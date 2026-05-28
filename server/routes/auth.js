@@ -585,31 +585,45 @@ router.post('/login',
       // Without this fallback, those users could never log in even with
       // correct credentials.
       if (findError || !user) {
+        logger.info('[login] Supabase lookup returned no user or errored. Trying Mongo fallback...', { email, hasFindError: !!findError });
         try {
           const User = require('../models/User');
           const mongoUser = await User.findOne({ email: email.toLowerCase() });
-          if (mongoUser && await mongoUser.comparePassword(password)) {
-            const { token, refreshToken, expiresIn } = issueTokenPair(mongoUser._id.toString());
-            return res.json({
-              success: true,
-              message: 'Login successful (Mongoose fallback)',
-              data: {
-                token,
-                refreshToken,
-                expiresIn,
-                user: {
-                  id: mongoUser._id,
-                  email: mongoUser.email,
-                  name: mongoUser.name,
-                  emailVerified: true,
+          if (mongoUser) {
+            const isMatch = await mongoUser.comparePassword(password);
+            if (isMatch) {
+              logger.info('[login] Mongo fallback lookup successful', { email });
+              const { token, refreshToken, expiresIn } = issueTokenPair(mongoUser._id.toString());
+              return res.json({
+                success: true,
+                message: 'Login successful (Mongoose fallback)',
+                data: {
+                  token,
+                  refreshToken,
+                  expiresIn,
+                  user: {
+                    id: mongoUser._id,
+                    email: mongoUser.email,
+                    name: mongoUser.name,
+                    emailVerified: true,
+                  },
                 },
-              },
-            });
+              });
+            } else {
+              logger.warn('[login] Mongo fallback user found but password check failed', { email });
+            }
+          } else {
+            logger.warn('[login] Mongo fallback user not found', { email });
           }
         } catch (mongoErr) {
           logger.warn('[login] Mongo fallback lookup failed', { error: mongoErr.message });
         }
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        
+        const devMsg = process.env.NODE_ENV !== 'production' 
+          ? 'Account not found. The database was recently reset to fix collection limits. Please re-register your account or use a test account (e.g., sarah@click.test / TestPass123!).' 
+          : 'Invalid credentials';
+          
+        return res.status(401).json({ success: false, error: devMsg });
       }
 
       // Create a combined name field for compatibility

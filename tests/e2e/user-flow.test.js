@@ -11,18 +11,26 @@ describe('E2E User Flows', () => {
   let testUser;
   let testUserId;
 
+  let registerEmail;
+  let searchtestEmail;
+
   beforeAll(async () => {
+    process.env.AUTO_VERIFY_EMAIL = 'true';
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click-test');
     }
+    registerEmail = `e2e_${Date.now()}@example.com`;
+    searchtestEmail = `searchtest_${Date.now()}@example.com`;
   });
 
   afterAll(async () => {
+    await User.deleteMany({
+      email: { $regex: /^(e2e_|searchtest_)/ }
+    });
     if (testUserId) {
-      await User.deleteOne({ _id: testUserId });
       await Content.deleteMany({ userId: testUserId });
     }
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 
   describe('Complete User Registration and Content Creation Flow', () => {
@@ -31,8 +39,8 @@ describe('E2E User Flows', () => {
       const registerResponse = await request(app)
         .post('/api/auth/register')
         .send({
-          email: 'e2e@example.com',
-          password: 'password123',
+          email: registerEmail,
+          password: 'TestPassword123!',
           name: 'E2E Test User',
         })
         .expect(201);
@@ -54,7 +62,7 @@ describe('E2E User Flows', () => {
         .post('/api/content/generate')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          text: 'This is a test content for E2E testing',
+          text: 'This is a test content for E2E testing that needs to be at least 50 characters long to satisfy validation.',
           title: 'E2E Test Content',
           type: 'article',
           platforms: ['twitter', 'linkedin'],
@@ -80,8 +88,8 @@ describe('E2E User Flows', () => {
     beforeEach(async () => {
       // Create test user and content
       testUser = new User({
-        email: 'searchtest@example.com',
-        password: 'password123',
+        email: searchtestEmail,
+        password: 'TestPassword123!',
         name: 'Search Test',
       });
       await testUser.save();
@@ -106,10 +114,17 @@ describe('E2E User Flows', () => {
 
       const jwt = require('jsonwebtoken');
       authToken = jwt.sign(
-        { userId: testUserId },
+        { userId: testUserId.toString() },
         process.env.JWT_SECRET || 'test-secret',
         { expiresIn: '1h' }
       );
+    });
+
+    afterEach(async () => {
+      if (testUserId) {
+        await User.deleteOne({ _id: testUserId });
+        await Content.deleteMany({ userId: testUserId });
+      }
     });
 
     it('should search and filter content', async () => {

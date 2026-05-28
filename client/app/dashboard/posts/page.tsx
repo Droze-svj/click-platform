@@ -201,10 +201,10 @@ export default function SignalDiffusionArchivePage() {
               </div>
            </div>
 
-           <div className="p-8 sm:p-16 min-h-[600px] bg-surface-page/10">
+           <div className="p-8 sm:p-16 min-h-[40vh] bg-surface-page/10">
               <AnimatePresence mode="wait">
                 {posts.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.2 }} exit={{ opacity: 0 }} key="empty" className="py-64 text-center flex flex-col items-center gap-16 group">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.2 }} exit={{ opacity: 0 }} key="empty" className="py-16 sm:py-32 text-center flex flex-col items-center gap-8 sm:gap-16 group">
                      <Terminal size={200} className="text-surface-900 dark:text-white animate-pulse group-hover:scale-110 transition-transform duration-700" />
                      <div className="space-y-8">
                         <p className="text-4xl sm:text-7xl font-black text-surface-900 dark:text-white uppercase tracking-[0.8em] italic drop-shadow-lg underline decoration-primary-500/20 underline-offset-8">NULL_ARCHIVE_SECTOR</p>
@@ -212,7 +212,7 @@ export default function SignalDiffusionArchivePage() {
                      </div>
                   </motion.div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                      {posts.map((post, i) => {
                        const cfg = STATUS_CFG[post.status] || STATUS_CFG.draft
                        return (

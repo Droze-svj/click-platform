@@ -57,6 +57,10 @@ const initPrisma = async () => {
 
 // Initialize MongoDB connection (legacy)
 const initMongoDB = async () => {
+  if (mongoose.connection.readyState === 1) {
+    databaseStatus.mongodb = true;
+    return true;
+  }
   try {
     let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/click';
     
@@ -114,7 +118,7 @@ const initDatabases = async () => {
   const results = await Promise.allSettled([
     withTimeout(initSupabase(), 3000, 'Supabase'),
     withTimeout(initPrisma(), 3000, 'Prisma'),
-    withTimeout(initMongoDB(), 3000, 'MongoDB') 
+    withTimeout(initMongoDB(), 12000, 'MongoDB') 
   ]);
 
   results.forEach((res, i) => {

@@ -28,6 +28,7 @@ import {
   Scissors,
   Trash2,
   Lock,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -242,12 +243,12 @@ const ModernVideoEditor: React.FC<{
 
   // ── Consolidated UI & Interaction State ──
   const [activeCategoryState, setActiveCategoryState] = useState<EditorCategory>(() => {
-    if (typeof window === 'undefined') return 'ai-edit'
+    if (typeof window === 'undefined') return 'edit'
     try {
       const prefs = loadEditorContentPreferences()
       const section = prefs.defaultOpenSection
-      return section && CATEGORIES.some(c => c.id === section) ? section : 'ai-edit'
-    } catch { return 'ai-edit' }
+      return section && CATEGORIES.some(c => c.id === section) ? section : 'edit'
+    } catch { return 'edit' }
   })
 
   const setActiveCategory = useCallback((category: EditorCategory) => {
@@ -259,7 +260,9 @@ const ModernVideoEditor: React.FC<{
   const [projectName, setProjectName] = useState('Untitled Kinetic Sequence')
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true)
+  const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false)
+  const [showPerformanceRail, setShowPerformanceRail] = useState(false)
+  const [insightsSidebarCollapsed, setInsightsSidebarCollapsed] = useState(false)
   const [contentPanelCollapsed, setContentPanelCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [commandKOpen, setCommandKOpen] = useState(false)
@@ -354,7 +357,7 @@ const ModernVideoEditor: React.FC<{
 
   // ── Consolidated AI & Strategy State ──
   const [contentNiche, setContentNiche] = useState<ContentNiche>('educational')
-  const [targetLanguage, setTargetLanguage] = useState<string>('English')
+  const [targetLanguage, setTargetLanguage] = useState<string>('en')
   const [engagementScore, setEngagementScore] = useState<EngagementScore>({
     overall: 85, viralPotential: 78, hookStrength: 92, sentimentDensity: 70, trendAlignment: 82, retentionHeatmap: Array(20).fill(80).map((v, i) => v - i * 2)
   })
@@ -1295,23 +1298,34 @@ const ModernVideoEditor: React.FC<{
     showToast('✦ Neural Beat-Sync: Segments Aligned to Peaks', 'success')
   }, [timelineSegments, showToast, setTimelineSegments])
 
-  const handleUpdateOverlay = useCallback((type: 'text' | 'shape' | 'image', id: string, updates: any) => {
+  const handleUpdateOverlay = useCallback((type: string, id: string, updates: any) => {
     if (type === 'text') {
       setTextOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o))
     } else if (type === 'image') {
       setImageOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o))
     } else if (type === 'shape') {
       setShapeOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o))
+    } else if (type === 'svg') {
+      setSvgOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o))
+    } else if (type === 'gradient') {
+      setGradientOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o))
     }
   }, [])
 
   const handleSegmentSelect = useCallback((id: string | null, addToSelection?: boolean) => {
-    if (addToSelection && id) {
-      setSelectedSegmentIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+    const isTextOverlay = textOverlays.some(t => t.id === id)
+    if (isTextOverlay) {
+      setSelectedOverlayId(id)
+      setSelectedSegmentIds([])
     } else {
-      setSelectedSegmentIds(id ? [id] : [])
+      setSelectedOverlayId(null)
+      if (addToSelection && id) {
+        setSelectedSegmentIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+      } else {
+        setSelectedSegmentIds(id ? [id] : [])
+      }
     }
-  }, [])
+  }, [textOverlays])
 
   const handleTimeUpdate = useCallback((t: number) => {
     const snapped = snapToKeyframes
@@ -1367,21 +1381,28 @@ const ModernVideoEditor: React.FC<{
         // Mobile: collapse everything
         setSidebarCollapsed(true)
         setPropertiesPanelOpen(false)
+        setShowPerformanceRail(false)
         setContentPanelCollapsed(false)
         setLeftPanelWidth(Math.min(width - 32, 300))
       } else if (width < 1024) {
         setSidebarCollapsed(true)
         setPropertiesPanelOpen(false)
+        setShowPerformanceRail(false)
         setLeftPanelWidth(Math.min(width * 0.5, 340))
       } else if (width < 1280) {
         setSidebarCollapsed(true)
         setPropertiesPanelOpen(false)
+        setShowPerformanceRail(false)
         setLeftPanelWidth(Math.min(width * 0.38, 360))
       } else if (width < 1600) {
         setSidebarCollapsed(true)
+        setPropertiesPanelOpen(false)
+        setShowPerformanceRail(false)
         setLeftPanelWidth(Math.min(width * 0.32, 400))
       } else {
         setSidebarCollapsed(false)
+        setPropertiesPanelOpen(false)
+        setShowPerformanceRail(false)
         setLeftPanelWidth(Math.min(width * 0.28, 420))
       }
     }
@@ -1540,7 +1561,7 @@ const ModernVideoEditor: React.FC<{
       case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} hasSegmentSelection={!!selectedSegmentId} />
       case 'short-clips': return <ShortClipsView videoState={videoState} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} setActiveCategory={setActiveCategory} showToast={showToast} transcript={transcript} />
       case 'growth': return <GrowthInsightsView isOledTheme={true} />
-      case 'predict': return <PredictionEngineView timelineSegments={timelineSegments} transcript={transcript} showToast={showToast} />
+      case 'predict': return <PredictionEngineView videoId={videoId || ''} timelineSegments={timelineSegments} transcript={transcript} showToast={showToast} />
       case 'automate': return <AutomateView
         voiceoverText={voiceoverText}
         setVoiceoverText={setVoiceoverText}
@@ -2030,13 +2051,42 @@ const ModernVideoEditor: React.FC<{
                 title={propertiesPanelOpen ? 'Hide Properties' : 'Show Properties'}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   propertiesPanelOpen
-                    ? 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
-                    : 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
+                    ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
+                    : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
                 }`}
               >
                 <span className="hidden sm:block">{propertiesPanelOpen ? 'Hide Props' : 'Show Props'}</span>
                 <Layers className="w-3 h-3 rotate-90" />
               </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPerformanceRail(p => !p)}
+                title={showPerformanceRail ? 'Hide Insights' : 'Show Insights'}
+                className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
+                  showPerformanceRail
+                    ? 'bg-fuchsia-600/20 border-fuchsia-500/30 text-fuchsia-400 hover:bg-fuchsia-600/40'
+                    : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
+                }`}
+              >
+                <span className="hidden sm:block">{showPerformanceRail ? 'Hide Insights' : 'Show Insights'}</span>
+                <TrendingUp className="w-3 h-3" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInsightsSidebarCollapsed(p => !p)}
+                title={insightsSidebarCollapsed ? 'Show Expert' : 'Hide Expert'}
+                className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
+                  !insightsSidebarCollapsed
+                    ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
+                    : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
+                }`}
+              >
+                <span className="hidden sm:block">{insightsSidebarCollapsed ? 'Show Expert' : 'Hide Expert'}</span>
+                <BrainCircuit className="w-3 h-3 text-indigo-400" />
+              </button>
+
               <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Uplink: Live</span>
@@ -2074,22 +2124,22 @@ const ModernVideoEditor: React.FC<{
               )}
               <div className={`overflow-hidden flex flex-col h-full bg-surface-900 border border-surface-800 ${viewportWidth < 768 ? 'rounded-none border-none bg-transparent' : 'rounded-xl shadow-lg'}`}>
                 <div className="flex-shrink-0 px-6 py-4 border-b border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 shadow-inner">
                       <button
                         type="button"
                         onClick={() => setActiveCategory('edit')}
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory !== 'ai' && activeCategory !== 'predict' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-500 hover:text-white'}`}
+                        className={`px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory !== 'ai' && activeCategory !== 'predict' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                       >
-                        MANUAL OVERRIDE
+                        Manual Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveCategory('ai')}
-                        className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === 'ai' || activeCategory === 'predict' ? 'bg-fuchsia-600 text-white shadow-[0_0_20px_rgba(192,38,211,0.4)]' : 'text-slate-500 hover:text-white'}`}
+                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === 'ai' || activeCategory === 'predict' ? 'bg-fuchsia-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                       >
                         <Sparkles className="w-3 h-3" />
-                        AUTONOMOUS AI
+                        Neural Engine
                       </button>
                     </div>
                   </div>
@@ -2128,24 +2178,7 @@ const ModernVideoEditor: React.FC<{
                 layoutPrefs.focusMode === 'timeline' ? 'min-h-[120px] flex-1' : 'flex-1 min-h-0'
               }`}
             >
-              {/* Header bar - Floating overlay style */}
-              <div className="absolute top-6 inset-x-8 z-10 flex items-center justify-between pointer-events-none">
-                <div className="flex items-center gap-3 px-4 py-2 bg-surface-100 dark:bg-surface-900 rounded-full border border-surface-200 dark:border-surface-800">
-                  <Film className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">Neural Monitoring</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/50 rounded-full text-emerald-700 dark:text-emerald-400 text-[9px] font-bold">
-                  <Zap className="w-3 h-3 fill-emerald-400 animate-pulse" />
-                  REAL-TIME SYNC
-                </div>
-              </div>
 
-              {/* Predictive Health HUD - Floating */}
-              <HealthDeltaOverlay
-                score={engagementScore.overall || 88}
-                diversityDelta={Math.max(0, Math.min(50, Math.round((styleDNA?.visualDensity ?? 0.4) * 30)))}
-                engagementPotential={engagementScore.viralPotential || 94}
-              />
 
               {/* Video — full bleed */}
               <div className="absolute inset-0 bg-black/60">
@@ -2302,6 +2335,7 @@ const ModernVideoEditor: React.FC<{
                       onEffectSelect={setSelectedEffectId}
                       onEffectDeleted={() => showToast('Effect purged', 'info')}
                       textOverlays={textOverlays}
+                      onTextOverlaysChange={setTextOverlays}
                       imageOverlays={imageOverlays}
                       onAssetDrop={handleAssetDrop}
                       transcript={transcript}
@@ -2397,45 +2431,48 @@ const ModernVideoEditor: React.FC<{
           )}
 
           {/* Performance Rail — shows the creator's top-performing fonts /
-               captions / motions / hooks ordered by retention delta. Each chip
-               applies to the most-recent text overlay so the user can act on
-               "what's working" without leaving the editor. */}
-          <div className="w-72 flex-shrink-0 px-3 py-3 hidden xl:block">
-            <PerformanceRail
-              onApplyFont={(fontKey) => {
-                if (textOverlays.length === 0) return
-                setTextOverlays(prev => prev.map((t, i) =>
-                  i === prev.length - 1 ? { ...t, fontFamily: fontKey } : t
-                ))
-                showToast?.(`Applied top-performing font`, 'success')
-              }}
-              onApplyCaptionStyle={(styleKey) => {
-                if (textOverlays.length === 0) return
-                setTextOverlays(prev => prev.map((t, i) =>
-                  i === prev.length - 1 ? { ...t, style: styleKey as any } : t
-                ))
-                showToast?.(`Applied top-performing caption style`, 'success')
-              }}
-              onApplyMotion={(motionKey) => {
-                if (textOverlays.length === 0) return
-                setTextOverlays(prev => prev.map((t, i) =>
-                  i === prev.length - 1 ? { ...t, motionGraphic: motionKey as any } : t
-                ))
-                showToast?.(`Applied top-performing motion`, 'success')
-              }}
-            />
-          </div>
+               captions / motions / hooks ordered by retention delta. Gated behind showPerformanceRail to keep layout clean by default. */}
+          {showPerformanceRail && (
+            <div className="w-72 flex-shrink-0 px-3 py-3 hidden xl:block">
+              <PerformanceRail
+                onApplyFont={(fontKey) => {
+                  if (textOverlays.length === 0) return
+                  setTextOverlays(prev => prev.map((t, i) =>
+                    i === prev.length - 1 ? { ...t, fontFamily: fontKey } : t
+                  ))
+                  showToast?.(`Applied top-performing font`, 'success')
+                }}
+                onApplyCaptionStyle={(styleKey) => {
+                  if (textOverlays.length === 0) return
+                  setTextOverlays(prev => prev.map((t, i) =>
+                    i === prev.length - 1 ? { ...t, style: styleKey as any } : t
+                  ))
+                  showToast?.(`Applied top-performing caption style`, 'success')
+                }}
+                onApplyMotion={(motionKey) => {
+                  if (textOverlays.length === 0) return
+                  setTextOverlays(prev => prev.map((t, i) =>
+                    i === prev.length - 1 ? { ...t, motionGraphic: motionKey as any } : t
+                  ))
+                  showToast?.(`Applied top-performing motion`, 'success')
+                }}
+              />
+            </div>
+          )}
 
           {/* Insights Sidebar (New) */}
-          <InsightsSidebar
-            score={engagementScore}
-            niche={contentNiche}
-            onNicheChange={setContentNiche}
-            onCaptionStyleChange={(style) => setCaptionStyle(prev => prev ? { ...prev, textStyle: style } : prev)}
-            onLanguageChange={setTargetLanguage}
-            onManualOverride={handleManualOverride}
-            onScheduleUpload={handleScheduleUpload}
-          />
+          {!insightsSidebarCollapsed && (
+            <InsightsSidebar
+              score={engagementScore}
+              niche={contentNiche}
+              onNicheChange={setContentNiche}
+              onCaptionStyleChange={(style) => setCaptionStyle(prev => prev ? { ...prev, textStyle: style } : prev)}
+              onLanguageChange={setTargetLanguage}
+              onManualOverride={handleManualOverride}
+              onScheduleUpload={handleScheduleUpload}
+              targetLanguage={targetLanguage}
+            />
+          )}
 
       </div>
 

@@ -152,9 +152,9 @@ class NeuralBroadcasterService {
         result = await socialPublishing.publishToLinkedIn(post.userId, content);
       } else if (post.platform === 'youtube') {
         result = await socialPublishing.publishToYouTube(post.userId, content.videoPath, {
-            title: content.title,
-            description: content.text,
-            tags: post.content.hashtags
+          title: content.title,
+          description: content.text,
+          tags: post.content.hashtags
         });
       } else if (post.platform === 'instagram') {
         result = await socialPublishing.publishToInstagram(post.userId, post.content.mediaUrl, post.content.text);

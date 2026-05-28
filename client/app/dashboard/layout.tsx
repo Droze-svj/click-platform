@@ -6,7 +6,6 @@ import SidebarNav from '../../components/SidebarNav'
 import GlobalCommandPalette from '../../components/GlobalCommandPalette'
 import WorkflowRail from '../../components/WorkflowRail'
 import OnboardingNudge from '../../components/OnboardingNudge'
-import ClickPresence from '../../components/click/ClickPresence'
 import { LayoutPreferencesProvider } from '../../contexts/LayoutPreferencesContext'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -32,22 +31,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <main className="flex-1 min-w-0 pb-24 lg:pb-0 flex flex-col overflow-x-hidden">
                     <WorkflowRail />
                     <OnboardingNudge />
-                    <div className="flex-1 min-w-0 overflow-x-hidden">
+                    <div className="flex-1 min-w-0">
                         {children}
                     </div>
                 </main>
                 <GlobalCommandPalette />
-                {/*
-                  Ambient Click presence pill — fixed bottom-right, low
-                  visual weight. Tells the user, at all times, what Click
-                  is up to (learning / drafting / idle). Hidden on mobile
-                  bottom-nav viewports so it doesn't fight the WorkflowRail.
-                */}
-                <div className="hidden md:block fixed bottom-6 right-6 z-40 pointer-events-none">
-                    <div className="pointer-events-auto">
-                        <ClickPresence />
-                    </div>
-                </div>
             </div>
         </LayoutPreferencesProvider>
     )

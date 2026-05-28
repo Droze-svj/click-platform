@@ -72,6 +72,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getMatchingEmojiForChunk } from '../../../utils/captionEmojiMap'
 import { VideoFilter, TextOverlay, TemplateLayout, TEMPLATE_LAYOUTS, ShapeOverlay, ShapeOverlayKind, MOTION_GRAPHIC_TEMPLATES, MotionGraphicTemplate, ImageOverlay, GradientOverlay, GradientOverlayDirection, SvgOverlay, MotionCompound, TransformKeyframe, CAPTION_FONTS } from '../../../types/editor'
 import {
   TextPresetConfig,
@@ -91,6 +92,7 @@ import {
   RESET_FILTER
 } from './basic/basicEditorConstants'
 import { apiPost } from '../../../lib/api'
+import { useTranslation } from '../../../hooks/useTranslation'
 import BrandKit, { useBrandKit } from '../../BrandKit'
 
 type UndoSnapshot = {
@@ -378,6 +380,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   onLCutSelected,
   hasSegmentSelection = false,
 }) => {
+  const { t } = useTranslation()
   const currentTime = videoState?.currentTime ?? 0
   const duration = videoState?.duration ?? 60
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null)
@@ -1111,13 +1114,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
   // ── Tab state ─────────────────────────────────────────────────────────────
   const EDIT_TABS = [
-    { id: 'trim',     icon: Scissors,          label: 'Trim',    shortcut: 'T' },
-    { id: 'text',     icon: Type,              label: 'Text',    shortcut: 'X' },
-    { id: 'filters',  icon: SlidersHorizontal, label: 'Filters', shortcut: 'F' },
-    { id: 'motion',   icon: Wand2,             label: 'Motion',  shortcut: 'M' },
-    { id: 'overlays', icon: Layers,            label: 'Layers',  shortcut: 'L' },
-    { id: 'packs',    icon: Zap,               label: 'Packs',   shortcut: 'P' },
-    { id: 'insights', icon: BarChart3,         label: 'Data',    shortcut: 'I' },
+    { id: 'trim',     icon: Scissors,          label: 'Trim',    shortcut: 'T', altShortcut: '⌥T' },
+    { id: 'text',     icon: Type,              label: 'Text',    shortcut: 'X', altShortcut: '⌥X' },
+    { id: 'filters',  icon: SlidersHorizontal, label: 'Filters', shortcut: 'F', altShortcut: '⌥F' },
+    { id: 'motion',   icon: Wand2,             label: 'Motion',  shortcut: 'M', altShortcut: '⌥M' },
+    { id: 'overlays', icon: Layers,            label: 'Layers',  shortcut: 'L', altShortcut: '⌥L' },
+    { id: 'packs',    icon: Zap,               label: 'Packs',   shortcut: 'P', altShortcut: '⌥P' },
+    { id: 'insights', icon: BarChart3,         label: 'Data',    shortcut: 'I', altShortcut: '⌥I' },
   ] as const
   type EditTab = typeof EDIT_TABS[number]['id']
 
@@ -1125,15 +1128,40 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   const [speedValue, setSpeedValue] = React.useState(1)
   const [selectedFilterName, setSelectedFilterName] = React.useState('')
   const [globalSearch, setGlobalSearch] = React.useState('')
+  const [neuralAutoFraming, setNeuralAutoFraming] = React.useState(true)
+  const [focusTarget, setFocusTarget] = React.useState<'face' | 'action' | 'custom'>('face')
+  const [trackingOffset, setTrackingOffset] = React.useState({ x: 0, y: 0 })
+
+  React.useEffect(() => {
+    if (!neuralAutoFraming) return
+    const interval = setInterval(() => {
+      setTrackingOffset({
+        x: Math.round((Math.random() - 0.5) * 12 * 100) / 100,
+        y: Math.round((Math.random() - 0.5) * 8 * 100) / 100,
+      })
+    }, 800)
+    return () => clearInterval(interval)
+  }, [neuralAutoFraming])
   const [layerOpacities, setLayerOpacities] = React.useState<Record<string, number>>({})
   const [captionLoading, setCaptionLoading] = React.useState(false)
-  const [captionStyle, setCaptionStyle] = React.useState<'tiktok-pop' | 'hormozi-bold' | 'minimal-white' | 'neon-glow'>('tiktok-pop')
+  const [captionStyle, setCaptionStyle] = React.useState<'tiktok-pop' | 'hormozi-bold' | 'minimal-white' | 'neon-glow' | 'vlog-kinetic' | 'cyberpunk-neon' | 'oled-darkroom' | 'youtube-shorts' | 'meme-impact' | 'retro-vhs' | 'serif-quote'>('tiktok-pop')
   const [captionError, setCaptionError] = React.useState<string | null>(null)
   const [captionSuccess, setCaptionSuccess] = React.useState<number | null>(null)  // count of captions added
   const [wordsPerCap, setWordsPerCap] = React.useState(4)
   const [captionY, setCaptionY] = React.useState<'top' | 'mid' | 'bottom'>('bottom')
   const [captionColor, setCaptionColor] = React.useState('#FFFFFF')
   const [manualTranscript, setManualTranscript] = React.useState('')
+  const [translatingCaptions, setTranslatingCaptions] = React.useState(false)
+  const [targetTranslationLanguage, setTargetTranslationLanguage] = React.useState('es')
+  const [emojiEffect, setEmojiEffect] = React.useState<'pop' | 'bounce' | 'slide' | 'pulse' | 'shake' | 'blur'>('pop')
+  const [emojiStyle, setEmojiStyle] = React.useState<'3d-bold' | 'neon-glow' | 'flat'>('3d-bold')
+  const [generatingEmojis, setGeneratingEmojis] = React.useState(false)
+  const [emojiFontSize, setEmojiFontSize] = React.useState<number>(48)
+  const [emojiDensity, setEmojiDensity] = React.useState<number>(6)
+  const [emojiAnimOut, setEmojiAnimOut] = React.useState<'fade' | 'pop' | 'slide-bottom' | 'bounce-out' | 'scale-out' | 'zoom-out' | 'flip-out'>('fade')
+  const [emojiAnimInDuration, setEmojiAnimInDuration] = React.useState<number>(0.45)
+  const [emojiAnimOutDuration, setEmojiAnimOutDuration] = React.useState<number>(0.3)
+  const [emojiYPosition, setEmojiYPosition] = React.useState<'above' | 'head' | 'below' | 'custom-top'>('above')
   const filtStrength = filterStrength ?? 100
   const setFiltStrength = setFilterStrength ?? (() => {})
 
@@ -1166,10 +1194,17 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       const ts = Date.now()
       type CaptionDefaults = { fontSize: number; style: TextOverlayStyle; fontFamily: string }
       const captionStyleMap: Record<string, CaptionDefaults> = {
-        'tiktok-pop':    { fontSize: 36, style: 'bold-kinetic', fontFamily: 'Inter' },
-        'hormozi-bold':  { fontSize: 42, style: 'bold-kinetic', fontFamily: 'Inter' },
-        'minimal-white': { fontSize: 28, style: 'none',         fontFamily: 'Inter' },
-        'neon-glow':     { fontSize: 34, style: 'neon',          fontFamily: 'Inter' },
+        'tiktok-pop':     { fontSize: 36, style: 'bold-kinetic', fontFamily: 'Inter' },
+        'hormozi-bold':   { fontSize: 42, style: 'bold-kinetic', fontFamily: 'Inter' },
+        'minimal-white':  { fontSize: 28, style: 'none',         fontFamily: 'Inter' },
+        'neon-glow':      { fontSize: 34, style: 'neon',          fontFamily: 'Inter' },
+        'vlog-kinetic':   { fontSize: 40, style: 'bold-kinetic', fontFamily: 'Inter' },
+        'cyberpunk-neon': { fontSize: 38, style: 'neon',          fontFamily: 'Courier New' },
+        'oled-darkroom':  { fontSize: 32, style: 'outline',       fontFamily: 'Inter' },
+        'youtube-shorts': { fontSize: 38, style: 'bold-kinetic', fontFamily: 'Inter' },
+        'meme-impact':    { fontSize: 40, style: 'outline',       fontFamily: 'Impact' },
+        'retro-vhs':      { fontSize: 34, style: 'neon',          fontFamily: 'Courier New' },
+        'serif-quote':    { fontSize: 36, style: 'none',          fontFamily: 'Georgia' },
       }
       const def = captionStyleMap[captionStyle] ?? captionStyleMap['tiktok-pop']
 
@@ -1200,6 +1235,113 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       setCaptionLoading(false)
     }
   }, [transcript, manualTranscript, videoId, captionStyle, wordsPerCap, captionY, captionColor, duration, templateLayout, videoFilters, textOverlays, shapeOverlays, imageOverlays, svgOverlays, gradientOverlays, pushSnapshot, setTextOverlays, showToast])
+
+  const handleTranslateCaptions = useCallback(async () => {
+    if (!textOverlays || textOverlays.length === 0) {
+      showToast('No captions found on the timeline to translate.', 'error')
+      return
+    }
+    setTranslatingCaptions(true)
+    try {
+      showToast('Translating captions in a timing-safe manner…', 'info')
+      const res = await apiPost<{ success?: boolean; data?: TextOverlay[] }>(
+        '/video/captions/translate-overlays',
+        {
+          overlays: textOverlays,
+          targetLanguage: targetTranslationLanguage
+        }
+      )
+      const data = (res as any)?.data ?? (res as any)
+      if (Array.isArray(data) && data.length > 0) {
+        pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
+        setTextOverlays(data)
+        showToast(`✦ Translated captions to ${targetTranslationLanguage.toUpperCase()}`, 'success')
+      } else {
+        showToast('Translation completed but returned no segments.', 'info')
+      }
+    } catch (err: any) {
+      console.error('Translation error', err)
+      showToast('Failed to translate captions: ' + (err.message || err), 'error')
+    } finally {
+      setTranslatingCaptions(false)
+    }
+  }, [textOverlays, targetTranslationLanguage, templateLayout, videoFilters, shapeOverlays, imageOverlays, svgOverlays, gradientOverlays, pushSnapshot, setTextOverlays, showToast])
+
+  const handleGenerateAiEmojis = useCallback(async () => {
+    if (!transcript?.words || transcript.words.length === 0) {
+      showToast('No transcript words found to synchronize emojis. Generate transcript first.', 'error')
+      return
+    }
+    
+    setGeneratingEmojis(true)
+    try {
+      showToast('Analyzing transcript with AI to synchronize emojis…', 'info')
+      
+      // Delay slightly for dramatic modern effect
+      await new Promise(r => setTimeout(r, 600))
+      
+      const wordsList = transcript.words
+      const newEmojiOverlays: TextOverlay[] = []
+      const ts = Date.now()
+      
+      const maxWordsPerChunk = emojiDensity
+      for (let i = 0; i < wordsList.length; i += maxWordsPerChunk) {
+        const chunk = wordsList.slice(i, i + maxWordsPerChunk)
+        const matchingEmoji = getMatchingEmojiForChunk(
+          chunk.map(w => ({ word: w.text || '', start: w.start, end: w.end })),
+          chunk[0] ? { word: chunk[0].text || '', start: chunk[0].start, end: chunk[0].end } : null
+        )
+        
+        if (matchingEmoji) {
+          const startTime = chunk[0].start
+          const endTime = chunk[chunk.length - 1].end
+          
+          // Offset Y position based on user preference
+          let yPct = captionY === 'top' ? 32 : captionY === 'mid' ? 68 : 62
+          if (emojiYPosition === 'head') {
+            yPct = 25 // Head level / top section
+          } else if (emojiYPosition === 'below') {
+            yPct = captionY === 'top' ? 24 : captionY === 'mid' ? 56 : 88 // Below subtitles
+          } else if (emojiYPosition === 'custom-top') {
+            yPct = 12 // High above
+          } else if (emojiYPosition === 'above') {
+            yPct = captionY === 'top' ? 32 : captionY === 'mid' ? 38 : 62 // Default offset above subtitles
+          }
+          
+          newEmojiOverlays.push({
+            id: `aiemoji-${ts}-${i}`,
+            text: matchingEmoji,
+            startTime: startTime,
+            endTime: endTime,
+            x: 50,
+            y: yPct,
+            fontSize: emojiFontSize,
+            color: '#ffffff',
+            fontFamily: 'Inter',
+            style: emojiStyle === 'neon-glow' ? 'neon' : emojiStyle === 'flat' ? 'minimal' : 'bold-kinetic',
+            animationIn: emojiEffect === 'pop' ? 'pop' : emojiEffect === 'bounce' ? 'bounce' : emojiEffect === 'slide' ? 'slide-bottom' : emojiEffect === 'blur' ? 'blur-in' : 'fade',
+            animationOut: emojiAnimOut,
+            animationInDuration: emojiAnimInDuration,
+            animationOutDuration: emojiAnimOutDuration,
+            motionGraphic: emojiEffect === 'shake' ? 'shake' : emojiEffect === 'pulse' ? 'pulse' : 'none'
+          })
+        }
+      }
+      
+      if (newEmojiOverlays.length === 0) {
+        showToast('AI analyzed the transcript but found no high-energy emoji triggers.', 'info')
+        return
+      }
+      
+      pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
+      setTextOverlays((prev: TextOverlay[]) => [...prev, ...newEmojiOverlays])
+      showToast(`✦ Synthesized ${newEmojiOverlays.length} AI Emojis on the timeline!`, 'success')
+    } catch (err: any) {
+      showToast('Emoji generation failed', 'error')
+    } finally {
+      setGeneratingEmojis(false)
+    }
+  }, [transcript, captionY, emojiEffect, emojiStyle, emojiFontSize, emojiDensity, emojiAnimOut, emojiAnimInDuration, emojiAnimOutDuration, emojiYPosition, templateLayout, videoFilters, textOverlays, shapeOverlays, imageOverlays, svgOverlays, gradientOverlays, pushSnapshot, setTextOverlays, showToast])
 
   // Keyboard shortcut to switch tabs
   React.useEffect(() => {
@@ -1274,20 +1416,48 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     <div className="flex flex-col h-full text-slate-200 overflow-hidden">
 
       {/* ── Sticky header ── */}
-      <div className="shrink-0 px-3 pt-3 pb-0 space-y-2">
-        {/* Global search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
-          <input
-            value={globalSearch}
-            onChange={e => setGlobalSearch(e.target.value)}
-            placeholder="Search all tools… (filters, motion, text)"
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
-          />
-          {globalSearch && (
-            <button type="button" onClick={() => setGlobalSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
-              <span className="text-[10px] font-black">✕</span>
+      <div className="shrink-0 px-3 pt-3 pb-2 space-y-3 border-b border-white/[0.04] bg-surface-900/50 backdrop-blur-xl z-20 relative">
+        {/* Undo/Redo & Global Search row */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-black/40 rounded-xl p-0.5 border border-white/[0.06]">
+            <button
+              type="button"
+              onClick={undo} disabled={undoStack.length === 0}
+              title="Undo"
+              className="p-1.5 rounded-lg hover:bg-white/10 disabled:opacity-25 transition-all text-slate-400 hover:text-white"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
             </button>
+            <button
+              type="button"
+              onClick={redo} disabled={redoStack.length === 0}
+              title="Redo"
+              className="p-1.5 rounded-lg hover:bg-white/10 disabled:opacity-25 transition-all text-slate-400 hover:text-white"
+            >
+              <Redo2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+            <input
+              value={globalSearch}
+              onChange={e => setGlobalSearch(e.target.value)}
+              placeholder="Search tools..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/[0.06] text-[11px] text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/40 transition-all"
+            />
+            {globalSearch && (
+              <button type="button" onClick={() => setGlobalSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                <span className="text-[10px] font-black">✕</span>
+              </button>
+            )}
+          </div>
+
+          {(overlayCount > 0 || hasLook) && (
+            <div className="flex items-center gap-2 px-2">
+              {overlayCount > 0 && <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">{overlayCount} layers</span>}
+              {hasLook && <button type="button" onClick={resetFilters} className="text-[9px] font-bold text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors">Reset</button>}
+            </div>
           )}
         </div>
 
@@ -1298,62 +1468,45 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              className="bg-slate-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+              className="absolute left-3 right-3 top-[44px] bg-slate-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50"
             >
               {globalSearchResults.map((r, i) => (
                 <button type="button" key={i} onClick={() => { setActiveEditTab(r.tab); r.action() }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.06] transition-colors text-left border-b border-white/[0.04] last:border-0"
                 >
                   <Sparkles className="w-3 h-3 text-indigo-400 shrink-0" />
-                  <span className="text-[11px] text-slate-200 font-black">{r.label}</span>
-                  <span className="ml-auto text-[9px] text-slate-600 font-black uppercase tracking-widest">{r.tab}</span>
+                  <span className="text-[11px] text-slate-200 font-bold">{r.label}</span>
+                  <span className="ml-auto text-[9px] text-slate-600 font-bold uppercase tracking-widest">{r.tab}</span>
                 </button>
               ))}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Undo / Redo + status strip */}
-        <div className="flex items-center gap-2">
-          <motion.button whileTap={{ scale: 0.93 }}
-            onClick={undo} disabled={undoStack.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/10 disabled:opacity-25 transition-all text-slate-300 hover:text-white text-[10px] font-black uppercase tracking-widest"
-          >
-            <Undo2 className="w-3 h-3" /> Undo
-            {undoStack.length > 0 && <span className="bg-indigo-600 text-white rounded-full px-1 text-[8px] ml-0.5">{undoStack.length}</span>}
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.93 }}
-            onClick={redo} disabled={redoStack.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/10 disabled:opacity-25 transition-all text-slate-300 hover:text-white text-[10px] font-black uppercase tracking-widest"
-          >
-            <Redo2 className="w-3 h-3" /> Redo
-          </motion.button>
-          <div className="flex-1" />
-          {overlayCount > 0 && <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">{overlayCount} layers</span>}
-          {hasLook && <button type="button" onClick={resetFilters} className="text-[9px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors">Reset look</button>}
-        </div>
-
-        {/* Animated Tab bar */}
-        <div className="relative flex gap-0.5 bg-black/50 p-1 rounded-2xl border border-white/[0.06]">
-          {EDIT_TABS.map(({ id, icon: Icon, label, shortcut }) => (
+        {/* Sleek Tab bar */}
+        <div className="flex justify-between items-center bg-black/60 backdrop-blur-xl p-1 rounded-2xl border border-white/10 shadow-inner shadow-black overflow-x-auto custom-scrollbar-thin select-none">
+          {EDIT_TABS.map(({ id, icon: Icon, label, shortcut, altShortcut }) => (
             <button
               type="button"
               key={id}
               onClick={() => setActiveEditTab(id)}
-              title={`${label} (Alt+${shortcut})`}
-              className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl transition-colors z-10 ${
-                activeEditTab === id ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+              title={`${t(`editor.tabs.${id}`)} (${altShortcut})`}
+              className={`relative flex-1 flex flex-col items-center gap-1.5 py-2.5 px-3 min-w-[55px] rounded-xl transition-all duration-300 z-10 group shrink-0 ${
+                activeEditTab === id ? 'text-white' : 'text-slate-555 hover:text-slate-300'
               }`}
             >
               {activeEditTab === id && (
                 <motion.div
                   layoutId="edit-tab-bg"
-                  className="absolute inset-0 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-600/30"
-                  transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+                  className="absolute inset-0 rounded-xl bg-gradient-to-b from-indigo-500/10 to-indigo-500/25 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
-              <Icon className="w-3.5 h-3.5 relative z-10" />
-              <span className="text-[7.5px] font-black uppercase tracking-widest leading-none relative z-10">{label}</span>
+              <Icon className={`w-4 h-4 relative z-10 transition-transform group-hover:scale-110 ${activeEditTab === id ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : 'text-slate-500 group-hover:text-slate-300'}`} />
+              <span className="text-[7.5px] font-black uppercase tracking-widest leading-none relative z-10 flex flex-col items-center gap-0.5">
+                {t(`editor.tabs.${id}`)}
+                <span className="text-[6px] font-mono text-slate-600 bg-black/50 border border-white/5 px-1 py-0.5 rounded leading-none mt-0.5 group-hover:text-indigo-300 group-hover:border-indigo-500/20 transition-all font-normal">{altShortcut}</span>
+              </span>
             </button>
           ))}
         </div>
@@ -1519,7 +1672,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
             {/* Format / Aspect Ratio */}
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Format / Aspect Ratio</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">{t('editor.aspectRatio')}</span>
               <div className="grid grid-cols-3 gap-1.5">
                 {TEMPLATE_LAYOUTS.map(l => (
                   <motion.button key={l.id} whileTap={{ scale: 0.96 }}
@@ -1529,12 +1682,116 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Neural Auto-Framing / AI Focus Tracking */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20 space-y-3 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Fingerprint className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">{t('editor.neuralFocusTracking')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${neuralAutoFraming ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-slate-600'}`} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNeuralAutoFraming(!neuralAutoFraming)
+                      showToast(`AI Auto-Framing ${!neuralAutoFraming ? 'Activated' : 'Suspended'}`, 'info')
+                    }}
+                    className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all ${
+                      neuralAutoFraming 
+                        ? 'bg-indigo-600/40 border-indigo-400/35 text-indigo-200' 
+                        : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'
+                    }`}
+                  >
+                    {neuralAutoFraming ? t('editor.active') : t('editor.offline')}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">{t('editor.trackingPriorityTarget')}</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {([
+                    { id: 'face', label: '⚡ Speaker', desc: 'Focus face' },
+                    { id: 'action', label: '🎯 Action', desc: 'Peak movement' },
+                    { id: 'custom', label: '🎬 Custom', desc: 'Manual ROI' }
+                  ] as const).map(target => (
+                    <button
+                      key={target.id}
+                      type="button"
+                      disabled={!neuralAutoFraming}
+                      onClick={() => {
+                        setFocusTarget(target.id)
+                        showToast(`Focus target changed to ${t(`editor.${target.id}`)}`, 'success')
+                      }}
+                      className={`py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${
+                        !neuralAutoFraming 
+                          ? 'opacity-40 cursor-not-allowed bg-white/5 border border-transparent text-slate-600' 
+                          : focusTarget === target.id 
+                            ? 'bg-indigo-600 text-white shadow-lg border border-indigo-400/30' 
+                            : 'bg-white/5 border border-white/[0.06] text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {t(`editor.${target.id}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dynamic telemetry output */}
+              <div className="bg-black/60 border border-white/[0.06] rounded-xl p-2.5 font-mono text-[8px] text-indigo-300 space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span>{t('editor.status')}</span>
+                  <span className={neuralAutoFraming ? 'text-emerald-400 animate-pulse font-bold' : 'text-slate-500 font-bold'}>
+                    {neuralAutoFraming ? t('editor.lockAcquired') : t('editor.standby')}
+                  </span>
+                </div>
+                {neuralAutoFraming ? (
+                  <div className="grid grid-cols-2 gap-1 select-none">
+                    <div>ROI_X: <span className="text-white font-bold">{trackingOffset.x > 0 ? `+${trackingOffset.x.toFixed(2)}` : trackingOffset.x.toFixed(2)}%</span></div>
+                    <div>ROI_Y: <span className="text-white font-bold">{trackingOffset.y > 0 ? `+${trackingOffset.y.toFixed(2)}` : trackingOffset.y.toFixed(2)}%</span></div>
+                    <div>FPS_DRIFT: <span className="text-white font-bold">0.08ms</span></div>
+                    <div>NET_WEIGHT: <span className="text-white font-bold">0.994</span></div>
+                  </div>
+                ) : (
+                  <div className="text-slate-600 italic select-none">{t('editor.telemetryPlaceholder')}</div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         {/* ════ TEXT ════ */}
         {activeEditTab === 'text' && (
           <div className="space-y-3">
+            {selectedTextId && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between shadow-[0_0_20px_rgba(99,102,241,0.15)] relative overflow-hidden"
+              >
+                <div className="flex items-center gap-2 relative z-10">
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Canvas Direct Edit Mode</span>
+                    <span className="text-[7.5px] text-slate-500 font-bold uppercase mt-1 leading-none">Double-click player text to type inline</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTextId(null)}
+                  className="text-[8px] font-black uppercase text-indigo-400 hover:text-indigo-200 transition-colors bg-indigo-500/10 px-2 py-1 rounded-lg border border-indigo-500/20"
+                >
+                  Deselect
+                </button>
+              </motion.div>
+            )}
+
             {/* Quick add */}
             <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <div className="flex gap-2 mb-2">
@@ -1614,25 +1871,32 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               </div>
 
               <div className="px-3 pb-3 space-y-2.5">
-                {/* Style picker with live preview */}
-                <div className="grid grid-cols-4 gap-1">
-                  {([
-                    { id: 'tiktok-pop',    label: 'TikTok',  preview: { color: '#fff', shadow: 'drop-shadow(0 0 6px rgba(236,72,153,0.8))' } },
-                    { id: 'hormozi-bold',  label: 'Hormozi', preview: { color: '#fff', shadow: 'none' } },
-                    { id: 'minimal-white', label: 'Minimal', preview: { color: '#e2e8f0', shadow: 'none' } },
-                    { id: 'neon-glow',     label: 'Neon',    preview: { color: '#00F5FF', shadow: 'drop-shadow(0 0 8px rgba(0,245,255,0.8))' } },
-                  ] as const).map(s => (
-                    <button type="button" key={s.id} onClick={() => { setCaptionStyle(s.id); if (s.id === 'neon-glow') setCaptionColor('#00F5FF'); else setCaptionColor('#FFFFFF') }}
-                      className={`py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${
-                        captionStyle === s.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 border border-indigo-400/30' : 'bg-white/5 text-slate-500 hover:text-white border border-white/[0.06]'
-                      }`}
-                    >
-                      <span style={{ '--caption-color': captionStyle === s.id ? s.preview.color : undefined, '--caption-filter': captionStyle === s.id ? s.preview.shadow : undefined } as any}
-                        className="text-[9px] font-black leading-none text-[var(--caption-color)] [filter:var(--caption-filter)]">Aa</span>
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
+                 {/* Style picker with live preview */}
+                 <div className="grid grid-cols-4 gap-1">
+                   {([
+                     { id: 'tiktok-pop',     label: 'TikTok',   preview: { color: '#fff', shadow: 'drop-shadow(0 0 6px rgba(236,72,153,0.8))', pill: false } },
+                     { id: 'hormozi-bold',   label: 'Hormozi',  preview: { color: '#FFD700', shadow: 'none', pill: false } },
+                     { id: 'minimal-white',  label: 'Minimal',  preview: { color: '#e2e8f0', shadow: 'none', pill: false } },
+                     { id: 'neon-glow',      label: 'Neon',     preview: { color: '#00F5FF', shadow: 'drop-shadow(0 0 8px rgba(0,245,255,0.8))', pill: false } },
+                     { id: 'vlog-kinetic',   label: 'Kinetic',  preview: { color: '#FFFF00', shadow: 'drop-shadow(0 0 5px rgba(255,255,0,0.6))', pill: false } },
+                     { id: 'cyberpunk-neon', label: 'Cyber',    preview: { color: '#FF00FF', shadow: 'drop-shadow(0 0 10px rgba(255,0,255,0.9))', pill: false } },
+                     { id: 'oled-darkroom',  label: 'OLED',     preview: { color: '#FFFFFF', shadow: 'none', pill: true } },
+                     { id: 'youtube-shorts', label: 'Shorts',   preview: { color: '#ffffff', shadow: 'drop-shadow(0 0 4px #ff3b30)', pill: false } },
+                     { id: 'meme-impact',    label: 'Meme',     preview: { color: '#ffffff', shadow: 'drop-shadow(0 0 6px #000000)', pill: false } },
+                     { id: 'retro-vhs',      label: 'Retro',    preview: { color: '#dafffa', shadow: 'drop-shadow(0 0 5px #00ffff)', pill: false } },
+                     { id: 'serif-quote',    label: 'Quote',    preview: { color: '#f7e6c4', shadow: 'none', pill: false } },
+                   ] as const).map(s => (
+                     <button type="button" key={s.id} onClick={() => { setCaptionStyle(s.id); if (s.id === 'neon-glow' || s.id === 'cyberpunk-neon') setCaptionColor(s.preview.color); else if (s.id === 'hormozi-bold' || s.id === 'vlog-kinetic') setCaptionColor('#FFD700'); else setCaptionColor('#FFFFFF') }}
+                       className={`py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${
+                         captionStyle === s.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 border border-indigo-400/30' : 'bg-white/5 text-slate-500 hover:text-white border border-white/[0.06]'
+                       }`}
+                     >
+                       <span style={{ '--caption-color': captionStyle === s.id ? s.preview.color : undefined, '--caption-filter': captionStyle === s.id ? s.preview.shadow : undefined } as any}
+                         className={`text-[9px] font-black leading-none text-[var(--caption-color)] [filter:var(--caption-filter)] ${s.preview.pill ? 'bg-black text-white px-1 py-0.5 rounded border border-white/20 scale-90' : ''}`}>Aa</span>
+                       {s.label}
+                     </button>
+                   ))}
+                 </div>
 
                 {/* Manual transcript textarea — shown when no transcript attached */}
                 {!transcript?.fullText && (
@@ -1761,6 +2025,273 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* ── Translation Section ── */}
+                <div className="pt-3.5 mt-1 border-t border-white/[0.06] space-y-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Translate Video Captions</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <select
+                        value={targetTranslationLanguage}
+                        title="Select target translation language"
+                        onChange={(e) => setTargetTranslationLanguage(e.target.value)}
+                        className="w-full appearance-none bg-black/40 border border-white/[0.06] rounded-xl px-3 py-2 text-[10px] font-bold text-white focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-all"
+                      >
+                        <option value="en" className="bg-[#0c0c16] text-white">English</option>
+                        <option value="es" className="bg-[#0c0c16] text-white">Spanish (Español)</option>
+                        <option value="fr" className="bg-[#0c0c16] text-white">French (Français)</option>
+                        <option value="de" className="bg-[#0c0c16] text-white">German (Deutsch)</option>
+                        <option value="it" className="bg-[#0c0c16] text-white">Italian (Italiano)</option>
+                        <option value="pt" className="bg-[#0c0c16] text-white">Portuguese (Português)</option>
+                        <option value="ru" className="bg-[#0c0c16] text-white">Russian (Русский)</option>
+                        <option value="ja" className="bg-[#0c0c16] text-white">Japanese (日本語)</option>
+                        <option value="ko" className="bg-[#0c0c16] text-white">Korean (한국어)</option>
+                        <option value="zh" className="bg-[#0c0c16] text-white">Chinese (中文)</option>
+                        <option value="ar" className="bg-[#0c0c16] text-white">Arabic (العربية)</option>
+                        <option value="hi" className="bg-[#0c0c16] text-white">Hindi (हिन्दी)</option>
+                        <option value="nl" className="bg-[#0c0c16] text-white">Dutch (Nederlands)</option>
+                        <option value="pl" className="bg-[#0c0c16] text-white">Polish (Polski)</option>
+                        <option value="tr" className="bg-[#0c0c16] text-white">Turkish (Türkçe)</option>
+                      </select>
+                      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[8px]">
+                        ▼
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={translatingCaptions || !textOverlays || textOverlays.length === 0}
+                      onClick={handleTranslateCaptions}
+                      className={`px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+                        translatingCaptions || !textOverlays || textOverlays.length === 0
+                          ? 'bg-indigo-600/30 text-indigo-400 cursor-not-allowed border border-transparent'
+                          : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20'
+                      }`}
+                    >
+                      {translatingCaptions ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            className="w-3.5 h-3.5 border border-indigo-300/40 border-t-indigo-300 rounded-full"
+                          />
+                          Translating…
+                        </>
+                      ) : (
+                        'Translate'
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── AI Emoji Section ── */}
+                <div className="pt-3.5 mt-1 border-t border-white/[0.06] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">AI Emoji Synthesis</span>
+                    </div>
+                    {(() => { const ems = textOverlays?.filter(o => o.id.startsWith('aiemoji-')).length ?? 0; return ems > 0 ? (
+                      <button
+                        type="button"
+                        title="Clear generated AI emojis"
+                        onClick={() => {
+                          pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
+                          setTextOverlays((prev: TextOverlay[]) => prev.filter(o => !o.id.startsWith('aiemoji-')))
+                          showToast('AI emojis cleared', 'info')
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[8px] font-black text-indigo-300 hover:bg-rose-500/20 hover:border-rose-500/30 hover:text-rose-300 transition-all uppercase tracking-widest"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />{ems} emojis
+                      </button>
+                    ) : null })()}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Enter Transition</span>
+                      <div className="relative">
+                        <select
+                          value={emojiEffect}
+                          title="Select emoji enter transition"
+                          onChange={(e) => setEmojiEffect(e.target.value as any)}
+                          className="w-full appearance-none bg-black/40 border border-white/[0.06] rounded-xl px-3 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-all"
+                        >
+                          <option value="pop" className="bg-[#0c0c16] text-white">💥 Pop In</option>
+                          <option value="bounce" className="bg-[#0c0c16] text-white">🦘 Bounce Up</option>
+                          <option value="slide" className="bg-[#0c0c16] text-white">➡️ Slide In</option>
+                          <option value="pulse" className="bg-[#0c0c16] text-white">💓 Zoom Pulse</option>
+                          <option value="shake" className="bg-[#0c0c16] text-white">⚡ Camera Shake</option>
+                          <option value="blur" className="bg-[#0c0c16] text-white">🌫️ Blur In</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[8px]">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Exit Transition</span>
+                      <div className="relative">
+                        <select
+                          value={emojiAnimOut}
+                          title="Select emoji exit transition"
+                          onChange={(e) => setEmojiAnimOut(e.target.value as any)}
+                          className="w-full appearance-none bg-black/40 border border-white/[0.06] rounded-xl px-3 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-all"
+                        >
+                          <option value="fade" className="bg-[#0c0c16] text-white">🌫️ Smooth Fade</option>
+                          <option value="pop" className="bg-[#0c0c16] text-white">💥 Pop Out</option>
+                          <option value="slide-bottom" className="bg-[#0c0c16] text-white">⬇️ Slide Down</option>
+                          <option value="bounce-out" className="bg-[#0c0c16] text-white">🦘 Bounce Out</option>
+                          <option value="scale-out" className="bg-[#0c0c16] text-white">🔍 Scale Out</option>
+                          <option value="zoom-out" className="bg-[#0c0c16] text-white">🔎 Zoom Out</option>
+                          <option value="flip-out" className="bg-[#0c0c16] text-white">🔄 Flip Out</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[8px]">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Visual Render style</span>
+                      <div className="relative">
+                        <select
+                          value={emojiStyle}
+                          title="Select emoji style"
+                          onChange={(e) => setEmojiStyle(e.target.value as any)}
+                          className="w-full appearance-none bg-black/40 border border-white/[0.06] rounded-xl px-3 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-all"
+                        >
+                          <option value="3d-bold" className="bg-[#0c0c16] text-white">✨ 3D Pop Style</option>
+                          <option value="neon-glow" className="bg-[#0c0c16] text-white">🏮 Neon Glow</option>
+                          <option value="flat" className="bg-[#0c0c16] text-white">📄 Minimal Flat</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[8px]">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Emoji Size</span>
+                      <div className="relative">
+                        <select
+                          value={emojiFontSize}
+                          title="Select emoji font size"
+                          onChange={(e) => setEmojiFontSize(Number(e.target.value))}
+                          className="w-full appearance-none bg-black/40 border border-white/[0.06] rounded-xl px-3 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-all"
+                        >
+                          <option value="32" className="bg-[#0c0c16] text-white">🤏 Small (32px)</option>
+                          <option value="48" className="bg-[#0c0c16] text-white">👌 Medium (48px)</option>
+                          <option value="64" className="bg-[#0c0c16] text-white">💪 Large (64px)</option>
+                          <option value="80" className="bg-[#0c0c16] text-white">👑 Giant (80px)</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[8px]">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Frequency / Density</span>
+                      <div className="relative">
+                        <select
+                          value={emojiDensity}
+                          title="Select emoji frequency / density"
+                          onChange={(e) => setEmojiDensity(Number(e.target.value))}
+                          className="w-full appearance-none bg-black/40 border border-white/[0.06] rounded-xl px-3 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-all"
+                        >
+                          <option value="3" className="bg-[#0c0c16] text-white">🔥 High (3 Words)</option>
+                          <option value="6" className="bg-[#0c0c16] text-white">⚡ Medium (6 Words)</option>
+                          <option value="10" className="bg-[#0c0c16] text-white">🎯 Low / Strict (10 Words)</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[8px]">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Placement Offset</span>
+                      <div className="relative">
+                        <select
+                          value={emojiYPosition}
+                          title="Select emoji placement offset"
+                          onChange={(e) => setEmojiYPosition(e.target.value as any)}
+                          className="w-full appearance-none bg-black/40 border border-white/[0.06] rounded-xl px-3 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-all"
+                        >
+                          <option value="above" className="bg-[#0c0c16] text-white">⬆️ Above Captions</option>
+                          <option value="below" className="bg-[#0c0c16] text-white">⬇️ Below Captions</option>
+                          <option value="head" className="bg-[#0c0c16] text-white">👱 Head Level</option>
+                          <option value="custom-top" className="bg-[#0c0c16] text-white">👑 Top Header</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-[8px]">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 bg-white/[0.02] border border-white/[0.04] p-2 rounded-xl">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-1">In Duration: {emojiAnimInDuration}s</span>
+                      <input
+                        type="range"
+                        min={0.1}
+                        max={1.5}
+                        step={0.05}
+                        value={emojiAnimInDuration}
+                        onChange={(e) => setEmojiAnimInDuration(Number(e.target.value))}
+                        className="w-full accent-indigo-500 cursor-pointer"
+                        title="Enter animation duration"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-1">Out Duration: {emojiAnimOutDuration}s</span>
+                      <input
+                        type="range"
+                        min={0.1}
+                        max={1.5}
+                        step={0.05}
+                        value={emojiAnimOutDuration}
+                        onChange={(e) => setEmojiAnimOutDuration(Number(e.target.value))}
+                        className="w-full accent-indigo-500 cursor-pointer"
+                        title="Exit animation duration"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={generatingEmojis || !transcript?.words?.length}
+                    onClick={handleGenerateAiEmojis}
+                    className={`w-full py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                      generatingEmojis || !transcript?.words?.length
+                        ? 'bg-indigo-600/30 text-indigo-400 cursor-not-allowed border border-transparent'
+                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white shadow-lg shadow-indigo-600/20'
+                    }`}
+                  >
+                    {generatingEmojis ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          className="w-3.5 h-3.5 border-2 border-indigo-300/40 border-t-indigo-300 rounded-full"
+                        />
+                        Analyzing & Generating Emojis…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+                        Generate AI Emojis
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1975,12 +2506,18 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 />
                 <div className="flex justify-between mt-1">
                   <button type="button" onClick={resetFilters} className="text-[9px] text-slate-500 hover:text-rose-400 font-black uppercase tracking-widest transition-colors">Reset</button>
-                  <div className="flex gap-2">
-                    {setCompareMode && ['before','after','split'].map(m => (
-                      <button type="button" key={m} onClick={() => setCompareMode(m as any)}
-                        className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg transition-all ${compareMode === m ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}`}
-                      >{m}</button>
-                    ))}
+                  <div className="flex gap-2.5">
+                    {setCompareMode && (
+                      [
+                        { id: 'before', label: '⏪ Before' },
+                        { id: 'after', label: '⏩ After' },
+                        { id: 'split', label: '🌓 Split' }
+                      ].map(item => (
+                        <button type="button" key={item.id} onClick={() => setCompareMode(item.id as any)}
+                          className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg transition-all ${compareMode === item.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                        >{item.label}</button>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>

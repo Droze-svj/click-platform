@@ -46,7 +46,22 @@
     "settings": "सेटिंग्स",
     "templates": "टेम्पलेट",
     "infrastructure": "इन्फ्रास्ट्रक्चर",
-    "clickTagline": "AI आधारित कंटेंट"
+    "clickTagline": "AI आधारित कंटेंट",
+    "recurring": "आवर्ती",
+    "studio": "स्टूडियो",
+    "grow": "बढ़ाएँ",
+    "manage": "प्रबंधित करें",
+    "onboarding": "शुरू करें",
+    "forge": "फोर्ज",
+    "videoEditor": "एडिटर",
+    "aiClips": "AI क्लिप्स",
+    "aiTools": "AI टूल्स",
+    "creatorsHub": "क्रिएटर्स",
+    "discover": "खोजें",
+    "strategist": "स्ट्रेटेजिस्ट",
+    "aiInsights": "AI इनसाइट्स",
+    "roadmap": "रोडमैप",
+    "connectAccounts": "अकाउंट्स कनेक्ट करें"
   },
   "workflow": {
     "niche": "निच",
@@ -175,7 +190,39 @@
       "quotesCreated": "Quotes बनाए गए",
       "postsScheduled": "Posts Scheduled"
     },
-    "clickToView": "विवरण देखने के लिए Click करें →"
+    "clickToView": "विवरण देखने के लिए Click करें →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "content": {
     "title": "Content",
@@ -231,7 +278,10 @@
     "translated": "अनुवाद हो गया",
     "translationFailed": "अनुवाद विफल रहा",
     "viewOriginal": "Original देखें",
-    "selectLanguage": "भाषा चुनें"
+    "selectLanguage": "भाषा चुनें",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
   },
   "auth": {
     "login": "Sign In",
@@ -248,5 +298,65 @@
     "loginSubtitle": "AI‑powered content creation के लिए अपने Account में Sign in करें।",
     "registerTitle": "अपना Account बनाएं",
     "registerSubtitle": "AI-powered content creation के साथ शुरुआत करें।"
+  },
+  "editor": {
+    "tabs": {
+      "trim": "ट्रिम",
+      "text": "टेक्स्ट",
+      "filters": "फ़िल्टर",
+      "motion": "मोशन",
+      "overlays": "लेयर्स",
+      "packs": "पैक",
+      "insights": "डेटा"
+    },
+    "aspectRatio": "फ़ॉर्मेट / आस्पेक्ट रेशियो",
+    "neuralFocusTracking": "न्यूरल फ़ोकस ट्रैकिंग",
+    "active": "सक्रिय",
+    "offline": "ऑफ़लाइन",
+    "trackingPriorityTarget": "ट्रैकिंग प्राथमिकता लक्ष्य",
+    "speaker": "⚡ स्पीकर",
+    "face": "⚡ स्पीकर",
+    "action": "🎯 एक्शन",
+    "custom": "🎬 कस्टम",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "लक्ष्य मेट्रिक्स स्ट्रीम करने के लिए ऑटो-फ़्रेमिंग सक्षम करें…"
+  },
+  "studio": {
+    "advancedStudio": "एडवांस्ड स्टूडियो",
+    "videoStudio": "वीडियो स्टूडियो",
+    "syncArchive": "सिंक आर्काइव",
+    "payloadInventory": "पेलोड इन्वेंटरी",
+    "neuralProcessed": "न्यूरल प्रोसेस्ड",
+    "syntheticYields": "सिंथेटिक यील्ड्स",
+    "initializeIntake": "इंटेक इनिशियलाइज़ करें",
+    "payloadArchive": "पेलोड आर्काइव",
+    "searchArchive": "SEARCH_ARCHIVE...",
+    "dropPayload": "पेलोड यहाँ ड्रॉप करें",
+    "syncingPayload": "पेलोड सिंक हो रहा है...",
+    "neuralIngestionReady": "NEURAL_STUDIO_INGESTION_READY",
+    "payloadsDetected": "PAYLOADS_DETECTED",
+    "open": "खोलें",
+    "syncingStudio": "न्यूरल स्टूडियो सिंक हो रहा है...",
+    "tip": "TUTORIAL_CORE:",
+    "tipPaste": "PASTE_URL (⌘V) ON THIS HUD FOR AUTO-SYNC.",
+    "secureTunnel": "SECURE_TUNNEL",
+    "highVelocity": "HIGH_VELOCITY",
+    "intakeHint": "रॉ फुटेज या मल्टी-ट्रैक सीक्वेंस को न्यूरल मैट्रिक्स में इंजेक्ट करें। A/B स्वार्म इष्टतम हाई-वेलोसिटी सिंथेसिस के लिए वेक्टर्स को ऑटो-कैलिब्रेट करेगा।",
+    "secureStorage": "SECURE_STORAGE_NODES",
+    "all": "सभी",
+    "completed": "पूर्ण",
+    "processing": "प्रक्रियाधीन",
+    "failed": "असफल",
+    "queued": "कतारबद्ध",
+    "yields": "YIELDS",
+    "uploadStable": "✓ UPLOAD_STABLE: ANALYZING_VECTORS...",
+    "uploadFailed": "WRITE_ERR: UPLOAD_FAILED",
+    "missingContentId": "PARAM_ERR: MISSING_CONTENT_ID",
+    "invalidVideo": "MIME_ERR: INVALID_VIDEO_FORMAT",
+    "syncingPayloadProgress": "Payload सिंक हो रहा है...",
+    "analysisComplete": "✓ ANALYSIS_COMPLETE: {count} CLIPS_GENERATED",
+    "processingFailure": "PROCESSING_FAILURE: SEQUENCE_ABORTED"
   }
 }

@@ -155,7 +155,7 @@ function safeJsonParse(text, fallback = null) {
 async function callGemini(prompt, opts) {
   if (!googleAI.isConfigured) throw new Error('gemini-not-configured');
   const text = await googleAI.generateContent(prompt, {
-    maxTokens: opts.maxTokens || 1024,
+    maxTokens: Math.max(4096, opts.maxTokens || 0),
     temperature: opts.temperature ?? 0.7,
   });
   if (text == null || text === '') throw new Error('gemini-empty-response');

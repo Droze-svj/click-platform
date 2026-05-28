@@ -388,6 +388,75 @@ router.post('/:contentId/duplicate', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Content duplicated', 201, duplicate);
 }));
 
+// ── Pre-Publish Optimization and Clicks/Insights Analytics ──
+
+/**
+ * GET /api/content/:contentId/pre-publish
+ * Generates a complete pre-publish report evaluating hook, emotional resonance, platform algorithm alignment, and timing rules.
+ */
+router.get('/:contentId/pre-publish', auth, asyncHandler(async (req, res) => {
+  const content = await Content.findOne({
+    _id: req.params.contentId,
+    userId: req.user._id
+  }).lean();
+
+  if (!content) {
+    return sendError(res, 'Content not found', 404);
+  }
+
+  const contentText = content.transcript || content.description || '';
+  if (!contentText || contentText.trim().length === 0) {
+    return sendError(res, 'Content must contain transcript or description text to optimize', 400);
+  }
+
+  const { generatePrePublishReport } = require('../services/contentEngagementOptimizerService');
+  const platform = content.platform || req.query.platform || 'instagram';
+  const niche = content.category || req.query.niche || 'general';
+  
+  const report = await generatePrePublishReport(
+    req.user._id.toString(),
+    contentText,
+    platform,
+    niche,
+    content.type || 'post'
+  );
+
+  sendSuccess(res, 'Pre-publish engagement analysis completed', 200, report);
+}));
+
+/**
+ * GET /api/content/:contentId/ab-variants
+ * Generates 3 conversion-science-backed A/B variants of the content text.
+ */
+router.get('/:contentId/ab-variants', auth, asyncHandler(async (req, res) => {
+  const content = await Content.findOne({
+    _id: req.params.contentId,
+    userId: req.user._id
+  }).lean();
+
+  if (!content) {
+    return sendError(res, 'Content not found', 404);
+  }
+
+  const contentText = content.transcript || content.description || '';
+  if (!contentText || contentText.trim().length === 0) {
+    return sendError(res, 'Content must contain transcript or description text to generate variants', 400);
+  }
+
+  const { generateABVariants } = require('../services/contentEngagementOptimizerService');
+  const platform = content.platform || req.query.platform || 'instagram';
+  const niche = content.category || req.query.niche || 'general';
+
+  const variantsData = await generateABVariants(
+    req.user._id.toString(),
+    contentText,
+    platform,
+    niche
+  );
+
+  sendSuccess(res, 'A/B variants generated successfully', 200, variantsData);
+}));
+
 // Content adaptation routes
 router.use('/:contentId', require('./content/adapt'));
 

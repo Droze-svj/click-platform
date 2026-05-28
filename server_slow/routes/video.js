@@ -394,8 +394,8 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
           });
         } finally {
           activeProcessCount--;
-          // Final safety cleanup of original file if still present
-          if (fs.existsSync(req.file.path)) {
+          // Final safety cleanup of original file if still present, ONLY if it has been uploaded to cloud storage
+          if (storageType !== 'local' && fs.existsSync(req.file.path)) {
             fs.unlink(req.file.path, (err) => {
               if (!err) logger.info('Cleaned up original local file in finally', { path: req.file.path });
             });

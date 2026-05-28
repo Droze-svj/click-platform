@@ -375,6 +375,7 @@ async function deleteFromSocial(userId, platform, externalId) {
 
 module.exports = {
   postToSocialMedia,
+  postToSocial: postToSocialMedia,
   connectAccount,
   disconnectAccount,
   getConnectedAccounts,

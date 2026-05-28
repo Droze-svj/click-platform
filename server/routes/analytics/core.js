@@ -266,7 +266,7 @@ router.post('/posts/:postId', auth, asyncHandler(async (req, res) => {
     // Verify user owns the post
     const supabase = getSupabaseClient();
     if (!supabase) {
-       return res.status(501).json({ success: false, error: 'Supabase storage not enabled' });
+      return res.status(501).json({ success: false, error: 'Supabase storage not enabled' });
     }
 
     const { data: post, error: postError } = await supabase
@@ -751,7 +751,7 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
     if (!supabase) {
-       return res.json({
+      return res.json({
         success: true,
         total_views: 0,
         total_likes: 0,
@@ -1054,7 +1054,7 @@ router.post('/process-insights/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const supabase = getSupabaseClient();
-    const { generateContent: geminiGenerate } = require('../utils/googleAI');
+    const { generateContent: geminiGenerate } = require('../../utils/googleAI');
 
     // 1. Fetch Post and Analytics Context
     const { data: post, error: postErr } = await supabase

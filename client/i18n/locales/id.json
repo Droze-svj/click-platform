@@ -46,7 +46,22 @@
     "settings": "Settings",
     "templates": "Templates",
     "infrastructure": "Infrastructure",
-    "clickTagline": "AI-Powered Content"
+    "clickTagline": "AI-Powered Content",
+    "recurring": "Berulang",
+    "studio": "Studio",
+    "grow": "Kembangkan",
+    "manage": "Kelola",
+    "onboarding": "Mulai",
+    "forge": "Forge",
+    "videoEditor": "Editor",
+    "aiClips": "Klip AI",
+    "aiTools": "Alat AI",
+    "creatorsHub": "Kreator",
+    "discover": "Temukan",
+    "strategist": "Strategis",
+    "aiInsights": "Insight AI",
+    "roadmap": "Roadmap",
+    "connectAccounts": "Hubungkan Akun"
   },
   "workflow": {
     "niche": "Niche",
@@ -145,7 +160,39 @@
       "quotesCreated": "Quotes Made",
       "postsScheduled": "Posts Scheduled"
     },
-    "clickToView": "Click to view details →"
+    "clickToView": "Click to view details →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "auth": {
     "login": "Sign In",
@@ -247,6 +294,69 @@
     "translated": "Translated",
     "translationFailed": "Translation failed",
     "viewOriginal": "View original",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "editor": {
+    "tabs": {
+      "trim": "Pangkas",
+      "text": "Teks",
+      "filters": "Filter",
+      "motion": "Gerakan",
+      "overlays": "Lapisan",
+      "packs": "Paket",
+      "insights": "Data"
+    },
+    "aspectRatio": "Format / Rasio Aspek",
+    "neuralFocusTracking": "Pelacakan Fokus Neural",
+    "active": "Aktif",
+    "offline": "Offline",
+    "trackingPriorityTarget": "Target Prioritas Pelacakan",
+    "speaker": "⚡ Pembicara",
+    "face": "⚡ Pembicara",
+    "action": "🎯 Aksi",
+    "custom": "🎬 Kustom",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "Aktifkan auto-framing untuk streaming metrik target…"
+  },
+  "studio": {
+    "advancedStudio": "Studio Canggih",
+    "videoStudio": "Studio Video",
+    "syncArchive": "Arsip Sinkronisasi",
+    "payloadInventory": "Inventaris Payload",
+    "neuralProcessed": "Diproses Neural",
+    "syntheticYields": "Hasil Sintetis",
+    "initializeIntake": "Inisialisasi Intake",
+    "payloadArchive": "Arsip Payload",
+    "searchArchive": "SEARCH_ARCHIVE...",
+    "dropPayload": "Jatuhkan Payload di Sini",
+    "syncingPayload": "Menyinkronkan Payload...",
+    "neuralIngestionReady": "NEURAL_STUDIO_INGESTION_READY",
+    "payloadsDetected": "PAYLOADS_DETECTED",
+    "open": "Buka",
+    "syncingStudio": "Menyinkronkan Neural Studio...",
+    "tip": "TUTORIAL_CORE:",
+    "tipPaste": "PASTE_URL (⌘V) DI HUD INI UNTUK SINKRONISASI OTOMATIS.",
+    "secureTunnel": "SECURE_TUNNEL",
+    "highVelocity": "HIGH_VELOCITY",
+    "intakeHint": "Masukkan rekaman mentah atau urutan multi-track ke dalam matriks neural. A/B Swarm akan mengkalibrasi vektor secara otomatis untuk sintesis berkecepatan tinggi yang optimal.",
+    "secureStorage": "SECURE_STORAGE_NODES",
+    "all": "semua",
+    "completed": "selesai",
+    "processing": "memproses",
+    "failed": "gagal",
+    "queued": "mengantre",
+    "yields": "YIELDS",
+    "uploadStable": "✓ UPLOAD_STABLE: ANALYZING_VECTORS...",
+    "uploadFailed": "WRITE_ERR: UPLOAD_FAILED",
+    "missingContentId": "PARAM_ERR: MISSING_CONTENT_ID",
+    "invalidVideo": "MIME_ERR: INVALID_VIDEO_FORMAT",
+    "syncingPayloadProgress": "Menyinkronkan Payload...",
+    "analysisComplete": "✓ ANALYSIS_COMPLETE: {count} CLIPS_GENERATED",
+    "processingFailure": "PROCESSING_FAILURE: SEQUENCE_ABORTED"
   }
 }

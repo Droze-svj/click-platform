@@ -13,8 +13,8 @@ export interface TranscriptWord {
 /** [phrase or word, emoji]. Sorted by length desc so "thank you" matches before "thank". */
 const MAP: [string, string][] = [
   // Phrases (longer first)
-  ['thank you', '🙏'],
   ['thank you so much', '🙏'],
+  ['thank you', '🙏'],
   ['love it', '❤️'],
   ['let me know', '💡'],
   ['check it out', '👀'],
@@ -121,6 +121,11 @@ const MAP: [string, string][] = [
   ['win', '🏆'],
   ['winning', '🏆'],
   ['money', '💰'],
+  ['cash', '💵'],
+  ['price', '🏷️'],
+  ['buy', '🛒'],
+  ['pay', '💳'],
+  ['dollar', '💵'],
   ['success', '🏆'],
   ['work', '💼'],
   ['run', '🚀'],
@@ -175,6 +180,52 @@ const MAP: [string, string][] = [
   ['believe', '🙏'],
   ['challenge', '🏋️'],
   ['opportunity', '🚀'],
+  // Modern tech / AI / Whop Keywords
+  ['ai', '🤖'],
+  ['chatgpt', '🤖'],
+  ['gemini', '✨'],
+  ['tech', '💻'],
+  ['code', '💻'],
+  ['computer', '💻'],
+  ['whop', '🟠'],
+  ['click', '🖱️'],
+  ['platform', '🌐'],
+  ['video', '🎥'],
+  ['sound', '🔊'],
+  ['audio', '🎧'],
+  ['vibe', '🎵'],
+  ['trend', '📈'],
+  ['retention', '🎯'],
+  ['hooks', '🪝'],
+  ['viral', '🚀'],
+  ['manual', '✍️'],
+  ['auto', '⚡'],
+  ['edit', '✂️'],
+  ['filter', '🎨'],
+  ['preset', '✨'],
+  ['effects', '🎭'],
+  ['text', '📝'],
+  ['captions', '💬'],
+  ['font', '🔤'],
+  ['transition', '🔄'],
+  ['overlay', '🔲'],
+  ['emoji', '🎭'],
+  ['animation', '🎬'],
+  ['interactive', '🕹️'],
+  ['timeline', '⏳'],
+  ['speed', '⚡'],
+  ['color', '🌈'],
+  ['grade', '🎨'],
+  ['style', '✨'],
+  ['pack', '🎁'],
+  ['brand', '🏷️'],
+  ['kit', '🧰'],
+  ['pacing', '⏱️'],
+  ['cut', '✂️'],
+  ['master', '👑'],
+  ['forge', '⚒️'],
+  ['beat', '🥁'],
+  ['sync', '🔄']
 ]
 
 const normalizedMap = MAP.map(([k, e]) => [k.toLowerCase().trim(), e] as [string, string]).sort(
@@ -196,6 +247,7 @@ function matchWord(key: string, word: string): boolean {
  * Find a matching emoji for the given caption chunk.
  * Prefers the active word when it matches; otherwise first match in chunk.
  * Longer phrases are matched first. Returns null if no match.
+ * Falls back to high-accuracy sentiment/punctuation heuristics if no direct matches.
  */
 export function getMatchingEmojiForChunk(
   words: TranscriptWord[],
@@ -206,7 +258,7 @@ export function getMatchingEmojiForChunk(
   let best: string | null = null
   let bestLen = 0
 
-  // Prefer match on active word (single-word keys only)
+  // 1. Prefer match on active word (single-word keys only)
   if (activeWord) {
     for (const [key, emoji] of normalizedMap) {
       if (key.includes(' ')) continue
@@ -218,7 +270,7 @@ export function getMatchingEmojiForChunk(
     if (best) return best
   }
 
-  // Otherwise first match in chunk (phrase or single word)
+  // 2. Otherwise first match in chunk (phrase or single word)
   for (const [key, emoji] of normalizedMap) {
     if (key.length <= bestLen) continue
     const matched = key.includes(' ')
@@ -229,5 +281,32 @@ export function getMatchingEmojiForChunk(
       best = emoji
     }
   }
-  return best
+  if (best) return best
+
+  // 3. Smart High-Accuracy Fallbacks (Analyze word characteristics & punctuation)
+  for (const w of words) {
+    const trimmed = w.word.trim()
+    if (trimmed.endsWith('?')) {
+      return '🤔' // Question marks represent contemplation
+    }
+    if (trimmed.endsWith('!')) {
+      return '🔥' // Exclamation represents high energy/hype
+    }
+    // Check if the word is numeric (like a stat or metric)
+    if (/^\d+(\.\d+)?%?$/.test(trimmed)) {
+      return '📊' // Statistics/percentages
+    }
+  }
+
+  // Fallbacks for general common structures if chunk contains strong emotion indicators
+  const allRaw = words.map(w => w.word.toLowerCase()).join(' ')
+  if (allRaw.includes('great') || allRaw.includes('perfect') || allRaw.includes('awesome') || allRaw.includes('best')) {
+    return '✨'
+  }
+  if (allRaw.includes('how') || allRaw.includes('why') || allRaw.includes('what')) {
+    return '💡'
+  }
+
+  return null
 }
+

@@ -52,8 +52,7 @@ class DatabaseOptimizer {
     try {
       // Connect with optimized settings
       await mongoose.connect(connectionString, options)
-
-      
+      logger.info('Database connection optimized and established successfully')
 
       // Set up connection event handlers
       this.setupConnectionMonitoring()
@@ -76,17 +75,17 @@ class DatabaseOptimizer {
     const conn = mongoose.connection
 
     conn.on('connected', () => {
-      
+      logger.info('Mongoose connected to DB Cluster')
       this.updateConnectionMetrics()
     })
 
     conn.on('disconnected', () => {
-      
+      logger.warn('Mongoose disconnected from DB Cluster')
       this.updateConnectionMetrics()
     })
 
     conn.on('reconnected', () => {
-      
+      logger.info('Mongoose reconnected to DB Cluster')
       this.updateConnectionMetrics()
     })
 
@@ -112,25 +111,23 @@ class DatabaseOptimizer {
 
     mongoose.Query.prototype.exec = function(callback) {
       const startTime = Date.now()
-      const collection = this.model.collection.name
+      const collection = this.model?.collection?.name || 'unknown'
       const operation = this.op || 'find'
 
-      return originalExec.call(this, (err, result) => {
-        const duration = Date.now() - startTime
-
+      const track = (duration) => {
         // Track query performance
         global.databaseOptimizer?.trackQuery(operation, collection, duration)
 
         // Log slow queries
         if (duration > 1000) { // Queries taking more than 1 second
-          
+          logger.warn(`Slow query detected: ${operation} on ${collection} took ${duration}ms`)
 
           global.databaseOptimizer?.performanceMetrics.slowQueries.push({
             operation,
             collection,
             duration,
             timestamp: new Date(),
-            query: this.getQuery()
+            query: typeof this.getQuery === 'function' ? this.getQuery() : {}
           })
 
           // Keep only last 50 slow queries
@@ -138,11 +135,32 @@ class DatabaseOptimizer {
             global.databaseOptimizer.performanceMetrics.slowQueries.shift()
           }
         }
+      }
 
-        if (callback) {
+      if (typeof callback === 'function') {
+        return originalExec.call(this, (err, result) => {
+          const duration = Date.now() - startTime
+          track(duration)
           callback(err, result)
+        })
+      } else {
+        const promise = originalExec.call(this)
+        if (promise && typeof promise.then === 'function') {
+          return promise.then(
+            (result) => {
+              const duration = Date.now() - startTime
+              track(duration)
+              return result
+            },
+            (err) => {
+              const duration = Date.now() - startTime
+              track(duration)
+              throw err
+            }
+          )
         }
-      })
+        return promise
+      }
     }
   }
 
@@ -167,7 +185,7 @@ class DatabaseOptimizer {
       this.performanceMetrics.connectionPoolSize = conn.db?.serverConfig?.poolSize || 0
       this.performanceMetrics.activeConnections = conn.db?.serverConfig?.connections?.length || 0
     } catch (error) {
-      
+      logger.warn('Failed to update connection metrics', { error: error.message })
     }
   }
 
@@ -181,7 +199,7 @@ class DatabaseOptimizer {
       const pingTime = Date.now() - startTime
 
       if (pingTime > 500) { // Ping taking more than 500ms
-        
+        logger.warn(`High database latency detected: ${pingTime}ms`)
       }
 
       return { status: 'healthy', pingTime }
@@ -195,7 +213,7 @@ class DatabaseOptimizer {
    * Optimize database indexes
    */
   async optimizeIndexes() {
-    
+    logger.info('Starting database index optimization')
 
     try {
       const db = mongoose.connection.db
@@ -219,10 +237,10 @@ class DatabaseOptimizer {
         }
       }
 
-      
+      logger.info(`Index optimization complete. Created ${this.performanceMetrics.indexesCreated} new indexes`)
 
     } catch (error) {
-      
+      logger.warn('Failed to optimize indexes', { error: error.message })
     }
   }
 
@@ -231,7 +249,20 @@ class DatabaseOptimizer {
    */
   async analyzeCollectionIndexes(collection, collectionName, existingIndexes) {
     // Get collection stats
-    const stats = await collection.stats()
+    let stats
+    try {
+      if (typeof collection.stats === 'function') {
+        stats = await collection.stats()
+      } else {
+        const db = mongoose.connection.db
+        stats = await db.command({ collStats: collectionName })
+      }
+    } catch (err) {
+      logger.warn(`Failed to get collection stats for ${collectionName}, using fallback: ${err.message}`)
+      stats = { count: 0, size: 0 }
+    }
+
+    logger.info(`Analyzing collection ${collectionName} stats`, { count: stats.count, size: stats.size })
 
     // Analyze query patterns and suggest indexes
     const suggestions = []
@@ -282,10 +313,10 @@ class DatabaseOptimizer {
         }
 
         this.performanceMetrics.indexesCreated++
-        
+        logger.debug(`Created index on ${collectionName} for ${suggestion.field}`)
 
       } catch (error) {
-        
+        logger.warn(`Failed to create index for ${collectionName}`, { error: error.message })
       }
     }
   }
@@ -294,7 +325,7 @@ class DatabaseOptimizer {
    * Create compound indexes for common query patterns
    */
   async createCompoundIndexes() {
-    
+    logger.info('Starting compound index creation')
 
     const indexes = [
       // Content queries: user + createdAt
@@ -323,11 +354,11 @@ class DatabaseOptimizer {
           name: `${indexDef.collection}_compound_${Object.keys(indexDef.fields).join('_')}`
         })
 
-        
+        logger.debug(`Created compound index for ${indexDef.collection}`)
         this.performanceMetrics.indexesCreated++
 
       } catch (error) {
-        
+        logger.warn(`Failed to create compound index for ${indexDef.collection}`, { error: error.message })
       }
     }
   }
@@ -336,7 +367,7 @@ class DatabaseOptimizer {
    * Optimize read/write concerns for performance
    */
   async optimizeReadWriteConcerns() {
-    
+    logger.info('Optimizing read/write concerns')
 
     try {
       // Set default read preference
@@ -349,9 +380,9 @@ class DatabaseOptimizer {
         j: true // Wait for journal write
       })
 
-      
+      logger.info('Read/write concerns optimized')
     } catch (error) {
-      
+      logger.warn('Failed to optimize read/write concerns', { error: error.message })
     }
   }
 
@@ -391,7 +422,7 @@ class DatabaseOptimizer {
    * Run database maintenance tasks
    */
   async runMaintenance() {
-    
+    logger.info('Running routine database maintenance')
 
     try {
       const db = mongoose.connection.db
@@ -404,7 +435,7 @@ class DatabaseOptimizer {
           if (!collection.name.startsWith('system.')) {
             try {
               await db.command({ compact: collection.name })
-              
+              logger.debug(`Compacted collection ${collection.name}`)
             } catch (error) {
               // Compact may not be supported on all MongoDB deployments
               logger.debug(`Compact not supported for ${collection.name}`, { error: error.message })
@@ -416,13 +447,13 @@ class DatabaseOptimizer {
       // Rebuild indexes (selective)
       const stats = await db.stats()
       if (stats.indexSize > 1024 * 1024 * 100) { // If indexes > 100MB
-        
+        logger.info('Index size > 100MB, consider scheduling index rebuilds via cron')
       }
 
-      
+      logger.info('Database maintenance complete')
 
     } catch (error) {
-      
+      logger.warn('Failed to run database maintenance', { error: error.message })
     }
   }
 
@@ -430,13 +461,13 @@ class DatabaseOptimizer {
    * Close database connection gracefully
    */
   async close() {
-    
+    logger.info('Closing database connection gracefully')
 
     try {
       await mongoose.connection.close()
-      
+      logger.info('Database connection closed')
     } catch (error) {
-      
+      logger.warn('Failed to close database connection gracefully', { error: error.message })
     }
   }
 }

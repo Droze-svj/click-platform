@@ -1,78 +1,126 @@
-const { callGemini } = require('./geminiService');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const { safeJsonParse } = require('../utils/aiHelper');
 const UserPreferences = require('../models/UserPreferences');
 const ContentPerformance = require('../models/ContentPerformance');
 const logger = require('../utils/logger');
+const { getClickPersonalityRules } = require('./marketingKnowledge');
 
 /**
- * 2026 V6 - THE CONTINUOUS LEARNING MATRIX
- * Simulates scraping global social networks and the user's connected platforms to generate a highly adaptive editing blueprint.
+ * Continuous Learning Matrix — builds an editing blueprint from the user's
+ * REAL ContentPerformance analytics instead of hardcoded fictional data.
+ * Falls back gracefully when no performance history exists yet.
  */
-
 async function ingestAnalyticsAndScrape(userId) {
   try {
-    // 1. Fetch User Preferences to get their Niche and Competitor Watchlist
     const prefs = await UserPreferences.findOne({ userId });
-    if (!prefs) throw new Error('User preferences not found');
-    
+    if (!prefs) {
+      logger.warn('[ContinuousLearning] No user preferences found', { userId });
+      return null;
+    }
+
     const niche = prefs.marketingIntelligence?.niche || 'General Business';
     const competitors = prefs.marketingIntelligence?.competitorWatchlist || [];
 
-    // In a real production edge case, we would pull from Twitter/X API, TikTok API, and YouTube Data API.
-    // We would also pull from our own ContentPerformance schema:
-    // const perfDocs = await ContentPerformance.find({ userId }).sort({ createdAt: -1 }).limit(10);
-    
-    // 2. Synthesize prompt for Gemini to act as the Continuous Learning Brain
-    const systemPrompt = `You are CLICK's Autonomous Continuous Learning Engine (V6 Global Standard).
-Your objective is to ingest historical data and global 2026 social media trends to generate a "Creative Intelligence Blueprint" for a specific user.
+    // Pull real performance data — up to 20 recent content records.
+    const perfDocs = await ContentPerformance.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean()
+      .catch(() => []);
+
+    // Build a compact performance summary for the prompt.
+    let performanceSummary = 'No historical performance data yet.';
+    if (perfDocs.length > 0) {
+      const avgRetention = perfDocs.reduce((s, d) => s + (d.retentionRate || 0), 0) / perfDocs.length;
+      const avgCtr = perfDocs.reduce((s, d) => s + (d.clickThroughRate || 0), 0) / perfDocs.length;
+      const topHooks = perfDocs
+        .filter(d => d.hookStyle && (d.retentionRate || 0) >= avgRetention)
+        .map(d => d.hookStyle)
+        .slice(0, 3);
+      const topGrades = perfDocs
+        .filter(d => d.colorGrade && (d.retentionRate || 0) >= avgRetention)
+        .map(d => d.colorGrade)
+        .slice(0, 3);
+      const dropOff = perfDocs
+        .map(d => d.retentionDropOffSecond)
+        .filter(Boolean)
+        .sort((a, b) => a - b);
+      const medianDropOff = dropOff.length ? dropOff[Math.floor(dropOff.length / 2)] : null;
+
+      performanceSummary = [
+        `Sample size: ${perfDocs.length} videos`,
+        `Avg retention: ${avgRetention.toFixed(1)}%`,
+        `Avg CTR: ${avgCtr.toFixed(2)}%`,
+        topHooks.length ? `Top-performing hook styles: ${topHooks.join(', ')}` : null,
+        topGrades.length ? `Top-performing color grades: ${topGrades.join(', ')}` : null,
+        medianDropOff ? `Median retention drop-off at: ${medianDropOff}s` : null,
+      ].filter(Boolean).join('\n');
+    }
+
+    if (!geminiConfigured) {
+      logger.warn('[ContinuousLearning] Gemini not configured; skipping blueprint generation');
+      return null;
+    }
+
+    const systemPrompt = `You are CLICK's Autonomous Continuous Learning Engine.
+Generate a "Creative Intelligence Blueprint" based on REAL historical performance data for this creator.
+
+${getClickPersonalityRules(userId)}
 
 USER NICHE: "${niche}"
 TRACKED COMPETITORS: ${competitors.join(', ') || 'N/A'}
 
-Simulated Ingested Data:
-- The user's last 5 videos showed a 35% retention drop-off around the 15-second mark.
-- Competitors are currently gaining massive traction using "Fast whip-pans" and "Edgy, fast-paced captions".
-- Global Algorithm Trend (April 2026): High-contrast grading and disruptive SFX are over-indexing on YouTube Shorts.
+REAL PERFORMANCE DATA:
+${performanceSummary}
 
-Based on this, generate the explicit editing rules that the AI Auto-Editor MUST follow for their next video.
-
+Based on this real data, generate precise, actionable editing rules for the AI Auto-Editor.
 Return ONLY valid JSON:
 {
   "activeCreativeBlueprint": {
-    "recommendedVfx": ["whip-pan", "camera-shake"],
-    "recommendedColorMood": "High Contrast / Energetic",
-    "pacingStrategy": "Fast-paced, cut every 2.5 seconds to bypass 15s drop-off",
-    "captionStyle": "Aggressive, pop-in, 1-2 words max per line",
-    "rationale": "Why we are adapting to this style..."
+    "recommendedVfx": ["string"],
+    "recommendedColorMood": "string",
+    "pacingStrategy": "string",
+    "captionStyle": "string",
+    "rationale": "string",
+    "failingPatterns": ["2-3 content patterns that consistently underperform for this creator — be specific"],
+    "platformPerformanceMap": {
+      "tiktok":    { "rating": "best|average|weak", "reason": "one-line rationale" },
+      "instagram": { "rating": "best|average|weak", "reason": "one-line rationale" },
+      "youtube":   { "rating": "best|average|weak", "reason": "one-line rationale" }
+    },
+    "suggestedPivot": "one-sentence style evolution recommendation based on performance trajectory",
+    "contentSeriesWinners": ["2-3 topic clusters that get above-average completion for this creator"]
   },
   "historicalPerformanceMetrics": {
-    "avgRetentionRate": 65,
-    "topPerformingHooks": ["Negative hook", "Number hook"],
-    "clickThroughRate": 8.5
+    "avgRetentionRate": 0,
+    "topPerformingHooks": ["string"],
+    "clickThroughRate": 0
   }
 }`;
 
-    // 3. Request Gemini evaluation
-    const result = await callGemini(systemPrompt, { temperature: 0.8, maxTokens: 1500 });
+    const raw = await geminiGenerate(systemPrompt, { temperature: 0.7, maxTokens: 1800 });
+    const result = safeJsonParse(raw);
 
     if (!result || !result.activeCreativeBlueprint) {
-      throw new Error('Gemini failed to generate blueprint');
+      logger.warn('[ContinuousLearning] Gemini returned unparseable blueprint', { preview: String(raw || '').slice(0, 100) });
+      return null;
     }
 
-    // 4. Update the DB with the new autonomous knowledge
-    prefs.marketingIntelligence.historicalPerformanceMetrics = {
-      ...prefs.marketingIntelligence.historicalPerformanceMetrics,
-      ...result.historicalPerformanceMetrics
-    };
+    prefs.marketingIntelligence = prefs.marketingIntelligence || {};
+    if (result.historicalPerformanceMetrics) {
+      prefs.marketingIntelligence.historicalPerformanceMetrics = {
+        ...prefs.marketingIntelligence.historicalPerformanceMetrics,
+        ...result.historicalPerformanceMetrics,
+      };
+    }
     prefs.marketingIntelligence.activeCreativeBlueprint = result.activeCreativeBlueprint;
     prefs.marketingIntelligence.lastLearningSync = new Date();
-    
     await prefs.save();
 
-    logger.info(`[Continuous Learning] Synced blueprint for user ${userId}`);
+    logger.info('[ContinuousLearning] Blueprint synced from real data', { userId, sampleSize: perfDocs.length });
     return result.activeCreativeBlueprint;
-
   } catch (error) {
-    logger.error(`[Continuous Learning Error]: ${error.message}`);
+    logger.error('[ContinuousLearning] ingestAnalyticsAndScrape failed', { error: error.message });
     return null;
   }
 }
@@ -82,12 +130,9 @@ async function getActiveBlueprint(userId) {
     const prefs = await UserPreferences.findOne({ userId });
     return prefs?.marketingIntelligence?.activeCreativeBlueprint || null;
   } catch (error) {
-    logger.error(`[getActiveBlueprint Error]: ${error.message}`);
+    logger.error('[ContinuousLearning] getActiveBlueprint failed', { error: error.message });
     return null;
   }
 }
 
-module.exports = {
-  ingestAnalyticsAndScrape,
-  getActiveBlueprint
-};
+module.exports = { ingestAnalyticsAndScrape, getActiveBlueprint };

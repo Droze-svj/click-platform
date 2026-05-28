@@ -26,6 +26,9 @@ async function processVideoJob(jobData, job) {
     if (jobData.useViralPipeline) {
       const { runViralPipeline } = require('../services/viralPipelineService');
       await runViralPipeline(contentId, videoPath, user);
+    } else if (jobData.useOneClickViral) {
+      const { runOneClickViral } = require('../services/oneClickViralService');
+      await runOneClickViral(contentId, jobData.options);
     } else {
       await processVideo(contentId, videoPath, user);
     }

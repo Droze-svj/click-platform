@@ -1,6 +1,4 @@
-// Simple login test without requiring env file
-const fetch = require('node-fetch');
-
+// Simple login test without requiring node-fetch (uses native Node.js fetch)
 async function testLogin(email, password) {
   console.log(`🔐 Testing login for: ${email}\n`);
 
@@ -9,7 +7,7 @@ async function testLogin(email, password) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Origin': 'http://localhost:3000'
+        'Origin': 'http://localhost:3010'
       },
       body: JSON.stringify({
         email: email,
@@ -41,9 +39,9 @@ async function runTests() {
   console.log('====================\n');
 
   const testCredentials = [
-    { email: 'test@example.com', password: 'Test123' },
-    { email: 'admin@whop.ai', password: 'Test123' },
-    { email: 'dariovuma@gmail.com', password: 'Test123' }
+    { email: 'sarah@click.test', password: 'TestPass123!' },
+    { email: 'admin@click.yourdomain.com', password: 'password123' },
+    { email: 'dariovuma@gmail.com', password: 'TestPass123!' }
   ];
 
   for (const creds of testCredentials) {
@@ -52,7 +50,7 @@ async function runTests() {
   }
 
   console.log('💡 TIP: If login fails, the account may not exist or password may be different.');
-  console.log('💡 You can register a new account at: http://localhost:3000/register');
+  console.log('💡 You can register a new account at: http://localhost:3010/register');
 }
 
 runTests();

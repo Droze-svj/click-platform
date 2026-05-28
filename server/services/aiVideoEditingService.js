@@ -13,6 +13,17 @@ const { execSync } = require('child_process');
 const { promisify } = require('util');
 const exec = promisify(require('child_process').exec);
 
+// Ensure logs/ directory exists and configure FFmpeg to redirect reports
+try {
+  const logsDir = path.join(process.cwd(), 'logs');
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+  process.env.FFREPORT = 'file=' + path.join(logsDir, 'ffmpeg-%p-%t.log') + ':level=32';
+} catch (err) {
+  logger.error('Failed to configure FFmpeg reports logging redirection:', err);
+}
+
 // Import services for integration
 let videoCaptionService = null;
 let audioService = null;
@@ -255,28 +266,48 @@ async function analyzeSentimentAndEmotions(transcript) {
  * Detect audio beats for music sync
  */
 async function detectBeats(inputPath) {
+  // Use ebur128 momentary loudness peaks as beat proxies.
+  // 'beatdetect' does not exist in stock FFmpeg; this approach works universally.
   return new Promise((resolve) => {
-    const beats = [];
-    const command = ffmpeg(inputPath)
-      .outputOptions([
-        '-af', 'beatdetect',
-        '-f', 'null'
-      ])
-      .on('stderr', (stderrLine) => {
-        // Beat detection output parsing (simplified)
-        const beatMatch = stderrLine.match(/beat at ([\d.]+)/i);
-        if (beatMatch) {
-          beats.push(parseFloat(beatMatch[1]));
-        }
-      })
-      .on('end', () => {
-        resolve(beats.sort((a, b) => a - b));
-      })
-      .on('error', () => {
-        resolve([]); // Fallback if beat detection fails
-      });
+    const { spawn } = require('child_process');
+    const proc = spawn('ffmpeg', [
+      '-i', inputPath,
+      '-af', 'ebur128=peak=true',
+      '-f', 'null', '-',
+    ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
-    command.output('/dev/null').run();
+    const rawBeats = [];
+    let buffer = '';
+
+    proc.stderr.on('data', chunk => {
+      buffer += chunk.toString();
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      lines.forEach(line => {
+        // Match lines like: [Parsed_ebur128_0 @ ...] t: 1.234  ... M: -9.5 ...
+        const m = line.match(/t:\s*([\d.]+).*\bM:\s*([-\d.]+)/);
+        if (m) {
+          const time = parseFloat(m[1]);
+          const loudness = parseFloat(m[2]);
+          if (!isNaN(time) && loudness > -20) rawBeats.push({ time, loudness });
+        }
+      });
+    });
+
+    proc.on('close', () => {
+      // Find local maxima (peaks where loudness exceeds both neighbours)
+      const sorted = rawBeats.sort((a, b) => a.time - b.time);
+      const peaks = sorted.filter((b, i) => {
+        const prev = sorted[i - 1]?.loudness ?? -Infinity;
+        const next = sorted[i + 1]?.loudness ?? -Infinity;
+        return b.loudness > prev && b.loudness > next;
+      });
+      resolve(peaks.map(p => p.time));
+    });
+
+    proc.on('error', () => resolve([]));
+    // Hard timeout so a massive file doesn't stall the pipeline
+    setTimeout(() => { proc.kill(); resolve([]); }, 30000);
   });
 }
 
@@ -586,7 +617,7 @@ function buildCutFilter(silencePeriods, sceneChanges, duration) {
  * Hook: first 1–3 seconds — optimize for niche-specific opening, not generic clickbait.
  * Plan one clear outcome per clip (learn/feel/do); use intentional silence and pacing.
  */
-async function detectKeyMoments(transcript, duration, audioLevels = []) {
+async function detectKeyMoments(transcript, duration, audioLevels = [], preferredVoiceTone = null, preferredHookStyle = null, contentTone = null, platform = null, niche = null, userId = null) {
   const moments = {
     hook: null,
     reactions: [],
@@ -598,6 +629,69 @@ async function detectKeyMoments(transcript, duration, audioLevels = []) {
   // === GEMINI-POWERED DEEP ANALYSIS ===
   if (transcript && geminiConfigured) {
     try {
+      let extraInstructions = '';
+      if (preferredVoiceTone) {
+        extraInstructions += `\n- BRAND VOICE RULE: The user prefers the voice/tone: "${preferredVoiceTone}". You MUST ensure all suggestedCaptions, hookText, and cta strictly adhere to this vibe/tone.\n`;
+      }
+      if (preferredHookStyle) {
+        extraInstructions += `\n- HOOK STRUCTURE RULE: The user prefers the hook style: "${preferredHookStyle}". You MUST customize and structure the rewritten hookText and the opening suggestedCaptions to explicitly align with this style (e.g. curiosity-gap, before-after, list-tease, enemy-frame, etc.).\n`;
+      }
+      const contentToneHookMap = {
+        educational:  'stat-reveal or counterintuitive-fact (prioritise insight over shock)',
+        entertaining: 'curiosity-gap or pattern-break (maximise laugh or surprise)',
+        motivational: 'bold-claim or transformation (inspire action)',
+        promotional:  'social-proof or urgency (drive conversion)',
+      };
+      if (contentTone && contentTone !== 'auto' && contentToneHookMap[contentTone]) {
+        extraInstructions += `\n- CONTENT TONE RULE: The user wants "${contentTone}" content. Bias hookText and suggestedCaptions toward ${contentToneHookMap[contentTone]}.\n`;
+      }
+      if (platform && platform !== 'auto' && platform !== 'all') {
+        const platformNorms = {
+          tiktok:          'fast hooks (<3s), punchy captions, trending audio references, Gen-Z voice',
+          instagram:       'aesthetic visuals, aspirational tone, strong thumbnail moment, mid-length captions',
+          youtube_shorts:  'clear value proposition in first 2s, subscriber-bait CTA, retention loops',
+          linkedin:        'professional insight-first hook, authority voice, B2B-oriented CTA',
+        };
+        const norm = platformNorms[platform] || platform;
+        extraInstructions += `\n- PLATFORM RULE: Content is being published to ${platform.toUpperCase()}. Optimize all hooks, captions, pacing, and CTA for this platform. Native conventions: ${norm}.\n`;
+      }
+      if (niche) {
+        extraInstructions += `\n- NICHE RULE: Creator niche is "${niche}". Use niche-specific vocabulary, references, and pain points in suggestedCaptions and hookText to maximise audience resonance.\n`;
+      }
+
+      // 🧬 2026 CREATOR-DNA PERSONALIZATION INJECTION
+      if (userId) {
+        try {
+          const UserStyleProfile = require('../models/UserStyleProfile');
+          const profile = await UserStyleProfile.findOne({ userId });
+          if (profile) {
+            const topFonts = profile.weightedFonts && profile.weightedFonts.length > 0
+              ? profile.topPerformers('weightedFonts', 2).map(f => f.key)
+              : [];
+            const topHooks = profile.weightedHooks && profile.weightedHooks.length > 0
+              ? profile.topPerformers('weightedHooks', 2).map(h => h.key)
+              : [];
+            const topTones = profile.weightedVoiceTones && profile.weightedVoiceTones.length > 0
+              ? profile.topPerformers('weightedVoiceTones', 1).map(t => t.key)
+              : [];
+            const topCTAs = profile.weightedCtaCategories && profile.weightedCtaCategories.length > 0
+              ? profile.topPerformers('weightedCtaCategories', 1).map(c => c.key)
+              : [];
+
+            if (topFonts.length > 0 || topHooks.length > 0 || topTones.length > 0 || topCTAs.length > 0) {
+              extraInstructions += `\n- CREATOR ENGAGEMENT DNA MATRIX (REAL Historical Performance-Weighted Insights):`;
+              if (topTones.length > 0) extraInstructions += `\n  * Primary Audience voice tone: "${topTones.join(', ')}". Bias output pacing/scripts toward this vibe.`;
+              if (topHooks.length > 0) extraInstructions += `\n  * Highly engaging opening frameworks: "${topHooks.join(', ')}". Custom structure your rewritten hook to mirror these conversion mechanics.`;
+              if (topCTAs.length > 0) extraInstructions += `\n  * Top converting Call-to-Action style: "${topCTAs.join(', ')}". Adapt your CTA output to this layout.`;
+              if (topFonts.length > 0) extraInstructions += `\n  * Visual typography favored by active viewer segments: "${topFonts.join(', ')}".`;
+              extraInstructions += `\n  Incorporate these historical engagement weights to strictly align with what conversions show works for this creator's channel.\n`;
+            }
+          }
+        } catch (profileError) {
+          logger.warn('Failed to query Creator-DNA style profile in moments detection', { error: profileError.message });
+        }
+      }
+
       const geminiPrompt = `You are Click's AI Video Intelligence Engine — the world's most advanced content strategy AI.
       
 Analyze this transcript and return a JSON object with deep, platform-native insights. 
@@ -607,7 +701,7 @@ CREATIVE DIVERGENCE PROTOCOL:
 - Look for non-obvious emotional spikes or subtle logic shifts in the transcript.
 - Your hook rewrites should be aggressive, scroll-stopping, and unique to the creator's voice.
 - Each caption should have a distinct "vibe" (e.g., one punchy, one mysterious, one authoritative).
-
+${extraInstructions}
 {
   "hookScore": (0-100, how viral is the opening 3 seconds),
   "hookText": (the best possible 3-second hook — rewrite it if needed to maximize stop-scroll rate),
@@ -958,6 +1052,134 @@ async function autoSelectMusic(videoId, sentiment, duration, options = {}) {
  * @param {string} style - modern, bold, minimal, tiktok, youtube, outline, professional
  * @param {Object} overrides - Optional { fontFamily } from user brand/preferences
  */
+
+/**
+ * Word-Level Karaoke Caption System — the #1 differentiator over Submagic/Captions.ai.
+ * Groups transcript words into 4-word display lines. Each line is rendered dim,
+ * then each active word lights up in yellow precisely during its spoken window.
+ *
+ * @param {Array} transcriptWords - Array of { word|text, start, end } from Whisper/Gemini
+ * @param {string} style - Caption style for sizing hints
+ * @param {number} globalTimeOffset - PTS offset when trimming has shifted timestamps
+ * @param {number} globalDuration - Clip duration (for clamping enable expressions)
+ * @returns {string[]} Array of FFmpeg drawtext filter strings
+ */
+/**
+ * Resolves a valid TTF/OTF font file on the server's filesystem
+ * to avoid FFmpeg drawtext crashes when Sans/Arial defaults are missing.
+ */
+function getSystemFontPath() {
+  const possiblePaths = [
+    // macOS Supplemental Fonts
+    '/System/Library/Fonts/Supplemental/Arial.ttf',
+    '/System/Library/Fonts/Supplemental/Helvetica.ttf',
+    '/System/Library/Fonts/Supplemental/Verdana.ttf',
+    '/System/Library/Fonts/Supplemental/Georgia.ttf',
+    '/System/Library/Fonts/Supplemental/Impact.ttf',
+    // macOS Core Fonts
+    '/System/Library/Fonts/Helvetica.dfont',
+    '/System/Library/Fonts/Arial.ttf',
+    '/Library/Fonts/Arial.ttf',
+    '/Library/Fonts/Microsoft/Arial.ttf',
+    // Linux truetype Fonts
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+    '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf',
+    '/usr/share/fonts/truetype/msttcorefonts/arial.ttf',
+    // Windows Fonts
+    'C:\\Windows\\Fonts\\arial.ttf'
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return null;
+}
+
+/**
+ * Word-Level Karaoke Caption System — the #1 differentiator over Submagic/Captions.ai.
+ * Groups transcript words into 4-word display lines. Each line is rendered dim,
+ * then each active word lights up in yellow precisely during its spoken window.
+ *
+ * @param {Array} transcriptWords - Array of { word|text, start, end } from Whisper/Gemini
+ * @param {string} style - Caption style for sizing hints
+ * @param {number} globalTimeOffset - PTS offset when trimming has shifted timestamps
+ * @param {number} globalDuration - Clip duration (for clamping enable expressions)
+ * @returns {string[]} Array of FFmpeg drawtext filter strings
+ */
+function generateWordLevelCaptionFilters(transcriptWords, style = 'modern', globalTimeOffset = 0, globalDuration = Infinity) {
+  if (!Array.isArray(transcriptWords) || transcriptWords.length === 0) return [];
+
+  const filters = [];
+  const WORDS_PER_LINE = 4;
+  const fontSize = ['bold', 'tiktok', 'neon'].includes(style) ? 56 : 52;
+  const yPos = 'h-text_h-260';
+  // ~28px per character at fontSize 52-56 is a good monospace approximation
+  const charWidth = fontSize === 56 ? 30 : 28;
+
+  const fontPath = getSystemFontPath();
+  const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+
+  for (let i = 0; i < transcriptWords.length; i += WORDS_PER_LINE) {
+    const group = transcriptWords.slice(i, i + WORDS_PER_LINE);
+    const groupStart = (group[0].start ?? 0) - globalTimeOffset;
+    const lastWord = group[group.length - 1];
+    const groupEnd = ((lastWord.end ?? lastWord.start + 0.4)) - globalTimeOffset;
+
+    if (groupEnd <= 0 || groupStart >= globalDuration) continue;
+
+    const gs = Math.max(0, groupStart).toFixed(3);
+    const ge = Math.min(groupEnd, globalDuration).toFixed(3);
+
+    const lineText = group.map(w => (w.word || w.text || '').replace(/[^a-zA-Z0-9 ',.!?-]/g, '')).join(' ').toUpperCase();
+    if (!lineText.trim()) continue;
+    const safeLine = lineText.replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+
+    // Dim base line — full group, low opacity
+    filters.push(
+      `drawtext=text='${safeLine}'${fontfileOpt}:fontsize=${fontSize}:fontcolor='white@0.40':` +
+      `x='(w-text_w)/2':y='${yPos}':` +
+      `borderw=2:bordercolor='black@0.5':` +
+      `enable='between(t\\,${gs}\\,${ge})'`
+    );
+
+    // Per-word highlight overlays
+    let charsAccumulated = 0;
+    group.forEach(wordObj => {
+      const wStart = ((wordObj.start ?? 0) - globalTimeOffset);
+      const wEnd = ((wordObj.end ?? (wordObj.start ?? 0) + 0.35) - globalTimeOffset);
+      if (wEnd <= 0 || wStart >= globalDuration) { charsAccumulated += (wordObj.word || wordObj.text || '').length + 1; return; }
+
+      const ws = Math.max(0, wStart).toFixed(3);
+      const we = Math.min(wEnd, globalDuration).toFixed(3);
+
+      const wordText = (wordObj.word || wordObj.text || '').replace(/[^a-zA-Z0-9 ',.!?-]/g, '').toUpperCase();
+      if (!wordText.trim()) { charsAccumulated += wordText.length + 1; return; }
+      const safeWord = wordText.replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
+
+      // x offset: centre the full line, then shift right by chars-before-word
+      const totalChars = lineText.length;
+      const xOffset = Math.round(charsAccumulated * charWidth - (totalChars * charWidth) / 2);
+      const xExpr = `(w-${Math.round(totalChars * charWidth / 2)})/2+${xOffset + Math.round(totalChars * charWidth / 4)}`;
+
+      filters.push(
+        `drawtext=text='${safeWord}'${fontfileOpt}:fontsize=${fontSize + 4}:fontcolor='#FFE500':` +
+        `x='${xExpr}':y='${yPos}':` +
+        `borderw=3:bordercolor='black':` +
+        `shadowcolor='#FFD700@0.6':shadowx=0:shadowy=3:` +
+        `enable='between(t\\,${ws}\\,${we})'`
+      );
+
+      charsAccumulated += (wordObj.word || wordObj.text || '').length + 1;
+    });
+  }
+
+  return filters;
+}
+
 async function generateAndApplySmartCaptions(videoId, transcript, duration, style = 'modern', overrides = {}, transcriptData = null, targetLang = 'en') {
   try {
     const captionService = getVideoCaptionService();
@@ -1299,7 +1521,20 @@ function hasManualEdits(state) {
   if (!state || typeof state !== 'object') return false;
   if (Array.isArray(state.textOverlays) && state.textOverlays.length > 0) return true;
   if (Array.isArray(state.shapeOverlays) && state.shapeOverlays.length > 0) return true;
-  if (Array.isArray(state.timelineSegments) && state.timelineSegments.length > 1) return true;
+  if (Array.isArray(state.timelineSegments) && state.timelineSegments.length > 0) {
+    if (state.timelineSegments.length > 1) return true;
+    const seg = state.timelineSegments[0];
+    if (seg && (
+      (seg.startTime !== undefined && seg.startTime > 0) || 
+      (seg.start !== undefined && seg.start > 0) || 
+      seg.reversed || 
+      seg.freezeFrame || 
+      (seg.sourceStartTime !== undefined && seg.sourceStartTime > 0) ||
+      seg.id !== 'initial-video-segment'
+    )) {
+      return true;
+    }
+  }
   if (state.videoFilters && Object.keys(state.videoFilters).length > 0) {
     // Filter object exists with at least one key — assume it's non-default
     return true;
@@ -1331,14 +1566,16 @@ function renderManualEditIntermediate({ inputPath, editorState, outputDir, video
     const videoChain = [];
     const audioChain = [];
 
-    // Timeline keep-ranges. If only one segment, ffmpeg can skip the
-    // select dance and re-encode the whole thing. Multiple segments →
+    // Timeline keep-ranges. Handles one or more keep segments
     // select/aselect concat.
     const segments = Array.isArray(editorState?.timelineSegments) ? editorState.timelineSegments : [];
     const validSegs = segments
-      .map((s) => ({ start: Number(s?.start), end: Number(s?.end) }))
+      .map((s) => ({
+        start: Number(s?.startTime ?? s?.start),
+        end: Number(s?.endTime ?? s?.end)
+      }))
       .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start);
-    if (validSegs.length > 1) {
+    if (validSegs.length >= 1) {
       const between = validSegs.map((s) => `between(t\\,${s.start.toFixed(3)}\\,${s.end.toFixed(3)})`).join('+');
       videoChain.push(`select='${between}',setpts=N/FRAME_RATE/TB`);
       audioChain.push(`aselect='${between}',asetpts=N/SR/TB`);
@@ -1363,6 +1600,9 @@ function renderManualEditIntermediate({ inputPath, editorState, outputDir, video
     // additional filters. We now escape the full set FFmpeg recognises
     // PLUS strip newlines (which would terminate the filter line).
     const overlays = Array.isArray(editorState?.textOverlays) ? editorState.textOverlays : [];
+    const fontPath = getSystemFontPath();
+    const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+
     for (const o of overlays.slice(0, 10)) { // cap to avoid runaway filter chains
       const text = String(o?.text || '').trim();
       if (!text) continue;
@@ -1381,11 +1621,30 @@ function renderManualEditIntermediate({ inputPath, editorState, outputDir, video
       const color = typeof o.color === 'string' && /^#?[0-9a-fA-F]{3,8}$/.test(o.color) ? (o.color.startsWith('#') ? o.color : '#' + o.color) : 'white';
       const x = Number.isFinite(Number(o.x)) ? Math.round(Number(o.x)) : '(w-text_w)/2';
       const y = Number.isFinite(Number(o.y)) ? Math.round(Number(o.y)) : '(h-text_h)*0.85';
-      let drawtext = `drawtext=text='${escaped}':fontsize=${fontSize}:fontcolor=${color}:x=${x}:y=${y}:borderw=3:bordercolor=black:shadowcolor=black@0.7:shadowx=2:shadowy=2`;
+      let drawtext = `drawtext=text='${escaped}'${fontfileOpt}:fontsize=${fontSize}:fontcolor=${color}:x=${x}:y=${y}:borderw=3:bordercolor=black:shadowcolor=black@0.7:shadowx=2:shadowy=2`;
       if (Number.isFinite(Number(o.start)) && Number.isFinite(Number(o.end)) && Number(o.end) > Number(o.start)) {
         drawtext += `:enable='between(t\\,${Number(o.start).toFixed(3)}\\,${Number(o.end).toFixed(3)})'`;
       }
       videoChain.push(drawtext);
+    }
+
+    // Shape overlays via drawbox.
+    const shapes = Array.isArray(editorState?.shapeOverlays) ? editorState.shapeOverlays : [];
+    for (const s of shapes.slice(0, 20)) {
+      try {
+        const start = s.startTime ?? s.start ?? 0;
+        const end = s.endTime ?? s.end ?? 5;
+        const enable = `between(t\\,${Number(start).toFixed(3)}\\,${Number(end).toFixed(3)})`;
+        const x = s.x !== undefined ? `(w*${Number(s.x) / 100})-(w*${(Number(s.width) || 20) / 100})/2` : '(w-w*0.2)/2';
+        const y = s.y !== undefined ? `(h*${Number(s.y) / 100})-(h*${(Number(s.height) || 20) / 100})/2` : '(h-h*0.2)/2';
+        const w = `w*${(Number(s.width) || 20) / 100}`;
+        const h = s.kind === 'line' ? (Number(s.strokeWidth) || 2) : `h*${(Number(s.height) || 20) / 100}`;
+        const color = String(s.color || '#ffffff').replace('#', '0x');
+        const alpha = Number(s.opacity ?? 0.5);
+        videoChain.push(`drawbox=x='${x}':y='${y}':w='${w}':h='${h}':color=${color}@${alpha}:t=fill:enable='${enable}'`);
+      } catch (e) {
+        logger.warn('Skip shape overlay in intermediate manual pre-render', { error: e.message, shape: s });
+      }
     }
 
     if (videoChain.length === 0 && audioChain.length === 0) {
@@ -1404,7 +1663,7 @@ function renderManualEditIntermediate({ inputPath, editorState, outputDir, video
         if (!fs.existsSync(outputPath)) return reject(new Error('manual-edit pre-render produced no file'));
         const size = fs.statSync(outputPath).size;
         if (size < 1024) {
-          try { fs.unlinkSync(outputPath); } catch (_) {}
+          try { fs.unlinkSync(outputPath); } catch (_) { /* ignore file removal error */ }
           return reject(new Error(`manual-edit pre-render produced empty file (${size} bytes)`));
         }
         resolve(outputPath);
@@ -1414,19 +1673,127 @@ function renderManualEditIntermediate({ inputPath, editorState, outputDir, video
   });
 }
 
+/**
+ * 2026 Viral Caption Emoji Injection
+ * Autonomously attaches highly relevant, trending emojis to the caption text
+ * based on keyword matching and sentiment style.
+ */
+function attachViralEmojis(text, style) {
+  if (!text) return '';
+  const upper = text.toUpperCase();
+  let emoji = '';
+
+  // Keyword to emoji mappings (2026 Engagement Trends)
+  if (upper.includes('MONEY') || upper.includes('RICH') || upper.includes('DOLLAR') || upper.includes('IRA') || upper.includes('EARN') || upper.includes('INVEST') || upper.includes('COST') || upper.includes('REVENUE') || upper.includes('MRR')) {
+    emoji = ' 💵';
+  } else if (upper.includes('FIRE') || upper.includes('INSANE') || upper.includes('UNREAL') || upper.includes('CRAZY') || upper.includes('EPIC') || upper.includes('BURN')) {
+    emoji = ' 🔥';
+  } else if (upper.includes('MIND BLOWN') || upper.includes('SHOCK') || upper.includes('OMG') || upper.includes('WTF') || upper.includes('SURPRISE') || upper.includes('IMPACT')) {
+    emoji = ' 🤯';
+  } else if (upper.includes('SECRET') || upper.includes('SHH') || upper.includes('MYSTERY') || upper.includes('HIDDEN') || upper.includes('LOOP')) {
+    emoji = ' 🤫';
+  } else if (upper.includes('WARNING') || upper.includes('STOP') || upper.includes('DANGER') || upper.includes('WRONG') || upper.includes('MISTAKE') || upper.includes('FAIL')) {
+    emoji = ' ⚠️';
+  } else if (upper.includes('WIN') || upper.includes('BEST') || upper.includes('CHAMPION') || upper.includes('GOLD') || upper.includes('SUCCESS') || upper.includes('PROFIT') || upper.includes('GROW')) {
+    emoji = ' 🏆';
+  } else if (upper.includes('PRO TIP') || upper.includes('GUIDE') || upper.includes('METHOD') || upper.includes('LEARN') || upper.includes('KNOWLEDGE') || upper.includes('IDEA') || upper.includes('SYSTEM')) {
+    emoji = ' 💡';
+  } else if (upper.includes('LOVE') || upper.includes('HEART') || upper.includes('AESTHETIC') || upper.includes('PEACE') || upper.includes('BEAUTY')) {
+    emoji = ' ❤️';
+  } else if (upper.includes('TECH') || upper.includes('AI') || upper.includes('SOFTWARE') || upper.includes('CODE') || upper.includes('SYSTEM') || upper.includes('PIPELINE') || upper.includes('AUTOMATION')) {
+    emoji = ' ⚡';
+  } else if (upper.includes('TIME') || upper.includes('SPEED') || upper.includes('FAST') || upper.includes('COMMUTE') || upper.includes('COMMUTING') || upper.includes('HOUR')) {
+    emoji = ' ⏱️';
+  }
+
+  // Style-based overrides if no keyword matched
+  if (!emoji) {
+    if (style === 'hook') emoji = ' 👀';
+    else if (style === 'punchline') emoji = ' 🔥';
+    else if (style === 'CTA') emoji = ' 👇';
+  }
+
+  return `${text}${emoji}`;
+}
+
 async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
   // Hoisted so the outer catch can scrub partial files on failure. The
   // inner try writes to these paths; the catch reads them back to
   // decide what to unlink.
   let _tempPathForCleanup = null;
   let _outputPathForCleanup = null;
+  let inputPath = null;
+
+  const cleanup = (isSuccess = false, uploadResult = null) => {
+    try {
+      const tempAbs = _tempPathForCleanup ? path.join(process.cwd(), _tempPathForCleanup) : null;
+      if (tempAbs && fs.existsSync(tempAbs)) {
+        fs.unlinkSync(tempAbs);
+        logger.info('Cleaned up transient temp file', { path: tempAbs });
+      }
+    } catch (err) {
+      logger.warn('Failed to clean up temp file', { error: err.message });
+    }
+
+    try {
+      if (_outputPathForCleanup) {
+        const musicOutputPath = _outputPathForCleanup.replace('.mp4', '-with-music.mp4');
+        const musicAbs = path.join(process.cwd(), musicOutputPath);
+        if (fs.existsSync(musicAbs)) {
+          fs.unlinkSync(musicAbs);
+          logger.info('Cleaned up transient music mix file', { path: musicAbs });
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to clean up transient music mix file', { error: err.message });
+    }
+
+    try {
+      if (inputPath && inputPath.includes('manual-edit-') && inputPath.endsWith('.mp4')) {
+        const manualAbs = path.isAbsolute(inputPath) ? inputPath : path.join(process.cwd(), inputPath);
+        if (fs.existsSync(manualAbs)) {
+          fs.unlinkSync(manualAbs);
+          logger.info('Cleaned up transient manual-edit intermediate file', { path: manualAbs });
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to clean up manual-edit intermediate file', { error: err.message });
+    }
+
+    if (isSuccess && uploadResult && uploadResult.storage !== 'local') {
+      try {
+        const outAbs = _outputPathForCleanup ? path.join(process.cwd(), _outputPathForCleanup) : null;
+        if (outAbs && fs.existsSync(outAbs)) {
+          fs.unlinkSync(outAbs);
+          logger.info('Cleaned up local output file after successful cloud upload', { path: outAbs });
+        }
+      } catch (err) {
+        logger.warn('Failed to clean up local output file after cloud upload', { error: err.message });
+      }
+    }
+  };
+
+  const cleanupAll = () => {
+    cleanup();
+    try {
+      const outAbs = _outputPathForCleanup ? path.join(process.cwd(), _outputPathForCleanup) : null;
+      if (outAbs && fs.existsSync(outAbs)) {
+        fs.unlinkSync(outAbs);
+        logger.info('Cleaned up output file on failure', { path: outAbs });
+      }
+    } catch (err) {
+      logger.warn('Failed to clean up output file', { error: err.message });
+    }
+  };
+
   try {
     let bRollPlan = [];
     let commerceInlays = [];
     // Request-scoped music genre. Previously held on `global` so two
     // concurrent auto-edits would clobber each other; isolating it here
     // keeps parallel renders independent.
-    let requestMusicGenre = null;
+    let requestMusicGenre = editingOptions.musicGenre || null;
+    let requestVisualTheme = null; // Dynamically picked for diversity
     let {
       removeSilence = true,
       removePauses = true,
@@ -1463,7 +1830,55 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       prioritizeHook,
       aspectFormats, // e.g. ['9:16', '1:1', '16:9'] for multi-aspect export
       pacingIntensity, // 'gentle' | 'medium' | 'aggressive'
+      // Custom overrides
+      preferredVoiceTone = null,
+      preferredHookStyle = null,
+      pauseThresholdMs = null,
+      pacingPauseThresholdMs = null,
+      speedMultiplierSilence = null,
+      speedMultiplierDialogue = null,
+      captionFontScale = null,
+      captionVerticalOffset = null,
+      aestheticColorGrade = null,
+      aestheticTransition = null,
+      subtitlePosition = 'auto', // 'auto' | 'top' | 'middle' | 'bottom' | 'lower-third'
+      contentTone = 'auto', // 'auto' | 'educational' | 'entertaining' | 'motivational' | 'promotional'
+      customInstructions = null, // free-text creative direction from user
     } = editingOptions;
+
+    // Bridge UI field names to the internal variable names used throughout
+    // the pipeline. Any dimension the user explicitly set in the AI Director
+    // HUD must survive through to Gemini analysis and FFmpeg filter building.
+    if (!preferredHookStyle && editingOptions.hookStyle && editingOptions.hookStyle !== 'auto') {
+      preferredHookStyle = editingOptions.hookStyle;
+    }
+    if (!preferredVoiceTone && editingOptions.voiceTone && editingOptions.voiceTone !== 'auto') {
+      preferredVoiceTone = editingOptions.voiceTone;
+    }
+    if (!aestheticTransition && editingOptions.transitionStyle && editingOptions.transitionStyle !== 'auto') {
+      aestheticTransition = editingOptions.transitionStyle;
+    }
+    if (!aestheticColorGrade && editingOptions.colorGrade && editingOptions.colorGrade !== 'auto') {
+      // Map the UI's human-friendly colorGrade names to the visual theme keys
+      // consumed by the FFmpeg color-filter switch below.
+      const COLOR_GRADE_MAP = {
+        vivid:     'hyper_pop',
+        cinematic: 'high_contrast_luma',
+        natural:   'dreamy_pastel',
+        cool:      'cyberpunk_neon',
+        warm:      'vintage_film',
+        vintage:   'vintage_film',
+        bw:        'bw',
+      };
+      aestheticColorGrade = COLOR_GRADE_MAP[editingOptions.colorGrade] || editingOptions.colorGrade;
+    }
+
+    // When the user explicitly toggles speedRamping OFF, disable the Neural
+    // Speed Ramp by marking optimizePacing false so the cut-filter branch runs
+    // instead. A true/unset value leaves optimizePacing as the user set it.
+    if ('speedRamping' in editingOptions && editingOptions.speedRamping === false) {
+      optimizePacing = false;
+    }
 
     const optimizeHookOption = prioritizeHook !== undefined ? prioritizeHook : optimizeHook;
     const aspectRatiosToExport = Array.isArray(aspectFormats) && aspectFormats.length > 0
@@ -1480,7 +1895,22 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
         // Use blueprint to override or enhance options
         if (learningBlueprint.pacingStrategy?.toLowerCase().includes('aggressive')) pacingIntensity = 'aggressive';
         if (learningBlueprint.recommendedVfx) {
-           editingOptions.vfx = [...(editingOptions.vfx || []), ...learningBlueprint.recommendedVfx];
+          editingOptions.vfx = [...(editingOptions.vfx || []), ...learningBlueprint.recommendedVfx];
+        }
+        // Personalization: Auto-inherit captionStyle from learning matrix if not explicitly set
+        if (learningBlueprint.captionStyle && (!editingOptions.captionStyle || editingOptions.captionStyle === 'auto')) {
+          captionStyle = learningBlueprint.captionStyle;
+          logger.info('🧠 Auto-inherited Caption Style from performance blueprint:', { captionStyle });
+        }
+        // Personalization: Auto-inherit colorMood from learning matrix if not explicitly set
+        if (learningBlueprint.recommendedColorMood && (!editingOptions.colorGrade || editingOptions.colorGrade === 'auto')) {
+          aestheticColorGrade = learningBlueprint.recommendedColorMood;
+          logger.info('🧠 Auto-inherited Color Grade from performance blueprint:', { aestheticColorGrade });
+        }
+        // Personalization: Auto-inherit musicGenre from learning matrix if not explicitly set
+        if (learningBlueprint.musicGenre && (!editingOptions.musicGenre || editingOptions.musicGenre === 'auto')) {
+          requestMusicGenre = learningBlueprint.musicGenre;
+          logger.info('🧠 Auto-inherited Music Genre from performance blueprint:', { requestMusicGenre });
         }
       }
     }
@@ -1491,10 +1921,29 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       aggressive: { minSilenceDuration: 0.3, silenceThreshold: -35 },
     };
     const pacing = pacingPresets[pacingIntensity] || pacingPresets.medium;
-    const effectiveMinSilence = pacingPresets[pacingIntensity] ? pacing.minSilenceDuration : minSilenceDuration;
+
+    // Support user override pause threshold (convert ms to seconds)
+    const userPauseThreshold = pacingPauseThresholdMs || pauseThresholdMs;
+    const effectiveMinSilence = (typeof userPauseThreshold === 'number' && userPauseThreshold > 0)
+      ? userPauseThreshold / 1000
+      : (pacingPresets[pacingIntensity] ? pacing.minSilenceDuration : minSilenceDuration);
+
     const effectiveSilenceThreshold = pacingPresets[pacingIntensity] ? pacing.silenceThreshold : silenceThreshold;
 
-    logger.info('Auto-edit options (Opus+)', { clipTargetLength, clipCount, contentGenre, prioritizeHook: optimizeHookOption, aspectRatiosToExport, effectiveWorkflow, pacingIntensity: pacingIntensity || 'medium' });
+    logger.info('Auto-edit options (Opus+)', { 
+      clipTargetLength, 
+      clipCount, 
+      contentGenre, 
+      prioritizeHook: optimizeHookOption, 
+      aspectRatiosToExport, 
+      effectiveWorkflow, 
+      pacingIntensity: pacingIntensity || 'medium',
+      preferredVoiceTone,
+      preferredHookStyle,
+      userPauseThreshold,
+      speedMultiplierDialogue,
+      speedMultiplierSilence
+    });
 
     const content = await resolveContent(videoId);
     if (!content) throw new Error('Video content not found');
@@ -1512,7 +1961,6 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     // `__dirname/../..` which points at the project root. When those
     // diverge the file is never found and the whole auto-edit 500s.
     // Probe BOTH layouts and pick whichever one exists on disk.
-    let inputPath;
     let cleanUrl = content.originalFile.url;
     // Fix historical bug where URLs were saved as "../uploads/videos/..."
     if (cleanUrl.startsWith('../')) {
@@ -1525,8 +1973,14 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       const projectRootCandidate = path.join(__dirname, '../..', cleanUrl);
       const serverLocalCandidate = path.join(__dirname, '..', cleanUrl);
       const cwdCandidate = path.join(process.cwd(), cleanUrl);
-      const absoluteCandidates = [serverLocalCandidate, projectRootCandidate, cwdCandidate];
-      const found = absoluteCandidates.find((p) => fs.existsSync(p));
+      const absoluteCandidates = [cwdCandidate, projectRootCandidate, serverLocalCandidate];
+      const found = absoluteCandidates.find((p) => {
+        try {
+          return fs.existsSync(p) && fs.statSync(p).size > 0;
+        } catch (_) {
+          return false;
+        }
+      });
       const chosen = found || projectRootCandidate; // keep prior behaviour if nothing matches
       inputPath = path.relative(process.cwd(), chosen);
     } else {
@@ -1714,15 +2168,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let repetitivePhrases = [];
     let selectedMusic = null;
 
-    // 🚀 Neural Speed Ramping (2026 Pacing Standard)
-    if (optimizePacing) {
-      const speedFactor = pacingIntensity === 'aggressive' ? 0.9 : pacingIntensity === 'gentle' ? 1.1 : 1.0;
-      if (speedFactor !== 1.0) {
-        videoFilters.push(`setpts=${speedFactor}*PTS`);
-        audioFilters.push(`atempo=${(1/speedFactor).toFixed(2)}`);
-        appliedEdits.push(`Neural Speed Ramping (${pacingIntensity})`);
-      }
-    }
+    // 🚀 Neural Speed Ramping (Consolidated to dynamic final phase to prevent conflicts)
 
     // Get platform optimizations
     const platformOpts = getPlatformOptimizations(platform);
@@ -1733,16 +2179,76 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     if (transcript && geminiConfigured && enableSmartCaptions) {
       emitProgress('analysis', 8, 'Autonomous AI analyzing content profile...');
       try {
+        // Build a context block listing every dimension the user has explicitly
+        // set so the AI can choose the remaining free dimensions to COMPLEMENT them.
+        const userChoiceLines = [
+          editingOptions.pacingIntensity
+            ? `- Pacing: "${editingOptions.pacingIntensity}" (user-set)` : null,
+          (editingOptions.captionStyle && editingOptions.captionStyle !== 'modern')
+            ? `- Caption style: "${editingOptions.captionStyle}" (user-set)` : null,
+          (editingOptions.musicGenre && editingOptions.musicGenre !== 'auto')
+            ? `- Music genre: "${editingOptions.musicGenre}" (user-set, do not override)` : null,
+          (editingOptions.colorGrade && editingOptions.colorGrade !== 'auto')
+            ? `- Color grade: "${editingOptions.colorGrade}" (user-set)` : null,
+          (editingOptions.hookStyle && editingOptions.hookStyle !== 'auto')
+            ? `- Hook style: "${editingOptions.hookStyle}" (user-set)` : null,
+          (editingOptions.voiceTone && editingOptions.voiceTone !== 'auto')
+            ? `- Voice tone: "${editingOptions.voiceTone}" (user-set)` : null,
+          (editingOptions.transitionStyle && editingOptions.transitionStyle !== 'auto')
+            ? `- Transitions: "${editingOptions.transitionStyle}" (user-set)` : null,
+          (editingOptions.contentTone && editingOptions.contentTone !== 'auto')
+            ? `- Content tone: "${editingOptions.contentTone}" (user-set — pick pacing, captions, and music that reinforce this)` : null,
+          (Array.isArray(editingOptions.stylePresetIds) && editingOptions.stylePresetIds.length)
+            ? `- Style presets: ${editingOptions.stylePresetIds.join(', ')} (user-set)` : null,
+          (editingOptions.brollFrequency && editingOptions.brollFrequency !== 'balanced')
+            ? `- B-roll frequency: "${editingOptions.brollFrequency}" (user-set)` : null,
+          (editingOptions.ctaStyle && editingOptions.ctaStyle !== 'auto')
+            ? `- CTA style: "${editingOptions.ctaStyle}" (user-set)` : null,
+          (editingOptions.subtitlePosition && editingOptions.subtitlePosition !== 'auto')
+            ? `- Subtitle position: "${editingOptions.subtitlePosition}" (user-set)` : null,
+          editingOptions.prioritizeHook
+            ? `- Hook priority: MAXIMUM (user explicitly wants scroll-stopping opener)` : null,
+          (editingOptions.speedRamping === false)
+            ? `- Speed ramping: DISABLED (user-set, do not suggest speed ramps)` : null,
+        ].filter(Boolean);
+        const userChoicesBlock = userChoiceLines.length
+          ? `\n\nThe user has already made these creative choices — your free dimensions must COMPLEMENT them, not contradict:\n${userChoiceLines.join('\n')}\n`
+          : '';
+        const contentToneGuidance = {
+          educational:   'Prefer stat-reveal or counterintuitive-fact hooks. Use calm-authority pacing (medium). Captions should surface key insights. Music: lofi or cinematic.',
+          entertaining:  'Prefer curiosity-gap or pattern-break hooks. Use fast, punchy pacing (aggressive). Captions should be playful and emoji-forward. Music: upbeat_pop or breakcore.',
+          motivational:  'Prefer bold-claim or transformation hooks. Use rising-energy pacing (aggressive). Captions should be inspirational one-liners. Music: synthwave or cinematic.',
+          promotional:   'Prefer social-proof or urgency hooks. Use medium pacing with strong CTA captions. Music: upbeat_pop or phonk.',
+        };
+        const contentToneBlock = (contentTone && contentTone !== 'auto' && contentToneGuidance[contentTone])
+          ? `\n\nCONTENT TONE DIRECTIVE (user-chosen: "${contentTone}"): ${contentToneGuidance[contentTone]}\n`
+          : '';
+        const userDirectionBlock = customInstructions
+          ? `\n\nCRITICAL USER CREATIVE DIRECTION (MUST FOLLOW):\n"${customInstructions}"\nEnsure every decision respects and amplifies this creative intent.\n`
+          : '';
+        const platformContext = (editingOptions.platform && editingOptions.platform !== 'auto' && editingOptions.platform !== 'all')
+          ? `\nTARGET PLATFORM: ${editingOptions.platform} — tailor pacing, caption style, hook length, and CTA copy to native platform conventions.`
+          : '';
+        const nicheContext = editingOptions.niche
+          ? `\nCREATOR NICHE: "${editingOptions.niche}" — all creative choices should resonate with this niche's audience expectations and vocabulary.`
+          : '';
         const preFlightPrompt = `You are Click's Autonomous Video Architect (2026 Edition).
 Analyze this transcript and autonomously decide the PERFECT editing configuration. Override standard presets to maximize retention and virality.
+CRITICAL: ENSURE EXTREME AESTHETIC DIVERSITY. Do not repeatedly select the same options across different videos. Pick highly creative, distinct visual themes.${platformContext}${nicheContext}${userChoicesBlock}${contentToneBlock}${userDirectionBlock}
 
-Return ONLY valid JSON:
+Return ONLY valid JSON (no markdown, no extra text):
 {
   "pacingIntensity": "aggressive|medium|slow",
-  "captionStyle": "tiktok|bold|outline|modern|professional",
+  "captionStyle": "tiktok|bold|outline|modern|professional|cyberpunk|vintage",
+  "hookStyle": "curiosity-gap|question|stat|mystery|story|bold-claim|pattern-break",
+  "transitionStyle": "fast-cut|crossfade|glitch|whip-pan|hard-cut",
+  "voiceTone": "energetic|calm|authoritative|playful|serious",
+  "brollFrequency": "off|minimal|balanced|heavy",
+  "ctaStyle": "question|urgency|value|curiosity",
   "enableAutoZoom": true|false,
   "enableColorGrading": true|false,
-  "musicGenre": "phonk|lofi|dark_ambient|synthwave|upbeat_pop|cinematic",
+  "visualTheme": "cyberpunk_neon|vintage_film|high_contrast_luma|dreamy_pastel|hyper_pop",
+  "musicGenre": "phonk|lofi|dark_ambient|synthwave|upbeat_pop|cinematic|breakcore",
   "viralExtraction": {
     "shouldExtract": true|false,
     "startTime": 0.0,
@@ -1751,9 +2257,9 @@ Return ONLY valid JSON:
   "reasoning": "Explain why you chose this exact configuration for this specific video"
 }
 
-Transcript: "${transcript.substring(0, 1500)}"`;
+Transcript: "${transcript.substring(0, 3500)}"`;
 
-        const rawPreflight = await geminiGenerate(preFlightPrompt, { temperature: 0.3, maxTokens: 400 });
+        const rawPreflight = await geminiGenerate(preFlightPrompt, { temperature: 0.3, maxTokens: 600 });
         const preflightData = parseGeminiJson(rawPreflight) || {};
 
         // Honor user "locked" preferences from editorState. The previous
@@ -1764,11 +2270,49 @@ Transcript: "${transcript.substring(0, 1500)}"`;
         // hatch: any key in there pins the user's choice. We also accept
         // top-level `userLocked*` flags for backwards compat with older
         // clients that may not nest preferences.
-        const locked = (editingOptions?.editorState?.lockedPreferences) || editingOptions?.lockedPreferences || {};
-        if (preflightData.pacingIntensity && !locked.pacingIntensity) pacingIntensity = preflightData.pacingIntensity;
-        if (preflightData.captionStyle && !locked.captionStyle) captionStyle = preflightData.captionStyle;
+        // Merge explicit user locks with auto-detected locks: any dimension the
+        // user has set to a non-default value is treated as locked so the pre-flight
+        // AI cannot silently override their creative direction.
+        const locked = {
+          ...(editingOptions?.editorState?.lockedPreferences || editingOptions?.lockedPreferences || {}),
+          ...(editingOptions.pacingIntensity ? { pacingIntensity: true } : {}),
+          ...(editingOptions.captionStyle && editingOptions.captionStyle !== 'modern' ? { captionStyle: true } : {}),
+          ...(editingOptions.musicGenre && editingOptions.musicGenre !== 'auto' ? { musicGenre: true } : {}),
+          ...(editingOptions.colorGrade && editingOptions.colorGrade !== 'auto' ? { colorGrade: true } : {}),
+          ...(editingOptions.visualTheme ? { visualTheme: true } : {}),
+          ...(editingOptions.hookStyle && editingOptions.hookStyle !== 'auto' ? { hookStyle: true } : {}),
+          ...(editingOptions.transitionStyle && editingOptions.transitionStyle !== 'auto' ? { transitionStyle: true } : {}),
+          ...(editingOptions.voiceTone && editingOptions.voiceTone !== 'auto' ? { voiceTone: true } : {}),
+          ...(editingOptions.brollFrequency && editingOptions.brollFrequency !== 'balanced' ? { brollFrequency: true } : {}),
+          ...(editingOptions.ctaStyle && editingOptions.ctaStyle !== 'auto' ? { ctaStyle: true } : {}),
+        };
+        // Enum whitelists prevent garbage AI output from corrupting pipeline state.
+        const VALID = {
+          pacingIntensity:  new Set(['aggressive', 'medium', 'slow']),
+          captionStyle:     new Set(['tiktok', 'bold', 'outline', 'modern', 'professional', 'cyberpunk', 'vintage']),
+          hookStyle:        new Set(['curiosity-gap', 'question', 'stat', 'mystery', 'story', 'bold-claim', 'pattern-break']),
+          transitionStyle:  new Set(['fast-cut', 'crossfade', 'glitch', 'whip-pan', 'hard-cut']),
+          voiceTone:        new Set(['energetic', 'calm', 'authoritative', 'playful', 'serious']),
+          brollFrequency:   new Set(['off', 'minimal', 'balanced', 'heavy']),
+          ctaStyle:         new Set(['question', 'urgency', 'value', 'curiosity']),
+          visualTheme:      new Set(['cyberpunk_neon', 'vintage_film', 'high_contrast_luma', 'dreamy_pastel', 'hyper_pop']),
+        };
+        const valid = (key, val) => val && VALID[key] && VALID[key].has(val);
+
+        if (valid('pacingIntensity', preflightData.pacingIntensity) && !locked.pacingIntensity) pacingIntensity = preflightData.pacingIntensity;
+        if (valid('captionStyle', preflightData.captionStyle) && !locked.captionStyle) captionStyle = preflightData.captionStyle;
         if (preflightData.enableAutoZoom !== undefined && !locked.enableAutoZoom) enableAutoZoom = preflightData.enableAutoZoom;
         if (preflightData.enableColorGrading !== undefined && !locked.enableColorGrading) enableColorGrading = preflightData.enableColorGrading;
+        if (valid('hookStyle', preflightData.hookStyle) && !locked.hookStyle) preferredHookStyle = preflightData.hookStyle;
+        if (valid('transitionStyle', preflightData.transitionStyle) && !locked.transitionStyle) aestheticTransition = preflightData.transitionStyle;
+        if (valid('voiceTone', preflightData.voiceTone) && !locked.voiceTone) preferredVoiceTone = preflightData.voiceTone;
+        if (valid('brollFrequency', preflightData.brollFrequency) && !locked.brollFrequency) editingOptions.brollFrequency = preflightData.brollFrequency;
+        if (valid('ctaStyle', preflightData.ctaStyle) && !locked.ctaStyle) editingOptions.ctaStyle = preflightData.ctaStyle;
+        // Apply AI-suggested color grade only if the user hasn't locked a choice.
+        // Map visual theme names to aestheticColorGrade so the FFmpeg filter switch picks them up.
+        if (valid('visualTheme', preflightData.visualTheme) && !locked.colorGrade && !aestheticColorGrade) {
+          aestheticColorGrade = preflightData.visualTheme;
+        }
         // Surface which keys were locked so the response payload can show
         // the user that their picks survived the AI pass.
         if (Object.keys(locked).length > 0) {
@@ -1792,13 +2336,18 @@ Transcript: "${transcript.substring(0, 1500)}"`;
         // Hold the AI-picked genre in this request's closure so parallel
         // auto-edits don't share state. The variable is declared higher
         // up in autoEditVideo's scope.
-        requestMusicGenre = preflightData.musicGenre;
+        if (!locked.musicGenre && preflightData.musicGenre) {
+          requestMusicGenre = preflightData.musicGenre;
+        }
+        if (!locked.visualTheme && preflightData.visualTheme) {
+          requestVisualTheme = preflightData.visualTheme;
+        }
 
         logger.info('Autonomous Pre-Flight Orchestration Applied', { overrides: preflightData });
         appliedEdits.push(`Autonomous Override: ${preflightData.reasoning || 'AI selected optimal pacing and style'}`);
         creativeFeatures.push('Autonomous Architecture');
       } catch (err) {
-        logger.warn('Pre-flight analysis failed, proceeding with standard options');
+        logger.warn('Pre-flight analysis failed, proceeding with standard options', { error: err.message, videoId });
       }
     }
 
@@ -1814,7 +2363,7 @@ Transcript: "${transcript.substring(0, 1500)}"`;
     const [keyMomentsResult, sentimentResult, beatsResult, faceMomentsResult] = await processInParallel([
       async () => {
         if (transcript || audioLevels.length > 0) {
-          const moments = await detectKeyMoments(transcript, duration, audioLevels);
+          const moments = await detectKeyMoments(transcript, duration, audioLevels, preferredVoiceTone, preferredHookStyle, contentTone !== 'auto' ? contentTone : null, editingOptions.platform || null, editingOptions.niche || null, userId);
           const overlays = enableTextOverlays && transcript
             ? generateTextOverlaySuggestions(transcript, moments, duration)
             : [];
@@ -1849,13 +2398,27 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           position: 'bottom',
         }));
       } else {
-        // Sentiment-aware generic fallback
+        // Sentiment-aware diverse fallback hooks
         const energy = sentiment?.energyLevel || 5;
-        const hookWord = energy >= 7 ? 'LET’S GO 🔥' : energy >= 5 ? 'WAIT FOR IT' : 'WATCH THIS';
-        const midWord = energy >= 7 ? 'INSANE 🤯' : 'MIND BLOWN 🤯';
+        const highEnergyHooks = ['LET’S GO 🔥', 'MIND BLOWN 🤯', 'POV: YOU WON 🏆', 'WTF JUST HAPPENED'];
+        const midEnergyHooks = ['WAIT FOR IT', 'WATCH THIS', 'SECRET REVEALED 🤫', 'PRO TIP 💡'];
+        const hookWord = energy >= 7 
+          ? highEnergyHooks[Math.floor(Math.random() * highEnergyHooks.length)] 
+          : midEnergyHooks[Math.floor(Math.random() * midEnergyHooks.length)];
+          
+        const highEnergyMids = ['INSANE 🤯', 'UNREAL 🔥', '100% REAL', 'CRAZY RIGHT?'];
+        const midEnergyMids = ['MIND BLOWN 🤯', 'WOW', 'INTERESTING', 'TAKE NOTES ✍️'];
+        const midWord = energy >= 7 
+          ? highEnergyMids[Math.floor(Math.random() * highEnergyMids.length)]
+          : midEnergyMids[Math.floor(Math.random() * midEnergyMids.length)];
+          
+        const creativeColors = ['#FFD700', '#00FFFF', '#FF3366', '#39FF14', '#FFFFFF'];
+        const cColor1 = creativeColors[Math.floor(Math.random() * creativeColors.length)];
+        const cColor2 = creativeColors[Math.floor(Math.random() * creativeColors.length)];
+
         textOverlays = [
-          { type: 'hook', text: hookWord, startTime: 0, endTime: Math.min(1.5, duration), size: 72, color: '#FFD700', position: 'center' },
-          { type: 'highlight', text: midWord, startTime: duration > 4 ? Math.floor(duration / 2) : duration - 1, endTime: duration > 4 ? Math.floor(duration / 2) + 2 : duration, size: 64, color: '#FFFFFF', position: 'bottom' }
+          { type: 'hook', text: hookWord, startTime: 0, endTime: Math.min(1.5, duration), size: 72, color: cColor1, position: 'center' },
+          { type: 'highlight', text: midWord, startTime: duration > 4 ? Math.floor(duration / 2) : duration - 1, endTime: duration > 4 ? Math.floor(duration / 2) + 2 : duration, size: 64, color: cColor2, position: 'bottom' }
         ];
       }
     }
@@ -1892,7 +2455,7 @@ Transcript: "${transcript.substring(0, 1500)}"`;
       emitProgress('captions', 15, 'Generating smart captions...');
       const captionOverrides = editingOptions.captionFontFamily ? { fontFamily: editingOptions.captionFontFamily } : {};
       const targetLang = editingOptions.targetLang || 'en';
-      smartCaptions = await generateAndApplySmartCaptions(videoId, transcript, duration, captionStyle, captionOverrides, null, targetLang);
+      smartCaptions = await generateAndApplySmartCaptions(videoId, transcript, duration, captionStyle, captionOverrides, transcriptWords ? { words: transcriptWords } : null, targetLang);
       if (smartCaptions && smartCaptions.length > 0) {
         appliedEdits.push(`Smart Captions (${smartCaptions.length} lines, ${captionStyle} style, language: ${targetLang})`);
         creativeFeatures.push('Smart Captions');
@@ -1914,10 +2477,49 @@ Transcript: "${transcript.substring(0, 1500)}"`;
     let silencePeriods = [];
     if (removeSilence || removePauses) {
       logger.info('Detecting silence periods', { videoId });
-      silencePeriods = await retryWithBackoff(
-        () => detectSilencePeriods(inputPath, effectiveSilenceThreshold, effectiveMinSilence),
-        2
-      );
+      if (transcriptWords && transcriptWords.length > 0) {
+        logger.info('Using transcript-aware segmentation for precise cuts', { videoId, words: transcriptWords.length });
+        
+        for (let i = 0; i < transcriptWords.length - 1; i++) {
+          const w1 = transcriptWords[i];
+          const w2 = transcriptWords[i + 1];
+          const w1End = w1.end ?? (w1.start + 0.3);
+          const w2Start = w2.start ?? (w1End + 0.1);
+          
+          if (w2Start > w1End) {
+            const gapDuration = w2Start - w1End;
+            if (gapDuration >= effectiveMinSilence) {
+              const safeStart = w1End + 0.05;
+              const safeEnd = w2Start - 0.05;
+              if (safeEnd > safeStart) {
+                silencePeriods.push({ start: safeStart, end: safeEnd, duration: safeEnd - safeStart });
+              }
+            }
+          }
+        }
+        
+        const firstWordStart = transcriptWords[0].start ?? 0;
+        if (firstWordStart > effectiveMinSilence) {
+          const safeEnd = firstWordStart - 0.05;
+          if (safeEnd > 0) {
+            silencePeriods.unshift({ start: 0, end: safeEnd, duration: safeEnd });
+          }
+        }
+        
+        const lastWord = transcriptWords[transcriptWords.length - 1];
+        const lastWordEnd = lastWord.end ?? ((lastWord.start ?? 0) + 0.3);
+        if (duration - lastWordEnd > effectiveMinSilence) {
+          const safeStart = lastWordEnd + 0.05;
+          if (duration > safeStart) {
+            silencePeriods.push({ start: safeStart, end: duration, duration: duration - safeStart });
+          }
+        }
+      } else {
+        silencePeriods = await retryWithBackoff(
+          () => detectSilencePeriods(inputPath, effectiveSilenceThreshold, effectiveMinSilence),
+          2
+        );
+      }
 
       // Get edit history to avoid repetitive cuts
       const editHistory = await getEditHistory(videoId);
@@ -1983,7 +2585,8 @@ Transcript: "${transcript.substring(0, 1500)}"`;
       }
 
       // 🛸 Phase 14: Neural B-Roll Intelligence
-      if (editingOptions.enableBRoll !== false) {
+      const brollFreq = editingOptions.brollFrequency || 'balanced';
+      if (editingOptions.enableBRoll !== false && brollFreq !== 'off') {
         try {
           emitProgress('b-roll', 28, 'Orchestrating AI B-roll variety...');
           bRollPlan = await bRollIntelligenceService.orchestrateBRoll(videoId, { segments: content.captions?.segments || [] });
@@ -1996,8 +2599,8 @@ Transcript: "${transcript.substring(0, 1500)}"`;
         }
       }
 
-      // 🛍️ Phase 15: Neural Commerce Layer (Autonomous Inlays)
-      if (editingOptions.enableCommerceInlays !== false) {
+      // 🛍️ Phase 15: Neural Commerce Layer (Autonomous Inlays) — opt-in only
+      if (editingOptions.enableCommerceInlays === true) {
         logger.info('Analyzing transcript for Commerce Inlays', { videoId });
         emitProgress('commerce', 32, 'Scanning for Authority Moments and Product CTAs...');
         
@@ -2018,7 +2621,7 @@ Transcript: "${transcript.substring(0, 1500)}"`;
         try {
           await commitContent(content);
         } catch (cErr) {
-           // commitContent might not be available if not required, but assuming it is since b-roll uses it
+          // commitContent might not be available if not required, but assuming it is since b-roll uses it
         }
         creativeFeatures.push('Neural Commerce Inlays');
       }
@@ -2055,20 +2658,113 @@ Transcript: "${transcript.substring(0, 1500)}"`;
       appliedEdits.push('Vertical Shielding (9:16 Optimization)');
     } else {
       // For vertical footage: apply Dynamic Cameraman Drift (Organic Breathing)
-      // Uses non-repeating Lissajous curves to perfectly simulate a human cameraman.
-      videoFilters.push("scale=1150:2044:force_original_aspect_ratio=increase,crop=1080:1920:x='(iw-1080)/2+25*sin(t/3.14)+10*sin(t/5.2)':y='(ih-1920)/2+15*cos(t/2.71)+8*cos(t/4.5)',format=yuv420p");
+      // Uses non-repeating Lissajous curves + detected face region for subject-biased drift.
+      let faceX = 0.5, faceY = 0.4;
+      if (enableAutoZoom) {
+        try {
+          const region = await saliencyService.detectActiveRegion(inputPath);
+          faceX = region.x;
+          faceY = region.y;
+          logger.info('Active region detected', { videoId, faceX: faceX.toFixed(2), faceY: faceY.toFixed(2), method: region.method });
+        } catch (_) { /* heuristic fallback */ }
+      }
+      const driftX = `(iw-1080)/2+${Math.round((faceX - 0.5) * 80)}+25*sin(t/3.14)+10*sin(t/5.2)`;
+      const driftY = `(ih-1920)/2+${Math.round((faceY - 0.4) * 120)}+15*cos(t/2.71)+8*cos(t/4.5)`;
+      videoFilters.push(`scale=1150:2044:force_original_aspect_ratio=increase,crop=1080:1920:x='${driftX}':y='${driftY}',format=yuv420p`);
       appliedEdits.push('Dynamic Cameraman Drift');
       creativeFeatures.push('AI Cameraman Tracking');
     }
 
-    // Quality: 2026 Luma-Cinematic Color Grade (High Contrast, Vibrant Mids)
+    // Quality: 2026 Diverse Color Grades
     if (enableColorGrading) {
-      videoFilters.push('eq=contrast=1.15:brightness=0.02:saturation=1.25');
-      appliedEdits.push('Luma-Cinematic Grade');
+      let avoidedThemes = [];
+      if (userId) {
+        try {
+          const SuggestionHistory = require('../models/SuggestionHistory');
+          const recentHistory = await SuggestionHistory.find({ 
+            userId, 
+            kind: 'auto-edit-theme' 
+          })
+            .sort({ createdAt: -1 })
+            .limit(3)
+            .lean();
+          avoidedThemes = recentHistory.map(h => h.label).filter(Boolean);
+        } catch (err) {
+          logger.warn('Failed to fetch recent auto-edit themes', { error: err.message });
+        }
+      }
+
+      const themes = ['cyberpunk_neon', 'vintage_film', 'high_contrast_luma', 'dreamy_pastel', 'hyper_pop', 'bw'];
+      let availableThemes = themes.filter(t => !avoidedThemes.includes(t));
+      if (availableThemes.length === 0) availableThemes = themes;
+
+      let chosenTheme = null;
+
+      // 🧠 creator-dna performance biasing
+      if (userId && !aestheticColorGrade && !requestVisualTheme) {
+        try {
+          const UserStyleProfile = require('../models/UserStyleProfile');
+          const profile = await UserStyleProfile.findOne({ userId });
+          if (profile && profile.weightedColorGrades && profile.weightedColorGrades.length > 0) {
+            // Retrieve top performing grades that are NOT avoided
+            const topPerformers = profile.topPerformers('weightedColorGrades', 5)
+              .map(p => p.key)
+              .filter(key => availableThemes.includes(key));
+            
+            if (topPerformers.length > 0) {
+              // 70% chance to pick their top performer, 30% chance to keep it fresh
+              if (Math.random() < 0.70) {
+                chosenTheme = topPerformers[0];
+                logger.info('🧠 Personalization Bias: Selected top-performing visual theme', { chosenTheme });
+              }
+            }
+          }
+        } catch (profileError) {
+          logger.warn('Failed to bias visual theme selection using style profile', { error: profileError.message });
+        }
+      }
+
+      const theme = aestheticColorGrade || requestVisualTheme || chosenTheme || availableThemes[Math.floor(Math.random() * availableThemes.length)];
+
+      if (userId && !aestheticColorGrade && !requestVisualTheme) {
+        try {
+          const SuggestionHistory = require('../models/SuggestionHistory');
+          await SuggestionHistory.create({
+            userId,
+            kind: 'auto-edit-theme',
+            label: theme
+          });
+        } catch (err) {
+          logger.warn('Failed to save selected theme to SuggestionHistory', { error: err.message });
+        }
+      }
+      if (theme === 'cyberpunk_neon') {
+        videoFilters.push('eq=contrast=1.2:brightness=0.01:saturation=1.4:gamma_b=1.2:gamma_g=0.9');
+        appliedEdits.push('Cyberpunk Neon Grade');
+      } else if (theme === 'vintage_film') {
+        videoFilters.push('eq=contrast=0.95:brightness=0.05:saturation=0.8:gamma_r=1.1');
+        appliedEdits.push('Vintage Film Grade');
+      } else if (theme === 'dreamy_pastel') {
+        videoFilters.push('eq=contrast=0.9:brightness=0.08:saturation=1.1:gamma=1.1');
+        appliedEdits.push('Dreamy Pastel Grade');
+      } else if (theme === 'hyper_pop') {
+        videoFilters.push('eq=contrast=1.25:brightness=0.03:saturation=1.5');
+        appliedEdits.push('Hyper Pop Grade');
+      } else if (theme === 'bw') {
+        videoFilters.push('hue=s=0,eq=contrast=1.2:brightness=0.02');
+        appliedEdits.push('Black & White Grade');
+      } else {
+        videoFilters.push('eq=contrast=1.15:brightness=0.02:saturation=1.25');
+        appliedEdits.push('Luma-Cinematic Grade');
+      }
     }
 
-    // Build cut filter if we have silence/scenes to remove
-    if (silencePeriods.length > 0 || sceneChanges.length > 0) {
+    // Build cut filter only when pacing speed-ramp is OFF.
+    // When optimizePacing=true the speed-ramp pipeline handles silences by
+    // accelerating through them (1.15x). Applying the select-based cut filter
+    // on top of the speed-ramp's trim+concat chain produces wrong timestamps
+    // because select resets PTS before the trim segments can operate on them.
+    if (!optimizePacing && (silencePeriods.length > 0 || sceneChanges.length > 0)) {
       const cuts = buildCutFilter(silencePeriods, sceneChanges, duration);
       if (cuts) {
         videoFilters.push(cuts.videoFilter);
@@ -2090,16 +2786,15 @@ Transcript: "${transcript.substring(0, 1500)}"`;
       appliedEdits.push(isShortForm ? 'Audio Enhancement (mobile mix)' : 'Audio Enhancement');
     }
 
-    // Quality: Noise reduction (clean voice)
+    // Quality: Noise reduction — spectral denoising only; no frequency cuts here
+    // so that a 3 kHz lowpass doesn't destroy voice clarity above that range.
     if (enableNoiseReduction) {
-      audioFilters.push('highpass=f=200,lowpass=f=3000,afftdn=nr=10:nf=-25');
+      audioFilters.push('afftdn=nr=10:nf=-25');
       appliedEdits.push('Noise Reduction');
     }
 
-    // Quality: Professional Audio Mastering (normalize loudness for platform standards)
-    // Followed by resampling to ensure absolute encoder compatibility
-    audioFilters.push('loudnorm=I=-16:TP=-1.5:LRA=11,aresample=44100');
-    appliedEdits.push('Loudness Mastering');
+    // Resample to guarantee encoder compatibility; loudnorm already applied above.
+    audioFilters.push('aresample=44100');
 
     // Creative: Cinematic Sub-Bass Boom on key impacts
     const bassBoomChain = generateSubBassBoomFilter(keyMoments?.reactions || [], duration);
@@ -2130,199 +2825,410 @@ Transcript: "${transcript.substring(0, 1500)}"`;
       appliedEdits.push('Smart Audio Ducking');
     }
 
-    // 5. Build dynamic Viral Velocity (High retention: slightly speed up entire video for engaging pace)
-    // NOTE: Only ONE setpts/atempo allowed per chain to avoid conflicts
+    // 5. Build dynamic pacing speed ramps (Neural Speed Ramping - 2026 Premium Edition)
     if (optimizePacing) {
-      const baseVelocity = pacingIntensity === 'aggressive' ? 1.1 : 1.06;
-      const velocityScale = repetitivePhrases.length > 0
-        ? Math.min(1.18, baseVelocity + (repetitivePhrases.length * 0.015))
-        : baseVelocity;
-      videoFilters.push(`setpts=PTS/${velocityScale}`);
-      audioFilters.push(`atempo=${velocityScale}`);
-      appliedEdits.push('Viral Velocity Optimization (Aggressive)');
-      creativeFeatures.push('High-Energy Pace');
-    }
+      const defaultBaseVelocity = pacingIntensity === 'aggressive' ? 1.08 : pacingIntensity === 'gentle' ? 1.0 : 1.04;
+      const baseVelocity = (typeof speedMultiplierDialogue === 'number' && speedMultiplierDialogue > 0)
+        ? speedMultiplierDialogue
+        : defaultBaseVelocity;
 
-    // 5b. KINETIC ZOOM JOLTS & FLASH CUTS (New for 2026)
-    if (enableAutoZoom) {
-      // Use keyMoments.reactions which contains the mapped viral moments
-      const zoomChain = generateKineticZoomChain(keyMoments?.reactions || [], duration);
-      if (zoomChain) {
-        videoFilters.push(zoomChain);
-        creativeFeatures.push('Kinetic Zoom Jolts');
-        appliedEdits.push('AI Motion Tracking');
+      const hasAudio = metadata.streams && metadata.streams.some(s => s.codec_type === 'audio');
+      
+      const punchlines = keyMoments?.reactions || [];
+      const pauses = silencePeriods || [];
+      const boundaries = new Set([0, duration]);
+      
+      // Punchline intervals: 1.5s centered around reaction times, speed = 0.95 (decelerate for focus)
+      const punchlineIntervals = [];
+      punchlines.forEach(p => {
+        const peak = p.time;
+        if (typeof peak === 'number' && !isNaN(peak)) {
+          const start = Math.max(0, peak - 0.5);
+          const end = Math.min(duration, peak + 1.0);
+          if (end > start + 0.1) {
+            punchlineIntervals.push({ start, end, speed: 0.95, priority: 2 });
+            boundaries.add(start);
+            boundaries.add(end);
+          }
+        }
+      });
+      
+      // Pause intervals: speed = speedMultiplierSilence or default 1.15 (accelerate fillers)
+      const silenceSpeed = (typeof speedMultiplierSilence === 'number' && speedMultiplierSilence > 0)
+        ? speedMultiplierSilence
+        : 1.15;
+
+      const pauseIntervals = [];
+      pauses.forEach(s => {
+        if (typeof s.start === 'number' && typeof s.end === 'number') {
+          const start = Math.max(0, s.start);
+          const end = Math.min(duration, s.end);
+          if (end > start + 0.1) {
+            pauseIntervals.push({ start, end, speed: silenceSpeed, priority: 1 });
+            boundaries.add(start);
+            boundaries.add(end);
+          }
+        }
+      });
+      
+      const sortedBoundaries = Array.from(boundaries).sort((a, b) => a - b);
+      const rawSegments = [];
+      for (let i = 0; i < sortedBoundaries.length - 1; i++) {
+        const start = sortedBoundaries[i];
+        const end = sortedBoundaries[i + 1];
+        const mid = (start + end) / 2;
+        
+        let speed = baseVelocity;
+        let highestPriority = 0;
+        
+        punchlineIntervals.forEach(inv => {
+          if (mid >= inv.start && mid <= inv.end) {
+            if (inv.priority > highestPriority) {
+              highestPriority = inv.priority;
+              speed = inv.speed;
+            }
+          }
+        });
+        
+        pauseIntervals.forEach(inv => {
+          if (mid >= inv.start && mid <= inv.end) {
+            if (inv.priority > highestPriority) {
+              highestPriority = inv.priority;
+              speed = inv.speed;
+            }
+          }
+        });
+        
+        rawSegments.push({ start, end, speed });
       }
       
-      // Add flash impacts on viral triggers for high energy
-      const flashChain = generateFlashCutsFilter(keyMoments?.reactions || [], duration);
-      if (flashChain) {
-        videoFilters.push(flashChain);
-        creativeFeatures.push('Flash Impacts');
+      // Merge adjacent segments with identical speeds
+      const pacingSegments = [];
+      if (rawSegments.length > 0) {
+        let current = { ...rawSegments[0] };
+        for (let i = 1; i < rawSegments.length; i++) {
+          if (Math.abs(rawSegments[i].speed - current.speed) < 0.001) {
+            current.end = rawSegments[i].end;
+          } else {
+            pacingSegments.push(current);
+            current = { ...rawSegments[i] };
+          }
+        }
+        pacingSegments.push(current);
       }
-
-      // Add Action Camera Shake on 'shock' moments
-      const shakeChain = generateShockJitterFilter(keyMoments?.reactions || [], duration);
-      if (shakeChain) {
-        videoFilters.push(shakeChain);
-        creativeFeatures.push('Action Camera Shake');
-        appliedEdits.push('Dynamic Camera Shake');
-      }
-
-      // Add Color Isolation (B&W shift) on negative/serious moments
-      const colorIsolationChain = generateColorIsolationFilter(keyMoments?.reactions || [], duration);
-      if (colorIsolationChain) {
-        videoFilters.push(colorIsolationChain);
-        creativeFeatures.push('B-Roll Color Isolation');
-        appliedEdits.push('Thematic Color Shift');
-      }
-
-      // Add Cyber Glitch Corruption on controversial/FOMO moments
-      const glitchChain = generateCyberGlitchFilter(keyMoments?.reactions || [], duration);
-      if (glitchChain) {
-        videoFilters.push(glitchChain);
-        creativeFeatures.push('Cyber Glitch Effect');
+      
+      // Exclude sub-0.05s intervals to protect FFmpeg execution
+      const finalSegments = pacingSegments.filter(s => (s.end - s.start) >= 0.05);
+      
+      if (finalSegments.length > 1) {
+        // Render Video split-trim-concat chain
+        const splitLabels = finalSegments.map((_, idx) => `[vseg${idx}]`);
+        const trimLabels = finalSegments.map((_, idx) => `[vtrim${idx}]`);
+        
+        let videoSpeedFilter = `split=${finalSegments.length}${splitLabels.join('')}; `;
+        finalSegments.forEach((seg, idx) => {
+          videoSpeedFilter += `[vseg${idx}]trim=start=${seg.start.toFixed(3)}:end=${seg.end.toFixed(3)},setpts=PTS-STARTPTS,setpts=PTS/${seg.speed}[vtrim${idx}]; `;
+        });
+        videoSpeedFilter += `${trimLabels.join('')}concat=n=${finalSegments.length}:v=1:a=0`;
+        videoFilters.push(videoSpeedFilter);
+        
+        // Render Audio split-trim-concat chain in lockstep
+        if (hasAudio) {
+          const aSplitLabels = finalSegments.map((_, idx) => `[aseg${idx}]`);
+          const aTrimLabels = finalSegments.map((_, idx) => `[atrim${idx}]`);
+          
+          let audioSpeedFilter = `asplit=${finalSegments.length}${aSplitLabels.join('')}; `;
+          finalSegments.forEach((seg, idx) => {
+            audioSpeedFilter += `[aseg${idx}]atrim=start=${seg.start.toFixed(3)}:end=${seg.end.toFixed(3)},asetpts=PTS-STARTPTS,atempo=${seg.speed}[atrim${idx}]; `;
+          });
+          audioSpeedFilter += `${aTrimLabels.join('')}concat=n=${finalSegments.length}:v=0:a=1`;
+          audioFilters.push(audioSpeedFilter);
+        }
+        
+        appliedEdits.push('Neural Speed Ramping (Dynamic)');
+        creativeFeatures.push('Dynamic Speed Ramping');
+      } else if (finalSegments.length === 1) {
+        const speed = finalSegments[0].speed;
+        if (Math.abs(speed - 1.0) > 0.01) {
+          videoFilters.push(`setpts=PTS/${speed}`);
+          if (hasAudio) audioFilters.push(`atempo=${speed}`);
+          appliedEdits.push(`Neural Speed Ramping (${speed.toFixed(2)}x)`);
+          creativeFeatures.push('Pacing Optimization');
+        }
       }
     }
 
-      // === PREMIUM AI CAPTION SYSTEM ===
-      // Priority: Use Gemini-suggested captions if available, fall back to smartCaptions
-      const captionsToRender = [];
+    // 5b. KINETIC ZOOM JOLTS & RANDOMIZED VFX DIVERSITY (New for 2026)
+    // Randomize the applied effects so videos don't become repetitive
+    if (enableAutoZoom) {
+      const availableVFX = [];
 
-      // Gemini-sourced captions take highest priority (most creative and accurate)
-      const geminiCaptions = keyMoments?.suggestedCaptions || [];
-      if (geminiCaptions.length > 0) {
-        geminiCaptions.slice(0, 8).forEach(cap => captionsToRender.push({ ...cap, source: 'gemini' }));
-        appliedEdits.push('Gemini AI Captions');
-        creativeFeatures.push('AI-Generated Captions');
-      } else if (smartCaptions && smartCaptions.length > 0) {
-        smartCaptions.slice(0, 8).forEach(cap => captionsToRender.push({ ...cap, source: 'analysis' }));
-        appliedEdits.push('Smart Captions');
-      }
+      // ── Original 5 VFX ──────────────────────────────────────────────────────
+      const zoomChain = generateKineticZoomChain(keyMoments?.reactions || [], duration);
+      if (zoomChain) availableVFX.push({ chain: zoomChain, name: 'Kinetic Zoom Jolts', type: 'AI Motion Tracking' });
 
-      // Add CTA overlay from Gemini at the end of the video
-      if (keyMoments?.cta) {
-        captionsToRender.push({
-          text: keyMoments.cta.toUpperCase(),
-          startTime: Math.max(0, duration - 4),
-          endTime: duration,
-          style: 'CTA',
-          source: 'gemini-cta',
-        });
-      }
+      const flashChain = generateFlashCutsFilter(keyMoments?.reactions || [], duration);
+      if (flashChain) availableVFX.push({ chain: flashChain, name: 'Flash Impacts', type: 'High Energy Flash' });
 
-      if (captionsToRender.length > 0) {
-        emitProgress('editing', 50, 'Applying AI-generated captions...');
+      const shakeChain = generateShockJitterFilter(keyMoments?.reactions || [], duration);
+      if (shakeChain) availableVFX.push({ chain: shakeChain, name: 'Action Camera Shake', type: 'Dynamic Camera Shake' });
 
-        // Style map — 2026 platform-native visual treatments (Ultra-Premium)
-        const styleMap = {
-          hook:     { fontColor: '#FFD700', bgColor: 'black@0.9', fontSize: 82, y: 'h-text_h-360', borderColor: '#FFD700', borderw: 4, shadow: 4 },
-          stat:     { fontColor: '#00FFFF', bgColor: 'black@0.85', fontSize: 72, y: 'h-text_h-320', borderColor: '#00FFFF', borderw: 3, shadow: 3 },
-          question: { fontColor: '#FFFFFF', bgColor: 'black@0.85', fontSize: 64, y: 'h/2.2',         borderColor: '#FFFFFF', borderw: 2, shadow: 2 },
-          punchline: { fontColor: '#FF3366', bgColor: 'black@0.9', fontSize: 76, y: 'h-text_h-320', borderColor: '#FF3366', borderw: 3, shadow: 4 },
-          CTA:      { fontColor: '#FFD700', bgColor: 'black@0.95', fontSize: 60, y: 'h-text_h-240', borderColor: '#FFD700', borderw: 2, shadow: 2 },
-          default:  { fontColor: '#FFFFFF', bgColor: 'black@0.8',  fontSize: 58, y: 'h-text_h-320', borderColor: 'black',   borderw: 2, shadow: 2 },
+      const colorIsolationChain = generateColorIsolationFilter(keyMoments?.reactions || [], duration);
+      if (colorIsolationChain) availableVFX.push({ chain: colorIsolationChain, name: 'B-Roll Color Isolation', type: 'Thematic Color Shift' });
+
+      const glitchChain = generateCyberGlitchFilter(keyMoments?.reactions || [], duration);
+      if (glitchChain) availableVFX.push({ chain: glitchChain, name: 'Cyber Glitch Effect', type: 'Cyber Glitch Effect' });
+
+      // ── 2026 VFX Pack ────────────────────────────────────────────────────────
+      const rgbSplitChain = generateRGBSplitFilter(keyMoments?.reactions || [], duration);
+      if (rgbSplitChain) availableVFX.push({ chain: rgbSplitChain, name: 'RGB Channel Split', type: 'Chromatic Aberration' });
+
+      const filmBurnChain = generateFilmBurnFilter(sceneChanges, duration);
+      if (filmBurnChain) availableVFX.push({ chain: filmBurnChain, name: 'Film Burn Transition', type: 'Film Burn' });
+
+      const whipBlurChain = generateWhipPanBlurFilter(sceneChanges, duration);
+      if (whipBlurChain) availableVFX.push({ chain: whipBlurChain, name: 'Motion Blur Whip Pan', type: 'Whip Pan Blur' });
+
+      const vignettePulseChain = generateVignettePulseFilter(keyMoments?.reactions || [], duration);
+      if (vignettePulseChain) availableVFX.push({ chain: vignettePulseChain, name: 'Vignette Pulse', type: 'Bass Vignette' });
+
+      const lightLeakChain = generateLightLeakFilter(sceneChanges, duration);
+      if (lightLeakChain) availableVFX.push({ chain: lightLeakChain, name: 'Light Leak', type: 'Scene Light Leak' });
+
+      // ── Diversity-enforced selection (batch registry prevents repetition) ───
+      if (availableVFX.length > 0) {
+        // batchVFXRegistry passed from batch route; excludes recently-used VFX across clips
+        const batchVFXRegistry = editingOptions._batchVFXRegistry || new Set();
+        const fresh = availableVFX.filter(vfx => !batchVFXRegistry.has(vfx.name));
+        const pool = fresh.length > 0 ? fresh : availableVFX; // reset if all excluded
+
+        // If the user explicitly chose a transition style, pin that VFX first.
+        // fast-cut: avoid slow blending effects; glitch: pin glitch; whip-pan: pin whip blur.
+        const TRANSITION_VFX_MAP = {
+          glitch:   'Cyber Glitch Effect',
+          'whip-pan': 'Motion Blur Whip Pan',
+          crossfade: 'Film Burn Transition',
+          'fast-cut': null, // intentional — fast-cut means fewer/no overlaid effects
         };
-
-        captionsToRender.forEach((caption) => {
-          const rawText = (caption.text || '').toUpperCase().trim();
-          if (!rawText) return;
-
-          const sty = styleMap[caption.style] || styleMap.default;
-
-          // Dynamic font size based on text length — shorter = bigger impact
-          let fontSize = sty.fontSize;
-          if (rawText.length < 10) fontSize = Math.round(fontSize * 1.2);
-          else if (rawText.length > 35) fontSize = Math.round(fontSize * 0.82);
-
-          const x = '(w-text_w)/2';
-          const y = sty.y;
-          
-          // Offset timestamps dynamically for Viral Clip Extraction
-          const s = Math.max(0, Number(caption.startTime ?? 0) - globalTimeOffset).toFixed(3);
-          const e = Math.max(0.1, Number(caption.endTime ?? ((caption.startTime ?? 0) + 3)) - globalTimeOffset).toFixed(3);
-          
-          // Skip rendering if caption is completely outside the newly extracted viral clip bounds
-          if (Number(s) >= globalDuration || Number(e) <= 0) return;
-
-          // Kinetic displacement for hooks/punchlines (more aggressive bounce)
-          let finalY = sty.y;
-          if (caption.style === 'hook' || caption.style === 'punchline') {
-            // Add a snappy periodic bounce: + 15px oscillation
-            finalY = `${sty.y}-15*sin(2*PI*t/0.4)`;
+        let pinnedVFX = null;
+        if (aestheticTransition && TRANSITION_VFX_MAP[aestheticTransition] !== undefined) {
+          const targetName = TRANSITION_VFX_MAP[aestheticTransition];
+          if (targetName) {
+            pinnedVFX = pool.find(v => v.name === targetName) || null;
           }
+        }
+        if (aestheticTransition === 'fast-cut') {
+          // No overlaid VFX for fast-cut style — pure hard cuts are the effect
+          logger.info('Skipping VFX overlay — fast-cut transition style active');
+        } else {
+          const shuffled = pool.filter(v => !pinnedVFX || v.name !== pinnedVFX.name).sort(() => 0.5 - Math.random());
+          const numExtra = Math.max(0, Math.floor(Math.random() * Math.min(2, shuffled.length + 1)));
+          const selectedVFX = pinnedVFX ? [pinnedVFX, ...shuffled.slice(0, numExtra)] : shuffled.slice(0, Math.max(1, numExtra + 1));
 
-          // Safe-escape for drawtext: single quotes must be \' in the filter string
-          const safeText = rawText.replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
-
-          const captionFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${sty.fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${sty.bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow}:shadowy=${sty.shadow}:enable='between(t\\,${s}\\,${e})'`;
-          videoFilters.push(captionFilter);
-        });
-
-        logger.info('AI Caption System applied', { count: captionsToRender.length, sources: [...new Set(captionsToRender.map(c => c.source))] });
-      }
-
-      // Creative: Add text overlays (from AI analysis — hook + highlights)
-      if (enableTextOverlays && textOverlays.length > 0 && geminiCaptions.length === 0) {
-        // Only apply if Gemini captions didn't already cover this
-        const overlaysToApply = [
-          textOverlays.find(o => o.type === 'hook'),
-          ...textOverlays.filter(o => o.type === 'highlight').slice(0, 2)
-        ].filter(Boolean);
-
-        overlaysToApply.forEach((overlay) => {
-          const fontSize = overlay.size || 36;
-          const color = overlay.color || '#FFFFFF';
-          const bgColor = (overlay.backgroundColor || 'black@0.7').replace(/rgba\(0,0,0,([0-9.]+)\)/, 'black@$1');
-          const x = '(w-text_w)/2';
-          const y = overlay.position === 'top' ? '80' : overlay.position === 'bottom' ? 'h-text_h-120' : '(h-text_h)/2';
-          
-          // Offset timestamps dynamically for Viral Clip Extraction
-          const s = Math.max(0, Number(overlay.startTime ?? 0) - globalTimeOffset).toFixed(3);
-          const e = Math.max(0.1, Number(overlay.endTime ?? duration) - globalTimeOffset).toFixed(3);
-          if (Number(s) >= globalDuration || Number(e) <= 0) return;
-
-          const safeText = (overlay.text || '').replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
-
-          const textFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${color}':x='${x}':y='${y}':box=1:boxcolor='${bgColor}':borderw=2:bordercolor='black':enable='between(t\\,${s}\\,${e})'`;
-          videoFilters.push(textFilter);
-        });
-
-        if (overlaysToApply.length > 0) {
-          creativeFeatures.push('Text Overlays');
-          appliedEdits.push(`Text Overlays (${overlaysToApply.length})`);
+          selectedVFX.forEach(vfx => {
+            videoFilters.push(vfx.chain);
+            creativeFeatures.push(vfx.name);
+            if (vfx.type) appliedEdits.push(vfx.type);
+            batchVFXRegistry.add(vfx.name);
+          });
+          logger.info('Applied diverse VFX set', { vfxCount: selectedVFX.length, choices: selectedVFX.map(v => v.name) });
         }
       }
+    }
 
-      // 🛍️ Phase 15.5: Render Commerce Layer CTAs
-      if (commerceInlays && commerceInlays.length > 0) {
-        commerceInlays.forEach((inlay) => {
-          // Add a premium, glowing glassmorphic CTA product box
-          const startT = Math.max(0, inlay.time - globalTimeOffset).toFixed(3);
-          const endT = Math.max(0.1, (inlay.time + inlay.duration) - globalTimeOffset).toFixed(3);
-          if (Number(startT) >= globalDuration || Number(endT) <= 0) return;
+    // === PREMIUM AI CAPTION SYSTEM ===
+    // Priority: Use Gemini-suggested captions if available, fall back to smartCaptions
+    const captionsToRender = [];
 
-          const prodName = (inlay.product || 'Product').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
-          const prodPrice = (inlay.price || 'Link in bio').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
+    // Gemini-sourced captions take highest priority (most creative and accurate)
+    const geminiCaptions = keyMoments?.suggestedCaptions || [];
+    if (geminiCaptions.length > 0) {
+      geminiCaptions.slice(0, 8).forEach(cap => captionsToRender.push({ ...cap, source: 'gemini' }));
+      appliedEdits.push('Gemini AI Captions');
+      creativeFeatures.push('AI-Generated Captions');
+    } else if (smartCaptions && smartCaptions.length > 0) {
+      smartCaptions.slice(0, 8).forEach(cap => captionsToRender.push({ ...cap, source: 'analysis' }));
+      appliedEdits.push('Smart Captions');
+    }
+
+    // Add CTA overlay from Gemini at the end of the video
+    if (keyMoments?.cta) {
+      captionsToRender.push({
+        text: keyMoments.cta.toUpperCase(),
+        startTime: Math.max(0, duration - 4),
+        endTime: duration,
+        style: 'CTA',
+        source: 'gemini-cta',
+      });
+    }
+
+    if (captionsToRender.length > 0) {
+      emitProgress('editing', 50, 'Applying AI-generated captions...');
+
+      // Style map — 2026 platform-native visual treatments (Ultra-Premium)
+      const styleMap = {
+        hook:     { fontColor: '#FFD700', bgColor: 'black@0.9', fontSize: 82, y: 'h-text_h-360', borderColor: '#FFD700', borderw: 4, shadow: 4 },
+        stat:     { fontColor: '#00FFFF', bgColor: 'black@0.85', fontSize: 72, y: 'h-text_h-320', borderColor: '#00FFFF', borderw: 3, shadow: 3 },
+        question: { fontColor: '#FFFFFF', bgColor: 'black@0.85', fontSize: 64, y: 'h/2.2',         borderColor: '#FFFFFF', borderw: 2, shadow: 2 },
+        punchline: { fontColor: '#FF3366', bgColor: 'black@0.9', fontSize: 76, y: 'h-text_h-320', borderColor: '#FF3366', borderw: 3, shadow: 4 },
+        CTA:      { fontColor: '#FFD700', bgColor: 'black@0.95', fontSize: 60, y: 'h-text_h-240', borderColor: '#FFD700', borderw: 2, shadow: 2 },
+        default:  { fontColor: '#FFFFFF', bgColor: 'black@0.8',  fontSize: 58, y: 'h-text_h-320', borderColor: 'black',   borderw: 2, shadow: 2 },
+      };
+
+      captionsToRender.forEach((caption) => {
+        const rawText = (caption.text || '').toUpperCase().trim();
+        if (!rawText) return;
+
+        // Apply 2026 dynamic emoji decoration (for data/metadata only)
+        const emojiText = attachViralEmojis(rawText, caption.style);
+        // Strip emoji and non-printable-ASCII before passing to FFmpeg drawtext —
+        // drawtext cannot render emoji glyphs and renders them as □ tofu boxes.
+        const drawableText = emojiText.replace(/[^ -~]/g, '').trim();
+        if (!drawableText) return;
+
+        const sty = styleMap[caption.style] || styleMap.default;
+
+        // Dynamic font size based on text length — shorter = bigger impact
+        let fontSize = sty.fontSize;
+        if (drawableText.length < 10) fontSize = Math.round(fontSize * 1.2);
+        else if (drawableText.length > 35) fontSize = Math.round(fontSize * 0.82);
+
+        // Apply custom captionFontScale override
+        if (typeof captionFontScale === 'number' && captionFontScale > 0) {
+          fontSize = Math.round(fontSize * captionFontScale);
+        }
+
+        const x = '(w-text_w)/2';
           
-          // Outer glass border box (160px tall card, positioned 280px above bottom edge)
-          videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=white@0.8:thickness=4:enable='between(t\\,${startT}\\,${endT})'`);
-          // Inner glass fill
-          videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=black@0.6:t=fill:enable='between(t\\,${startT}\\,${endT})'`);
-          // Product Name (sits ~25px below top of card)
-          videoFilters.push(`drawtext=text='SHOP\\: ${prodName}':fontsize=42:fontcolor='#FFD700':x='(w-text_w)/2':y='h-415':shadowcolor=black@0.9:shadowx=3:shadowy=3:enable='between(t\\,${startT}\\,${endT})'`);
-          // Price / CTA (sits ~85px below top of card)
-          videoFilters.push(`drawtext=text='${prodPrice} -> TAP TO BUY':fontsize=32:fontcolor='#FFFFFF':x='(w-text_w)/2':y='h-355':shadowcolor=black@0.9:shadowx=2:shadowy=2:enable='between(t\\,${startT}\\,${endT})'`);
-        });
-      }
+        // Offset timestamps dynamically for Viral Clip Extraction
+        const s = Math.max(0, Number(caption.startTime ?? 0) - globalTimeOffset).toFixed(3);
+        const e = Math.max(0.1, Number(caption.endTime ?? ((caption.startTime ?? 0) + 3)) - globalTimeOffset).toFixed(3);
+          
+        // Skip rendering if caption is completely outside the newly extracted viral clip bounds
+        if (Number(s) >= globalDuration || Number(e) <= 0) return;
 
-      // OpusClip/TikTok style Viral Retention Progress Bar (2026 Trend)
-      if (optimizePacing) {
-        // A sleek, neon-cyan progress bar at the very bottom
-        const progressBarFilter = `drawbox=x=0:y=h-15:w='iw*(t/${duration})':h=15:color=#00FFFF@0.9:t=fill`;
-        videoFilters.push(progressBarFilter);
-        creativeFeatures.push('Retention Progress Bar');
-        appliedEdits.push('Viral Progress UI');
+        // Map subtitlePosition to a concrete Y expression when user specified
+        // a non-auto placement (overrides each style's default position).
+        const subtitlePosY = {
+          top:         '80',
+          middle:      '(h-text_h)/2',
+          bottom:      'h-text_h-200',
+          'lower-third': 'h*0.75',
+        }[subtitlePosition];
+
+        // Kinetic displacement for hooks/punchlines (more aggressive bounce)
+        let finalY = subtitlePosY || sty.y;
+        if (!subtitlePosY && (caption.style === 'hook' || caption.style === 'punchline')) {
+          // Add a snappy periodic bounce: + 15px oscillation
+          finalY = `${sty.y}-15*sin(2*PI*t/0.4)`;
+        }
+
+        // Apply vertical alignment offset override
+        if (typeof captionVerticalOffset === 'number' && captionVerticalOffset !== 0) {
+          finalY = `${finalY}+(${captionVerticalOffset})`;
+        }
+
+        // Safe-escape for drawtext: single quotes must be \’ in the filter string
+        const safeText = drawableText.replace(/\\/g, '\\\\').replace(/'/g, '\u2019').replace(/:/g, '\\:').replace(/%/g, '\\%');
+
+        const fontPath = getSystemFontPath();
+        const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+
+        const captionFilter = `drawtext=text='${safeText}'${fontfileOpt}:fontsize=${fontSize}:fontcolor='${sty.fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${sty.bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow}:shadowy=${sty.shadow}:enable='between(t\\,${s}\\,${e})'`;
+        videoFilters.push(captionFilter);
+      });
+
+      logger.info('AI Caption System applied', { count: captionsToRender.length, sources: [...new Set(captionsToRender.map(c => c.source))] });
+
+      // Word-level karaoke highlights — fires when Whisper word timestamps exist.
+      // Renders each spoken word in yellow at its precise timing window,
+      // making Click's captions visually identical to Submagic/Captions.ai.
+      // Guard: skip karaoke when styled Gemini/Smart captions are already rendered —
+      // both systems occupy the lower-third area and running both creates doubled subtitles.
+      if (transcriptWords && transcriptWords.length > 0 && captionsToRender.length === 0) {
+        const wordFilters = generateWordLevelCaptionFilters(transcriptWords, captionStyle, 0, duration);
+        wordFilters.forEach(f => videoFilters.push(f));
+        if (wordFilters.length > 0) {
+          creativeFeatures.push('Word-Level Karaoke Captions');
+          appliedEdits.push(`Karaoke Highlights (${wordFilters.length} word frames)`);
+          logger.info('Karaoke caption filters applied', { wordCount: transcriptWords.length, filterCount: wordFilters.length });
+        }
       }
+    }
+
+    // Creative: Add text overlays (from AI analysis — hook + highlights)
+    if (enableTextOverlays && textOverlays.length > 0 && geminiCaptions.length === 0) {
+      // Only apply if Gemini captions didn't already cover this
+      const overlaysToApply = [
+        textOverlays.find(o => o.type === 'hook'),
+        ...textOverlays.filter(o => o.type === 'highlight').slice(0, 2)
+      ].filter(Boolean);
+
+      overlaysToApply.forEach((overlay) => {
+        let fontSize = overlay.size || 36;
+        if (typeof captionFontScale === 'number' && captionFontScale > 0) {
+          fontSize = Math.round(fontSize * captionFontScale);
+        }
+        const color = overlay.color || '#FFFFFF';
+        const bgColor = (overlay.backgroundColor || 'black@0.7').replace(/rgba\(0,0,0,([0-9.]+)\)/, 'black@$1');
+        const x = '(w-text_w)/2';
+        let y = overlay.position === 'top' ? '80' : overlay.position === 'bottom' ? 'h-text_h-120' : '(h-text_h)/2';
+        
+        if (typeof captionVerticalOffset === 'number' && captionVerticalOffset !== 0) {
+          y = `${y}+(${captionVerticalOffset})`;
+        }
+          
+        // Offset timestamps dynamically for Viral Clip Extraction
+        const s = Math.max(0, Number(overlay.startTime ?? 0) - globalTimeOffset).toFixed(3);
+        const e = Math.max(0.1, Number(overlay.endTime ?? duration) - globalTimeOffset).toFixed(3);
+        if (Number(s) >= globalDuration || Number(e) <= 0) return;
+
+        const safeText = (overlay.text || '').replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
+        const fontPath = getSystemFontPath();
+        const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+
+        const textFilter = `drawtext=text='${safeText}'${fontfileOpt}:fontsize=${fontSize}:fontcolor='${color}':x='${x}':y='${y}':box=1:boxcolor='${bgColor}':borderw=2:bordercolor='black':enable='between(t\\,${s}\\,${e})'`;
+        videoFilters.push(textFilter);
+      });
+
+      if (overlaysToApply.length > 0) {
+        creativeFeatures.push('Text Overlays');
+        appliedEdits.push(`Text Overlays (${overlaysToApply.length})`);
+      }
+    }
+
+    // 🛍️ Phase 15.5: Render Commerce Layer CTAs
+    if (commerceInlays && commerceInlays.length > 0) {
+      commerceInlays.forEach((inlay) => {
+        // Add a premium, glowing glassmorphic CTA product box
+        const startT = Math.max(0, inlay.time - globalTimeOffset).toFixed(3);
+        const endT = Math.max(0.1, (inlay.time + inlay.duration) - globalTimeOffset).toFixed(3);
+        if (Number(startT) >= globalDuration || Number(endT) <= 0) return;
+
+        const prodName = (inlay.product || 'Product').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
+        const prodPrice = (inlay.price || 'Link in bio').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
+        const fontPath = getSystemFontPath();
+        const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+          
+        // Outer glass border box (160px tall card, positioned 280px above bottom edge)
+        videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=white@0.8:thickness=4:enable='between(t\\,${startT}\\,${endT})'`);
+        // Inner glass fill
+        videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=black@0.6:t=fill:enable='between(t\\,${startT}\\,${endT})'`);
+        // Product Name (sits ~25px below top of card)
+        videoFilters.push(`drawtext=text='SHOP\\: ${prodName}'${fontfileOpt}:fontsize=42:fontcolor='#FFD700':x='(w-text_w)/2':y='h-415':shadowcolor=black@0.9:shadowx=3:shadowy=3:enable='between(t\\,${startT}\\,${endT})'`);
+        // Price / CTA (sits ~85px below top of card)
+        videoFilters.push(`drawtext=text='${prodPrice} -> TAP TO BUY'${fontfileOpt}:fontsize=32:fontcolor='#FFFFFF':x='(w-text_w)/2':y='h-355':shadowcolor=black@0.9:shadowx=2:shadowy=2:enable='between(t\\,${startT}\\,${endT})'`);
+      });
+    }
+
+    // OpusClip/TikTok style Viral Retention Progress Bar (2026 Trend)
+    if (optimizePacing) {
+      // A sleek, neon-cyan progress bar at the very bottom
+      const progressBarFilter = `drawbox=x=0:y=h-15:w='iw*(t/${duration})':h=15:color=#00FFFF@0.9:t=fill`;
+      videoFilters.push(progressBarFilter);
+      creativeFeatures.push('Retention Progress Bar');
+      appliedEdits.push('Viral Progress UI');
+    }
 
     // Log final filter strings for debugging
     logger.info('FFmpeg filter config', {
@@ -2529,6 +3435,8 @@ Transcript: "${transcript.substring(0, 1500)}"`;
                     musicVolume: 0.25,
                     fadeIn: 2,
                     fadeOut: 2,
+                    silencePeriods,   // used to duck music during speech
+                    duckedMusicDb: -18,
                   });
                   finalVideoPath = musicOutputPath;
                   appliedEdits.push('Background Music Added');
@@ -2727,17 +3635,17 @@ Transcript: "${transcript.substring(0, 1500)}"`;
 
             const hookScore = (
               typeof keyMoments.hook?.score === 'number' ? keyMoments.hook.score :
-              typeof keyMoments.hook?.confidence === 'number' ? Math.round(keyMoments.hook.confidence * 100) :
-              // Quality-derived fallback: bias slightly above quality
-              // when prioritizeHook was on (the user paid attention to
-              // the hook). Capped 0-100.
-              Math.max(0, Math.min(100, Math.round(qualityFloor * (optimizeHookOption ? 1.05 : 0.95))))
+                typeof keyMoments.hook?.confidence === 'number' ? Math.round(keyMoments.hook.confidence * 100) :
+                // Quality-derived fallback: bias slightly above quality
+                // when prioritizeHook was on (the user paid attention to
+                // the hook). Capped 0-100.
+                  Math.max(0, Math.min(100, Math.round(qualityFloor * (optimizeHookOption ? 1.05 : 0.95))))
             );
             const sentimentEnergy = (
               typeof sentiment?.energyLevel === 'number' ? sentiment.energyLevel :
               // Quality / 12 ≈ 0–8 range, slightly conservative so we
               // never surface 10/10 without real signal.
-              Math.max(1, Math.min(10, Math.round(qualityFloor / 12)))
+                Math.max(1, Math.min(10, Math.round(qualityFloor / 12)))
             );
             const viralMomentCount = (
               Array.isArray(keyMoments.reactions) && keyMoments.reactions.length > 0
@@ -2775,15 +3683,56 @@ Transcript: "${transcript.substring(0, 1500)}"`;
               viralMomentCount,
               // Style metadata so the lightbox can show preset / variation labels
               stylePresetId: editingOptions.stylePresetId || (Array.isArray(editingOptions.stylePresetIds) && editingOptions.stylePresetIds[0]) || null,
-              colorGrade: editingOptions.colorGrade || null,
-              transitionStyle: editingOptions.transitionStyle || null,
+              colorGrade: aestheticColorGrade || editingOptions.colorGrade || null,
+              transitionStyle: aestheticTransition || editingOptions.transitionStyle || null,
               musicGenre: editingOptions.musicGenre || (selectedMusic?.mood) || null,
-              hookStyle: editingOptions.hookStyle || keyMoments.hook?.style || null,
-              pacingIntensity: editingOptions.pacingIntensity || null,
+              hookStyle: preferredHookStyle || editingOptions.hookStyle || keyMoments.hook?.style || null,
+              pacingIntensity: pacingIntensity || null,
               ctaStyle: editingOptions.ctaStyle || null,
-              voiceTone: editingOptions.voiceTone || null,
+              voiceTone: preferredVoiceTone || editingOptions.voiceTone || null,
               niche: keyMoments.niche || null,
             });
+
+            // PHASE 6: NEURO-MARKETING METADATA GENERATION (2026 Premium Standard)
+            try {
+              emitProgress('analysis', 98, 'Generating continuous learning Neuro-Marketing strategy...');
+              const aiAssistedService = require('./aiAssistedEditingService');
+              const strategyResult = await aiAssistedService.generateMarketingStrategy(
+                videoId,
+                transcript,
+                finalMetadata,
+                keyMoments?.niche || 'General Business'
+              );
+              if (strategyResult && strategyResult.strategy) {
+                const marketingStrategy = strategyResult.strategy;
+                content.metadata.marketingStrategy = marketingStrategy;
+                content.generatedContent.marketingStrategy = marketingStrategy;
+                
+                // Attach the strategy and scheduling details directly to the clip record
+                const latestClipIndex = content.generatedContent.shortVideos.length - 1;
+                if (latestClipIndex >= 0) {
+                  content.generatedContent.shortVideos[latestClipIndex].marketingStrategy = marketingStrategy;
+                  // Pre-load scheduling matrix info directly onto the clip
+                  if (marketingStrategy.schedulingMatrix) {
+                    content.generatedContent.shortVideos[latestClipIndex].optimalPublishTime = marketingStrategy.schedulingMatrix.optimalTime;
+                    content.generatedContent.shortVideos[latestClipIndex].optimalPublishDay = marketingStrategy.schedulingMatrix.optimalDay;
+                    content.generatedContent.shortVideos[latestClipIndex].algorithmRationale = marketingStrategy.schedulingMatrix.algorithmRationale;
+                  }
+                  if (marketingStrategy.titles && marketingStrategy.titles.length > 0) {
+                    content.generatedContent.shortVideos[latestClipIndex].suggestedTitles = marketingStrategy.titles;
+                  }
+                  if (marketingStrategy.captions && marketingStrategy.captions.length > 0) {
+                    content.generatedContent.shortVideos[latestClipIndex].suggestedCaptions = marketingStrategy.captions;
+                  }
+                  if (marketingStrategy.hashtags && marketingStrategy.hashtags.length > 0) {
+                    content.generatedContent.shortVideos[latestClipIndex].suggestedHashtags = marketingStrategy.hashtags;
+                  }
+                }
+                logger.info('Neuro-marketing strategy and scheduling matrices pre-loaded successfully', { videoId });
+              }
+            } catch (marketError) {
+              logger.warn('Failed to generate neuro-marketing metadata, skipping', { error: marketError.message });
+            }
 
             await commitContent(content);
             logger.info('Content model updated with edited video', { videoId, editedUrl: uploadResult.url });
@@ -2819,9 +3768,11 @@ Transcript: "${transcript.substring(0, 1500)}"`;
               }
             }
 
+            cleanup(true, uploadResult);
             resolve(result);
           } catch (uploadError) {
             logger.error('Upload error after edit', { videoId, error: uploadError.message });
+            cleanupAll();
             reject(uploadError);
           }
         })
@@ -2833,47 +3784,14 @@ Transcript: "${transcript.substring(0, 1500)}"`;
             command: finalCommand._getArguments ? finalCommand._getArguments().join(' ') : 'unknown'
           });
 
-          // Clean up partial output file if it exists
-          if (fs.existsSync(outputPath)) {
-            try {
-              fs.unlinkSync(outputPath);
-              logger.info('Cleaned up partial output file', { videoId, outputPath });
-            } catch (cleanupError) {
-              logger.warn('Failed to cleanup partial file', { videoId, error: cleanupError.message });
-            }
-          }
-
+          cleanupAll();
           reject(new Error(`Video editing failed: ${err.message}`));
         })
         .run();
     });
   } catch (error) {
     logger.error('Auto-edit video service error', { error: error.message, videoId });
-    // Temp-file leak protection: if the render failed mid-way, scrub any
-    // half-written files we know about so the disk doesn't fill on
-    // repeated retries. The previous code only cleaned on success, so a
-    // timeout / OOM / SIGTERM left a partial .mp4 behind that we'd
-    // recreate on next attempt without removing the orphan.
-    try {
-      const candidates = [
-        _tempPathForCleanup ? path.join(process.cwd(), _tempPathForCleanup) : null,
-        _outputPathForCleanup ? path.join(process.cwd(), _outputPathForCleanup) : null,
-      ].filter(Boolean);
-      for (const p of candidates) {
-        try {
-          if (p && fs.existsSync(p)) {
-            const stat = fs.statSync(p);
-            // Don't blow away a finished video — keep anything > 1KB AND
-            // older than 60s (i.e. clearly not from this failing render).
-            if (stat.size < 1024 || (Date.now() - stat.mtimeMs) < 60_000) {
-              fs.unlinkSync(p);
-            }
-          }
-        } catch (cleanErr) {
-          logger.warn('Auto-edit cleanup: failed to unlink temp', { path: p, error: cleanErr.message });
-        }
-      }
-    } catch (_) { /* best-effort cleanup */ }
+    cleanupAll();
     throw error;
   }
 }
@@ -3032,7 +3950,7 @@ function validateAndClampAnalysis(analysis, duration) {
 async function analyzeVideoForEditing(videoMetadata) {
   try {
     const {
-      videoId, scenes: scenesInput = [], audioLevels = [],
+      videoId, audioLevels = [],
       // Niche-aware context — supplied by the route from User + UserStyleProfile.
       // All optional; falling back to defaults when absent keeps behaviour
       // unchanged for callers that haven't migrated.
@@ -3375,7 +4293,7 @@ async function getInteractiveSuggestions(videoId, opts = {}) {
       return start < end ? { start, end } : null;
     };
 
-    const hookFw = HOOK_FRAMEWORKS[0]; // strongest framework first
+    // Select the strongest hook framework logic based on early sentiment
     const angle = (np.angles || [])[0] || 'a clear, specific outcome';
     const trigger = (np.triggers || [])[0] || 'specific numbers';
 
@@ -3433,14 +4351,14 @@ Return valid JSON:
         const fw = HOOK_FRAMEWORKS[i % HOOK_FRAMEWORKS.length];
         const kind =
           i === 0 ? 'hook' :
-          i === 1 ? 'caption' :
-          i === retention.length - 1 ? 'cta' :
-          'cut';
+            i === 1 ? 'caption' :
+              i === retention.length - 1 ? 'cta' :
+                'cut';
         const description =
           kind === 'hook'    ? `Tighten ${range.start.toFixed(1)}–${range.end.toFixed(1)}s to a ${fw.id} hook anchored to "${angle}". ${r.rule}` :
-          kind === 'caption' ? `Burn a ${pp.captionStyle.toLowerCase()} caption with a ${trigger} between ${range.start.toFixed(1)}s and ${range.end.toFixed(1)}s.` :
-          kind === 'cta'     ? `Land the CTA at ${range.start.toFixed(1)}s. ${pp.cta}` :
-          `Insert a re-hook around ${range.start.toFixed(1)}s using the ${fw.id} framework: ${r.rule}`;
+            kind === 'caption' ? `Burn a ${pp.captionStyle.toLowerCase()} caption with a ${trigger} between ${range.start.toFixed(1)}s and ${range.end.toFixed(1)}s.` :
+              kind === 'cta'     ? `Land the CTA at ${range.start.toFixed(1)}s. ${pp.cta}` :
+                `Insert a re-hook around ${range.start.toFixed(1)}s using the ${fw.id} framework: ${r.rule}`;
         return {
           id: `sg-${i}`,
           kind,
@@ -3595,8 +4513,7 @@ async function applyAllAiSuggestions(videoId, suggestions = []) {
         energyProfile = await getAudioService().getAudioEnergyProfile(inputPath).catch(() => []);
       }
     }
-
-    const timelineData = suggestions.map((s, idx) => {
+    const timelineData = suggestions.map((s) => {
       // Find energy level at this timestamp
       const time = s.time || s.startTime || 0;
       const energySample = energyProfile.find(p => p.time >= time - 0.2 && p.time <= time + 0.2) || { energy: 0.5 };
@@ -3610,8 +4527,6 @@ async function applyAllAiSuggestions(videoId, suggestions = []) {
       } else {
         style = 'none';
       }
-
-      transitionIdx++;
 
       return {
         ...s,
@@ -4481,6 +5396,73 @@ function generateCyberGlitchFilter(viralMoments, duration) {
   return `noise=alls=100:allf=t+u:enable='${enableExpr}',eq=contrast=1.5:enable='${enableExpr}'`;
 }
 
+// ─── 2026 VFX Pack ────────────────────────────────────────────────────────────
+
+function generateRGBSplitFilter(viralMoments, duration) {
+  if (!Array.isArray(viralMoments) || viralMoments.length === 0) return null;
+  const moments = viralMoments.slice(0, 4);
+  let enableExpr = moments.map(m => {
+    const s = Number(m.time); if (isNaN(s)) return null;
+    const e = Math.min(s + 0.3, duration);
+    return `between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})`;
+  }).filter(Boolean).join('+');
+  if (!enableExpr) return null;
+  // Chromatic aberration via hue+saturation burst — safe on all FFmpeg builds
+  return `hue=h=0:s=1.8:enable='${enableExpr}',eq=contrast=1.3:saturation=0.1:enable='${enableExpr}'`;
+}
+
+function generateFilmBurnFilter(sceneChanges, duration) {
+  if (!Array.isArray(sceneChanges) || sceneChanges.length === 0) return null;
+  const transitions = sceneChanges.slice(0, 4);
+  let brightnessExpr = '0';
+  transitions.forEach(t => {
+    const s = Math.max(0, t - 0.15).toFixed(3);
+    const e = Math.min(t + 0.15, duration).toFixed(3);
+    brightnessExpr = `if(between(t\\,${s}\\,${e})\\,0.4*(1-abs(t-${Number(t).toFixed(3)})/0.15)\\,${brightnessExpr})`;
+  });
+  if (brightnessExpr === '0') return null;
+  return `eq=brightness='${brightnessExpr}':saturation=1.4:gamma_r=1.3:gamma_g=1.0:gamma_b=0.7`;
+}
+
+function generateWhipPanBlurFilter(sceneChanges, duration) {
+  if (!Array.isArray(sceneChanges) || sceneChanges.length === 0) return null;
+  const cuts = sceneChanges.slice(0, 5);
+  const enableExpr = cuts.map(t => {
+    const s = Math.max(0, t - 0.1).toFixed(3);
+    const e = Math.min(t + 0.1, duration).toFixed(3);
+    return `between(t\\,${s}\\,${e})`;
+  }).join('+');
+  if (!enableExpr) return null;
+  return `tblend=all_mode=average:enable='${enableExpr}'`;
+}
+
+function generateVignettePulseFilter(viralMoments, duration) {
+  if (!Array.isArray(viralMoments) || viralMoments.length === 0) return null;
+  const moments = viralMoments.slice(0, 5);
+  let angleExpr = 'PI/5';
+  moments.forEach(m => {
+    const s = Number(m.time); if (isNaN(s)) return;
+    const e = Math.min(s + 0.5, duration).toFixed(3);
+    angleExpr = `if(between(t\\,${s.toFixed(3)}\\,${e})\\,PI/2.5\\,${angleExpr})`;
+  });
+  return `vignette='${angleExpr}'`;
+}
+
+function generateLightLeakFilter(sceneChanges, duration) {
+  if (!Array.isArray(sceneChanges) || sceneChanges.length === 0) return null;
+  const cuts = sceneChanges.slice(0, 3);
+  const enableExpr = cuts.map(t => {
+    const s = Math.max(0, t - 0.25).toFixed(3);
+    const e = Math.min(t + 0.35, duration).toFixed(3);
+    return `between(t\\,${s}\\,${e})`;
+  }).join('+');
+  if (!enableExpr) return null;
+  // Warm orange flare at scene transitions
+  return `eq=brightness=0.35:saturation=0.3:gamma_r=1.6:gamma_g=1.2:gamma_b=0.6:enable='${enableExpr}'`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function getEditPerformanceAnalytics(videoId) {
   try {
     const content = await resolveContent(videoId);
@@ -4580,7 +5562,7 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
     }
     const stats = fs.statSync(outPath);
     if (stats.size < 4096) {
-      try { fs.unlinkSync(outPath); } catch (_) {}
+      try { fs.unlinkSync(outPath); } catch (_) { /* ignore deletion error */ }
       throw new Error(`Aspect ratio export ${ratio} produced a too-small file (${stats.size} bytes)`);
     }
 

@@ -6,7 +6,10 @@ const {
   getPersonalizedRecommendations,
   learnFromBehavior,
   getTrendBasedSuggestions,
+  analyzeCrossVideoPatterns,
+  matchTrendsToCreator,
 } = require('../../services/aiRecommendationsEngine');
+const continuousLearningService = require('../../services/continuousLearningService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const {
@@ -99,11 +102,33 @@ router.get('/trend-based', auth, asyncHandler(async (req, res) => {
     }
     
     const result = await getTrendBasedSuggestions(userId, platform || 'instagram');
-    sendSuccess(res, 'Trend-based suggestions fetched', 200, result || []);
+    sendSuccess(res, 'Trend-based suggestions fetched', 200, result || { suggestions: [], trends: [] });
   } catch (error) {
     logger.error('Get trend-based suggestions error', { error: error.message, userId: req.user._id || req.user.id });
-    sendSuccess(res, 'Trend-based suggestions fetched', 200, []);
+    sendSuccess(res, 'Trend-based suggestions fetched', 200, { suggestions: [], trends: [] });
   }
+}));
+
+// Cross-video pattern mining — what's working across this creator's entire library
+router.get('/cross-video-patterns', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id || req.user.id;
+  const result = await analyzeCrossVideoPatterns(userId);
+  sendSuccess(res, 'Cross-video patterns analysed', 200, result);
+}));
+
+// Trend matching — current platform trends scored against creator's niche and style
+router.get('/trend-match', auth, asyncHandler(async (req, res) => {
+  const { platform = 'tiktok' } = req.query;
+  const userId = req.user._id || req.user.id;
+  const result = await matchTrendsToCreator(userId, platform);
+  sendSuccess(res, 'Trends matched to creator', 200, result);
+}));
+
+// Active blueprint — the AI's current understanding of what works for this creator
+router.get('/blueprint', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id || req.user.id;
+  const result = await continuousLearningService.getActiveBlueprint(userId);
+  sendSuccess(res, 'Blueprint retrieved', 200, result || {});
 }));
 
 module.exports = router;

@@ -102,8 +102,34 @@ router.put('/select', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid niche' });
     }
 
-    req.user.niche = niche;
-    await req.user.save();
+    if (req.user && typeof req.user.save === 'function') {
+      req.user.niche = niche;
+      await req.user.save();
+    } else {
+      const User = require('../models/User');
+      const userDoc = await User.findById(req.userId || req.user?._id || req.user?.id);
+      if (userDoc) {
+        userDoc.niche = niche;
+        await userDoc.save();
+        req.user.niche = niche;
+      } else {
+        req.user.niche = niche;
+        if (!req.allowDevMode && !req.user.isDevUser) {
+          try {
+            const newUserDoc = new User({
+              _id: req.userId || req.user?._id || req.user?.id,
+              email: req.user.email || 'unknown@example.com',
+              name: req.user.name || 'Unknown User',
+              password: 'sso-placeholder-password',
+              niche: niche
+            });
+            await newUserDoc.save();
+          } catch (e) {
+            console.error('Failed to create user doc for niche selection', e);
+          }
+        }
+      }
+    }
 
     res.json({
       message: 'Niche updated',
@@ -170,7 +196,31 @@ router.put('/brand', auth, async (req, res) => {
     if (logo) req.user.brandSettings.logo = logo;
     if (font) req.user.brandSettings.font = font;
 
-    await req.user.save();
+    if (req.user && typeof req.user.save === 'function') {
+      await req.user.save();
+    } else {
+      const User = require('../models/User');
+      const userDoc = await User.findById(req.userId || req.user?._id || req.user?.id);
+      if (userDoc) {
+        userDoc.brandSettings = req.user.brandSettings;
+        await userDoc.save();
+      } else {
+        if (!req.allowDevMode && !req.user.isDevUser) {
+          try {
+            const newUserDoc = new User({
+              _id: req.userId || req.user?._id || req.user?.id,
+              email: req.user.email || 'unknown@example.com',
+              name: req.user.name || 'Unknown User',
+              password: 'sso-placeholder-password',
+              brandSettings: req.user.brandSettings
+            });
+            await newUserDoc.save();
+          } catch (e) {
+            console.error('Failed to create user doc for brand settings', e);
+          }
+        }
+      }
+    }
 
     res.json({
       message: 'Brand settings updated',

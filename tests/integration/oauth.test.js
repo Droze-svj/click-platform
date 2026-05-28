@@ -3,7 +3,8 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const User = require('../../server/models/User');
-const app = require('../../server/index');
+const createTestApp = require('./test-server-setup');
+const app = createTestApp();
 const jwt = require('jsonwebtoken');
 
 describe('OAuth Integration Tests', () => {
@@ -11,15 +12,17 @@ describe('OAuth Integration Tests', () => {
   let testUser;
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click-test');
-    }
+    // Ensure DB is connected
+    const { initDatabases } = require('../../server/config/database');
+    await initDatabases();
 
     // Create test user
+    await User.deleteOne({ email: 'oauth-test_' + Date.now() + '@example.com' });
     testUser = new User({
-      email: 'oauth-test@example.com',
-      password: 'password123',
+      email: 'oauth-test_' + Date.now() + '@example.com',
+      password: 'TestPassword123!',
       name: 'OAuth Test User',
+      emailVerified: true,
     });
     await testUser.save();
 
@@ -32,7 +35,7 @@ describe('OAuth Integration Tests', () => {
 
   afterAll(async () => {
     await User.deleteOne({ _id: testUser._id });
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 
   beforeEach(async () => {
@@ -112,6 +115,7 @@ describe('OAuth Integration Tests', () => {
           $set: {
             'oauth.twitter.connected': true,
             'oauth.twitter.connectedAt': new Date(),
+            'oauth.twitter.platformUserId': 'test-twitter-user',
           }
         });
 
@@ -132,6 +136,7 @@ describe('OAuth Integration Tests', () => {
           $set: {
             'oauth.twitter.connected': true,
             'oauth.twitter.accessToken': 'test-token',
+            'oauth.twitter.platformUserId': 'test-twitter-user',
           }
         });
 

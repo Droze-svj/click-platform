@@ -33,7 +33,19 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const { url, state } = await twitterService.getAuthorizationUrl(userId, callbackUrl);
+
+  // Create state payload
+  const statePayload = {
+    userId,
+    platform: 'twitter',
+    redirectUri: process.env.FRONTEND_URL || 'http://localhost:3000'
+  };
+  const crypto = require('crypto');
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  statePayload.codeVerifier = codeVerifier;
+
+  const state = Buffer.from(JSON.stringify(statePayload)).toString('base64');
+  const url = await twitterService.getAuthorizationUrl(userId, state, callbackUrl);
 
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
 }));
@@ -105,9 +117,11 @@ router.get('/status', auth, asyncHandler(async (req, res) => {
   const userId = req.userId || req.user?._id || req.user?.id;
   const accounts = await twitterService.getConnectedAccounts(userId);
   const connected = Array.isArray(accounts) && accounts.length > 0;
+  const firstAccount = accounts[0];
 
   sendSuccess(res, 'Status retrieved', 200, {
     connected,
+    connectedAt: firstAccount?.connectedAt || null,
     accounts: accounts || [],
     configured: twitterService.isConfigured()
   });

@@ -8,6 +8,14 @@ const advancedVideoEditingService = require('../../services/advancedVideoEditing
 const Content = require('../../models/Content');
 const { addVideoProcessingJob } = require('../../queues');
 const logger = require('../../utils/logger');
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+
+router.use((req, res, next) => {
+  if (['POST', 'PUT'].includes(req.method)) return aiLimiter(req, res, next);
+  return next();
+});
+router.use(costGuard());
 
 /**
  * POST /api/video/advanced-editing/auto-cut

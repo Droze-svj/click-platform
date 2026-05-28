@@ -304,40 +304,34 @@ function Action({
 }: {
   icon: any
   label: string
-  /** Full label shown on md+ screens; short `label` shown otherwise. */
   longLabel?: string
   onClick: () => void
   hotkey?: string
   loading?: boolean
   accent?: 'primary'
 }) {
-  const base = 'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black transition-all border-2 whitespace-nowrap uppercase italic tracking-widest active:scale-95'
+  const base = 'inline-flex items-center justify-center w-10 h-10 rounded-2xl transition-all active:scale-95 group relative flex-shrink-0'
   const cls = accent === 'primary'
-    ? `${base} bg-gradient-to-r from-primary-600 to-indigo-700 hover:from-primary-500 hover:to-indigo-600 text-white border-transparent shadow-[0_4px_15px_rgba(99,102,241,0.3)]`
-    : `${base} bg-white/[0.03] hover:bg-white/[0.08] border-white/5 text-slate-300 hover:text-white hover:border-white/10 shadow-sm`
+    ? `${base} bg-gradient-to-tr from-indigo-500 to-fuchsia-500 hover:from-indigo-400 hover:to-fuchsia-400 text-white shadow-lg shadow-indigo-500/25`
+    : `${base} bg-white/[0.04] hover:bg-white/[0.1] border border-white/5 text-slate-400 hover:text-white shadow-sm`
+  
   return (
     <button
-     type="button"
+      type="button"
       onClick={onClick}
       disabled={loading}
       aria-label={loading ? `${longLabel || label} — loading` : (hotkey ? `${longLabel || label} (shortcut ${hotkey})` : (longLabel || label))}
-      className={`${cls} ${loading ? 'opacity-60 cursor-wait' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50`}
-      title={hotkey ? `${label} (${hotkey})` : label}
+      className={`${cls} ${loading ? 'opacity-60 cursor-wait' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50`}
     >
-      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Icon className="w-3.5 h-3.5" />}
-      {longLabel ? (
-        <>
-          <span className="hidden sm:inline">{longLabel}</span>
-          <span className="sm:hidden">{label}</span>
-        </>
-      ) : (
-        <span>{label}</span>
-      )}
-      {hotkey && (
-        <kbd className="hidden xl:inline-block ml-2 px-1.5 py-0.5 rounded-lg bg-black/40 border-2 border-white/10 text-[9px] font-mono text-slate-500 leading-none">
-          {hotkey}
-        </kbd>
-      )}
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+      
+      {/* Tooltip */}
+      <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50">
+        <div className="bg-slate-900 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl">
+          {longLabel || label}
+          {hotkey && <span className="ml-2 text-slate-500 border border-white/10 bg-black/40 rounded px-1">{hotkey}</span>}
+        </div>
+      </div>
     </button>
   )
 }

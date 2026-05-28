@@ -46,6 +46,7 @@ async function saveEditState(videoId, editState) {
     }
 
     content.metadata.editHistoryIndex = history.length - 1;
+    content.markModified('metadata');
     await content.save();
 
     logger.info('Edit state saved', { videoId, historyLength: history.length });
@@ -85,6 +86,7 @@ async function undoEdit(videoId) {
     content.metadata.editHistoryIndex = currentIndex;
 
     const previousState = history[currentIndex];
+    content.markModified('metadata');
     await content.save();
 
     logger.info('Edit undone', { videoId, currentIndex });
@@ -126,6 +128,7 @@ async function redoEdit(videoId) {
     content.metadata.editHistoryIndex = currentIndex;
 
     const nextState = history[currentIndex];
+    content.markModified('metadata');
     await content.save();
 
     logger.info('Edit redone', { videoId, currentIndex });
@@ -181,6 +184,7 @@ async function clearEditHistory(videoId) {
     if (content.metadata) {
       content.metadata.editHistory = [];
       content.metadata.editHistoryIndex = -1;
+      content.markModified('metadata');
       await content.save();
     }
 

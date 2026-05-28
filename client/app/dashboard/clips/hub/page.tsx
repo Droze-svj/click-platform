@@ -344,7 +344,9 @@ export default function ClipHubPage() {
           onClose={() => setLightboxIndex(null)}
           onClipChange={(next) => setClips(prev => prev.map(c => c.id === next.id ? { ...c, ...next } : c))}
           onClipRemoved={(id) => setClips(prev => prev.filter(c => c.id !== id))}
-          onOpenInEditor={(c) => router.push(`/dashboard/video/edit/${c.contentId}`)}
+          onOpenInEditor={(c) =>
+            router.push(`/dashboard/video/edit/${c.contentId}?mode=manual${c.url ? `&clipUrl=${encodeURIComponent(c.url)}` : ''}`)
+          }
         />
       )}
     </div>

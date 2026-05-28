@@ -67,3 +67,5 @@ playwright-report/
 test-results/
 ffmpeg-*.log
 ffmpeg_logs/
+backups/
+

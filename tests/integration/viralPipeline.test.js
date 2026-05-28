@@ -18,8 +18,20 @@ jest.mock('../../server/services/videoCaptionService', () => ({
 jest.mock('../../server/services/aiVideoEditingService', () => ({
   autoEditVideo: jest.fn().mockResolvedValue({
     success: true,
-    editedVideoUrl: '/uploads/videos/edited-test.mp4',
-    editedVideoPath: '/abs/path/to/edited-test.mp4'
+    outputPath: '/uploads/videos/edited.mp4'
+  }),
+  exportMultipleFormats: jest.fn().mockResolvedValue({
+    success: true,
+    exports: {
+      '1:1': '/uploads/videos/edited-1x1.mp4'
+    }
+  })
+}));
+
+jest.mock('../../server/services/competitiveBenchmarkingService', () => ({
+  getCompetitiveBenchmarks: jest.fn().mockResolvedValue({
+    industry: { median: 1000 },
+    recommendations: ['Use brighter colors', 'Hook within 2 seconds']
   })
 }));
 
@@ -62,7 +74,7 @@ describe('Viral Pipeline Integration', () => {
   const mockUser = {
     _id: new mongoose.Types.ObjectId(),
     id: 'user123',
-    email: 'test@example.com',
+    email: 'test_' + Date.now() + '@example.com',
     name: 'Test User'
   };
 

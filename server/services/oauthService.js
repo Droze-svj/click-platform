@@ -222,7 +222,7 @@ async function listSocialAccounts(userId, platform) {
     }));
   }
   const user = await User.findById(userId);
-  if (!user?.oauth?.[platformKey]?.accounts) {
+  if (!user?.oauth?.[platformKey]?.accounts || user?.oauth?.[platformKey]?.accounts.length === 0) {
     // Fall back to the legacy single-row shape.
     const legacy = user?.oauth?.[platformKey];
     if (legacy?.connected && legacy.platformUserId) {

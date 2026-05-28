@@ -34,40 +34,40 @@ let _started = false;
 function getRefreshFn(platform) {
   try {
     switch (platform) {
-      case 'google': {
-        const svc = require('./googleOAuthService');
-        return (userId, accountId) => svc.refreshAccessToken(userId, accountId);
-      }
-      case 'facebook': {
-        const svc = require('./facebookOAuthService');
-        return (userId) => svc.refreshAccessToken(userId);
-      }
-      case 'linkedin': {
-        const svc = require('./linkedinOAuthService');
-        return (userId) => svc.refreshAccessToken(userId);
-      }
-      case 'twitter': {
-        const svc = require('./twitterOAuthService');
-        return (userId) => svc.refreshToken(userId);
-      }
-      case 'tiktok': {
-        const svc = require('./tiktokOAuthService');
-        return (userId) => svc.refreshAccessToken(userId);
-      }
-      case 'youtube': {
-        const svc = require('./youtubeOAuthService');
-        return typeof svc.refreshAccessToken === 'function'
-          ? (userId) => svc.refreshAccessToken(userId)
-          : null;
-      }
-      case 'instagram': {
-        const svc = require('./instagramOAuthService');
-        return typeof svc.refreshAccessToken === 'function'
-          ? (userId) => svc.refreshAccessToken(userId)
-          : null;
-      }
-      default:
-        return null;
+    case 'google': {
+      const svc = require('./googleOAuthService');
+      return (userId, accountId) => svc.refreshAccessToken(userId, accountId);
+    }
+    case 'facebook': {
+      const svc = require('./facebookOAuthService');
+      return (userId) => svc.refreshAccessToken(userId);
+    }
+    case 'linkedin': {
+      const svc = require('./linkedinOAuthService');
+      return (userId) => svc.refreshAccessToken(userId);
+    }
+    case 'twitter': {
+      const svc = require('./twitterOAuthService');
+      return (userId) => svc.refreshToken(userId);
+    }
+    case 'tiktok': {
+      const svc = require('./tiktokOAuthService');
+      return (userId) => svc.refreshAccessToken(userId);
+    }
+    case 'youtube': {
+      const svc = require('./youtubeOAuthService');
+      return typeof svc.refreshAccessToken === 'function'
+        ? (userId) => svc.refreshAccessToken(userId)
+        : null;
+    }
+    case 'instagram': {
+      const svc = require('./instagramOAuthService');
+      return typeof svc.refreshAccessToken === 'function'
+        ? (userId) => svc.refreshAccessToken(userId)
+        : null;
+    }
+    default:
+      return null;
     }
   } catch (err) {
     logger.warn('Token refresh: failed to load platform service', { platform, error: err.message });

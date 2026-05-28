@@ -1835,7 +1835,22 @@ async function createRepostABTest(userId, recycleId, variations) {
     }
 
     // Create A/B test record
-    const ABTest = require('../models/ABTest');
+    let ABTest;
+    try { ABTest = require('../models/ABTest'); } catch (_) { /* model not yet created */ }
+    if (!ABTest) {
+      // ABTest model unavailable — return a stub result without persisting
+      return {
+        testId: null,
+        testName: `Repost A/B Test - ${recycle.originalContentId}`,
+        variants: testVariations.map((v, idx) => ({
+          variant: idx === 0 ? 'A' : 'B',
+          content: { title: v.title, description: v.description, caption: v.caption, hashtags: v.hashtags },
+          score: v.score || 0
+        })),
+        scheduledPosts: [],
+        status: 'pending_model'
+      };
+    }
     const test = new ABTest({
       userId,
       name: `Repost A/B Test - ${recycle.originalContentId}`,
@@ -1943,10 +1958,10 @@ async function scoutForResurrectionCandidates(userId) {
         { 'analytics.engagement': { $gte: 500 } }
       ]
     })
-    .populate('content.contentId')
-    .sort({ 'analytics.views': -1 })
-    .limit(20)
-    .lean();
+      .populate('content.contentId')
+      .sort({ 'analytics.views': -1 })
+      .limit(20)
+      .lean();
 
     // Map to resurrection schema
     return candidates.map(c => ({

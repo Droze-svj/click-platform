@@ -160,43 +160,44 @@ async function autoCutVideo(inputPath, outputPath, options = {}) {
 
     // Create filter complex to remove segments
     const filterParts = [];
+    const vStreams = [];
+    const aStreams = [];
     let currentTime = 0;
+    let streamIndex = 0;
 
     for (const segment of mergedSegments) {
       if (segment.start > currentTime) {
         // Keep segment before cut
         filterParts.push(
-          `[0:v]trim=start=${currentTime}:end=${segment.start},setpts=PTS-STARTPTS[v${filterParts.length}];`
+          `[0:v]trim=start=${currentTime}:end=${segment.start},setpts=PTS-STARTPTS[v${streamIndex}];`
         );
         filterParts.push(
-          `[0:a]atrim=start=${currentTime}:end=${segment.start},asetpts=PTS-STARTPTS[a${filterParts.length}];`
+          `[0:a]atrim=start=${currentTime}:end=${segment.start},asetpts=PTS-STARTPTS[a${streamIndex}];`
         );
+        vStreams.push(`[v${streamIndex}]`);
+        aStreams.push(`[a${streamIndex}]`);
+        streamIndex++;
       }
       currentTime = segment.end;
     }
 
     // Add remaining video
-    if (currentTime < 1000) {
-      // Assume video duration (would need to get actual duration)
+    if (currentTime < 1000) { // Just a large number if we don't have exact duration
       filterParts.push(
-        `[0:v]trim=start=${currentTime},setpts=PTS-STARTPTS[v${filterParts.length}];`
+        `[0:v]trim=start=${currentTime},setpts=PTS-STARTPTS[v${streamIndex}];`
       );
       filterParts.push(
-        `[0:a]atrim=start=${currentTime},asetpts=PTS-STARTPTS[a${filterParts.length}];`
+        `[0:a]atrim=start=${currentTime},asetpts=PTS-STARTPTS[a${streamIndex}];`
       );
+      vStreams.push(`[v${streamIndex}]`);
+      aStreams.push(`[a${streamIndex}]`);
     }
 
     // Concatenate all segments
-    const vConcat = filterParts
-      .filter((p) => p.startsWith('[0:v]'))
-      .map((_, i) => `[v${i}]`)
-      .join('');
-    const aConcat = filterParts
-      .filter((p) => p.startsWith('[0:a]'))
-      .map((_, i) => `[a${i}]`)
-      .join('');
+    const vConcat = vStreams.join('');
+    const aConcat = aStreams.join('');
 
-    const filterComplex = filterParts.join('') + `${vConcat}concat=n=${filterParts.length / 2}:v=1[outv];${aConcat}concat=n=${filterParts.length / 2}:a=1[outa]`;
+    const filterComplex = filterParts.join('') + `${vConcat}concat=n=${vStreams.length}:v=1:a=0[outv];${aConcat}concat=n=${aStreams.length}:v=0:a=1[outa]`;
 
     // Apply filter
     await new Promise((resolve, reject) => {
@@ -300,24 +301,72 @@ async function addSmartTransitions(inputPath, outputPath, scenes, options = {}) 
       transitionType,
     });
 
-    // For simplicity, use crossfade between scenes
-    // In production, would use more sophisticated transition logic
-    const filterComplex = scenes
-      .map((scene, index) => {
-        if (index === 0) return null;
-        const prevScene = scenes[index - 1];
-        const transitionStart = prevScene.end - duration;
-        const transitionEnd = scene.start + duration;
+    let filterParts = [];
+    let vStreams = [];
+    let aStreams = [];
+    let streamIndex = 0;
+    
+    // We will slice the video into non-transition and transition segments
+    for (let i = 0; i < scenes.length; i++) {
+      const scene = scenes[i];
+      const nextScene = scenes[i + 1];
+      
+      let segmentStart = scene.start;
+      if (i > 0) {
+        segmentStart = scene.start + duration; // Skip the start transition part for this scene
+      }
+      
+      let segmentEnd = scene.end;
+      if (nextScene) {
+        segmentEnd = scene.end - duration; // End early to leave room for transition
+      }
 
-        return `[0:v]trim=start=${transitionStart}:end=${transitionEnd},setpts=PTS-STARTPTS,fade=t=in:st=${transitionStart}:d=${duration}[v${index}];`;
-      })
-      .filter(Boolean)
-      .join('');
+      // Add main scene segment
+      if (segmentEnd > segmentStart) {
+        filterParts.push(`[0:v]trim=start=${segmentStart}:end=${segmentEnd},setpts=PTS-STARTPTS[v${streamIndex}];`);
+        filterParts.push(`[0:a]atrim=start=${segmentStart}:end=${segmentEnd},asetpts=PTS-STARTPTS[a${streamIndex}];`);
+        vStreams.push(`[v${streamIndex}]`);
+        aStreams.push(`[a${streamIndex}]`);
+        streamIndex++;
+      }
+
+      // Add transition to next scene if it exists
+      if (nextScene) {
+        const transStart = scene.end - duration;
+        const transEnd = nextScene.start + duration;
+        
+        let transFilter = '';
+        if (transitionType === 'glitch') {
+          transFilter = `,rgbashift=rh=10:bv=-10`;
+        } else if (transitionType === 'zoom') {
+          transFilter = `,zoompan=z='min(zoom+0.15,1.5)':d=1:s=1920x1080`;
+        } else {
+          // fade (dip to black)
+          transFilter = `,fade=t=out:st=0:d=${duration},fade=t=in:st=${duration}:d=${duration}`;
+        }
+
+        filterParts.push(`[0:v]trim=start=${transStart}:end=${transEnd},setpts=PTS-STARTPTS${transFilter}[v${streamIndex}];`);
+        filterParts.push(`[0:a]atrim=start=${transStart}:end=${transEnd},asetpts=PTS-STARTPTS[a${streamIndex}];`);
+        vStreams.push(`[v${streamIndex}]`);
+        aStreams.push(`[a${streamIndex}]`);
+        streamIndex++;
+      }
+    }
+
+    if (vStreams.length === 0) {
+      // fallback if logic failed
+      return { success: true, transitionsAdded: 0, outputPath: inputPath };
+    }
+
+    const vConcat = vStreams.join('');
+    const aConcat = aStreams.join('');
+    const filterComplex = filterParts.join('') + `${vConcat}concat=n=${vStreams.length}:v=1:a=0[outv];${aConcat}concat=n=${aStreams.length}:v=0:a=1[outa]`;
 
     // Apply transitions
     await new Promise((resolve, reject) => {
       ffmpeg(inputPath)
         .complexFilter(filterComplex)
+        .outputOptions(['-map', '[outv]', '-map', '[outa]'])
         .output(outputPath)
         .on('end', () => {
           logger.info('Smart transitions added', { outputPath });
@@ -551,6 +600,87 @@ async function stabilizeVideo(inputPath, outputPath, options = {}) {
 }
 
 /**
+ * Get available video style presets
+ * @returns {Array} List of style presets
+ */
+function getVideoStylePresets() {
+  return [
+    {
+      id: 'cinematic',
+      name: 'Cinematic Film',
+      description: 'High contrast, slightly warm shadows, teal highlights',
+      ffmpegFilter: 'eq=contrast=1.15:gamma=0.9:saturation=0.8,colorbalance=rs=.1:gs=-.1:bs=.1:rm=.1:gm=-.1:bm=.1:rh=-.1:gh=.1:bh=.2'
+    },
+    {
+      id: 'vibrant',
+      name: 'Vibrant Social',
+      description: 'High saturation, increased brightness for social media feeds',
+      ffmpegFilter: 'eq=contrast=1.1:brightness=0.05:saturation=1.4,unsharp=5:5:1.0:5:5:0.0'
+    },
+    {
+      id: 'vintage',
+      name: 'Vintage / Retro',
+      description: 'Lower contrast, sepia warmth, subtle grain simulation',
+      ffmpegFilter: 'eq=contrast=0.9:saturation=0.6,colorbalance=rs=.2:gs=.1:bs=-.1:rm=.2:gm=.1:bm=-.1,noise=alls=20:allf=t+u'
+    },
+    {
+      id: 'moody',
+      name: 'Dark & Moody',
+      description: 'Lower exposure, desaturated, deep blacks',
+      ffmpegFilter: 'eq=contrast=1.2:brightness=-0.05:gamma=0.8:saturation=0.6'
+    },
+    {
+      id: 'cyberpunk',
+      name: 'Cyberpunk Neon',
+      description: 'High contrast, extreme neon highlights (magenta/cyan bias)',
+      ffmpegFilter: 'eq=contrast=1.3:saturation=1.5,colorbalance=rs=.2:gs=-.1:bs=.3:rm=.1:gm=-.1:bm=.2'
+    }
+  ];
+}
+
+/**
+ * Apply full style effect preset to video
+ * @param {string} inputPath - Input video
+ * @param {string} outputPath - Output video
+ * @param {string} styleId - Style preset ID
+ * @returns {Promise<Object>} Result
+ */
+async function applyStyleEffect(inputPath, outputPath, styleId) {
+  try {
+    const presets = getVideoStylePresets();
+    const preset = presets.find(p => p.id === styleId);
+
+    if (!preset) {
+      throw new Error(`Style preset "${styleId}" not found`);
+    }
+
+    logger.info('Applying style effect', { inputPath, styleId: preset.id });
+
+    await new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .videoFilters(preset.ffmpegFilter)
+        .outputOptions(['-c:v libx264', '-crf 18', '-preset fast', '-c:a copy'])
+        .output(outputPath)
+        .on('end', () => {
+          logger.info('Style effect applied', { outputPath, styleId });
+          resolve();
+        })
+        .on('error', reject)
+        .run();
+    });
+
+    return {
+      success: true,
+      styleApplied: preset.name,
+      outputPath,
+    };
+  } catch (error) {
+    logger.error('Error applying style effect', { error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Apply all advanced edits to video
  * @param {string} inputPath - Input video
  * @param {string} outputPath - Output video
@@ -649,6 +779,18 @@ async function applyAdvancedEdits(inputPath, outputPath, options = {}) {
       await fs.copyFile(inputPath, outputPath);
     }
 
+    // Apply specific full Style Effect if requested
+    if (options.styleEffect) {
+      const styledPath = outputPath + '.styled.mp4';
+      tempFiles.push(styledPath);
+      // Process using the new style effect pipeline
+      const result = await applyStyleEffect(outputPath, styledPath, options.styleEffect);
+      if (result.success) {
+        await fs.copyFile(styledPath, outputPath);
+        editsApplied.push(`style-${options.styleEffect}`);
+      }
+    }
+
     // Cleanup temp files
     for (const tempFile of tempFiles) {
       try {
@@ -693,4 +835,6 @@ module.exports = {
   autoFrameVideo,
   stabilizeVideo,
   applyAdvancedEdits,
+  applyStyleEffect,
+  getVideoStylePresets,
 };

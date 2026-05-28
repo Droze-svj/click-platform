@@ -40,6 +40,23 @@ interface UserSettings {
     digitalTwinProvider: 'heygen' | 'sora' | 'both';
     heygenApiKey?: string; soraApiKey?: string;
   }
+  videoEditing?: {
+    preferredVoiceTone?: string;
+    preferredHookStyle?: string;
+    pacingIntensity?: string;
+    captionStyle?: string;
+    captionFontScale?: number;
+    captionVerticalOffset?: number;
+    aestheticColorGrade?: string;
+    aestheticTransition?: string;
+    subtitlePosition?: string;
+    contentTone?: string;
+    brollFrequency?: string;
+    musicGenre?: string;
+    defaultPlatform?: string;
+    enableSpeedRamping?: boolean;
+    enableBRoll?: boolean;
+  }
 }
 
 export interface BrandKit {
@@ -81,7 +98,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const tabFromUrl = searchParams.get('tab')
-  const [settings, setSettings] = useState<UserSettings>({
+  const [settings, setSettings] = useState<UserSettings & { videoEditing?: any }>({
     notifications: {
       email: true, push: true, contentReady: true, weeklyDigest: false,
       achievements: true, mentions: true, comments: false,
@@ -89,12 +106,31 @@ export default function SettingsPage() {
     },
     privacy: { dataConsent: true, marketingConsent: false, analyticsConsent: true },
     preferences: { theme: 'auto', language: 'en', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
-    agentic: { autonomousSwarm: true, slaAutoFulfill: true, predictiveThreshold: 85, digitalTwinProvider: 'both' }
+    agentic: { autonomousSwarm: true, slaAutoFulfill: true, predictiveThreshold: 85, digitalTwinProvider: 'both' },
+    videoEditing: {
+      preferredVoiceTone: 'Hype',
+      preferredHookStyle: 'curiosity-gap',
+      pacingIntensity: 'medium',
+      captionStyle: 'modern',
+      captionFontScale: 1.0,
+      captionVerticalOffset: 0,
+      aestheticColorGrade: 'vibrant',
+      aestheticTransition: 'fade',
+      subtitlePosition: 'auto',
+      contentTone: 'auto',
+      brollFrequency: 'balanced',
+      musicGenre: 'auto',
+      defaultPlatform: 'auto',
+      enableSpeedRamping: true,
+      enableBRoll: true,
+    }
   })
-  const [activeTab, setActiveTab] = useState<'general' | 'notifications' | 'privacy' | 'security' | 'brand' | 'agentic'>(tabFromUrl === 'brand' ? 'brand' : 'general')
+  const [activeTab, setActiveTab] = useState<'general' | 'notifications' | 'privacy' | 'security' | 'brand' | 'agentic' | 'videoEditing' | 'trust'>(tabFromUrl === 'brand' ? 'brand' : 'general')
   const [brandKit, setBrandKit] = useState<BrandKit>(DEFAULT_BRAND_KIT)
   const [brandKitLoading, setBrandKitLoading] = useState(false)
   const [brandKitSaving, setBrandKitSaving] = useState(false)
+  const [trustData, setTrustData] = useState<{ score: number; level: string; levelColor: string; breakdown: any[]; nextSteps: any[] } | null>(null)
+  const [trustLoading, setTrustLoading] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const notificationsSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialLoadDoneRef = useRef(false)
@@ -132,6 +168,15 @@ export default function SettingsPage() {
   useEffect(() => { loadSettings().then(() => { initialLoadDoneRef.current = true }) }, [loadSettings])
   useEffect(() => { if (tabFromUrl === 'brand') setActiveTab('brand') }, [tabFromUrl])
   useEffect(() => { if (activeTab === 'brand') loadBrandKit() }, [activeTab, loadBrandKit])
+  useEffect(() => {
+    if (activeTab !== 'trust' || !user?.id) return
+    setTrustLoading(true)
+    const token = localStorage.getItem('token')
+    axios.get(`${API_URL}/trust/credibility/${user.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { const d = r.data?.data; if (d) setTrustData(d) })
+      .catch(() => {})
+      .finally(() => setTrustLoading(false))
+  }, [activeTab, user?.id])
 
   // Deactivate the user's account. Gated behind two confirmations because
   // the previous "Delete account" button had no onClick at all — users
@@ -275,7 +320,9 @@ export default function SettingsPage() {
                 {[
                   { id: 'general', label: 'System', icon: <CpuIcon size={24} />, desc: 'Core settings' },
                   { id: 'agentic', label: 'AI agent', icon: <Zap size={24} />, desc: 'Autonomy & confidence' },
+                  { id: 'trust', label: 'Trust Score', icon: <ShieldCheck size={24} />, desc: 'Credibility & verification' },
                   { id: 'brand', label: 'Brand', icon: <Palette size={24} />, desc: 'Visual identity' },
+                  { id: 'videoEditing', label: 'AI Video', icon: <Sliders size={24} />, desc: 'Auto-edit defaults' },
                   { id: 'notifications', label: 'Notifications', icon: <Bell size={24} />, desc: 'Alerts' },
                   { id: 'privacy', label: 'Privacy', icon: <EyeOff size={24} />, desc: 'Data & consent' },
                   { id: 'security', label: 'Access', icon: <Shield size={24} />, desc: 'Password & account' },
@@ -336,7 +383,7 @@ export default function SettingsPage() {
                               </div>
                           </header>
                           
-                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                          <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
                              <DropdownControl label="Theme" description="Pick your interface theme."
                                 value={settings.preferences.theme}
                                 options={[{id: 'light', label:'Light'}, {id:'dark', label:'Dark'}, {id:'auto', label:'Match system'}]}
@@ -346,6 +393,26 @@ export default function SettingsPage() {
                                 value={settings.preferences.language}
                                 options={supportedLanguages.map(l => ({id: l, label: languageNames[l]}))}
                                 onChange={(v) => { if (isValidLang(v)) { setLanguage(v); handleSettingChange('preferences.language', v); } }}
+                              />
+                             <DropdownControl label="Timezone" description="Your local timezone for scheduling and digests."
+                                value={settings.preferences.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
+                                options={[
+                                  { id: 'auto', label: 'Auto-detect' },
+                                  { id: 'America/New_York', label: 'Eastern (US)' },
+                                  { id: 'America/Chicago', label: 'Central (US)' },
+                                  { id: 'America/Denver', label: 'Mountain (US)' },
+                                  { id: 'America/Los_Angeles', label: 'Pacific (US)' },
+                                  { id: 'America/Sao_Paulo', label: 'Brazil (BRT)' },
+                                  { id: 'Europe/London', label: 'London (GMT/BST)' },
+                                  { id: 'Europe/Paris', label: 'Paris (CET)' },
+                                  { id: 'Europe/Berlin', label: 'Berlin (CET)' },
+                                  { id: 'Asia/Dubai', label: 'Dubai (GST)' },
+                                  { id: 'Asia/Kolkata', label: 'India (IST)' },
+                                  { id: 'Asia/Singapore', label: 'Singapore (SGT)' },
+                                  { id: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+                                  { id: 'Australia/Sydney', label: 'Sydney (AEST)' },
+                                ]}
+                                onChange={(v) => handleSettingChange('preferences.timezone', v === 'auto' ? Intl.DateTimeFormat().resolvedOptions().timeZone : v)}
                               />
                           </div>
                         </div>
@@ -365,9 +432,9 @@ export default function SettingsPage() {
                           
                           <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
                              <div className="space-y-8">
-                                <ToggleControl label="Autonomous mode" description="Let multiple AI agents collaborate to produce higher-quality output." 
+                                <ToggleControl label="Autonomous mode" description="Let multiple AI agents collaborate to produce higher-quality output."
                                   value={settings.agentic.autonomousSwarm} onChange={(v) => handleSettingChange('agentic.autonomousSwarm', v)} />
-                                <ToggleControl label="Auto-publish scheduled posts" description="Publish queued posts automatically at their scheduled time — no extra approval needed." 
+                                <ToggleControl label="Auto-publish scheduled posts" description="Publish queued posts automatically at their scheduled time — no extra approval needed."
                                   value={settings.agentic.slaAutoFulfill} onChange={(v) => handleSettingChange('agentic.slaAutoFulfill', v)} />
                              </div>
 
@@ -392,6 +459,37 @@ export default function SettingsPage() {
                                    </div>
                                 </div>
                              </div>
+                          </div>
+
+                          <div className="space-y-8">
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-6">Digital Twin Integration</h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                              <DropdownControl label="Digital Twin Provider" description="AI avatar engine for synthetic video generation."
+                                value={settings.agentic.digitalTwinProvider || 'both'}
+                                options={[
+                                  { id: 'heygen', label: 'HeyGen (Avatar video)' },
+                                  { id: 'sora', label: 'Sora (Generative video)' },
+                                  { id: 'both', label: 'Both (Best quality)' },
+                                ]}
+                                onChange={(v) => handleSettingChange('agentic.digitalTwinProvider', v)}
+                              />
+                              <div className="flex flex-col gap-8 p-10 rounded-[3.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 shadow-inner">
+                                <div className="space-y-3">
+                                  <span className="text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none">API Keys</span>
+                                  <span className="text-[12px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-tight">Connect your own API keys for unlimited generation.</span>
+                                </div>
+                                <input type="password" placeholder="HeyGen API Key" aria-label="HeyGen API Key"
+                                  value={settings.agentic.heygenApiKey || ''}
+                                  onChange={(e) => handleSettingChange('agentic.heygenApiKey', e.target.value)}
+                                  className="w-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 px-6 py-4 rounded-[1.5rem] text-sm font-black text-surface-900 dark:text-white focus:border-primary-500 outline-none transition-all"
+                                />
+                                <input type="password" placeholder="Sora API Key" aria-label="Sora API Key"
+                                  value={settings.agentic.soraApiKey || ''}
+                                  onChange={(e) => handleSettingChange('agentic.soraApiKey', e.target.value)}
+                                  className="w-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 px-6 py-4 rounded-[1.5rem] text-sm font-black text-surface-900 dark:text-white focus:border-primary-500 outline-none transition-all"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -472,6 +570,267 @@ export default function SettingsPage() {
                         </div>
                       )}
 
+                      {activeTab === 'videoEditing' && (
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                             <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg hover:rotate-12 transition-transform duration-500">
+                                <Sliders className="text-primary-600 dark:text-primary-400" size={40} />
+                             </div>
+                             <div className="space-y-3">
+                                <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">AI Video Defaults</h2>
+                                <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">These become the starting point for every auto-edit. Override them per-video in the AI Director.</p>
+                             </div>
+                          </header>
+
+                          {/* Section 1: AI Edit Style */}
+                          <div className="space-y-8">
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-6">AI Edit Style</h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+                               <DropdownControl
+                                  label="Voice Tone"
+                                  description="Default voice tone and emotional style for captions and hooks."
+                                  value={settings.videoEditing?.preferredVoiceTone || 'Hype'}
+                                  options={[
+                                    { id: 'Hype', label: 'Hype / Energetic' },
+                                    { id: 'Storyteller', label: 'Storyteller / Narrator' },
+                                    { id: 'Educational', label: 'Educational / Informational' },
+                                    { id: 'Professional', label: 'Professional / Corporate' },
+                                    { id: 'Casual', label: 'Casual / Friendly' },
+                                    { id: 'Aggressive', label: 'Aggressive / Bold' },
+                                    { id: 'Calm', label: 'Calm / Meditative' },
+                                    { id: 'Motivational', label: 'Motivational / Inspiring' },
+                                    { id: 'Conversational', label: 'Conversational / Podcast' },
+                                    { id: 'Authoritative', label: 'Authoritative / Expert' },
+                                  ]}
+                                  onChange={(v) => handleSettingChange('videoEditing.preferredVoiceTone', v)}
+                                />
+
+                               <DropdownControl
+                                  label="Hook Archetype"
+                                  description="The persuasion pattern Click's AI applies in the opening hook."
+                                  value={settings.videoEditing?.preferredHookStyle || 'curiosity-gap'}
+                                  options={[
+                                    { id: 'curiosity-gap', label: 'Curiosity Gap (Open Loops)' },
+                                    { id: 'list-tease', label: 'List Tease (Top 3 Secrets...)' },
+                                    { id: 'visual-first', label: 'Visual First (High Action Reveal)' },
+                                    { id: 'question-based', label: 'Intense Question Hook' },
+                                    { id: 'bold-statement', label: 'Bold Controversial Statement' },
+                                    { id: 'before-after', label: 'Before / After Transformation' },
+                                    { id: 'enemy-frame', label: 'Enemy Frame (Us vs Them)' },
+                                    { id: 'authority-proof', label: 'Authority Proof (Results First)' },
+                                    { id: 'shock-reveal', label: 'Shock Reveal (Unexpected Fact)' },
+                                  ]}
+                                  onChange={(v) => handleSettingChange('videoEditing.preferredHookStyle', v)}
+                                />
+
+                               <DropdownControl
+                                  label="Pacing Speed"
+                                  description="Controls splicing frequency, clip zoom changes, and quick cuts."
+                                  value={settings.videoEditing?.pacingIntensity || 'medium'}
+                                  options={[
+                                    { id: 'gentle', label: 'Gentle (Fewer cuts, storytelling)' },
+                                    { id: 'medium', label: 'Medium (Balanced for all niches)' },
+                                    { id: 'aggressive', label: 'Aggressive (Fast cuts, high retention)' }
+                                  ]}
+                                  onChange={(v) => handleSettingChange('videoEditing.pacingIntensity', v)}
+                                />
+                            </div>
+                          </div>
+
+                          {/* Section 2: Platform & Tone Defaults */}
+                          <div className="space-y-8">
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-6">Platform & Tone Defaults</h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+                              <DropdownControl
+                                label="Default Platform"
+                                description="Platform-optimised output when not explicitly chosen per-video."
+                                value={settings.videoEditing?.defaultPlatform || 'auto'}
+                                options={[
+                                  { id: 'auto', label: 'Auto-detect' },
+                                  { id: 'tiktok', label: 'TikTok (9:16, 60s)' },
+                                  { id: 'instagram', label: 'Instagram Reels (9:16)' },
+                                  { id: 'youtube', label: 'YouTube Shorts (9:16)' },
+                                  { id: 'linkedin', label: 'LinkedIn (1:1 or 16:9)' },
+                                ]}
+                                onChange={(v) => handleSettingChange('videoEditing.defaultPlatform', v)}
+                              />
+                              <DropdownControl
+                                label="Content Tone"
+                                description="Biases hook style, pacing, and caption language for your niche."
+                                value={settings.videoEditing?.contentTone || 'auto'}
+                                options={[
+                                  { id: 'auto', label: 'Auto (AI decides)' },
+                                  { id: 'educational', label: 'Educational (Stat-reveal hooks)' },
+                                  { id: 'entertaining', label: 'Entertaining (Pattern breaks)' },
+                                  { id: 'motivational', label: 'Motivational (Bold claims)' },
+                                  { id: 'promotional', label: 'Promotional (Urgency / CTA)' },
+                                ]}
+                                onChange={(v) => handleSettingChange('videoEditing.contentTone', v)}
+                              />
+                              <DropdownControl
+                                label="Music Genre"
+                                description="Default background music style for auto-edited videos."
+                                value={settings.videoEditing?.musicGenre || 'auto'}
+                                options={[
+                                  { id: 'auto', label: 'Auto (AI picks per content)' },
+                                  { id: 'phonk', label: 'Phonk (Dark, aggressive)' },
+                                  { id: 'lofi', label: 'Lo-fi (Calm, focus)' },
+                                  { id: 'dark_ambient', label: 'Dark Ambient (Cinematic)' },
+                                  { id: 'synthwave', label: 'Synthwave (Retro-futuristic)' },
+                                  { id: 'upbeat_pop', label: 'Upbeat Pop (High energy)' },
+                                  { id: 'cinematic', label: 'Cinematic (Orchestral)' },
+                                  { id: 'breakcore', label: 'Breakcore (Ultra-fast)' },
+                                ]}
+                                onChange={(v) => handleSettingChange('videoEditing.musicGenre', v)}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Section 3: Captions & Aesthetics */}
+                          <div className="space-y-8">
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-6">Captions & Aesthetics</h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+                              <div className="space-y-10">
+                                <DropdownControl
+                                  label="Caption Animation Style"
+                                  description="Default motion render preset for generated word transcriptions."
+                                  value={settings.videoEditing?.captionStyle || 'modern'}
+                                  options={[
+                                    { id: 'modern', label: 'Modern (Smooth word sliding)' },
+                                    { id: 'pop', label: 'Pop / Highlight Active Word' },
+                                    { id: 'karaoke', label: 'Karaoke (Color tracking)' },
+                                    { id: 'classic', label: 'Classic Static Block' },
+                                    { id: 'bold', label: 'Bold Impact (TikTok style)' },
+                                    { id: 'outline', label: 'Outline (High readability)' },
+                                  ]}
+                                  onChange={(v) => handleSettingChange('videoEditing.captionStyle', v)}
+                                />
+                                <DropdownControl
+                                  label="Subtitle Position"
+                                  description="Default vertical placement of auto-generated captions."
+                                  value={settings.videoEditing?.subtitlePosition || 'auto'}
+                                  options={[
+                                    { id: 'auto', label: 'Auto (AI picks best position)' },
+                                    { id: 'top', label: 'Top of frame' },
+                                    { id: 'middle', label: 'Center of frame' },
+                                    { id: 'bottom', label: 'Bottom (safe zone)' },
+                                    { id: 'lower-third', label: 'Lower Third (75% down)' },
+                                  ]}
+                                  onChange={(v) => handleSettingChange('videoEditing.subtitlePosition', v)}
+                                />
+                              </div>
+                              <div className="space-y-10">
+                                <div className="p-10 rounded-[3.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-8 shadow-inner backdrop-blur-xl group/size">
+                                   <div className="flex justify-between items-center">
+                                      <div className="space-y-2">
+                                         <p className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none">Caption Font Scale</p>
+                                         <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic leading-none">Default caption font size multiplier.</p>
+                                      </div>
+                                      <span className="text-4xl font-black text-primary-500 tabular-nums italic group-hover/size:scale-110 transition-transform">{(settings.videoEditing?.captionFontScale || 1.0).toFixed(1)}x</span>
+                                   </div>
+                                   <input type="range" min="0.5" max="2.0" step="0.1"
+                                     value={settings.videoEditing?.captionFontScale || 1.0}
+                                     title="Caption Font Scale" aria-label="Caption Font Scale"
+                                     onChange={(e) => handleSettingChange('videoEditing.captionFontScale', parseFloat(e.target.value))}
+                                     className="w-full h-3 bg-surface-card dark:bg-surface-800 rounded-full appearance-none cursor-pointer accent-primary-500 shadow-inner"
+                                   />
+                                   <div className="flex justify-between">
+                                     <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 italic uppercase tracking-widest">Compact (0.5x)</span>
+                                     <span className="text-[9px] font-black text-primary-500 italic uppercase tracking-widest">Normal (1.0x)</span>
+                                     <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 italic uppercase tracking-widest">Heavy (2.0x)</span>
+                                   </div>
+                                </div>
+                                <div className="p-10 rounded-[3.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-8 shadow-inner backdrop-blur-xl group/offset">
+                                   <div className="flex justify-between items-center">
+                                      <div className="space-y-2">
+                                         <p className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none">Caption Vertical Offset</p>
+                                         <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic leading-none">Fine-tune vertical position on the viewport.</p>
+                                      </div>
+                                      <span className="text-4xl font-black text-primary-500 tabular-nums italic group-hover/offset:scale-110 transition-transform">{settings.videoEditing?.captionVerticalOffset || 0}px</span>
+                                   </div>
+                                   <input type="range" min="-200" max="200" step="10"
+                                     value={settings.videoEditing?.captionVerticalOffset || 0}
+                                     title="Caption Vertical Offset" aria-label="Caption Vertical Offset"
+                                     onChange={(e) => handleSettingChange('videoEditing.captionVerticalOffset', parseInt(e.target.value))}
+                                     className="w-full h-3 bg-surface-card dark:bg-surface-800 rounded-full appearance-none cursor-pointer accent-primary-500 shadow-inner"
+                                   />
+                                   <div className="flex justify-between">
+                                     <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 italic uppercase tracking-widest">Lower (-200px)</span>
+                                     <span className="text-[9px] font-black text-primary-500 italic uppercase tracking-widest">Default (0px)</span>
+                                     <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 italic uppercase tracking-widest">Higher (+200px)</span>
+                                   </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                              <DropdownControl
+                                label="Color Grade Preset"
+                                description="Visual color-grading style applied to every auto-edited clip."
+                                value={settings.videoEditing?.aestheticColorGrade || 'vibrant'}
+                                options={[
+                                  { id: 'vibrant', label: 'Vibrant / High Contrast' },
+                                  { id: 'cyberpunk_neon', label: 'Cyberpunk Neon' },
+                                  { id: 'vintage_film', label: 'Vintage Movie' },
+                                  { id: 'hyper_pop', label: 'Hyper Pop Glow' },
+                                  { id: 'cinematic', label: 'Cinematic Depth' },
+                                  { id: 'monochrome', label: 'Classic Noir' },
+                                  { id: 'dreamy_pastel', label: 'Dreamy Pastel' },
+                                  { id: 'none', label: 'Original Raw Frame' }
+                                ]}
+                                onChange={(v) => handleSettingChange('videoEditing.aestheticColorGrade', v)}
+                              />
+                              <DropdownControl
+                                label="Transitions Archetype"
+                                description="Default transition style between clips."
+                                value={settings.videoEditing?.aestheticTransition || 'fade'}
+                                options={[
+                                  { id: 'fade', label: 'Smooth Cross Fade' },
+                                  { id: 'slide', label: 'Whip Slide (Horizontal)' },
+                                  { id: 'zoom', label: 'Impact Zoom Snap' },
+                                  { id: 'glitch', label: 'Neon Glitch' },
+                                  { id: 'whip', label: 'Whip Pan' },
+                                  { id: 'dissolve', label: 'Soft Dissolve' },
+                                  { id: 'none', label: 'Hard Cut / Standard' }
+                                ]}
+                                onChange={(v) => handleSettingChange('videoEditing.aestheticTransition', v)}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Section 4: Feature Flags */}
+                          <div className="space-y-8">
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-6">Feature Flags</h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                              <ToggleControl
+                                label="Neural Speed Ramping"
+                                description="Automatically vary playback speed to match energy peaks in the audio."
+                                value={settings.videoEditing?.enableSpeedRamping ?? true}
+                                onChange={(v) => handleSettingChange('videoEditing.enableSpeedRamping', v)}
+                              />
+                              <ToggleControl
+                                label="B-Roll Overlay"
+                                description="Insert AI-selected B-roll clips to cover cuts and add visual variety."
+                                value={settings.videoEditing?.enableBRoll ?? true}
+                                onChange={(v) => handleSettingChange('videoEditing.enableBRoll', v)}
+                              />
+                            </div>
+                            {(settings.videoEditing?.enableBRoll ?? true) && (
+                              <DropdownControl
+                                label="B-Roll Frequency"
+                                description="How often B-roll is inserted when enabled."
+                                value={settings.videoEditing?.brollFrequency || 'balanced'}
+                                options={[
+                                  { id: 'minimal', label: 'Minimal (Key moments only)' },
+                                  { id: 'balanced', label: 'Balanced (Every 15-30s)' },
+                                  { id: 'heavy', label: 'Heavy (Frequent cut-aways)' },
+                                ]}
+                                onChange={(v) => handleSettingChange('videoEditing.brollFrequency', v)}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {activeTab === 'notifications' && (
                         <div className="space-y-16">
                           <header className="flex items-center gap-10">
@@ -498,6 +857,53 @@ export default function SettingsPage() {
                                   value={settings.notifications.mentions ?? true} onChange={(v) => handleSettingChange('notifications.mentions', v)} />
                              </div>
                           </div>
+
+                          <div className="space-y-8">
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-6">Activity Alerts</h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                              <ToggleControl label="Weekly Digest" description="A summary of your top content and analytics every Monday."
+                                value={settings.notifications.weeklyDigest} onChange={(v) => handleSettingChange('notifications.weeklyDigest', v)} />
+                              <ToggleControl label="Achievements" description="Get notified when you hit milestones and platform records."
+                                value={settings.notifications.achievements ?? true} onChange={(v) => handleSettingChange('notifications.achievements', v)} />
+                              <ToggleControl label="Comments" description="Alert when someone comments on your published content."
+                                value={settings.notifications.comments ?? false} onChange={(v) => handleSettingChange('notifications.comments', v)} />
+                            </div>
+                          </div>
+
+                          <div className="space-y-8">
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-6">Delivery Settings</h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+                              <DropdownControl label="Alert Priority" description="Minimum priority level to trigger a notification."
+                                value={settings.notifications.priorityTiers || 'all'}
+                                options={[
+                                  { id: 'all', label: 'All alerts' },
+                                  { id: 'high_medium', label: 'High & Medium only' },
+                                  { id: 'high_only', label: 'High priority only' },
+                                ]}
+                                onChange={(v) => handleSettingChange('notifications.priorityTiers', v)}
+                              />
+                              <DropdownControl label="Digest Mode" description="How often you receive batched digests."
+                                value={settings.notifications.digestMode || 'immediate'}
+                                options={[
+                                  { id: 'immediate', label: 'Immediate (real-time)' },
+                                  { id: 'daily', label: 'Daily digest' },
+                                  { id: 'weekly', label: 'Weekly digest' },
+                                ]}
+                                onChange={(v) => handleSettingChange('notifications.digestMode', v)}
+                              />
+                              <div className="flex flex-col gap-6 p-10 rounded-[3.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 shadow-inner">
+                                <div className="space-y-2">
+                                  <span className="text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none">Digest Time</span>
+                                  <span className="text-[12px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-tight">Preferred time for daily/weekly digests.</span>
+                                </div>
+                                <input type="time" aria-label="Digest delivery time"
+                                  value={settings.notifications.digestTime || '09:00'}
+                                  onChange={(e) => handleSettingChange('notifications.digestTime', e.target.value)}
+                                  className="w-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 px-6 py-4 rounded-[1.5rem] text-sm font-black text-surface-900 dark:text-white focus:border-primary-500 outline-none transition-all"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -519,6 +925,115 @@ export default function SettingsPage() {
                              <ToggleControl label="Use my content to improve my AI" description="Let Click learn from your past posts to make better suggestions for you."
                                value={settings.privacy.dataConsent} onChange={(v) => handleSettingChange('privacy.dataConsent', v)} />
                           </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'trust' && (
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                            <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-lg">
+                              <ShieldCheck size={40} className="text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div className="space-y-3">
+                              <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">Trust Score</h2>
+                              <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">Your platform credibility and content authenticity signals.</p>
+                            </div>
+                          </header>
+
+                          {trustLoading && (
+                            <div className="flex items-center justify-center py-32">
+                              <Fingerprint size={56} className="text-primary-500 animate-spin" />
+                            </div>
+                          )}
+
+                          {!trustLoading && trustData && (
+                            <div className="max-w-4xl space-y-12">
+                              {/* Score Gauge */}
+                              <div className="p-12 rounded-[4rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 shadow-inner flex flex-col sm:flex-row items-center gap-12">
+                                <div className="relative flex-shrink-0">
+                                  <svg width="140" height="140" viewBox="0 0 140 140" className="-rotate-90">
+                                    <circle cx="70" cy="70" r="58" fill="none" stroke="currentColor" strokeWidth="12" className="text-surface-100 dark:text-surface-800" />
+                                    <circle cx="70" cy="70" r="58" fill="none" strokeWidth="12"
+                                      strokeDasharray={`${2 * Math.PI * 58}`}
+                                      strokeDashoffset={`${2 * Math.PI * 58 * (1 - (trustData.score || 0) / 100)}`}
+                                      strokeLinecap="round"
+                                      className={trustData.levelColor === 'violet' ? 'stroke-violet-500' : trustData.levelColor === 'emerald' ? 'stroke-emerald-500' : trustData.levelColor === 'sky' ? 'stroke-sky-500' : 'stroke-amber-500'}
+                                      style={{ transition: 'stroke-dashoffset 1s ease' }}
+                                    />
+                                  </svg>
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center rotate-0">
+                                    <span className="text-4xl font-black text-surface-900 dark:text-white leading-none">{trustData.score}</span>
+                                    <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest">/ 100</span>
+                                  </div>
+                                </div>
+                                <div className="flex-1 space-y-4">
+                                  <div className={`inline-flex items-center gap-3 px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border ${
+                                    trustData.levelColor === 'violet' ? 'bg-violet-500/10 text-violet-500 border-violet-500/20' :
+                                    trustData.levelColor === 'emerald' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                    trustData.levelColor === 'sky' ? 'bg-sky-500/10 text-sky-500 border-sky-500/20' :
+                                    'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                  }`}>
+                                    <ShieldCheck size={14} />
+                                    {trustData.level} Creator
+                                  </div>
+                                  <p className="text-sm font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight leading-relaxed">
+                                    {trustData.level === 'Elite' ? 'You have the highest trust level. Your content carries maximum authenticity signals.' :
+                                     trustData.level === 'Trusted' ? 'Strong credibility. Complete the next steps to reach Elite status.' :
+                                     trustData.level === 'Established' ? 'You\'re building a solid reputation. Keep publishing to grow your score.' :
+                                     'You\'re getting started. Complete the steps below to build your Trust Score.'}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Signal Breakdown */}
+                              <div className="space-y-4">
+                                <h3 className="text-xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white">Score Breakdown</h3>
+                                {trustData.breakdown.map((item: any) => (
+                                  <div key={item.signal} className="flex items-center gap-6 p-6 rounded-[2rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800">
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${item.achieved ? 'bg-emerald-500/10 text-emerald-500' : 'bg-surface-200 dark:bg-surface-800 text-surface-400'}`}>
+                                      {item.achieved ? <Check size={16} /> : <AlertCircle size={16} />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[12px] font-black uppercase italic tracking-tight text-surface-900 dark:text-white">{item.label}</span>
+                                        <span className="text-[11px] font-black text-surface-400 tabular-nums">{item.points}/{item.maxPoints} pts</span>
+                                      </div>
+                                      <div className="h-1.5 rounded-full bg-surface-100 dark:bg-surface-800 overflow-hidden">
+                                        <div className={`h-full rounded-full transition-all duration-700 ${item.achieved ? 'bg-emerald-500' : 'bg-primary-500/50'}`}
+                                          style={{ width: `${Math.round((item.points / item.maxPoints) * 100)}%` }} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Next Steps */}
+                              {trustData.nextSteps.length > 0 && (
+                                <div className="space-y-4">
+                                  <h3 className="text-xl font-black uppercase italic tracking-tighter text-surface-900 dark:text-white">How to improve</h3>
+                                  {trustData.nextSteps.map((step: any) => (
+                                    <div key={step.signal} className="flex items-start gap-6 p-8 rounded-[2rem] bg-primary-500/5 border-2 border-primary-500/15 hover:border-primary-500/30 transition-all">
+                                      <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <Sparkles size={18} className="text-primary-500" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="text-[12px] font-black uppercase italic tracking-tight text-surface-900 dark:text-white mb-1">{step.label}</p>
+                                        <p className="text-[11px] font-bold text-surface-500 dark:text-slate-400 italic leading-relaxed">{step.hint}</p>
+                                      </div>
+                                      <span className="text-[10px] font-black text-primary-500 bg-primary-500/10 px-3 py-1 rounded-lg flex-shrink-0">+{step.potentialGain} pts</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {!trustLoading && !trustData && (
+                            <div className="flex flex-col items-center justify-center py-24 text-center">
+                              <ShieldQuestion size={64} className="text-surface-300 dark:text-surface-700 mb-8" />
+                              <p className="text-base font-black uppercase italic tracking-tight text-surface-400">Trust Score unavailable. Complete your profile to activate scoring.</p>
+                            </div>
+                          )}
                         </div>
                       )}
 

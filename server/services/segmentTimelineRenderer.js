@@ -275,7 +275,7 @@ async function renderSegmentTimeline({ inputPath, segments, outputPath, exportOp
 
   const codec = exportOptions.codec === 'hevc' ? 'libx265'
     : exportOptions.codec === 'prores' ? 'prores_ks'
-    : 'libx264';
+      : 'libx264';
   const crf = asNumber(exportOptions.crf, exportOptions.quality === 'best' ? 18 : 23);
   const preset = exportOptions.preset || (exportOptions.quality === 'best' ? 'slow' : 'medium');
   const audioBitrate = exportOptions.audioBitrate || (exportOptions.quality === 'best' ? '320k' : '192k');

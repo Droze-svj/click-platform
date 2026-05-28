@@ -44,14 +44,35 @@ async function generateMultiModalContent(prompt, mediaTypes = ['text', 'image'])
       const imgPrompt = `You are an image prompt expert. Generate a detailed image description for DALL-E based on this content prompt. Be specific about composition, lighting, and style.\n\n${prompt}`;
       const imageDescription = await geminiGenerate(imgPrompt, { temperature: 0.7 });
 
+      let imageUrl = null;
       const client = getOpenAIClient();
-      const imageResponse = client && (await client.images.generate({
-        model: 'dall-e-3',
-        prompt: imageDescription,
-        n: 1,
-        size: '1024x1024',
-      }));
-      results.image = imageResponse?.data?.[0]?.url || null;
+      if (client) {
+        try {
+          const imageResponse = await client.images.generate({
+            model: 'dall-e-3',
+            prompt: imageDescription,
+            n: 1,
+            size: '1024x1024',
+          });
+          imageUrl = imageResponse?.data?.[0]?.url || null;
+        } catch (openaiError) {
+          logger.warn('OpenAI DALL-E image generation failed, falling back to seed-based stock image', { error: openaiError.message });
+        }
+      }
+
+      if (!imageUrl) {
+        // Calculate a seed from the description for stability
+        let seed = 0;
+        const cleanDesc = imageDescription || '';
+        for (let i = 0; i < cleanDesc.length; i++) {
+          seed = (seed + cleanDesc.charCodeAt(i)) % 1000;
+        }
+        
+        imageUrl = `https://picsum.photos/seed/${seed || 42}/1024/1024`;
+        logger.info('Generated seed-based fallback image url', { imageUrl, seed });
+      }
+
+      results.image = imageUrl;
       results.imageDescription = imageDescription;
     }
 

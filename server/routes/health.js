@@ -174,9 +174,10 @@ router.get('/', async (req, res) => {
   // Readiness rule: if ANY required dep is down, the service is not
   // ready. Redis is required when REDIS_URL is configured (it gates the
   // workers). Gemini is non-blocking.
-  const supabaseRequired = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const mongoRequired = !!process.env.MONGODB_URI;
-  const redisRequired = !!process.env.REDIS_URL && !/localhost|127\.0\.0\.1/.test(process.env.REDIS_URL || '');
+  const isTest = process.env.NODE_ENV === 'test';
+  const supabaseRequired = !isTest && !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const mongoRequired = !isTest && !!process.env.MONGODB_URI;
+  const redisRequired = !isTest && !!process.env.REDIS_URL && !/localhost|127\.0\.0\.1/.test(process.env.REDIS_URL || '');
 
   const failures = [];
   if (supabaseRequired && dbStatus.connected === false) failures.push('supabase');

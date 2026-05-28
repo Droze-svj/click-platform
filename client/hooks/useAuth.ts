@@ -31,6 +31,7 @@ interface User {
     status: string
     plan: string
   }
+  email_verified?: boolean
   niche?: string
   brandSettings?: any
   usage?: {

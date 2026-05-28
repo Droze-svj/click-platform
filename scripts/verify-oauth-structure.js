@@ -170,6 +170,7 @@ function checkServiceFunctions(servicePath, requiredFunctions) {
       new RegExp(`${func}\\s*:\\s*async`, 'g'),
       new RegExp(`const\\s+${func}\\s*=`, 'g'),
       new RegExp(`module\\.exports\\s*=\\s*{[^}]*${func}`, 'g'),
+      new RegExp(`(?:async\\s+)?${func}\\s*\\(`, 'g'),
     ];
 
     const found = patterns.some(pattern => pattern.test(content));

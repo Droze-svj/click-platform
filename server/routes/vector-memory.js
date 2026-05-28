@@ -26,7 +26,7 @@ router.post('/store', authenticate, async (req, res) => {
 
     res.json({ message: "Contextual memory securely stashed.", status: 200 });
   } catch (error) {
-    
+    console.error('[VectorMemory] Store Error:', error);
     res.status(500).json({ error: "Server Error storing semantic memory" });
   }
 });
@@ -47,6 +47,28 @@ router.get('/query', authenticate, async (req, res) => {
   } catch (error) {
     
     res.status(500).json({ error: "Server Error querying semantic memory" });
+  }
+});
+
+/**
+ * @route DELETE /api/memory/:memoryId
+ * @desc Delete a specific contextual editing preference
+ */
+router.delete('/:memoryId', authenticate, async (req, res) => {
+  try {
+    const { memoryId } = req.params;
+    if (!memoryId) {
+      return res.status(400).json({ error: "Missing memory ID" });
+    }
+
+    const success = await vectorMemoryService.deleteUserMemory(req.user.id, memoryId);
+    if (!success) {
+      return res.status(404).json({ error: "Memory not found or could not be deleted" });
+    }
+
+    res.json({ message: "Memory successfully deleted.", status: 200 });
+  } catch (error) {
+    res.status(500).json({ error: "Server Error deleting semantic memory" });
   }
 });
 

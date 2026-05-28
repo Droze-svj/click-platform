@@ -41,7 +41,6 @@ function fallbackReport(slice) {
   const np = slice.nichePlaybook;
   const pp = slice.platformPlaybook;
   const angles = np.angles || [];
-  const triggers = np.triggers || [];
   return {
     hooks: HOOK_FRAMEWORKS.slice(0, 6).map((fw, i) => ({
       id: fw.id,

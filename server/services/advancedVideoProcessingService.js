@@ -275,41 +275,53 @@ async function trimVideo(inputPath, outputPath, startTime, duration, options = {
  * Merge multiple videos
  */
 async function mergeVideos(inputPaths, outputPath) {
+  const { v4: uuidv4 } = require('uuid');
+  const concatFile = path.join(path.dirname(outputPath), `concat-${uuidv4()}.txt`);
+  
   try {
-    // Create concat file for FFmpeg with unique ID for atomic processing
-    const { v4: uuidv4 } = require('uuid');
-    const concatFile = path.join(path.dirname(outputPath), `concat-${uuidv4()}.txt`);
     const concatContent = inputPaths.map(p => `file '${path.resolve(p).replace(/'/g, "'\\''")}'`).join('\n');
     fs.writeFileSync(concatFile, concatContent);
 
     return new Promise((resolve, reject) => {
-      ffmpeg()
-        .input(concatFile)
-        .inputOptions(['-f', 'concat', '-safe', '0'])
-        .outputOptions(['-c', 'copy'])
-        .output(outputPath)
-        .on('start', () => {
-          logger.info('Video merge started', { inputPaths, outputPath });
-        })
-        .on('end', () => {
-          // Clean up concat file
-          if (fs.existsSync(concatFile)) {
-            fs.unlinkSync(concatFile);
-          }
-          logger.info('Video merge completed', { outputPath });
-          resolve(outputPath);
-        })
-        .on('error', (error) => {
-          // Clean up concat file
-          if (fs.existsSync(concatFile)) {
-            fs.unlinkSync(concatFile);
-          }
-          logger.error('Video merge error', { error: error.message });
-          reject(error);
-        })
-        .run();
+      try {
+        ffmpeg()
+          .input(concatFile)
+          .inputOptions(['-f', 'concat', '-safe', '0'])
+          .outputOptions(['-c', 'copy'])
+          .output(outputPath)
+          .on('start', () => {
+            logger.info('Video merge started', { inputPaths, outputPath });
+          })
+          .on('end', () => {
+            // Clean up concat file
+            if (fs.existsSync(concatFile)) {
+              fs.unlinkSync(concatFile);
+            }
+            logger.info('Video merge completed', { outputPath });
+            resolve(outputPath);
+          })
+          .on('error', (error) => {
+            // Clean up concat file
+            if (fs.existsSync(concatFile)) {
+              fs.unlinkSync(concatFile);
+            }
+            logger.error('Video merge error', { error: error.message });
+            reject(error);
+          })
+          .run();
+      } catch (ffmpegError) {
+        if (fs.existsSync(concatFile)) {
+          fs.unlinkSync(concatFile);
+        }
+        reject(ffmpegError);
+      }
     });
   } catch (error) {
+    if (fs.existsSync(concatFile)) {
+      try {
+        fs.unlinkSync(concatFile);
+      } catch (_) {}
+    }
     logger.error('Merge videos error', { error: error.message });
     captureException(error, { tags: { service: 'video', operation: 'merge' } });
     throw error;

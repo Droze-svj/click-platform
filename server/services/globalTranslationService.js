@@ -125,13 +125,21 @@ class GlobalTranslationService {
 
   getLanguageName(code) {
     const names = {
+      en: 'English',
       es: 'Spanish',
-      hi: 'Hindi',
       fr: 'French',
       de: 'German',
+      it: 'Italian',
       pt: 'Portuguese',
+      ru: 'Russian',
+      ja: 'Japanese',
+      ko: 'Korean',
       zh: 'Mandarin Chinese',
-      ja: 'Japanese'
+      ar: 'Arabic',
+      hi: 'Hindi',
+      nl: 'Dutch',
+      pl: 'Polish',
+      tr: 'Turkish'
     };
     return names[code] || code;
   }

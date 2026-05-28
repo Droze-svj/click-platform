@@ -30,11 +30,7 @@ function isMongoUserId(userId) {
  * Get user preferences
  */
 async function getUserPreferences(userId) {
-  // Supabase users (UUIDs) can't be stored in a Mongo schema that types
-  // userId as ObjectId — return ephemeral defaults instead of throwing.
-  if (!isMongoUserId(userId)) {
-    return buildEphemeralDefaults(userId);
-  }
+  // Now supports any userId string/ObjectId since userId schema is type: Mixed
   try {
     let preferences = await UserPreferences.findOne({ userId }).lean();
 
@@ -307,12 +303,7 @@ async function getBrandKit(userId) {
  * Update brand kit
  */
 async function updateBrandKit(userId, brandKit) {
-  // Supabase users → echo back the requested update without persisting to Mongo.
-  // The client also persists brand-kit to localStorage so the user still
-  // sees their changes; the in-memory return keeps the route contract happy.
-  if (!isMongoUserId(userId)) {
-    return { ...brandKit };
-  }
+  // Brand kit updates are now persisted directly for all users including strings
   try {
     let preferences = await UserPreferences.findOne({ userId });
     if (!preferences) {

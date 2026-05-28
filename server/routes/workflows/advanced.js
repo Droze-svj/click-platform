@@ -45,7 +45,7 @@ router.post('/:workflowId/execute', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Workflow executed', 200, result);
   } catch (error) {
     logger.error('Execute conditional workflow error', { error: error.message, workflowId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -60,7 +60,7 @@ router.post('/:workflowId/schedule', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Workflow scheduled', 200, result);
   } catch (error) {
     logger.error('Schedule workflow error', { error: error.message, workflowId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -71,7 +71,7 @@ router.get('/:workflowId/analytics', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Workflow analytics fetched', 200, analytics);
   } catch (error) {
     logger.error('Get workflow analytics error', { error: error.message, workflowId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 

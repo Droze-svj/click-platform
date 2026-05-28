@@ -23,8 +23,7 @@ const scheduledPostSchema = new mongoose.Schema({
   // UUIDs / clip ids produced by the Supabase-backed clips pipeline. Existing
   // ObjectId values still serialise cleanly through String.
   contentId: {
-    type: String,
-    index: true
+    type: String
   },
   campaignId: {
     type: mongoose.Schema.Types.ObjectId,

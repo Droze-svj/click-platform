@@ -4,6 +4,7 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
+const auth = require('../../middleware/auth');
 const voiceHookService = require('../../services/voiceHookService');
 const logger = require('../../utils/logger');
 
@@ -38,7 +39,7 @@ router.get('/library', async (req, res) => {
 });
 
 // Get voice hook suggestions for video
-router.post('/suggestions', async (req, res) => {
+router.post('/suggestions', auth, async (req, res) => {
   try {
     const { videoMetadata, userPreferences } = req.body;
 
@@ -58,7 +59,7 @@ router.post('/suggestions', async (req, res) => {
 });
 
 // Add voice hook to video
-router.post('/add-to-video', upload.fields([
+router.post('/add-to-video', auth, upload.fields([
   { name: 'video', maxCount: 1 },
   { name: 'voiceHook', maxCount: 1 }
 ]), async (req, res) => {
@@ -102,7 +103,7 @@ router.post('/add-to-video', upload.fields([
 });
 
 // Upload and process custom voice hook
-router.post('/upload-custom', upload.single('voiceHook'), async (req, res) => {
+router.post('/upload-custom', auth, upload.single('voiceHook'), async (req, res) => {
   try {
     const { options, name, category } = req.body;
     const voiceHookFile = req.file;
@@ -144,7 +145,7 @@ router.post('/upload-custom', upload.single('voiceHook'), async (req, res) => {
 });
 
 // Analyze voice hook performance
-router.post('/analyze-performance', async (req, res) => {
+router.post('/analyze-performance', auth, async (req, res) => {
   try {
     const { voiceHookId, videoMetrics } = req.body;
 
@@ -178,7 +179,7 @@ router.get('/templates', async (req, res) => {
 });
 
 // Generate dynamic voice hook
-router.post('/generate-dynamic', async (req, res) => {
+router.post('/generate-dynamic', auth, async (req, res) => {
   try {
     const { content, style, platform } = req.body;
 
@@ -198,7 +199,7 @@ router.post('/generate-dynamic', async (req, res) => {
 });
 
 // Create voice hook sequence
-router.post('/create-sequence', async (req, res) => {
+router.post('/create-sequence', auth, async (req, res) => {
   try {
     const { videoDuration, contentType, engagementPoints } = req.body;
 
@@ -238,7 +239,7 @@ router.get('/marketplace', async (req, res) => {
 });
 
 // Apply advanced audio mixing
-router.post('/advanced-mixing', upload.fields([
+router.post('/advanced-mixing', auth, upload.fields([
   { name: 'video', maxCount: 1 },
   { name: 'voiceHooks', maxCount: 10 }
 ]), async (req, res) => {

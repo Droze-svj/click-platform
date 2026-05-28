@@ -43,7 +43,7 @@ async function generateSingleVariant(content, index, options) {
   const fullPrompt = `You are a creative content writer. Generate variations of content while maintaining the core message.\n\n${prompt}`;
   const response = await geminiGenerate(fullPrompt, {
     temperature: 0.8 + index * 0.1,
-    maxTokens: 500
+    maxTokens: 4000
   });
 
   return {
@@ -104,7 +104,7 @@ async function improveSection(content, section, options = {}) {
     }
 
     const fullPrompt = `You are a content editor. Improve specific sections of content.\n\n${prompt}`;
-    const improved = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 500 });
+    const improved = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 4000 });
 
     return {
       original: section,
@@ -165,7 +165,7 @@ async function rewriteForTone(content, targetTone, options = {}) {
     }
 
     const fullPrompt = `You are a tone specialist. Rewrite content to match specific tones.\n\n${prompt}`;
-    const rewritten = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 500 });
+    const rewritten = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 4000 });
 
     return {
       original: content,

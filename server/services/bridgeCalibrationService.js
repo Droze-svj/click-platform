@@ -62,11 +62,11 @@ class BridgeCalibrationService {
       // In a real implementation, we would call proxy rotation APIs here
       // For now, we simulate a successful rotation and re-pulse
       if (driftData.status === 'DRIFT_DETECTED') {
-         action = 'PROXY_ROTATION_SUCCESS';
-         success = true;
+        action = 'PROXY_ROTATION_SUCCESS';
+        success = true;
       } else {
-         action = 'AUTH_HANDSHAKE_FAILURE';
-         success = false;
+        action = 'AUTH_HANDSHAKE_FAILURE';
+        success = false;
       }
     } catch (err) {
       action = 'SYSTEM_RECOVERY_ERROR';

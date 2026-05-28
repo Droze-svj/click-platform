@@ -14,22 +14,27 @@ describe('Workflow Automation Integration Tests', () => {
   let testWorkflowId;
 
   beforeAll(async () => {
+    const { initDatabases } = require('../../server/config/database');
+    await initDatabases();
     // Create test user
     testUser = new User({
       name: 'Test Workflow User',
       email: 'test-workflow@example.com',
-      password: 'hashedpassword',
+      password: "hashedpassword",
+      emailVerified: true,
       subscription: { status: 'active', plan: 'pro' },
     });
     await testUser.save();
 
-    authToken = 'test-token';
+    const jwt = require('jsonwebtoken');
+    const { getJwtSecret } = require('../../server/utils/jwtSecret');
+    authToken = jwt.sign({ userId: testUser._id.toString() }, getJwtSecret(), { expiresIn: '1h' });
   });
 
   afterAll(async () => {
     await Workflow.deleteMany({ userId: testUser._id });
     await User.deleteMany({ email: 'test-workflow@example.com' });
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 
   describe('Workflow Templates', () => {
@@ -63,20 +68,19 @@ describe('Workflow Automation Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-test-user-id', testUser._id.toString())
         .send({
-          templateId: 'content-publishing',
+          templateId: 'content-to-posts',
           customizations: {
             name: 'My Content Publishing Workflow',
           },
         });
 
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('_id');
-        expect(response.body.data).toHaveProperty('name');
-        expect(response.body.data).toHaveProperty('triggers');
-        expect(response.body.data).toHaveProperty('actions');
-        testWorkflowId = response.body.data._id;
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('_id');
+      expect(response.body.data).toHaveProperty('name');
+      expect(response.body.data).toHaveProperty('triggers');
+      expect(response.body.data).toHaveProperty('actions');
+      testWorkflowId = response.body.data._id;
     });
   });
 
@@ -110,16 +114,15 @@ describe('Workflow Automation Integration Tests', () => {
           ],
         });
 
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('_id');
-        expect(response.body.data).toHaveProperty('name', 'Test Advanced Workflow');
-        expect(response.body.data).toHaveProperty('triggers');
-        expect(response.body.data).toHaveProperty('actions');
-        expect(response.body.data).toHaveProperty('conditions');
-        expect(response.body.data).toHaveProperty('advanced', true);
-        testWorkflowId = response.body.data._id;
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('_id');
+      expect(response.body.data).toHaveProperty('name', 'Test Advanced Workflow');
+      expect(response.body.data).toHaveProperty('triggers');
+      expect(response.body.data).toHaveProperty('actions');
+      expect(response.body.data).toHaveProperty('conditions');
+      expect(response.body.data).toHaveProperty('advanced', true);
+      testWorkflowId = response.body.data._id;
     });
 
     test('POST /api/workflows/advanced/:workflowId/execute - Should execute conditional workflow', async () => {
@@ -128,36 +131,31 @@ describe('Workflow Automation Integration Tests', () => {
         const createRes = await request(app)
           .post('/api/workflows/advanced/create')
           .set('Authorization', `Bearer ${authToken}`)
-        .set('x-test-user-id', testUser._id.toString())
+          .set('x-test-user-id', testUser._id.toString())
           .send({
             name: 'Test Execute Workflow',
             triggers: [{ type: 'event', config: { event: 'test' } }],
             actions: [{ type: 'test', config: {} }],
           });
 
-        if (createRes.status === 200) {
-          testWorkflowId = createRes.body.data._id;
-        }
+        expect(createRes.status).toBe(200);
+        testWorkflowId = createRes.body.data._id;
       }
 
-      if (testWorkflowId) {
-        const response = await request(app)
-          .post(`/api/workflows/advanced/${testWorkflowId}/execute`)
-          .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app)
+        .post(`/api/workflows/advanced/${testWorkflowId}/execute`)
+        .set('Authorization', `Bearer ${authToken}`)
         .set('x-test-user-id', testUser._id.toString())
-          .send({
-            context: {
-              platform: 'instagram',
-              status: 'published',
-            },
-          });
+        .send({
+          context: {
+            platform: 'instagram',
+            status: "completed",
+          },
+        });
 
-        expect([200, 400, 500]).toContain(response.status);
-        if (response.status === 200) {
-          expect(response.body.success).toBe(true);
-          expect(response.body.data).toHaveProperty('executed');
-        }
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('executed');
     });
 
     test('POST /api/workflows/advanced/:workflowId/schedule - Should schedule workflow', async () => {
@@ -165,37 +163,33 @@ describe('Workflow Automation Integration Tests', () => {
         const createRes = await request(app)
           .post('/api/workflows/advanced/create')
           .set('Authorization', `Bearer ${authToken}`)
-        .set('x-test-user-id', testUser._id.toString())
+          .set('x-test-user-id', testUser._id.toString())
           .send({
             name: 'Test Schedule Workflow',
             triggers: [{ type: 'schedule', config: {} }],
             actions: [{ type: 'test', config: {} }],
           });
 
-        if (createRes.status === 200) {
-          testWorkflowId = createRes.body.data._id;
-        }
+        expect(createRes.status).toBe(200);
+        testWorkflowId = createRes.body.data._id;
       }
 
-      if (testWorkflowId) {
-        const response = await request(app)
-          .post(`/api/workflows/advanced/${testWorkflowId}/schedule`)
-          .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app)
+        .post(`/api/workflows/advanced/${testWorkflowId}/schedule`)
+        .set('Authorization', `Bearer ${authToken}`)
         .set('x-test-user-id', testUser._id.toString())
-          .send({
-            scheduleConfig: {
-              type: 'daily',
-              time: '09:00',
-              timezone: 'UTC',
-            },
-          });
+        .send({
+          scheduleConfig: {
+            type: 'daily',
+            time: '09:00',
+            timezone: 'UTC',
+          },
+        });
 
-        if (response.status === 200) {
-          expect(response.body.success).toBe(true);
-          expect(response.body.data).toHaveProperty('success', true);
-          expect(response.body.data).toHaveProperty('schedule');
-        }
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('success', true);
+      expect(response.body.data).toHaveProperty('schedule');
     });
 
     test('GET /api/workflows/advanced/:workflowId/analytics - Should get workflow analytics', async () => {
@@ -203,31 +197,28 @@ describe('Workflow Automation Integration Tests', () => {
         const createRes = await request(app)
           .post('/api/workflows/advanced/create')
           .set('Authorization', `Bearer ${authToken}`)
-        .set('x-test-user-id', testUser._id.toString())
+          .set('x-test-user-id', testUser._id.toString())
           .send({
             name: 'Test Analytics Workflow',
             triggers: [{ type: 'event', config: {} }],
             actions: [{ type: 'test', config: {} }],
           });
 
-        if (createRes.status === 200) {
-          testWorkflowId = createRes.body.data._id;
-        }
+        expect(createRes.status).toBe(200);
+        testWorkflowId = createRes.body.data._id;
       }
 
-      if (testWorkflowId) {
-        const response = await request(app)
-          .get(`/api/workflows/advanced/${testWorkflowId}/analytics`)
-          .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app)
+        .get(`/api/workflows/advanced/${testWorkflowId}/analytics`)
+        .set('Authorization', `Bearer ${authToken}`)
         .set('x-test-user-id', testUser._id.toString());
 
-        expect(response.status).toBe(200);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('workflowId');
-        expect(response.body.data).toHaveProperty('totalExecutions');
-        expect(response.body.data).toHaveProperty('successfulExecutions');
-        expect(response.body.data).toHaveProperty('successRate');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('workflowId');
+      expect(response.body.data).toHaveProperty('totalExecutions');
+      expect(response.body.data).toHaveProperty('successfulExecutions');
+      expect(response.body.data).toHaveProperty('successRate');
     });
   });
 
@@ -242,7 +233,7 @@ describe('Workflow Automation Integration Tests', () => {
           // Missing required triggers and actions
         });
 
-      expect([400, 500]).toContain(response.status);
+      expect(response.status).toBe(400);
     });
 
     test('GET /api/workflows/advanced/invalid-id/analytics - Should handle non-existent workflow', async () => {
@@ -252,7 +243,7 @@ describe('Workflow Automation Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-test-user-id', testUser._id.toString());
 
-      expect([404, 500]).toContain(response.status);
+      expect(response.status).toBe(404);
     });
   });
 });

@@ -201,6 +201,44 @@ router.get('/:contentId/in-language', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/video/captions/translate-overlays
+ * Translate an arbitrary array of text overlays in a single timing-safe batch call
+ */
+router.post('/translate-overlays', authenticate, async (req, res) => {
+  try {
+    const { overlays, targetLanguage } = req.body;
+
+    if (!Array.isArray(overlays) || !targetLanguage) {
+      return sendError(res, 'overlays (array) and targetLanguage are required', 400);
+    }
+
+    if (overlays.length === 0) {
+      return sendSuccess(res, [], 'Empty overlays array');
+    }
+
+    // Map overlays to standard segments { text }
+    const segments = overlays.map(o => ({ text: o.text || '' }));
+
+    // Perform timing-safe batch translation
+    const translatedSegments = await videoCaptionService.translateSegments(
+      segments,
+      targetLanguage
+    );
+
+    // Map translated text back to overlays, preserving styling, IDs, and timing
+    const result = overlays.map((o, idx) => ({
+      ...o,
+      text: translatedSegments[idx]?.text || o.text
+    }));
+
+    return sendSuccess(res, result, 'Overlays translated successfully');
+  } catch (error) {
+    logger.error('Error translating overlays', { error: error.message });
+    return sendError(res, error.message, 500);
+  }
+});
+
 const logger = require('../../utils/logger');
 
 module.exports = router;

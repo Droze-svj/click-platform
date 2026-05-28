@@ -337,7 +337,9 @@ router.get(
           return sendSuccess(res, { jobId, status: state, progress });
         }
       }
-    } catch {}
+    } catch (err) {
+      // Ignore queue inspection error and fallback
+    }
 
     return sendSuccess(res, { jobId, status: 'unknown' });
   })

@@ -46,7 +46,7 @@ describe('Social Media Integration (API Bridge)', () => {
       // Mock Content update
       Content.findByIdAndUpdate.mockResolvedValue({ _id: contentId });
 
-      const result = await socialMediaService.postToSocial(userId, 'tiktok', mockContentData, contentId);
+      const result = await socialMediaService.postToSocial(userId, 'tiktok', mockContentData, { contentId });
 
       expect(result.success).toBe(true);
       expect(result.platform).toBe('tiktok');
@@ -66,7 +66,7 @@ describe('Social Media Integration (API Bridge)', () => {
       
       Content.findByIdAndUpdate.mockResolvedValue({ _id: contentId });
 
-      const result = await socialMediaService.postToSocial(userId, 'youtube', mockContentData, contentId);
+      const result = await socialMediaService.postToSocial(userId, 'youtube', mockContentData, { contentId });
 
       expect(result.success).toBe(true);
       expect(result.platform).toBe('youtube');
@@ -79,7 +79,7 @@ describe('Social Media Integration (API Bridge)', () => {
       
       OAuthService.getSocialCredentials.mockResolvedValue(null);
 
-      const result = await socialMediaService.postToSocial(userId, 'tiktok', mockContentData, contentId);
+      const result = await socialMediaService.postToSocial(userId, 'tiktok', mockContentData, { contentId });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Account not linked');

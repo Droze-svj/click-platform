@@ -1,17 +1,104 @@
 {
   "config": {
-    "configFile": "/Volumes/CLICK/WHOP AI V3/playwright.config.js",
-    "rootDir": "/Volumes/CLICK/WHOP AI V3/tests/e2e",
+    "configFile": "/Users/dariovuma/Documents/WHOP_AI_V3/playwright.config.js",
+    "rootDir": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e",
     "forbidOnly": false,
     "fullyParallel": true,
-    "globalSetup": "/Volumes/CLICK/WHOP AI V3/tests/e2e/helpers/global-setup.js",
-    "globalTeardown": "/Volumes/CLICK/WHOP AI V3/tests/e2e/helpers/global-teardown.js",
+    "globalSetup": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e/helpers/global-setup.js",
+    "globalTeardown": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e/helpers/global-teardown.js",
     "globalTimeout": 0,
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {},
     "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/dariovuma/Documents/WHOP_AI_V3/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/dariovuma/Documents/WHOP_AI_V3/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/dariovuma/Documents/WHOP_AI_V3/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/dariovuma/Documents/WHOP_AI_V3/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/dariovuma/Documents/WHOP_AI_V3/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/dariovuma/Documents/WHOP_AI_V3/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "Tablet",
+        "name": "Tablet",
+        "testDir": "/Users/dariovuma/Documents/WHOP_AI_V3/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
     "reporter": [
       [
         "html",
@@ -44,98 +131,12 @@
       "max": 5,
       "threshold": 300000
     },
-    "quiet": false,
-    "projects": [
-      {
-        "outputDir": "/Volumes/CLICK/WHOP AI V3/test-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {},
-        "id": "chromium",
-        "name": "chromium",
-        "testDir": "/Volumes/CLICK/WHOP AI V3/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
-        "timeout": 60000
-      },
-      {
-        "outputDir": "/Volumes/CLICK/WHOP AI V3/test-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {},
-        "id": "firefox",
-        "name": "firefox",
-        "testDir": "/Volumes/CLICK/WHOP AI V3/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
-        "timeout": 60000
-      },
-      {
-        "outputDir": "/Volumes/CLICK/WHOP AI V3/test-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {},
-        "id": "webkit",
-        "name": "webkit",
-        "testDir": "/Volumes/CLICK/WHOP AI V3/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
-        "timeout": 60000
-      },
-      {
-        "outputDir": "/Volumes/CLICK/WHOP AI V3/test-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {},
-        "id": "Mobile Chrome",
-        "name": "Mobile Chrome",
-        "testDir": "/Volumes/CLICK/WHOP AI V3/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
-        "timeout": 60000
-      },
-      {
-        "outputDir": "/Volumes/CLICK/WHOP AI V3/test-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {},
-        "id": "Mobile Safari",
-        "name": "Mobile Safari",
-        "testDir": "/Volumes/CLICK/WHOP AI V3/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
-        "timeout": 60000
-      },
-      {
-        "outputDir": "/Volumes/CLICK/WHOP AI V3/test-results",
-        "repeatEach": 1,
-        "retries": 0,
-        "metadata": {},
-        "id": "Tablet",
-        "name": "Tablet",
-        "testDir": "/Volumes/CLICK/WHOP AI V3/tests/e2e",
-        "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
-        "timeout": 60000
-      }
-    ],
     "shard": null,
+    "tags": [],
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
-    "version": "1.56.1",
-    "workers": 4,
+    "version": "1.59.1",
+    "workers": 5,
     "webServer": {
       "command": "npm run dev",
       "url": "http://localhost:3000",
@@ -153,8 +154,8 @@
     }
   ],
   "stats": {
-    "startTime": "2026-03-31T12:21:06.725Z",
-    "duration": 42334.41099999999,
+    "startTime": "2026-05-24T09:28:00.302Z",
+    "duration": 2189.686,
     "expected": 0,
     "skipped": 0,
     "unexpected": 0,

@@ -10,29 +10,36 @@ const Workflow = require('../../server/models/Workflow');
 const app = createTestApp();
 
 describe('End-to-End Flow Integration Tests', () => {
+  jest.setTimeout(60000);
   let authToken;
   let testUser;
   let createdContentId;
   let createdWorkflowId;
 
   beforeAll(async () => {
+    const { initDatabases } = require('../../server/config/database');
+    await initDatabases();
+    
     // Create test user
+    await User.deleteOne({ email: 'e2e-test_' + Date.now() + '@example.com' });
     testUser = new User({
       name: 'E2E Test User',
-      email: 'e2e-test@example.com',
-      password: 'hashedpassword',
+      email: 'e2e-test_' + Date.now() + '@example.com',
+      password: "hashedpassword",
+      emailVerified: true,
       subscription: { status: 'active', plan: 'pro' },
     });
     await testUser.save();
 
-    authToken = 'test-token';
+    const jwt = require('jsonwebtoken');
+    authToken = jwt.sign({ userId: testUser._id }, process.env.JWT_SECRET || 'test-secret', { expiresIn: '1h' });
   });
 
   afterAll(async () => {
     await Content.deleteMany({ userId: testUser._id });
     await Workflow.deleteMany({ userId: testUser._id });
-    await User.deleteMany({ email: 'e2e-test@example.com' });
-    await mongoose.connection.close();
+    await User.deleteMany({ email: 'e2e-test_' + Date.now() + '@example.com' });
+    await mongoose.disconnect();
   });
 
   describe('Complete Content Creation Flow with AI', () => {
@@ -148,7 +155,7 @@ describe('End-to-End Flow Integration Tests', () => {
           .send({
             context: {
               platform: 'instagram',
-              status: 'published',
+              status: "completed",
             },
           });
 

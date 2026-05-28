@@ -19,9 +19,9 @@ try {
   if (apiKey) {
     const logger = require('./logger');
     genAI = new GoogleGenerativeAI(apiKey);
-    model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
-    embeddingModel = genAI.getGenerativeModel({ model: 'text-embedding-004' });
-    logger.info(`🛡️ [GoogleAI] Model initialized: gemini-flash-latest (Key: ${apiKey.substring(0, 6)}...${apiKey.slice(-4)})`);
+    model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    embeddingModel = genAI.getGenerativeModel({ model: 'embedding-001' });
+    logger.info(`🛡️ [GoogleAI] Model initialized (Key: ${apiKey.substring(0, 6)}...${apiKey.slice(-4)})`);
   } else {
     try {
       const logger = require('./logger');
@@ -72,6 +72,96 @@ async function generateContent(prompt, options = {}) {
         });
       }
       
+      if (lowerPrompt.includes('template')) {
+        logger.info('🛡️ [GoogleAI] Returning mock template sections');
+        return JSON.stringify({
+          sections: [
+            {
+              name: "Hook",
+              content: "In a world of constant content noise, only the sovereign creator stands out.",
+              keyPoints: ["Break pattern", "Assert authority"]
+            },
+            {
+              name: "Problem",
+              content: "Traditional video editing pipelines are fragmented, manual, and drain creative energy.",
+              keyPoints: ["High operational friction", "Time drain"]
+            },
+            {
+              name: "Solution Steps",
+              content: "Leverage Click's advanced neural workflow: 1. Feed the prompts, 2. Synthesize visual blueprints, 3. Deploy.",
+              keyPoints: ["Speed", "Precision", "Automation"]
+            },
+            {
+              name: "Tips",
+              content: "Configure spacing, letter tracking, and high-energy transitions to maximize retention spikes.",
+              keyPoints: ["Typographic control", "Visual alignment"]
+            },
+            {
+              name: "Conclusion",
+              content: "Sovereignty is yours. Click AI transitions you from coordinator to director.",
+              keyPoints: ["Claim freedom", "Scale growth"]
+            }
+          ]
+        });
+      }
+
+      if (lowerPrompt.includes('audience') && lowerPrompt.includes('angles')) {
+        logger.info('🛡️ [GoogleAI] Returning mock Stage 1: Intelligence positioning');
+        return JSON.stringify({
+          audience: "Target Creators & Social Media Professionals",
+          positioning: "Autonomous content factory utilizing advanced neural pipelines",
+          topAngles: [
+            { angle: "Efficiency Boost", trigger: "Time savings" },
+            { angle: "Direct Influence", trigger: "Authenticity" },
+            { angle: "Future Stack", trigger: "Technology" }
+          ]
+        });
+      }
+
+      if (lowerPrompt.includes('rawscript')) {
+        logger.info('🛡️ [GoogleAI] Returning mock Stage 2: Raw Script');
+        return JSON.stringify({
+          title: "Unlocking Creative Autonomy in 2026",
+          hook: "This secret hack will change your workflow forever. 🚀",
+          rawScript: {
+            hook: "This secret hack will change your workflow forever. 🚀",
+            body: [
+              "Traditional video editing pipelines are fragmented and drain creative energy.",
+              "Stop doing this manually and leverage Click's advanced neural workflow.",
+              "Sovereignty is yours once you shift from coordinator to director."
+            ],
+            cta: "Join the Sovereign Cluster today. Link in bio."
+          },
+          estimatedDurationSec: 30
+        });
+      }
+
+      if (lowerPrompt.includes('polishedhook')) {
+        logger.info('🛡️ [GoogleAI] Returning mock Stage 3: Refinery');
+        return JSON.stringify({
+          polishedHook: "This raw hack will redefine your creative workflow. 🚀",
+          polishedBody: [
+            "Manual editing pipelines are dead weight that exhaust creative drive.",
+            "Calibrate Click's advanced neural engine and reclaim control.",
+            "Reclaim your sovereignty. Transform from editor to ultimate director."
+          ],
+          polishedCta: "Ascend to the Sovereign Cluster now. Link in bio.",
+          improvements: ["Stronger action verbs", "Replaced filler words with power verbs"]
+        });
+      }
+
+      if (lowerPrompt.includes('hashtags') && lowerPrompt.includes('resonancescore')) {
+        logger.info('🛡️ [GoogleAI] Returning mock Stage 5: Blueprint');
+        return JSON.stringify({
+          hashtags: ["#ClickAI", "#SovereignCreator", "#NeuralForge", "#FutureTech", "#InferenceHub", "#GrowthLattice", "#AIAgent"],
+          ctaChain: ["Join the Sovereign Cluster today. Link in bio.", "Manifest your vision with Click AI."],
+          thumbnailPrompt: "A futuristic neon workspace showing an holographic video timeline floating in the air, deep violet and cyan color grade.",
+          postingWindow: "Tue 7pm",
+          resonanceScore: 94,
+          totalDuration: 30
+        });
+      }
+
       if (lowerPrompt.includes('json object') || lowerPrompt.includes('manifest') || lowerPrompt.includes('script')) {
         logger.info('🛡️ [GoogleAI] Returning mock manifest');
         return JSON.stringify({
@@ -106,6 +196,9 @@ async function generateContent(prompt, options = {}) {
         generationConfig: {
           maxOutputTokens: options.maxTokens || 1024,
           temperature: options.temperature ?? 0.7,
+          topP: options.topP ?? 0.95,
+          topK: options.topK ?? 40,
+          responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
         },
       });
       const response = result.response;
@@ -151,6 +244,9 @@ async function generateContent(prompt, options = {}) {
             generationConfig: {
               maxOutputTokens: options.maxTokens || 1024,
               temperature: options.temperature ?? 0.7,
+              topP: options.topP ?? 0.95,
+              topK: options.topK ?? 40,
+              responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
             },
           });
 
@@ -196,7 +292,18 @@ async function generateEmbeddings(text) {
     const result = await embeddingModel.embedContent(text);
     return result.embedding.values;
   } catch (err) {
-    
+    try {
+      const logger = require('./logger');
+      logger.error('[GoogleAI] Embedding failed:', { error: err.message });
+      if (process.env.NODE_ENV !== 'production') {
+        logger.info('🛡️ [GoogleAI] Dev Fallback: Returning mock embedding vector');
+      }
+    } catch (_) {
+      // Logger import or invocation failed
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      return new Array(768).fill(0.01);
+    }
     return null;
   }
 }
@@ -205,5 +312,5 @@ module.exports = {
   client: model,
   generateContent,
   generateEmbeddings,
-  isConfigured: !!model || (process.env.NODE_ENV !== 'production'),
+  isConfigured: !!model,
 };

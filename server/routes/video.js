@@ -430,8 +430,8 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
           });
         } finally {
           activeProcessCount--;
-          // Final safety cleanup of original file if still present
-          if (fs.existsSync(req.file.path)) {
+          // Final safety cleanup of original file if still present, ONLY if it has been uploaded to cloud storage
+          if (storageType !== 'local' && fs.existsSync(req.file.path)) {
             fs.unlink(req.file.path, (err) => {
               if (!err) logger.info('Cleaned up original local file in finally', { path: req.file.path });
             });
@@ -2095,7 +2095,7 @@ router.post('/transcribe-editor', auth, async (req, res) => {
       });
     }
 
-    const { videoId } = req.body;
+    const { videoId, language = 'auto' } = req.body;
     const userId = req.user?._id || req.user?.id;
 
     if (!videoId || typeof videoId !== 'string') {
@@ -2157,7 +2157,7 @@ router.post('/transcribe-editor', auth, async (req, res) => {
       });
     }
 
-    const result = await transcribeVideoService(userId, videoId, videoPath);
+    const result = await transcribeVideoService(userId, videoId, videoPath, { language });
 
     if (!result || !result.success) {
       return res.status(500).json({

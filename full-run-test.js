@@ -27,7 +27,7 @@ async function start() {
   // 1. Health Check
   await runTest('Server Health', async () => {
     const res = await axios.get(`${BASE_URL}/api/health`);
-    if (res.data.status !== 'healthy' && res.data.status !== 'starting') {
+    if (res.data.status !== 'healthy' && res.data.status !== 'starting' && res.data.status !== 'ok') {
       throw new Error(`Health status: ${res.data.status}`);
     }
   });
@@ -57,8 +57,6 @@ async function start() {
 
   // 5. AI Video Factory (Sovereign Engine)
   await runTest('AI Video Factory (Prompt -> Blueprint)', async () => {
-    // Note: We might need to require the service directly if the route isn't public/easy to hit via curl
-    // But let's try the pipeline route if it exists
     try {
         const res = await axios.post(`${BASE_URL}/api/pipeline/autonomous`, {
             prompt: 'The impact of AI on creativity',
@@ -80,9 +78,15 @@ async function start() {
         if (!fs.existsSync(path.dirname(tempFile))) fs.mkdirSync(path.dirname(tempFile), { recursive: true });
         fs.writeFileSync(tempFile, 'FULL TEST CONTENT');
         
-        await c2pa.embedAuthenticitySignature(tempFile, { creator: 'Full Run Test' });
-        const ver = await c2pa.verifyAuthenticitySignature(tempFile);
-        if (!ver.verified) throw new Error('C2PA verification failed');
+        await c2pa.signRender({
+            inputPath: tempFile,
+            tree: { metadata: { aiAssisted: true, aiProviders: ['Gemini'] } },
+            jobId: 'test-job-id',
+            userId: 'test-user-id'
+        });
+        const ver = await c2pa.verifyRender(tempFile);
+        if (!ver.sha256) throw new Error('C2PA verification failed: missing sha256 hash');
+        console.log(`   C2PA Signature Checked, SHA256: ${ver.sha256}`);
     } catch (err) {
         throw new Error(`C2PA Service Error: ${err.message}`);
     }

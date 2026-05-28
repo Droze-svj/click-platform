@@ -53,7 +53,9 @@ const workflowSchema = new mongoose.Schema({
     config: mongoose.Schema.Types.Mixed,
   }],
   actions: [{
-    type: String,
+    type: {
+      type: String,
+    },
     config: mongoose.Schema.Types.Mixed,
   }],
   conditions: [{

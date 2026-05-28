@@ -46,7 +46,22 @@
     "settings": "Impostazioni",
     "templates": "Modelli",
     "infrastructure": "Infrastruttura",
-    "clickTagline": "Contenuti con IA"
+    "clickTagline": "Contenuti con IA",
+    "recurring": "Ricorrenti",
+    "studio": "Studio",
+    "grow": "Cresci",
+    "manage": "Gestisci",
+    "onboarding": "Inizia",
+    "forge": "Forge",
+    "videoEditor": "Editor",
+    "aiClips": "Clip AI",
+    "aiTools": "Strumenti AI",
+    "creatorsHub": "Creatori",
+    "discover": "Scopri",
+    "strategist": "Strategist",
+    "aiInsights": "Approfondimenti AI",
+    "roadmap": "Roadmap",
+    "connectAccounts": "Collega account"
   },
   "workflow": {
     "niche": "Nicchia",
@@ -175,7 +190,39 @@
       "quotesCreated": "Citazioni create",
       "postsScheduled": "Post programmati"
     },
-    "clickToView": "Click per i dettagli →"
+    "clickToView": "Click per i dettagli →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "auth": {
     "login": "Accedi",
@@ -247,6 +294,69 @@
     "translated": "Tradotto",
     "translationFailed": "Traduzione non riuscita",
     "viewOriginal": "Visualizza originale",
-    "selectLanguage": "Seleziona lingua"
+    "selectLanguage": "Seleziona lingua",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "editor": {
+    "tabs": {
+      "trim": "Taglia",
+      "text": "Testo",
+      "filters": "Filtri",
+      "motion": "Movimento",
+      "overlays": "Livelli",
+      "packs": "Pacchetti",
+      "insights": "Dati"
+    },
+    "aspectRatio": "Formato / Rapporto d'aspetto",
+    "neuralFocusTracking": "Tracciamento neurale della messa a fuoco",
+    "active": "Attivo",
+    "offline": "Non in linea",
+    "trackingPriorityTarget": "Obiettivo di tracciamento prioritario",
+    "speaker": "⚡ Relatore",
+    "face": "⚡ Relatore",
+    "action": "🎯 Azione",
+    "custom": "🎬 Personalizzato",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "Attiva l'inquadratura automatica per trasmettere le metriche target…"
+  },
+  "studio": {
+    "advancedStudio": "Studio Avanzato",
+    "videoStudio": "Studio Video",
+    "syncArchive": "Sincronizza Archivio",
+    "payloadInventory": "Inventario Payload",
+    "neuralProcessed": "Processato Neuralmente",
+    "syntheticYields": "Rendimenti Sintetici",
+    "initializeIntake": "Inizializza Acquisizione",
+    "payloadArchive": "Archivio Payload",
+    "searchArchive": "CERCA_ARCHIVIO...",
+    "dropPayload": "Trascina qui il Payload",
+    "syncingPayload": "Sincronizzazione Payload...",
+    "neuralIngestionReady": "NEURAL_STUDIO_INGESTIONE_PRONTA",
+    "payloadsDetected": "PAYLOAD_RILEVATI",
+    "open": "Apri",
+    "syncingStudio": "Sincronizzazione Neural Studio...",
+    "tip": "TUTORIAL_BASE:",
+    "tipPaste": "INCOLLA_URL (⌘V) SU QUESTO HUD PER LA SINCRONIZZAZIONE_AUTOMATICA.",
+    "secureTunnel": "TUNNEL_SICURO",
+    "highVelocity": "ALTA_VELOCITÀ",
+    "intakeHint": "Inietta filmati grezzi o sequenze multi-traccia nella matrice neurale. A/B Swarm auto-calibrerà i vettori per una sintesi ottimale ad alta velocità.",
+    "secureStorage": "NODI_DI_ARCHIVIAZIONE_SICURA",
+    "all": "tutti",
+    "completed": "completati",
+    "processing": "in elaborazione",
+    "failed": "non riusciti",
+    "queued": "in coda",
+    "yields": "RESE",
+    "uploadStable": "✓ CARICAMENTO_STABILE: ANALISI_VETTORI...",
+    "uploadFailed": "ERR_SCRITTURA: CARICAMENTO_NON_RIUSCITO",
+    "missingContentId": "ERR_PARAMETRO: ID_CONTENUTO_MANCANTE",
+    "invalidVideo": "ERR_MIME: FORMATO_VIDEO_NON_VALIDO",
+    "syncingPayloadProgress": "Sincronizzazione Payload...",
+    "analysisComplete": "✓ ANALISI_COMPLETA: {count} CLIP_GENERATE",
+    "processingFailure": "ERRORE_ELABORAZIONE: SEQUENZA_INTERROTTA"
   }
 }

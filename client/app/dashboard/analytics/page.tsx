@@ -263,7 +263,7 @@ export default function SovereignAnalyticsMatrix() {
                   </div>
                </div>
               <div className="flex items-center gap-6 w-full md:w-auto">
-                 <div className="relative flex-1 md:w-80 group/search">
+                 <div className="relative flex-1 min-w-0 md:w-80 group/search">
                     <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-800 group-focus-within/search:text-primary-500 transition-colors" size={20} />
                     <input 
                        type="text" 
@@ -281,7 +281,7 @@ export default function SovereignAnalyticsMatrix() {
               </div>
            </div>
 
-            <div className="divide-y-2 divide-white/5 max-h-[900px] overflow-y-auto custom-scrollbar relative z-10">
+            <div className="divide-y-2 divide-white/5 max-h-[60vh] overflow-y-auto custom-scrollbar relative z-10">
              <AnimatePresence>
                {filteredNodes.map((node, idx) => (
                  <motion.div key={node.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ delay: idx * 0.05 }}

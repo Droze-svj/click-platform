@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 const userPreferencesSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.Mixed, // Supports ObjectId, string UUIDs, and dev-user strings
     ref: 'User',
     required: true,
     unique: true
@@ -120,7 +120,7 @@ const userPreferencesSchema = new mongoose.Schema({
     accentColor: { type: String, default: '' },
     titleFont: { type: String, default: '' },
     bodyFont: { type: String, default: '' },
-    lowerThirdStyle: { type: String, enum: ['bar', 'pill', 'minimal', 'none'], default: '' },
+    lowerThirdStyle: { type: String, enum: ['bar', 'pill', 'minimal', 'none', ''], default: '' },
     lowerThirdPosition: { type: String, enum: ['left', 'right', 'center', ''], default: '' },
     logoPlacement: { type: String, enum: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'none', ''], default: '' },
     logoOpacity: { type: Number, default: null },
@@ -149,6 +149,17 @@ const userPreferencesSchema = new mongoose.Schema({
   completedTutorials: [String],
   // Synced devices
   syncedDevices: [String],
+  // Default AI Video Editing preferences
+  videoEditing: {
+    preferredVoiceTone: { type: String, default: 'Hype' },
+    preferredHookStyle: { type: String, default: 'curiosity-gap' },
+    pacingIntensity: { type: String, enum: ['gentle', 'medium', 'aggressive'], default: 'medium' },
+    captionStyle: { type: String, default: 'modern' },
+    captionFontScale: { type: Number, default: 1.0 },
+    captionVerticalOffset: { type: Number, default: 0 },
+    aestheticColorGrade: { type: String, default: 'vibrant' },
+    aestheticTransition: { type: String, default: 'fade' }
+  },
   updatedAt: {
     type: Date,
     default: Date.now

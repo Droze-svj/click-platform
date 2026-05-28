@@ -41,13 +41,13 @@ router.post(
 
     const result = register
       ? await hookEnsembleService.generateHooksAndRegisterTest({
-          userId,
-          topic,
-          niche,
-          platform,
-          topK,
-          projectId,
-        })
+        userId,
+        topic,
+        niche,
+        platform,
+        topK,
+        projectId,
+      })
       : await hookEnsembleService.generateHooks({ userId, topic, niche, platform, topK });
 
     return sendSuccess(res, result);

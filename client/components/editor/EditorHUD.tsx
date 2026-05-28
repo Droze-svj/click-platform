@@ -430,7 +430,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
               transition={{ duration: 0.2 }}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 text-[9px] font-black uppercase tracking-widest shrink-0 shadow-sm ${
+              className={`flex items-center gap-1.5 p-1 sm:px-3 sm:py-1 rounded-full border-2 text-[9px] font-black uppercase tracking-widest shrink-0 shadow-sm ${
                 autosaveStatus === 'saving'
                   ? 'bg-amber-500/5 border-amber-500/20 text-amber-400'
                   : autosaveStatus === 'error'
@@ -450,12 +450,12 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               </span>
             </motion.div>
           </AnimatePresence>
-        </div>
+          </div>
 
-        <div className="h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
+          <div className="hidden sm:block h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
 
-        {/* ── Undo / Redo ── */}
-        <div className="flex items-center gap-1 shrink-0">
+          {/* ── Undo / Redo ── */}
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
           <HUDTooltip label="Undo" shortcut="⌘ Z">
             <button
               type="button"
@@ -495,16 +495,16 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           </HUDTooltip>
         </div>
 
-        <div className="h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
+        <div className="hidden sm:block h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
 
         {/* ── Live Timecode ── */}
-        <div className="flex items-center gap-2 shrink-0 px-3 py-1.5 rounded-2xl bg-white/[0.03] border-2 border-white/5 shadow-inner">
-          <Timer className="w-3.5 h-3.5 text-primary-400 shrink-0" />
-          <span className="text-xs font-mono font-black text-white tabular-nums tracking-tighter">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0 px-2 py-1 sm:px-3 sm:py-1.5 rounded-2xl bg-white/[0.03] border-2 border-white/5 shadow-inner">
+          <Timer className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-400 shrink-0" />
+          <span className="text-[10px] sm:text-xs font-mono font-black text-white tabular-nums tracking-tighter">
             {formatTime(currentTime)}
           </span>
-          <span className="text-[10px] text-slate-600 font-black">/</span>
-          <span className="text-xs font-mono font-black text-slate-500 tabular-nums tracking-tighter">
+          <span className="text-[9px] sm:text-[10px] text-slate-600 font-black">/</span>
+          <span className="text-[10px] sm:text-xs font-mono font-black text-slate-500 tabular-nums tracking-tighter">
             {formatTime(duration)}
           </span>
         </div>
@@ -515,10 +515,10 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           onClick={onCommandK}
           aria-label="Open Command Menu"
           title="Command Menu (⌘K)"
-          className="flex-1 min-w-0 max-w-[400px] flex items-center gap-3 px-4 h-10 rounded-2xl border-2 border-white/5 bg-black/20 hover:border-primary-500/30 hover:bg-primary-500/5 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 shadow-inner overflow-hidden"
+          className="flex-1 md:flex-none md:w-auto min-w-[40px] max-w-[400px] flex items-center justify-center md:justify-start gap-3 p-2 md:px-4 h-10 rounded-2xl border-2 border-white/5 bg-black/20 hover:border-primary-500/30 hover:bg-primary-500/5 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 shadow-inner overflow-hidden"
         >
           <Search className="w-3.5 h-3.5 text-slate-500 group-hover:text-primary-400 transition-colors shrink-0" />
-          <span className="text-[10px] font-black italic uppercase tracking-[0.4em] text-slate-600 group-hover:text-slate-400 transition-colors truncate">
+          <span className="text-[10px] font-black italic uppercase tracking-[0.4em] text-slate-600 group-hover:text-slate-400 transition-colors truncate hidden md:inline-block">
             NEURAL_OS_INPUT…
           </span>
           <div className="flex items-center gap-1 ml-auto shrink-0 opacity-30 group-hover:opacity-100 transition-all duration-500">
@@ -571,12 +571,12 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           </AnimatePresence>
         </div>
 
-        <div className="h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
+        <div className="hidden sm:block h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
 
         {/* ── Action Buttons ── */}
         <div className="flex items-center gap-1 shrink-0">
           <HUDTooltip label="Layout Matrix" shortcut="L">
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <button
                 type="button"
                 onClick={() => setLayoutOpen((v) => !v)}
@@ -640,16 +640,16 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           <HUDTooltip label="Zen Mode" shortcut="Z">
             <button 
               onClick={() => setZenMode?.(!zenMode)}
-              className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-90 ${zenMode ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40' : 'hover:bg-white/[0.08] text-slate-500 hover:text-white'}`}
+              className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all active:scale-90 ${zenMode ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40' : 'hover:bg-white/[0.08] text-slate-500 hover:text-white'}`}
             >
               {zenMode ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </HUDTooltip>
 
           {/* Final Launch Action */}
-          <button className="flex items-center gap-2 px-4 h-10 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-lg group ml-1">
+          <button className="flex items-center justify-center gap-2 px-2 sm:px-4 h-9 sm:h-10 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-lg group ml-1">
              <Radio className="w-4 h-4 animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] italic group-hover:translate-x-1 transition-transform">GO_LIVE</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] italic group-hover:translate-x-1 transition-transform hidden sm:inline-block">GO_LIVE</span>
           </button>
         </div>
 

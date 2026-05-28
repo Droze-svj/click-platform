@@ -20,13 +20,16 @@ const app = express();
 app.use(express.json());
 
 // Mock auth middleware
-const mockAuth = (req, res, next) => {
+const mockUserId = new mongoose.Types.ObjectId();
+jest.mock('../../server/middleware/auth', () => (req, res, next) => {
   req.user = {
-    _id: new mongoose.Types.ObjectId(),
+    _id: mockUserId,
     save: jest.fn().mockResolvedValue(true)
   };
   next();
-};
+});
+
+const mockAuth = require('../../server/middleware/auth');
 
 app.use('/api/subscription', mockAuth, subscriptionRouter);
 
@@ -52,7 +55,7 @@ describe('Subscription API Integration', () => {
         .send({ whopUserId: 'user_1', whopSubscriptionId: 'sub_1' });
 
       expect(response.status).toBe(200);
-      expect(response.body.tier).toBe('elite');
+      expect(response.body.subscription.plan).toBe('p_elite_1');
     });
 
     it('should map generic plan to starter tier', async () => {
@@ -71,7 +74,7 @@ describe('Subscription API Integration', () => {
         .send({ whopUserId: 'user_1', whopSubscriptionId: 'sub_1' });
 
       expect(response.status).toBe(200);
-      expect(response.body.tier).toBe('starter');
+      expect(response.body.subscription.plan).toBe('p_starter_1');
     });
 
     it('should return 403 if subscription is not active', async () => {
@@ -115,7 +118,7 @@ describe('Subscription API Integration', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(mockUser.tier).toBe('pro');
+      expect(mockUser.subscription.plan).toBe('pro');
       expect(mockUser.save).toHaveBeenCalled();
     });
   });

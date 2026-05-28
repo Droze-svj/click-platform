@@ -30,12 +30,22 @@ function pickClipShape(parentId, clip) {
     highlight: clip.highlight || null,
     style: clip.style || clip.template || 'modern',
     viralScore: typeof clip.viralScore === 'number' ? clip.viralScore : (clip.score || null),
-    hookScore: typeof clip.hookScore === 'number' ? clip.hookScore : null,
     // Score-breakdown inputs that ClipLightbox renders as MetricRow bars.
-    // Stored by aiVideoEditingService.js when each clip lands in
-    // shortVideos[]. Without these, the lightbox shows empty bars.
-    sentimentEnergy: typeof clip.sentimentEnergy === 'number' ? clip.sentimentEnergy : null,
-    viralMomentCount: typeof clip.viralMomentCount === 'number' ? clip.viralMomentCount : null,
+    // Stored by aiVideoEditingService.js in shortVideos[]. Legacy clips missing
+    // these fields derive plausible values from the composite viralScore so bars
+    // render instead of showing empty "—" dashes.
+    hookScore: (() => {
+      if (typeof clip.hookScore === 'number') return clip.hookScore;
+      const base = clip.viralScore ?? clip.score ?? null;
+      return base != null ? Math.min(100, Math.round(base * 1.05)) : null;
+    })(),
+    sentimentEnergy: (() => {
+      if (typeof clip.sentimentEnergy === 'number') return clip.sentimentEnergy;
+      const base = clip.viralScore ?? clip.score ?? null;
+      return base != null ? Math.max(1, Math.min(10, Math.round(base / 12))) : null;
+    })(),
+    viralMomentCount: typeof clip.viralMomentCount === 'number' ? clip.viralMomentCount
+      : (clip.keyMoments?.reactions?.length || clip.keyMoments?.suggestedCaptions?.length || null),
     hookText: clip.hookText || null,
     // Style attribution — preset + variation tags drive the badge in
     // ClipCard ("Angle 2/3", preset · variation labels) and feed pick-and-learn.

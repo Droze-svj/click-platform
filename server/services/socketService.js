@@ -11,13 +11,13 @@ function initializeSocket(server) {
   const isDev = process.env.NODE_ENV !== 'production';
   const corsOrigin = isDev
     ? (origin, cb) => {
-        if (!origin) return cb(null, true); // same-origin / curl / native ws clients
-        try {
-          const u = new URL(origin);
-          if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return cb(null, true);
-        } catch { /* fall through */ }
-        cb(null, false);
-      }
+      if (!origin) return cb(null, true); // same-origin / curl / native ws clients
+      try {
+        const u = new URL(origin);
+        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return cb(null, true);
+      } catch { /* fall through */ }
+      cb(null, false);
+    }
     : (process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3010']);
 
   io = new Server(server, {

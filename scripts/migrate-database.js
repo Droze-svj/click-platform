@@ -58,13 +58,36 @@ async function runMigrations() {
           const User = require('../server/models/User');
           const Content = require('../server/models/Content');
           
-          // Create indexes if they don't exist
-          await User.collection.createIndex({ email: 1 }, { unique: true, sparse: true });
-          await User.collection.createIndex({ 'subscription.status': 1, 'subscription.endDate': 1 });
-          await Content.collection.createIndex({ userId: 1, createdAt: -1 });
-          await Content.collection.createIndex({ status: 1 });
+          // Create indexes if they don't exist, ignore duplicates/conflicts
+          try {
+            await User.collection.createIndex({ email: 1 }, { unique: true, sparse: true });
+            console.log('  ✅ User email index created');
+          } catch (e) {
+            console.log(`  ℹ️  User email index skipped/existing: ${e.message}`);
+          }
           
-          console.log('  ✅ Created database indexes');
+          try {
+            await User.collection.createIndex({ 'subscription.status': 1, 'subscription.endDate': 1 });
+            console.log('  ✅ User subscription status index created');
+          } catch (e) {
+            console.log(`  ℹ️  User subscription index skipped/existing: ${e.message}`);
+          }
+
+          try {
+            await Content.collection.createIndex({ userId: 1, createdAt: -1 });
+            console.log('  ✅ Content userId/createdAt index created');
+          } catch (e) {
+            console.log(`  ℹ️  Content userId/createdAt index skipped/existing: ${e.message}`);
+          }
+
+          try {
+            await Content.collection.createIndex({ status: 1 });
+            console.log('  ✅ Content status index created');
+          } catch (e) {
+            console.log(`  ℹ️  Content status index skipped/existing: ${e.message}`);
+          }
+          
+          console.log('  ✅ Finished processing database indexes');
         },
       },
     ];

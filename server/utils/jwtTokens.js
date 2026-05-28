@@ -21,7 +21,7 @@ const { getJwtSecret } = require('./jwtSecret');
 
 // Access-token lifetime. Drop to '1h' once the client-side refresh loop
 // is proven in production and every session has a refresh token alongside.
-const ACCESS_TTL = '30d';
+const ACCESS_TTL = '1h';
 // Refresh-token lifetime — long enough that a casually-used account stays
 // logged in for a quarter, short enough that an exfiltrated refresh token
 // can't grant new access forever.
@@ -54,9 +54,9 @@ function issueTokenPair(userId) {
   return {
     token,
     refreshToken,
-    // 30d in seconds, kept in sync with ACCESS_TTL above. Used by the
+    // 1h in seconds, kept in sync with ACCESS_TTL above. Used by the
     // client to schedule a proactive refresh before expiry.
-    expiresIn: 30 * 24 * 60 * 60,
+    expiresIn: 3600,
   };
 }
 

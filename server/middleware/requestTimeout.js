@@ -112,7 +112,7 @@ function getTimeoutForRoute(routeType = 'default') {
 function getRouteTypeFromPath(path = '') {
   const p = (path || '').toLowerCase();
   if (p.includes('/api/video/upload') || p.includes('/upload') && p.includes('video')) return 'upload';
-  if (p.includes('/api/video') || p.includes('/api/export') || p.includes('/render')) return 'processing';
+  if (p.includes('/api/video') || p.includes('/api/export') || p.includes('/render') || p.includes('/api/intelligence')) return 'processing';
   if (p.includes('/api/analytics') || p.includes('/report')) return 'analytics';
   if (p.includes('/auth/') || p.includes('/oauth/')) return 'auth';
   return 'default';

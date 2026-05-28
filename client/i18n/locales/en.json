@@ -37,8 +37,23 @@
     "approvals": "Approvals",
     "quotes": "Quotes",
     "scheduler": "Scheduler",
+    "recurring": "Recurring",
     "calendar": "Calendar",
+    "studio": "Studio",
+    "grow": "Grow",
+    "manage": "Manage",
+    "onboarding": "Get started",
+    "forge": "Forge",
+    "videoEditor": "Editor",
+    "aiClips": "AI clips",
+    "aiTools": "AI tools",
+    "creatorsHub": "Creators",
+    "discover": "Discover",
+    "strategist": "Strategist",
+    "aiInsights": "AI insights",
+    "roadmap": "Roadmap",
     "social": "Social",
+    "connectAccounts": "Connect Accounts",
     "analytics": "Analytics",
     "achievements": "Achievements",
     "membership": "Membership",
@@ -145,7 +160,39 @@
       "quotesCreated": "Quotes Made",
       "postsScheduled": "Posts Scheduled"
     },
-    "clickToView": "Click to view details →"
+    "clickToView": "Click to view details →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "auth": {
     "login": "Sign In",
@@ -247,6 +294,69 @@
     "translated": "Translated",
     "translationFailed": "Translation failed",
     "viewOriginal": "View original",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "editor": {
+    "tabs": {
+      "trim": "Trim",
+      "text": "Text",
+      "filters": "Filters",
+      "motion": "Motion",
+      "overlays": "Layers",
+      "packs": "Packs",
+      "insights": "Data"
+    },
+    "aspectRatio": "Format / Aspect Ratio",
+    "neuralFocusTracking": "Neural Focus Tracking",
+    "active": "Active",
+    "offline": "Offline",
+    "trackingPriorityTarget": "Tracking Priority Target",
+    "speaker": "⚡ Speaker",
+    "face": "⚡ Speaker",
+    "action": "🎯 Action",
+    "custom": "🎬 Custom",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "Enable auto-framing to stream target metrics…"
+  },
+  "studio": {
+    "advancedStudio": "Advanced Studio",
+    "videoStudio": "Video Studio",
+    "syncArchive": "Sync Archive",
+    "payloadInventory": "Payload Inventory",
+    "neuralProcessed": "Neural Processed",
+    "syntheticYields": "Synthetic Yields",
+    "initializeIntake": "Initialize Intake",
+    "payloadArchive": "Payload Archive",
+    "searchArchive": "SEARCH_ARCHIVE...",
+    "dropPayload": "Drop Payload Here",
+    "syncingPayload": "Syncing Payload...",
+    "neuralIngestionReady": "NEURAL_STUDIO_INGESTION_READY",
+    "payloadsDetected": "PAYLOADS_DETECTED",
+    "open": "Open",
+    "syncingStudio": "Syncing Neural Studio...",
+    "tip": "TUTORIAL_CORE:",
+    "tipPaste": "PASTE_URL (⌘V) ON THIS HUD FOR AUTO-SYNC.",
+    "secureTunnel": "SECURE_TUNNEL",
+    "highVelocity": "HIGH_VELOCITY",
+    "intakeHint": "Inject raw footage or multi-track sequences into the neural matrix. A/B Swarm will auto-calibrate vectors for optimal high-velocity synthesis.",
+    "secureStorage": "SECURE_STORAGE_NODES",
+    "all": "all",
+    "completed": "completed",
+    "processing": "processing",
+    "failed": "failed",
+    "queued": "queued",
+    "yields": "YIELDS",
+    "uploadStable": "✓ UPLOAD_STABLE: ANALYZING_VECTORS...",
+    "uploadFailed": "WRITE_ERR: UPLOAD_FAILED",
+    "missingContentId": "PARAM_ERR: MISSING_CONTENT_ID",
+    "invalidVideo": "MIME_ERR: INVALID_VIDEO_FORMAT",
+    "syncingPayloadProgress": "Syncing Payload...",
+    "analysisComplete": "✓ ANALYSIS_COMPLETE: {count} CLIPS_GENERATED",
+    "processingFailure": "PROCESSING_FAILURE: SEQUENCE_ABORTED"
   }
 }

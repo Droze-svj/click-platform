@@ -320,14 +320,73 @@ async function translateSegments(segments, targetLanguage) {
   try {
     const raw = await geminiGenerate(prompt, { temperature: 0.3, maxTokens: 3000 });
     const lookup = new Map();
-    for (const line of (raw || '').split('\n')) {
-      const m = line.match(/^\s*\[(\d+)\]\s*(.*)$/);
-      if (m) lookup.set(Number(m[1]), m[2].trim());
+    
+    if (raw) {
+      const lines = raw.split('\n');
+      for (const line of lines) {
+        // Try multiple regex patterns to capture brackets, colons, dots, or numbers
+        const m1 = line.match(/^\s*\[(\d+)\]\s*:?\s*(.*)$/);
+        const m2 = line.match(/^\s*(\d+)[.\s\-:]+\s*(.*)$/);
+        const m3 = line.match(/^\s*\[?(\d+)\]?\s*(.*)$/);
+        
+        if (m1) {
+          lookup.set(Number(m1[1]), m1[2].trim());
+        } else if (m2) {
+          lookup.set(Number(m2[1]), m2[2].trim());
+        } else if (m3) {
+          lookup.set(Number(m3[1]), m3[2].trim());
+        }
+      }
     }
-    return segments.map((s, i) => ({ ...s, text: lookup.get(i) || s.text }));
+
+    // Dynamic recovery fallback for any missed segments
+    const finalSegments = [];
+    for (let i = 0; i < segments.length; i++) {
+      const originalSeg = segments[i];
+      let translatedText = lookup.get(i);
+      
+      if (!translatedText || translatedText.trim() === '' || translatedText === originalSeg.text) {
+        try {
+          logger.info(`[caption-translate] Fallback individual translation for segment ${i}`);
+          const fallbackPrompt = `You are a professional subtitle translator. Translate the following subtitle segment to ${targetLanguage}. 
+Maintain the tone and timing context. Output ONLY the translated text.
+
+Segment: "${originalSeg.text}"`;
+          const singleTranslation = await geminiGenerate(fallbackPrompt, { temperature: 0.2, maxTokens: 300 });
+          if (singleTranslation && singleTranslation.trim()) {
+            translatedText = singleTranslation.trim();
+          } else {
+            translatedText = originalSeg.text;
+          }
+        } catch (singleErr) {
+          logger.warn(`[caption-translate] Fallback failed for segment ${i}`, { error: singleErr.message });
+          translatedText = originalSeg.text;
+        }
+      }
+      
+      finalSegments.push({ ...originalSeg, text: translatedText });
+    }
+    
+    return finalSegments;
   } catch (err) {
-    logger.error('[caption-translate] segment batch translation failed', { error: err.message, targetLanguage });
-    return segments;
+    logger.error('[caption-translate] segment batch translation failed, using individual fallback', { error: err.message, targetLanguage });
+    // If the whole batch call failed, fall back to individual translation for all segments
+    const finalSegments = [];
+    for (let i = 0; i < segments.length; i++) {
+      const originalSeg = segments[i];
+      let translatedText = originalSeg.text;
+      try {
+        const fallbackPrompt = `You are a professional subtitle translator. Translate the following subtitle segment to ${targetLanguage}. Output ONLY the translated text.\n\n"${originalSeg.text}"`;
+        const singleTranslation = await geminiGenerate(fallbackPrompt, { temperature: 0.2, maxTokens: 300 });
+        if (singleTranslation && singleTranslation.trim()) {
+          translatedText = singleTranslation.trim();
+        }
+      } catch (_) {
+        // Ignore individual fallback translation errors
+      }
+      finalSegments.push({ ...originalSeg, text: translatedText });
+    }
+    return finalSegments;
   }
 }
 

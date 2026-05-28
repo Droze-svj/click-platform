@@ -266,14 +266,28 @@ async function renderFromEditorState(options) {
     }
   })    
   
-  // Unconditionally inject 2026 Luma-Cinematic Color Grade for all manual renders
-  // This guarantees the video never looks 'basic' or flat.
-  let cinematicEQ = '1.15';
-  let brightnessEQ = '0.02';
+  // 🌿 2026 Comfort-Aesthetic Settings (Prevents sensory overstimulation by default for Manual Edits)
+  // By default, manual edits are designed to be clean, stable, and highly organized.
+  // The user can opt-in to auto-injected cinematic shakes/glitches by passing `comfortMode: false`.
+  const comfortMode = exportOptions.comfortMode !== false && videoFilters.comfortMode !== false;
 
-  // Auto-generate Flash Cuts and Camera Shakes based on Manual Text Overlays
-  // When a user adds a text overlay, it usually indicates a hook or punchline.
-  // We use these timestamps to trigger cinematic impacts.
+  let cinematicEQ = '1.0';
+  let brightnessEQ = '0.0';
+  let saturationVal = '1.0';
+
+  if (!comfortMode) {
+    // Cinematic high-contrast mode only if requested
+    cinematicEQ = '1.15';
+    brightnessEQ = '0.02';
+    saturationVal = '1.25';
+  } else {
+    // Standard clean, balanced natural color grading for comfort
+    cinematicEQ = '1.02';
+    brightnessEQ = '0.0';
+    saturationVal = '1.05';
+  }
+
+  // Flash Cuts and Camera Shakes based on Manual Text Overlays
   let shakeX = '0';
   let shakeY = '0';
   let glitchEnable = '';
@@ -283,9 +297,6 @@ async function renderFromEditorState(options) {
   (textOverlays || []).forEach(o => {
     const s = Number(o.startTime ?? 0);
     if (isNaN(s)) return;
-    const eFlash = s + 0.15; // 150ms flash
-    cinematicEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),1.8,${cinematicEQ})`;
-    brightnessEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),0.3,${brightnessEQ})`;
 
     // Check if the word implies a 'Secret' or 'Hack' for the Telephone EQ
     const rawText = (o.text || '').toUpperCase();
@@ -293,42 +304,55 @@ async function renderFromEditorState(options) {
       telephoneEQ += (telephoneEQ ? '+' : '') + `between(t,${s.toFixed(2)},${(s+2).toFixed(2)})`;
     }
 
-    // Only shake & glitch on high-impact styles
-    if (o.style === 'hook' || o.style === 'punchline' || o.type === 'hook') {
-      const eShake = s + 0.4; // 400ms shake
-      const jitterX = `(random(1)*40-20)`;
-      const jitterY = `(random(1)*40-20)`;
-      shakeX = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterX},${shakeX})`;
-      shakeY = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterY},${shakeY})`;
-      hasShakes = true;
+    if (!comfortMode) {
+      const eFlash = s + 0.15; // 150ms flash
+      cinematicEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),1.8,${cinematicEQ})`;
+      brightnessEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),0.3,${brightnessEQ})`;
 
-      if (o.style === 'punchline') {
-        glitchEnable += (glitchEnable ? '+' : '') + `between(t,${s.toFixed(2)},${(s+0.2).toFixed(2)})`;
+      // Only shake & glitch on high-impact styles
+      if (o.style === 'hook' || o.style === 'punchline' || o.type === 'hook') {
+        const eShake = s + 0.4; // 400ms shake
+        const jitterX = `(random(1)*40-20)`;
+        const jitterY = `(random(1)*40-20)`;
+        shakeX = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterX},${shakeX})`;
+        shakeY = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterY},${shakeY})`;
+        hasShakes = true;
+
+        if (o.style === 'punchline') {
+          glitchEnable += (glitchEnable ? '+' : '') + `between(t,${s.toFixed(2)},${(s+0.2).toFixed(2)})`;
+        }
       }
     }
   });
 
-  videoFilters_ff.push(`eq=contrast='${cinematicEQ}':brightness='${brightnessEQ}':saturation=1.25`);
+  videoFilters_ff.push(`eq=contrast='${cinematicEQ}':brightness='${brightnessEQ}':saturation=${saturationVal}`);
 
-  if (glitchEnable) {
+  if (glitchEnable && !comfortMode) {
     videoFilters_ff.push(`noise=alls=100:allf=t+u:enable='${glitchEnable}',rgbashift=rh=15:bv=-15:enable='${glitchEnable}'`);
   }
 
-  // Inject 2026 Chromatic Aberration as a baseline 'depth' layer
-  videoFilters_ff.push('rgbashift=rh=1:bv=-1');
+  if (!comfortMode) {
+    // Inject 2026 Chromatic Aberration as a baseline 'depth' layer only if comfortMode is off
+    videoFilters_ff.push('rgbashift=rh=1:bv=-1');
+  }
 
   // Inject Dynamic Cameraman Drift & Shake if video is vertical
   if (height > width) {
-    // Uses non-repeating Lissajous curves to perfectly simulate a human cameraman.
-    videoFilters_ff.push(`scale=1150:2044:force_original_aspect_ratio=increase,crop=1080:1920:x='(iw-1080)/2+25*sin(t/3.14)+10*sin(t/5.2)+${shakeX}':y='(ih-1920)/2+15*cos(t/2.71)+8*cos(t/4.5)+${shakeY}'`);
+    if (comfortMode) {
+      // 🌿 Steady, smooth, perfectly centered professional crop (No motion sickness, no drift)
+      videoFilters_ff.push('scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920');
+    } else {
+      // Uses non-repeating Lissajous curves to perfectly simulate a human cameraman.
+      videoFilters_ff.push(`scale=1150:2044:force_original_aspect_ratio=increase,crop=1080:1920:x='(iw-1080)/2+25*sin(t/3.14)+10*sin(t/5.2)+${shakeX}':y='(ih-1920)/2+15*cos(t/2.71)+8*cos(t/4.5)+${shakeY}'`);
+    }
   }
 
-  // Inject OpusClip style Progress Bar (Neon Cyan)
-  // Using FFmpeg's built-in 'T' variable (or determining length from metadata if possible)
-  // A generic fallback is to use 'iw*(t/100)' but it's better to fetch duration if available.
-  // Since we have the input metadata before this point ideally, let's use a safe fallback.
-  const estimatedDuration = exportOptions.duration || 60;
-  overlayFilters.push(`drawbox=x=0:y=h-15:w='iw*(t/${estimatedDuration})':h=15:color=#00FFFF@0.9:t=fill`);
+  // Inject Progress Bar if explicitly requested, or if not in comfort mode
+  const enableProgressBar = exportOptions.progressBar === true || videoFilters.progressBar === true || (!comfortMode);
+  if (enableProgressBar) {
+    const estimatedDuration = exportOptions.duration || 60;
+    overlayFilters.push(`drawbox=x=0:y=h-15:w='iw*(t/${estimatedDuration})':h=15:color=#00FFFF@0.9:t=fill`);
+  }
 
   const allVideoFilters = [...videoFilters_ff, ...lutFilters, ...overlayFilters]
   const firstMusic = timelineSegments.find(s => s.type === 'audio' && s.sourceUrl)
@@ -365,7 +389,12 @@ async function renderFromEditorState(options) {
 
     // 🎬 Phase 16: Cinematic Film Grain (2026 Hollywood Standard)
     // Automatically injects a subtle dynamic noise overlay to remove the 'digital/cheap' look
-    finalFilterList.push('noise=alls=8:allf=t+u');
+    if (!comfortMode) {
+      finalFilterList.push('noise=alls=8:allf=t+u');
+    } else {
+      // Subtle organic dither to avoid compression banding but remain comfortable
+      finalFilterList.push('noise=alls=2:allf=t+u');
+    }
 
     // 💰 Phase 17: Autonomous Commerce Inlays
     if (exportOptions.monetizationPlan && exportOptions.monetizationPlan.triggers) {

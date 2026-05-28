@@ -123,5 +123,7 @@ afterAll(async () => {
   }
   if (mongoServer) {
     await mongoServer.stop();
+    mongoServer = null;
+    delete process.env.MONGODB_URI;
   }
 });

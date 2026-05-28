@@ -256,22 +256,24 @@ async function createCustomLayout(inputs, layout, outputPath) {
     const layoutFilters = [];
 
     switch (layout.type) {
-    case 'picture-in-picture':
+    case 'picture-in-picture': {
       const pipX = layout.pipX || '(W-w)/2';
       const pipY = layout.pipY || '(H-h)/2';
       const pipW = layout.pipW || 'W/3';
       const pipH = layout.pipH || 'H/3';
       layoutFilters.push(`[1:v]scale=${pipW}:${pipH}[pip];[0:v][pip]overlay=${pipX}:${pipY}`);
       break;
+    }
 
     case 'side-by-side':
       layoutFilters.push('[0:v]pad=2*W:H[bg];[bg][1:v]overlay=W/2:0');
       break;
 
-    case 'grid':
-      const gridSize = Math.ceil(Math.sqrt(inputs.length));
+    case 'grid': {
+      const _gridSize = Math.ceil(Math.sqrt(inputs.length));
       // Complex grid layout logic would go here
       break;
+    }
 
     default:
       // Default to overlay first input on second
@@ -425,92 +427,77 @@ async function processCustomMusic(musicFilePath, options = {}) {
  * Get available sticker packs
  */
 async function getAvailableStickers() {
-  try {
-    // This would typically return sticker categories and items
-    return {
-      categories: [
-        {
-          id: 'emojis',
-          name: 'Emojis',
-          stickers: [
-            { id: 'smile', name: '😊', url: '/stickers/emojis/smile.png' },
-            { id: 'heart', name: '❤️', url: '/stickers/emojis/heart.png' },
-            { id: 'thumbs_up', name: '👍', url: '/stickers/emojis/thumbs_up.png' },
-            { id: 'fire', name: '🔥', url: '/stickers/emojis/fire.png' },
-            { id: 'star', name: '⭐', url: '/stickers/emojis/star.png' }
-          ]
-        },
-        {
-          id: 'decorative',
-          name: 'Decorative',
-          stickers: [
-            { id: 'sparkles', name: '✨', url: '/stickers/decorative/sparkles.png' },
-            { id: 'rainbow', name: '🌈', url: '/stickers/decorative/rainbow.png' },
-            { id: 'butterfly', name: '🦋', url: '/stickers/decorative/butterfly.png' },
-            { id: 'flower', name: '🌸', url: '/stickers/decorative/flower.png' },
-            { id: 'crown', name: '👑', url: '/stickers/decorative/crown.png' }
-          ]
-        },
-        {
-          id: 'social',
-          name: 'Social Media',
-          stickers: [
-            { id: 'like', name: 'Like', url: '/stickers/social/like.png' },
-            { id: 'subscribe', name: 'Subscribe', url: '/stickers/social/subscribe.png' },
-            { id: 'follow', name: 'Follow', url: '/stickers/social/follow.png' },
-            { id: 'share', name: 'Share', url: '/stickers/social/share.png' },
-            { id: 'comment', name: '💬', url: '/stickers/social/comment.png' }
-          ]
-        }
-      ]
-    };
-  } catch (error) {
-    logger.error('Failed to get available stickers', { error: error.message });
-    throw error;
-  }
+  // This would typically return sticker categories and items
+  return {
+    categories: [
+      {
+        id: 'emojis',
+        name: 'Emojis',
+        stickers: [
+          { id: 'smile', name: '😊', url: '/stickers/emojis/smile.png' },
+          { id: 'heart', name: '❤️', url: '/stickers/emojis/heart.png' },
+          { id: 'thumbs_up', name: '👍', url: '/stickers/emojis/thumbs_up.png' },
+          { id: 'fire', name: '🔥', url: '/stickers/emojis/fire.png' },
+          { id: 'star', name: '⭐', url: '/stickers/emojis/star.png' }
+        ]
+      },
+      {
+        id: 'decorative',
+        name: 'Decorative',
+        stickers: [
+          { id: 'sparkles', name: '✨', url: '/stickers/decorative/sparkles.png' },
+          { id: 'rainbow', name: '🌈', url: '/stickers/decorative/rainbow.png' },
+          { id: 'butterfly', name: '🦋', url: '/stickers/decorative/butterfly.png' },
+          { id: 'flower', name: '🌸', url: '/stickers/decorative/flower.png' },
+          { id: 'crown', name: '👑', url: '/stickers/decorative/crown.png' }
+        ]
+      },
+      {
+        id: 'social',
+        name: 'Social Media',
+        stickers: [
+          { id: 'like', name: 'Like', url: '/stickers/social/like.png' },
+          { id: 'subscribe', name: 'Subscribe', url: '/stickers/social/subscribe.png' },
+          { id: 'follow', name: 'Follow', url: '/stickers/social/follow.png' },
+          { id: 'share', name: 'Share', url: '/stickers/social/share.png' },
+          { id: 'comment', name: '💬', url: '/stickers/social/comment.png' }
+        ]
+      }
+    ]
+  };
 }
 
 /**
  * Get available music tracks for background
  */
-async function getAvailableMusicTracks(userId) {
-  try {
-    // This would query user's music library
-    // For now, return sample tracks
-    return [
-      { id: '1', name: 'Upbeat Electronic', duration: 180, genre: 'Electronic', url: '/music/electronic_upbeat.mp3' },
-      { id: '2', name: 'Corporate Background', duration: 240, genre: 'Corporate', url: '/music/corporate_background.mp3' },
-      { id: '3', name: 'Energetic Pop', duration: 200, genre: 'Pop', url: '/music/pop_energetic.mp3' },
-      { id: '4', name: 'Calm Ambient', duration: 300, genre: 'Ambient', url: '/music/ambient_calm.mp3' },
-      { id: '5', name: 'Motivational', duration: 220, genre: 'Motivational', url: '/music/motivational.mp3' }
-    ];
-  } catch (error) {
-    logger.error('Failed to get available music tracks', { error: error.message, userId });
-    throw error;
-  }
+async function getAvailableMusicTracks(_userId) {
+  // This would query user's music library
+  // For now, return sample tracks
+  return [
+    { id: '1', name: 'Upbeat Electronic', duration: 180, genre: 'Electronic', url: '/music/electronic_upbeat.mp3' },
+    { id: '2', name: 'Corporate Background', duration: 240, genre: 'Corporate', url: '/music/corporate_background.mp3' },
+    { id: '3', name: 'Energetic Pop', duration: 200, genre: 'Pop', url: '/music/pop_energetic.mp3' },
+    { id: '4', name: 'Calm Ambient', duration: 300, genre: 'Ambient', url: '/music/ambient_calm.mp3' },
+    { id: '5', name: 'Motivational', duration: 220, genre: 'Motivational', url: '/music/motivational.mp3' }
+  ];
 }
 
 /**
  * Get user's uploaded custom assets
  */
-async function getUserCustomAssets(userId) {
-  try {
-    // This would query user's uploaded music, images, etc.
-    return {
-      music: [
-        // User's uploaded music would be here
-      ],
-      images: [
-        // User's uploaded images would be here
-      ],
-      stickers: [
-        // User's custom stickers would be here
-      ]
-    };
-  } catch (error) {
-    logger.error('Failed to get user custom assets', { error: error.message, userId });
-    throw error;
-  }
+async function getUserCustomAssets(_userId) {
+  // This would query user's uploaded music, images, etc.
+  return {
+    music: [
+      // User's uploaded music would be here
+    ],
+    images: [
+      // User's uploaded images would be here
+    ],
+    stickers: [
+      // User's custom stickers would be here
+    ]
+  };
 }
 
 module.exports = {

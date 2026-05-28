@@ -34,7 +34,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Workflow templates fetched', 200, payload);
   } catch (error) {
     logger.error('Get workflow templates error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -44,7 +44,7 @@ router.get('/categories', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Template categories fetched', 200, categories);
   } catch (error) {
     logger.error('Get template categories error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -68,7 +68,7 @@ router.post('/create', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Workflow created from template', 200, workflow);
   } catch (error) {
     logger.error('Create from template error', { error: error.message, templateId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 

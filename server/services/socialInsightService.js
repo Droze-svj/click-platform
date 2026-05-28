@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 const { aiCallJson } = require('../utils/aiRouter');
 const ContentPerformance = require('../models/ContentPerformance');
+const { getClickPersonalityRules } = require('./marketingKnowledge');
 
 /**
  * Social Insight Service
@@ -17,9 +18,9 @@ async function fetchSocialInsights(userId, platforms = ['tiktok', 'instagram', '
     const topPosts = await ContentPerformance.find({ 
       platform: { $in: platforms } 
     })
-    .sort({ 'scores.overall': -1 })
-    .limit(10)
-    .lean();
+      .sort({ 'scores.overall': -1 })
+      .limit(10)
+      .lean();
 
     const userPerformance = {
       avgRetention: topPosts.length > 0 
@@ -38,8 +39,10 @@ async function fetchSocialInsights(userId, platforms = ['tiktok', 'instagram', '
       { topic: 'Gemini Orchestration', velocity: 0.92, platform: 'youtube' }
     ];
 
-    // 3. Use Gemini to synthesize these signals into "Actionable Intelligence"
     const systemPrompt = `Analyze these social signals and user performance data.
+    
+    ${getClickPersonalityRules(userId)}
+    
     USER PERFORMANCE: ${JSON.stringify(userPerformance)}
     GLOBAL TRENDS: ${JSON.stringify(globalTrends)}
     

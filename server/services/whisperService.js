@@ -55,6 +55,9 @@ async function generateTranscriptFromVideo(videoPath, options = {}) {
     useAudioExtraction = false, // Extract audio first for better results
   } = options;
 
+  let fileToTranscribe = videoPath;
+  let shouldCleanupAudio = false;
+
   try {
     // Check if file exists
     if (!fs.existsSync(videoPath)) {
@@ -62,9 +65,7 @@ async function generateTranscriptFromVideo(videoPath, options = {}) {
     }
 
     // Check file size and enforce 25MB OpenAI limit
-    let fileToTranscribe = videoPath;
     let fileSize = fs.statSync(videoPath).size;
-    let shouldCleanupAudio = false;
 
     // Use audio extraction if file is too large or requested
     if (useAudioExtraction || fileSize > 24 * 1024 * 1024) {
@@ -132,15 +133,6 @@ async function generateTranscriptFromVideo(videoPath, options = {}) {
       }
     );
 
-    // Cleanup extracted audio file if created
-    if (shouldCleanupAudio && fs.existsSync(fileToTranscribe) && fileToTranscribe !== videoPath) {
-      try {
-        fs.unlinkSync(fileToTranscribe);
-      } catch (cleanupError) {
-        logger.warn('Failed to cleanup audio file', { error: cleanupError.message });
-      }
-    }
-
     // If we requested verbose_json, return the rich object directly instead of flattening to text.
     // This enables Word-Level Kinetic Typography downstream.
     const transcript = responseFormat === 'verbose_json' ? transcription : (typeof transcription === 'string' ? transcription : transcription.text);
@@ -167,6 +159,18 @@ async function generateTranscriptFromVideo(videoPath, options = {}) {
 
     // Return null on error, caller can handle fallback
     return null;
+  } finally {
+    // Cleanup extracted audio file if created, regardless of success/error
+    if (shouldCleanupAudio && fileToTranscribe && fileToTranscribe !== videoPath) {
+      if (fs.existsSync(fileToTranscribe)) {
+        try {
+          fs.unlinkSync(fileToTranscribe);
+          logger.info('Cleaned up Whisper temporary audio file successfully', { path: fileToTranscribe });
+        } catch (cleanupError) {
+          logger.warn('Failed to cleanup audio file in finally block', { error: cleanupError.message, path: fileToTranscribe });
+        }
+      }
+    }
   }
 }
 

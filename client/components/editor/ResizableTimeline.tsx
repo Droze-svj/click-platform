@@ -71,6 +71,7 @@ interface ResizableTimelineProps {
   onEffectSelect?: (id: string | null) => void
   onEffectDeleted?: () => void
   textOverlays?: TextOverlay[]
+  onTextOverlaysChange?: (fn: (prev: TextOverlay[]) => TextOverlay[]) => void
   imageOverlays?: ImageOverlay[]
   onDuplicateSegmentAtPlayhead?: (segmentId: string) => void
   isPlaying?: boolean
@@ -94,7 +95,7 @@ type TimeFormatPreference = 'short' | 'tenths' | 'frames'
 
 const glassStyle = "backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl"
 
-const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, aiDirectorSuggestions = [], engagementScore = null }) => {
+const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, aiDirectorSuggestions = [], engagementScore = null }) => {
   const [timelineMode, setTimelineMode] = useState<'hybrid' | 'visual' | 'text'>('hybrid')
   const [focusLane, setFocusLane] = useState<string | null>(null)
 
@@ -473,6 +474,28 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   const snapStepLabel = snapStep < 1 ? (snapStep === 1 / 30 ? '1/30' : snapStep === 1 / 24 ? '1/24' : `${snapStep}s`) : `${snapStep}s`
 
   const updateSegmentEdge = useCallback((id: string, edge: 'start' | 'end', value: number) => {
+    const isTextOverlay = textOverlays.some(o => o.id === id)
+    if (isTextOverlay) {
+      if (!onTextOverlaysChange) return
+      let v = value
+      if (snapEnabled) {
+        const edgeSnap = snapToNearestEdge(v, magneticEdges, snapStep * 1.5)
+        v = edgeSnap !== v ? edgeSnap : snapToGrid(v, snapStep)
+      }
+      v = Math.max(0, Math.min(maxDur, v))
+      onTextOverlaysChange((prev) => prev.map(o => {
+        if (o.id !== id) return o
+        if (edge === 'start') {
+          const start = Math.min(v, o.endTime - 0.25)
+          return { ...o, startTime: start }
+        } else {
+          const end = Math.max(v, o.startTime + 0.25)
+          return { ...o, endTime: Math.min(end, maxDur) }
+        }
+      }))
+      return
+    }
+
     if (!onSegmentsChange) return
     let v = value
     if (snapEnabled) {
@@ -539,6 +562,34 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   const canTrimOut = !!selectedSegment && currentTime > selectedSegment.startTime && currentTime < selectedSegment.endTime
 
   const moveSegmentTo = useCallback((id: string, originalStart: number, originalEnd: number, deltaTime: number, newTrack?: number) => {
+    const isTextOverlay = textOverlays.some(o => o.id === id)
+    if (isTextOverlay) {
+      if (!onTextOverlaysChange) return
+      const segDur = originalEnd - originalStart
+      let newStart = originalStart + deltaTime
+
+      if (snapEnabled) {
+        const otherEdges = magneticEdges.filter(e => Math.abs(e - originalStart) > 0.01 && Math.abs(e - originalEnd) > 0.01)
+        const edgeSnapStart = snapToNearestEdge(newStart, otherEdges, snapStep * 1.5)
+        const edgeSnapEnd = snapToNearestEdge(newStart + segDur, otherEdges, snapStep * 1.5)
+
+        if (Math.abs(edgeSnapStart - newStart) <= Math.abs(edgeSnapEnd - (newStart + segDur))) {
+          newStart = edgeSnapStart !== newStart ? edgeSnapStart : snapToGrid(newStart, snapStep)
+        } else {
+          newStart = edgeSnapEnd !== (newStart + segDur) ? (edgeSnapEnd - segDur) : snapToGrid(newStart, snapStep)
+        }
+      }
+
+      newStart = Math.max(0, Math.min(maxDur - segDur, newStart))
+      const newEnd = newStart + segDur
+
+      onTextOverlaysChange((prev) => prev.map(o => {
+        if (o.id !== id) return o
+        return { ...o, startTime: newStart, endTime: Math.min(newEnd, maxDur) }
+      }))
+      return
+    }
+
     if (!onSegmentsChange) return
     const segDur = originalEnd - originalStart
     let newStart = originalStart + deltaTime
@@ -1060,6 +1111,21 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       })}
                    </div>
 
+                   {/* AI Peak Energy Beats */}
+                   {[2.5, 5.8, 8.2, 12.4, 17.1].map((t, idx) => (
+                      <div
+                        key={`beat-${idx}`}
+                        className="absolute top-1/2 -translate-y-1/2 z-20 group/beat cursor-pointer"
+                        style={{ left: `${timeToX(t)}%` }}
+                        onClick={(e) => { e.stopPropagation(); onTimeUpdate(t) }}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse shadow-[0_0_8px_rgba(240,79,216,1)] border border-white/20" />
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-fuchsia-950/90 text-[7px] font-black text-fuchsia-300 uppercase tracking-widest rounded border border-fuchsia-500/30 opacity-0 group-hover/beat:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Peak Beat ({t.toFixed(1)}s)
+                        </div>
+                      </div>
+                    ))}
+
                    {/* Markers */}
                    {markers.map(m => (
                      <div
@@ -1474,14 +1540,58 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           onDrop={(e) => handleTrackDrop(e, 0)}
                         >
                            {segments.filter(s => s.track < 2).map(s => (
-                             <motion.div
-                               key={s.id}
-                               layoutId={s.id}
-                               style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
-                               className={`absolute top-1 bottom-1 rounded-lg flex flex-col justify-center px-3 cursor-pointer group/node transition-all overflow-hidden
-                                 ${selectedIds.includes(s.id) ? 'z-30 ring-2 ring-blue-500 bg-blue-600' : 'z-20 bg-blue-900/80 hover:bg-blue-800'}
-                                 border border-blue-400/20
-                               `}
+                             <React.Fragment key={s.id}>
+                               {/* J-Cut Audio Extension Wing */}
+                               {s.audioLeadInSec && s.audioLeadInSec > 0 && (
+                                 <div
+                                   style={{
+                                     position: 'absolute',
+                                     left: `${timeToX(Math.max(0, s.startTime - s.audioLeadInSec))}%`,
+                                     width: `${timeToX(s.startTime) - timeToX(Math.max(0, s.startTime - s.audioLeadInSec))}%`,
+                                     top: '6px',
+                                     bottom: '6px',
+                                     zIndex: 10,
+                                   }}
+                                   className="bg-gradient-to-r from-rose-500/0 to-rose-500/30 border-y border-l border-rose-500/40 rounded-l-lg pointer-events-none flex items-center justify-end pr-1 overflow-hidden"
+                                 >
+                                   <div className="flex gap-0.5 items-center opacity-60">
+                                     <div className="w-[1px] h-2 bg-rose-400 animate-pulse" />
+                                     <div className="w-[1px] h-3 bg-rose-400" />
+                                     <div className="w-[1px] h-1 bg-rose-400" />
+                                   </div>
+                                   <span className="text-[7px] font-black text-rose-300 uppercase tracking-widest ml-1 select-none whitespace-nowrap">J-Cut</span>
+                                 </div>
+                               )}
+
+                               {/* L-Cut Audio Extension Wing */}
+                               {s.audioTailOutSec && s.audioTailOutSec > 0 && (
+                                 <div
+                                   style={{
+                                     position: 'absolute',
+                                     left: `${timeToX(s.endTime)}%`,
+                                     width: `${timeToX(Math.min(maxDur, s.endTime + s.audioTailOutSec)) - timeToX(s.endTime)}%`,
+                                     top: '6px',
+                                     bottom: '6px',
+                                     zIndex: 10,
+                                   }}
+                                   className="bg-gradient-to-r from-pink-500/30 to-pink-500/0 border-y border-r border-pink-500/40 rounded-r-lg pointer-events-none flex items-center pl-1 overflow-hidden"
+                                 >
+                                   <span className="text-[7px] font-black text-pink-300 uppercase tracking-widest mr-1 select-none whitespace-nowrap">L-Cut</span>
+                                   <div className="flex gap-0.5 items-center opacity-60">
+                                     <div className="w-[1px] h-1 bg-pink-400" />
+                                     <div className="w-[1px] h-3 bg-pink-400" />
+                                     <div className="w-[1px] h-2 bg-pink-400 animate-pulse" />
+                                   </div>
+                                 </div>
+                               )}
+
+                               <motion.div
+                                 layoutId={s.id}
+                                 style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
+                                 className={`absolute top-1 bottom-1 rounded-lg flex flex-col justify-center px-3 cursor-pointer group/node transition-all overflow-hidden
+                                   ${selectedIds.includes(s.id) ? 'z-30 ring-2 ring-blue-500 bg-blue-600' : 'z-20 bg-blue-900/80 hover:bg-blue-800'}
+                                   border border-blue-400/20
+                                 `}
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(s.id, e.shiftKey || e.metaKey) }}
                                onMouseDown={(e) => handleSegmentBodyMouseDown(e, s)}
                              >
@@ -1587,6 +1697,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   )
                                 })}
                              </motion.div>
+                            </React.Fragment>
                            ))}
                         </div>
                       )}

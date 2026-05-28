@@ -124,7 +124,7 @@ export default function SidebarNav() {
     <motion.aside
       animate={{ width: collapsed ? 84 : 280 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className="relative hidden lg:flex flex-shrink-0 h-screen flex-col bg-surface-card border-r border-surface-100 dark:border-white/5 overflow-hidden z-40 transition-colors duration-500 shadow-2xl"
+      className="relative hidden lg:flex flex-shrink-0 h-screen flex-col bg-surface-card/95 dark:bg-surface-900/95 backdrop-blur-xl border-r border-surface-200/50 dark:border-surface-800/50 overflow-hidden z-40 transition-all duration-500 shadow-2xl"
     >
       {/* ── Logo + Toggle ── */}
       <div className="flex items-center justify-between px-7 py-8 border-b border-surface-100 dark:border-white/5 bg-surface-page/50 dark:bg-black/20 backdrop-blur-3xl">
@@ -144,7 +144,7 @@ export default function SidebarNav() {
       </div>
 
       {collapsed && (
-        <button type="button" onClick={() => setCollapsed(false)} aria-label="Expand sidebar" className="absolute -right-4 top-20 z-10 w-9 h-9 rounded-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 shadow-2xl transition-all active:scale-90">
+        <button type="button" onClick={() => setCollapsed(false)} aria-label="Expand sidebar" className="absolute -right-4 top-20 z-50 w-9 h-9 rounded-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 shadow-2xl transition-all active:scale-90">
           <ChevronRight size={18} />
         </button>
       )}
@@ -178,8 +178,8 @@ export default function SidebarNav() {
                   if (collapsed) { setCollapsed(false); setExpandedZone(zone.id) }
                   else setExpandedZone(isExpanded ? null : zone.id)
                 }}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-[1.8rem] transition-all group relative overflow-hidden ${
-                  zoneActive ? 'bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 text-surface-900 dark:text-white shadow-inner' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-page dark:hover:bg-white/[0.02]'
+                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-[1.8rem] transition-all duration-300 ease-out group relative overflow-hidden ${
+                  zoneActive ? 'bg-surface-page dark:bg-white/10 border-2 border-surface-200 dark:border-white/20 text-surface-900 dark:text-white shadow-md ring-1 ring-primary-500/20 scale-[1.02] z-10' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-page dark:hover:bg-white/[0.04]'
                 } ${collapsed ? 'justify-center' : ''}`}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${zone.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none`} />
@@ -249,13 +249,22 @@ export default function SidebarNav() {
         </div>
 
         <div className={`flex items-center gap-4 px-4 py-4 rounded-[2rem] bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 shadow-inner ${collapsed ? 'justify-center' : ''}`}>
-          <div className="w-12 h-12 rounded-[1.2rem] bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xl shadow-primary-500/20 ring-2 ring-white/10">{user?.name?.charAt(0) || 'U'}</div>
+          <div className="relative flex-shrink-0">
+            <div className="w-12 h-12 rounded-[1.2rem] bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-xl shadow-primary-500/20 ring-2 ring-white/10">{user?.name?.charAt(0) || 'U'}</div>
+            {user?.email_verified && (
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-surface-card dark:border-surface-900 flex items-center justify-center shadow-lg" title="Email verified">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+            )}
+          </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-black text-surface-900 dark:text-white truncate leading-none mb-1.5 italic uppercase tracking-tighter">{user?.name || 'Creator'}</p>
               <div className="flex items-center gap-2">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,1)]" />
-                 <p className="text-[9px] font-black text-emerald-500 truncate uppercase tracking-widest italic leading-none">Neural Tier</p>
+                 <p className="text-[9px] font-black text-emerald-500 truncate uppercase tracking-widest italic leading-none">
+                   {user?.subscription?.plan || 'Creator'}
+                 </p>
               </div>
             </div>
           )}

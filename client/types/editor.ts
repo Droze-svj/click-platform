@@ -415,6 +415,8 @@ export interface TextOverlay {
   text: string
   x: number
   y: number
+  width?: number
+  height?: number
   fontSize: number
   color: string
   fontFamily: string

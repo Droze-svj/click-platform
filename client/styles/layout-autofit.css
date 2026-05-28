@@ -56,9 +56,9 @@ body, html {
 
 .click-preview-viewport img,
 .click-preview-viewport svg,
-.click-preview-viewport div {
-  max-width: 80% !important;
-  max-height: 80% !important;
+.click-preview-viewport video {
+  max-width: 100% !important;
+  max-height: 100% !important;
   object-fit: contain !important;
 }
 
@@ -82,3 +82,40 @@ body, html {
 .click-log-line {
   margin-bottom: 5px;
 }
+
+/* ── 2026 Global Responsive Scalability Overrides ────────────────────────── */
+
+/* Force robust word wrapping on all textual headers and body lines */
+h1, h2, h3, h4, h5, h6, p, span, li, button, input {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+
+
+/* Bounded column scaling for responsive grids on phones */
+.grid {
+  max-width: 100% !important;
+}
+
+/* iOS Safe Area Padding to prevent home-indicator layout conflicts */
+.dashboard-layout, main, .click-app-container {
+  padding-bottom: env(safe-area-inset-bottom) !important;
+}
+
+/* Premium custom thin scrollbar definitions */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.35);
+}
+

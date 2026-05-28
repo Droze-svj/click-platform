@@ -131,7 +131,7 @@ export function extractApiError(error: any, context?: {
           break
         case 401:
           category = 'authentication'
-          message = 'Your session has expired. Please sign in again.'
+          message = message && message !== 'An error occurred' ? message : 'Your session has expired. Please sign in again.'
           severity = 'medium'
           retryable = false
           break

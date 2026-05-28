@@ -1,5 +1,5 @@
 const { geminiGenerate } = require('../utils/googleAI');
-const logger = require('./logger');
+const logger = require('../utils/logger');
 
 /**
  * AI-powered analysis of green screen lighting quality

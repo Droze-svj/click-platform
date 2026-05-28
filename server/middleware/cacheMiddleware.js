@@ -1,67 +1,20 @@
 // Cache middleware for API responses
 
-const cache = require('../utils/cache');
-const crypto = require('crypto');
+const cacheService = require('../services/cacheService');
 
 /**
- * Generate cache key from request
+ * Cache middleware that delegates to the robust Redis-backed cacheService
+ * @param {number} ttl Time to live in seconds
  */
-function generateCacheKey(req) {
-  const keyData = {
-    path: req.path,
-    query: req.query,
-    user: req.user?._id?.toString()
-  };
-  const keyString = JSON.stringify(keyData);
-  return crypto.createHash('md5').update(keyString).digest('hex');
-}
-
-/**
- * Cache middleware
- */
-function cacheMiddleware(ttl = 300000) { // 5 minutes default
-  return (req, res, next) => {
-    // Only cache GET requests
-    if (req.method !== 'GET') {
-      return next();
-    }
-
-    // Skip cache for authenticated routes that need fresh data
-    if (req.path.includes('/auth/me') || req.path.includes('/status')) {
-      return next();
-    }
-
-    const cacheKey = `api:${generateCacheKey(req)}`;
-    const cached = cache.get(cacheKey);
-
-    if (cached) {
-      return res.json(cached);
-    }
-
-    // Store original json method
-    const originalJson = res.json.bind(res);
-
-    // Override json method to cache response
-    res.json = function(data) {
-      // Only cache successful responses
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        cache.set(cacheKey, data, ttl);
-      }
-      return originalJson(data);
-    };
-
-    next();
-  };
+function cacheMiddleware(ttl = 300) { // 5 minutes default (in seconds for Redis)
+  return cacheService.cacheMiddleware(ttl);
 }
 
 /**
  * Invalidate cache for specific patterns
  */
-function invalidateCache(pattern) {
-  // Simple pattern matching - in production, use Redis with pattern matching
-  const cache = require('../utils/cache');
-  // For now, we'll need to track keys or clear all
-  // In production, use Redis with pattern deletion
+async function invalidateCache(pattern) {
+  return cacheService.delPattern(pattern);
 }
 
 module.exports = {

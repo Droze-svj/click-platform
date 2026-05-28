@@ -14,13 +14,17 @@ describe('Infrastructure Integration Tests', () => {
   let regularUser;
 
   beforeAll(async () => {
+    const { initDatabases } = require('../../server/config/database');
+    await initDatabases();
+    
     // Create admin user
     adminUser = new User({
       name: 'Admin User',
       email: 'admin-infra@example.com',
-      password: 'hashedpassword',
+      password: "hashedpassword",
+      emailVerified: true,
       role: 'admin',
-      subscription: { status: 'active', plan: 'enterprise' },
+      subscription: { status: 'active', plan: 'agency' },
     });
     await adminUser.save();
 
@@ -28,21 +32,24 @@ describe('Infrastructure Integration Tests', () => {
     regularUser = new User({
       name: 'Regular User',
       email: 'regular-infra@example.com',
-      password: 'hashedpassword',
+      password: "hashedpassword",
+      emailVerified: true,
       role: 'user',
       subscription: { status: 'active', plan: 'pro' },
     });
     await regularUser.save();
 
-    adminToken = 'admin-test-token';
-    regularToken = 'regular-test-token';
+    const jwt = require('jsonwebtoken');
+    const { getJwtSecret } = require('../../server/utils/jwtSecret');
+    adminToken = jwt.sign({ userId: adminUser._id.toString() }, getJwtSecret(), { expiresIn: '1h' });
+    regularToken = jwt.sign({ userId: regularUser._id.toString() }, getJwtSecret(), { expiresIn: '1h' });
   });
 
   afterAll(async () => {
     await User.deleteMany({ 
       email: { $in: ['admin-infra@example.com', 'regular-infra@example.com'] }
     });
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 
   describe('Intelligent Cache', () => {
@@ -52,13 +59,11 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin - that's expected
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('hits');
-        expect(response.body.data).toHaveProperty('misses');
-        expect(response.body.data).toHaveProperty('hitRate');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('hits');
+      expect(response.body.data).toHaveProperty('misses');
+      expect(response.body.data).toHaveProperty('hitRate');
     });
 
     test('POST /api/infrastructure/cache/invalidate - Should invalidate cache (admin only)', async () => {
@@ -68,11 +73,9 @@ describe('Infrastructure Integration Tests', () => {
         .set('x-test-admin', 'true')
         .send({ pattern: 'test-*', cascade: true });
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('invalidated');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('invalidated');
     });
 
     test('POST /api/infrastructure/cache/invalidate - Should reject non-admin users', async () => {
@@ -93,13 +96,11 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('totalServers');
-        expect(response.body.data).toHaveProperty('healthyServers');
-        expect(response.body.data).toHaveProperty('averageLoad');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('totalServers');
+      expect(response.body.data).toHaveProperty('healthyServers');
+      expect(response.body.data).toHaveProperty('averageLoad');
     });
 
     test('GET /api/infrastructure/load-balancer/health - Should check server health (admin only)', async () => {
@@ -108,11 +109,9 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin or servers not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toBeDefined();
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeDefined();
     });
 
     test('GET /api/infrastructure/load-balancer/select-server - Should select server (admin only)', async () => {
@@ -122,13 +121,12 @@ describe('Infrastructure Integration Tests', () => {
         .set('x-test-admin', 'true')
         .query({ strategy: 'weighted' });
 
-      // May fail if not admin or no healthy servers
+      expect([200, 503]).toContain(response.status);
       if (response.status === 200) {
         expect(response.body.success).toBe(true);
         expect(response.body.data).toHaveProperty('server');
         expect(response.body.data).toHaveProperty('strategy');
-      } else if (response.status === 503) {
-        // No healthy servers - that's a valid response
+      } else {
         expect(response.body.success).toBe(false);
       }
     });
@@ -141,13 +139,11 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('database');
-        expect(response.body.data).toHaveProperty('collections');
-        expect(response.body.data).toHaveProperty('dataSize');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('database');
+      expect(response.body.data).toHaveProperty('collections');
+      expect(response.body.data).toHaveProperty('dataSize');
     });
 
     test('GET /api/infrastructure/database/slow-queries - Should analyze slow queries (admin only)', async () => {
@@ -157,12 +153,10 @@ describe('Infrastructure Integration Tests', () => {
         .set('x-test-admin', 'true')
         .query({ threshold: 1000 });
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('totalSlowQueries');
-        expect(response.body.data).toHaveProperty('recommendations');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('totalSlowQueries');
+      expect(response.body.data).toHaveProperty('recommendations');
     });
 
     test('GET /api/infrastructure/database/indexes - Should analyze indexes (admin only)', async () => {
@@ -171,12 +165,10 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('collections');
-        expect(response.body.data).toHaveProperty('recommendations');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('collections');
+      expect(response.body.data).toHaveProperty('recommendations');
     });
   });
 
@@ -187,16 +179,14 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('memory');
-        expect(response.body.data).toHaveProperty('cpu');
-        expect(response.body.data.memory).toHaveProperty('total');
-        expect(response.body.data.memory).toHaveProperty('used');
-        expect(response.body.data.cpu).toHaveProperty('cores');
-        expect(response.body.data.cpu).toHaveProperty('usage');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('memory');
+      expect(response.body.data).toHaveProperty('cpu');
+      expect(response.body.data.memory).toHaveProperty('total');
+      expect(response.body.data.memory).toHaveProperty('used');
+      expect(response.body.data.cpu).toHaveProperty('cores');
+      expect(response.body.data.cpu).toHaveProperty('usage');
     });
 
     test('GET /api/infrastructure/resources/thresholds - Should check resource thresholds (admin only)', async () => {
@@ -205,14 +195,12 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('resources');
-        expect(response.body.data).toHaveProperty('alerts');
-        expect(response.body.data).toHaveProperty('healthy');
-        expect(Array.isArray(response.body.data.alerts)).toBe(true);
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('resources');
+      expect(response.body.data).toHaveProperty('alerts');
+      expect(response.body.data).toHaveProperty('healthy');
+      expect(Array.isArray(response.body.data.alerts)).toBe(true);
     });
 
     test('GET /api/infrastructure/resources/recommendations - Should get resource recommendations (admin only)', async () => {
@@ -221,13 +209,11 @@ describe('Infrastructure Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('x-test-admin', 'true');
 
-      // May fail if not admin
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('recommendations');
-        expect(response.body.data).toHaveProperty('currentStatus');
-        expect(Array.isArray(response.body.data.recommendations)).toBe(true);
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('recommendations');
+      expect(response.body.data).toHaveProperty('currentStatus');
+      expect(Array.isArray(response.body.data.recommendations)).toBe(true);
     });
   });
 });

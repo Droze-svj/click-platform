@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: false,
   poweredByHeader: false,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   // Both checks enforced at build time. Flip either back to `true` only if
   // a hard deploy gate is needed and there's a known acceptable backlog.
   typescript: { ignoreBuildErrors: false },

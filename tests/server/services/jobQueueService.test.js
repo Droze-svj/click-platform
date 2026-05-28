@@ -1,12 +1,63 @@
 // Job Queue Service Tests
 
+// Mock bullmq and ioredis BEFORE importing jobQueueService
+jest.mock('bullmq', () => {
+  const mockQueue = {
+    add: jest.fn().mockImplementation((name, data, opts) => Promise.resolve({
+      id: 'test-job-id',
+      name,
+      data,
+      opts,
+      getState: jest.fn().mockResolvedValue('waiting'),
+      progress: 0,
+    })),
+    getJob: jest.fn().mockImplementation((jobId) => {
+      if (jobId === 'non-existent') return Promise.resolve(null);
+      return Promise.resolve({
+        id: jobId,
+        name: 'test-job',
+        data: { test: 'data' },
+        getState: jest.fn().mockResolvedValue('active'),
+        progress: 50,
+        timestamp: Date.now(),
+      });
+    }),
+    getWaitingCount: jest.fn().mockResolvedValue(1),
+    getActiveCount: jest.fn().mockResolvedValue(0),
+    getCompletedCount: jest.fn().mockResolvedValue(5),
+    getFailedCount: jest.fn().mockResolvedValue(0),
+    getDelayedCount: jest.fn().mockResolvedValue(0),
+    close: jest.fn().mockResolvedValue(),
+  };
+
+  return {
+    Queue: jest.fn().mockImplementation(() => mockQueue),
+    Worker: jest.fn().mockImplementation(() => ({
+      close: jest.fn().mockResolvedValue(),
+      on: jest.fn(),
+    })),
+    QueueEvents: jest.fn().mockImplementation(() => ({
+      close: jest.fn().mockResolvedValue(),
+      on: jest.fn(),
+    })),
+  };
+});
+
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => ({
+    on: jest.fn(),
+    ping: jest.fn().mockResolvedValue('PONG'),
+    quit: jest.fn().mockResolvedValue(),
+    disconnect: jest.fn(),
+  }));
+});
+
+// Set a dummy redis url to bypass dev neutralization shield
+process.env.REDIS_URL = 'redis://sandbox-redis:6379';
+
 const { getQueue, addJob, getJobStatus, getQueueStats } = require('../../../server/services/jobQueueService');
 
-// Job queue tests need a real Redis (BullMQ throws "Redis not configured.
-// Cannot create queue." otherwise). The `unit` jest project doesn't expose
-// REDIS_URL, so this belongs in `integration` once the env wiring is moved
-// over. Skip until then.
-describe.skip('Job Queue Service', () => {
+describe('Job Queue Service', () => {
   let testQueue;
 
   beforeAll(() => {
@@ -65,9 +116,3 @@ describe.skip('Job Queue Service', () => {
     });
   });
 });
-
-
-
-
-
-

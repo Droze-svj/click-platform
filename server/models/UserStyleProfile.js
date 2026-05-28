@@ -82,6 +82,10 @@ const userStyleProfileSchema = new mongoose.Schema({
   weightedColorGrades:  { type: [weightedCounterSchema], default: [] },
   weightedTransitions:  { type: [weightedCounterSchema], default: [] },
   weightedHooks:        { type: [weightedCounterSchema], default: [] },
+  weightedPacing:       { type: [weightedCounterSchema], default: [] },
+  weightedVoiceTones:   { type: [weightedCounterSchema], default: [] },
+  weightedCtaCategories:{ type: [weightedCounterSchema], default: [] },
+  weightedHashtags:     { type: [weightedCounterSchema], default: [] },
 
   // Numeric averages — useful for things like "this user prefers cuts every
   // 1.6s on average" or "edits at ~32px font size".
@@ -163,6 +167,7 @@ userStyleProfileSchema.statics.recordPerformance = async function recordPerforma
   const allowed = [
     'weightedFonts', 'weightedCaptionStyles', 'weightedAnimations', 'weightedMotions',
     'weightedColorGrades', 'weightedTransitions', 'weightedHooks',
+    'weightedPacing', 'weightedVoiceTones', 'weightedCtaCategories', 'weightedHashtags',
   ];
   if (!allowed.includes(weightedFacet)) throw new Error(`Invalid weighted facet: ${weightedFacet}`);
 

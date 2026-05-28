@@ -147,6 +147,7 @@ async function runViralPipeline(contentId, videoPath, user, pipelineOptions = {}
         thumbnail: `/uploads/thumbnails/${thumbnailFilename}`,
         pipelineVersion: '2.0-neural'
       };
+      updatedContent.status = 'completed';
       await updatedContent.save();
     } catch (thumbErr) {
       logger.warn('Thumbnail generation failed', { thumbErr: thumbErr.message });

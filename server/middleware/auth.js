@@ -167,7 +167,8 @@ const auth = async (req, res, next) => {
     // Leave AUTO_VERIFY_EMAIL unset in production to keep verification
     // required for real paying customers.
     const autoVerify = process.env.AUTO_VERIFY_EMAIL === 'true';
-    if (!user.email_verified && !allowDevMode && !autoVerify) {
+    const isVerified = user.email_verified === true || user.emailVerified === true;
+    if (!isVerified && !allowDevMode && !autoVerify) {
       return res.status(403).json({
         error: 'Email verification required',
         emailVerified: false,

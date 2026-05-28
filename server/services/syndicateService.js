@@ -39,15 +39,15 @@ class SyndicateService {
     let executionStatus = 'PENDING';
 
     if (consensusReached) {
-        if (!isBudgetImpacting) {
-            executionStatus = 'AUTONOMOUS_LOCKED';
-            logger.info('Syndicate: Minor pivot consensus reached. Executing autonomously.');
-        } else {
-            executionStatus = 'AWAITING_HUMAN_OVERRIDE';
-            logger.warn('Syndicate: Budget-impacting consensus reached. Awaiting user signature.');
-        }
+      if (!isBudgetImpacting) {
+        executionStatus = 'AUTONOMOUS_LOCKED';
+        logger.info('Syndicate: Minor pivot consensus reached. Executing autonomously.');
+      } else {
+        executionStatus = 'AWAITING_HUMAN_OVERRIDE';
+        logger.warn('Syndicate: Budget-impacting consensus reached. Awaiting user signature.');
+      }
     } else {
-        executionStatus = 'REJECTED';
+      executionStatus = 'REJECTED';
     }
 
     return {

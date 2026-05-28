@@ -33,6 +33,19 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
+ * GET /api/search
+ * Basic text-based search
+ */
+router.get('/', auth, asyncHandler(async (req, res) => {
+  const { query, type, limit = 10 } = req.query;
+  const results = await textSearch(req.user._id, query || '', {
+    contentType: type,
+    limit: parseInt(limit)
+  });
+  sendSuccess(res, 'Search completed', 200, { results });
+}));
+
+/**
  * POST /api/search/semantic
  * Semantic AI-powered search
  */

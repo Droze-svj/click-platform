@@ -85,9 +85,9 @@ class NetworkHealthService {
    */
   async getSimulatedQuotas(userId) {
     return [
-        { platform: 'youtube', limit: 10, used: 2, label: 'Daily Uploads' },
-        { platform: 'linkedin', limit: 5, used: 1, label: 'UGC Shares' },
-        { platform: 'facebook', limit: 25, used: 0, label: 'Page Posts' }
+      { platform: 'youtube', limit: 10, used: 2, label: 'Daily Uploads' },
+      { platform: 'linkedin', limit: 5, used: 1, label: 'UGC Shares' },
+      { platform: 'facebook', limit: 25, used: 0, label: 'Page Posts' }
     ];
   }
 }

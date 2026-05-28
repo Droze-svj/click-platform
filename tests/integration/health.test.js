@@ -6,6 +6,11 @@ const createTestApp = require('./test-server-setup');
 const app = createTestApp();
 
 describe('Health API', () => {
+  beforeAll(async () => {
+    const { initDatabases } = require('../../server/config/database');
+    await initDatabases();
+  });
+
   describe('GET /api/health', () => {
     it('should return 200 and status ok', async () => {
       const response = await request(app)

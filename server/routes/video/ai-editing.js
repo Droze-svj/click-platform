@@ -168,6 +168,33 @@ async function resolveEditingOptions(editingOptions, userId, videoId = null) {
     } catch (e) {
       // ignore
     }
+
+    // Merge creator's global AI Video Editing preferences from settings
+    try {
+      const UserSettings = require('../../models/UserSettings');
+      const userSettings = await UserSettings.findOne({ userId: String(userId) }).lean();
+      if (userSettings && userSettings.videoEditing) {
+        const defaults = userSettings.videoEditing;
+        const keys = [
+          'preferredVoiceTone', 'preferredHookStyle', 'pacingIntensity',
+          'captionStyle', 'captionFontScale', 'captionVerticalOffset',
+          'aestheticColorGrade', 'aestheticTransition',
+          'subtitlePosition', 'contentTone', 'brollFrequency',
+          'musicGenre', 'defaultPlatform', 'enableSpeedRamping', 'enableBRoll',
+        ];
+        keys.forEach((key) => {
+          if (options[key] === undefined && defaults[key] !== undefined && defaults[key] !== '') {
+            options[key] = defaults[key];
+          }
+        });
+        // Apply defaultPlatform as the platform when not explicitly overridden
+        if (!options.platform && defaults.defaultPlatform && defaults.defaultPlatform !== 'auto') {
+          options.platform = defaults.defaultPlatform;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
   if (videoId) {
     try {
@@ -444,6 +471,23 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
         message: `Video has been automatically edited with ${result.editsApplied?.length || 0} improvements applied. The edited video has replaced the original.`,
       });
 
+      // Notify the client so useUserSocket.ts listeners wake up immediately
+      try {
+        const { getIO } = require('../../services/socketService');
+        const io = getIO();
+        if (io && userId) {
+          io.to(`user-${userId}`).emit('clip:ready', {
+            videoId,
+            clips: realClips,
+            editedVideoUrl: result.editedVideoUrl,
+            editsApplied: result.editsApplied || [],
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (socketErr) {
+        logger.warn('[auto-edit] clip:ready emit failed', { error: socketErr.message });
+      }
+
       // Smart Publish suggestion: per-platform captions + best publish slots,
       // attached to the freshly-saved clip in Mongo so the
       // SchedulePublishDrawer can render them as editable defaults. Failures
@@ -510,7 +554,32 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
     }
   } catch (error) {
     logger.error('Auto-edit video error', { error: error.message, videoId, stack: error.stack });
-    sendError(res, `Video editing failed: ${error.message}`, 500);
+    const msg = error.message || '';
+    let userMessage = 'Video editing failed. Please try again or use the manual editor.';
+    let errorCode = 'EDIT_FAILED';
+    let recoveryHint = 'Try uploading a shorter clip (under 3 minutes) or switching to a simpler preset.';
+    if (msg.includes('ENOENT') || msg.includes('not found') || msg.includes('No such file')) {
+      userMessage = 'Your video file could not be located. Please re-upload and try again.';
+      errorCode = 'FILE_NOT_FOUND';
+      recoveryHint = 'Re-upload the video, then retry the auto-edit.';
+    } else if (msg.includes('codec') || msg.includes('encoder') || msg.includes('filter') || msg.includes('Invalid option') || msg.includes('ffmpeg')) {
+      userMessage = 'The video format isn\'t supported by the editor. Convert your file to MP4 (H.264) and retry.';
+      errorCode = 'UNSUPPORTED_FORMAT';
+      recoveryHint = 'Use a tool like HandBrake to convert to H.264 MP4, then re-upload.';
+    } else if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('ETIMEDOUT')) {
+      userMessage = 'The edit took too long to process. Try a shorter clip or a lighter preset.';
+      errorCode = 'PROCESSING_TIMEOUT';
+      recoveryHint = 'Break your video into shorter segments (under 90s each) for faster processing.';
+    } else if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('429')) {
+      userMessage = 'AI analysis is temporarily busy. Your video will be edited with preset defaults — AI captions will apply on the next attempt.';
+      errorCode = 'AI_QUOTA';
+      recoveryHint = 'Wait 60 seconds and retry, or choose a preset-only edit which doesn\'t require AI analysis.';
+    } else if (msg.includes('memory') || msg.includes('ENOMEM')) {
+      userMessage = 'The video is too large to process right now. Try a clip under 100 MB.';
+      errorCode = 'OUT_OF_MEMORY';
+      recoveryHint = 'Compress your video to under 100 MB before uploading.';
+    }
+    sendError(res, userMessage, 500, { errorCode, recoveryHint });
   }
 }));
 
@@ -846,6 +915,43 @@ router.post('/export-aspect-ratios', auth, asyncHandler(async (req, res) => {
   } catch (error) {
     logger.error('Aspect-ratio export error', { error: error.message, videoId });
     sendError(res, error.message, 500);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/video/ai-editing/marketing-brief:
+ *   post:
+ *     summary: Generate full marketing brief + scored viral clips for a video
+ *     tags: [Video]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/marketing-brief', auth, asyncHandler(async (req, res) => {
+  const { videoId, niche } = req.body;
+  if (!videoId) return sendError(res, 'videoId is required', 400);
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
+  try {
+    const { generateMarketingStrategy, scoreAndRankClips } = require('../../services/aiAssistedEditingService');
+    const content = await resolveContent(videoId);
+    const transcript = content?.captions?.text || content?.transcript?.text || content?.transcription?.text || '';
+    const transcriptWords = content?.captions?.words || content?.transcript?.words || null;
+    const duration = content?.originalFile?.duration || content?.metadata?.duration || 0;
+    const resolvedNiche = niche || content?.niche || 'general';
+    const metadata = { duration };
+
+    const [brief, scoredClips] = await Promise.all([
+      generateMarketingStrategy(videoId, transcript, metadata, resolvedNiche),
+      scoreAndRankClips(transcript, transcriptWords, duration, metadata, req.user?.id),
+    ]);
+
+    return sendSuccess(res, 'Marketing brief generated', 200, { brief, scoredClips });
+  } catch (e) {
+    logger.error('marketing-brief error', { videoId, error: e.message });
+    return sendError(res, e.message, 500);
   }
 }));
 

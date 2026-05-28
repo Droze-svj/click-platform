@@ -6,6 +6,23 @@ const logger = require('../utils/logger');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 // Pull in the V6 learning brain to feed the Auto Edit Engine
 const { getActiveBlueprint } = require('./continuousLearningService');
+const { getClickPersonalityRules } = require('./marketingKnowledge');
+const vectorMemoryService = require('./vectorMemoryService');
+
+/**
+ * Fetches the top-5 creator memories relevant to the current task and formats
+ * them as a prompt block. Returns empty string when no userId or no memories.
+ */
+async function fetchMemoryContext(userId, queryText) {
+  if (!userId) return '';
+  try {
+    const mems = await vectorMemoryService.queryUserMemory(userId, queryText, { topK: 5 });
+    if (!mems.length) return '';
+    return `\n\nCreator Memory (proven past patterns for this creator):\n${mems.map(m => `- ${m.text}`).join('\n')}`;
+  } catch {
+    return '';
+  }
+}
 
 /**
  * Shared prompt helper — parses JSON safely with fallback
@@ -20,14 +37,24 @@ async function callGemini(prompt, opts = {}) {
  * CORE INTELLIGENCE — Full video analysis (same engine as auto-edit)
  * Called by manual AI-assist endpoints and exposed to the editor as "AI Co-Pilot"
  */
-async function analyzeVideoForManualEdit(videoId, transcript, metadata) {
+async function analyzeVideoForManualEdit(videoId, transcript, metadata, userId = null) {
   const duration = metadata?.duration || 0;
   if (!geminiConfigured || !transcript) {
     return { cuts: [], moments: {}, captions: [], pacing: [], qualityScore: 70, cta: null };
   }
 
+  if (!userId && videoId) {
+    try {
+      const Content = require('../models/Content');
+      const content = await Content.findById(videoId).select('userId').lean();
+      userId = content?.userId;
+    } catch (_) {}
+  }
+
   try {
     const result = await callGemini(`You are Click's AI Video Intelligence Engine — the world's most advanced content strategy AI.
+
+${getClickPersonalityRules(userId)}
 
 Analyze this video transcript and return a comprehensive editing guide in JSON:
 
@@ -67,13 +94,24 @@ async function getSmartCutSuggestions(videoId, transcript, metadata) {
   try {
     if (!geminiConfigured) return { suggestions: [], videoId };
 
-    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata);
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
     if (analysis?.suggestedCuts) {
       return { suggestions: analysis.suggestedCuts, videoId, niche: analysis.niche, hookScore: analysis.hookScore };
     }
 
     // Direct fallback prompt
-    const result = await callGemini(`You are a professional video editor. Suggest optimal cut points.
+    const result = await callGemini(`You are Click's professional video editor. Suggest optimal cut points.
+
+${getClickPersonalityRules(userId)}
 
 Transcript: ${transcript?.substring(0, 2000) || 'No transcript'}
 Duration: ${metadata?.duration || 0} seconds
@@ -105,7 +143,16 @@ async function findBestMoments(videoId, transcript, metadata) {
   try {
     if (!geminiConfigured) return { moments: [], videoId };
 
-    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata);
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
     if (analysis) {
       return {
         hook: analysis.hookTimestamp !== undefined ? { time: analysis.hookTimestamp, score: analysis.hookScore, text: analysis.hookText } : null,
@@ -175,12 +222,23 @@ async function analyzePacing(videoId, transcript, metadata) {
   try {
     if (!geminiConfigured) return { suggestions: [], videoId };
 
-    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata);
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
     if (analysis?.pacingSuggestions) {
       return { suggestions: analysis.pacingSuggestions, videoId };
     }
 
-    const result = await callGemini(`You are a video pacing expert for viral short-form content.
+    const result = await callGemini(`You are Click's video pacing expert for viral short-form content.
+
+${getClickPersonalityRules(userId)}
 
 Transcript: ${transcript?.substring(0, 2000) || 'No transcript'}
 Duration: ${metadata?.duration || 0} seconds
@@ -202,7 +260,16 @@ async function qualityCheck(videoId, metadata, transcript) {
   try {
     if (!geminiConfigured) return { improvements: [], videoId };
 
-    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata);
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
     if (analysis?.qualityIssues) {
       return {
         improvements: analysis.qualityIssues,
@@ -227,7 +294,16 @@ async function generateCaptionsForManualEdit(videoId, transcript, metadata) {
   try {
     if (!geminiConfigured || !transcript) return { captions: [], videoId };
 
-    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata);
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
     return {
       captions: analysis?.suggestedCaptions || [],
       cta: analysis?.cta || null,
@@ -264,8 +340,19 @@ async function generateCreativeDirectorBrief(videoId, transcript, metadata) {
       };
     }
 
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
     const duration = metadata?.duration || 0;
     const result = await callGemini(`You are Click AI Creative Director — the most advanced creative strategy engine on the planet.
+
+${getClickPersonalityRules(userId)}
 
 MISSION: Analyze this video and produce a COMPREHENSIVE creative direction brief. Think like a world-class editor at MrBeast's studio, combined with a Hollywood colorist, and a TikTok algorithm engineer.
 
@@ -282,6 +369,17 @@ Return a JSON object with this EXACT structure:
     "retention30s": (0-100 estimated % still watching at 30s),
     "viralPotential": (0-100),
     "shareability": (0-100)
+  },
+  "aidaDiagnostic": {
+    "attentionScore": (0-100 diagnostic of 0-3s hook),
+    "interestScore": (0-100 diagnostic of 3-15s storytelling interest),
+    "desireScore": (0-100 diagnostic of 15-30s value or emotional desire building),
+    "actionScore": (0-100 diagnostic of 30s+ call-to-action impact),
+    "frameworkAnalysis": "Detailed psychological breakdown of the video's flow under the Attention, Interest, Desire, Action framework."
+  },
+  "competitorMatrix": {
+    "versusOpusClip": "A hyper-specific analysis of how this video structure, pacing, and visual style outperforms Opus Clip's standard template.",
+    "viralLeversToPull": ["2 specific high-impact behavioral science hooks or levers to boost CTR and average watch duration"]
   },
   "suggestedEdits": [
     { "time": 0, "action": "cut|speed-up|slow-down|zoom|add-text|add-broll|transition", "detail": "specific instruction", "impact": "high|medium|low", "reason": "why this edit improves the video" }
@@ -316,8 +414,20 @@ async function generateAICaptions(videoId, transcript, metadata, style = 'hormoz
   try {
     if (!geminiConfigured || !transcript) return { captions: [], videoId };
 
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
     const duration = metadata?.duration || 0;
     const result = await callGemini(`You are Click AI Caption Engine — generate viral, engagement-maximizing captions.
+
+${getClickPersonalityRules(userId)}
+
 CRITICAL INSTRUCTION: You MUST translate and output the captions in the following target language: **${targetLanguage}**. Ensure the translation is culturally accurate, not just a literal word-for-word translation, while maintaining the exact timing and punchiness of the original transcript.
 
 STYLE: ${style}
@@ -353,6 +463,7 @@ Rules:
 - Generate 8-15 captions for a typical 60s video
 - Match the style: ${style === 'hormozi-punchline' ? 'Bold, simple, one-line punchlines' : style === 'mrbeast-energy' ? 'Excited, colorful, fast-paced' : style === 'clean-minimal' ? 'Elegant, lowercase, subtle' : 'Standard clear captions'}
 - TRANSLATION MANDATE: All output text inside the JSON MUST be accurately written in ${targetLanguage}.
+- 2026 EMOJI PROTOCOL: Incorporate highly relevant, trending unicode emojis directly into the text property at key emotional peaks or noun references (e.g. 💵, 🔥, 🤯, 🤫, ⚠️, 🏆, 💡) to maximize scroll-stop and viewer retention (Opus Clip defeating standard).
 
 Return ONLY valid JSON.`,
     { temperature: 0.6, maxTokens: 2000 });
@@ -373,7 +484,18 @@ async function suggestColorGrade(videoId, transcript, metadata) {
       return { videoId, preset: 'cinematic', params: { brightness: 100, contrast: 108, saturation: 95, temperature: 100, vibrance: 100, vignette: 20 }, rationale: 'Default cinematic grade' };
     }
 
-    const result = await callGemini(`You are a world-class Hollywood colorist. Analyze this video content and recommend the PERFECT color grade.
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const result = await callGemini(`You are Click's world-class Hollywood colorist. Analyze this video content and recommend the PERFECT color grade.
+
+${getClickPersonalityRules(userId)}
 
 TRANSCRIPT: "${(transcript || '').substring(0, 2000)}"
 DURATION: ${metadata?.duration || 0}s
@@ -406,7 +528,18 @@ async function suggestTransitions(videoId, transcript, metadata) {
   try {
     if (!geminiConfigured) return { videoId, transitions: [] };
 
-    const result = await callGemini(`You are a professional video editor. Suggest optimal transitions for this video.
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const result = await callGemini(`You are Click's professional video editor. Suggest optimal transitions for this video.
+
+${getClickPersonalityRules(userId)}
 
 TRANSCRIPT: "${(transcript || '').substring(0, 2000)}"
 DURATION: ${metadata?.duration || 0}s
@@ -440,10 +573,18 @@ Return ONLY valid JSON.`,
  * AUTO-EDIT SEQUENCE — Complete auto-edit pipeline
  * Returns a full set of timeline actions that can be applied with one click
  */
-async function autoEditSequence(videoId, transcript, metadata, userId = null, brief = null) {
+async function autoEditSequence(videoId, transcript, metadata, userId = null, brief = null, customInstructions = null) {
   try {
     const duration = metadata?.duration || 0;
     
+    if (!userId && videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
     // Check if transcript is verbose/object (Word-Level Data)
     let transcriptContext = typeof transcript === 'string' ? transcript : JSON.stringify(transcript);
     const isVerbose = typeof transcript !== 'string';
@@ -466,7 +607,7 @@ ${JSON.stringify(activeBlueprint, null, 2)}
     let briefInjection = '';
     if (brief) {
       briefInjection = `
-      
+
 CRITICAL INSTRUCTION FROM CREATIVE DIRECTOR BRIEF:
 The user has approved this specific creative direction. You MUST maintain consistency with these parameters:
 - Creative Style: ${brief.creativeStyle}
@@ -477,7 +618,16 @@ The user has approved this specific creative direction. You MUST maintain consis
 `;
     }
 
-    const result = await callGemini(`You are the Click AI Auto-Editor (Agent Mode) — the most powerful autonomous video editor on the planet, equipped with extreme creativity and 2026 algorithmic logic.${blueprintInjection}${briefInjection}
+    // Recall creator's proven patterns from persistent memory
+    const memoryContext = await fetchMemoryContext(userId, transcriptContext.substring(0, 500));
+
+    const customBlock = customInstructions
+      ? `\n\nCRITICAL USER CREATIVE DIRECTION (HIGHEST PRIORITY — override any conflicting defaults):\n"${customInstructions}"\n`
+      : '';
+
+    const result = await callGemini(`You are the Click AI Auto-Editor (Agent Mode) — the most powerful autonomous video editor on the planet, equipped with extreme creativity and 2026 algorithmic logic.${blueprintInjection}${briefInjection}${memoryContext}${customBlock}
+
+${getClickPersonalityRules(userId)}
 
 MISSION: Generate a **COMPLETE** and wildly creative edit sequence blueprint. Do NOT be repetitive. Inject randomness and high-end brand originality. Ensure the output feels like a human cinematic director layered the timeline.
 
@@ -558,7 +708,20 @@ async function generateEngagementPrediction(videoId, transcript, metadata, editS
       return { videoId, retention30s: 45, retention60s: 25, viralPotential: 30, shareability: 35, completionRate: 20, predictedViews: '1K-5K' };
     }
 
-    const result = await callGemini(`You are a TikTok/YouTube algorithm analyst. Predict this video's engagement.
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    const engagementMemory = await fetchMemoryContext(userId, (transcript || '').substring(0, 500));
+
+    const result = await callGemini(`You are Click's TikTok/YouTube algorithm analyst — the world's most precise engagement predictor.
+
+${getClickPersonalityRules(userId)}${engagementMemory}
 
 TRANSCRIPT: "${(transcript || '').substring(0, 2000)}"
 DURATION: ${metadata?.duration || 0}s
@@ -566,19 +729,34 @@ EDITS APPLIED: ${JSON.stringify(editState || {}).substring(0, 500)}
 
 Return JSON:
 {
-  "retention30s": (0-100),
+  "retention30s": (0-100, how many percent keep watching at 30s),
   "retention60s": (0-100),
   "viralPotential": (0-100),
   "shareability": (0-100),
   "completionRate": (0-100),
   "predictedViews": "range like 10K-50K",
   "topPlatform": "tiktok|instagram|youtube_shorts|linkedin",
-  "improvementTips": ["specific actionable tip 1", "tip 2", "tip 3"],
-  "retentionKillers": ["what causes drop-off at specific timestamps"]
+  "hookScore": (0-100, quality of the first 3 seconds),
+  "hookFeedback": "One sentence of ruthlessly specific feedback on the opening 3 seconds",
+  "actionableImprovements": [
+    {
+      "issue": "precise description of the specific problem (e.g. 'Hook takes 6.2s before value delivery')",
+      "fix": "exact action to take (e.g. 'Cut to X:XX — open on the result, rewind to context')",
+      "impact": "high|medium|low",
+      "estimatedRetentionBoost": "+8%"
+    }
+  ],
+  "retentionDropoffs": [
+    {
+      "timestamp": "X:XX",
+      "reason": "specific reason audience will swipe away here",
+      "fix": "exact remediation"
+    }
+  ]
 }
 
-Return ONLY valid JSON.`,
-    { temperature: 0.3, maxTokens: 800 });
+Be ruthlessly specific. Reference actual timestamps from the transcript where possible. Return ONLY valid JSON.`,
+    { temperature: 0.3, maxTokens: 1200 });
 
     return { videoId, ...result };
   } catch (err) {
@@ -588,15 +766,126 @@ Return ONLY valid JSON.`,
 }
 
 /**
+ * SMART VIRAL CLIP SCORER — Algorithmic sliding-window clip ranker.
+ * Scores every potential 15–60s window by hook quality, proof density, story signals,
+ * delivery energy, and topic completeness. Labels each clip with a type.
+ * Optionally enriches top 3 with Gemini rationale + A/B hook variants.
+ */
+async function scoreAndRankClips(transcript, transcriptWords, duration, metadata, userId = null) {
+  if (!transcript || duration < 10) return { clips: [], ranked: false };
+
+  const HOOK_WORDS = ['secret','truth','mistake','wrong','actually','nobody','never','always','finally','proof','real','honest','shocking','wait','stop','listen','attention','warning'];
+  const PROOF_WORDS = ['results','made','earned','grew','lost','gained','clients','revenue','percent','numbers','data','study','research'];
+  const STORY_WORDS = ['when i','so i','then i','i was','i used to','i remember','the day','that moment','i realized','i found out'];
+
+  const WINDOW_SIZES = [15, 30, 45, 60];
+  const STEP = 10;
+  const words = transcript.split(/\s+/);
+  const wordsPerSecond = words.length / duration;
+  const candidates = [];
+
+  for (const windowLen of WINDOW_SIZES) {
+    for (let start = 0; start + windowLen <= duration; start += STEP) {
+      const end = start + windowLen;
+      const wStart = Math.floor(start * wordsPerSecond);
+      const wEnd = Math.min(Math.ceil(end * wordsPerSecond), words.length);
+      const windowWords = words.slice(wStart, wEnd);
+      const windowText = windowWords.join(' ').toLowerCase();
+      const firstQuint = windowWords.slice(0, Math.ceil(windowWords.length * 0.2)).join(' ').toLowerCase();
+
+      let hookScore = Math.min(HOOK_WORDS.filter(w => firstQuint.includes(w)).length * 15, 60);
+      let proofScore = Math.min(PROOF_WORDS.filter(w => windowText.includes(w)).length * 12, 50);
+      let storyScore = Math.min(STORY_WORDS.filter(p => windowText.includes(p)).length * 18, 40);
+      let energyScore = Math.min((windowText.match(/[!?]/g) || []).length * 8, 40);
+      let completenessScore = /[.?!]$/.test(windowWords[windowWords.length - 1] || '') ? 20 : 0;
+
+      let volumeVariance = 0;
+      if (Array.isArray(transcriptWords) && transcriptWords.length > 0) {
+        const wObjs = transcriptWords.filter(w => w.start >= start && (w.end || w.start) <= end);
+        if (wObjs.length > 2) {
+          const vols = wObjs.map(w => w.volume || 50);
+          const mean = vols.reduce((a, b) => a + b, 0) / vols.length;
+          const variance = vols.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / vols.length;
+          volumeVariance = Math.min(Math.sqrt(variance) * 0.8, 30);
+        }
+      }
+
+      const totalScore = hookScore + proofScore + storyScore + energyScore + completenessScore + volumeVariance;
+
+      let clipType = 'insight';
+      if (hookScore >= 30) clipType = 'hook';
+      else if (proofScore >= 30) clipType = 'proof';
+      else if (storyScore >= 25) clipType = 'story';
+      else if (energyScore >= 25) clipType = 'reaction';
+      else if (windowText.includes('honestly') || windowText.includes('i will admit') || windowText.includes('confession')) clipType = 'confession';
+
+      candidates.push({
+        startTime: start, endTime: end, duration: windowLen,
+        viralScore: Math.round(Math.min(totalScore, 100)),
+        clipType,
+        scoreBreakdown: {
+          hookStrength: Math.round(hookScore),
+          proofDensity: Math.round(proofScore),
+          storySignals: Math.round(storyScore),
+          deliveryEnergy: Math.round(energyScore + volumeVariance),
+          topicCompleteness: completenessScore,
+        },
+      });
+    }
+  }
+
+  // Sort descending, deduplicate overlapping windows
+  candidates.sort((a, b) => b.viralScore - a.viralScore);
+  const deduped = [];
+  for (const c of candidates) {
+    if (!deduped.some(d => c.startTime < d.endTime && c.endTime > d.startTime)) {
+      deduped.push(c);
+      if (deduped.length >= 6) break;
+    }
+  }
+
+  // Enrich top 3 with Gemini rationale + hook variants
+  if (geminiConfigured && deduped.length > 0) {
+    try {
+      const top3 = deduped.slice(0, 3).map(c => ({ startTime: c.startTime, endTime: c.endTime, clipType: c.clipType, viralScore: c.viralScore }));
+      const enriched = await callGemini(
+        `Given these candidate video clips, provide a 1-sentence viral rationale and 3 hook variants for each.\nClips: ${JSON.stringify(top3)}\nTranscript (first 3000 chars): "${transcript.substring(0, 3000)}"\nReturn JSON array: [{ "startTime": number, "rationale": "...", "hookVariants": { "curiosityGap": "...", "boldClaim": "...", "socialProof": "..." } }]`,
+        { temperature: 0.6, maxTokens: 900 }
+      );
+      if (Array.isArray(enriched)) {
+        enriched.forEach(e => {
+          const match = deduped.find(d => d.startTime === e.startTime);
+          if (match) { match.rationale = e.rationale; match.hookVariants = e.hookVariants; }
+        });
+      }
+    } catch (_) { /* graceful degradation */ }
+  }
+
+  return { clips: deduped, ranked: true };
+}
+
+/**
  * VIRAL SNAPSHOT FORGE — Extracts highly optimized short clips from the main sequence
  */
 async function generateViralSnapshots(videoId, transcript, metadata) {
   try {
     if (!geminiConfigured || !transcript) return { videoId, snapshots: [] };
     
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
     const duration = metadata?.duration || 0;
-    const result = await callGemini(`You are a top-tier viral content curator and AI clipping engine.
-Your objective is to identify the 3 absolute best, most retaining, and emotionally peaking segments within this transcript to extract as standalone short-form clips.
+    const result = await callGemini(`You are Click's top-tier viral content curator and AI clipping engine.
+
+${getClickPersonalityRules(userId)}
+
+Your objective: identify the 3 absolute best retaining segments AND generate 3 hook caption variants for each.
 
 TRANSCRIPT (${duration}s): "${transcript.substring(0, 5000)}"
 
@@ -610,17 +899,24 @@ Return JSON:
       "endTime": 15.0,
       "duration": 15.0,
       "viralScore": 95,
-      "rationale": "Why this specific 15 seconds will go viral (e.g., intense disagreement, profound value drop)"
+      "clipType": "hook|insight|story|proof|reaction|confession",
+      "rationale": "Why this specific segment will go viral — reference what the speaker says, the emotional peak, the specific line",
+      "hookVariants": {
+        "curiosityGap": "A hook framing that creates an irresistible information gap (e.g. 'The reason I almost quit...')",
+        "boldClaim": "A hook that opens with a strong, possibly controversial claim (e.g. 'Most coaches are lying to you.')",
+        "socialProof": "A hook that leads with a result or community validation (e.g. '47,000 people used this and got X')"
+      }
     }
   ]
 }
 
 Rules:
 - Generate exactly 3 snapshot clips.
-- Durations should be between 7 seconds and 35 seconds.
-- Provide highly descriptive rationales.
+- Durations between 7s and 60s.
+- Each hookVariant must be genuinely different in psychological framing, not just rephrased.
+- Assign clipType based on the dominant content type in that segment.
 Return ONLY valid JSON.`,
-    { temperature: 0.7, maxTokens: 1500 });
+    { temperature: 0.7, maxTokens: 2000 });
     return { videoId, ...result };
   } catch (err) {
     logger.warn('Viral Snapshot failed', { error: err.message });
@@ -635,7 +931,31 @@ async function generateMarketingStrategy(videoId, transcript, metadata, niche) {
   try {
     if (!geminiConfigured) return { videoId, strategy: null };
     
-    const result = await callGemini(`You are an omniscient, billion-dollar Growth Hacker and Neuro-Marketing AI.
+    let userId = null;
+    if (videoId) {
+      try {
+        const Content = require('../models/Content');
+        const content = await Content.findById(videoId).select('userId').lean();
+        userId = content?.userId;
+      } catch (_) {}
+    }
+
+    // Inject creator memory + active blueprint for personalised marketing advice
+    const marketingMemory = await fetchMemoryContext(userId, (transcript || '').substring(0, 500));
+    let blueprintContext = '';
+    if (userId) {
+      try {
+        const UserPreferences = require('../models/UserPreferences');
+        const prefs = await UserPreferences.findOne({ userId }).lean();
+        const bp = prefs?.marketingIntelligence?.activeCreativeBlueprint;
+        if (bp) blueprintContext = `\n\nCreator AI Blueprint (personalised from real performance data):\n${JSON.stringify(bp)}`;
+      } catch (_) {}
+    }
+
+    const result = await callGemini(`You are Click's omniscient, billion-dollar Growth Hacker and Neuro-Marketing AI.
+
+${getClickPersonalityRules(userId)}${marketingMemory}${blueprintContext}
+
 You possess continuous learning capability and unlimited marketing background knowledge (AIDA, Hook/Retain/Reward, Harvard Business models, GaryVee distribution strats, MrBeast virality structure).
 
 The user has defined their target market/niche as: "${niche || 'General Business / Lifestyle'}".
@@ -643,33 +963,43 @@ The user has defined their target market/niche as: "${niche || 'General Business
 You must formulate an EXACT, highly original, non-repetitive marketing strategy to distribute this video.
 
 TRANSCRIPT: "${(transcript || '').substring(0, 3000)}"
+VIDEO DURATION: ${metadata?.duration || 0}s
 
 Return JSON:
 {
   "strategy": {
-    "nicheBreakdown": "Your deep analysis on what this specific niche craves right now.",
+    "nicheBreakdown": "Your deep analysis on what this specific niche craves right now in 2026.",
+    "contentArchetype": "educational-binge|motivation-jolt|proof-of-results|controversy-hook|storytelling-arc|tutorial-step-by-step",
     "titles": [
-      "5 highly original, click-through optimized titles."
+      "Title 1 — curiosity-gap framing",
+      "Title 2 — bold claim framing",
+      "Title 3 — social proof framing"
     ],
     "captions": [
       { "style": "Edgy & Controversial", "copy": "The caption text..." },
       { "style": "Educational Value-Drop", "copy": "The caption text..." },
       { "style": "Storytelling / Vulnerable", "copy": "The caption text..." }
     ],
-    "hashtags": ["#tag1", "#tag2"],
+    "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"],
     "schedulingMatrix": {
-      "optimalDay": "Tuesday",
-      "optimalTime": "18:30 EST",
-      "algorithmRationale": "A deep psychological and algorithmic explanation of WHY this exact time and day is perfect for this specific niche (e.g., 'Gen-Z founders are commuting and checking LinkedIn/TikTok during this block')."
-    }
+      "tiktok": { "optimalDay": "Tuesday", "optimalTime": "18:30 EST", "reasoning": "specific algorithmic + demographic rationale" },
+      "instagram": { "optimalDay": "Thursday", "optimalTime": "11:00 EST", "reasoning": "..." },
+      "youtube_shorts": { "optimalDay": "Saturday", "optimalTime": "09:00 EST", "reasoning": "..." },
+      "linkedin": { "optimalDay": "Wednesday", "optimalTime": "08:00 EST", "reasoning": "..." }
+    },
+    "competitiveInsights": [
+      "Specific tactic the top 1% of creators in this niche are using right now that this clip should emulate",
+      "A format or hook structure dominating this niche FYP this month that this clip can borrow"
+    ]
   }
 }
 
 Rules:
 - DO NOT be generic. Provide aggressive, hyper-specific marketing advice.
 - Adapt your style entirely to the requested niche.
+- competitiveInsights must be concrete tactics, not generic advice.
 Return ONLY valid JSON.`,
-    { temperature: 0.9, maxTokens: 2500 });
+    { temperature: 0.9, maxTokens: 3000 });
     return { videoId, ...result };
   } catch (err) {
     logger.warn('Marketing Strategy failed', { error: err.message });
@@ -698,5 +1028,7 @@ module.exports = {
   // V5 Marketing & Snapshot Upgrade
   generateViralSnapshots,
   generateMarketingStrategy,
+  // V6 — Smart Clip Scorer (algorithmic + AI hybrid)
+  scoreAndRankClips,
 };
 

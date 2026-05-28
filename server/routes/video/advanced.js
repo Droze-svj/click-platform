@@ -18,7 +18,17 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const progressTracker = require('../../services/videoProgressService');
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+
 const router = express.Router();
+
+// Apply AI rate limiting and cost guarding globally to POST/PUT requests on advanced routes
+router.use((req, res, next) => {
+  if (['POST', 'PUT'].includes(req.method)) return aiLimiter(req, res, next);
+  return next();
+});
+router.use(costGuard());
 
 /**
  * Helper for consistent logging of video editing operations.

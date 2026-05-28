@@ -116,13 +116,4 @@ After your first prod deploy with the minimum viable set:
 
 If any of the above fails, the env-var section above tells you which var to check.
 
-## Known endpoints with no server-side implementation
 
-These client paths exist but the server has no matching route file. The UI
-will get a 404 if hit. Either implement the route or remove the client call:
-
-- `POST /api/captions-spatial/detect` (used by `DynamicSubtitleEngine.tsx`)
-- `POST /api/monetization/plan` (used by `MonetizationHub.tsx` — note: the
-  similar `/api/video/advanced/monetization-plan` does exist)
-- `POST /api/phase8/spatial`
-- `POST /api/sovereign/insights`, `POST /api/sovereign/swarm`

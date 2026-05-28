@@ -45,7 +45,13 @@ async function scheduleWithTimezone(userId, contentId, platform, scheduledTime, 
 }
 
 function convertToUTC(time, timezone) {
-  const date = new Date(time);
+  let date;
+  if (typeof time === 'string' && !time.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(time)) {
+    // If it is a string without timezone specifier, append 'Z' to parse it timezone-neutrally
+    date = new Date(time.includes('T') ? `${time}Z` : `${time}T00:00:00Z`);
+  } else {
+    date = new Date(time);
+  }
   if (Number.isNaN(date.getTime())) return new Date(time);
   if (!timezone || timezone === 'UTC') return date;
 
@@ -124,36 +130,73 @@ function calculateNextRecurrence(recurrence, startDate) {
   const date = new Date(startDate);
   const now = new Date();
 
-  switch (recurrence.frequency) {
+  // 1. Safety check for invalid input dates
+  if (Number.isNaN(date.getTime())) {
+    logger.error('Invalid start date provided for recurrence calculation', { startDate });
+    return new Date(Date.now() + 24 * 60 * 60 * 1000); // Fail-safe to next day
+  }
+
+  // 2. Ensure interval is always a positive integer >= 1
+  const interval = Math.max(1, parseInt(recurrence?.interval, 10) || 1);
+  const freq = String(recurrence?.frequency || 'daily').toLowerCase();
+
+  switch (freq) {
   case 'daily':
-    date.setDate(date.getDate() + recurrence.interval);
+    date.setDate(date.getDate() + interval);
     break;
   case 'weekly':
-    if (recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
+    if (recurrence.daysOfWeek && Array.isArray(recurrence.daysOfWeek) && recurrence.daysOfWeek.length > 0) {
       // Find next matching day of week
       const currentDay = date.getDay();
-      const nextDay = recurrence.daysOfWeek.find(day => day > currentDay) || recurrence.daysOfWeek[0];
-      const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
-      date.setDate(date.getDate() + daysToAdd);
+      const sortedDays = [...recurrence.daysOfWeek].map(Number).filter(d => !Number.isNaN(d)).sort((a, b) => a - b);
+      if (sortedDays.length > 0) {
+        const nextDay = sortedDays.find(day => day > currentDay) ?? sortedDays[0];
+        const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
+        date.setDate(date.getDate() + daysToAdd);
+      } else {
+        date.setDate(date.getDate() + (7 * interval));
+      }
     } else {
-      date.setDate(date.getDate() + (7 * recurrence.interval));
+      date.setDate(date.getDate() + (7 * interval));
     }
     break;
   case 'monthly':
-    date.setMonth(date.getMonth() + recurrence.interval);
+    date.setMonth(date.getMonth() + interval);
     if (recurrence.dayOfMonth) {
-      date.setDate(recurrence.dayOfMonth);
+      const targetDay = parseInt(recurrence.dayOfMonth, 10);
+      if (!Number.isNaN(targetDay)) {
+        date.setDate(targetDay);
+      }
     }
     break;
+  default:
+    date.setDate(date.getDate() + interval);
   }
 
-  // Apply time if specified
-  if (recurrence.times && recurrence.times.length > 0) {
-    const [hour, minute] = recurrence.times[0].split(':').map(Number);
-    date.setHours(hour, minute, 0, 0);
+  // 3. Apply time if specified
+  if (recurrence.times && Array.isArray(recurrence.times) && recurrence.times.length > 0 && typeof recurrence.times[0] === 'string') {
+    const timeParts = recurrence.times[0].split(':').map(Number);
+    if (timeParts.length >= 2 && !Number.isNaN(timeParts[0]) && !Number.isNaN(timeParts[1])) {
+      date.setHours(timeParts[0], timeParts[1], 0, 0);
+    }
   }
 
-  return date > now ? date : calculateNextRecurrence(recurrence, date);
+  // 4. Double check for NaN results
+  if (Number.isNaN(date.getTime())) {
+    logger.error('Recurrence calculation produced an invalid date; falling back to next day', { recurrence });
+    return new Date(Date.now() + 24 * 60 * 60 * 1000);
+  }
+
+  // 5. Infinite recursion safety guard: ensure the date strictly advances
+  const currentMs = date.getTime();
+  const startMs = new Date(startDate).getTime();
+  if (currentMs <= startMs) {
+    // Force advance by 1 day to break loops
+    date.setDate(date.getDate() + 1);
+  }
+
+  // 6. Recurse if the calculated date is still in the past, carrying over the sanitised interval
+  return date > now ? date : calculateNextRecurrence({ ...recurrence, interval }, date);
 }
 
 /**

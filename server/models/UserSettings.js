@@ -49,8 +49,26 @@ const userSettingsSchema = new mongoose.Schema({
     heygenApiKey: { type: String, default: '' },
     soraApiKey: { type: String, default: '' }
   },
+  // Default AI Video Editing preferences
+  videoEditing: {
+    preferredVoiceTone: { type: String, default: 'Hype' },
+    preferredHookStyle: { type: String, default: 'curiosity-gap' },
+    pacingIntensity: { type: String, default: 'medium' },
+    captionStyle: { type: String, default: 'modern' },
+    captionFontScale: { type: Number, default: 1.0 },
+    captionVerticalOffset: { type: Number, default: 0 },
+    aestheticColorGrade: { type: String, default: 'vibrant' },
+    aestheticTransition: { type: String, default: 'fade' },
+    subtitlePosition: { type: String, enum: ['auto', 'top', 'middle', 'bottom', 'lower-third'], default: 'auto' },
+    contentTone: { type: String, enum: ['auto', 'educational', 'entertaining', 'motivational', 'promotional'], default: 'auto' },
+    brollFrequency: { type: String, enum: ['off', 'minimal', 'balanced', 'heavy'], default: 'balanced' },
+    musicGenre: { type: String, default: 'auto' },
+    defaultPlatform: { type: String, enum: ['auto', 'tiktok', 'instagram', 'youtube', 'linkedin'], default: 'auto' },
+    enableSpeedRamping: { type: Boolean, default: true },
+    enableBRoll: { type: Boolean, default: true },
+  },
   updatedAt: { type: Date, default: Date.now }
-}, { strict: true });
+}, {});
 
 userSettingsSchema.index({ userId: 1 });
 userSettingsSchema.pre('save', function (next) {

@@ -1,8 +1,11 @@
 // AI Recommendations Engine
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const { safeJsonParse } = require('../utils/aiRouter');
 const Content = require('../models/Content');
 const User = require('../models/User');
+const UserPreferences = require('../models/UserPreferences');
+const TrendSnapshot = require('../models/TrendSnapshot');
 const logger = require('../utils/logger');
 const {
   AppError,
@@ -104,16 +107,9 @@ Format as JSON array with fields: title, description, platform, reasoning, keyPo
       throw new Error('No response from AI recommendations');
     }
 
-    let recommendations;
-    try {
-      recommendations = JSON.parse(recommendationsText);
-    } catch (error) {
-      const jsonMatch = recommendationsText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        recommendations = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse recommendations');
-      }
+    const recommendations = safeJsonParse(recommendationsText, null);
+    if (!recommendations || !Array.isArray(recommendations)) {
+      throw new Error('Failed to parse recommendations or response is not an array');
     }
 
     logger.info('Personalized recommendations generated', { userId, count: recommendations.length });
@@ -311,16 +307,9 @@ Format as JSON array with fields: title, description, trendAlignment (string), e
     const fullPrompt = `You are a trend-based content strategist. Suggest content that aligns with trends and user history.\n\n${prompt}`;
     const suggestionsText = await geminiGenerate(fullPrompt, { maxTokens: 2000, temperature: 0.8 });
 
-    let suggestions;
-    try {
-      suggestions = JSON.parse(suggestionsText);
-    } catch (error) {
-      const jsonMatch = suggestionsText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        suggestions = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse suggestions');
-      }
+    const suggestions = safeJsonParse(suggestionsText, null);
+    if (!suggestions || !Array.isArray(suggestions)) {
+      throw new Error('Failed to parse suggestions or response is not an array');
     }
 
     logger.info('Trend-based suggestions generated', { userId, platform, count: suggestions.length });
@@ -331,9 +320,154 @@ Format as JSON array with fields: title, description, trendAlignment (string), e
   }
 }
 
+/**
+ * Cross-video pattern mining — identifies what's consistently working or failing
+ * across the creator's entire published content library.
+ */
+async function analyzeCrossVideoPatterns(userId) {
+  try {
+    const isDevUser = userId && (String(userId).startsWith('dev-') || String(userId).startsWith('test-'));
+    if (isDevUser) return { topPatterns: [], improvementGaps: [], bestPlatform: null, bestFormat: null, insightSummary: 'No data yet.' };
+
+    const allContent = await Content.find({ userId, status: 'published' })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .select('title tags category platform views likes type createdAt')
+      .lean()
+      .catch(() => []);
+
+    if (allContent.length === 0) {
+      return { topPatterns: [], improvementGaps: [], bestPlatform: null, bestFormat: null, insightSummary: 'Not enough content history yet.' };
+    }
+
+    // Split into top-quartile performers vs. rest (by engagement proxy)
+    const scored = allContent.map(c => ({ ...c, _eng: (c.views || 0) + (c.likes || 0) * 10 }));
+    scored.sort((a, b) => b._eng - a._eng);
+    const topQ = scored.slice(0, Math.max(1, Math.floor(scored.length * 0.25)));
+
+    // Build frequency maps from top performers
+    const freq = { platforms: {}, formats: {}, categories: {}, tags: {} };
+    topQ.forEach(c => {
+      if (c.platform) freq.platforms[c.platform] = (freq.platforms[c.platform] || 0) + 1;
+      if (c.type)     freq.formats[c.type]       = (freq.formats[c.type]       || 0) + 1;
+      if (c.category) freq.categories[c.category] = (freq.categories[c.category] || 0) + 1;
+      (c.tags || []).forEach(t => { freq.tags[t] = (freq.tags[t] || 0) + 1; });
+    });
+
+    const topPlatform = Object.entries(freq.platforms).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    const topFormat   = Object.entries(freq.formats).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    const topTags     = Object.entries(freq.tags).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([t]) => t);
+
+    if (!geminiConfigured) {
+      return { topPatterns: topTags, improvementGaps: [], bestPlatform: topPlatform, bestFormat: topFormat, insightSummary: 'AI analysis unavailable.' };
+    }
+
+    const sampleTitles = topQ.slice(0, 3).map(c => c.title).join('; ');
+    const prompt = `You are a content performance analyst. A creator's top-quartile videos share these patterns:
+Platform frequency: ${JSON.stringify(freq.platforms)}
+Format frequency: ${JSON.stringify(freq.formats)}
+Category frequency: ${JSON.stringify(freq.categories)}
+Top tags: ${topTags.join(', ')}
+Sample top titles: "${sampleTitles}"
+Total content analysed: ${allContent.length} videos
+
+Return JSON with actionable pattern insights:
+{
+  "topPatterns": ["3-5 specific patterns that explain why top videos succeed"],
+  "improvementGaps": ["2-3 specific gaps or mistakes visible in lower-performing content"],
+  "bestPlatform": "${topPlatform || 'unknown'}",
+  "bestFormat": "${topFormat || 'unknown'}",
+  "insightSummary": "One paragraph executive summary of this creator's content performance DNA"
+}
+Return ONLY valid JSON.`;
+
+    const raw = await geminiGenerate(prompt, { temperature: 0.4, maxTokens: 1200 });
+    const result = safeJsonParse(raw, null);
+    if (!result) return { topPatterns: topTags, improvementGaps: [], bestPlatform: topPlatform, bestFormat: topFormat, insightSummary: 'Pattern analysis complete.' };
+
+    logger.info('[CrossVideoPatterns] analysis complete', { userId, contentCount: allContent.length });
+    return result;
+  } catch (error) {
+    logger.error('[CrossVideoPatterns] failed', { error: error.message, userId });
+    return { topPatterns: [], improvementGaps: [], bestPlatform: null, bestFormat: null, insightSummary: 'Analysis unavailable.' };
+  }
+}
+
+/**
+ * Trend matching — scores current platform trends against the creator's niche and style,
+ * then generates a content angle + suggested hook for each matched trend.
+ */
+async function matchTrendsToCreator(userId, platform = 'tiktok') {
+  try {
+    const isDevUser = userId && (String(userId).startsWith('dev-') || String(userId).startsWith('test-'));
+
+    // Fetch latest trend snapshot for the platform
+    const snapshot = await TrendSnapshot.findOne({ platform }).sort({ capturedAt: -1 }).lean().catch(() => null);
+    const trends = snapshot?.items || [];
+
+    // Fetch creator niche + top hooks from UserPreferences
+    const prefs = isDevUser ? null : await UserPreferences.findOne({ userId }).lean().catch(() => null);
+    const niche = prefs?.marketingIntelligence?.niche || 'general';
+    const topHooks = prefs?.marketingIntelligence?.historicalPerformanceMetrics?.topPerformingHooks || [];
+
+    if (trends.length === 0) {
+      return [{ trend: 'No trend data available', relevanceScore: 0, contentAngle: 'Check back later', suggestedHook: '', estimatedFit: 'unknown' }];
+    }
+
+    // Score each trend by keyword overlap with niche + top hooks
+    const nicheWords = niche.toLowerCase().split(/\s+/);
+    const hookWords  = topHooks.join(' ').toLowerCase().split(/\s+/);
+
+    const scored = trends.map(item => {
+      const label = (item.label || '').toLowerCase();
+      const nicheOverlap = nicheWords.filter(w => w.length > 3 && label.includes(w)).length / Math.max(nicheWords.length, 1);
+      const hookOverlap  = hookWords.filter(w => w.length > 3 && label.includes(w)).length / Math.max(hookWords.length, 1);
+      return { ...item, relevanceScore: Math.round(((nicheOverlap + hookOverlap) / 2) * 100) / 100 };
+    });
+
+    scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    const top5 = scored.slice(0, 5);
+
+    if (!geminiConfigured) {
+      return top5.map(t => ({ trend: t.label, relevanceScore: t.relevanceScore, contentAngle: 'Use this trend in your next video', suggestedHook: `"${t.label}" changed everything...`, estimatedFit: t.relevanceScore > 0.3 ? 'high' : 'medium' }));
+    }
+
+    const prompt = `You are a viral content strategist. For each trending topic below, generate a specific content angle and hook optimised for a creator in the "${niche}" niche.
+
+Trends: ${JSON.stringify(top5.map(t => ({ trend: t.label, velocity: t.velocity, relevanceScore: t.relevanceScore })))}
+Creator's top hook styles: ${topHooks.join(', ') || 'curiosity-gap, story'}
+
+Return a JSON array (one entry per trend):
+[
+  {
+    "trend": "trend label",
+    "relevanceScore": 0.0,
+    "contentAngle": "specific angle this creator should take on the trend",
+    "suggestedHook": "an exact opening line the creator could use (max 12 words)",
+    "estimatedFit": "high|medium|low"
+  }
+]
+Return ONLY valid JSON.`;
+
+    const raw = await geminiGenerate(prompt, { temperature: 0.7, maxTokens: 900 });
+    const result = safeJsonParse(raw, null);
+    if (!Array.isArray(result)) {
+      return top5.map(t => ({ trend: t.label, relevanceScore: t.relevanceScore, contentAngle: `Create content about ${t.label}`, suggestedHook: `Everyone's talking about ${t.label}...`, estimatedFit: 'medium' }));
+    }
+
+    logger.info('[TrendMatch] matched trends to creator', { userId, platform, count: result.length });
+    return result;
+  } catch (error) {
+    logger.error('[TrendMatch] failed', { error: error.message, userId });
+    return [];
+  }
+}
+
 module.exports = {
   getPersonalizedRecommendations,
   learnFromBehavior,
   getTrendBasedSuggestions,
+  analyzeCrossVideoPatterns,
+  matchTrendsToCreator,
 };
 

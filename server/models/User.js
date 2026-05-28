@@ -90,6 +90,12 @@ const userSchema = new mongoose.Schema({
       lastRefreshed: Date,
       codeVerifier: String, // Temporary, for OAuth flow
       state: String, // Temporary, for OAuth flow
+      platformUserId: String,
+      platformUsername: String,
+      avatar: String,
+      expiresAt: Date,
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
     },
     linkedin: {
       accessToken: String,

@@ -48,27 +48,15 @@ jest.mock('../../server/services/socketService', () => ({
   emitToUser: jest.fn()
 }));
 
-jest.mock('openai', () => {
-  return jest.fn().mockImplementation(() => ({
-    chat: {
-      completions: {
-        create: jest.fn().mockResolvedValue({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                hookStrength: 95,
-                viralPotential: 88,
-                hookType: 'question',
-                rewrites: ['Option 1', 'Option 2'],
-                directives: []
-              })
-            }
-          }]
-        })
-      }
-    }
-  }));
-});
+jest.mock('../../server/utils/aiRouter', () => ({
+  aiCallJson: jest.fn().mockResolvedValue({
+    hookStrength: 95,
+    viralPotential: 88,
+    hookType: 'question',
+    rewrites: ['Option 1', 'Option 2'],
+    directives: []
+  })
+}));
 
 jest.mock('../../server/models/Content');
 

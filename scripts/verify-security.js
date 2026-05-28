@@ -184,7 +184,7 @@ const SECURITY_CHECKS = {
         const filePath = path.join(serverPath, file);
         if (fs.existsSync(filePath)) {
           const content = fs.readFileSync(filePath, 'utf8');
-          if (content.includes('rateLimit') || content.includes('rate-limit') || content.includes('express-rate-limit')) {
+          if (content.includes('rateLimit') || content.includes('rate-limit') || content.includes('express-rate-limit') || content.includes('apiLimiter') || content.includes('enhancedRateLimiter')) {
             return { pass: true, message: 'Rate limiting configured' };
           }
         }

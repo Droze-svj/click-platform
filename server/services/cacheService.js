@@ -1,8 +1,5 @@
-console.log('🏗️ cacheService: start requires');
 const redis = require('redis');
 const logger = require('../utils/logger');
-const { captureException } = require('../utils/sentry');
-console.log('🏗️ cacheService: requires loaded');
 
 // Lazy load cache monitoring to avoid circular dependencies
 let cacheMonitoring = null;
@@ -43,10 +40,11 @@ async function initCache() {
       url: redisUrl,
       password: process.env.REDIS_PASSWORD || undefined,
       socket: {
-        connectTimeout: 5000, // 5 second timeout
+        connectTimeout: process.env.NODE_ENV === 'test' ? 500 : 5000, // fail fast in test mode
         reconnectStrategy: (retries) => {
-          if (retries > 3) {
-            logger.warn('Redis reconnection failed after 3 retries, disabling cache');
+          const maxRetries = process.env.NODE_ENV === 'test' ? 1 : 3;
+          if (retries > maxRetries) {
+            logger.warn('Redis reconnection failed, disabling cache');
             cacheEnabled = false;
             return new Error('Redis connection failed');
           }
@@ -76,7 +74,12 @@ async function initCache() {
     await Promise.race([
       redisClient.connect(),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Redis connection timeout')), 5000)
+        setTimeout(
+          () => reject(new Error('Redis connection timeout')),
+          (process.env.NODE_ENV === 'test' || process.env.REDIS_CONNECT_TIMEOUT)
+            ? parseInt(process.env.REDIS_CONNECT_TIMEOUT || '500')
+            : 5000
+        )
       )
     ]);
 

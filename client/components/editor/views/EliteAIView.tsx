@@ -94,6 +94,26 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   const [showSwarmHUD, setShowSwarmHUD] = useState(false)
   const [swarmHUDTask, setSwarmHUDTask] = useState('')
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
+  const [spokenLanguage, setSpokenLanguage] = useState('auto')
+
+  const languages = [
+    { code: 'auto', name: 'Auto-Detect Spoken Language' },
+    { code: 'en', name: 'English (US/UK)' },
+    { code: 'es', name: 'Spanish (Español)' },
+    { code: 'fr', name: 'French (Français)' },
+    { code: 'de', name: 'German (Deutsch)' },
+    { code: 'it', name: 'Italian (Italiano)' },
+    { code: 'ja', name: 'Japanese (日本語)' },
+    { code: 'pt', name: 'Portuguese (Português)' },
+    { code: 'ar', name: 'Arabic (العربية)' },
+    { code: 'zh', name: 'Chinese (中文)' },
+    { code: 'ru', name: 'Russian (Русский)' },
+    { code: 'ko', name: 'Korean (한국어)' },
+    { code: 'hi', name: 'Hindi (हिन्दी)' },
+    { code: 'tr', name: 'Turkish (Türkçe)' },
+    { code: 'th', name: 'Thai (ไทย)' },
+    { code: 'vi', name: 'Vietnamese (Tiếng Việt)' }
+  ]
 
   const engines = [
     { id: 'gpt4', name: 'GPT-4o', maker: 'OpenAI', icon: Cpu, color: 'fuchsia' },
@@ -639,6 +659,29 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             </motion.button>
           </div>
 
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+              Spoken Video Language
+            </label>
+            <div className="relative">
+              <select
+                value={spokenLanguage}
+                title="Select spoken video language"
+                onChange={(e) => setSpokenLanguage(e.target.value)}
+                className="w-full appearance-none bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-white focus:outline-none focus:border-fuchsia-500/50 cursor-pointer transition-all"
+              >
+                {languages.map((lang) => (
+                  <option key={lang.code} value={lang.code} className="bg-[#0c0c16] text-white">
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">
+                ▼
+              </div>
+            </div>
+          </div>
+
           <motion.button
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
@@ -656,7 +699,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               try {
                 const res = await apiPost<{ success?: boolean; data?: { text: string; words: Array<{ word: string; start: number; end: number }> } }>(
                   '/video/transcribe-editor',
-                  { videoId, language: 'en' }
+                  { videoId, language: spokenLanguage }
                 )
                 const data = (res as any)?.data ?? (res as any)
                 const words = data?.words ?? []

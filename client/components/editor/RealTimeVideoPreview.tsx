@@ -248,7 +248,7 @@ export interface RealTimeVideoPreviewProps {
   trackVisibility?: Record<number, boolean>
   previewQuality?: 'draft' | 'full'
   chromaKey?: any
-  onUpdateOverlay?: (type: 'text' | 'shape' | 'image', id: string, updates: any) => void
+  onUpdateOverlay?: (type: string, id: string, updates: any) => void
   selectedOverlayId?: string | null
   onSelectOverlay?: (id: string | null) => void
   isNeuralActive?: boolean
@@ -369,6 +369,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const [latency, setLatency] = useState(0.2)
   const [magneticSnapping, setMagneticSnapping] = useState(true)
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  const [editingTextId, setEditingTextId] = useState<string | null>(null)
+  const [editingTextValue, setEditingTextValue] = useState<string>('')
   const [previewResolution, setPreviewResolution] = useState<'Full' | '1/2' | '1/4'>('Full')
   const [videoDimensions, setVideoDimensions] = useState<{ w: number; h: number } | null>(null)
   const [containerDimensions, setContainerDimensions] = useState<{ w: number; h: number } | null>(null)
@@ -421,6 +423,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   // Track container dimensions to map percentage coordinates to actual pixels
   useEffect(() => {
     if (!containerRef.current) return
+    
+    // Set initial size immediately on mount to prevent coordinate jump
+    const rect = containerRef.current.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      setContainerDimensions({
+        w: rect.width,
+        h: rect.height
+      })
+    }
+
     const resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
         if (entry.target === containerRef.current) {
@@ -599,7 +611,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
   // Determine aspect ratio from layout
   const currentLayout = TEMPLATE_LAYOUTS.find(l => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1] // Default to standard 16/9
-  const aspectStyle = currentLayout.id === 'auto' ? {} : { aspectRatio: currentLayout.aspect.replace('/', ' / ') };
+  const aspectStyle = currentLayout.id === 'auto'
+    ? {}
+    : {
+        aspectRatio: currentLayout.aspect.replace('/', ' / '),
+        width: 'auto',
+        height: 'auto',
+        maxWidth: '100%',
+        maxHeight: '100%'
+      };
 
   const animatedTransform = interpolateTransformAtTime(videoTransformKeyframes, currentTime, videoTransform as any);
 
@@ -730,6 +750,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 <Rnd
                   bounds="parent"
                   position={{ x: (text.x / 100) * (containerDimensions?.w || 800) || 0, y: (text.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  size={{
+                    width: text.width ? (text.width / 100) * (containerDimensions?.w || 800) : 'auto',
+                    height: text.height ? (text.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                  }}
                   onDragStart={() => setActiveDragId(text.id)}
                   onDrag={(e, d) => {
                     if (!magneticSnapping) return
@@ -755,10 +779,28 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                       y: snapLines.y !== undefined ? snapLines.y : rawY
                     })
                   }}
+                  onResizeStop={(e, direction, ref, delta, position) => {
+                     // Scale font size proportionally to height change
+                     const oldHeight = ref.offsetHeight - delta.height
+                     const ratio = oldHeight > 0 ? ref.offsetHeight / oldHeight : 1
+                     const newFontSize = Math.max(12, Math.round(text.fontSize * ratio))
+                     const rawX = (position.x / (containerDimensions?.w || 800)) * 100
+                     const rawY = (position.y / (containerDimensions?.h || 600)) * 100
+                     onUpdateOverlay?.('text', text.id, {
+                       fontSize: newFontSize,
+                       x: rawX,
+                       y: rawY,
+                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
+                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100
+                     })
+                  }}
                   className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
                   style={{ maxWidth: '90%' }}
-                  disableDragging={isPlaying}
-                  enableResizing={false}
+                  disableDragging={isPlaying || editingTextId === text.id}
+                  enableResizing={{
+                    topLeft: true, topRight: true, bottomLeft: true, bottomRight: true,
+                    left: false, right: false, top: false, bottom: false
+                  }}
                   onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(text.id) }}
                 >
                   {isSelected && (
@@ -769,26 +811,72 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
                     </>
                   )}
-                    <div
-                      className="whitespace-pre-wrap break-words flex flex-col justify-center text-center drop-shadow-lg max-w-[90vw]"
+                  {editingTextId === text.id ? (
+                    <textarea
+                      value={editingTextValue}
+                      title="Edit caption text inline"
+                      aria-label="Edit caption text inline"
+                      placeholder="Type caption text..."
+                      onChange={(e) => setEditingTextValue(e.target.value)}
+                      onBlur={() => {
+                        onUpdateOverlay?.('text', text.id, { text: editingTextValue })
+                        setEditingTextId(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          onUpdateOverlay?.('text', text.id, { text: editingTextValue })
+                          setEditingTextId(null)
+                        }
+                      }}
+                      className="bg-transparent border border-indigo-500 text-white outline-none resize-none p-1 text-center font-bold"
                       style={{
                         fontSize: `${text.fontSize}px`,
-                        color: text.color,
                         fontFamily: text.fontFamily,
-                        letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : 'normal',
                         lineHeight: text.lineHeight || 1.2,
-                        textShadow: text.style === 'shadow' ? `2px 2px 4px ${text.shadowColor || 'rgba(0,0,0,0.5)'}` :
-                                   text.style === 'neon' ? `0 0 10px ${text.color}, 0 0 20px ${text.color}` :
-                                   text.style === 'outline' ? `-1px -1px 0 ${text.outlineColor || '#000'}, 1px -1px 0 ${text.outlineColor || '#000'}, -1px 1px 0 ${text.outlineColor || '#000'}, 1px 1px 0 ${text.outlineColor || '#000'}` : 'none',
-                        backgroundColor: text.backgroundColor || 'transparent',
-                        padding: text.backgroundColor ? '4px 8px' : '0',
-                        borderRadius: text.backgroundColor ? '4px' : '0',
-                        transform: transform.replace('translate(-50%, -50%)', ''), // Rnd handles base positioning
-                        transformOrigin: 'center center'
+                        width: '100%',
+                        minWidth: '120px',
+                        background: 'rgba(0,0,0,0.5)',
+                        borderRadius: '4px',
+                        color: text.color,
                       }}
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      className={
+                        text.motionGraphic && text.motionGraphic !== 'none'
+                          ? `motion-graphic-${text.motionGraphic} w-full h-full flex items-center justify-center`
+                          : 'w-full h-full flex items-center justify-center'
+                      }
                     >
-                      {text.text}
+                      <div
+                        onDoubleClick={(e) => {
+                          e.stopPropagation()
+                          setEditingTextId(text.id)
+                          setEditingTextValue(text.text)
+                        }}
+                        className="whitespace-pre-wrap break-words flex flex-col justify-center text-center drop-shadow-lg max-w-[90vw]"
+                        style={{
+                          fontSize: `${text.fontSize}px`,
+                          color: text.color,
+                          fontFamily: text.fontFamily,
+                          letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : 'normal',
+                          lineHeight: text.lineHeight || 1.2,
+                          textShadow: text.style === 'shadow' ? `2px 2px 4px ${text.shadowColor || 'rgba(0,0,0,0.5)'}` :
+                                     text.style === 'neon' ? `0 0 10px ${text.color}, 0 0 20px ${text.color}` :
+                                     text.style === 'outline' ? `-1px -1px 0 ${text.outlineColor || '#000'}, 1px -1px 0 ${text.outlineColor || '#000'}, -1px 1px 0 ${text.outlineColor || '#000'}, 1px 1px 0 ${text.outlineColor || '#000'}` : 'none',
+                          backgroundColor: text.backgroundColor || 'transparent',
+                          padding: text.backgroundColor ? '4px 8px' : '0',
+                          borderRadius: text.backgroundColor ? '4px' : '0',
+                          transform: transform.replace('translate(-50%, -50%)', ''), // Rnd handles base positioning
+                          transformOrigin: 'center center'
+                        }}
+                      >
+                        {text.text}
+                      </div>
                     </div>
+                  )}
                 </Rnd>
               </div>
             )
@@ -873,14 +961,17 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               >
                 <Rnd
                   bounds="parent"
-                  position={{ x: (img.x / 100) * (videoDimensions?.w || 800) || 0, y: (img.y / 100) * (videoDimensions?.h || 600) || 0 }}
-                  size={{ width: `${img.width}%`, height: `${img.height}%` }}
+                  position={{ x: (img.x / 100) * (containerDimensions?.w || 800) || 0, y: (img.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  size={{
+                    width: img.width ? (img.width / 100) * (containerDimensions?.w || 800) : 'auto',
+                    height: img.height ? (img.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                  }}
                   onDragStart={() => setActiveDragId(img.id)}
                   onDrag={(e, d) => {
                     if (!magneticSnapping) return
                     const snapDist = 3
-                    const pX = (d.x / (videoDimensions?.w || 800)) * 100
-                    const pY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const pX = (d.x / (containerDimensions?.w || 800)) * 100
+                    const pY = (d.y / (containerDimensions?.h || 600)) * 100
                     const newSnap: {x?: number, y?: number} = {}
                     const snapPoints = [0, 25, 50, 75, 100]
                     for (const pt of snapPoints) {
@@ -892,8 +983,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   onDragStop={(e, d) => {
                     setActiveDragId(null)
                     setSnapLines({})
-                    const rawX = (d.x / (videoDimensions?.w || 800)) * 100
-                    const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
+                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
                     onUpdateOverlay?.('image', img.id, {
                       x: snapLines.x !== undefined ? snapLines.x : rawX,
                       y: snapLines.y !== undefined ? snapLines.y : rawY
@@ -901,10 +992,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                      onUpdateOverlay?.('image', img.id, {
-                       width: parseFloat(ref.style.width),
-                       height: parseFloat(ref.style.height),
-                       x: (position.x / (videoDimensions?.w || 800)) * 100,
-                       y: (position.y / (videoDimensions?.h || 600)) * 100
+                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
+                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100,
+                       x: (position.x / (containerDimensions?.w || 800)) * 100,
+                       y: (position.y / (containerDimensions?.h || 600)) * 100
                      })
                   }}
                   className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
@@ -948,14 +1039,17 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               >
                 <Rnd
                   bounds="parent"
-                  position={{ x: (shape.x / 100) * (videoDimensions?.w || 800) || 0, y: (shape.y / 100) * (videoDimensions?.h || 600) || 0 }}
-                  size={{ width: `${shape.width}%`, height: `${shape.height}%` }}
+                  position={{ x: (shape.x / 100) * (containerDimensions?.w || 800) || 0, y: (shape.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  size={{
+                    width: shape.width ? (shape.width / 100) * (containerDimensions?.w || 800) : 'auto',
+                    height: shape.height ? (shape.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                  }}
                   onDragStart={() => setActiveDragId(shape.id)}
                   onDrag={(e, d) => {
                     if (!magneticSnapping) return
                     const snapDist = 3
-                    const pX = (d.x / (videoDimensions?.w || 800)) * 100
-                    const pY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const pX = (d.x / (containerDimensions?.w || 800)) * 100
+                    const pY = (d.y / (containerDimensions?.h || 600)) * 100
                     const newSnap: {x?: number, y?: number} = {}
                     const snapPoints = [0, 25, 50, 75, 100]
                     for (const pt of snapPoints) {
@@ -967,8 +1061,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   onDragStop={(e, d) => {
                     setActiveDragId(null)
                     setSnapLines({})
-                    const rawX = (d.x / (videoDimensions?.w || 800)) * 100
-                    const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
+                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
                     onUpdateOverlay?.('shape', shape.id, {
                       x: snapLines.x !== undefined ? snapLines.x : rawX,
                       y: snapLines.y !== undefined ? snapLines.y : rawY
@@ -976,10 +1070,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                      onUpdateOverlay?.('shape', shape.id, {
-                       width: parseFloat(ref.style.width),
-                       height: parseFloat(ref.style.height),
-                       x: (position.x / (videoDimensions?.w || 800)) * 100,
-                       y: (position.y / (videoDimensions?.h || 600)) * 100
+                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
+                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100,
+                       x: (position.x / (containerDimensions?.w || 800)) * 100,
+                       y: (position.y / (containerDimensions?.h || 600)) * 100
                      })
                   }}
                   className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
@@ -1009,6 +1103,128 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               </div>
             )
           })}
+
+          {/* SVG Overlays */}
+          {svgOverlays.map((svg) => {
+            const isActive = currentTime >= svg.startTime && currentTime <= svg.endTime
+            if (!isActive) return null
+            const isSelected = selectedOverlayId === svg.id
+
+            return (
+              <div
+                key={svg.id}
+                className="absolute top-0 left-0 w-full h-full"
+                style={{ opacity: svg.opacity, zIndex: 10 + (svg.layer || 0) }}
+              >
+                <Rnd
+                  bounds="parent"
+                  position={{ x: (svg.x / 100) * (containerDimensions?.w || 800) || 0, y: (svg.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  size={{
+                    width: svg.width ? (svg.width / 100) * (containerDimensions?.w || 800) : 'auto',
+                    height: svg.height ? (svg.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                  }}
+                  onDragStart={() => setActiveDragId(svg.id)}
+                  onDragStop={(e, d) => {
+                    setActiveDragId(null)
+                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
+                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
+                    onUpdateOverlay?.('svg', svg.id, { x: rawX, y: rawY })
+                  }}
+                  onResizeStop={(e, direction, ref, delta, position) => {
+                     onUpdateOverlay?.('svg', svg.id, {
+                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
+                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100,
+                       x: (position.x / (containerDimensions?.w || 800)) * 100,
+                       y: (position.y / (containerDimensions?.h || 600)) * 100
+                     })
+                  }}
+                  className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
+                  disableDragging={isPlaying}
+                  onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(svg.id) }}
+                >
+                  {isSelected && (
+                    <>
+                      <div className="absolute top-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute top-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                    </>
+                  )}
+                  {svg.url && svg.url.startsWith('<svg') ? (
+                    <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: svg.url }} />
+                  ) : (
+                    <img
+                      src={svg.url}
+                      alt="SVG Layer"
+                      className="w-full h-full object-contain pointer-events-none"
+                    />
+                  )}
+                </Rnd>
+              </div>
+            )
+          })}
+
+          {/* Gradient Overlays */}
+          {(() => {
+            const getGradientCss = (direction: string, stops: [string, string]) => {
+              const dirMap: Record<string, string> = {
+                'top-to-bottom': 'to bottom',
+                'bottom-to-top': 'to top',
+                'left-to-right': 'to right',
+                'right-to-left': 'to left',
+                'radial': 'circle'
+              }
+              const dir = dirMap[direction] || 'to bottom'
+              if (dir === 'circle') {
+                return `radial-gradient(circle, ${stops[0]}, ${stops[1]})`
+              }
+              return `linear-gradient(${dir}, ${stops[0]}, ${stops[1]})`
+            }
+
+            return gradientOverlays.map((grad) => {
+              const isActive = currentTime >= grad.startTime && currentTime <= grad.endTime
+              if (!isActive) return null
+              const isSelected = selectedOverlayId === grad.id
+
+              // Determine region layout coordinates
+              const width = 100
+              const height = grad.region === 'lower-third' ? 33 : grad.region === 'top-bar' ? 20 : grad.region === 'top-half' || grad.region === 'bottom-half' ? 50 : 100
+              const x = 0
+              const y = grad.region === 'bottom-half' ? 50 : grad.region === 'lower-third' ? 67 : 0
+
+              return (
+                <div
+                  key={grad.id}
+                  className="absolute top-0 left-0 w-full h-full"
+                  style={{ opacity: grad.opacity, zIndex: 10 + (grad.layer || 0) }}
+                >
+                  <Rnd
+                    bounds="parent"
+                    position={{ x: (x / 100) * (containerDimensions?.w || 800) || 0, y: (y / 100) * (containerDimensions?.h || 600) || 0 }}
+                    size={{ width: `${width}%`, height: `${height}%` }}
+                    className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
+                    disableDragging={isPlaying}
+                    onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(grad.id) }}
+                  >
+                    {isSelected && (
+                      <>
+                        <div className="absolute top-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                      </>
+                    )}
+                    <div
+                      className="w-full h-full"
+                      style={{
+                        background: getGradientCss(grad.direction, grad.colorStops),
+                      }}
+                    />
+                  </Rnd>
+                </div>
+              )
+            })
+          })()}
         </div>
 
         {/* HUD Elements */}

@@ -18,7 +18,7 @@ function emitProcessingProgress(userId, jobId, progress, message = null) {
   try {
     const io = getSocketService();
     if (io) {
-      io.to(`user:${userId}`).emit('processing:progress', {
+      io.to(`user-${userId}`).emit('processing:progress', {
         jobId,
         progress,
         message,
@@ -41,7 +41,7 @@ function emitProcessingComplete(userId, jobId, result) {
   try {
     const io = getSocketService();
     if (io) {
-      io.to(`user:${userId}`).emit('processing:complete', {
+      io.to(`user-${userId}`).emit('processing:complete', {
         jobId,
         result,
         timestamp: new Date().toISOString(),
@@ -63,7 +63,7 @@ function emitProcessingFailed(userId, jobId, error) {
   try {
     const io = getSocketService();
     if (io) {
-      io.to(`user:${userId}`).emit('processing:failed', {
+      io.to(`user-${userId}`).emit('processing:failed', {
         jobId,
         error: error.message || error,
         timestamp: new Date().toISOString(),
@@ -85,7 +85,7 @@ function emitUploadProgress(userId, uploadId, progress, bytesUploaded, totalByte
   try {
     const io = getSocketService();
     if (io) {
-      io.to(`user:${userId}`).emit('upload:progress', {
+      io.to(`user-${userId}`).emit('upload:progress', {
         uploadId,
         progress,
         bytesUploaded,
@@ -109,7 +109,7 @@ function emitNotification(userId, notification) {
   try {
     const io = getSocketService();
     if (io) {
-      io.to(`user:${userId}`).emit('notification', {
+      io.to(`user-${userId}`).emit('notification', {
         ...notification,
         timestamp: new Date().toISOString(),
       });

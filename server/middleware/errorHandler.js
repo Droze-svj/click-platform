@@ -57,15 +57,23 @@ const errorHandler = (err, req, res, next) => {
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map(e => ({
-      field: e.path,
-      message: e.message
-    }));
-    return res.status(400).json({
-      success: false,
-      error: 'Validation Error',
-      details: errors
-    });
+    if (err.errors) {
+      const errors = Object.values(err.errors).map(e => ({
+        field: e.path,
+        message: e.message
+      }));
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        details: errors
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: err.message || 'Validation Error',
+        details: err.fields || []
+      });
+    }
   }
 
   // Mongoose duplicate key error

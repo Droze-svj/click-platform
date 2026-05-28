@@ -12,17 +12,23 @@ const setupTestServer = require('./test-server-setup');
 const User = require('../../server/models/User');
 const Content = require('../../server/models/Content');
 
+const app = setupTestServer();
+
 describe('AI Features Integration Tests', () => {
   let authToken;
   let testUser;
   let testContent;
 
   beforeAll(async () => {
+    const { initDatabases } = require('../../server/config/database');
+    await initDatabases();
+    
     // Create test user
     testUser = new User({
       name: 'Test User',
       email: 'test-ai@example.com',
-      password: 'hashedpassword',
+      password: "hashedpassword",
+      emailVerified: true,
       subscription: { status: 'active', plan: 'pro' },
     });
     await testUser.save();
@@ -33,7 +39,7 @@ describe('AI Features Integration Tests', () => {
       title: 'Test Content',
       body: 'This is test content for AI recommendations',
       type: 'article',
-      status: 'published',
+      status: "completed",
       platform: 'instagram',
       views: 100,
       likes: 20,
@@ -41,13 +47,15 @@ describe('AI Features Integration Tests', () => {
     await testContent.save();
 
     // Use test token (mock auth middleware handles this)
-    authToken = 'test-token';
+    const jwt = require('jsonwebtoken');
+    const { getJwtSecret } = require('../../server/utils/jwtSecret');
+    authToken = jwt.sign({ userId: testUser._id.toString() }, getJwtSecret(), { expiresIn: '1h' });
   });
 
   afterAll(async () => {
     await Content.deleteMany({ userId: testUser._id });
     await User.deleteMany({ email: 'test-ai@example.com' });
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 
   describe('Multi-Model AI', () => {
@@ -89,14 +97,10 @@ describe('AI Features Integration Tests', () => {
           options: { temperature: 0.7 },
         });
 
-      // May fail if OpenAI API key not configured - that's okay
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('content');
-        expect(response.body.data).toHaveProperty('model');
-      } else {
-        expect(response.status).toBe(500);
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('content');
+      expect(response.body.data).toHaveProperty('model');
     });
 
     test('POST /api/ai/multi-model/compare - Should compare model outputs', async () => {
@@ -110,12 +114,10 @@ describe('AI Features Integration Tests', () => {
           models: ['gpt-4', 'gpt-3.5-turbo'],
         });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('outputs');
-        expect(response.body.data).toHaveProperty('bestModel');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('outputs');
+      expect(response.body.data).toHaveProperty('bestModel');
     });
   });
 
@@ -127,13 +129,11 @@ describe('AI Features Integration Tests', () => {
         .set('x-test-user-id', testUser._id.toString())
         .query({ limit: 5 });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('recommendations');
-        expect(response.body.data).toHaveProperty('preferences');
-        expect(Array.isArray(response.body.data.recommendations)).toBe(true);
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('recommendations');
+      expect(response.body.data).toHaveProperty('preferences');
+      expect(Array.isArray(response.body.data.recommendations)).toBe(true);
     });
 
     test('POST /api/ai/recommendations/learn - Should learn from user behavior', async () => {
@@ -159,12 +159,10 @@ describe('AI Features Integration Tests', () => {
         .set('x-test-user-id', testUser._id.toString())
         .query({ platform: 'instagram' });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('suggestions');
-        expect(response.body.data).toHaveProperty('trends');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('suggestions');
+      expect(response.body.data).toHaveProperty('trends');
     });
   });
 
@@ -184,13 +182,11 @@ describe('AI Features Integration Tests', () => {
           },
         });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('performanceScore');
-        expect(response.body.data).toHaveProperty('expectedViews');
-        expect(response.body.data).toHaveProperty('expectedEngagementRate');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('performanceScore');
+      expect(response.body.data).toHaveProperty('expectedViews');
+      expect(response.body.data).toHaveProperty('expectedEngagementRate');
     });
 
     test('POST /api/ai/predictive/posting-time - Should predict optimal posting time', async () => {
@@ -205,9 +201,9 @@ describe('AI Features Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('optimalTimes');
-      expect(response.body.data).toHaveProperty('confidence');
-      expect(Array.isArray(response.body.data.optimalTimes)).toBe(true);
+      expect(response.body.data).toHaveProperty('recommendedTimes');
+      expect(response.body.data).toHaveProperty('bestTime');
+      expect(Array.isArray(response.body.data.recommendedTimes)).toBe(true);
     });
 
     test('GET /api/ai/predictive/trends - Should forecast content trends', async () => {
@@ -217,12 +213,10 @@ describe('AI Features Integration Tests', () => {
         .set('x-test-user-id', testUser._id.toString())
         .query({ platform: 'instagram', days: 30 });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('emergingTrends');
-        expect(response.body.data).toHaveProperty('decliningTrends');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('trends');
+      expect(Array.isArray(response.body.data.trends)).toBe(true);
     });
   });
 
@@ -242,12 +236,10 @@ describe('AI Features Integration Tests', () => {
           },
         });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('content');
-        expect(response.body.data).toHaveProperty('metadata');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('content');
+      expect(response.body.data).toHaveProperty('metadata');
     });
 
     test('POST /api/ai/content-generation/variations - Should generate content variations', async () => {
@@ -260,12 +252,10 @@ describe('AI Features Integration Tests', () => {
           count: 3,
         });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(Array.isArray(response.body.data)).toBe(true);
-        expect(response.body.data.length).toBeGreaterThan(0);
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBeGreaterThan(0);
     });
 
     test('POST /api/ai/content-generation/template - Should generate from template', async () => {
@@ -279,11 +269,69 @@ describe('AI Features Integration Tests', () => {
           options: { style: 'professional' },
         });
 
-      // May fail if OpenAI API key not configured
-      if (response.status === 200) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.data).toHaveProperty('sections');
-      }
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('sections');
+    });
+  });
+
+  describe('Stock Assets & Advanced Multi-Modal Sourcing', () => {
+    test('GET /api/assets/stock?type=broll - Should return B-roll assets', async () => {
+      const response = await request(app)
+        .get('/api/assets/stock')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('x-test-user-id', testUser._id.toString())
+        .query({ type: 'broll', page: 1, limit: 5 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('items');
+      expect(Array.isArray(response.body.data.items)).toBe(true);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+    });
+
+    test('GET /api/assets/stock?type=music - Should return stock music assets', async () => {
+      const response = await request(app)
+        .get('/api/assets/stock')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('x-test-user-id', testUser._id.toString())
+        .query({ type: 'music', page: 1, limit: 5 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('items');
+      expect(Array.isArray(response.body.data.items)).toBe(true);
+    });
+
+    test('GET /api/assets/stock?type=gifs - Should return GIF assets', async () => {
+      const response = await request(app)
+        .get('/api/assets/stock')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('x-test-user-id', testUser._id.toString())
+        .query({ type: 'gifs', page: 1, limit: 5 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('items');
+      expect(Array.isArray(response.body.data.items)).toBe(true);
+    });
+
+    test('POST /api/ai/advanced/multi-modal - Should generate text and image (with seed fallback)', async () => {
+      const response = await request(app)
+        .post('/api/ai/advanced/multi-modal')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('x-test-user-id', testUser._id.toString())
+        .send({
+          prompt: 'A futuristic tech office with clean coding workstations',
+          mediaTypes: ['text', 'image']
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('text');
+      expect(response.body.data).toHaveProperty('image');
+      expect(typeof response.body.data.image).toBe('string');
+      expect(response.body.data.image.startsWith('http')).toBe(true);
     });
   });
 });

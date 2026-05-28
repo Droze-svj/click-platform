@@ -15,11 +15,14 @@
 const aiRouter = require('../utils/aiRouter');
 const logger = require('../utils/logger');
 const creatorDnaService = require('./creatorDnaService');
+const { getClickPersonalityRules } = require('./marketingKnowledge');
 
-const HOOK_PROMPT = ({ topic, niche, platform, dna }) => `
+const HOOK_PROMPT = ({ topic, niche, platform, dna, userId }) => `
 You are a viral-video hook strategist. Produce 5 distinct video-opening hooks
 for this clip. Each hook must be at most 15 words, suitable as the very first
 line a creator says or shows on screen.
+
+${getClickPersonalityRules(userId || dna?.userId)}
 
 Topic: ${topic || 'unspecified'}
 Niche: ${niche || 'general'}
@@ -99,7 +102,7 @@ async function runOnce(prompt, opts) {
  */
 async function generateHooks({ userId, topic, niche, platform, topK = 4 }) {
   const dna = userId ? await creatorDnaService.getCreatorDNA(userId) : null
-  const prompt = HOOK_PROMPT({ topic, niche, platform, dna })
+  const prompt = HOOK_PROMPT({ topic, niche, platform, dna, userId })
 
   // Fan out — each provider runs independently. Failures are absorbed by
   // runOnce so we never block on a single dead provider.

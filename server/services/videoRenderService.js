@@ -22,9 +22,9 @@ function buildVideoFilterChain(filters) {
   const filters_out = []
 
   const eqParts = []
-  if (brightness !== 0) eqParts.push(`brightness=${brightness}`)
   if (contrast !== 1) eqParts.push(`contrast=${contrast}`)
   if (saturation !== 1) eqParts.push(`saturation=${saturation}`)
+  if (brightness !== 0) eqParts.push(`brightness=${brightness}`)
   if (eqParts.length > 0) {
     filters_out.push(`eq=${eqParts.join(':')}`)
   }
@@ -94,16 +94,57 @@ const CAPTION_STYLE_MAP = {
 };
 
 /**
+ * Resolves a valid TTF/OTF font file on the server's filesystem
+ * to avoid FFmpeg drawtext crashes when Sans/Arial defaults are missing.
+ */
+function getSystemFontPath() {
+  const possiblePaths = [
+    // macOS Supplemental Fonts
+    '/System/Library/Fonts/Supplemental/Arial.ttf',
+    '/System/Library/Fonts/Supplemental/Helvetica.ttf',
+    '/System/Library/Fonts/Supplemental/Verdana.ttf',
+    '/System/Library/Fonts/Supplemental/Georgia.ttf',
+    '/System/Library/Fonts/Supplemental/Impact.ttf',
+    // macOS Core Fonts
+    '/System/Library/Fonts/Helvetica.dfont',
+    '/System/Library/Fonts/Arial.ttf',
+    '/Library/Fonts/Arial.ttf',
+    '/Library/Fonts/Microsoft/Arial.ttf',
+    // Linux truetype Fonts
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+    '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf',
+    '/usr/share/fonts/truetype/msttcorefonts/arial.ttf',
+    // Windows Fonts
+    'C:\\Windows\\Fonts\\arial.ttf'
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return null;
+}
+
+/**
  * Safely escape text for FFmpeg drawtext filter.
- * Uses Unicode apostrophe (U+2019) instead of backslash hacks.
+ * Escapes characters like commas, semicolons, backticks, and brackets to prevent filtergraph breakups.
  */
 function escapeFfmpegText(text) {
   return String(text || '')
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "’")
-    .replace(/:/g, '\\:')
-    .replace(/%/g, '\\%')
-    .substring(0, 80)           // hard-cap length to prevent filter overflow
+    .replace(/[\r\n]+/g, ' ')          // newlines → space
+    .replace(/\\/g, '\\\\')             // backslash first (everything below adds backslashes)
+    .replace(/'/g, "’")               // single quote -> typographic quote
+    .replace(/`/g, '\\`')               // backtick (command injection guard)
+    .replace(/;/g, '\\;')               // semicolon (filter-graph separator guard)
+    .replace(/,/g, '\\,')               // comma (drawtext arg separator guard)
+    .replace(/\[/g, '\\[')              // brackets (filter-link labels guard)
+    .replace(/\]/g, '\\]')
+    .replace(/:/g, '\\:')               // colon (filter option separator guard)
+    .replace(/%/g, '\\%')               // percent (drawtext format spec guard)
+    .substring(0, 80)                   // hard-cap length to prevent filter overflow
 }
 
 /**
@@ -128,11 +169,11 @@ function buildDrawTextFilter(overlay) {
 
   // Positioning: support explicit x/y (percentage-based from editor) or style defaults
   const x = overlay.x !== undefined
-    ? `(w-text_w)*${(overlay.x ?? 50) / 100}`
+    ? `(w-text_w)*${(Number(overlay.x) ?? 50) / 100}`
     : '(w-text_w)/2'
 
   const y = overlay.y !== undefined
-    ? `(h-text_h)*${(overlay.y ?? 50) / 100}`
+    ? `(h-text_h)*${(Number(overlay.y) ?? 50) / 100}`
     : sty.y
 
   // Dynamic font size: scale based on text length for maximum punch
@@ -151,22 +192,25 @@ function buildDrawTextFilter(overlay) {
     finalY = `(${y})-15*sin(2*PI*t/0.4)`
   }
 
-  return `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t,${start},${end})'`
+  const fontPath = getSystemFontPath()
+  const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : ''
+
+  return `drawtext=text='${safeText}'${fontfileOpt}:fontsize=${fontSize}:fontcolor='${fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
 }
 
 /**
  * Build drawbox filter for a shape overlay
  */
 function buildDrawBoxFilter(shape) {
-  const start = shape.startTime ?? 0
-  const end = shape.endTime ?? 5
-  const enable = `between(t,${start},${end})`
-  const x = `(w*${(shape.x ?? 50) / 100})-(w*${(shape.width ?? 20) / 100})/2`
-  const y = `(h*${(shape.y ?? 50) / 100})-(h*${(shape.height ?? 20) / 100})/2`
-  const w = `w*${(shape.width ?? 20) / 100}`
-  const h = shape.kind === 'line' ? (shape.strokeWidth ?? 2) : `h*${(shape.height ?? 20) / 100}`
-  const color = (shape.color || '#ffffff').replace('#', '0x')
-  const alpha = shape.opacity ?? 0.5
+  const start = Number(shape.startTime ?? shape.start ?? 0)
+  const end = Number(shape.endTime ?? shape.end ?? 5)
+  const enable = `between(t\\,${start.toFixed(3)}\\,${end.toFixed(3)})`
+  const x = shape.x !== undefined ? `(w*${Number(shape.x) / 100})-(w*${(Number(shape.width) || 20) / 100})/2` : '(w-w*0.2)/2'
+  const y = shape.y !== undefined ? `(h*${Number(shape.y) / 100})-(h*${(Number(shape.height) || 20) / 100})/2` : '(h-h*0.2)/2'
+  const w = `w*${(Number(shape.width) || 20) / 100}`
+  const h = shape.kind === 'line' ? (Number(shape.strokeWidth) || 2) : `h*${(Number(shape.height) || 20) / 100}`
+  const color = String(shape.color || '#ffffff').replace('#', '0x')
+  const alpha = Number(shape.opacity ?? 0.5)
   return `drawbox=x='${x}':y='${y}':w='${w}':h='${h}':color=${color}@${alpha}:t=fill:enable='${enable}'`
 }
 
@@ -260,14 +304,28 @@ async function renderFromEditorState(options) {
     }
   })    
   
-  // Unconditionally inject 2026 Luma-Cinematic Color Grade for all manual renders
-  // This guarantees the video never looks 'basic' or flat.
-  let cinematicEQ = '1.15';
-  let brightnessEQ = '0.02';
+  // 🌿 2026 Comfort-Aesthetic Settings (Prevents sensory overstimulation by default for Manual Edits)
+  // By default, manual edits are designed to be clean, stable, and highly organized.
+  // The user can opt-in to auto-injected cinematic shakes/glitches by passing `comfortMode: false`.
+  const comfortMode = exportOptions.comfortMode !== false && videoFilters.comfortMode !== false;
 
-  // Auto-generate Flash Cuts and Camera Shakes based on Manual Text Overlays
-  // When a user adds a text overlay, it usually indicates a hook or punchline.
-  // We use these timestamps to trigger cinematic impacts.
+  let cinematicEQ = '1.0';
+  let brightnessEQ = '0.0';
+  let saturationVal = '1.0';
+
+  if (!comfortMode) {
+    // Cinematic high-contrast mode only if requested
+    cinematicEQ = '1.15';
+    brightnessEQ = '0.02';
+    saturationVal = '1.25';
+  } else {
+    // Standard clean, balanced natural color grading for comfort
+    cinematicEQ = '1.02';
+    brightnessEQ = '0.0';
+    saturationVal = '1.05';
+  }
+
+  // Flash Cuts and Camera Shakes based on Manual Text Overlays
   let shakeX = '0';
   let shakeY = '0';
   let glitchEnable = '';
@@ -276,9 +334,6 @@ async function renderFromEditorState(options) {
   (textOverlays || []).forEach(o => {
     const s = Number(o.startTime ?? 0);
     if (isNaN(s)) return;
-    const eFlash = s + 0.15; // 150ms flash
-    cinematicEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),1.8,${cinematicEQ})`;
-    brightnessEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),0.3,${brightnessEQ})`;
 
     // Check if the word implies a 'Secret' or 'Hack' for the Telephone EQ
     const rawText = (o.text || '').toUpperCase();
@@ -286,41 +341,54 @@ async function renderFromEditorState(options) {
       telephoneEQ += (telephoneEQ ? '+' : '') + `between(t,${s.toFixed(2)},${(s+2).toFixed(2)})`;
     }
 
-    // Only shake & glitch on high-impact styles
-    if (o.style === 'hook' || o.style === 'punchline' || o.type === 'hook') {
-      const eShake = s + 0.4; // 400ms shake
-      const jitterX = `(random(1)*40-20)`;
-      const jitterY = `(random(1)*40-20)`;
-      shakeX = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterX},${shakeX})`;
-      shakeY = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterY},${shakeY})`;
+    if (!comfortMode) {
+      const eFlash = s + 0.15; // 150ms flash
+      cinematicEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),1.8,${cinematicEQ})`;
+      brightnessEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),0.3,${brightnessEQ})`;
 
-      if (o.style === 'punchline') {
-        glitchEnable += (glitchEnable ? '+' : '') + `between(t,${s.toFixed(2)},${(s+0.2).toFixed(2)})`;
+      // Only shake & glitch on high-impact styles
+      if (o.style === 'hook' || o.style === 'punchline' || o.type === 'hook') {
+        const eShake = s + 0.4; // 400ms shake
+        const jitterX = `(random(1)*40-20)`;
+        const jitterY = `(random(1)*40-20)`;
+        shakeX = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterX},${shakeX})`;
+        shakeY = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterY},${shakeY})`;
+
+        if (o.style === 'punchline') {
+          glitchEnable += (glitchEnable ? '+' : '') + `between(t,${s.toFixed(2)},${(s+0.2).toFixed(2)})`;
+        }
       }
     }
   });
 
-  videoFilters_ff.push(`eq=contrast='${cinematicEQ}':brightness='${brightnessEQ}':saturation=1.25`);
+  videoFilters_ff.push(`eq=contrast='${cinematicEQ}':brightness='${brightnessEQ}':saturation=${saturationVal}`);
 
-  if (glitchEnable) {
+  if (glitchEnable && !comfortMode) {
     videoFilters_ff.push(`noise=alls=100:allf=t+u:enable='${glitchEnable}',rgbashift=rh=15:bv=-15:enable='${glitchEnable}'`);
   }
 
-  // Inject 2026 Chromatic Aberration as a baseline 'depth' layer
-  videoFilters_ff.push('rgbashift=rh=1:bv=-1');
+  if (!comfortMode) {
+    // Inject 2026 Chromatic Aberration as a baseline 'depth' layer only if comfortMode is off
+    videoFilters_ff.push('rgbashift=rh=1:bv=-1');
+  }
 
   // Inject Dynamic Cameraman Drift & Shake if video is vertical
   if (height > width) {
-    // Uses non-repeating Lissajous curves to perfectly simulate a human cameraman.
-    videoFilters_ff.push(`scale=1150:2044:force_original_aspect_ratio=increase,crop=1080:1920:x='(iw-1080)/2+25*sin(t/3.14)+10*sin(t/5.2)+${shakeX}':y='(ih-1920)/2+15*cos(t/2.71)+8*cos(t/4.5)+${shakeY}'`);
+    if (comfortMode) {
+      // 🌿 Steady, smooth, perfectly centered professional crop (No motion sickness, no drift)
+      videoFilters_ff.push('scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920');
+    } else {
+      // Uses non-repeating Lissajous curves to perfectly simulate a human cameraman.
+      videoFilters_ff.push(`scale=1150:2044:force_original_aspect_ratio=increase,crop=1080:1920:x='(iw-1080)/2+25*sin(t/3.14)+10*sin(t/5.2)+${shakeX}':y='(ih-1920)/2+15*cos(t/2.71)+8*cos(t/4.5)+${shakeY}'`);
+    }
   }
 
-  // Inject OpusClip style Progress Bar (Neon Cyan)
-  // Using FFmpeg's built-in 'T' variable (or determining length from metadata if possible)
-  // A generic fallback is to use 'iw*(t/100)' but it's better to fetch duration if available.
-  // Since we have the input metadata before this point ideally, let's use a safe fallback.
-  const estimatedDuration = exportOptions.duration || 60;
-  overlayFilters.push(`drawbox=x=0:y=h-15:w='iw*(t/${estimatedDuration})':h=15:color=#00FFFF@0.9:t=fill`);
+  // Inject Progress Bar if explicitly requested, or if not in comfort mode
+  const enableProgressBar = exportOptions.progressBar === true || videoFilters.progressBar === true || (!comfortMode);
+  if (enableProgressBar) {
+    const estimatedDuration = exportOptions.duration || 60;
+    overlayFilters.push(`drawbox=x=0:y=h-15:w='iw*(t/${estimatedDuration})':h=15:color=#00FFFF@0.9:t=fill`);
+  }
 
   const allVideoFilters = [...videoFilters_ff, ...lutFilters, ...overlayFilters]
   const firstMusic = timelineSegments.find(s => s.type === 'audio' && s.sourceUrl)
@@ -333,11 +401,13 @@ async function renderFromEditorState(options) {
   return new Promise(async (resolve, reject) => {
     // 🛸 Phase 14: Neural Enhancement Scan
     let enhancementFilters = []
+    let hasAudio = false
     try {
       const metadata = await new Promise((res, rej) => {
         ffmpeg.ffprobe(inputPath, (err, data) => err ? rej(err) : res(data))
       })
       enhancementFilters = videoEnhancer.getEnhancementFilters(metadata)
+      hasAudio = Array.isArray(metadata.streams) && metadata.streams.some(s => s.codec_type === 'audio')
     } catch (err) {
       logger.warn('Quality scan failed, proceeding with baseline', { error: err.message })
     }
@@ -358,7 +428,12 @@ async function renderFromEditorState(options) {
 
     // 🎬 Phase 16: Cinematic Film Grain (2026 Hollywood Standard)
     // Automatically injects a subtle dynamic noise overlay to remove the 'digital/cheap' look
-    finalFilterList.push('noise=alls=8:allf=t+u');
+    if (!comfortMode) {
+      finalFilterList.push('noise=alls=8:allf=t+u');
+    } else {
+      // Subtle organic dither to avoid compression banding but remain comfortable
+      finalFilterList.push('noise=alls=2:allf=t+u');
+    }
 
     // 💰 Phase 17: Autonomous Commerce Inlays
     if (exportOptions.monetizationPlan && exportOptions.monetizationPlan.triggers) {
@@ -397,31 +472,46 @@ async function renderFromEditorState(options) {
     const finalFilterStr = finalFilterList.length > 0 ? finalFilterList.join(',') : null;
 
     if (hasMusic) {
-      // 2026 Autonomy: Always-On Intelligent Auto-Ducking
-      // Uses sidechain compression to automatically carve out frequencies for the voice
+      const musicVolume = firstMusic?.properties?.volume ?? 0.5
       const duckLevel = exportOptions.duckLevel ?? -12
-      
       const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
       const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[vout]`
-      
       const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
-      // Force autonomous sidechain compression so user never has to mix audio manually
-      let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`
-      
-      const complexStr = `${vidPart};${audPart}`
-      command = command
-        .complexFilter(complexStr)
-        .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+      if (hasAudio) {
+        // Source has audio + background music added -> map both with sidechain compression
+        let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`
+        const complexStr = `${vidPart};${audPart}`
+        command = command
+          .complexFilter(complexStr)
+          .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+      } else {
+        // Silent source + background music added -> map only music track directly (skip sidechain amix)
+        let audPart = `[1:a]volume=${musicVolume},${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`
+        const complexStr = `${vidPart};${audPart}`
+        command = command
+          .complexFilter(complexStr)
+          .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+      }
     } else {
       const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
-      if (finalFilterStr) {
-        // Apply loudnorm directly as an audio filter
-        command = command.complexFilter(`[0:v]${finalFilterStr}[vout];[0:a]${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`)
-          .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+      if (hasAudio) {
+        if (finalFilterStr) {
+          // Source has audio, no music, with video filters -> map with complex filter
+          command = command.complexFilter(`[0:v]${finalFilterStr}[vout];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`)
+            .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+        } else {
+          // Source has audio, no music, no video filters -> apply audioFilters directly
+          command = command.audioFilters(`highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11`)
+        }
       } else {
-        command = command.audioFilters(`${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11`)
+        // Source is completely silent and no background music added -> render as video only
+        if (finalFilterStr) {
+          command = command.complexFilter(`[0:v]${finalFilterStr}[vout]`)
+            .outputOptions(['-map', '[vout]'])
+        }
+        command = command.noAudio()
       }
     }
 
@@ -433,9 +523,14 @@ async function renderFromEditorState(options) {
       .size(`${width}x${height}`)
       .videoCodec(codec)
       .outputOptions(videoOutputOptions)
-      .audioCodec('aac')
-      .outputOptions(['-b:a', audioBitrate])
-      .output(outputPath)
+
+    if (hasAudio || hasMusic) {
+      commandChain
+        .audioCodec('aac')
+        .outputOptions(['-b:a', audioBitrate])
+    }
+
+    commandChain.output(outputPath)
 
     // Optimize for this specific machine
     optimizeFFmpegCommand(commandChain)

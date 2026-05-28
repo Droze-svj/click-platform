@@ -142,7 +142,7 @@ const DEFAULT_CONTENT_PREFS: EditorContentPreferences = {
   defaultExportPreset: '1080p',
   defaultExportQuality: 'high',
   defaultExportCodec: 'h264',
-  defaultOpenSection: 'ai-edit',
+  defaultOpenSection: 'edit',
   previewQuality: 'full',
   showExportPlatformHints: true,
   recentSections: [],

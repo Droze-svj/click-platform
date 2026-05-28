@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { usePreferences } from '../hooks/usePreferences'
 import { useTranslation } from '../hooks/useTranslation'
-import { supportedLanguages } from '../i18n/config'
+import { supportedLanguages, languageNames, languageFlags } from '../i18n/config'
 
 export default function SettingsPanel() {
   const { preferences, updatePreference, resetPreferences } = usePreferences()
@@ -59,6 +59,8 @@ export default function SettingsPanel() {
                 type="button"
                 onClick={() => updatePreference('isOledTheme', !preferences.isOledTheme)}
                 className={`w-12 h-6 rounded-full transition-colors relative ${preferences.isOledTheme ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                aria-label="Toggle OLED Theme Mode"
+                title="Toggle OLED Theme Mode"
               >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${preferences.isOledTheme ? 'left-7' : 'left-1'}`} />
               </button>
@@ -79,6 +81,8 @@ export default function SettingsPanel() {
                 type="button"
                 onClick={() => updatePreference('sidebarCollapsed', !preferences.sidebarCollapsed)}
                 className={`w-12 h-6 rounded-full transition-colors relative ${preferences.sidebarCollapsed ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                aria-label="Toggle Compact Sidebar"
+                title="Toggle Compact Sidebar"
               >
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${preferences.sidebarCollapsed ? 'left-7' : 'left-1'}`} />
               </button>
@@ -99,15 +103,18 @@ export default function SettingsPanel() {
                 <Languages className="w-6 h-6 text-indigo-500" />
               </div>
               <div className="flex-1">
-                <label className="block text-xs font-black uppercase text-gray-500 mb-2">Display Language</label>
+                <label htmlFor="language-select" className="block text-xs font-black uppercase text-gray-500 mb-2">Display Language</label>
                 <select
+                  id="language-select"
                   value={preferences.language}
                   onChange={(e) => updatePreference('language', e.target.value)}
                   className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                  title="Display Language"
+                  aria-label="Display Language"
                 >
                   {supportedLanguages.map(lang => (
                     <option key={lang} value={lang}>
-                      {lang === 'en' ? 'English (US)' : lang === 'es' ? 'Español' : lang === 'fr' ? 'Français' : lang}
+                      {languageFlags[lang]} {languageNames[lang]}
                     </option>
                   ))}
                 </select>
@@ -116,7 +123,7 @@ export default function SettingsPanel() {
 
             {/* Translation Accuracy - Elite Integration */}
             <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
-              <label className="block text-xs font-black uppercase text-gray-500 mb-4 flex items-center gap-2">
+              <label className="flex text-xs font-black uppercase text-gray-500 mb-4 items-center gap-2">
                 <Brain className="w-4 h-4 text-emerald-400" />
                 Master Translation Accuracy
               </label>
@@ -134,6 +141,8 @@ export default function SettingsPanel() {
                         ? 'bg-emerald-500/10 border-emerald-500/50 shadow-sm'
                         : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
+                    title={`Select ${acc.label} translation accuracy`}
+                    aria-label={`Select ${acc.label} translation accuracy`}
                   >
                     <span className={`block font-bold text-sm ${preferences.translationAccuracy === acc.id ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>{acc.label}</span>
                     <span className="block text-[10px] text-gray-500 mt-1">{acc.desc}</span>
@@ -166,6 +175,8 @@ export default function SettingsPanel() {
                 type="button"
                 onClick={() => updatePreference('showAiPreviews', !preferences.showAiPreviews)}
                 className={`w-10 h-5 rounded-full transition-colors relative ${preferences.showAiPreviews ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                aria-label="Toggle Persistent AI Hints"
+                title="Toggle Persistent AI Hints"
               >
                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${preferences.showAiPreviews ? 'left-5.5' : 'left-0.5'}`} />
               </button>
@@ -180,6 +191,8 @@ export default function SettingsPanel() {
                 type="button"
                 onClick={() => updatePreference('autoSaveEnabled', !preferences.autoSaveEnabled)}
                 className={`w-10 h-5 rounded-full transition-colors relative ${preferences.autoSaveEnabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`}
+                aria-label="Toggle Click Cloud Autosync"
+                title="Toggle Click Cloud Autosync"
               >
                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${preferences.autoSaveEnabled ? 'left-5.5' : 'left-0.5'}`} />
               </button>
@@ -197,6 +210,8 @@ export default function SettingsPanel() {
                 type="button"
                 onClick={() => updatePreference('clickFastExport', !preferences.clickFastExport)}
                 className={`w-10 h-5 rounded-full transition-colors relative ${preferences.clickFastExport ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                aria-label="Toggle Neural Fast-Export"
+                title="Toggle Neural Fast-Export"
               >
                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${preferences.clickFastExport ? 'left-5.5' : 'left-0.5'}`} />
               </button>
@@ -211,6 +226,8 @@ export default function SettingsPanel() {
               type="button"
               onClick={resetPreferences}
               className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+              title="Reset preferences to defaults"
+              aria-label="Reset preferences to defaults"
             >
               <Undo2 className="w-4 h-4" />
               Reset to Defaults
@@ -218,6 +235,8 @@ export default function SettingsPanel() {
             <button
               type="button"
               className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all"
+              title="Clear all local data"
+              aria-label="Clear all local data"
             >
               <Trash2 className="w-4 h-4" />
               Clear All Local Data

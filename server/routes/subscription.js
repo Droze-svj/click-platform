@@ -39,7 +39,33 @@ router.post('/verify', auth, async (req, res) => {
         whopSubscriptionId: whopSubscriptionId
       };
       
-      await req.user.save();
+      if (req.user && typeof req.user.save === 'function') {
+        await req.user.save();
+      } else {
+        const User = require('../models/User');
+        const userDoc = await User.findById(req.userId || req.user?._id || req.user?.id);
+        if (userDoc) {
+          userDoc.whopUserId = whopUserId;
+          userDoc.subscription = req.user.subscription;
+          await userDoc.save();
+        } else {
+          if (!req.allowDevMode && !req.user.isDevUser) {
+            try {
+              const newUserDoc = new User({
+                _id: req.userId || req.user?._id || req.user?.id,
+                email: req.user.email || 'unknown@example.com',
+                name: req.user.name || 'Unknown User',
+                password: 'sso-placeholder-password',
+                whopUserId: whopUserId,
+                subscription: req.user.subscription
+              });
+              await newUserDoc.save();
+            } catch (e) {
+              console.error('Failed to create user doc for subscription settings', e);
+            }
+          }
+        }
+      }
 
       logger.info('Subscription verified successfully', { 
         userId: req.user._id, 

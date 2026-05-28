@@ -46,7 +46,22 @@
     "settings": "Settings",
     "templates": "Templates",
     "infrastructure": "Infrastructure",
-    "clickTagline": "AI-Powered Content"
+    "clickTagline": "AI-Powered Content",
+    "recurring": "Định kỳ",
+    "studio": "Studio",
+    "grow": "Phát triển",
+    "manage": "Quản lý",
+    "onboarding": "Bắt đầu",
+    "forge": "Tạo lập",
+    "videoEditor": "Trình chỉnh sửa",
+    "aiClips": "Clip AI",
+    "aiTools": "Công cụ AI",
+    "creatorsHub": "Người sáng tạo",
+    "discover": "Khám phá",
+    "strategist": "Chiến lược gia",
+    "aiInsights": "Thông tin chi tiết AI",
+    "roadmap": "Lộ trình",
+    "connectAccounts": "Kết nối tài khoản"
   },
   "workflow": {
     "niche": "Niche",
@@ -145,7 +160,39 @@
       "quotesCreated": "Quotes Made",
       "postsScheduled": "Posts Scheduled"
     },
-    "clickToView": "Click to view details →"
+    "clickToView": "Click to view details →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "auth": {
     "login": "Sign In",
@@ -247,6 +294,69 @@
     "translated": "Translated",
     "translationFailed": "Translation failed",
     "viewOriginal": "View original",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "editor": {
+    "tabs": {
+      "trim": "Cắt",
+      "text": "Văn bản",
+      "filters": "Bộ lọc",
+      "motion": "Chuyển động",
+      "overlays": "Lớp",
+      "packs": "Gói",
+      "insights": "Dữ liệu"
+    },
+    "aspectRatio": "Định dạng / Tỷ lệ khung hình",
+    "neuralFocusTracking": "Theo dõi tiêu điểm Neural",
+    "active": "Hoạt động",
+    "offline": "Ngoại tuyến",
+    "trackingPriorityTarget": "Mục tiêu ưu tiên theo dõi",
+    "speaker": "⚡ Người nói",
+    "face": "⚡ Người nói",
+    "action": "🎯 Hành động",
+    "custom": "🎬 Tùy chỉnh",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "Bật tự động căn khung để truyền phát các chỉ số mục tiêu…"
+  },
+  "studio": {
+    "advancedStudio": "Studio Nâng cao",
+    "videoStudio": "Studio Video",
+    "syncArchive": "Đồng bộ Kho lưu trữ",
+    "payloadInventory": "Kho chứa Payload",
+    "neuralProcessed": "Đã xử lý Neural",
+    "syntheticYields": "Kết quả tổng hợp",
+    "initializeIntake": "Khởi tạo Đầu vào",
+    "payloadArchive": "Kho lưu trữ Payload",
+    "searchArchive": "SEARCH_ARCHIVE...",
+    "dropPayload": "Thả Payload vào đây",
+    "syncingPayload": "Đang đồng bộ Payload...",
+    "neuralIngestionReady": "NEURAL_STUDIO_INGESTION_READY",
+    "payloadsDetected": "PAYLOADS_DETECTED",
+    "open": "Mở",
+    "syncingStudio": "Đang đồng bộ Neural Studio...",
+    "tip": "TUTORIAL_CORE:",
+    "tipPaste": "PASTE_URL (⌘V) VÀO HUD NÀY ĐỂ AUTO-SYNC.",
+    "secureTunnel": "SECURE_TUNNEL",
+    "highVelocity": "HIGH_VELOCITY",
+    "intakeHint": "Đưa cảnh quay thô hoặc chuỗi đa kênh vào ma trận neural. A/B Swarm sẽ tự động hiệu chỉnh các vector để tổng hợp tốc độ cao tối ưu.",
+    "secureStorage": "CÁC NÚT LƯU TRỮ BẢO MẬT",
+    "all": "tất cả",
+    "completed": "đã hoàn thành",
+    "processing": "đang xử lý",
+    "failed": "thất bại",
+    "queued": "đang chờ",
+    "yields": "KẾT QUẢ",
+    "uploadStable": "✓ TẢI LÊN ỔN ĐỊNH: ĐANG PHÂN TÍCH VECTƠ...",
+    "uploadFailed": "LỖI GHI: TẢI LÊN THẤT BẠI",
+    "missingContentId": "LỖI THAM SỐ: THIẾU ID NỘI DUNG",
+    "invalidVideo": "LỖI MIME: ĐỊNH DẠNG VIDEO KHÔNG HỢP LỆ",
+    "syncingPayloadProgress": "Đang đồng bộ hóa Payload...",
+    "analysisComplete": "✓ PHÂN TÍCH HOÀN TẤT: {count} CLIP ĐÃ ĐƯỢC TẠO",
+    "processingFailure": "LỖI XỬ LÝ: TRÌNH TỰ ĐÃ BỊ HỦY"
   }
 }

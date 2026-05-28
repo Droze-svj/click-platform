@@ -100,14 +100,27 @@ export function useSocket(userId?: string | null): UseSocketReturn {
     }
   }, [serverUrl])
 
-  // Join user room when userId becomes available or changes (without recreating socket).
-  // The server's socket handler listens for `authenticate` with { userId } and
-  // adds the socket to `user-${userId}`. Previously we emitted `join-user`,
-  // which the server ignored — so per-user broadcasts never reached this tab.
+  // Join user room and re-authenticate when userId or token changes.
+  // Also listens for localStorage changes (e.g. token refresh) so long-lived
+  // tabs don't lose real-time sync after JWT expiry.
   useEffect(() => {
     if (!userId) return
-    if (!socketRef.current) return
-    socketRef.current.emit('authenticate', { userId })
+    const s = socketRef.current
+    if (!s) return
+
+    const authenticate = () => {
+      const currentToken = localStorage.getItem('token')
+      if (currentToken) s.auth = { token: currentToken }
+      s.emit('authenticate', { userId })
+    }
+
+    authenticate()
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token' && e.newValue) authenticate()
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [userId])
 
   const on = useCallback((event: string, callback: (...args: any[]) => void) => {

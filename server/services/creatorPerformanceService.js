@@ -21,6 +21,7 @@
 const logger = require('../utils/logger');
 const UserStyleProfile = require('../models/UserStyleProfile');
 const { resolveContent } = require('../utils/devStore');
+const continuousLearningService = require('./continuousLearningService');
 
 function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 
@@ -66,6 +67,73 @@ function extractPicks(content) {
   for (const t of transitions) add('weightedTransitions', t);
   const hookId = content?.metadata?.hookFrameworkId || content?.metadata?.hookId;
   if (hookId) add('weightedHooks', hookId);
+
+  // ── Extended Facets with Self-Healing Heuristic Detectors ──
+  
+  // 1. Pacing Detector
+  let pacing = content?.metadata?.pacing || content?.pacing;
+  if (!pacing) {
+    const avgCut = content?.metadata?.avgCutDuration || content?.averages?.avgCutDuration;
+    if (typeof avgCut === 'number') {
+      pacing = avgCut < 2.0 ? 'dynamic-kinetic' : 'steady-breathing';
+    } else {
+      pacing = 'dynamic-kinetic'; // default for short-form
+    }
+  }
+  add('weightedPacing', pacing);
+
+  // 2. Voice Tone Archetype Detector
+  const scriptText = content?.text || content?.metadata?.text || '';
+  let tone = content?.metadata?.brandTone || content?.brandTone || content?.metadata?.brandVoice?.tone;
+  if (!tone && scriptText) {
+    const txt = scriptText.toLowerCase();
+    if (txt.includes('attention arbitrage') || txt.includes('dopamine') || txt.includes('scroll stopper')) {
+      tone = 'hype';
+    } else if (txt.includes('mrr') || txt.includes('conversion') || txt.includes('roi') || txt.includes('yield')) {
+      tone = 'growth-catalyst';
+    } else if (txt.includes('contrarian') || txt.includes('stop doing') || txt.includes('brutal truth')) {
+      tone = 'bold-disruptor';
+    } else {
+      tone = 'analytical-storyteller'; // fallback default
+    }
+  }
+  if (tone) add('weightedVoiceTones', tone);
+
+  // 3. CTA Category Detector
+  let ctaCat = content?.metadata?.ctaCategory || content?.ctaCategory;
+  if (!ctaCat && scriptText) {
+    const txt = scriptText.toLowerCase();
+    try {
+      const { CTA_LIBRARY } = require('./marketingKnowledge');
+      for (const [cat, variants] of Object.entries(CTA_LIBRARY || {})) {
+        for (const v of variants) {
+          if (v && txt.includes(v.toLowerCase().slice(0, 12))) {
+            ctaCat = cat;
+            break;
+          }
+        }
+        if (ctaCat) break;
+      }
+    } catch (_) {
+      // Ignored if circular dependency in test builds
+    }
+  }
+  if (ctaCat) add('weightedCtaCategories', ctaCat);
+
+  // 4. Hashtag Extractor
+  let hashtags = content?.metadata?.hashtags || content?.hashtags;
+  if ((!hashtags || hashtags.length === 0) && scriptText) {
+    const matches = scriptText.match(/#\w+/g);
+    if (matches) {
+      hashtags = matches.map(tag => tag.toLowerCase().slice(1));
+    }
+  }
+  if (Array.isArray(hashtags)) {
+    for (const tag of hashtags) {
+      add('weightedHashtags', tag);
+    }
+  }
+
   return picks;
 }
 
@@ -113,6 +181,13 @@ async function ingestPostPerformance({ userId, contentId, metrics } = {}) {
   } catch (e) {
     logger.warn('[creatorPerformance] lastIngestedAt write failed', { userId, error: e.message });
   }
+
+  // Non-blocking: rebuild creative blueprint from the latest performance data
+  setImmediate(async () => {
+    try {
+      await continuousLearningService.ingestAnalyticsAndScrape(userId);
+    } catch (_) { /* non-fatal — next ingest will retry */ }
+  });
 
   return { updated, delta, picks: picks.length, lastIngestedAt: new Date() };
 }

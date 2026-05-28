@@ -434,21 +434,28 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
 }
 
 // ── Tile ────────────────────────────────────────────────────────────────────
-function StockTile({
-  item, isPlaying, isFav, onPreview, onAdd, onFav,
-}: {
-  item: StockItem
-  isPlaying: boolean
-  isFav: boolean
-  onPreview: () => void
-  onAdd: () => void
-  onFav: () => void
-}) {
+const StockTile = React.forwardRef<
+  any,
+  {
+    item: StockItem
+    isPlaying: boolean
+    isFav: boolean
+    onPreview: () => void
+    onAdd: () => void
+    onFav: () => void
+  }
+>(({ item, isPlaying, isFav, onPreview, onAdd, onFav }, ref) => {
   const Icon = MOOD_ICONS[item.mood] || Tag
+  const [imgSrc, setImgSrc] = useState(item.thumb)
+
+  React.useEffect(() => {
+    setImgSrc(item.thumb)
+  }, [item.thumb])
 
   if (item.category === 'sticker') {
     return (
       <motion.button
+        ref={ref}
         type="button"
         layout
         initial={{ opacity: 0, scale: 0.8 }}
@@ -469,6 +476,7 @@ function StockTile({
   if (item.category === 'transition') {
     return (
       <motion.div
+        ref={ref}
         layout
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -493,6 +501,7 @@ function StockTile({
   if (item.category === 'gif') {
     return (
       <motion.div
+        ref={ref}
         layout
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -503,7 +512,12 @@ function StockTile({
         <div className="aspect-square bg-black relative">
           {item.thumb && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.thumb} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <img 
+              src={imgSrc} 
+              onError={() => setImgSrc('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600&auto=format&fit=crop')} 
+              alt={item.title} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            />
           )}
           <button
            type="button"
@@ -528,6 +542,7 @@ function StockTile({
   if (item.category === 'broll') {
     return (
       <motion.div
+        ref={ref}
         layout
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -537,7 +552,12 @@ function StockTile({
         <div className="aspect-video bg-black relative">
           {item.thumb && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.thumb} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img 
+              src={imgSrc} 
+              onError={() => setImgSrc('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop')} 
+              alt={item.title} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+            />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
           {item.premium && (
@@ -590,6 +610,7 @@ function StockTile({
   const isMusic = item.category === 'music'
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
@@ -645,6 +666,7 @@ function StockTile({
       </div>
     </motion.div>
   )
-}
+})
+StockTile.displayName = 'StockTile'
 
 export default StockLibraryView

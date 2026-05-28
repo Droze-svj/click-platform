@@ -329,17 +329,17 @@ async function addTransitions(videoPath, transitionType, options = {}) {
   const transitionFilter = transitionType === 'fade' ? 'fade=t=out:st=2:d=1' : 'luma:./luma.png'
 
   const command = ffmpeg(videoPath)
-      .videoFilters(transitionFilter)
-      .output(outputPath)
-      .outputOptions([
-        '-c:v', 'libx264',
-        '-c:a', 'aac',
-        '-preset', 'medium',
-        '-crf', '23'
-      ])
-      .on('progress', (progress) => {
-        logger.debug('Transition progress', { jobId, progress: progress.percent })
-      });
+    .videoFilters(transitionFilter)
+    .output(outputPath)
+    .outputOptions([
+      '-c:v', 'libx264',
+      '-c:a', 'aac',
+      '-preset', 'medium',
+      '-crf', '23'
+    ])
+    .on('progress', (progress) => {
+      logger.debug('Transition progress', { jobId, progress: progress.percent })
+    });
 
   try {
     await runFFmpegWithTimeout(command);

@@ -254,62 +254,61 @@ export default function AutonomousCreator() {
 
               {/* Dynamic Controls Lattice */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-12 relative z-10 border-t-2 border-surface-100 dark:border-surface-800 pt-12">
-                 
-                 {/* Target Platform Logic */}
-                 <div className="md:col-span-12 lg:col-span-8 space-y-8">
-                    <div className="flex items-center gap-6 px-4">
-                       <Globe size={14} className="text-primary-500 shrink-0" />
-                       <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">Platform</span>
-                    </div>
-                    <div className="flex flex-wrap gap-4 px-4 pb-4">
-                      {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin', 'twitter'].map(p => (
-                        <button
-                          type="button"
-                          key={p}
-                          onClick={() => setPlatform(p)}
-                          disabled={loading}
-                           className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 italic relative group/btn shadow-md ${
-                            platform === p 
-                            ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-transparent shadow-2xl scale-105 z-20' 
-                            : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-surface-900 dark:hover:text-white'
-                          }`}
-                        >
-                          {p.replace('_', ' ')}
-                        </button>
-                      ))}
-                    </div>
-                 </div>
+                {/* Target Platform Logic */}
+                <div className="md:col-span-12 lg:col-span-8 space-y-8">
+                   <div className="flex items-center gap-6 px-4">
+                      <Globe size={14} className="text-primary-500 shrink-0" />
+                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">Platform</span>
+                   </div>
+                   <div className="flex flex-wrap gap-4 px-4 pb-4">
+                     {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin', 'twitter'].map(p => (
+                       <button
+                         type="button"
+                         key={p}
+                         onClick={() => setPlatform(p)}
+                         disabled={loading}
+                          className={`px-4 py-3 sm:px-6 sm:py-3.5 rounded-[1.2rem] sm:rounded-[1.5rem] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all border-2 italic relative group/btn shadow-md whitespace-nowrap ${
+                           platform === p 
+                           ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-transparent shadow-2xl scale-105 z-20' 
+                           : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-surface-900 dark:hover:text-white'
+                         }`}
+                       >
+                         {p.replace('_', ' ')}
+                       </button>
+                     ))}
+                   </div>
+                </div>
 
-                 {/* Tone Nuance Matrix */}
-                 <div className="md:col-span-12 space-y-8">
-                    <div className="flex items-center gap-6 px-4">
-                       <Mic2 size={14} className="text-primary-500 shrink-0" />
-                       <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">Tone</span>
-                    </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 px-4">
-                      {[
-                        { id: 'educational', label: 'Authoritative', icon: Shield },
-                        { id: 'motivational', label: 'Elevated', icon: Zap },
-                        { id: 'storytelling', label: 'Narrative', icon: Film },
-                        { id: 'controversial', label: 'Disruptive', icon: AlertCircle },
-                      ].map(t => (
-                        <button
-                          type="button"
-                          key={t.id}
-                          onClick={() => setTone(t.id)}
-                          disabled={loading}
-                          className={`flex items-center justify-between gap-4 px-8 py-5 rounded-[2rem] text-[9px] font-black uppercase tracking-[0.3em] transition-all border-2 italic shadow-md ${
-                            tone === t.id 
-                            ? 'bg-primary-600 text-white border-transparent shadow-2xl scale-105' 
-                            : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-surface-900 dark:hover:text-white'
-                          }`}
-                        >
-                          {t.label}
-                          <t.icon size={16} className={tone === t.id ? 'text-white' : 'text-surface-400 dark:text-slate-700'} />
-                        </button>
-                      ))}
-                    </div>
-                 </div>
+                {/* Tone Nuance Matrix */}
+                <div className="md:col-span-12 space-y-8">
+                   <div className="flex items-center gap-6 px-4">
+                      <Mic2 size={14} className="text-primary-500 shrink-0" />
+                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">Tone</span>
+                   </div>
+                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 px-4">
+                     {[
+                       { id: 'educational', label: 'Authoritative', icon: Shield },
+                       { id: 'motivational', label: 'Elevated', icon: Zap },
+                       { id: 'storytelling', label: 'Narrative', icon: Film },
+                       { id: 'controversial', label: 'Disruptive', icon: AlertCircle },
+                     ].map(t => (
+                       <button
+                         type="button"
+                         key={t.id}
+                         onClick={() => setTone(t.id)}
+                         disabled={loading}
+                         className={`flex items-center justify-between gap-2 px-4 py-3.5 sm:px-6 sm:py-4 rounded-[1.5rem] sm:rounded-[2rem] text-[8px] sm:text-[9px] font-black uppercase tracking-[0.08em] sm:tracking-[0.18em] transition-all border-2 italic shadow-md ${
+                           tone === t.id 
+                           ? 'bg-primary-600 text-white border-transparent shadow-2xl scale-105' 
+                           : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-surface-900 dark:hover:text-white'
+                         }`}
+                       >
+                         <span className="truncate whitespace-nowrap pr-1">{t.label}</span>
+                         <t.icon size={14} className={`shrink-0 ${tone === t.id ? 'text-white' : 'text-surface-400 dark:text-slate-700'}`} />
+                       </button>
+                     ))}
+                   </div>
+                </div>
               </div>
 
               <div className="pt-8 border-t-2 border-surface-100 dark:border-surface-800">
@@ -343,13 +342,13 @@ export default function AutonomousCreator() {
         {/* Sidebar Intelligence & Presets */}
         <div className="xl:col-span-4 space-y-12">
            {/* Current Strategy Cluster */}
-           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 rounded-[4rem] space-y-10 shadow-2xl relative overflow-hidden group">
+           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-8 sm:p-10 rounded-[3rem] sm:rounded-[4rem] space-y-8 sm:space-y-10 shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-1000"><Brain size={250} className="text-primary-500" /></div>
-              <div className="flex items-center gap-6 relative z-10">
-                 <div className="w-14 h-14 rounded-2xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg"><Brain size={28} className="text-primary-600 dark:text-primary-400" /></div>
-                 <div>
-                    <h3 className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Strategy Cluster</h3>
-                    <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none">AI-recommended angles</p>
+              <div className="flex items-center gap-4 sm:gap-6 relative z-10">
+                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg shrink-0"><Brain size={24} className="text-primary-600 dark:text-primary-400" /></div>
+                 <div className="min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">Strategy Cluster</h3>
+                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">AI-recommended angles</p>
                  </div>
               </div>
               <div className="space-y-4 relative z-10">
@@ -358,31 +357,31 @@ export default function AutonomousCreator() {
                     { label: 'Niche fit', value: '98%' },
                     { label: 'Retention model', value: 'Active' },
                   ].map((s, i) => (
-                     <div key={i} className="flex justify-between items-center p-5 rounded-[1.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/stat hover:border-primary-500/30 transition-all duration-500">
-                        <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] italic group-hover/stat:text-primary-500 transition-colors truncate pr-2">{s.label}</span>
-                        <span className="text-[10px] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter shrink-0">{s.value}</span>
+                     <div key={i} className="flex justify-between items-center p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/stat hover:border-primary-500/30 transition-all duration-500 min-w-0">
+                        <span className="text-[8px] sm:text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.1em] sm:tracking-[0.2em] italic group-hover/stat:text-primary-500 transition-colors truncate pr-2">{s.label}</span>
+                        <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter shrink-0">{s.value}</span>
                      </div>
                   ))}
               </div>
            </div>
 
            {/* Quick Style Pivots (Advanced) */}
-           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 rounded-[4rem] space-y-10 shadow-2xl relative overflow-hidden group">
+           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-8 sm:p-10 rounded-[3rem] sm:rounded-[4rem] space-y-8 sm:space-y-10 shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-1000"><Zap size={250} className="text-amber-500" /></div>
-              <div className="flex items-center gap-6 relative z-10">
-                 <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-lg"><Zap size={28} className="text-amber-600 dark:text-amber-400" /></div>
-                 <div>
-                    <h3 className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Style Pivots</h3>
-                    <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none">Pick a visual direction</p>
+              <div className="flex items-center gap-4 sm:gap-6 relative z-10">
+                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-lg shrink-0"><Zap size={24} className="text-amber-600 dark:text-amber-400" /></div>
+                 <div className="min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">Style Pivots</h3>
+                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">Pick a visual direction</p>
                  </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 relative z-10">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 relative z-10">
                  {['HIGH ENERGY', 'MINIMALIST', 'CINEMATIC', 'DYNAMIC', 'VIRAL', 'PREMIUM'].map(p => (
                     <button
                       type="button"
                       key={p}
                       onClick={() => setStylePivot(p)}
-                      className={`px-5 py-4 rounded-[1.5rem] text-[9px] font-black uppercase tracking-[0.2em] italic border-2 transition-all shadow-md ${
+                      className={`px-3 py-3 sm:px-4 sm:py-3.5 rounded-[1.2rem] sm:rounded-[1.5rem] text-[8px] sm:text-[9px] font-black uppercase tracking-[0.05em] sm:tracking-[0.15em] italic border-2 transition-all shadow-md whitespace-nowrap truncate ${
                         stylePivot === p 
                         ? 'bg-amber-500 text-black border-transparent shadow-2xl scale-105' 
                         : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-amber-500/30 hover:text-surface-900 dark:hover:text-white'
@@ -395,17 +394,17 @@ export default function AutonomousCreator() {
                  <button
                    type="button"
                    onClick={() => setStylePivot('UGC_RAW')}
-                   className={`col-span-2 px-6 py-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] italic border-2 transition-all duration-700 flex items-center justify-between shadow-md ${
+                   className={`col-span-2 px-4 py-4 sm:px-6 sm:py-5 rounded-[1.5rem] sm:rounded-[2rem] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] italic border-2 transition-all duration-700 flex items-center justify-between shadow-md ${
                      stylePivot === 'UGC_RAW'
                        ? 'bg-gradient-to-r from-orange-600 to-amber-500 border-transparent text-white shadow-[0_30px_60px_rgba(234,88,12,0.4)] scale-105'
                        : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-orange-500/30 hover:text-surface-900 dark:hover:text-white'
                    }`}
                  >
-                   <span className="flex items-center gap-3">
-                     <span className={`w-2 h-2 rounded-full bg-current ${stylePivot === 'UGC_RAW' ? 'animate-pulse' : ''}`} />
-                     UGC / raw / authentic
+                   <span className="flex items-center gap-2 truncate pr-1">
+                     <span className={`w-1.5 h-1.5 rounded-full bg-current shrink-0 ${stylePivot === 'UGC_RAW' ? 'animate-pulse' : ''}`} />
+                     <span className="truncate whitespace-nowrap">UGC / raw / authentic</span>
                    </span>
-                   <span className={`text-[8px] font-black tracking-widest px-3 py-1 rounded-full border ${
+                   <span className={`text-[7px] sm:text-[8px] font-black tracking-wider sm:tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${
                      stylePivot === 'UGC_RAW' ? 'text-white border-white/30 bg-white/10' : 'text-surface-300 dark:text-slate-800 border-surface-200 dark:border-surface-700'
                    }`}>
                      HUMANIZE
@@ -416,11 +415,11 @@ export default function AutonomousCreator() {
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-8 rounded-[2.5rem] bg-orange-500/5 border-2 border-orange-500/10 mt-6 relative z-10 backdrop-blur-xl shadow-inner"
+                  className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-orange-500/5 border-2 border-orange-500/10 mt-6 relative z-10 backdrop-blur-xl shadow-inner"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest italic">Authenticity boost on</p>
-                    <span className="text-[10px] font-black text-surface-900 dark:text-white tabular-nums italic">~85% real-feel</span>
+                    <p className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest italic">Authenticity boost on</p>
+                    <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white tabular-nums italic">~85% real-feel</span>
                   </div>
                   <div className="h-2.5 rounded-full bg-surface-page dark:bg-surface-950 overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner">
                     <motion.div
@@ -430,7 +429,7 @@ export default function AutonomousCreator() {
                       className="h-full bg-gradient-to-r from-orange-600 to-amber-400 shadow-[0_0_15px_rgba(234,88,12,0.5)]"
                     />
                   </div>
-                  <p className="text-[9px] text-surface-400 dark:text-slate-600 font-bold uppercase tracking-widest mt-4 italic">
+                  <p className="text-[8px] sm:text-[9px] text-surface-400 dark:text-slate-600 font-bold uppercase tracking-widest mt-4 italic">
                     Adding: natural pauses, handheld shake, phone-camera color, varied pacing
                   </p>
                 </motion.div>
@@ -438,29 +437,29 @@ export default function AutonomousCreator() {
            </div>
 
            {/* Pipeline Trace Visualizer */}
-           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 rounded-[4rem] shadow-2xl relative overflow-hidden group h-[450px]">
+           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-8 sm:p-10 rounded-[3rem] sm:rounded-[4rem] shadow-2xl relative overflow-hidden group h-[450px]">
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none p-12 group-hover:opacity-[0.08] transition-opacity duration-1000"><Orbit size={400} className="text-primary-500 animate-spin-slow rotate-45" /></div>
               <div className="flex flex-col h-full relative z-10">
-                 <div className="flex items-center gap-6 mb-12 border-b-2 border-surface-100 dark:border-surface-800 pb-8">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-lg"><Waves size={28} className="text-emerald-600 dark:text-emerald-400 animate-pulse" /></div>
-                    <div>
-                       <h3 className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Live progress</h3>
-                       <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none">AI generation steps</p>
+                 <div className="flex items-center gap-4 sm:gap-6 mb-8 sm:mb-12 border-b-2 border-surface-100 dark:border-surface-800 pb-6 sm:pb-8">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-lg shrink-0"><Waves size={24} className="text-emerald-600 dark:text-emerald-400 animate-pulse" /></div>
+                    <div className="min-w-0">
+                       <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">Live progress</h3>
+                       <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">AI generation steps</p>
                     </div>
                  </div>
-                 <div className="flex-1 space-y-10 custom-scrollbar overflow-y-auto pr-4">
+                 <div className="flex-1 space-y-8 sm:space-y-10 custom-scrollbar overflow-y-auto pr-4">
                     {STAGES.map((s, i) => (
-                       <div key={s.id} className="flex items-center gap-8 relative group/stage">
-                          <div className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center group-hover/stage:scale-110 transition-all shadow-md relative z-10 ${
+                       <div key={s.id} className="flex items-center gap-6 sm:gap-8 relative group/stage min-w-0">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center group-hover/stage:scale-110 transition-all shadow-md relative z-10 shrink-0 text-[10px] sm:text-[12px] ${
                             completedStages.includes(s.id) ? 'bg-emerald-500 border-transparent text-white shadow-emerald-500/20' : currentStage === s.id ? 'bg-primary-500 border-transparent text-white animate-pulse shadow-primary-500/20' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-300 dark:text-slate-800'
                           }`}>
-                             {completedStages.includes(s.id) ? <CheckCircle2 size={18} /> : (i + 1)}
+                             {completedStages.includes(s.id) ? <CheckCircle2 size={16} /> : (i + 1)}
                           </div>
-                          <div className="flex-1">
-                             <p className={`text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : currentStage === s.id ? 'text-primary-500' : 'text-surface-300 dark:text-slate-800'}`}>{s.label}</p>
-                             {currentStage === s.id && <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-[9px] font-black text-primary-500 uppercase italic mt-2 tracking-[0.2em] animate-pulse">Working…</motion.div>}
+                          <div className="flex-1 min-w-0">
+                             <p className={`text-[11px] sm:text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors truncate ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : currentStage === s.id ? 'text-primary-500' : 'text-surface-300 dark:text-slate-800'}`}>{s.label}</p>
+                             {currentStage === s.id && <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-[8px] sm:text-[9px] font-black text-primary-500 uppercase italic mt-2 tracking-[0.2em] animate-pulse">Working…</motion.div>}
                           </div>
-                          {i < STAGES.length - 1 && <div className={`absolute top-10 left-5 w-0.5 h-6 transition-colors ${completedStages.includes(s.id) ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-surface-100 dark:bg-surface-800'}`} />}
+                          {i < STAGES.length - 1 && <div className={`absolute top-8 sm:top-10 left-4 sm:left-5 w-0.5 h-6 sm:h-8 transition-colors ${completedStages.includes(s.id) ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-surface-100 dark:bg-surface-800'}`} />}
                        </div>
                     ))}
                  </div>

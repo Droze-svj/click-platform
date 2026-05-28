@@ -46,7 +46,22 @@
     "settings": "Настройки",
     "templates": "Шаблоны",
     "infrastructure": "Инфраструктура",
-    "clickTagline": "Контент с ИИ"
+    "clickTagline": "Контент с ИИ",
+    "recurring": "Регулярные",
+    "studio": "Студия",
+    "grow": "Развитие",
+    "manage": "Управление",
+    "onboarding": "Начать",
+    "forge": "Кузница",
+    "videoEditor": "Редактор",
+    "aiClips": "AI-клипы",
+    "aiTools": "AI-инструменты",
+    "creatorsHub": "Создатели",
+    "discover": "Обзор",
+    "strategist": "Стратег",
+    "aiInsights": "AI-аналитика",
+    "roadmap": "Дорожная карта",
+    "connectAccounts": "Подключить аккаунты"
   },
   "workflow": {
     "niche": "Ниша",
@@ -175,7 +190,39 @@
       "quotesCreated": "Цитат создано",
       "postsScheduled": "Постов запланировано"
     },
-    "clickToView": "Click, чтобы просмотреть детали →"
+    "clickToView": "Click, чтобы просмотреть детали →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "auth": {
     "login": "Войти",
@@ -247,6 +294,69 @@
     "translated": "Переведено",
     "translationFailed": "Ошибка перевода",
     "viewOriginal": "Показать оригинал",
-    "selectLanguage": "Выбрать язык"
+    "selectLanguage": "Выбрать язык",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "editor": {
+    "tabs": {
+      "trim": "Обрезка",
+      "text": "Текст",
+      "filters": "Фильтры",
+      "motion": "Движение",
+      "overlays": "Слои",
+      "packs": "Пакеты",
+      "insights": "Данные"
+    },
+    "aspectRatio": "Формат / Соотношение сторон",
+    "neuralFocusTracking": "Нейронное отслеживание фокуса",
+    "active": "Активно",
+    "offline": "Офлайн",
+    "trackingPriorityTarget": "Приоритетная цель отслеживания",
+    "speaker": "⚡ Спикер",
+    "face": "⚡ Спикер",
+    "action": "🎯 Действие",
+    "custom": "🎬 Пользовательский",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "Включите автокадрирование для потоковой передачи целевых метрик…"
+  },
+  "studio": {
+    "advancedStudio": "Расширенная студия",
+    "videoStudio": "Видеостудия",
+    "syncArchive": "Архив синхронизации",
+    "payloadInventory": "Инвентарь полезной нагрузки",
+    "neuralProcessed": "Нейронная обработка",
+    "syntheticYields": "Синтетические выходы",
+    "initializeIntake": "Инициализировать прием",
+    "payloadArchive": "Архив полезной нагрузки",
+    "searchArchive": "ПОИСК_В_АРХИВЕ...",
+    "dropPayload": "Перетащите полезную нагрузку сюда",
+    "syncingPayload": "Синхронизация полезной нагрузки...",
+    "neuralIngestionReady": "НЕЙРОННАЯ_СТУДИЯ_ГОТОВА_К_ПРИЕМУ",
+    "payloadsDetected": "ПОЛЕЗНЫЕ_НАГРУЗКИ_ОБНАРУЖЕНЫ",
+    "open": "Открыть",
+    "syncingStudio": "Синхронизация Neural Studio...",
+    "tip": "ОСНОВЫ_УЧЕБНИКА:",
+    "tipPaste": "ВСТАВЬТЕ_URL (⌘V) В ЭТОТ HUD ДЛЯ АВТОСИНХРОНИЗАЦИИ.",
+    "secureTunnel": "БЕЗОПАСНЫЙ_ТУННЕЛЬ",
+    "highVelocity": "ВЫСОКАЯ_СКОРОСТЬ",
+    "intakeHint": "Внедрите необработанные кадры или многодорожечные последовательности в нейронную матрицу. A/B Swarm автоматически откалибрует векторы для оптимального высокоскоростного синтеза.",
+    "secureStorage": "УЗЛЫ_ЗАЩИЩЕННОГО_ХРАНИЛИЩА",
+    "all": "все",
+    "completed": "завершено",
+    "processing": "обрабатывается",
+    "failed": "сбой",
+    "queued": "в очереди",
+    "yields": "РЕЗУЛЬТАТЫ",
+    "uploadStable": "✓ ЗАГРУЗКА_СТАБИЛЬНА: АНАЛИЗ_ВЕКТОРОВ...",
+    "uploadFailed": "ОШИБКА_ЗАПИСИ: СБОЙ_ЗАГРУЗКИ",
+    "missingContentId": "ОШИБКА_ПАРАМЕТРА: ОТСУТСТВУЕТ_ID_КОНТЕНТА",
+    "invalidVideo": "ОШИБКА_MIME: НЕДОПУСТИМЫЙ_ФОРМАТ_ВИДЕО",
+    "syncingPayloadProgress": "Синхронизация данных...",
+    "analysisComplete": "✓ АНАЛИЗ_ЗАВЕРШЕН: СГЕНЕРИРОВАНО {count} КЛИПОВ",
+    "processingFailure": "СБОЙ_ОБРАБОТКИ: ПОСЛЕДОВАТЕЛЬНОСТЬ_ПРЕРВАНА"
   }
 }

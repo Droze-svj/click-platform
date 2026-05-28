@@ -20,6 +20,7 @@ async function initElasticsearch() {
 
     const clientConfig = {
       node: esUrl,
+      requestTimeout: 3000,
     };
 
     if (esApiKey) {

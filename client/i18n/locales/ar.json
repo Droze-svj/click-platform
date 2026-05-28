@@ -46,7 +46,22 @@
     "settings": "الإعدادات",
     "templates": "القوالب",
     "infrastructure": "البنية التحتية",
-    "clickTagline": "محتوى مدعوم بالذكاء الاصطناعي"
+    "clickTagline": "محتوى مدعوم بالذكاء الاصطناعي",
+    "recurring": "متكرر",
+    "studio": "الاستوديو",
+    "grow": "نمو",
+    "manage": "إدارة",
+    "onboarding": "البدء",
+    "forge": "صياغة",
+    "videoEditor": "المحرر",
+    "aiClips": "مقاطع الذكاء الاصطناعي",
+    "aiTools": "أدوات الذكاء الاصطناعي",
+    "creatorsHub": "المبدعون",
+    "discover": "اكتشاف",
+    "strategist": "الاستراتيجي",
+    "aiInsights": "رؤى الذكاء الاصطناعي",
+    "roadmap": "خارطة الطريق",
+    "connectAccounts": "ربط الحسابات"
   },
   "workflow": {
     "niche": "المجال",
@@ -231,7 +246,10 @@
     "translated": "تمت الترجمة",
     "translationFailed": "فشلت الترجمة",
     "viewOriginal": "عرض الأصل",
-    "selectLanguage": "اختر اللغة"
+    "selectLanguage": "اختر اللغة",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -247,6 +265,98 @@
       "quotesCreated": "اقتباسات تم إنشاؤها",
       "postsScheduled": "منشورات تمت جدولتها"
     },
-    "clickToView": "انقر لعرض التفاصيل ←"
+    "clickToView": "انقر لعرض التفاصيل ←",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
+  },
+  "editor": {
+    "tabs": {
+      "trim": "قص",
+      "text": "نص",
+      "filters": "فلاتر",
+      "motion": "حركة",
+      "overlays": "طبقات",
+      "packs": "حزم",
+      "insights": "بيانات"
+    },
+    "aspectRatio": "التنسيق / نسبة الأبعاد",
+    "neuralFocusTracking": "تتبع التركيز العصبي",
+    "active": "نشط",
+    "offline": "غير متصل",
+    "trackingPriorityTarget": "هدف أولوية التتبع",
+    "speaker": "⚡ المتحدث",
+    "face": "⚡ المتحدث",
+    "action": "🎯 إجراء",
+    "custom": "🎬 مخصص",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "فعّل التأطير التلقائي لبث مقاييس الهدف…"
+  },
+  "studio": {
+    "advancedStudio": "استوديو متقدم",
+    "videoStudio": "استوديو الفيديو",
+    "syncArchive": "مزامنة الأرشيف",
+    "payloadInventory": "مخزون الحمولة",
+    "neuralProcessed": "معالج عصبي",
+    "syntheticYields": "عوائد تركيبية",
+    "initializeIntake": "تهيئة الإدخال",
+    "payloadArchive": "أرشيف الحمولة",
+    "searchArchive": "البحث في الأرشيف...",
+    "dropPayload": "أسقط الحمولة هنا",
+    "syncingPayload": "تتم مزامنة الحمولة...",
+    "neuralIngestionReady": "الاستوديو العصبي جاهز للاستيعاب",
+    "payloadsDetected": "تم اكتشاف حمولات",
+    "open": "فتح",
+    "syncingStudio": "تتم مزامنة الاستوديو العصبي...",
+    "tip": "البرنامج التعليمي الأساسي:",
+    "tipPaste": "الصق URL (⌘V) على هذا العرض الرأسي للمزامنة التلقائية.",
+    "secureTunnel": "نفق آمن",
+    "highVelocity": "سرعة عالية",
+    "intakeHint": "ادخل اللقطات الخام أو التسلسلات متعددة المسارات في المصفوفة العصبية. سيقوم A/B Swarm بالمعايرة التلقائية للمتجهات لتحقيق تركيب أمثل عالي السرعة.",
+    "secureStorage": "SECURE_STORAGE_NODES",
+    "all": "الكل",
+    "completed": "مكتمل",
+    "processing": "قيد المعالجة",
+    "failed": "فشل",
+    "queued": "في قائمة الانتظار",
+    "yields": "YIELDS",
+    "uploadStable": "✓ UPLOAD_STABLE: جاري تحليل المتجهات...",
+    "uploadFailed": "WRITE_ERR: UPLOAD_FAILED",
+    "missingContentId": "PARAM_ERR: MISSING_CONTENT_ID",
+    "invalidVideo": "MIME_ERR: INVALID_VIDEO_FORMAT",
+    "syncingPayloadProgress": "جاري مزامنة الحمولة...",
+    "analysisComplete": "✓ ANALYSIS_COMPLETE: {count} مقاطع تم إنشاؤها",
+    "processingFailure": "PROCESSING_FAILURE: SEQUENCE_ABORTED"
   }
 }

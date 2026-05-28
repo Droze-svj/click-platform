@@ -4,7 +4,6 @@ const express = require('express');
 const auth = require('../../middleware/auth');
 const {
   initAIProvider,
-  selectModelForTask,
   generateWithModel,
   compareModelOutputs,
   getAvailableModels,
@@ -13,7 +12,6 @@ const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const {
   ValidationError,
-  AppError,
 } = require('../../utils/errorHandler');
 const logger = require('../../utils/logger');
 const router = express.Router();
@@ -31,10 +29,10 @@ router.post('/provider', auth, asyncHandler(async (req, res) => {
 
 router.post('/generate', auth, asyncHandler(async (req, res) => {
   const { prompt, taskType, options } = req.body;
-  if (!prompt || !taskType) {
-    throw new ValidationError('Prompt and task type are required', [
-      { field: 'prompt', message: 'Prompt is required' },
-      { field: 'taskType', message: 'Task type is required' },
+  if (!prompt || !taskType || typeof prompt !== 'string' || typeof taskType !== 'string') {
+    throw new ValidationError('Prompt and task type are required strings', [
+      { field: 'prompt', message: 'Prompt is required as a string' },
+      { field: 'taskType', message: 'Task type is required as a string' },
     ]);
   }
   
@@ -44,10 +42,10 @@ router.post('/generate', auth, asyncHandler(async (req, res) => {
 
 router.post('/compare', auth, asyncHandler(async (req, res) => {
   const { prompt, taskType, models } = req.body;
-  if (!prompt || !taskType) {
-    throw new ValidationError('Prompt and task type are required', [
-      { field: 'prompt', message: 'Prompt is required' },
-      { field: 'taskType', message: 'Task type is required' },
+  if (!prompt || !taskType || typeof prompt !== 'string' || typeof taskType !== 'string') {
+    throw new ValidationError('Prompt and task type are required strings', [
+      { field: 'prompt', message: 'Prompt is required as a string' },
+      { field: 'taskType', message: 'Task type is required as a string' },
     ]);
   }
   

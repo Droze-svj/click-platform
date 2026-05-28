@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   TrendingUp,
@@ -15,10 +15,13 @@ import {
   Globe,
   Sparkles,
   Layers,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react'
+import { apiGet } from '../../../lib/api'
 
 interface PredictionEngineViewProps {
+  videoId?: string
   timelineSegments: any[]
   transcript: any
   showToast: (m: string, t: any) => void
@@ -27,13 +30,45 @@ interface PredictionEngineViewProps {
 type Persona = 'Gen Z' | 'B2B Professional' | 'Tech Enthusiast' | 'Lifestyle/Vlog'
 
 const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
+  videoId,
   timelineSegments,
   transcript,
   showToast
 }) => {
   const [selectedPersona, setSelectedPersona] = useState<Persona>('Gen Z')
   const [hookTestState, setHookTestState] = useState<'idle' | 'generating' | 'results'>('idle')
+  const [isLoading, setIsLoading] = useState(false)
+  const [prePublishReport, setPrePublishReport] = useState<any>(null)
+  const [abVariantsData, setAbVariantsData] = useState<any>(null)
+
   const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-3xl"
+
+  useEffect(() => {
+    if (!videoId) return
+
+    const loadPredictions = async () => {
+      setIsLoading(true)
+      try {
+        const [reportRes, abRes] = await Promise.all([
+          apiGet<any>(`/content/${videoId}/pre-publish`),
+          apiGet<any>(`/content/${videoId}/ab-variants`)
+        ])
+
+        if (reportRes?.success && reportRes?.data) {
+          setPrePublishReport(reportRes.data)
+        }
+        if (abRes?.success && abRes?.data) {
+          setAbVariantsData(abRes.data)
+        }
+      } catch (err) {
+        console.error('Failed to load predictions', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadPredictions()
+  }, [videoId])
 
   const metrics = useMemo(() => {
     const totalDuration = timelineSegments.reduce((acc, s) => acc + (s.duration || 0), 0) || 1
@@ -65,9 +100,13 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
   }, [timelineSegments, transcript])
 
   const viralScore = useMemo(() => {
+    if (prePublishReport?.overallScore) {
+      return prePublishReport.overallScore
+    }
+
     let score = 40
 
-    // Semantic Hook Logic (Deep Intelligence)
+    // Semantic Hook Logic
     if (metrics.highRetentionWordsFound >= 2) score += 20
     else if (metrics.highRetentionWordsFound === 1) score += 10
 
@@ -75,7 +114,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
     if (metrics.cutsPerMinute > 12) score += 10
     else if (metrics.cutsPerMinute > 6) score += 5
 
-    // Visual Hook Density (First 5 segments)
+    // Visual Hook Density
     const hookDensity = timelineSegments.slice(0, 5).filter(s => s.endTime <= 5).length
     if (hookDensity >= 3) score += 10
 
@@ -88,9 +127,17 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
     if (selectedPersona === 'B2B Professional' && metrics.brollRatio > 0.3) score += 10
 
     return Math.min(score, 99)
-  }, [metrics, selectedPersona, timelineSegments])
+  }, [metrics, selectedPersona, timelineSegments, prePublishReport])
 
   const roadmap = useMemo(() => {
+    if (prePublishReport?.priorityActions && prePublishReport.priorityActions.length > 0) {
+      return prePublishReport.priorityActions.map((action: any) => ({
+        title: action.action,
+        desc: `${action.details}. Impact: ${action.impact}`,
+        icon: Zap
+      }))
+    }
+
     const steps = []
 
     if (metrics.cutsPerMinute < 8) {
@@ -108,7 +155,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
     steps.push({ title: 'Chromatic Punch', desc: 'Apply cinematic high-contrast grading to the primary hook for immediate stimulus.', icon: Gauge })
 
     return steps.slice(0, 3)
-  }, [metrics, selectedPersona])
+  }, [metrics, selectedPersona, prePublishReport])
 
   const runHookTest = () => {
     setHookTestState('generating')
@@ -116,6 +163,18 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
        setHookTestState('results')
        showToast('Hook A/B testing simulation complete.', 'success')
     }, 2500)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-6">
+        <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-black text-white italic uppercase tracking-widest">TUNING COGNITIVE NODE</h2>
+          <p className="text-slate-500 text-sm italic">Analyzing hook metrics, pacing density, and conversion variants...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -162,10 +221,26 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
 
            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
               {[
-                { label: 'Pacing Density', val: metrics.cutsPerMinute > 12 ? 'HIGH' : 'MED', color: 'text-indigo-400' },
-                { label: 'Hook Velocity', val: metrics.highRetentionWordsFound > 1 ? 'ELITE' : 'AVG', color: 'text-orange-400' },
-                { label: 'Retention Alpha', val: viralScore > 85 ? 'TOP 1%' : 'TOP 10%', color: 'text-emerald-400' },
-                { label: 'Semantic Power', val: `${metrics.semanticIntensity.toFixed(0)}%`, color: 'text-blue-400' }
+                { 
+                  label: 'Pacing Density', 
+                  val: prePublishReport?.platformFit?.cpmRating || (metrics.cutsPerMinute > 12 ? 'HIGH' : 'MED'), 
+                  color: 'text-indigo-400' 
+                },
+                { 
+                  label: 'Hook Velocity', 
+                  val: prePublishReport?.hookAnalysis?.score >= 70 ? 'ELITE' : 'AVG', 
+                  color: 'text-orange-400' 
+                },
+                { 
+                  label: 'Retention Alpha', 
+                  val: viralScore > 80 ? 'TOP 1%' : 'TOP 10%', 
+                  color: 'text-emerald-400' 
+                },
+                { 
+                  label: 'Semantic Power', 
+                  val: prePublishReport?.overallScore ? `${prePublishReport.overallScore}%` : `${metrics.semanticIntensity.toFixed(0)}%`, 
+                  color: 'text-blue-400' 
+                }
               ].map((m, i) => (
                 <div key={i} className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-2">
                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block">{m.label}</span>
@@ -223,8 +298,6 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
            {/* Heatmap Data */}
            <div className="relative w-full h-full flex items-end gap-1">
               {Array.from({ length: 40 }).map((_, i) => {
-                 // Simulate a curve that bumps on hooks/cuts
-                 // High in first 5% (hook), dips, spikes intermittently
                  const isHook = i < 4
                  const isSpike = Math.random() > 0.8 && i > 10
                  const baseHeight = 30 + Math.sin(i / 5) * 20
@@ -233,7 +306,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
                  let color = 'bg-slate-700'
                  if (height > 80) color = 'bg-emerald-400'
                  else if (height > 60) color = 'bg-indigo-400'
-                 else if (height < 30) color = 'bg-rose-500' // Drop-off danger zone
+                 else if (height < 30) color = 'bg-rose-500'
 
                  return (
                     <motion.div
@@ -243,7 +316,6 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
                        transition={{ duration: 1, delay: i * 0.02, ease: 'easeOut' }}
                        className={`flex-1 rounded-t-sm ${color} transition-colors min-h-[4px] relative group/bar`}
                     >
-                       {/* Tooltip for dropoffs */}
                        {height < 30 && (
                           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[9px] font-black px-2 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity z-10 pointer-events-none whitespace-nowrap">
                              Drop-off Risk
@@ -279,13 +351,13 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
            </div>
            
            {hookTestState === 'idle' && (
-             <button
-                type="button"
-                onClick={runHookTest}
-                className="px-8 py-4 rounded-[2rem] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-[0.3em] transition-colors shadow-lg shadow-indigo-500/20 flex items-center gap-3"
-             >
-                <Target className="w-4 h-4" /> Run Audience Simulation
-             </button>
+              <button
+                 type="button"
+                 onClick={runHookTest}
+                 className="px-8 py-4 rounded-[2rem] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-[0.3em] transition-colors shadow-lg shadow-indigo-500/20 flex items-center gap-3"
+              >
+                 <Target className="w-4 h-4" /> Run Audience Simulation
+              </button>
            )}
         </div>
 
@@ -301,36 +373,60 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
 
         {hookTestState === 'results' && (
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                 { name: 'Variant A: High Energy', ctr: '12.4%', lift: '+4.2%', color: 'from-rose-500/20 to-orange-500/5', border: 'border-rose-500/30', badge: 'text-rose-400' },
-                 { name: 'Variant B: Curiosity Gap', ctr: '18.9%', lift: '+10.7%', color: 'from-emerald-500/20 to-teal-500/5', border: 'border-emerald-500/50', badge: 'text-emerald-400', winner: true },
-                 { name: 'Variant C: Minimalist', ctr: '8.1%', lift: '-0.1%', color: 'from-slate-500/20 to-slate-800/10', border: 'border-slate-500/30', badge: 'text-slate-400' }
-              ].map((v, i) => (
-                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.15 }}
-                    key={i}
-                    className={`relative p-8 rounded-[3rem] bg-gradient-to-br ${v.color} border ${v.border} space-y-6 ${v.winner ? 'shadow-[0_0_50px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/20' : ''}`}
-                 >
-                    {v.winner && (
-                       <div className="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-emerald-500 shadow-xl flex items-center justify-center animate-bounce">
-                          <Target className="w-5 h-5 text-white" />
-                       </div>
-                    )}
-                    <h4 className={`text-[11px] font-black uppercase tracking-widest ${v.badge}`}>{v.name}</h4>
-                    
-                    <div className="space-y-1">
-                       <span className="text-[10px] text-slate-400 uppercase tracking-widest">Predicted CTR</span>
-                       <div className="text-5xl font-black text-white tabular-nums tracking-tighter">{v.ctr}</div>
-                       <span className={`text-[10px] font-bold ${v.lift.startsWith('+') ? 'text-emerald-400' : 'text-rose-400'}`}>{v.lift} baseline</span>
-                    </div>
+              {(abVariantsData?.variants || [
+                 { type: 'High Energy', text: 'Variant A', predictedLift: '+4.2%', winner: false, hypothesis: 'Simulated high-energy pattern.' },
+                 { type: 'Curiosity Gap', text: 'Variant B', predictedLift: '+10.7%', winner: true, hypothesis: 'Creates immediate knowledge gap.' },
+                 { type: 'Minimalist', text: 'Variant C', predictedLift: '-0.1%', winner: false, hypothesis: 'Simulated flat hook.' }
+              ]).map((v: any, i: number) => {
+                 let color = 'from-slate-500/20 to-slate-800/10'
+                 let border = 'border-slate-500/30'
+                 let badge = 'text-slate-400'
+                 
+                 if (v.winner || v.type.toLowerCase().includes('curiosity')) {
+                   color = 'from-emerald-500/20 to-teal-500/5'
+                   border = 'border-emerald-500/50'
+                   badge = 'text-emerald-400'
+                 } else if (v.type.toLowerCase().includes('data') || v.type.toLowerCase().includes('energy')) {
+                   color = 'from-rose-500/20 to-orange-500/5'
+                   border = 'border-rose-500/30'
+                   badge = 'text-rose-400'
+                 }
 
-                    <button className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black text-white uppercase tracking-widest transition-colors">
-                       {v.winner ? 'Apply Winner to Timeline' : 'Preview Hook'}
-                    </button>
-                 </motion.div>
-              ))}
+                 return (
+                  <motion.div
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: i * 0.15 }}
+                     key={i}
+                     className={`relative p-8 rounded-[3rem] bg-gradient-to-br ${color} border ${border} space-y-6 flex flex-col justify-between ${v.winner ? 'shadow-[0_0_50px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/20' : ''}`}
+                  >
+                     {v.winner && (
+                        <div className="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-emerald-500 shadow-xl flex items-center justify-center animate-bounce">
+                           <Target className="w-5 h-5 text-white" />
+                        </div>
+                     )}
+                     
+                     <div className="space-y-4">
+                       <h4 className={`text-[11px] font-black uppercase tracking-widest ${badge}`}>{v.type}</h4>
+                       <p className="text-xs text-white italic leading-relaxed font-medium">"{v.text}"</p>
+                       {v.hypothesis && (
+                         <p className="text-[10px] text-slate-500 italic leading-relaxed">Hypothesis: {v.hypothesis}</p>
+                       )}
+                     </div>
+                     
+                     <div className="space-y-4 pt-4 border-t border-white/5">
+                       <div className="space-y-1">
+                          <span className="text-[10px] text-slate-400 uppercase tracking-widest">Predicted Lift</span>
+                          <div className="text-4xl font-black text-white tabular-nums tracking-tighter">{v.predictedLift || v.lift}</div>
+                       </div>
+
+                       <button className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black text-white uppercase tracking-widest transition-colors">
+                          {v.winner ? 'Apply Winner to Timeline' : 'Preview Hook'}
+                       </button>
+                     </div>
+                  </motion.div>
+                 )
+              })}
            </div>
         )}
       </div>
@@ -345,7 +441,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
          </div>
 
          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {roadmap.map((step, i) => (
+            {roadmap.map((step: any, i: number) => (
               <div key={i} className="space-y-6 group cursor-default">
                  <div className="flex items-center gap-6">
                     <span className="text-4xl font-black text-white/5 group-hover:text-indigo-500/20 transition-colors duration-500 tabular-nums">0{i+1}</span>

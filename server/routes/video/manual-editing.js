@@ -409,13 +409,13 @@ router.post('/ai-assist/creative-director', auth, asyncHandler(async (req, res) 
 }));
 
 router.post('/ai-assist/generate-captions', auth, asyncHandler(async (req, res) => {
-  const { videoId, transcript, metadata, style } = req.body;
+  const { videoId, transcript, metadata, style, targetLanguage, language } = req.body;
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
 
   try {
-    const result = await aiAssistedService.generateAICaptions(videoId, transcript, metadata, style);
+    const result = await aiAssistedService.generateAICaptions(videoId, transcript, metadata, style, targetLanguage || language || 'English');
     sendSuccess(res, 'AI captions generated', 200, result);
   } catch (error) {
     logger.error('AI captions error', { error: error.message });
@@ -687,6 +687,7 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       shapeOverlays: Array.isArray(shapeOverlays) ? shapeOverlays : [],
       exportOptions: exportOptions || {},
       timelineSegments: Array.isArray(timelineSegments) ? timelineSegments : [],
+      userId: req.user?._id || req.user?.id || null,
     });
 
     sendSuccess(res, 'Render completed', 200, {

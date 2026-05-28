@@ -122,7 +122,7 @@ router.post('/factory/create', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Creative prompt (topic) is required.' });
     }
 
-    const { aiCallJson } = require('../utils/aiRouter');
+    const { aiCall, aiCallJson, safeJsonParse } = require('../utils/aiRouter');
     const { buildSystemPrompt } = require('../services/marketingKnowledge');
 
     const baseSystem = buildSystemPrompt({
@@ -136,25 +136,28 @@ router.post('/factory/create', async (req, res) => {
     const ctx = `TOPIC: ${topic}\nPLATFORM: ${platform}\nCONTENT_TYPE: ${contentType}\nSTYLE: ${style}\nTONE: ${tone}\nKEYWORDS: ${(keywords || []).join(', ') || 'none'}`;
 
     // Stage 1 — intelligence: position the topic + identify hook angles.
-    const intelligence = await aiCallJson(
+    const r1 = await aiCall(
       `${ctx}\n\nReturn JSON with this exact shape:\n{\n  "audience": "...",\n  "positioning": "...",\n  "topAngles": [{"angle":"...","trigger":"..."}]\n}\nKeep audience and positioning ≤ 80 chars each. 3 angles.`,
-      { audience: '', positioning: '', topAngles: [] },
       { systemPrompt: baseSystem, taskKind: 'creative', temperature: 0.85, maxTokens: 700, taskType: 'autonomous-intelligence' }
     );
+    logger.info('[intelligence] STAGE 1 RAW:', { text: r1.text });
+    const intelligence = safeJsonParse(r1.text, { audience: '', positioning: '', topAngles: [] });
 
     // Stage 2 — script: full short-form script with hook/body/cta.
-    const script = await aiCallJson(
+    const r2 = await aiCall(
       `${ctx}\n\nUsing this positioning:\n${JSON.stringify(intelligence)}\n\nReturn JSON:\n{\n  "title": "...",\n  "hook": "...",\n  "rawScript": {"hook": "...","body": ["...","...","..."],"cta": "..."},\n  "estimatedDurationSec": 30\n}\nHook must be 1 sentence, ≤ 10 words. Body: 3-5 punchy lines, ≤ 14 words each. CTA: 1 sentence.`,
-      { title: '', hook: '', rawScript: { hook: '', body: [], cta: '' }, estimatedDurationSec: 30 },
       { systemPrompt: baseSystem, taskKind: 'creative', temperature: 0.9, maxTokens: 900, taskType: 'autonomous-script' }
     );
+    logger.info('[intelligence] STAGE 2 RAW:', { text: r2.text });
+    const script = safeJsonParse(r2.text, { title: '', hook: '', rawScript: { hook: '', body: [], cta: '' }, estimatedDurationSec: 30 });
 
     // Stage 3 — refinery: tighter, stronger verbs, cut weak words.
-    const refinery = await aiCallJson(
+    const r3 = await aiCall(
       `Polish this script for ${platform}. Replace generic verbs, cut filler. Keep meaning identical. Return JSON:\n{"polishedHook":"...","polishedBody":["...","..."],"polishedCta":"...","improvements":["..."]}\n\nINPUT:\n${JSON.stringify(script.rawScript)}`,
-      { polishedHook: script.rawScript?.hook || '', polishedBody: script.rawScript?.body || [], polishedCta: script.rawScript?.cta || '', improvements: [] },
       { systemPrompt: baseSystem, taskKind: 'creative', temperature: 0.6, maxTokens: 700, taskType: 'autonomous-refinery' }
     );
+    logger.info('[intelligence] STAGE 3 RAW:', { text: r3.text });
+    const refinery = safeJsonParse(r3.text, { polishedHook: script.rawScript?.hook || '', polishedBody: script.rawScript?.body || [], polishedCta: script.rawScript?.cta || '', improvements: [] });
 
     // Stage 4 — anatomy: per-section duration breakdown for timeline.
     const totalDuration = Math.max(15, Math.min(60, Number(script.estimatedDurationSec) || 30));
@@ -185,11 +188,12 @@ router.post('/factory/create', async (req, res) => {
     anatomy.sections[anatomy.sections.length - 1].start = cursor;
 
     // Stage 5 — blueprint: final deliverable (hashtags, CTA chain, thumb).
-    const blueprint = await aiCallJson(
+    const r5 = await aiCall(
       `${ctx}\n\nFINAL SCRIPT:\nHook: ${refinery.polishedHook}\nBody: ${(refinery.polishedBody || []).join(' | ')}\nCTA: ${refinery.polishedCta}\n\nReturn JSON:\n{\n  "hashtags": ["#...","#...","#..."],\n  "ctaChain": ["...","..."],\n  "thumbnailPrompt": "...",\n  "postingWindow": "Tue 7pm",\n  "resonanceScore": 87,\n  "totalDuration": ${totalDuration}\n}\n7 hashtags, 2 CTA variants, 1 visual thumbnail prompt, 1 best posting window, score 60-95.`,
-      { hashtags: [], ctaChain: [], thumbnailPrompt: '', postingWindow: '', resonanceScore: 75, totalDuration },
       { systemPrompt: baseSystem, taskKind: 'orchestration', temperature: 0.5, maxTokens: 700, taskType: 'autonomous-blueprint' }
     );
+    logger.info('[intelligence] STAGE 5 RAW:', { text: r5.text });
+    const blueprint = safeJsonParse(r5.text, { hashtags: [], ctaChain: [], thumbnailPrompt: '', postingWindow: '', resonanceScore: 75, totalDuration });
 
     // Compose stage map the client expects. Also keep a flat manifest
     // for backwards compatibility with older consumers.

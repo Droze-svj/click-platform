@@ -46,7 +46,22 @@
     "settings": "設定",
     "templates": "テンプレート",
     "infrastructure": "インフラ",
-    "clickTagline": "AIで作るコンテンツ"
+    "clickTagline": "AIで作るコンテンツ",
+    "recurring": "繰り返し",
+    "studio": "スタジオ",
+    "grow": "成長",
+    "manage": "管理",
+    "onboarding": "始める",
+    "forge": "フォージ",
+    "videoEditor": "エディター",
+    "aiClips": "AIクリップ",
+    "aiTools": "AIツール",
+    "creatorsHub": "クリエイター",
+    "discover": "発見",
+    "strategist": "ストラテジスト",
+    "aiInsights": "AIインサイト",
+    "roadmap": "ロードマップ",
+    "connectAccounts": "アカウントを接続"
   },
   "workflow": {
     "niche": "ニッチ",
@@ -175,7 +190,39 @@
       "quotesCreated": "作成済み引用",
       "postsScheduled": "予約済み投稿"
     },
-    "clickToView": "Clickして詳細を表示 →"
+    "clickToView": "Clickして詳細を表示 →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "auth": {
     "login": "ログイン",
@@ -247,6 +294,69 @@
     "translated": "翻訳済み",
     "translationFailed": "翻訳に失敗しました",
     "viewOriginal": "原文を表示",
-    "selectLanguage": "言語を選択"
+    "selectLanguage": "言語を選択",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "editor": {
+    "tabs": {
+      "trim": "トリム",
+      "text": "テキスト",
+      "filters": "フィルター",
+      "motion": "モーション",
+      "overlays": "レイヤー",
+      "packs": "パック",
+      "insights": "データ"
+    },
+    "aspectRatio": "フォーマット / アスペクト比",
+    "neuralFocusTracking": "ニューラルフォーカストラッキング",
+    "active": "アクティブ",
+    "offline": "オフライン",
+    "trackingPriorityTarget": "トラッキング優先ターゲット",
+    "speaker": "⚡ スピーカー",
+    "face": "⚡ スピーカー",
+    "action": "🎯 アクション",
+    "custom": "🎬 カスタム",
+    "status": "AI_TRACKING_STATUS",
+    "lockAcquired": "LOCK_ACQUIRED",
+    "standby": "STANDBY",
+    "telemetryPlaceholder": "オートフレーミングを有効にしてターゲットメトリクスをストリーミング…"
+  },
+  "studio": {
+    "advancedStudio": "高度なスタジオ",
+    "videoStudio": "ビデオスタジオ",
+    "syncArchive": "同期アーカイブ",
+    "payloadInventory": "ペイロードインベントリ",
+    "neuralProcessed": "ニューラル処理済み",
+    "syntheticYields": "合成生成物",
+    "initializeIntake": "取り込みを初期化",
+    "payloadArchive": "ペイロードアーカイブ",
+    "searchArchive": "アーカイブを検索...",
+    "dropPayload": "ペイロードをここにドロップ",
+    "syncingPayload": "ペイロードを同期中...",
+    "neuralIngestionReady": "ニューラルスタジオ取り込み準備完了",
+    "payloadsDetected": "ペイロード検出済み",
+    "open": "開く",
+    "syncingStudio": "ニューラルスタジオを同期中...",
+    "tip": "チュートリアルコア:",
+    "tipPaste": "このHUDにURLを貼り付け（⌘V）て自動同期。",
+    "secureTunnel": "セキュアトンネル",
+    "highVelocity": "高速",
+    "intakeHint": "未加工の映像またはマルチトラックシーケンスをニューラルマトリックスに取り込みます。A/Bスウォームが最適な高速合成のためにベクトルを自動調整します。",
+    "secureStorage": "セキュアストレージノード",
+    "all": "すべて",
+    "completed": "完了済み",
+    "processing": "処理中",
+    "failed": "失敗",
+    "queued": "待機中",
+    "yields": "成果物",
+    "uploadStable": "✓ アップロード安定: ベクターを分析中...",
+    "uploadFailed": "書き込みエラー: アップロード失敗",
+    "missingContentId": "パラメータエラー: コンテンツIDがありません",
+    "invalidVideo": "MIMEエラー: 無効な動画形式",
+    "syncingPayloadProgress": "ペイロードを同期中...",
+    "analysisComplete": "✓ 分析完了: {count}個のクリップを生成しました",
+    "processingFailure": "処理失敗: シーケンス中断"
   }
 }

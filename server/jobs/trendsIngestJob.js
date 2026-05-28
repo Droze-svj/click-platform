@@ -23,14 +23,14 @@ function normalizeItems(raw, kindHint) {
   const arr = Array.isArray(raw)
     ? raw
     : Array.isArray(raw.items)
-    ? raw.items
-    : Array.isArray(raw.sounds)
-    ? raw.sounds.map((s) => ({ ...s, _kind: 'sound' }))
-    : Array.isArray(raw.hashtags)
-    ? raw.hashtags.map((h) => ({ ...h, _kind: 'hashtag' }))
-    : Array.isArray(raw.topics)
-    ? raw.topics.map((t) => ({ ...t, _kind: 'topic' }))
-    : [];
+      ? raw.items
+      : Array.isArray(raw.sounds)
+        ? raw.sounds.map((s) => ({ ...s, _kind: 'sound' }))
+        : Array.isArray(raw.hashtags)
+          ? raw.hashtags.map((h) => ({ ...h, _kind: 'hashtag' }))
+          : Array.isArray(raw.topics)
+            ? raw.topics.map((t) => ({ ...t, _kind: 'topic' }))
+            : [];
   return arr
     .filter(Boolean)
     .map((it, i) => {

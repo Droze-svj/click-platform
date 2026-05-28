@@ -8,6 +8,7 @@ const {
   recoveryStrategies,
 } = require('../utils/errorHandler');
 const { generateWithFreeModel } = require('./freeAIModelService');
+const { buildSystemPrompt } = require('./marketingKnowledge');
 let Sentry = null;
 try {
   Sentry = require('@sentry/node');
@@ -138,7 +139,19 @@ async function generateWithModel(prompt, taskType, options = {}) {
       throw new ServiceUnavailableError('AI (Google Gemini)');
     }
 
-    const systemPrompt = getSystemPromptForTask(taskType);
+    let systemPrompt = getSystemPromptForTask(taskType);
+    if (options.userId || options.niche || options.platform) {
+      // Pull fully contextualized user demands and styles directly from marketingKnowledge
+      systemPrompt = await buildSystemPrompt({
+        userId: options.userId || 'anonymous-user',
+        niche: options.niche || 'general',
+        platform: options.platform || 'youtube',
+        contentType: taskType,
+        tone: options.tone,
+        customPrompt: options.customPrompt
+      });
+    }
+
     const fullPrompt = `${systemPrompt}\n\n${prompt}`;
 
     const content = await retry(
@@ -191,7 +204,9 @@ function getSystemPromptForTask(taskType) {
     'ideation': 'You are a creative strategist. Generate innovative ideas and suggestions.',
   };
 
-  return prompts[taskType] || prompts['content-generation'];
+  const antiHallucinationGuardrail = '\n\nCRITICAL INSTRUCTIONS:\n- DO NOT hallucinate. Base your response strictly on the provided context.\n- DO NOT invent features, facts, or statistics that are not explicitly stated.\n- AVOID repetitive phrasing and redundant loops. Ensure diverse and natural vocabulary.';
+
+  return (prompts[taskType] || prompts['content-generation']) + antiHallucinationGuardrail;
 }
 
 /**

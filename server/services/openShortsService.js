@@ -2,6 +2,7 @@ const { aiCallJson } = require('../utils/aiRouter');
 const logger = require('../utils/logger');
 const { getActiveBlueprint } = require('./continuousLearningService');
 const { renderFromEditorState } = require('./videoRenderService');
+const { getClickPersonalityRules } = require('./marketingKnowledge');
 const Content = require('../models/Content');
 const SuggestionHistory = require('../models/SuggestionHistory');
 const path = require('path');
@@ -23,9 +24,9 @@ async function generateShortContent(userId, topic, niche, opts = {}) {
       userId, 
       kind: 'openshorts-synthesis' 
     })
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .lean();
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
     
     const avoidedThemes = recentHistory.map(h => h.label).join(', ');
     
@@ -37,6 +38,8 @@ async function generateShortContent(userId, topic, niche, opts = {}) {
     // 3. Formulate the Sovereign Prompt for Gemini
     const systemPrompt = `You are the OpenShorts Sovereign Brain (V6-Gemini).
     Your task is to generate a complete, high-fidelity short-form video script and A/B Swarm editing manifests.
+    
+    ${getClickPersonalityRules(userId)}
     
     USER STYLE BLUEPRINT: ${JSON.stringify(blueprint || {})}
     USER BRAND VOICE: Tone: ${brandVoice.tone}, Style: ${brandVoice.style}, Characteristics: ${brandVoice.summary || 'N/A'}
@@ -161,7 +164,8 @@ async function processSovereignShort(userId, manifest, baseVideoUrl = null, vari
         quality: 'best',
         bitrateMbps: 12
       },
-      editIntensity: opts.editIntensity || 'CINEMATIC'
+      editIntensity: opts.editIntensity || 'CINEMATIC',
+      userId
     };
 
     // 4. Dispatch to Render Service

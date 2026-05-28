@@ -17,7 +17,17 @@ const { runOneClickViral } = require('../../services/oneClickViralService');
 const { reformatToPlatforms } = require('../../services/reformatService');
 const logger = require('../../utils/logger');
 
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+
 const router = express.Router();
+
+router.use((req, res, next) => {
+  if (req.method === 'POST') return aiLimiter(req, res, next);
+  return next();
+});
+
+router.use(costGuard());
 
 router.post('/one-click', auth, asyncHandler(async (req, res) => {
   const { contentId, niche, platform, language, targetLanguage } = req.body || {};

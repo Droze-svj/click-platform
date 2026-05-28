@@ -96,32 +96,32 @@ class SovereignToolboxService {
     logger.info(`[Toolbox] Executing tool: ${toolId}`, { videoId, userId });
 
     switch (toolId) {
-      case 'silence-removal':
-        return await aiVideoEditingService.detectSilencePeriods(options.path, options.threshold, options.minDuration);
+    case 'silence-removal':
+      return await aiVideoEditingService.detectSilencePeriods(options.path, options.threshold, options.minDuration);
       
-      case 'viral-clips':
-        return await openShortsService.generateShortContent(userId, options.topic, options.niche);
+    case 'viral-clips':
+      return await openShortsService.generateShortContent(userId, options.topic, options.niche);
 
-      case 'auto-captions':
-        return await videoCaptionService.generateCaptions(videoId, options);
+    case 'auto-captions':
+      return await videoCaptionService.generateCaptions(videoId, options);
 
-      case 'bg-swap':
-        return await creativeToolsService.swapBackground(videoId, options.backgroundUrl, options.blurAmount, userId);
+    case 'bg-swap':
+      return await creativeToolsService.swapBackground(videoId, options.backgroundUrl, options.blurAmount, userId);
 
-      case 'ai-avatar':
-        return await creativeToolsService.generateAiAvatar(videoId, options, userId);
+    case 'ai-avatar':
+      return await creativeToolsService.generateAiAvatar(videoId, options, userId);
 
-      case 'cinematic-3d':
-        return await visualSynthesisService.initializeSynthesis(`synth-${videoId}`, options.prompt, options);
+    case 'cinematic-3d':
+      return await visualSynthesisService.initializeSynthesis(`synth-${videoId}`, options.prompt, options);
 
-      default:
-        // For tools not explicitly mapped to a single function yet, return a successful "Planned Execution" manifest
-        return {
-          success: true,
-          toolId,
-          message: `Sovereign ${toolId} upgrade initialized. Processing via Click Neural Hub.`,
-          autonomousUpgrade: this.tools.find(t => t.id === toolId)?.upgrade
-        };
+    default:
+      // For tools not explicitly mapped to a single function yet, return a successful "Planned Execution" manifest
+      return {
+        success: true,
+        toolId,
+        message: `Sovereign ${toolId} upgrade initialized. Processing via Click Neural Hub.`,
+        autonomousUpgrade: this.tools.find(t => t.id === toolId)?.upgrade
+      };
     }
   }
 }

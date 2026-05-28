@@ -60,6 +60,9 @@ const STYLE_PRESETS = [
   { id: 'casual-vlog',        label: 'Casual Vlog',        emoji: '🎙️', tagline: 'Day-in-life · conversational',  accent: 'from-sky-500 to-cyan-700' },
   { id: 'mystery-hook',       label: 'Mystery Hook',       emoji: '🕯️', tagline: 'Curiosity loop · slow reveal',  accent: 'from-fuchsia-600 to-purple-800' },
   { id: 'gym-grit',           label: 'Gym Grit',           emoji: '🔥',  tagline: 'High-intensity · tough love',   accent: 'from-red-600 to-orange-800' },
+  { id: 'adhd-overload',     label: 'ADHD Overload',      emoji: '⚡',  tagline: 'Chaos · pop-burst · overstim',  accent: 'from-rose-600 to-rose-800' },
+  { id: 'podcast-goldmine',  label: 'Podcast Goldmine',   emoji: '🎙️', tagline: 'Authority · chapters · warm doc', accent: 'from-amber-500 to-amber-700' },
+  { id: 'retention-machine', label: 'Retention Machine',  emoji: '🔄',  tagline: 'Open loops · B-roll · chapters', accent: 'from-violet-600 to-violet-800' },
 ] as const
 
 // Compact select-card used inside the Advanced collapsible. One file-local
@@ -98,6 +101,151 @@ function SelectCard<T extends string>({
   )
 }
 
+// ─── Per-clip viral score breakdown ─────────────────────────────────────────
+const CLIP_TYPE_COLORS: Record<string, string> = {
+  hook:       'bg-yellow-50 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/50',
+  proof:      'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50',
+  story:      'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800/50',
+  insight:    'bg-purple-50 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800/50',
+  reaction:   'bg-orange-50 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border-orange-200 dark:border-orange-800/50',
+  confession: 'bg-pink-50 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300 border-pink-200 dark:border-pink-800/50',
+}
+
+function ClipScoreCard({ clip }: { clip: any }) {
+  const score = clip.engagementScore || {}
+  const breakdown = clip.scoreBreakdown || {}
+  const clipType = (clip.clipType || 'insight') as string
+  const typeColor = CLIP_TYPE_COLORS[clipType] || CLIP_TYPE_COLORS.insight
+  const overall = score.overall ?? clip.viralScore ?? 0
+
+  return (
+    <div className="p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-4">
+      <div className="flex items-center justify-between">
+        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border ${typeColor}`}>
+          {clipType}
+        </span>
+        <span className="text-2xl font-black text-surface-900 dark:text-white tabular-nums">{overall}%</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { label: 'Hook',   val: score.hookStrength  ?? breakdown.hookStrength  ?? 0 },
+          { label: 'Viral',  val: score.viralPotential ?? 0 },
+          { label: 'Proof',  val: breakdown.proofDensity ?? 0 },
+          { label: 'Energy', val: breakdown.deliveryEnergy ?? score.sentimentDensity ?? 0 },
+        ].map(({ label, val }) => (
+          <div key={label} className="flex justify-between items-center px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
+            <span className="text-[10px] font-bold text-surface-500 uppercase">{label}</span>
+            <span className="text-sm font-black text-surface-900 dark:text-white tabular-nums">{val}%</span>
+          </div>
+        ))}
+      </div>
+      {clip.rationale && (
+        <p className="text-[11px] text-surface-500 italic leading-relaxed">{clip.rationale}</p>
+      )}
+    </div>
+  )
+}
+
+// ─── A/B hook variant selector ───────────────────────────────────────────────
+function HookVariantSelector({ variants, onSelect }: {
+  variants: { curiosityGap?: string; boldClaim?: string; socialProof?: string }
+  onSelect: (hook: string) => void
+}) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const options = [
+    { key: 'curiosityGap', label: 'Curiosity Gap', icon: '🕵️', text: variants.curiosityGap },
+    { key: 'boldClaim',    label: 'Bold Claim',    icon: '💥', text: variants.boldClaim },
+    { key: 'socialProof',  label: 'Social Proof',  icon: '📣', text: variants.socialProof },
+  ].filter(o => o.text)
+
+  if (options.length === 0) return null
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-black uppercase tracking-widest text-surface-500">Hook Variant</p>
+      {options.map(opt => (
+        <button
+          key={opt.key}
+          type="button"
+          onClick={() => { setSelected(opt.key); onSelect(opt.text!) }}
+          className={`w-full text-left p-4 rounded-xl border transition-all ${
+            selected === opt.key
+              ? 'bg-primary-500/10 border-primary-400 dark:border-primary-600'
+              : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span>{opt.icon}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-surface-500">{opt.label}</span>
+          </div>
+          <p className="text-sm font-medium text-surface-900 dark:text-white">{opt.text}</p>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ─── Marketing brief collapsible panel ───────────────────────────────────────
+function MarketingBriefPanel({ brief }: { brief: any }) {
+  const [open, setOpen] = useState(false)
+  if (!brief?.strategy) return null
+  const s = brief.strategy
+  return (
+    <div className="rounded-3xl border border-surface-200 dark:border-surface-800 overflow-hidden shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between p-8 bg-white dark:bg-surface-900 text-left hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center justify-center">
+            <Brain size={18} className="text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <p className="text-sm font-black text-surface-900 dark:text-white">Marketing Brief</p>
+            {s.contentArchetype && (
+              <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] font-black uppercase tracking-widest border border-primary-200 dark:border-primary-800">
+                {s.contentArchetype.replace(/-/g, ' ')}
+              </span>
+            )}
+          </div>
+        </div>
+        {open ? <ChevronUp size={16} className="text-surface-400" /> : <ChevronDown size={16} className="text-surface-400" />}
+      </button>
+      {open && (
+        <div className="p-8 space-y-6 border-t border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950">
+          {s.schedulingMatrix && (
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3">Optimal Posting Times</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Object.entries(s.schedulingMatrix).map(([platform, data]: [string, any]) => (
+                  <div key={platform} className="p-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
+                    <p className="text-[9px] font-black uppercase text-surface-500 mb-1">{platform.replace(/_/g, ' ')}</p>
+                    <p className="text-xs font-black text-surface-900 dark:text-white">{data.optimalDay} · {data.optimalTime}</p>
+                    {data.reasoning && <p className="text-[9px] text-surface-500 mt-1 leading-relaxed">{String(data.reasoning).substring(0, 80)}…</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {Array.isArray(s.competitiveInsights) && s.competitiveInsights.length > 0 && (
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3">Competitive Insights</p>
+              <div className="space-y-2">
+                {s.competitiveInsights.map((insight: string, i: number) => (
+                  <div key={i} className="flex gap-3 p-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
+                    <Zap size={14} className="text-primary-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-surface-700 dark:text-surface-300">{insight}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function VideoEditPage({ params }: PageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -106,6 +254,8 @@ export default function VideoEditPage({ params }: PageProps) {
   // ModernVideoEditor so it can auto-open the SmartCleanup panel on the
   // requested tool. No mode-picker friction.
   const aiTool = searchParams?.get('aiTool') as ('silence' | 'fillers' | 'edit-by-text' | null) || null
+  const modeParam = searchParams?.get('mode') || null
+  const clipUrl = searchParams?.get('clipUrl') || null
   const videoId = params.videoId
   const { user } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
@@ -113,7 +263,9 @@ export default function VideoEditPage({ params }: PageProps) {
   const [video, setVideo] = useState<Video | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [editMode, setEditMode] = useState<'selection' | 'manual' | 'ai-auto'>(aiTool ? 'manual' : 'selection')
+  const [editMode, setEditMode] = useState<'selection' | 'manual' | 'ai-auto'>(
+    aiTool || modeParam === 'manual' ? 'manual' : 'selection'
+  )
   const [processing, setProcessing] = useState(false)
   const [liveProgress, setLiveProgress] = useState<{ stage: string; percent: number; message: string } | null>(null)
 
@@ -206,9 +358,14 @@ export default function VideoEditPage({ params }: PageProps) {
   const [speedRamping, setSpeedRamping] = useState<boolean>(false)
   const [brollFrequency, setBrollFrequency] = useState<'off' | 'sparse' | 'balanced' | 'heavy'>('balanced')
   const [voiceTone, setVoiceTone] = useState<'auto' | 'energetic' | 'calm' | 'authoritative' | 'playful' | 'serious'>('auto')
+  const [targetPlatform, setTargetPlatform] = useState<'auto' | 'tiktok' | 'instagram' | 'youtube' | 'linkedin'>('auto')
+  const [contentTone, setContentTone] = useState<'auto' | 'educational' | 'entertaining' | 'motivational' | 'promotional'>('auto')
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(false)
+  const [customInstructions, setCustomInstructions] = useState<string>('')
   const [editJobId, setEditJobId] = useState<string | null>(null)
   const [newVideoScore, setNewVideoScore] = useState<{ score: number; factors?: { name: string; value: string; impact: string }[] } | null>(null)
+  const [marketingBrief, setMarketingBrief] = useState<any>(null)
+  const [scoredClips, setScoredClips] = useState<any[]>([])
   // Resolved style insight from the publish→learn loop. When the user
   // has ≥3 publishes, we pre-select their top preset / color grade /
   // hook style so the HUD opens already biased toward their style. The
@@ -291,10 +448,20 @@ export default function VideoEditPage({ params }: PageProps) {
   useEffect(() => {
     if (!aiEditResult || !videoId) return
     setNewVideoScore(null)
+    setMarketingBrief(null)
+    setScoredClips([])
+    // Fetch engagement score and marketing brief in parallel
     apiPost('/video/ai-editing/score', { videoId })
       .then((res: any) => {
         const data = res?.data ?? res
         if (data?.score != null) setNewVideoScore({ score: data.score, factors: data.factors })
+      })
+      .catch(() => { })
+    apiPost('/video/ai-editing/marketing-brief', { videoId })
+      .then((res: any) => {
+        const data = res?.data ?? res
+        if (data?.brief) setMarketingBrief(data.brief)
+        if (Array.isArray(data?.scoredClips?.clips)) setScoredClips(data.scoredClips.clips)
       })
       .catch(() => { })
   }, [aiEditResult, videoId])
@@ -369,6 +536,9 @@ export default function VideoEditPage({ params }: PageProps) {
         ...(voiceTone !== 'auto' ? { voiceTone } : {}),
         speedRamping,
         brollFrequency,
+        ...(targetPlatform !== 'auto' ? { platform: targetPlatform } : {}),
+        ...(contentTone !== 'auto' ? { contentTone } : {}),
+        ...(customInstructions.trim() ? { customInstructions: customInstructions.trim() } : {}),
       }
       const result = await apiPost('/video/ai-editing/auto-edit', { videoId, editingOptions: backendOptions, outputFormat })
       const jobId = result.data?.jobId || result.jobId
@@ -444,7 +614,9 @@ export default function VideoEditPage({ params }: PageProps) {
   )
 
   const videoUrl = video?.originalFile?.url
-  const editorVideoUrl = (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl
+  // clipUrl is passed from the Clips Hub when editing an already-rendered clip —
+  // give it priority so the manual editor opens the clip MP4, not the parent source.
+  const editorVideoUrl = clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl
 
   const selectionUI = (
     <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-24 transition-colors duration-500">
@@ -654,10 +826,34 @@ export default function VideoEditPage({ params }: PageProps) {
                     )}
                   </div>
                 )}
+
+                {/* Ranked Viral Clips — scored by the Smart Clip Scorer */}
+                {scoredClips.length > 0 && (
+                  <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 rounded-3xl shadow-sm space-y-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <TrendingUp size={16} className="text-primary-500" />
+                      <h3 className="text-sm font-black text-surface-900 dark:text-white uppercase tracking-wider">Top Viral Clips</h3>
+                    </div>
+                    {scoredClips.map((clip, i) => (
+                      <div key={i} className="space-y-3">
+                        <ClipScoreCard clip={clip} />
+                        {clip.hookVariants && (
+                          <HookVariantSelector
+                            variants={clip.hookVariants}
+                            onSelect={(hook) => { /* hook selected — could copy to clipboard */ navigator.clipboard?.writeText(hook).catch(() => {}) }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Marketing Brief */}
+                <MarketingBriefPanel brief={marketingBrief} />
               </motion.div>
             ) : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 {/* Left Col: Analysis Results */}
                 <div className="lg:col-span-4 space-y-6">
                   {showAnalysis && aiAnalysis && (
@@ -720,6 +916,67 @@ export default function VideoEditPage({ params }: PageProps) {
                               )}
                             </p>
                          </div>
+                      </div>
+
+                      {/* Platform + Tone — top-level creative intent.
+                          Platform drives aspect ratio, caption style, and
+                          Gemini niche playbook. Tone biases hook type and
+                          CTA framing across the whole edit. */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-2">
+                            <Globe size={13} className="text-primary-500" /> Target platform
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {([
+                              { id: 'auto',      label: 'Auto',      emoji: '✨' },
+                              { id: 'tiktok',    label: 'TikTok',    emoji: '🎵' },
+                              { id: 'instagram', label: 'Instagram',  emoji: '📸' },
+                              { id: 'youtube',   label: 'YouTube',   emoji: '▶️' },
+                              { id: 'linkedin',  label: 'LinkedIn',  emoji: '💼' },
+                            ] as const).map(p => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => setTargetPlatform(p.id)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                                  targetPlatform === p.id
+                                    ? 'bg-primary-500 text-white border-primary-500 shadow-sm'
+                                    : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700'
+                                }`}
+                              >
+                                <span>{p.emoji}</span>{p.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-2">
+                            <Sparkle size={13} className="text-primary-500" /> Content tone
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {([
+                              { id: 'auto',          label: 'Auto' },
+                              { id: 'educational',   label: 'Educational' },
+                              { id: 'entertaining',  label: 'Entertaining' },
+                              { id: 'motivational',  label: 'Motivational' },
+                              { id: 'promotional',   label: 'Promotional' },
+                            ] as const).map(t => (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => setContentTone(t.id)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                                  contentTone === t.id
+                                    ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white shadow-sm'
+                                    : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'
+                                }`}
+                              >
+                                {t.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Style Preset Gallery — visual cards for each of
@@ -916,6 +1173,26 @@ export default function VideoEditPage({ params }: PageProps) {
                                    <span className="w-5 h-5 rounded-full bg-white shadow-sm mx-0.5" />
                                 </button>
                              </div>
+
+                             {/* Creative Direction — free-text injected into Gemini pre-flight */}
+                             <div className="md:col-span-2 p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-2">
+                               <div className="flex items-center gap-2">
+                                 <Brain size={14} className="text-primary-500" />
+                                 <p className="text-xs font-bold text-surface-900 dark:text-white">Creative Direction</p>
+                                 <span className="ml-auto text-[10px] font-medium text-surface-500">optional · overrides AI defaults</span>
+                               </div>
+                               <textarea
+                                 value={customInstructions}
+                                 onChange={e => setCustomInstructions(e.target.value)}
+                                 placeholder="e.g. Make it feel cinematic and dark, no jump cuts, emphasise the emotional pause at 0:42…"
+                                 maxLength={400}
+                                 rows={3}
+                                 className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg px-3 py-2 text-xs font-medium text-surface-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/40 resize-none placeholder:text-surface-400"
+                               />
+                               {customInstructions.length > 0 && (
+                                 <p className="text-[10px] text-surface-400 text-right tabular-nums">{customInstructions.length}/400</p>
+                               )}
+                             </div>
                            </div>
                          )}
                       </div>
@@ -952,6 +1229,8 @@ export default function VideoEditPage({ params }: PageProps) {
                             </div>
                             <p className="text-sm text-surface-800 dark:text-surface-200 leading-relaxed">
                               Compose <span className="font-black">{clipCount}</span> {aspectLabel} clip{clipCount === 1 ? '' : 's'}, target <span className="font-black">{lengthLabel}</span>
+                              {targetPlatform !== 'auto' && <> for <span className="font-black capitalize">{targetPlatform}</span></>}
+                              {contentTone !== 'auto' && <> · <span className="font-black capitalize">{contentTone}</span> tone</>}
                               {presets.length > 0 ? (
                                 <> across <span className="font-black">{presets.map(p => p.label).join(' + ')}</span> ({variations} variation angles)</>
                               ) : (
@@ -984,6 +1263,21 @@ export default function VideoEditPage({ params }: PageProps) {
                               {speedRamping && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
                                   <Gauge size={10} /> Speed ramp
+                                </span>
+                              )}
+                              {targetPlatform !== 'auto' && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300 capitalize">
+                                  <Globe size={10} /> {targetPlatform}
+                                </span>
+                              )}
+                              {contentTone !== 'auto' && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300 capitalize">
+                                  <Sparkle size={10} /> {contentTone}
+                                </span>
+                              )}
+                              {customInstructions.trim() && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 text-[10px] font-bold text-primary-700 dark:text-primary-300 max-w-xs truncate">
+                                  <Brain size={10} /> &ldquo;{customInstructions.trim().substring(0, 40)}{customInstructions.trim().length > 40 ? '…' : ''}&rdquo;
                                 </span>
                               )}
                             </div>

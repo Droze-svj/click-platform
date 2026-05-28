@@ -1,9 +1,7 @@
 const { generateEmbeddings } = require('../utils/googleAI');
 const redisClient = require('../utils/redisCache');
+const VectorMemory = require('../models/VectorMemory');
 
-// Mock in-memory Vector DB fallback
-// In production, instantiate Pinecone or Weaviate Client here
-const inMemoryVectorDB = new Map(); // userId => Array of { id, text, vector, metadata }
 
 /**
  * Calculates cosine similarity between two vectors.
@@ -33,17 +31,11 @@ async function storeUserMemory(userId, text, metadata = {}) {
     return false;
   }
 
-  // To-Do: Replace with Pinecone / Weaviate 'upsert' method when client is added.
-  if (!inMemoryVectorDB.has(userId)) {
-    inMemoryVectorDB.set(userId, []);
-  }
-
-  const memoryStore = inMemoryVectorDB.get(userId);
-  memoryStore.push({
-    id: Date.now().toString(),
+  await VectorMemory.create({
+    userId,
     text,
     vector,
-    metadata,
+    metadata
   });
 
   return true;
@@ -55,44 +47,98 @@ async function storeUserMemory(userId, text, metadata = {}) {
  * @param {string} queryText - The current task instructing the Editor Agent
  * @param {number} topK - How many memories to fetch
  */
-async function queryUserMemory(userId, queryText, topK = 3) {
+async function queryUserMemory(userId, queryText, topKOrOptions = 3) {
+  let topK = 3;
+  let options = {};
+  if (topKOrOptions && typeof topKOrOptions === 'object') {
+    options = topKOrOptions;
+    topK = options.limit ?? options.topK ?? 3;
+  } else if (typeof topKOrOptions === 'number') {
+    topK = topKOrOptions;
+  }
+
+  const minScore = options.minScore ?? 0.60;
+  const niche = options.niche;
+  const platform = options.platform;
+  const category = options.category;
+  const tags = options.tags || [];
+
   // Semantic Cache Check via Redis (or local map if redis unavailable)
-  const cacheKey = `semantic_cache:${userId}:${Buffer.from(queryText).toString('base64').substring(0, 32)}`;
+  const cacheOptionsHash = Buffer.from(JSON.stringify({ niche, platform, category, tags, minScore })).toString('base64').substring(0, 16);
+  const cacheKey = `semantic_cache:${userId}:${Buffer.from(queryText).toString('base64').substring(0, 32)}:${cacheOptionsHash}`;
 
   if (redisClient && redisClient.get) {
     try {
       const cachedResult = await redisClient.get(cacheKey);
       if (cachedResult) {
-        
         return JSON.parse(cachedResult);
       }
     } catch (err) {
-      
+      // Degrade gracefully if redis errors
     }
   }
 
   const vector = await generateEmbeddings(queryText);
   if (!vector) return [];
 
-  // To-Do: Replace with Pinecone / Weaviate 'query' method when client is added.
-  const memoryStore = inMemoryVectorDB.get(userId) || [];
+  const memoryStore = await VectorMemory.find({ userId }).lean() || [];
 
-  // Calculate similarities
+  // Calculate similarities and apply contextual boosts
   const scoredMemories = memoryStore.map(memory => {
+    const rawScore = cosineSimilarity(vector, memory.vector);
+    let boostedScore = rawScore;
+    
+    // Apply context boosts if metadata is available
+    if (memory.metadata) {
+      if (niche && memory.metadata.niche === niche) {
+        boostedScore += 0.15;
+      }
+      if (platform && memory.metadata.platform === platform) {
+        boostedScore += 0.08;
+      }
+      if (category && memory.metadata.category === category) {
+        boostedScore += 0.10;
+      }
+      // If tags match, boost by 0.10 per match (max 0.20)
+      if (tags.length > 0 && Array.isArray(memory.metadata.tags)) {
+        let tagMatches = 0;
+        for (const t of tags) {
+          if (memory.metadata.tags.includes(t)) tagMatches++;
+        }
+        boostedScore += Math.min(tagMatches * 0.10, 0.20);
+      }
+    }
+    
+    // Clamp maximum score to 1.0
+    boostedScore = Math.min(boostedScore, 1.0);
+
+    // Temporal decay: memories older than 6 months weighted up to 40% less
+    const createdAtTime = memory.createdAt ? new Date(memory.createdAt).getTime() : Date.now();
+    if (!isNaN(createdAtTime)) {
+      const ageInDays = (Date.now() - createdAtTime) / 86400000;
+      boostedScore *= Math.max(0.6, 1 - (ageInDays / 180) * 0.4);
+    }
+
     return {
       ...memory,
-      score: cosineSimilarity(vector, memory.vector),
+      rawScore,
+      score: boostedScore,
     };
   });
 
+  // Filter out scored memories under minimum score threshold
+  const filteredMemories = scoredMemories.filter(m => m.score >= minScore);
+
   // Sort descending by score
-  scoredMemories.sort((a, b) => b.score - a.score);
+  filteredMemories.sort((a, b) => b.score - a.score);
 
   // Return topK
-  const results = scoredMemories.slice(0, topK).map(mem => ({
+  const results = filteredMemories.slice(0, topK).map(mem => ({
+    id: mem._id,
     text: mem.text,
     metadata: mem.metadata,
     score: mem.score,
+    rawScore: mem.rawScore,
   }));
 
   // Store in Redis Semantic Cache (expire in 1 hour)
@@ -100,14 +146,29 @@ async function queryUserMemory(userId, queryText, topK = 3) {
     try {
       await redisClient.set(cacheKey, JSON.stringify(results), 'EX', 3600);
     } catch (err) {
-      
+      // Degrade gracefully if redis errors
     }
   }
 
   return results;
 }
 
+/**
+ * Delete a specific memory for a user
+ * @param {string} userId - ID of the user
+ * @param {string} memoryId - ID of the memory to delete
+ */
+async function deleteUserMemory(userId, memoryId) {
+  try {
+    const result = await VectorMemory.deleteOne({ _id: memoryId, userId });
+    return result.deletedCount > 0;
+  } catch (err) {
+    return false;
+  }
+}
+
 module.exports = {
   storeUserMemory,
   queryUserMemory,
+  deleteUserMemory,
 };

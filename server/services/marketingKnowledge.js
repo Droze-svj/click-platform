@@ -357,11 +357,32 @@ const LANGUAGE_PROFILES = {
   'ar':      { name: 'Modern Standard Arabic',         register: 'Use MSA for cross-region reach; mention dialect only when niche is hyper-local.', hashtagScript: 'arabic', regionalNotes: 'RTL in copy. Hashtags can mix Arabic + Latin for discoverability.' },
   'hi':      { name: 'Hindi',                          register: 'Conversational Hindi-English code-mix is normal on YouTube/IG. Pure Hindi for traditional niches.', hashtagScript: 'latin', regionalNotes: 'Devanagari for body, Latin transliteration for hashtags.' },
   'ru':      { name: 'Russian',                        register: 'Direct, witty. Avoid forced anglicisms.', hashtagScript: 'cyrillic', regionalNotes: 'Hashtags can be Cyrillic; mix with Latin for cross-platform.' },
+  'nl':      { name: 'Dutch',                          register: 'Direct, natural, conversational but professional.', hashtagScript: 'latin', regionalNotes: '' },
+  'pl':      { name: 'Polish',                         register: 'Engaging, friendly and culturally aware.', hashtagScript: 'latin', regionalNotes: '' },
+  'tr':      { name: 'Turkish',                        register: 'Warm, sincere, and dynamic.', hashtagScript: 'latin', regionalNotes: '' },
 };
 
 function normaliseLanguage(l) {
   if (!l || typeof l !== 'string') return 'en';
   const lower = l.toLowerCase();
+  const nameToCode = {
+    english: 'en',
+    spanish: 'es',
+    french: 'fr',
+    german: 'de',
+    italian: 'it',
+    portuguese: 'pt',
+    russian: 'ru',
+    japanese: 'ja',
+    korean: 'ko',
+    chinese: 'zh-Hans',
+    arabic: 'ar',
+    hindi: 'hi',
+    dutch: 'nl',
+    polish: 'pl',
+    turkish: 'tr'
+  };
+  if (nameToCode[lower]) return nameToCode[lower];
   if (LANGUAGE_PROFILES[lower]) return lower;
   if (LANGUAGE_PROFILES[l]) return l; // preserves 'zh-Hans' camel case
   const base = lower.split('-')[0];
@@ -520,22 +541,24 @@ function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage =
   } catch (_) { /* missing module — silently skip */ }
 
   const personaLine = {
-    'script-writer':    'You are Click — a senior short-form scriptwriter who has written for top-1% creators in this niche.',
-    'caption-writer':   'You are Click — a caption strategist who has analysed the top 100 viral videos in this niche this month.',
-    'edit-suggester':   'You are Click — a senior video editor advising on cuts, motion, and overlays.',
-    'thumbnail':        'You are Click — a thumbnail and cold-open strategist.',
-    'marketing-coach':  'You are Click — a direct, no-fluff marketing coach.',
+    'script-writer':    'You are Click — a brilliant, fast-talking short-form scriptwriter who has written for top-1% creators in this niche.',
+    'caption-writer':   'You are Click — an obsessed caption strategist who has analysed the top 100 viral videos in this niche this month.',
+    'edit-suggester':   'You are Click — a sharply observant senior video editor advising on cuts, motion, and overlays with a blunt, no-nonsense style.',
+    'thumbnail':        'You are Click — a ruthless thumbnail and cold-open strategist. You care about CTR above all else.',
+    'marketing-coach':  'You are Click — a highly energetic, direct, no-fluff marketing coach.',
     // Creative director — used when the task is to produce MULTIPLE
     // distinct creative options (variants) rather than a single best
     // answer. Output is ranked + tagged with what makes each variant
     // distinct so the creator can pick what fits their judgement.
-    'creative-director': 'You are Click — a creative director. Your job is to surface 3-5 genuinely different creative options for the same brief, each with a clear angle and a one-line "why this".',
-  }[persona] || 'You are Click — a marketing-minded creative collaborator.';
+    'creative-director': 'You are Click — a visionary creative director. Your job is to surface 3-5 genuinely different creative options for the same brief, each with a clear angle and a one-line "why this".',
+  }[persona] || 'You are Click — an intensely creative and sharply opinionated marketing collaborator.';
 
   return [
     personaLine,
     '',
     `Niche: ${slice.niche.toUpperCase()}. Platform: ${slice.platform.toUpperCase()}. Stage: ${stage}. Language: ${lp.name.toUpperCase()}.`,
+    '',
+    getClickPersonalityRules(styleProfile?.userId || niche),
     '',
     '── Language & locale ──',
     `Output language: ${lp.name}. Write all user-facing copy (script body, captions, CTAs, hashtags) in ${lp.name}.`,
@@ -579,6 +602,8 @@ function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage =
     '• Match the niche voice exactly — do not water it down to "professional".',
     '• If the user has not specified an angle, pick the strongest one from the playbook.',
     '• Hooks should pass the "would I keep scrolling" test in the first frame.',
+    '• IMPORTANT: Ensure all output matches the unique, charismatic personality defined above without any repetition.',
+    '• CRITICAL: DO NOT hallucinate or invent features, facts, or statistics that are not explicitly provided. Base your response strictly on the context.',
     extra,
   ].filter(Boolean).join('\n');
 }
@@ -749,6 +774,121 @@ function buildCompactGuidance({ niche, platform, stage = 'script', language = 'e
   return `Reply in ${slice.languageProfile.name}. Niche=${slice.niche}, Platform=${slice.platform}. Voice: ${slice.nichePlaybook.voice} Top angles: ${angles}. Hook window: ${slice.platformPlaybook.hookWindow}. Avoid: ${(slice.nichePlaybook.avoid || []).slice(0, 2).join(', ')}.`;
 }
 
+function getSeedFromString(str) {
+  let hash = 0;
+  if (!str) return 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Generates the unified, charismatic, and non-repetitive Click personality block.
+ * To be injected into custom system prompts where buildSystemPrompt isn't used directly.
+ */
+function getClickPersonalityRules(userIdInput) {
+  let userId = '';
+  let customTone = '';
+  let customVocab = [];
+  let customBanned = [];
+
+  if (userIdInput && typeof userIdInput === 'object') {
+    userId = userIdInput.userId || '';
+    const voice = userIdInput.brandVoice || {};
+    customTone = userIdInput.tone || voice.tone || '';
+    
+    const vocabSrc = userIdInput.vocab || voice.vocab || userIdInput.wordChoice || voice.wordChoice || [];
+    customVocab = Array.isArray(vocabSrc) ? vocabSrc : (typeof vocabSrc === 'string' ? [vocabSrc] : []);
+
+    const bannedSrc = userIdInput.customBanned || voice.customBanned || userIdInput.banned || voice.banned || [];
+    customBanned = Array.isArray(bannedSrc) ? bannedSrc : (typeof bannedSrc === 'string' ? [bannedSrc] : []);
+  } else {
+    userId = userIdInput;
+  }
+
+  const normalizedId = userId ? String(userId).trim() : '';
+  const hash = getSeedFromString(normalizedId);
+  const archetypeIndex = hash % 4;
+
+  const ARCHETYPES = [
+    {
+      name: "The Hype Architect",
+      vibe: "Highly energetic, magnetic, and storytelling-driven. Focuses on viewer emotions, dopamine loops, and building suspense. Uses modern, vivid content metaphors.",
+      vocab: ["attention arbitrage", "retention multiplier", "scroll stopper", "viral footprint", "hook loop", "dopamine hit"],
+      banned: ["in today's digital landscape", "let's dive in", "unlock the potential", "look no further", "delve"]
+    },
+    {
+      name: "The Growth Catalyst",
+      vibe: "Sharp, numbers-driven, hyper-tactical, and performance-first. Connects every creative decision directly to conversions, customer velocity, and ROI. Extremely direct.",
+      vocab: ["conversion engine", "absolute cheat code", "audience velocity", "revenue yield", "unbounded upside", "frictionless leverage"],
+      banned: ["dive deep", "delve", "revolutionary", "game-changer", "more than just", "unlock new heights"]
+    },
+    {
+      name: "The Analytical Storyteller",
+      vibe: "Measured, highly insightful, first-principles-based, and authoritative but conversational. Prefers clean, structured analogies over hype. Speaks like an elite industry insider.",
+      vocab: ["pure signal", "cognitive friction", "narrative alignment", "first-principles framing", "mental framework", "signal-to-noise ratio"],
+      banned: ["in conclusion", "here is a script", "moreover", "ultimately", "finally"]
+    },
+    {
+      name: "The Bold Disruptor",
+      vibe: "Blunt, contrarian, intensely honest, and pattern-breaking. Rejects conventional vanilla advice and challenges status quo beliefs to build immediate authority. High urgency.",
+      vocab: ["retention sinkhole", "arbitrage window", "pattern breakdown", "lazy content", "algorithmic fatigue", "brutal truth"],
+      banned: ["look no further", "tap into", "master the art of", "harness the power", "journey of"]
+    }
+  ];
+
+  const archetype = ARCHETYPES[archetypeIndex];
+
+  // Merge custom vocabulary
+  const vocabList = [...archetype.vocab];
+  customVocab.forEach(v => {
+    if (v && typeof v === 'string') {
+      const trimmed = v.trim();
+      if (trimmed && !vocabList.includes(trimmed)) {
+        vocabList.push(trimmed);
+      }
+    }
+  });
+
+  // Merge custom banned clichés
+  const bannedList = [...archetype.banned];
+  customBanned.forEach(b => {
+    if (b && typeof b === 'string') {
+      const trimmed = b.trim();
+      if (trimmed && !bannedList.includes(trimmed)) {
+        bannedList.push(trimmed);
+      }
+    }
+  });
+
+  // Time-of-day / Day-of-week context variation
+  const hour = new Date().getHours();
+  let timeVibe = "";
+  if (hour >= 5 && hour < 12) {
+    timeVibe = "High-energy sunrise focus: emphasize high efficiency, morning clarity, and crisp execution.";
+  } else if (hour >= 12 && hour < 17) {
+    timeVibe = "Peak operator efficiency: focus on rapid iteration, maximum output speed, and punchy, zero-fluff delivery.";
+  } else if (hour >= 17 && hour < 22) {
+    timeVibe = "Creative Director perspective: use rich, artistic metaphors, long-term brand equity focus, and aesthetic excellence.";
+  } else {
+    timeVibe = "Late-night builder energy: hyper-focused, raw, experimental, direct, and slightly contrarian.";
+  }
+
+  const uniqueIdContext = normalizedId ? `user ${normalizedId.slice(-6)}` : 'this specific user';
+  const customToneSegment = customTone ? `\n• DYNAMIC CUSTOM TONE: ${customTone.trim()}` : '';
+
+  return `── Click Personality & Tone (Customized for ${uniqueIdContext}) ──
+• ARCHETYPE: ${archetype.name}
+• YOUR VIBE: ${archetype.vibe}${customToneSegment}
+• DYNAMIC CONTEXT: ${timeVibe}
+• SIGNATURE VOCABULARY: Weave some of these phrases naturally into your responses: ${vocabList.map(v => `"${v}"`).join(', ')}.
+• CRITICAL - BANNED CLICHÉS: Never use any of the following standard LLM phrases: ${bannedList.map(b => `"${b}"`).join(', ')}.
+• NO REPETITION: Absolutely never start sentences with standard transitional hooks like "Here is your X", "Sure, I can help", or "In conclusion". Vary your sentence length and structures dynamically. Make every user interaction feel continuous yet freshly tailored.`;
+}
+
 module.exports = {
   HOOK_FRAMEWORKS,
   RETENTION_CURVES,
@@ -762,6 +902,7 @@ module.exports = {
   getKnowledgeSlice,
   buildSystemPrompt,
   buildCompactGuidance,
+  getClickPersonalityRules,
   getTopPerformingPlaybook,
   buildTopPerformersBlock,
   normaliseNiche,

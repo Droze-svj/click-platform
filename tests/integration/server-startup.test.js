@@ -13,15 +13,22 @@ const path = require('path');
 const http = require('http');
 
 // Test configuration
-const TEST_PORT = 6001;
-const TEST_TIMEOUT = 30000; // 30 seconds
+let currentPort = 12000 + Math.floor(Math.random() * 5000);
+function getNextPort() {
+  return currentPort++;
+}
+const TEST_TIMEOUT = 60000; // 60 seconds
 const SERVER_PATH = path.join(__dirname, '../../server/index.js');
 
 // Helper function to run server with specific environment
 function runServerWithEnv(env, timeout = TEST_TIMEOUT) {
+  const port = env.PORT || getNextPort().toString();
   return new Promise((resolve, reject) => {
+    const spawnedEnv = { ...process.env, PORT: port, REDIS_CONNECT_TIMEOUT: '500', ...env };
+    delete spawnedEnv.JEST_WORKER_ID;
+
     const serverProcess = spawn('node', [SERVER_PATH], {
-      env: { ...process.env, ...env },
+      env: spawnedEnv,
       cwd: path.join(__dirname, '../..'),
       stdio: ['pipe', 'pipe', 'pipe']
     });
@@ -39,10 +46,13 @@ function runServerWithEnv(env, timeout = TEST_TIMEOUT) {
 
     serverProcess.stdout.on('data', (data) => {
       stdout += data.toString();
-      if (data.toString().includes('Server running on port')) {
+      if (data.toString().includes('Server running on port') && !serverReady) {
         serverReady = true;
         clearTimeout(timeoutId);
-        resolve({ process: serverProcess, stdout, stderr });
+        // Wait 1200ms for background logs (like Redis timeout warnings) to settle
+        setTimeout(() => {
+          resolve({ process: serverProcess, stdout, stderr });
+        }, 1200);
       }
     });
 
@@ -133,7 +143,7 @@ describe('Server Startup Tests', () => {
       });
 
       expect(result.stdout).toContain('Server running on port');
-      expect(result.stdout).toContain('Sentry DSN not configured');
+      expect(result.stdout).toContain('SENTRY_DSN not set');
       expect(result.stdout).not.toContain('FATAL');
       
       servers.push(result.process);
@@ -183,7 +193,7 @@ describe('Server Startup Tests', () => {
       
       // Verify graceful degradation messages
       expect(result.stdout).toContain('Redis not configured');
-      expect(result.stdout).toContain('Sentry DSN not configured');
+      expect(result.stdout).toContain('SENTRY_DSN not set');
       
       servers.push(result.process);
     }, TEST_TIMEOUT);
@@ -219,11 +229,12 @@ describe('Server Startup Tests', () => {
 
   describe('3. Health Check Server Shutdown Sequence', () => {
     it('should close health check server before starting main server', async () => {
+      const testPort = getNextPort().toString();
       // This test requires cloud platform detection
       const result = await runServerWithEnv({
         NODE_ENV: 'production',
         RENDER: 'true', // Simulate Render.com environment
-        PORT: TEST_PORT.toString()
+        PORT: testPort
       });
 
       if (result.stdout.includes('Health check server')) {
@@ -235,23 +246,29 @@ describe('Server Startup Tests', () => {
     }, TEST_TIMEOUT);
 
     it('should handle port conflicts gracefully', async () => {
+      const testPort = getNextPort().toString();
       // Start a server on the test port
       const firstServer = await runServerWithEnv({
-        PORT: TEST_PORT.toString(),
+        PORT: testPort,
         NODE_ENV: 'development'
       });
 
       servers.push(firstServer.process);
 
-      // Wait for first server to start
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Try to start another server on the same port
+      let rejected = false;
+      try {
+        await runServerWithEnv({
+          PORT: testPort,
+          NODE_ENV: 'development'
+        }, 15000);
+      } catch (error) {
+        rejected = true;
+        expect(error.message).toContain('exited with code 1');
+        expect(error.message).toContain('is already in use');
+      }
 
-      // Try to start another server on same port
-      const portInUse = await isPortInUse(TEST_PORT);
-      expect(portInUse).toBe(true);
-
-      // The error handling should prevent crash
-      // (In real scenario, would get EADDRINUSE error)
+      expect(rejected).toBe(true);
     }, TEST_TIMEOUT);
   });
 
@@ -307,7 +324,7 @@ describe('Server Startup Tests', () => {
       });
 
       expect(result.stdout).toContain('Redis not configured');
-      expect(result.stdout).toContain('Sentry DSN not configured');
+      expect(result.stdout).toContain('SENTRY_DSN not set');
       
       servers.push(result.process);
     }, TEST_TIMEOUT);

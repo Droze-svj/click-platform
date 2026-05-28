@@ -97,7 +97,7 @@ class FiscalAutonomyService {
       const steer = await arbitrageSteering.getSteeringManifest();
       if (steer.autonomyState.superiority > AGGRESSIVE_THRESHOLD) {
         logger.info('Fiscal: High-Yield gap detected. Triggering autonomous monetize pivot.', { 
-           delta: steer.autonomyState.superiority 
+          delta: steer.autonomyState.superiority 
         });
         
         const governanceLedger = require('./governanceLedgerService');

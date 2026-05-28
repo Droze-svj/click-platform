@@ -132,6 +132,14 @@ function TextOverlayInspector({
         <NumberField value={overlay.fontSize} step={1} min={8} max={200}
           onChange={(v) => onUpdate({ fontSize: Math.round(v) })} />
       </FieldRow>
+      <FieldRow label="Letter Spacing" suffix="px">
+        <NumberField value={overlay.letterSpacing || 0} step={0.5} min={-5} max={20}
+          onChange={(v) => onUpdate({ letterSpacing: v })} />
+      </FieldRow>
+      <FieldRow label="Line Height">
+        <NumberField value={overlay.lineHeight || 1.2} step={0.05} min={0.5} max={3}
+          onChange={(v) => onUpdate({ lineHeight: v })} />
+      </FieldRow>
       <FieldRow label="Color">
         <input type="color" value={overlay.color}
           onChange={(e) => onUpdate({ color: e.target.value })}
@@ -243,8 +251,9 @@ function RangeField({ value, onChange, min, max, step }: { value: number; onChan
 }
 
 function ToggleField({ value, onChange, onLabel, offLabel }: { value: boolean; onChange: (v: boolean) => void; onLabel: React.ReactNode; offLabel: React.ReactNode }) {
+  const ariaProps = { 'aria-pressed': value }
   return (
-    <button type="button" onClick={() => onChange(!value)} aria-pressed={value ? 'true' : 'false'}
+    <button type="button" onClick={() => onChange(!value)} {...ariaProps}
       className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${
         value ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-white/[0.02] border-white/10 text-slate-500 hover:text-white'
       }`}>
