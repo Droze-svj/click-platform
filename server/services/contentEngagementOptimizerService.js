@@ -19,6 +19,7 @@
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
+const { safeJsonParse } = require('../utils/aiHelper');
 
 // ── Platform Algorithm Signal Weights (2026) ──────────────────────────────────
 // What each platform's algorithm actually rewards
@@ -182,7 +183,7 @@ Return JSON with: score (number 0-100), verdict (string), rewrites (array of {la
 Return only valid JSON.`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 1200, temperature: 0.82 });
-    const parsed = JSON.parse(response || '{}');
+    const parsed = safeJsonParse(response, {});
 
     return {
       hookText,
@@ -266,7 +267,7 @@ Return JSON with:
 Return only valid JSON.`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 900, temperature: 0.75 });
-    const parsed = JSON.parse(response || '{}');
+    const parsed = safeJsonParse(response, {});
 
     return {
       predictedEngagementRate: parsed.predictedEngagementRate || baseScore,
@@ -340,7 +341,7 @@ Return JSON: resonanceScore (0-100), verdict (string), dominantEmotion (string),
 Return only valid JSON.`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 900, temperature: 0.78 });
-    const parsed = JSON.parse(response || '{}');
+    const parsed = safeJsonParse(response, {});
 
     return {
       resonanceScore: parsed.resonanceScore ?? resonanceScore,
@@ -451,7 +452,7 @@ Return JSON with:
 Return only valid JSON.`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 1400, temperature: 0.88 });
-    const parsed = JSON.parse(response || '{}');
+    const parsed = safeJsonParse(response, {});
     return { ...parsed, original: { text: contentText }, platform, niche, source: 'ai-powered', generatedAt: new Date().toISOString() };
   } catch (error) {
     logger.error('generateABVariants error', { error: error.message, userId });

@@ -4,6 +4,7 @@
 
 const logger = require('../utils/logger');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const { safeJsonParse } = require('../utils/aiHelper');
 // Pull in the V6 learning brain to feed the Auto Edit Engine
 const { getActiveBlueprint } = require('./continuousLearningService');
 const { getClickPersonalityRules } = require('./marketingKnowledge');
@@ -29,8 +30,7 @@ async function fetchMemoryContext(userId, queryText) {
  */
 async function callGemini(prompt, opts = {}) {
   const raw = await geminiGenerate(prompt, { temperature: opts.temperature ?? 0.3, maxTokens: opts.maxTokens ?? 1200 });
-  const cleaned = (raw || '{}').replace(/```json\n?|\n?```/g, '').trim();
-  return JSON.parse(cleaned);
+  return safeJsonParse(raw, {});
 }
 
 /**

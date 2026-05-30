@@ -16,13 +16,13 @@ echo "⏳ Waiting for backend to initialize..."
 sleep 15
 
 # Start Next.js Client (Main Platform)
-echo "📱 Starting Next.js Client (Port 3000)..."
+echo "📱 Starting Next.js Client (Port 3010)..."
 cd client && npm run dev > ../client.log 2>&1 &
 CLIENT_PID=$!
 cd ..
 
 echo "✅ All servers launched!"
 echo "📡 Backend: http://localhost:5001"
-echo "📱 Client: http://localhost:3000 (Premium Landing Page)"
+echo "📱 Client: http://localhost:3010 (Premium Landing Page)"
 echo "---"
 echo "View logs with: tail -f backend.log client.log"

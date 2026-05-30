@@ -91,6 +91,7 @@ import AchievementSystem from './AchievementSystem'
 import { ErrorBoundary } from './ErrorBoundary'
 import { useVideoEditorAutosave } from '../hooks/useVideoEditorAutosave'
 import { useToast } from '../contexts/ToastContext'
+import { getAssetUrl } from '../utils/url'
 import KeyboardShortcutsHelp from './editor/KeyboardShortcutsHelp'
 import { InsightsSidebar } from './editor/InsightsSidebar'
 import EditorHUD from './editor/EditorHUD'
@@ -229,7 +230,7 @@ const ModernVideoEditor: React.FC<{
 }> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool }) => {
   const { showToast } = useToast()
   const brandKit = useBrandKit()
-  const actualVideoUrl = videoUrl || videoPath
+  const actualVideoUrl = getAssetUrl(videoUrl || videoPath || '')
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
@@ -881,7 +882,13 @@ const ModernVideoEditor: React.FC<{
     if (stateToLoad) {
       if (stateToLoad.videoFilters) setVideoFilters(stateToLoad.videoFilters)
       if (stateToLoad.textOverlays) setTextOverlays(stateToLoad.textOverlays)
-      if (stateToLoad.timelineSegments) setTimelineSegments(stateToLoad.timelineSegments)
+      if (stateToLoad.timelineSegments) {
+        const normalizedSegments = stateToLoad.timelineSegments.map((s: any) => ({
+          ...s,
+          sourceUrl: s.sourceUrl ? getAssetUrl(s.sourceUrl) : s.sourceUrl
+        }))
+        setTimelineSegments(normalizedSegments)
+      }
       if (stateToLoad.timelineMarkers) setTimelineMarkers(stateToLoad.timelineMarkers)
       if (stateToLoad.timelineEffects) setTimelineEffects(stateToLoad.timelineEffects)
       if (stateToLoad.colorGradeSettings) setColorGradeSettings(stateToLoad.colorGradeSettings)

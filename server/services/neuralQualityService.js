@@ -3,6 +3,7 @@
 
 const logger = require('../utils/logger');
 const { generateContent: geminiGenerate } = require('../utils/googleAI');
+const { safeJsonParse } = require('../utils/aiHelper');
 
 /**
  * Conduct a full Audit of a render project
@@ -114,7 +115,7 @@ async function analyzeHookStrength(hookText) {
     { "score": 85, "reason": "Uses curiosity gap effectively" }`;
 
     const response = await geminiGenerate(prompt, { temperature: 0.3 });
-    return JSON.parse(response);
+    return safeJsonParse(response, { score: 70, reason: 'AI analysis unavailable' });
   } catch {
     return { score: 70, reason: 'AI analysis unavailable' };
   }

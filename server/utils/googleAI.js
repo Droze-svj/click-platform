@@ -177,6 +177,39 @@ async function generateContent(prompt, options = {}) {
         });
       }
       
+      if (lowerPrompt.includes('recommendations') || lowerPrompt.includes('personalized') || lowerPrompt.includes('trend') || lowerPrompt.includes('suggest')) {
+        logger.info('🛡️ [GoogleAI] Returning mock recommendations / trend suggestions array');
+        return JSON.stringify([
+          {
+            title: "Unlocking Autonomous Growth",
+            description: "How autonomous workflows are shifting the content paradigm in 2026.",
+            platform: "linkedin",
+            reasoning: "High professional audience affinity with workflow efficiency templates.",
+            trendAlignment: "Automation tech is up 140% this week.",
+            expectedEngagement: "high",
+            keyPoints: ["Autonomy", "Sovereignty", "2026 Stack"]
+          },
+          {
+            title: "Stop Manual Editing Now",
+            description: "Why manual video pipelines are dead weight that exhaust creative drive.",
+            platform: "tiktok",
+            reasoning: "Strong pattern interrupt matching high-pacing video trends.",
+            trendAlignment: "Short-form video pacing is a top 5 trend.",
+            expectedEngagement: "high",
+            keyPoints: ["Time drain", "Sovereign director"]
+          }
+        ]);
+      }
+
+      const isJsonRequest = lowerPrompt.includes('json') || lowerPrompt.includes('format as array') || options.responseMimeType === 'application/json';
+      if (isJsonRequest) {
+        logger.info('🛡️ [GoogleAI] Returning generic mock JSON due to JSON request detection');
+        if (lowerPrompt.includes('array') || lowerPrompt.includes('list')) {
+          return JSON.stringify([{ title: "Sovereign Content Strategy", description: "Mock list item" }]);
+        }
+        return JSON.stringify({ success: true, status: "completed", message: "Mock response" });
+      }
+
       logger.warn('🛡️ [GoogleAI] Prompt did not match any mock pattern, returning default fallback');
       return "This is a high-fidelity autonomous manifest generated via Click Dev Fallback. In production, this would be synthesized by Gemini 1.5 Pro.";
     }

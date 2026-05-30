@@ -74,7 +74,7 @@ async function checkRedis() {
  */
 async function checkQueues() {
   try {
-    const { getRedisConnection } = require('../services/jobQueueService');
+    const { getRedisConnection, getQueue } = require('../services/jobQueueService');
     const redis = await getRedisConnection();
     if (!redis) return { status: 'disabled', reason: 'No Redis connection' };
 
@@ -84,7 +84,13 @@ async function checkQueues() {
     for (const q of queues) {
       // Basic check if queue is responsive
       try {
-        const count = await redis.llen(`bull:${q}:wait`);
+        let count;
+        if (redis && typeof redis.llen === 'function') {
+          count = await redis.llen(`bull:${q}:wait`);
+        } else {
+          const queue = getQueue(q);
+          count = await queue.getWaitingCount();
+        }
         status[q] = { active: true, waitingJobs: count };
       } catch (e) {
         status[q] = { active: false, error: e.message };

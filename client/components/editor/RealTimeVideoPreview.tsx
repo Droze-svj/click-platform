@@ -14,6 +14,7 @@ import { usePreviewRecorder } from '../../hooks/usePreviewRecorder'
 import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
 import { Rnd } from 'react-rnd'
+import { getAssetUrl } from '../../utils/url'
 
 import { WebGPURenderer } from '../../lib/rendering/WebGPURenderer'
 
@@ -32,11 +33,12 @@ function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; cur
     if (isPlaying) el.play().catch(() => { })
     else el.pause()
   }, [isPlaying])
+  const normalizedUrl = getAssetUrl(seg.sourceUrl || '')
   return (
     <video
       ref={ref}
-      src={seg.sourceUrl}
-      className="max-w-full max-h-full object-contain video-fit-contain"
+      src={normalizedUrl}
+      className="max-w-full max-h-full object-contain video-fit-contain w-full h-full"
       muted
       playsInline
     />
@@ -101,7 +103,8 @@ function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogue
     return () => cancelAnimationFrame(frameId)
   }, [volume, isMuted, isDialogueActive, seg.track])
 
-  return <audio ref={ref} src={seg.sourceUrl} />
+  const normalizedAudioUrl = getAssetUrl(seg.sourceUrl || '')
+  return <audio ref={ref} src={normalizedAudioUrl} />
 }
 
 /** Compute opacity, transform, and optional filter for text overlay animation based on currentTime */
@@ -359,6 +362,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], svgOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}, previewQuality = 'full', chromaKey, onUpdateOverlay, selectedOverlayId, onSelectOverlay, isNeuralActive, videoTransform, videoTransformKeyframes, videoCrop, isTransformMode, onUpdateVideoTransform
 }) => {
   const isDraft = previewQuality === 'draft'
+  const normalizedVideoUrl = getAssetUrl(videoUrl || '')
+  
+  // Overlay active B-roll on top of the main video
+  const activeBroll = timelineSegments.find(s => 
+    (s.type === 'broll' || s.track === 1) && 
+    currentTime >= s.startTime && 
+    currentTime <= s.endTime && 
+    (trackVisibility[s.track] !== false)
+  )
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoRefRight = useRef<HTMLVideoElement>(null)
   const previewRecorder = usePreviewRecorder(videoRef)
@@ -680,7 +692,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
           >
             <video
               ref={videoRef}
-              src={videoUrl}
+              src={normalizedVideoUrl}
               className="w-full h-full object-contain pointer-events-none"
               style={{
                 '--v-filter': filterString,
@@ -694,6 +706,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               autoPlay={isPlaying}
               muted={isMuted}
             />
+            {activeBroll && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
+                <BrollVideo
+                  seg={activeBroll}
+                  currentTime={currentTime}
+                  isPlaying={isPlaying}
+                />
+              </div>
+            )}
           </Rnd>
           <canvas ref={webGpuCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-0" />
           {/* AI Mixing Engine: Detect active dialogue for ducking */}

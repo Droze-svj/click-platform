@@ -37,27 +37,6 @@ module.exports = {
       kill_timeout: 5000,
       wait_ready: true,
       listen_timeout: 10000,
-      
-      // Health monitoring
-      health_check_grace_period: 3000,
-      health_check_fatal_exceptions: true,
-    },
-    // Optional: Separate worker for background jobs
-    {
-      name: 'click-worker-staging',
-      script: './server/workers/index.js',
-      instances: 1,
-      exec_mode: 'fork',
-      env: {
-        NODE_ENV: 'staging',
-      },
-      error_file: './logs/staging/worker-error.log',
-      out_file: './logs/staging/worker-out.log',
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '256M',
     },
   ],
 };
-
-
