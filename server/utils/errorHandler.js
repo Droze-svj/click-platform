@@ -1,10 +1,7 @@
 // Enhanced Error Handler Utility
 
-console.log('🏗️ utils/errorHandler: start requires');
 const logger = require('./logger');
-console.log('🏗️ utils/errorHandler: logger loaded');
 const { sendError } = require('./response');
-console.log('🏗️ utils/errorHandler: response loaded');
 
 // Lazy load errorRecovery to avoid circular dependency
 // Load after all classes are defined

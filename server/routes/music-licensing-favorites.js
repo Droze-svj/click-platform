@@ -71,7 +71,7 @@ router.get('/favorites', auth, asyncHandler(async (req, res) => {
         .populate('licenseId')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(parseInt(limit, 10))
         .lean(),
       MusicFavorite.countDocuments({ userId: req.user._id })
     ]);
@@ -79,8 +79,8 @@ router.get('/favorites', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Favorites retrieved', 200, {
       favorites,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total,
         totalPages: Math.ceil(total / limit)
       }

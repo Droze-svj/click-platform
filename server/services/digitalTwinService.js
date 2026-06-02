@@ -47,9 +47,12 @@ class DigitalTwinService {
         return this.triggerSoraGeneration(job);
       }
 
-      // Simulated fallback for development
-      logger.warn('Using simulated Digital Twin provider', { jobId });
-      job.status = 'generating';
+      // No provider key configured — be honest instead of faking a completed
+      // video. Avatar synthesis genuinely needs HeyGen or Sora credentials.
+      logger.warn('Digital Twin requested but no provider key configured', { jobId });
+      job.status = 'unavailable';
+      job.notImplemented = true;
+      job.message = 'AI Avatar synthesis needs a HEYGEN_API_KEY (or SORA_API_KEY). Add one to enable real generation.';
       return job;
     } catch (error) {
       logger.error('Error in createAvatarVideo', { error: error.message, userId });
@@ -147,16 +150,10 @@ class DigitalTwinService {
     if (!job) return null;
 
     if (job.provider === 'simulated') {
-      if (job.progress < 100) {
-        job.progress += 20;
-        if (job.progress >= 100) {
-          job.progress = 100;
-          job.status = 'completed';
-          job.videoUrl = `https://cdn.click.ai/generated/${jobId}.mp4`;
-          job.thumbnailUrl = `https://cdn.click.ai/generated/${jobId}_thumb.jpg`;
-          job.completedAt = Date.now();
-        }
-      }
+      // No real provider — never fabricate a completed video. Report honestly.
+      job.status = 'unavailable';
+      job.notImplemented = true;
+      job.message = 'AI Avatar synthesis needs a HEYGEN_API_KEY (or SORA_API_KEY).';
     } else if (job.provider === 'heygen' && job.externalId) {
       // Poll HeyGen API
       try {

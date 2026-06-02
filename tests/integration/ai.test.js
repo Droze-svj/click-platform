@@ -23,6 +23,9 @@ describe('AI Features Integration Tests', () => {
     const { initDatabases } = require('../../server/config/database');
     await initDatabases();
     
+    // Clean up any stale test user from previous runs
+    await User.deleteMany({ email: 'test-ai@example.com' });
+    
     // Create test user
     testUser = new User({
       name: 'Test User',

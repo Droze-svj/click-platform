@@ -1,15 +1,37 @@
-const { createCanvas, loadImage } = require('canvas');
 const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const logger = require('../utils/logger');
 const { uploadFile } = require('./storageService');
 
+// `canvas` is a native module that may not be compiled in every environment
+// (e.g. some local machines). Load it lazily so requiring this service never
+// crashes at boot; overlay generation throws a clear error only when actually
+// invoked without canvas — the caller already catches and skips gracefully.
+let _canvasLib = null;
+let _canvasTried = false;
+function getCanvasLib() {
+  if (_canvasTried) return _canvasLib;
+  _canvasTried = true;
+  try {
+    _canvasLib = require('canvas');
+  } catch (err) {
+    logger.warn('[CommerceAsset] canvas native module unavailable; commerce overlays disabled.', { error: err.message });
+    _canvasLib = null;
+  }
+  return _canvasLib;
+}
+
 class CommerceAssetService {
   /**
    * Generate a "Neural Glass" style QR code and Product Pill
    */
   async generateNeuralCommerceOverlay(productData) {
+    const canvasLib = getCanvasLib();
+    if (!canvasLib) {
+      throw new Error('Commerce overlay generation requires the native "canvas" module, which is not available in this environment.');
+    }
+    const { createCanvas } = canvasLib;
     const { name, price, checkoutUrl, id } = productData;
     const width = 800; // High res base
     const height = 400;

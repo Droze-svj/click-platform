@@ -155,6 +155,8 @@ export default function WorkflowRail() {
             const next = PLATFORM_OPTIONS[(idx + 1) % PLATFORM_OPTIONS.length]
             setPlatform(next.id)
           }}
+          title="Pick platform"
+          aria-label="Pick platform"
           className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-full bg-surface-50 dark:bg-slate-900 border border-surface-200 dark:border-white/10 hover:border-indigo-500/40 transition-all flex-shrink-0 group"
         >
           <Send size={12} className="text-indigo-400 group-hover:scale-110 transition-transform" />
@@ -183,6 +185,8 @@ export default function WorkflowRail() {
                     }}
                     disabled={!isReachable}
                     aria-current={isCurrent ? 'step' : undefined}
+                    title={stageLabel(s)}
+                    aria-label={stageLabel(s)}
                     className={`group flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ease-out whitespace-nowrap ${
                       isCurrent
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-105 ring-2 ring-indigo-500/30'
@@ -209,6 +213,8 @@ export default function WorkflowRail() {
         <button
           type="button"
           onClick={() => setDrawerOpen(!drawerOpen)}
+          title="Toggle Co-Pilot"
+          aria-label="Toggle Co-Pilot"
           className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all ${
             drawerOpen 
               ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30 shadow-inner' 

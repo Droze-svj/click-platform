@@ -40,8 +40,8 @@ router.get('/logs', asyncHandler(async (req, res) => {
       eventType,
       startDate,
       endDate,
-      limit: parseInt(limit),
-      skip: parseInt(skip),
+      limit: parseInt(limit, 10),
+      skip: parseInt(skip, 10),
     });
     sendSuccess(res, 'Audit logs fetched', 200, result);
   } catch (error) {
@@ -60,7 +60,7 @@ router.get('/logs', asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/summary', asyncHandler(async (req, res) => {
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
 
   try {
     const summary = await getAdminActivitySummary(period);

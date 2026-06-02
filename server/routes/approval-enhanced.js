@@ -169,7 +169,7 @@ router.get('/:entityId/visual-diff', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Both version1 and version2 are required', 400);
   }
 
-  const diff = await generateVisualDiff(entityId, parseInt(version1), parseInt(version2), entityType);
+  const diff = await generateVisualDiff(entityId, parseInt(version1, 10), parseInt(version2, 10), entityType);
   sendSuccess(res, 'Visual diff generated', 200, diff);
 }));
 

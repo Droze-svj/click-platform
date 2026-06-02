@@ -4,6 +4,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { parseRequestJson } = require('../utils/safeJson');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { calculateBrandAwareness, getBrandAwarenessTrends } = require('../services/brandAwarenessService');
@@ -68,7 +69,7 @@ router.get('/:workspaceId/competitor-benchmark/compare', auth, requireWorkspaceA
     return sendError(res, 'Platform and period are required', 400);
   }
 
-  const comparison = await getBenchmarkComparison(workspaceId, platform, JSON.parse(period));
+  const comparison = await getBenchmarkComparison(workspaceId, platform, parseRequestJson(period, 'period'));
   sendSuccess(res, 'Benchmark comparison retrieved', 200, comparison);
 }));
 

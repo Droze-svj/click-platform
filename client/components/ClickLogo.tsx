@@ -72,7 +72,13 @@ export default function ClickLogo({
         />
       </svg>
       {showWordmark && (
-        <span className={`text-lg font-black tracking-tight leading-none text-[var(--text-main)] ${wordmarkClassName}`}>
+        <span className={`leading-none text-[var(--text-main)] ${
+          /text-(xs|sm|base|md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)/.test(wordmarkClassName) ? '' : 'text-lg'
+        } ${
+          /font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)/.test(wordmarkClassName) ? '' : 'font-black'
+        } ${
+          /tracking-(tighter|tight|normal|wide|wider|widest)/.test(wordmarkClassName) ? '' : 'tracking-tight'
+        } ${wordmarkClassName}`}>
           Click
         </span>
       )}

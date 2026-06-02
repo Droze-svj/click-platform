@@ -58,6 +58,45 @@ async function analyzeContentConfidence(contentId, content, context = {}) {
 /**
  * Perform confidence analysis using AI
  */
+/**
+ * Deterministic confidence heuristics from the content text itself — used when
+ * the LLM is unavailable so we return a REAL signal instead of hardcoded 75s.
+ */
+function heuristicConfidence(content) {
+  const text = String(content?.text || content || '');
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const len = words.length;
+  const lower = text.toLowerCase();
+
+  const hedges = (lower.match(/\b(maybe|perhaps|might|possibly|i think|not sure|kind of|sort of)\b/g) || []).length;
+  const exclaims = (text.match(/!/g) || []).length;
+  const capsWords = (text.match(/\b[A-Z]{3,}\b/g) || []).length;
+  const sarcasmMarkers = /\/s\b|yeah right|so great|obviously/i.test(text) ? 1 : 0;
+  const sensitiveHit = /\b(politic|religion|death|violence|nsfw|suicide|drugs)\b/i.test(lower) ? 1 : 0;
+
+  const clamp = (n) => Math.max(0, Math.min(100, Math.round(n)));
+  // Clarity drops for very short or hedge-heavy copy.
+  const clarity = clamp(90 - hedges * 8 - (len < 4 ? 25 : 0));
+  // Tone drops with shouting / over-punctuation.
+  const tone = clamp(85 - capsWords * 4 - Math.max(0, exclaims - 2) * 5);
+  const sarcasm = sarcasmMarkers ? 65 : 30;
+  const humor = /\b(lol|haha|joke|funny|😂|🤣)\b/i.test(lower) ? 65 : 45;
+  const sensitivity = clamp(85 - sensitiveHit * 35);
+  const engagement = clamp(55 + Math.min(20, len) + exclaims * 2);
+
+  return {
+    aspectConfidence: { tone, humor, sarcasm, sensitivity, brandAlignment: 70, clarity, engagement },
+    breakdown: { textAnalysis: clarity, contextAnalysis: tone, brandCompliance: 70, platformFit: 70 },
+    metadata: {
+      detectedTopics: [],
+      detectedSentiment: 'neutral',
+      languageComplexity: len > 30 ? 'high' : len > 12 ? 'medium' : 'low',
+      readingLevel: len > 30 ? '12th grade' : '8th grade',
+      source: 'heuristic-fallback',
+    },
+  };
+}
+
 async function performConfidenceAnalysis(content, platform, brandGuidelines) {
   try {
     const prompt = `Analyze the following content for confidence scoring. Provide scores (0-100) for:
@@ -104,7 +143,8 @@ Respond with JSON:
 
     const fullPrompt = `You are a content quality analyst. Analyze content and provide confidence scores. Return valid JSON only.\n\n${prompt}`;
     const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1024 });
-    const analysis = JSON.parse(raw || '{}');
+    const { safeJsonParse } = require('../utils/aiRouter');
+    const analysis = safeJsonParse(raw, {}) || {};
 
     return {
       aspectConfidence: {
@@ -130,31 +170,9 @@ Respond with JSON:
       }
     };
   } catch (error) {
-    logger.error('Error performing confidence analysis', { error: error.message });
-    // Return default analysis
-    return {
-      aspectConfidence: {
-        tone: 75,
-        humor: 50,
-        sarcasm: 50,
-        sensitivity: 75,
-        brandAlignment: 75,
-        clarity: 80,
-        engagement: 75
-      },
-      breakdown: {
-        textAnalysis: 75,
-        contextAnalysis: 70,
-        brandCompliance: 75,
-        platformFit: 75
-      },
-      metadata: {
-        detectedTopics: [],
-        detectedSentiment: 'neutral',
-        languageComplexity: 'medium',
-        readingLevel: '8th grade'
-      }
-    };
+    logger.warn('Confidence LLM unavailable; using deterministic heuristics', { error: error.message });
+    // Real text-derived heuristics instead of hardcoded 75s.
+    return heuristicConfidence(content);
   }
 }
 

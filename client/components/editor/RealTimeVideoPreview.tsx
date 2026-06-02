@@ -904,68 +904,27 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
           })}
 
           {/* Engine Telemetry Overlay */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 pointer-events-none">
-            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
-              <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">Status</span>
-                <span className="text-xs font-mono font-bold text-white">{isPlaying ? 'PLAYING' : 'PAUSED'}</span>
-              </div>
-            </div>
-            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
-              <Activity className="w-3.5 h-3.5 text-indigo-400" />
-               <div className="flex flex-col">
-                 <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Metrics</span>
-                 <div className="flex gap-2 text-xs font-mono font-bold text-indigo-300">
-                   <span>{fps} FPS</span>
-                   <span className="opacity-50">|</span>
-                   <span>{latency}ms</span>
-                   <span className="opacity-50">|</span>
-                   <span
-                     className={
-                       gpuStatus === 'ready' ? 'text-emerald-400'
-                       : gpuStatus === 'unavailable' ? 'text-amber-400'
-                       : 'text-white/40'
-                     }
-                     title={
-                       gpuStatus === 'ready' ? 'WebGPU acceleration active'
-                       : gpuStatus === 'unavailable' ? 'WebGPU unavailable — using fallback video preview'
-                       : 'Initializing GPU renderer…'
-                     }
-                   >
-                     {gpuStatus === 'ready' ? 'GPU' : gpuStatus === 'unavailable' ? 'GPU off' : 'GPU…'}
-                   </span>
-                 </div>
-               </div>
-            </div>
-            {(() => {
-              const ops = timelineHasExportOnlyOps(timelineSegments || [])
-              const total = ops.reverse + ops.jcut + ops.lcut
-              if (total === 0) return null
-              const parts: string[] = []
-              if (ops.reverse) parts.push(`${ops.reverse}× reverse`)
-              if (ops.jcut) parts.push(`${ops.jcut}× J-cut`)
-              if (ops.lcut) parts.push(`${ops.lcut}× L-cut`)
-              return (
+          {/* Engine Telemetry Overlay */}
+          {(() => {
+            const ops = timelineHasExportOnlyOps(timelineSegments || [])
+            const total = ops.reverse + ops.jcut + ops.lcut
+            if (total === 0) return null
+            const parts: string[] = []
+            if (ops.reverse) parts.push(`${ops.reverse}× reverse`)
+            if (ops.jcut) parts.push(`${ops.jcut}× J-cut`)
+            if (ops.lcut) parts.push(`${ops.lcut}× L-cut`)
+            return (
+              <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 pointer-events-none">
                 <div
-                  className="flex bg-amber-500/10 backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2"
+                  className="flex bg-amber-500/10 backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2 pointer-events-auto"
                   title="These ops are applied at export time only — preview shows segments in their original direction with normal audio sync."
                 >
                   <span className="text-[9px] font-black uppercase text-amber-300/80 tracking-wider">Export-only</span>
                   <span className="text-[10px] font-mono font-bold text-amber-200">{parts.join(' · ')}</span>
                 </div>
-              )
-            })()}
-            </div>
-            {/* Magnetic Snapping Toggle */}
-            <button
-              type="button"
-              onClick={() => setMagneticSnapping(!magneticSnapping)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md transition-all ${magneticSnapping ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400' : 'bg-black/40 border-white/10 text-white/40'}`}
-            >
-              <Crosshair size={12} className={magneticSnapping ? 'animate-spin-slow' : ''} />
-              <span className="text-[10px] font-black uppercase tracking-wider">Magnetic Snapping</span>
-            </button>
+              </div>
+            )
+          })()}
           </div>
 
           {/* Image Overlays */}
@@ -1032,7 +991,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                     </>
                   )}
                   <img
-                    src={img.url}
+                    src={getAssetUrl(img.url)}
                     alt="Image Layer"
                     className="w-full h-full object-contain pointer-events-none"
                     style={{
@@ -1175,7 +1134,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                     <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: svg.url }} />
                   ) : (
                     <img
-                      src={svg.url}
+                      src={getAssetUrl(svg.url)}
                       alt="SVG Layer"
                       className="w-full h-full object-contain pointer-events-none"
                     />

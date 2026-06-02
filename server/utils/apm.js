@@ -21,7 +21,7 @@ class APMMonitor {
     };
 
     this.thresholds = {
-      responseTime: parseInt(process.env.PERFORMANCE_RESPONSE_TIME_THRESHOLD) || 1000, // ms
+      responseTime: parseInt(process.env.PERFORMANCE_RESPONSE_TIME_THRESHOLD, 10) || 1000, // ms
       errorRate: parseFloat(process.env.PERFORMANCE_ERROR_RATE_THRESHOLD) || 0.05, // 5%
       memoryUsage: Math.max(0.97, parseFloat(process.env.PERFORMANCE_MEMORY_THRESHOLD) || 0.97), // min 97% (95%+ is normal under load)
       memoryCritical: parseFloat(process.env.PERFORMANCE_MEMORY_CRITICAL_THRESHOLD) || 0.98, // 98% critical threshold
@@ -41,7 +41,7 @@ class APMMonitor {
     // Memory monitoring - check less frequently to reduce overhead
     // Skip in test environment or if explicitly disabled
     const memoryCheckInterval = process.env.APM_MEMORY_CHECK_INTERVAL
-      ? parseInt(process.env.APM_MEMORY_CHECK_INTERVAL)
+      ? parseInt(process.env.APM_MEMORY_CHECK_INTERVAL, 10)
       : (process.env.NODE_ENV === 'production' ? 60000 : 120000); // 1 min in prod, 2 min in dev
 
     if (process.env.NODE_ENV !== 'test' && process.env.DISABLE_APM_MEMORY_MONITORING !== 'true') {

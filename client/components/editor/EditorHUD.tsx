@@ -57,6 +57,9 @@ interface EditorHUDProps {
   onNormalizeStyle?: () => void
   zenMode?: boolean
   setZenMode?: (val: boolean) => void
+  onMakeItViral?: () => void
+  isMakingViral?: boolean
+  onExport?: () => void
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -343,7 +346,10 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   styleDNA,
   onNormalizeStyle,
   zenMode = false,
-  setZenMode
+  setZenMode,
+  onMakeItViral,
+  isMakingViral = false,
+  onExport
 }) => {
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [openMetric, setOpenMetric] = useState<'engagement' | 'viral' | 'hook' | null>(null)
@@ -637,6 +643,21 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
             )}
           </div>
 
+          {onMakeItViral && (
+            <button
+              type="button"
+              onClick={onMakeItViral}
+              disabled={isMakingViral}
+              className="flex items-center justify-center gap-2 px-2 sm:px-4 h-9 sm:h-10 rounded-xl bg-gradient-to-r from-fuchsia-500/10 to-indigo-500/10 hover:from-fuchsia-500 hover:to-indigo-500 border-2 border-fuchsia-500/20 hover:border-transparent text-fuchsia-400 hover:text-white transition-all duration-500 shadow-lg group disabled:opacity-50 disabled:cursor-wait"
+              title="Run the one-click viral recipe — hook, cuts, B-roll, beat sync, CTA"
+            >
+              <Sparkles size={14} className={isMakingViral ? 'animate-spin' : ''} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] italic hidden sm:inline-block">
+                {isMakingViral ? 'COMPOSING…' : 'MAKE_VIRAL'}
+              </span>
+            </button>
+          )}
+
           <HUDTooltip label="Zen Mode" shortcut="Z">
             <button 
               onClick={() => setZenMode?.(!zenMode)}
@@ -647,7 +668,12 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           </HUDTooltip>
 
           {/* Final Launch Action */}
-          <button className="flex items-center justify-center gap-2 px-2 sm:px-4 h-9 sm:h-10 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-lg group ml-1">
+          <button 
+            type="button"
+            onClick={onExport}
+            className="flex items-center justify-center gap-2 px-2 sm:px-4 h-9 sm:h-10 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-lg group ml-1 active:scale-95"
+            title="Export and publish sequence (GO LIVE)"
+          >
              <Radio className="w-4 h-4 animate-pulse" />
              <span className="text-[10px] font-black uppercase tracking-[0.2em] italic group-hover:translate-x-1 transition-transform hidden sm:inline-block">GO_LIVE</span>
           </button>

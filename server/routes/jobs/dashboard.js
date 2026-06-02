@@ -99,30 +99,30 @@ router.get('/dashboard/jobs/:queueName', auth, requireAdmin, asyncHandler(async 
 
     switch (status) {
     case 'waiting':
-      jobs = await queue.getWaiting(parseInt(offset), parseInt(limit));
+      jobs = await queue.getWaiting(parseInt(offset, 10), parseInt(limit, 10));
       break;
     case 'active':
-      jobs = await queue.getActive(parseInt(offset), parseInt(limit));
+      jobs = await queue.getActive(parseInt(offset, 10), parseInt(limit, 10));
       break;
     case 'completed':
-      jobs = await queue.getCompleted(parseInt(offset), parseInt(limit));
+      jobs = await queue.getCompleted(parseInt(offset, 10), parseInt(limit, 10));
       break;
     case 'failed':
-      jobs = await queue.getFailed(parseInt(offset), parseInt(limit));
+      jobs = await queue.getFailed(parseInt(offset, 10), parseInt(limit, 10));
       break;
     case 'delayed':
-      jobs = await queue.getDelayed(parseInt(offset), parseInt(limit));
+      jobs = await queue.getDelayed(parseInt(offset, 10), parseInt(limit, 10));
       break;
     default:
-      // Get all
-      const [waiting, active, completed, failed, delayed] = await Promise.all([
-        queue.getWaiting(0, parseInt(limit)),
-        queue.getActive(0, parseInt(limit)),
-        queue.getCompleted(0, parseInt(limit)),
-        queue.getFailed(0, parseInt(limit)),
-        queue.getDelayed(0, parseInt(limit)),
-      ]);
-      jobs = [...waiting, ...active, ...completed, ...failed, ...delayed];
+    // Get all
+    { const [waiting, active, completed, failed, delayed] = await Promise.all([
+      queue.getWaiting(0, parseInt(limit, 10)),
+      queue.getActive(0, parseInt(limit, 10)),
+      queue.getCompleted(0, parseInt(limit, 10)),
+      queue.getFailed(0, parseInt(limit, 10)),
+      queue.getDelayed(0, parseInt(limit, 10)),
+    ]);
+    jobs = [...waiting, ...active, ...completed, ...failed, ...delayed]; }
     }
 
     const formattedJobs = await Promise.all(jobs.map(async (job) => ({

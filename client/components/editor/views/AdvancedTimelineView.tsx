@@ -9,7 +9,7 @@ import {
   Layers, Music2, Film, Type, Ghost
 } from 'lucide-react'
 import { TimelineSegment } from '../../../types/editor'
-import { formatTime } from '../../../utils/editorUtils'
+import { formatTime, resolveTimelineOverlaps } from '../../../utils/editorUtils'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { Text } from 'react-konva'
 import { useLocalVAD } from '../../../hooks/useLocalVAD'
@@ -161,10 +161,18 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
     const finalTime = Math.max(0, xToTime(node.x()))
     node.x(timeToX(finalTime))
     const segDur = seg.endTime - seg.startTime
+
+    // Calculate new track based on y coordinate
+    const dragY = node.y()
+    const newTrack = Math.max(0, Math.round(dragY / (TRACK_HEIGHT + TRACK_GAP)))
+
+    // Instantly snap the y-position of the node to the target track
+    node.y(newTrack * (TRACK_HEIGHT + TRACK_GAP))
+
     setTimelineSegments((prev: TimelineSegment[]) =>
-      prev.map(s => s.id === seg.id ? { ...s, startTime: finalTime, endTime: finalTime + segDur } : s)
+      resolveTimelineOverlaps(prev, seg.id, finalTime, finalTime + segDur, newTrack)
     )
-    showToast('Segment moved', 'info')
+    showToast('Segment moved & track aligned', 'info')
   }, [xToTime, timeToX, setTimelineSegments, showToast])
 
   const handleStageClick = (e: KonvaEventObject<MouseEvent>) => {
@@ -192,16 +200,39 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
     switch (action) {
       case 'split': {
         const mid = (seg.startTime + seg.endTime) / 2
-        const a: TimelineSegment = { ...seg, id: `${seg.id}-a`, endTime: mid }
-        const b: TimelineSegment = { ...seg, id: `${seg.id}-b`, startTime: mid }
+        const suffixA = `a-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+        const suffixB = `b-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+        const a: TimelineSegment = {
+          ...seg,
+          id: `${seg.id}-${suffixA}`,
+          endTime: mid,
+          duration: mid - seg.startTime
+        }
+        const b: TimelineSegment = {
+          ...seg,
+          id: `${seg.id}-${suffixB}`,
+          startTime: mid,
+          duration: seg.endTime - mid
+        }
         setTimelineSegments((prev: TimelineSegment[]) => prev.flatMap(s => s.id === seg.id ? [a, b] : [s]))
         showToast('Segment split at midpoint', 'success')
         break
       }
       case 'duplicate': {
-        const dup: TimelineSegment = { ...seg, id: `${seg.id}-dup-${Date.now()}`, startTime: seg.endTime }
-        setTimelineSegments((prev: TimelineSegment[]) => [...prev, dup])
-        showToast('Segment duplicated', 'success')
+        const dupDur = seg.endTime - seg.startTime
+        const suffixDup = `dup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+        const dup: TimelineSegment = {
+          ...seg,
+          id: `${seg.id}-${suffixDup}`,
+          startTime: seg.endTime,
+          endTime: seg.endTime + dupDur,
+          duration: dupDur
+        }
+        setTimelineSegments((prev: TimelineSegment[]) => {
+          const next = [...prev, dup]
+          return resolveTimelineOverlaps(next, dup.id, dup.startTime, dup.endTime, dup.track ?? 0)
+        })
+        showToast('Segment duplicated & shifted', 'success')
         break
       }
       case 'delete': {

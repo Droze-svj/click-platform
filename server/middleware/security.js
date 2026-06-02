@@ -223,7 +223,7 @@ const ipFilter = (allowedIPs = [], blockedIPs = []) => {
  */
 const requestSizeLimit = (maxSize = '10mb') => {
   return (req, res, next) => {
-    const contentLength = parseInt(req.headers['content-length'] || '0');
+    const contentLength = parseInt(req.headers['content-length'] || '0', 10);
     const maxBytes = parseSize(maxSize);
 
     if (contentLength > maxBytes) {
@@ -241,7 +241,7 @@ const parseSize = (size) => {
   const units = { kb: 1024, mb: 1024 * 1024, gb: 1024 * 1024 * 1024 };
   const match = size.toLowerCase().match(/^(\d+)(kb|mb|gb)$/);
   if (match) {
-    return parseInt(match[1]) * units[match[2]];
+    return parseInt(match[1], 10) * units[match[2]];
   }
   return 10 * 1024 * 1024; // Default 10MB
 };

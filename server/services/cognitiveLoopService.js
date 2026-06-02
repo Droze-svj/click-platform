@@ -112,7 +112,8 @@ Return a JSON object with:
 Return only valid JSON.`;
 
     const content = await geminiGenerate(prompt, { maxTokens: 800 });
-    const pivotPlan = JSON.parse(content || '{}');
+    const { safeJsonParse } = require('../utils/aiRouter');
+    const pivotPlan = safeJsonParse(content, {}) || {};
 
     // 4. Record the strategic decision in the Sovereign Ledger (Blockchain-style audit)
     await sovereignLedger.recordDecision(

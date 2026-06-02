@@ -85,7 +85,7 @@ class OmniModelRouterService {
         assignedModel: assignment,
         modelLabel: model.label,
         sceneType: scene.type || 'general',
-        confidence: 0.85 + Math.random() * 0.1,
+        confidence: this.scoreModelConfidence(scene, assignment),
         simulated: true
       });
 
@@ -100,7 +100,7 @@ class OmniModelRouterService {
    * Internal heuristic for model selection
    */
   selectBestModel(scene) {
-    const desc = scene.description.toLowerCase();
+    const desc = (scene.description || '').toLowerCase();
     const type = scene.type?.toLowerCase();
 
     if (type === 'voice' || desc.includes('speaks') || desc.includes('narrates')) {
@@ -120,6 +120,32 @@ class OmniModelRouterService {
     }
 
     return 'sovereign-native';
+  }
+
+  /**
+   * Deterministic routing confidence derived from how the assignment was made:
+   * an explicit scene.type match is the strongest signal, a description-keyword
+   * match is moderate, and the catch-all fallback is the weakest. No randomness.
+   */
+  scoreModelConfidence(scene, assignment) {
+    const desc = (scene.description || '').toLowerCase();
+    const type = scene.type?.toLowerCase();
+    if (assignment === 'sovereign-native') return 0.6; // catch-all fallback
+    // Explicit type match (voice/character) is the strongest signal.
+    if ((type === 'voice' && assignment === 'elevenlabs-v3') ||
+        (type === 'character' && assignment === 'kling-v2')) {
+      return 0.95;
+    }
+    // Count how many routing keywords for the assigned model appear — more
+    // matches = higher confidence.
+    const keywordSets = {
+      'elevenlabs-v3': ['speaks', 'narrates', 'voice'],
+      'kling-v2': ['face', 'human', 'character'],
+      'runway-gen4': ['city', 'landscape', 'b-roll'],
+      'sora-v2': ['complex', 'tracking', 'physics'],
+    };
+    const hits = (keywordSets[assignment] || []).filter(k => desc.includes(k) || type === k).length;
+    return Math.min(0.92, 0.78 + hits * 0.05);
   }
 
   /**

@@ -65,8 +65,8 @@ async function advancedSearch(userId, searchParams) {
     const [results, total] = await Promise.all([
       Content.find(searchQuery)
         .sort(sort)
-        .limit(parseInt(limit))
-        .skip(parseInt(offset))
+        .limit(parseInt(limit, 10))
+        .skip(parseInt(offset, 10))
         .populate('folderId', 'name color')
         .lean(),
       Content.countDocuments(searchQuery)
@@ -75,8 +75,8 @@ async function advancedSearch(userId, searchParams) {
     return {
       results,
       total,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10)
     };
   } catch (error) {
     logger.error('Error in advanced search', { error: error.message, userId });

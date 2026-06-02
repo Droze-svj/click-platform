@@ -1,3 +1,4 @@
+/* eslint-disable no-console */ // dev-only persistence helper — console is intentional dev visibility
 // In-memory store for dev content to bypass MongoDB during development
 // Centralized to ensure all services can access mock data
 // Enhanced with JSON persistence to survive nodemon restarts

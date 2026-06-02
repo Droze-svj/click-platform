@@ -171,7 +171,7 @@ router.get('/analytics', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Admin access required', 403);
   }
 
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
 
   try {
     const analytics = await getOnboardingAnalytics({ period });

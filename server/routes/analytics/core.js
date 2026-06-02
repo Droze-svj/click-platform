@@ -437,15 +437,14 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
       .limit(10);
 
     // Get platform distribution
-    const { data: platformStats } = await supabase
-      .from('post_analytics')
-      .select('platform, views, likes, shares, comments')
-      .in('post_id',
-        supabase
-          .from('posts')
-          .select('id')
-          .eq('author_id', userId)
-      );
+    let platformStats = [];
+    if (postIds.length > 0) {
+      const { data } = await supabase
+        .from('post_analytics')
+        .select('platform, views, likes, shares, comments')
+        .in('post_id', postIds);
+      platformStats = Array.isArray(data) ? data : [];
+    }
 
     const platformDistribution = {};
     platformStats?.forEach(stat => {
@@ -483,8 +482,8 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
       .limit(5);
 
     // Calculate performance scores for top posts
-    const topPostsWithScores = topPosts?.map(post => {
-      const analytics = post.post_analytics || [];
+    const topPostsWithScores = Array.isArray(topPosts) ? topPosts.map(post => {
+      const analytics = Array.isArray(post?.post_analytics) ? post.post_analytics : [];
       const totalViews = analytics.reduce((sum, a) => sum + (a.views || 0), 0);
       const totalEngagement = analytics.reduce((sum, a) => sum + (a.likes || 0) + (a.shares || 0) + (a.comments || 0), 0);
 
@@ -494,7 +493,7 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
         total_engagement: totalEngagement,
         avg_engagement_rate: totalViews > 0 ? (totalEngagement / totalViews * 100).toFixed(2) : 0
       };
-    }).sort((a, b) => b.total_engagement - a.total_engagement) || [];
+    }).sort((a, b) => (b.total_engagement || 0) - (a.total_engagement || 0)) : [];
 
     // Empty-state for new accounts. Previously returned phantom 4.5M
     // views + 284K engagement which made fresh accounts look prolific.
@@ -668,26 +667,34 @@ router.get('/performance', auth, asyncHandler(async (req, res) => {
     }
 
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(period));
+    startDate.setDate(startDate.getDate() - parseInt(period, 10));
 
-    // Get engagement history
-    const { data: history, error: historyError } = await supabase
-      .from('engagement_history')
-      .select(`
-        recorded_at,
-        views,
-        likes,
-        shares,
-        comments
-      `)
-      .in('post_id', 
-        supabase
-          .from('posts')
-          .select('id')
-          .eq('author_id', userId)
-      )
-      .gte('recorded_at', startDate.toISOString())
-      .order('recorded_at', { ascending: true });
+    // Fetch post IDs first
+    const { data: postRows } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('author_id', userId);
+    const postIds = Array.isArray(postRows) ? postRows.map(r => r.id) : [];
+
+    let history = [];
+    let historyError = null;
+
+    if (postIds.length > 0) {
+      const { data, error } = await supabase
+        .from('engagement_history')
+        .select(`
+          recorded_at,
+          views,
+          likes,
+          shares,
+          comments
+        `)
+        .in('post_id', postIds)
+        .gte('recorded_at', startDate.toISOString())
+        .order('recorded_at', { ascending: true });
+      history = data;
+      historyError = error;
+    }
 
     if (historyError) throw historyError;
 
@@ -764,12 +771,23 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
       });
     }
 
-    const { data: analytics, error } = await supabase
-      .from('post_analytics')
-      .select('views, likes, shares, comments, engagement_rate')
-      .in('post_id',
-        supabase.from('posts').select('id').eq('author_id', userId)
-      );
+    const { data: postRows } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('author_id', userId);
+    const postIds = Array.isArray(postRows) ? postRows.map(r => r.id) : [];
+
+    let analytics = [];
+    let error = null;
+
+    if (postIds.length > 0) {
+      const { data, error: sbError } = await supabase
+        .from('post_analytics')
+        .select('views, likes, shares, comments, engagement_rate')
+        .in('post_id', postIds);
+      analytics = data;
+      error = sbError;
+    }
 
     if (error) throw error;
 

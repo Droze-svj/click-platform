@@ -165,9 +165,7 @@ async function generateQuoteCard(quote, author, brandSettings, style, niche) {
   const filepath = path.join(__dirname, '../../uploads/quotes', filename);
 
   const quotesDir = path.dirname(filepath);
-  if (!fs.existsSync(quotesDir)) {
-    fs.mkdirSync(quotesDir, { recursive: true });
-  }
+  await fs.promises.mkdir(quotesDir, { recursive: true });
 
   const buffer = canvas.toBuffer('image/png');
   await sharp(buffer).toFile(filepath);

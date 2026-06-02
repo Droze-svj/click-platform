@@ -22,12 +22,8 @@ if (vapidKeys.publicKey && vapidKeys.privateKey) {
       vapidKeys.privateKey
     )
     
-  } catch (error) {
-    
-  }
-} else {
-  
-}
+  } catch (error) { /* intentionally empty */ }
+} else { /* intentionally empty */ }
 
 // In-memory storage for subscriptions (use database in production)
 let pushSubscriptions = new Map()
@@ -70,9 +66,7 @@ router.post('/subscribe', async (req, res) => {
         tag: 'welcome',
         requireInteraction: false
       }))
-    } catch (error) {
-      
-    }
+    } catch (error) { /* intentionally empty */ }
 
     res.json({
       success: true,
@@ -351,9 +345,7 @@ setInterval(() => {
     }
   }
 
-  if (cleaned > 0) {
-    
-  }
+  if (cleaned > 0) { /* intentionally empty */ }
 }, 24 * 60 * 60 * 1000) // Daily cleanup
 
 module.exports = router

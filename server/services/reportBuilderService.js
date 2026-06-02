@@ -269,13 +269,8 @@ async function getSentiment(clientWorkspaceId, period) {
  * Get health score
  */
 async function getHealthScore(clientWorkspaceId) {
-  try {
-    // Would use actual health service
-    // For now, return placeholder
-    return 75;
-  } catch (error) {
-    return 0;
-  }
+  // Would use actual health service. Placeholder for now.
+  return 75;
 }
 
 /**

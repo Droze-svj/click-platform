@@ -115,5 +115,3 @@ After your first prod deploy with the minimum viable set:
 5. Schedule a post for "1 minute from now" with a connected platform → cron fires, post status moves to `posted` or `needs_reconnect` honestly.
 
 If any of the above fails, the env-var section above tells you which var to check.
-
-

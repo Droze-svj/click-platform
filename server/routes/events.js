@@ -4,6 +4,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { parseRequestJson } = require('../utils/safeJson');
 const { sendSuccess, sendError } = require('../utils/response');
 const { triggerWebhook } = require('../services/webhookService');
 const logger = require('../utils/logger');
@@ -31,7 +32,7 @@ router.get('/stream', auth, asyncHandler(async (req, res) => {
   const connection = {
     userId: req.user._id,
     events: eventList,
-    filters: filters ? JSON.parse(filters) : {},
+    filters: filters ? parseRequestJson(filters, 'filters') : {},
     res,
     createdAt: new Date()
   };

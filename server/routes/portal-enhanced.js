@@ -33,8 +33,8 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
     .populate('actor.userId', 'name email')
     .populate('actor.portalUserId', 'name email')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit))
-    .skip(parseInt(offset))
+    .limit(parseInt(limit, 10))
+    .skip(parseInt(offset, 10))
     .lean();
 
   const unreadCount = await PortalActivity.countDocuments({
@@ -46,8 +46,8 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
     activities,
     unreadCount,
     pagination: {
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
       total: await PortalActivity.countDocuments(query)
     }
   });
@@ -98,8 +98,8 @@ router.get('/:agencyWorkspaceId/links/:linkId/qr-code', auth, requireWorkspaceAc
   } = req.query;
 
   const qrCode = await generateQRCode(linkId, {
-    size: parseInt(size),
-    margin: parseInt(margin),
+    size: parseInt(size, 10),
+    margin: parseInt(margin, 10),
     color,
     backgroundColor
   });

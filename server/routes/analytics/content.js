@@ -18,7 +18,7 @@ const router = express.Router();
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
   const { period = 30 } = req.query;
-  const analytics = await getContentAnalytics(req.user._id, parseInt(period));
+  const analytics = await getContentAnalytics(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'Content analytics fetched', 200, analytics);
 }));
 
@@ -32,23 +32,8 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/insights', auth, asyncHandler(async (req, res) => {
-  // #region agent log
-  // #endregion
-
-  try {
-    // #region agent log
-    // #endregion
-
-    const insights = await getContentInsights(req.user._id);
-
-    // #region agent log
-    // #endregion
-    sendSuccess(res, 'Content insights fetched', 200, insights);
-  } catch (error) {
-    // #region agent log
-    // #endregion
-    throw error;
-  }
+  const insights = await getContentInsights(req.user._id);
+  sendSuccess(res, 'Content insights fetched', 200, insights);
 }));
 
 const { getVideoAnalyticsInsights } = require('../../services/videoAnalyticsService');

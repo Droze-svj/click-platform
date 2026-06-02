@@ -1,3 +1,4 @@
+/* eslint-disable no-console */ // dev-only session cache — console is intentional dev visibility
 // In-memory cache for dev-user session state (resets on nodemon restart)
 // Centralized to avoid circular dependencies between auth middleware and user routes
 // Enhanced with JSON persistence to ensure all progress and datas are saved

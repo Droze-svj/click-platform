@@ -105,7 +105,7 @@ router.get('/:clientWorkspaceId/content-health', auth, requireWorkspaceAccess('c
 
   const healthRecords = await ContentHealth.find({ clientWorkspaceId })
     .sort({ analysisDate: -1 })
-    .limit(parseInt(limit))
+    .limit(parseInt(limit, 10))
     .lean();
 
   sendSuccess(res, 'Content health history retrieved', 200, { health: healthRecords });

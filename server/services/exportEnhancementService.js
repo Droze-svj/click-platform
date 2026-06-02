@@ -145,9 +145,9 @@ async function getExportAnalytics(userId, period = 'month') {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       break;
     case 'quarter':
-      const quarter = Math.floor(now.getMonth() / 3);
+    { const quarter = Math.floor(now.getMonth() / 3);
       startDate = new Date(now.getFullYear(), quarter * 3, 1);
-      break;
+      break; }
     case 'year':
       startDate = new Date(now.getFullYear(), 0, 1);
       break;
@@ -257,9 +257,9 @@ function calculateNextRun(schedule) {
     }
     break;
   case 'weekly':
-    const daysUntil = (schedule.dayOfWeek - nextRun.getDay() + 7) % 7;
+  { const daysUntil = (schedule.dayOfWeek - nextRun.getDay() + 7) % 7;
     nextRun.setDate(nextRun.getDate() + (daysUntil || 7));
-    break;
+    break; }
   case 'monthly':
     nextRun.setDate(schedule.dayOfMonth);
     if (nextRun <= now) {

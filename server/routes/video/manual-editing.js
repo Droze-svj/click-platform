@@ -47,6 +47,21 @@ const pluginService = require('../../services/pluginSystemService');
 
 const router = express.Router();
 
+/**
+ * Parse a JSON string from the request body, surfacing malformed input as a
+ * 400 (bad request) instead of a misleading 500. Throws a tagged error whose
+ * `statusCode` the route's catch block honors (see `error.statusCode || 500`).
+ */
+function safeParse(value, fieldName) {
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    const err = new Error(`Invalid ${fieldName} JSON`);
+    err.statusCode = 400;
+    throw err;
+  }
+}
+
 // Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -101,11 +116,11 @@ router.post('/color-grading/curves', auth, upload.single('video'), asyncHandler(
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `color-curves-${Date.now()}.mp4`);
-    await colorGradingService.applyColorCurves(req.file.path, outputPath, JSON.parse(curves));
+    await colorGradingService.applyColorCurves(req.file.path, outputPath, safeParse(curves, 'curves'));
     sendSuccess(res, 'Color curves applied', 200, { outputPath });
   } catch (error) {
     logger.error('Color curves error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -117,11 +132,11 @@ router.post('/color-grading/wheels', auth, upload.single('video'), asyncHandler(
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `color-wheels-${Date.now()}.mp4`);
-    await colorGradingService.applyColorWheels(req.file.path, outputPath, JSON.parse(colorWheels));
+    await colorGradingService.applyColorWheels(req.file.path, outputPath, safeParse(colorWheels, 'colorWheels'));
     sendSuccess(res, 'Color wheels applied', 200, { outputPath });
   } catch (error) {
     logger.error('Color wheels error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -137,7 +152,7 @@ router.post('/color-grading/preset', auth, upload.single('video'), asyncHandler(
     sendSuccess(res, 'Color preset applied', 200, { outputPath, preset: presetName });
   } catch (error) {
     logger.error('Color preset error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -155,7 +170,7 @@ router.post('/audio/mix-tracks', auth, upload.fields([{ name: 'video', maxCount:
   }
 
   try {
-    const tracks = JSON.parse(audioTracks).map((track, index) => ({
+    const tracks = safeParse(audioTracks, 'audioTracks').map((track, index) => ({
       ...track,
       filePath: req.files.audio[index]?.path
     }));
@@ -165,7 +180,7 @@ router.post('/audio/mix-tracks', auth, upload.fields([{ name: 'video', maxCount:
     sendSuccess(res, 'Audio tracks mixed', 200, { outputPath });
   } catch (error) {
     logger.error('Audio mixing error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -177,11 +192,11 @@ router.post('/audio/ducking', auth, upload.single('video'), asyncHandler(async (
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `audio-ducking-${Date.now()}.mp4`);
-    await audioMixingService.applyAudioDucking(req.file.path, outputPath, JSON.parse(duckingOptions));
+    await audioMixingService.applyAudioDucking(req.file.path, outputPath, safeParse(duckingOptions, 'duckingOptions'));
     sendSuccess(res, 'Audio ducking applied', 200, { outputPath });
   } catch (error) {
     logger.error('Audio ducking error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -197,7 +212,7 @@ router.post('/audio/eq-preset', auth, upload.single('video'), asyncHandler(async
     sendSuccess(res, 'EQ preset applied', 200, { outputPath, preset });
   } catch (error) {
     logger.error('EQ preset error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -213,7 +228,7 @@ router.post('/audio/noise-reduction', auth, upload.single('video'), asyncHandler
     sendSuccess(res, 'Noise reduction applied', 200, { outputPath });
   } catch (error) {
     logger.error('Noise reduction error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -227,11 +242,11 @@ router.post('/typography/animated-text', auth, upload.single('video'), asyncHand
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `animated-text-${Date.now()}.mp4`);
-    await typographyService.applyAnimatedText(req.file.path, outputPath, JSON.parse(textOverlay));
+    await typographyService.applyAnimatedText(req.file.path, outputPath, safeParse(textOverlay, 'textOverlay'));
     sendSuccess(res, 'Animated text applied', 200, { outputPath });
   } catch (error) {
     logger.error('Animated text error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -243,11 +258,11 @@ router.post('/typography/template', auth, upload.single('video'), asyncHandler(a
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `text-template-${Date.now()}.mp4`);
-    await typographyService.applyTextTemplate(req.file.path, outputPath, JSON.parse(template));
+    await typographyService.applyTextTemplate(req.file.path, outputPath, safeParse(template, 'template'));
     sendSuccess(res, 'Text template applied', 200, { outputPath });
   } catch (error) {
     logger.error('Text template error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -266,11 +281,11 @@ router.post('/motion-graphics/shape', auth, upload.single('video'), asyncHandler
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `shape-overlay-${Date.now()}.mp4`);
-    await motionGraphicsService.addShapeOverlay(req.file.path, outputPath, JSON.parse(shape));
+    await motionGraphicsService.addShapeOverlay(req.file.path, outputPath, safeParse(shape, 'shape'));
     sendSuccess(res, 'Shape overlay added', 200, { outputPath });
   } catch (error) {
     logger.error('Shape overlay error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -282,11 +297,11 @@ router.post('/motion-graphics/chroma-key', auth, upload.single('video'), asyncHa
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `chroma-key-${Date.now()}.mp4`);
-    await motionGraphicsService.applyChromaKey(req.file.path, outputPath, JSON.parse(chromaKeyOptions));
+    await motionGraphicsService.applyChromaKey(req.file.path, outputPath, safeParse(chromaKeyOptions, 'chromaKeyOptions'));
     sendSuccess(res, 'Chroma key applied', 200, { outputPath });
   } catch (error) {
     logger.error('Chroma key error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -298,11 +313,11 @@ router.post('/motion-graphics/pip', auth, upload.fields([{ name: 'video', maxCou
 
   try {
     const outputPath = path.join(path.dirname(req.files.video[0].path), `pip-${Date.now()}.mp4`);
-    await motionGraphicsService.addPictureInPicture(req.files.video[0].path, req.files.pip[0].path, outputPath, JSON.parse(pipOptions));
+    await motionGraphicsService.addPictureInPicture(req.files.video[0].path, req.files.pip[0].path, outputPath, safeParse(pipOptions, 'pipOptions'));
     sendSuccess(res, 'Picture-in-picture added', 200, { outputPath });
   } catch (error) {
     logger.error('PIP error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -318,7 +333,7 @@ router.post('/motion-graphics/stabilize', auth, upload.single('video'), asyncHan
     sendSuccess(res, 'Video stabilized', 200, { outputPath });
   } catch (error) {
     logger.error('Stabilization error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -335,7 +350,7 @@ router.post('/ai-assist/smart-cuts', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Smart cut suggestions retrieved', 200, suggestions);
   } catch (error) {
     logger.error('Smart cuts error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -350,7 +365,7 @@ router.post('/ai-assist/best-moments', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Best moments found', 200, moments);
   } catch (error) {
     logger.error('Best moments error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -365,7 +380,7 @@ router.post('/ai-assist/pacing', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Pacing analysis complete', 200, analysis);
   } catch (error) {
     logger.error('Pacing analysis error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -380,7 +395,7 @@ router.post('/ai-assist/quality-check', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Quality check complete', 200, check);
   } catch (error) {
     logger.error('Quality check error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -404,7 +419,7 @@ router.post('/ai-assist/creative-director', auth, asyncHandler(async (req, res) 
     sendSuccess(res, 'Creative Director brief generated', 200, brief);
   } catch (error) {
     logger.error('Creative Director error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -419,7 +434,7 @@ router.post('/ai-assist/generate-captions', auth, asyncHandler(async (req, res) 
     sendSuccess(res, 'AI captions generated', 200, result);
   } catch (error) {
     logger.error('AI captions error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -434,7 +449,7 @@ router.post('/ai-assist/suggest-grade', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Color grade suggestion generated', 200, grade);
   } catch (error) {
     logger.error('Color grade suggestion error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -449,7 +464,7 @@ router.post('/ai-assist/suggest-transitions', auth, asyncHandler(async (req, res
     sendSuccess(res, 'Transition suggestions generated', 200, transitions);
   } catch (error) {
     logger.error('Transition suggestions error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -469,7 +484,7 @@ router.post('/ai-assist/auto-edit-sequence', auth, asyncHandler(async (req, res)
     sendSuccess(res, 'Auto-edit sequence generated', 200, sequence);
   } catch (error) {
     logger.error('Auto-edit sequence error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -484,7 +499,7 @@ router.post('/ai-assist/engagement-prediction', auth, asyncHandler(async (req, r
     sendSuccess(res, 'Engagement prediction generated', 200, prediction);
   } catch (error) {
     logger.error('Engagement prediction error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -500,7 +515,7 @@ router.post('/ai-assist/viral-snapshots', auth, asyncHandler(async (req, res) =>
     sendSuccess(res, 'Viral snapshots generated', 200, snapshots);
   } catch (error) {
     logger.error('Viral snapshots error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -516,7 +531,7 @@ router.post('/ai-assist/marketing-strategy', auth, asyncHandler(async (req, res)
     sendSuccess(res, 'Marketing strategy generated', 200, strategy);
   } catch (error) {
     logger.error('Marketing strategy error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -530,11 +545,11 @@ router.post('/transitions/apply', auth, upload.fields([{ name: 'clip1', maxCount
 
   try {
     const outputPath = path.join(path.dirname(req.files.clip1[0].path), `transition-${Date.now()}.mp4`);
-    await transitionsService.applyTransition(req.files.clip1[0].path, req.files.clip2[0].path, outputPath, JSON.parse(transition));
+    await transitionsService.applyTransition(req.files.clip1[0].path, req.files.clip2[0].path, outputPath, safeParse(transition, 'transition'));
     sendSuccess(res, 'Transition applied', 200, { outputPath });
   } catch (error) {
     logger.error('Transition error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -553,11 +568,11 @@ router.post('/speed/variable', auth, upload.single('video'), asyncHandler(async 
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `speed-${Date.now()}.mp4`);
-    await speedControlService.applyVariableSpeed(req.file.path, outputPath, JSON.parse(speedOptions));
+    await speedControlService.applyVariableSpeed(req.file.path, outputPath, safeParse(speedOptions, 'speedOptions'));
     sendSuccess(res, 'Variable speed applied', 200, { outputPath });
   } catch (error) {
     logger.error('Variable speed error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -569,11 +584,11 @@ router.post('/speed/ramp', auth, upload.single('video'), asyncHandler(async (req
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `speed-ramp-${Date.now()}.mp4`);
-    await speedControlService.applySpeedRamp(req.file.path, outputPath, JSON.parse(rampOptions));
+    await speedControlService.applySpeedRamp(req.file.path, outputPath, safeParse(rampOptions, 'rampOptions'));
     sendSuccess(res, 'Speed ramp applied', 200, { outputPath });
   } catch (error) {
     logger.error('Speed ramp error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -588,7 +603,7 @@ router.post('/speed/reverse', auth, upload.single('video'), asyncHandler(async (
     sendSuccess(res, 'Video reversed', 200, { outputPath });
   } catch (error) {
     logger.error('Reverse video error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -600,11 +615,11 @@ router.post('/speed/freeze', auth, upload.single('video'), asyncHandler(async (r
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `freeze-${Date.now()}.mp4`);
-    await speedControlService.freezeFrame(req.file.path, outputPath, JSON.parse(freezeOptions));
+    await speedControlService.freezeFrame(req.file.path, outputPath, safeParse(freezeOptions, 'freezeOptions'));
     sendSuccess(res, 'Freeze frame applied', 200, { outputPath });
   } catch (error) {
     logger.error('Freeze frame error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -623,11 +638,11 @@ router.post('/export/preset', auth, upload.single('video'), asyncHandler(async (
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `export-${platform}-${Date.now()}.mp4`);
-    await exportService.exportWithPreset(req.file.path, outputPath, platform, JSON.parse(options || '{}'));
+    await exportService.exportWithPreset(req.file.path, outputPath, platform, safeParse(options || '{}', 'options'));
     sendSuccess(res, 'Export completed', 200, { outputPath, platform });
   } catch (error) {
     logger.error('Export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -639,11 +654,11 @@ router.post('/export/custom', auth, upload.single('video'), asyncHandler(async (
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `export-custom-${Date.now()}.mp4`);
-    await exportService.exportCustom(req.file.path, outputPath, JSON.parse(settings));
+    await exportService.exportCustom(req.file.path, outputPath, safeParse(settings, 'settings'));
     sendSuccess(res, 'Custom export completed', 200, { outputPath });
   } catch (error) {
     logger.error('Custom export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -654,11 +669,11 @@ router.post('/export/batch', auth, upload.single('video'), asyncHandler(async (r
   }
 
   try {
-    const results = await exportService.batchExport(req.file.path, JSON.parse(exports));
+    const results = await exportService.batchExport(req.file.path, safeParse(exports, 'exports'));
     sendSuccess(res, 'Batch export completed', 200, { results });
   } catch (error) {
     logger.error('Batch export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -724,7 +739,7 @@ router.post('/saved-exports', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Export saved to folder (default 10 days; you can extend)', 200, saved);
   } catch (error) {
     logger.error('Save export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -738,7 +753,7 @@ router.get('/saved-exports', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Saved exports retrieved', 200, { list });
   } catch (error) {
     logger.error('List saved exports error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -752,7 +767,7 @@ router.patch('/saved-exports/:id/extend', auth, asyncHandler(async (req, res) =>
     sendSuccess(res, 'Expiration extended', 200, updated);
   } catch (error) {
     logger.error('Extend export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -770,7 +785,7 @@ router.post('/history/save', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Edit state saved', 200, result);
   } catch (error) {
     logger.error('Save edit state error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -785,7 +800,7 @@ router.post('/history/undo', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Edit undone', 200, result);
   } catch (error) {
     logger.error('Undo edit error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -800,7 +815,7 @@ router.post('/history/redo', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Edit redone', 200, result);
   } catch (error) {
     logger.error('Redo edit error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -812,7 +827,7 @@ router.get('/history/:videoId', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Edit history retrieved', 200, history);
   } catch (error) {
     logger.error('Get edit history error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -830,7 +845,7 @@ router.post('/presets/save', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Preset saved', 200, result);
   } catch (error) {
     logger.error('Save preset error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -843,7 +858,7 @@ router.get('/presets', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Presets retrieved', 200, result);
   } catch (error) {
     logger.error('Get presets error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -851,11 +866,11 @@ router.get('/presets/community', auth, asyncHandler(async (req, res) => {
   const { category, limit } = req.query;
 
   try {
-    const result = await presetService.getCommunityPresets(category || null, parseInt(limit) || 20);
+    const result = await presetService.getCommunityPresets(category || null, parseInt(limit, 10) || 20);
     sendSuccess(res, 'Community presets retrieved', 200, result);
   } catch (error) {
     logger.error('Get community presets error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -868,7 +883,7 @@ router.get('/presets/:presetId', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Preset retrieved', 200, result);
   } catch (error) {
     logger.error('Get preset error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -881,7 +896,7 @@ router.delete('/presets/:presetId', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Preset deleted', 200);
   } catch (error) {
     logger.error('Delete preset error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -898,7 +913,7 @@ router.post('/preview/frame', auth, upload.single('video'), asyncHandler(async (
     sendSuccess(res, 'Preview frame generated', 200, { outputPath });
   } catch (error) {
     logger.error('Preview frame error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -919,7 +934,7 @@ router.post('/preview/comparison', auth, upload.fields([{ name: 'original', maxC
     sendSuccess(res, 'Comparison generated', 200, { outputPath });
   } catch (error) {
     logger.error('Comparison error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -932,7 +947,7 @@ router.post('/batch/apply', auth, upload.single('video'), asyncHandler(async (re
 
   try {
     // Validate operations
-    const validation = batchService.validateBatchOperations(JSON.parse(operations));
+    const validation = batchService.validateBatchOperations(safeParse(operations, 'operations'));
     if (!validation.valid) {
       return sendError(res, `Invalid operations: ${validation.errors.join(', ')}`, 400);
     }
@@ -940,13 +955,13 @@ router.post('/batch/apply', auth, upload.single('video'), asyncHandler(async (re
     const outputPath = path.join(path.dirname(req.file.path), `batch-${Date.now()}.mp4`);
     const result = await batchService.applyBatchOperationsSequential(
       req.file.path,
-      JSON.parse(operations),
+      safeParse(operations, 'operations'),
       outputPath
     );
     sendSuccess(res, 'Batch operations completed', 200, result);
   } catch (error) {
     logger.error('Batch operations error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -960,7 +975,7 @@ router.get('/shortcuts', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Shortcuts retrieved', 200, shortcuts);
   } catch (error) {
     logger.error('Get shortcuts error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -973,7 +988,7 @@ router.post('/shortcuts/save', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Shortcut saved', 200);
   } catch (error) {
     logger.error('Save shortcut error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -991,7 +1006,7 @@ router.post('/shortcuts/preset', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Preset applied', 200, { preset: presetName });
   } catch (error) {
     logger.error('Apply preset error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1008,7 +1023,7 @@ router.post('/waveform/generate', auth, upload.single('video'), asyncHandler(asy
     sendSuccess(res, 'Waveform data generated', 200, waveformData);
   } catch (error) {
     logger.error('Waveform generation error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1024,7 +1039,7 @@ router.post('/waveform/image', auth, upload.single('video'), asyncHandler(async 
     sendSuccess(res, 'Waveform image generated', 200, { outputPath });
   } catch (error) {
     logger.error('Waveform image error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1038,7 +1053,7 @@ router.post('/waveform/beats', auth, upload.single('video'), asyncHandler(async 
     sendSuccess(res, 'Beats detected', 200, { beats });
   } catch (error) {
     logger.error('Beat detection error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1055,7 +1070,7 @@ router.post('/scopes/all', auth, upload.single('video'), asyncHandler(async (req
     sendSuccess(res, 'All scopes generated', 200, scopes);
   } catch (error) {
     logger.error('Scopes generation error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1070,7 +1085,7 @@ router.post('/scopes/waveform', auth, upload.single('video'), asyncHandler(async
     sendSuccess(res, 'Waveform monitor generated', 200, waveform);
   } catch (error) {
     logger.error('Waveform monitor error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1085,7 +1100,7 @@ router.post('/scopes/vectorscope', auth, upload.single('video'), asyncHandler(as
     sendSuccess(res, 'Vectorscope generated', 200, vectorscope);
   } catch (error) {
     logger.error('Vectorscope error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1100,7 +1115,7 @@ router.post('/scopes/histogram', auth, upload.single('video'), asyncHandler(asyn
     sendSuccess(res, 'Histogram generated', 200, histogram);
   } catch (error) {
     logger.error('Histogram error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1115,13 +1130,13 @@ router.get('/marketplace/browse', auth, asyncHandler(async (req, res) => {
       type,
       search,
       sortBy,
-      limit: parseInt(limit) || 20,
-      skip: parseInt(skip) || 0
+      limit: parseInt(limit, 10) || 20,
+      skip: parseInt(skip, 10) || 0
     });
     sendSuccess(res, 'Templates retrieved', 200, result);
   } catch (error) {
     logger.error('Browse templates error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1129,11 +1144,11 @@ router.get('/marketplace/featured', auth, asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
 
   try {
-    const templates = await templateMarketplaceService.getFeaturedTemplates(parseInt(limit));
+    const templates = await templateMarketplaceService.getFeaturedTemplates(parseInt(limit, 10));
     sendSuccess(res, 'Featured templates retrieved', 200, { templates });
   } catch (error) {
     logger.error('Get featured templates error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1151,7 +1166,7 @@ router.get('/marketplace/:templateId', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Template details retrieved', 200, { template });
   } catch (error) {
     logger.error('Get template details error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1164,7 +1179,7 @@ router.post('/marketplace/create', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Template created', 200, { template });
   } catch (error) {
     logger.error('Create template error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1177,7 +1192,7 @@ router.post('/marketplace/:templateId/download', auth, asyncHandler(async (req, 
     sendSuccess(res, 'Template downloaded', 200, result);
   } catch (error) {
     logger.error('Download template error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1191,7 +1206,7 @@ router.post('/marketplace/:templateId/rate', auth, asyncHandler(async (req, res)
     sendSuccess(res, 'Template rated', 200, result);
   } catch (error) {
     logger.error('Rate template error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1208,7 +1223,7 @@ router.post('/keyframes/save', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Keyframe animation saved', 200, result);
   } catch (error) {
     logger.error('Save keyframe animation error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1220,11 +1235,11 @@ router.post('/keyframes/apply', auth, upload.single('video'), asyncHandler(async
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `keyframe-${Date.now()}.mp4`);
-    await keyframeService.applyKeyframeAnimation(req.file.path, outputPath, JSON.parse(keyframes), property);
+    await keyframeService.applyKeyframeAnimation(req.file.path, outputPath, safeParse(keyframes, 'keyframes'), property);
     sendSuccess(res, 'Keyframe animation applied', 200, { outputPath });
   } catch (error) {
     logger.error('Apply keyframe animation error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1243,7 +1258,7 @@ router.get('/timeline/:videoId', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Timeline config retrieved', 200, timeline);
   } catch (error) {
     logger.error('Get timeline config error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1256,7 +1271,7 @@ router.post('/timeline/:videoId/track', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Track added', 200, result);
   } catch (error) {
     logger.error('Add track error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1268,7 +1283,7 @@ router.delete('/timeline/:videoId/track/:trackId', auth, asyncHandler(async (req
     sendSuccess(res, 'Track removed', 200);
   } catch (error) {
     logger.error('Remove track error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1281,7 +1296,7 @@ router.post('/timeline/:videoId/track/:trackId/clip', auth, asyncHandler(async (
     sendSuccess(res, 'Clip added to track', 200, result);
   } catch (error) {
     logger.error('Add clip to track error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1295,11 +1310,11 @@ router.post('/masking/bezier', auth, upload.single('video'), asyncHandler(async 
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `masked-${Date.now()}.mp4`);
-    await maskingService.applyBezierMask(req.file.path, outputPath, JSON.parse(maskData));
+    await maskingService.applyBezierMask(req.file.path, outputPath, safeParse(maskData, 'maskData'));
     sendSuccess(res, 'Bezier mask applied', 200, { outputPath });
   } catch (error) {
     logger.error('Bezier mask error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1311,11 +1326,11 @@ router.post('/masking/track', auth, upload.single('video'), asyncHandler(async (
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `tracked-mask-${Date.now()}.mp4`);
-    await maskingService.trackMask(req.file.path, outputPath, JSON.parse(trackingData));
+    await maskingService.trackMask(req.file.path, outputPath, safeParse(trackingData, 'trackingData'));
     sendSuccess(res, 'Mask tracking completed', 200, { outputPath });
   } catch (error) {
     logger.error('Mask tracking error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1327,11 +1342,11 @@ router.post('/masking/chroma-refine', auth, upload.single('video'), asyncHandler
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `chroma-refined-${Date.now()}.mp4`);
-    await maskingService.refineChromaKey(req.file.path, outputPath, JSON.parse(chromaKeyOptions));
+    await maskingService.refineChromaKey(req.file.path, outputPath, safeParse(chromaKeyOptions, 'chromaKeyOptions'));
     sendSuccess(res, 'Chroma key refined', 200, { outputPath });
   } catch (error) {
     logger.error('Chroma key refine error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1344,11 +1359,11 @@ router.post('/tracking/point', auth, upload.single('video'), asyncHandler(async 
   }
 
   try {
-    const tracking = await trackingService.trackPoint(req.file.path, JSON.parse(trackingData));
+    const tracking = await trackingService.trackPoint(req.file.path, safeParse(trackingData, 'trackingData'));
     sendSuccess(res, 'Point tracking completed', 200, tracking);
   } catch (error) {
     logger.error('Point tracking error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1359,11 +1374,11 @@ router.post('/tracking/face', auth, upload.single('video'), asyncHandler(async (
   }
 
   try {
-    const tracking = await trackingService.trackFace(req.file.path, JSON.parse(trackingData || '{}'));
+    const tracking = await trackingService.trackFace(req.file.path, safeParse(trackingData || '{}', 'trackingData'));
     sendSuccess(res, 'Face tracking completed', 200, tracking);
   } catch (error) {
     logger.error('Face tracking error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1374,11 +1389,11 @@ router.post('/tracking/object', auth, upload.single('video'), asyncHandler(async
   }
 
   try {
-    const tracking = await trackingService.trackObject(req.file.path, JSON.parse(trackingData));
+    const tracking = await trackingService.trackObject(req.file.path, safeParse(trackingData, 'trackingData'));
     sendSuccess(res, 'Object tracking completed', 200, tracking);
   } catch (error) {
     logger.error('Object tracking error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1396,7 +1411,7 @@ router.post('/proxy/generate', auth, upload.single('video'), asyncHandler(async 
     sendSuccess(res, 'Proxy generated', 200, { proxyPath, quality });
   } catch (error) {
     logger.error('Proxy generation error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1411,7 +1426,7 @@ router.get('/proxy/check', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Proxy check completed', 200, { exists, quality });
   } catch (error) {
     logger.error('Proxy check error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1426,7 +1441,7 @@ router.get('/tutorials/:feature', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Tutorials retrieved', 200, { tutorials });
   } catch (error) {
     logger.error('Get tutorials error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1438,7 +1453,7 @@ router.get('/tutorials/:feature/tooltips', auth, asyncHandler(async (req, res) =
     sendSuccess(res, 'Tooltips retrieved', 200, { tooltips });
   } catch (error) {
     logger.error('Get tooltips error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1451,7 +1466,7 @@ router.post('/tutorials/complete', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Tutorial completed', 200);
   } catch (error) {
     logger.error('Complete tutorial error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1463,7 +1478,7 @@ router.get('/tutorials/progress', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Progress retrieved', 200, progress);
   } catch (error) {
     logger.error('Get progress error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1475,7 +1490,7 @@ router.get('/tutorials/tips/:feature?', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Tips retrieved', 200, { tips });
   } catch (error) {
     logger.error('Get tips error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1489,11 +1504,11 @@ router.post('/export/hdr', auth, upload.single('video'), asyncHandler(async (req
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `hdr-${Date.now()}.mp4`);
-    await advancedExportService.exportHDR(req.file.path, outputPath, JSON.parse(hdrOptions || '{}'));
+    await advancedExportService.exportHDR(req.file.path, outputPath, safeParse(hdrOptions || '{}', 'hdrOptions'));
     sendSuccess(res, 'HDR export completed', 200, { outputPath });
   } catch (error) {
     logger.error('HDR export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1505,11 +1520,11 @@ router.post('/export/codec', auth, upload.single('video'), asyncHandler(async (r
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `export-codec-${Date.now()}.mp4`);
-    await advancedExportService.exportWithCodec(req.file.path, outputPath, JSON.parse(codecOptions));
+    await advancedExportService.exportWithCodec(req.file.path, outputPath, safeParse(codecOptions, 'codecOptions'));
     sendSuccess(res, 'Export with codec completed', 200, { outputPath });
   } catch (error) {
     logger.error('Codec export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1521,11 +1536,11 @@ router.post('/export/color-space', auth, upload.single('video'), asyncHandler(as
 
   try {
     const outputPath = path.join(path.dirname(req.file.path), `export-colorspace-${Date.now()}.mp4`);
-    await advancedExportService.exportWithColorSpace(req.file.path, outputPath, JSON.parse(colorSpaceOptions));
+    await advancedExportService.exportWithColorSpace(req.file.path, outputPath, safeParse(colorSpaceOptions, 'colorSpaceOptions'));
     sendSuccess(res, 'Export with color space completed', 200, { outputPath });
   } catch (error) {
     logger.error('Color space export error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1547,7 +1562,7 @@ router.post('/multicam/sync', auth, upload.array('cameras', 10), asyncHandler(as
     sendSuccess(res, 'Cameras synced', 200, syncData);
   } catch (error) {
     logger.error('Multi-cam sync error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1560,11 +1575,11 @@ router.post('/multicam/create', auth, upload.array('cameras', 10), asyncHandler(
   try {
     const cameraPaths = req.files.map(f => f.path);
     const outputPath = path.join(path.dirname(cameraPaths[0]), `multicam-${Date.now()}.mp4`);
-    await multiCamService.createMultiCamSequence(cameraPaths, outputPath, JSON.parse(sequence));
+    await multiCamService.createMultiCamSequence(cameraPaths, outputPath, safeParse(sequence, 'sequence'));
     sendSuccess(res, 'Multi-cam sequence created', 200, { outputPath });
   } catch (error) {
     logger.error('Multi-cam create error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1581,7 +1596,7 @@ router.post('/voice/command', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Voice command processed', 200, result);
   } catch (error) {
     logger.error('Voice command error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1603,7 +1618,7 @@ router.post('/cloud/save', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Project saved to cloud', 200, result);
   } catch (error) {
     logger.error('Cloud save error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1612,11 +1627,11 @@ router.get('/cloud/:videoId', auth, asyncHandler(async (req, res) => {
   const { version } = req.query;
 
   try {
-    const project = await cloudSyncService.getProjectFromCloud(videoId, version ? parseInt(version) : null);
+    const project = await cloudSyncService.getProjectFromCloud(videoId, version ? parseInt(version, 10) : null);
     sendSuccess(res, 'Project retrieved from cloud', 200, project);
   } catch (error) {
     logger.error('Cloud get error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1628,7 +1643,7 @@ router.get('/cloud/:videoId/history', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Version history retrieved', 200, history);
   } catch (error) {
     logger.error('Version history error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1641,7 +1656,7 @@ router.post('/cloud/:videoId/restore', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Version restored', 200, result);
   } catch (error) {
     logger.error('Restore version error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1678,7 +1693,7 @@ router.post('/analytics/track', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Analytics tracked', 200);
   } catch (error) {
     logger.error('Track analytics error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1691,7 +1706,7 @@ router.get('/analytics', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Analytics retrieved', 200, analytics);
   } catch (error) {
     logger.error('Get analytics error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1703,7 +1718,7 @@ router.get('/analytics/performance', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Performance metrics retrieved', 200, metrics);
   } catch (error) {
     logger.error('Get performance metrics error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1722,7 +1737,7 @@ router.post('/plugins/register', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Plugin registered', 200, result);
   } catch (error) {
     logger.error('Register plugin error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1734,7 +1749,7 @@ router.get('/plugins', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Plugins retrieved', 200, { plugins });
   } catch (error) {
     logger.error('Get plugins error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1752,7 +1767,7 @@ router.post('/plugins/:pluginId/execute', auth, asyncHandler(async (req, res) =>
     sendSuccess(res, 'Plugin executed', 200, result);
   } catch (error) {
     logger.error('Execute plugin error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -1765,7 +1780,7 @@ router.post('/plugins/:pluginId/enable', auth, asyncHandler(async (req, res) => 
     sendSuccess(res, 'Plugin enabled/disabled', 200, { enabled });
   } catch (error) {
     logger.error('Set plugin enabled error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 

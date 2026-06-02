@@ -6,10 +6,7 @@ const { Queue, Worker, QueueEvents } = require('bullmq');
 let IORedis = null;
 try {
   IORedis = require('ioredis');
-} catch (err) {
-  
-  
-}
+} catch (err) { /* intentionally empty */ }
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
@@ -329,7 +326,7 @@ function getRedisConnection() {
 
   redisConnection = {
     host: redisHost || 'localhost',
-    port: parseInt(process.env.REDIS_PORT) || 6379,
+    port: parseInt(process.env.REDIS_PORT, 10) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: null,
   };
@@ -415,9 +412,23 @@ async function addJob(queueName, jobData, options = {}) {
         log: async (msg) => logger.info(`[JobLog] ${msg}`)
       };
 
-      // Find the processor for this queue
-      const { QUEUE_PROCESSORS } = require('../workers/index');
-      const processor = QUEUE_PROCESSORS[queueName];
+      // Find the processor for this queue dynamically
+      let processor = null;
+      try {
+        if (queueName === 'content-generation') {
+          processor = require('../workers/contentGenerator').processContentJob;
+        } else if (queueName === 'video-processing') {
+          processor = require('../workers/videoProcessor').processVideoJob;
+        } else if (queueName === 'email-sending') {
+          processor = require('../workers/emailSender').processEmailJob;
+        } else if (queueName === 'transcript-generation') {
+          processor = require('../workers/transcriptProcessor').processTranscriptJob;
+        } else if (queueName === 'social-posting') {
+          processor = require('../workers/socialPostProcessor').processSocialPostJob;
+        }
+      } catch (requireErr) {
+        logger.error(`Failed to dynamically require processor for ${queueName}`, { error: requireErr.message });
+      }
 
       if (processor) {
         // Execute in-process (background-ish)

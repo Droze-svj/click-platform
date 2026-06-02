@@ -38,12 +38,24 @@ router.get('/global', auth, asyncHandler(async (req, res) => {
     // dashboard renders without 500.
     let analytics = [];
     if (supabase) {
-      const { data, error } = await supabase
-        .from('post_analytics')
-        .select('views, likes, shares, comments, engagement_rate')
-        .in('post_id',
-          supabase.from('posts').select('id').eq('author_id', userId)
-        );
+      const { data: postRows } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('author_id', userId);
+      const postIds = Array.isArray(postRows) ? postRows.map(r => r.id) : [];
+
+      let data = [];
+      let error = null;
+
+      if (postIds.length > 0) {
+        const { data: sbData, error: sbError } = await supabase
+          .from('post_analytics')
+          .select('views, likes, shares, comments, engagement_rate')
+          .in('post_id', postIds);
+        data = sbData;
+        error = sbError;
+      }
+
       if (error) throw error;
       analytics = data || [];
     }

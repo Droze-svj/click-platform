@@ -18,7 +18,7 @@ async function restorePostVersion(postId, versionNumber, userId, reason = '') {
     }
 
     // Get version to restore
-    const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber) });
+    const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber, 10) });
     if (!version) {
       throw new Error('Version not found');
     }

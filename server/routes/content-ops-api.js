@@ -4,6 +4,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { safeJsonParse } = require('../utils/safeJson');
 const { sendSuccess, sendError } = require('../utils/response');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
@@ -146,11 +147,11 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
     ];
   }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
   const [content, total] = await Promise.all([
     Content.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
+      .limit(parseInt(limit, 10))
       .skip(skip)
       .maxTimeMS(8000)
       .lean(),
@@ -160,10 +161,10 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Content retrieved', 200, {
     content,
     pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
       total,
-      pages: Math.ceil(total / parseInt(limit))
+      pages: Math.ceil(total / parseInt(limit, 10))
     }
   });
 }));
@@ -290,11 +291,11 @@ router.get('/assets', auth, asyncHandler(async (req, res) => {
     query['content.videos'] = { $exists: type === 'video' };
   }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
   const content = await Content.find(query)
     .select('title content.images content.videos metadata createdAt')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit))
+    .limit(parseInt(limit, 10))
     .skip(skip)
     .lean();
 
@@ -352,12 +353,12 @@ router.get('/posts', auth, asyncHandler(async (req, res) => {
     if (endDate) query.postedAt.$lte = new Date(endDate);
   }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
   const [posts, total] = await Promise.all([
     ScheduledPost.find(query)
       .populate('contentId', 'title type')
       .sort({ postedAt: -1 })
-      .limit(parseInt(limit))
+      .limit(parseInt(limit, 10))
       .skip(skip)
       .lean(),
     ScheduledPost.countDocuments(query)
@@ -366,10 +367,10 @@ router.get('/posts', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Posts retrieved', 200, {
     posts,
     pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
       total,
-      pages: Math.ceil(total / parseInt(limit))
+      pages: Math.ceil(total / parseInt(limit, 10))
     }
   });
 }));
@@ -475,12 +476,12 @@ router.get('/approvals', requireScope('approvals.read'), asyncHandler(async (req
   const query = { createdBy: req.user._id };
   if (status) query.status = status;
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
   const [approvals, total] = await Promise.all([
     ContentApproval.find(query)
       .populate('contentId', 'title type')
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
+      .limit(parseInt(limit, 10))
       .skip(skip)
       .lean(),
     ContentApproval.countDocuments(query)
@@ -489,10 +490,10 @@ router.get('/approvals', requireScope('approvals.read'), asyncHandler(async (req
   sendSuccess(res, 'Approvals retrieved', 200, {
     approvals,
     pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
       total,
-      pages: Math.ceil(total / parseInt(limit))
+      pages: Math.ceil(total / parseInt(limit, 10))
     }
   });
 }));
@@ -783,8 +784,8 @@ router.post('/content/export', requireScope('content.read'), asyncHandler(async 
     filename = `content-export-${Date.now()}.json`;
     break;
   case 'csv':
-    // Convert to CSV
-    const headers = ['id', 'title', 'type', 'status', 'createdAt', 'tags'];
+  // Convert to CSV
+  { const headers = ['id', 'title', 'type', 'status', 'createdAt', 'tags'];
     const rows = content.map(c => [
       c._id,
       c.title || '',
@@ -796,7 +797,7 @@ router.post('/content/export', requireScope('content.read'), asyncHandler(async 
     exportData = [headers, ...rows].map(row => row.join(',')).join('\n');
     contentType = 'text/csv';
     filename = `content-export-${Date.now()}.csv`;
-    break;
+    break; }
   default:
     return sendError(res, 'Unsupported export format', 400);
   }
@@ -821,7 +822,7 @@ router.post('/content/import', requireScope('content.write'), asyncHandler(async
 
   try {
     if (format === 'json') {
-      contentArray = typeof data === 'string' ? JSON.parse(data) : data;
+      contentArray = typeof data === 'string' ? safeJsonParse(data, null) : data;
     } else if (format === 'csv') {
       // Simple CSV parsing (in production, use a proper CSV parser)
       const lines = data.split('\n');
@@ -925,21 +926,21 @@ router.get('/search', requireScope('content.read'), asyncHandler(async (req, res
     if (dateTo) query.createdAt.$lte = new Date(dateTo);
   }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
   const [results, total] = await Promise.all([
-    Content.find(query).sort(sort).limit(parseInt(limit)).skip(skip).maxTimeMS(8000).lean(),
+    Content.find(query).sort(sort).limit(parseInt(limit, 10)).skip(skip).maxTimeMS(8000).lean(),
     Content.countDocuments(query).maxTimeMS(8000)
   ]);
 
   sendSuccess(res, 'Search completed', 200, {
     results,
     pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
       total,
-      pages: Math.ceil(total / parseInt(limit))
+      pages: Math.ceil(total / parseInt(limit, 10))
     }
   });
 }));

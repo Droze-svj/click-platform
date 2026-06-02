@@ -84,16 +84,27 @@ class BrandService {
     const factor = driftSensitivity / 100;
 
     let evolvedCPM = currentDNA.cpm;
+    // Accumulate how far accepted style moved from the current DNA — this is
+    // the real drift signal (normalized magnitude of change), not a random.
+    let driftAccum = 0;
+    let driftN = 0;
     telemetryHistory.forEach(session => {
-      if (session.styleDeltas && session.styleDeltas.cpm) {
+      if (session.styleDeltas && typeof session.styleDeltas.cpm === 'number') {
+        if (currentDNA.cpm) {
+          driftAccum += Math.abs(session.styleDeltas.cpm - currentDNA.cpm) / Math.max(1, currentDNA.cpm);
+          driftN++;
+        }
         evolvedCPM += (session.styleDeltas.cpm - evolvedCPM) * factor;
       }
     });
+    const sentimentDrift = driftN > 0
+      ? Math.round(Math.min(5, (driftAccum / driftN) * 5) * 100) / 100
+      : 0;
 
     return {
       ...currentDNA,
       cpm: Math.round(evolvedCPM * 10) / 10,
-      sentimentDrift: Math.random() * 5 // Mock drift score
+      sentimentDrift // 0-5 index derived from real accepted-style movement
     };
   }
 }

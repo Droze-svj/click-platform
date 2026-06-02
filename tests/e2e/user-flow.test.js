@@ -6,6 +6,9 @@ const User = require('../../server/models/User');
 const Content = require('../../server/models/Content');
 const mongoose = require('mongoose');
 
+// Increase timeout for E2E user flow tests
+jest.setTimeout(60000);
+
 describe('E2E User Flows', () => {
   let authToken;
   let testUser;

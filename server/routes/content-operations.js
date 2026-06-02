@@ -53,7 +53,7 @@ router.get('/health/suggestions', auth, asyncHandler(async (req, res) => {
   const { count = 10 } = req.query;
 
   const healthCheck = await performContentHealthCheck(req.user._id);
-  const suggestions = await getFutureContentSuggestions(req.user._id, healthCheck.gaps, parseInt(count));
+  const suggestions = await getFutureContentSuggestions(req.user._id, healthCheck.gaps, parseInt(count, 10));
 
   sendSuccess(res, 'Content suggestions generated', 200, {
     suggestions,
@@ -189,9 +189,9 @@ router.get('/refresh/recommendations', auth, asyncHandler(async (req, res) => {
   const { minAge, minEngagement, maxRefresh } = req.query;
 
   const recommendations = await getContentRefreshRecommendations(req.user._id, {
-    minAge: minAge ? parseInt(minAge) : 30,
-    minEngagement: minEngagement ? parseInt(minEngagement) : 100,
-    maxRefresh: maxRefresh ? parseInt(maxRefresh) : 20
+    minAge: minAge ? parseInt(minAge, 10) : 30,
+    minEngagement: minEngagement ? parseInt(minEngagement, 10) : 100,
+    maxRefresh: maxRefresh ? parseInt(maxRefresh, 10) : 20
   });
 
   sendSuccess(res, 'Refresh recommendations generated', 200, recommendations);

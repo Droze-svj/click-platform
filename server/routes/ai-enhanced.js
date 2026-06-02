@@ -4,6 +4,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { parseRequestJson } = require('../utils/safeJson');
 const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
 const { updateConfidenceRealTime, getConfidenceHistory, getConfidenceRecommendations, setConfidenceThresholds, batchAnalyzeConfidence } = require('../services/realTimeConfidenceService');
@@ -41,7 +42,7 @@ router.get('/confidence/:contentId/history', auth, asyncHandler(async (req, res)
   const { contentId } = req.params;
   const { limit = 10 } = req.query;
 
-  const history = await getConfidenceHistory(contentId, parseInt(limit));
+  const history = await getConfidenceHistory(contentId, parseInt(limit, 10));
   sendSuccess(res, 'Confidence history retrieved', 200, { history });
 }));
 
@@ -114,7 +115,7 @@ router.get('/templates/:templateId/compare', auth, asyncHandler(async (req, res)
     return sendError(res, 'Both version1 and version2 are required', 400);
   }
 
-  const comparison = await compareTemplateVersions(templateId, parseInt(version1), parseInt(version2));
+  const comparison = await compareTemplateVersions(templateId, parseInt(version1, 10), parseInt(version2, 10));
   sendSuccess(res, 'Versions compared', 200, comparison);
 }));
 
@@ -125,7 +126,7 @@ router.get('/templates/:templateId/compare', auth, asyncHandler(async (req, res)
 router.get('/templates/suggestions', auth, asyncHandler(async (req, res) => {
   const { contentType, platform, brandStyle } = req.query;
 
-  const suggestions = await getTemplateSuggestions(contentType, platform, brandStyle ? JSON.parse(brandStyle) : null);
+  const suggestions = await getTemplateSuggestions(contentType, platform, brandStyle ? parseRequestJson(brandStyle, 'brandStyle') : null);
   sendSuccess(res, 'Template suggestions retrieved', 200, { suggestions });
 }));
 

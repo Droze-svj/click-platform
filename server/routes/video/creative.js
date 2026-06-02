@@ -1,9 +1,35 @@
+// Creative AI Video Tools — real service delegation (no mocks).
+//
+// Mounted at /api/video/creative (see server/index.js). Every handler below
+// delegates to a real backend service:
+//   /transcribe       → videoTranscriptionService.transcribeVideo (JSON2VIDEO → Gemini)
+//   /auto-reframe      → creativeToolsService.autoReframe        (deterministic crop plan)
+//   /magic-broll       → creativeToolsService.magicBRoll         (Pexels-backed overlays)
+//   /thumbnail         → aiThumbnailService.autoGenerateViralThumbnails (FFmpeg frame+overlay)
+//   /speed-ramp        → creativeToolsService.applySpeedRamp     (beat-synced ramp plan)
+//   /eye-contact       → creativeToolsService.fixEyeContact      (honest not-implemented)
+//   /background-swap   → creativeToolsService.swapBackground     (honest not-implemented)
+//
+// Responses are intentionally FLAT (`{ success, ... }`) rather than wrapped in
+// the sendSuccess `{ data }` envelope, because the editor's CreativeAIView and
+// ThumbnailGeneratorView read fields at the top level (res.overlays,
+// res.rampCount, res.thumbnailUrl). asyncHandler is still used so any thrown
+// error is caught by the global error handler instead of hanging the request.
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg');
+const auth = require('../../middleware/auth');
+const asyncHandler = require('../../middleware/asyncHandler');
+const logger = require('../../utils/logger');
+
+const creativeTools = require('../../services/creativeToolsService');
+const videoTranscriptionService = require('../../services/videoTranscriptionService');
+const aiThumbnailService = require('../../services/aiThumbnailService');
+const aiLocalizationService = require('../../services/aiLocalizationService');
+const aiOutpaintingService = require('../../services/aiOutpaintingService');
 
 // Configure multer for temp uploads
 const uploadDir = path.join(__dirname, '../../../uploads/creative');
@@ -27,213 +53,275 @@ const fontUpload = multer({
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB max for fonts
 });
 
+const getUserId = (req) => req.user?._id || req.user?.id || null;
+
 /**
- * Endpoint: Transcribe Video (Whisper Large-v3 architecture hook)
- * Self-hosted mechanism: In a real environment, this delegates to whisper.cpp or returning a Python subprocess.
- * Here we mock the delay and return a structured JSON response typical of Whisper.
+ * POST /transcribe
+ * Transcribe an uploaded video (or a known videoId) via the unified
+ * transcription service (JSON2VIDEO primary, Gemini fallback). Returns the
+ * Whisper-style { text, segments, words } the editor expects.
  */
-router.post('/transcribe', upload.single('video'), async (req, res) => {
-  try {
-    const file = req.file;
-    if (!file) {
-      return res.status(400).json({ error: 'No video file provided' });
-    }
-
-    // 1. You would normally extract audio using FFmpeg:
-    // ffmpeg(file.path).noVideo().audioCodec('pcm_s16le').save(`${file.path}.wav`)
-    // 2. Then pass to Whisper.
-
-    // Simulate whisper processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Mock response
-    const mockTranscript = {
-      text: "Welcome to the future of video creation. Today we're using advanced AI features directly in the browser.",
-      segments: [
-        { id: 1, start: 0.0, end: 2.5, text: "Welcome to the future of video creation." },
-        { id: 2, start: 2.5, end: 6.0, text: "Today we're using advanced AI features directly in the browser." }
-      ]
-    };
-
-    // Cleanup input
-    fs.promises.unlink(file.path).catch(() => {});
-
-    res.json({ success: true, transcript: mockTranscript });
-  } catch (error) {
-    
-    res.status(500).json({ error: error.message });
+router.post('/transcribe', auth, upload.single('video'), asyncHandler(async (req, res) => {
+  const file = req.file;
+  const { videoId, language } = req.body;
+  if (!file && !videoId) {
+    return res.status(400).json({ success: false, error: 'A video file or videoId is required' });
   }
-});
 
-/**
- * Endpoint: Auto-Reframe (Intelligent Subject Tracking)
- * Scales/crops a 16:9 video to 9:16 keeping center/subject in frame.
- */
-router.post('/auto-reframe', express.json(), async (req, res) => {
   try {
-    const { videoId } = req.body;
-    if (!videoId) return res.status(400).json({ error: 'No videoId provided' });
-
-    // --- ACTUAL FFMPEG IMPLEMENTATION NOTE ---
-    // User would fetch video via videoId, then:
-    // ffmpeg(inputPath)
-    //   .videoFilters([{ filter: 'crop', options: 'ih*9/16:ih' }])
-    //   .outputOptions(['-c:v libx264', '-crf 23', '-preset fast'])
-    //   .save(outputPath)
-
-    // Mock processing delay for realism
-    await new Promise(r => setTimeout(r, 3500));
-
-    res.json({ success: true, message: 'Reframe complete', trackingMode: 'center_fallback' });
-  } catch (err) {
-    
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/**
- * Endpoint: Magic B-Roll (Context-Aware generation)
- */
-router.post('/magic-broll', express.json(), async (req, res) => {
-  try {
-    const { videoId, transcript } = req.body;
-    if (!videoId) {
-      return res.status(400).json({ error: 'Requires videoId' });
-    }
-
-    // Simulate LLM context-mapping & semantic video retrieval logic
-    await new Promise(r => setTimeout(r, 4000));
-
-    // Highly premium curated mock responses to map over the timeline
-    const overlays = [
+    const transcript = await videoTranscriptionService.transcribeVideo(
+      videoId || `upload-${Date.now()}`,
       {
-        id: `magic-${Date.now()}-1`,
-        startTime: 1,
-        endTime: 4,
-        url: 'https://cdn.pixabay.com/video/2021/08/04/83866-584742721_large.mp4',
-        keyword: 'Neural Network'
-      },
-      {
-        id: `magic-${Date.now()}-2`,
-        startTime: 6,
-        endTime: 9,
-        url: 'https://cdn.pixabay.com/video/2020/05/25/40149-425114138_large.mp4',
-        keyword: 'Global Infrastructure'
+        videoPath: file?.path || null,
+        userId: String(getUserId(req) || 'system'),
+        language: language || 'en',
       }
-    ];
-
-    res.json({ success: true, overlays });
-  } catch (err) {
-    
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/**
- * Endpoint: Eye Contact Fix
- */
-router.post('/eye-contact', express.json(), async (req, res) => {
-  try {
-    const { videoId } = req.body;
-    if (!videoId) return res.status(400).json({ error: 'No videoId provided' });
-
-    // Neural vector recalibration mock delay
-    await new Promise(r => setTimeout(r, 5000));
+    );
 
     res.json({
       success: true,
-      message: 'Eye contact processing complete',
-      status: 'resolved'
+      transcript: {
+        text: transcript.fullText,
+        segments: transcript.segments,
+        words: transcript.words,
+        language: transcript.language,
+        duration: transcript.duration,
+        provider: transcript.provider,
+      },
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    logger.error('[creative/transcribe] failed', { error: error.message });
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    // Always clean up the multer temp upload — success or failure.
+    if (file?.path) fs.promises.unlink(file.path).catch(() => {});
   }
-});
+}));
 
 /**
- * Endpoint: Background Swap
+ * POST /auto-reframe
+ * Returns a deterministic center-crop plan for the requested aspect ratio.
+ * The editor's renderer applies the FFmpeg crop at export time.
  */
-router.post('/background-swap', express.json(), async (req, res) => {
-  try {
-    const { videoId, bgMode } = req.body;
-    if (!videoId) return res.status(400).json({ error: 'No videoId provided' });
-
-    // Depth mapping mock delay
-    await new Promise(r => setTimeout(r, 4500));
-
-    res.json({
-      success: true,
-      message: 'Background swap semantic segmentation complete.',
-      bgMode,
-      status: 'resolved'
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+router.post('/auto-reframe', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId, aspectRatio } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'No videoId provided' });
   }
-});
+
+  const result = await creativeTools.autoReframe(videoId, aspectRatio || '9:16', getUserId(req));
+  res.json(result);
+}));
 
 /**
- * Endpoint: Font Upload (OTF/TTF)
+ * POST /magic-broll
+ * Context-aware B-roll: extracts visualisable keywords from the transcript and
+ * matches Pexels stock footage. The client sends `transcript` as either a
+ * words array ([{ word, start }]) or segments ([{ text, startTime }]); we
+ * normalise both into the segment shape the service expects.
  */
-/**
- * Endpoint: AI Thumbnail Generator
- * Generates/processes a frame with AI style enhancement.
- */
-router.post('/thumbnail', express.json(), async (req, res) => {
-  try {
-    const { videoId, frameDataUrl, style, title } = req.body;
-    if (!frameDataUrl) return res.status(400).json({ error: 'No frame data provided' });
-
-    // --- ACTUAL AI ENHANCEMENT NOTE ---
-    // In a production environment:
-    // 1. Convert base64 frameDataUrl to a buffer.
-    // 2. Pass to Stable Diffusion / DALL-E 3 with style-specific prompts.
-    // 3. Composite text/title onto the result.
-
-    // Simulate AI processing delay
-    await new Promise(r => setTimeout(r, 3000));
-
-    res.json({
-      success: true,
-      thumbnailUrl: frameDataUrl, // For mock, we just return the captured frame
-      styleApplied: style || 'Ultra-Viral',
-      message: 'AI Thumbnail generated successfully'
-    });
-  } catch (err) {
-    
-    res.status(500).json({ error: err.message });
+router.post('/magic-broll', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId, transcript } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'Requires videoId' });
   }
-});
 
-router.post('/fonts', fontUpload.single('font'), async (req, res) => {
-  try {
-    const file = req.file;
-    if (!file) return res.status(400).json({ error: 'No font file provided' });
+  const raw = Array.isArray(transcript) ? transcript : [];
+  const segments = raw
+    .map((e) => ({
+      text: e.text || e.word || '',
+      startTime: e.startTime ?? e.start ?? 0,
+    }))
+    .filter((s) => s.text);
 
-    // Validate ext
-    const originalExt = path.extname(file.originalname).toLowerCase();
-    if (!['.ttf', '.otf', '.woff', '.woff2'].includes(originalExt)) {
-      fs.promises.unlink(file.path).catch(() => {});
-      return res.status(400).json({ error: 'Invalid font format. Use TTF, OTF, or WOFF.' });
+  const result = await creativeTools.magicBRoll(videoId, segments, getUserId(req), {});
+
+  // The editor timeline (ModernVideoEditor onUpdateBroll) reads `b.url`, while
+  // the service returns `clipUrl`. Expose both so the splice works.
+  const overlays = (result.overlays || []).map((o) => ({
+    ...o,
+    url: o.clipUrl || o.url || null,
+  }));
+
+  res.json({
+    success: result.success !== false,
+    videoId,
+    overlays,
+    message: result.message,
+  });
+}));
+
+/**
+ * POST /thumbnail
+ * Real thumbnail generation. Primary path renders an AI overlay thumbnail from
+ * the source video on disk (FFmpeg frame extract + drawtext). When the source
+ * isn't resolvable (e.g. client-only / dev content), we persist the
+ * client-captured frame as a real file so it's servable and downloadable.
+ */
+router.post('/thumbnail', auth, express.json({ limit: '15mb' }), asyncHandler(async (req, res) => {
+  const { videoId, frameDataUrl, style, title } = req.body;
+  if (!videoId && !frameDataUrl) {
+    return res.status(400).json({ success: false, error: 'videoId or frameDataUrl is required' });
+  }
+
+  // Primary: render from the source video.
+  if (videoId) {
+    try {
+      const result = await aiThumbnailService.autoGenerateViralThumbnails(
+        videoId,
+        {},
+        { clipText: title || '', count: 1 }
+      );
+      if (result?.success && result.bestThumbnail) {
+        return res.json({
+          success: true,
+          thumbnailUrl: result.bestThumbnail,
+          variants: result.variants,
+          styleApplied: style || 'viral',
+          message: 'AI thumbnail rendered from source video.',
+        });
+      }
+    } catch (err) {
+      logger.warn('[creative/thumbnail] source render failed; falling back to captured frame', {
+        videoId,
+        error: err.message,
+      });
     }
-
-    // Rename file to proper extension
-    const newFileName = `${file.filename}${originalExt}`;
-    const newPath = path.join(fontDir, newFileName);
-    fs.renameSync(file.path, newPath);
-
-    const publicUrl = `/uploads/fonts/${newFileName}`;
-
-    // Here we'd typically save the font metadata to the Database
-
-    res.json({
-      success: true,
-      fontFamily: path.basename(file.originalname, originalExt),
-      url: publicUrl
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
-});
+
+  // Fallback: persist the client-captured frame as a real file.
+  if (frameDataUrl && /^data:image\/(png|jpe?g);base64,/i.test(frameDataUrl)) {
+    const outDir = path.join(__dirname, '../../../uploads/thumbnails');
+    await fs.promises.mkdir(outDir, { recursive: true });
+    const ext = /image\/png/i.test(frameDataUrl) ? 'png' : 'jpg';
+    const base64 = frameDataUrl.replace(/^data:image\/[a-z+]+;base64,/i, '');
+    const filename = `${videoId || 'frame'}_${Date.now()}.${ext}`;
+    await fs.promises.writeFile(path.join(outDir, filename), Buffer.from(base64, 'base64'));
+    return res.json({
+      success: true,
+      thumbnailUrl: `/uploads/thumbnails/${filename}`,
+      styleApplied: style || 'viral',
+      message: 'Thumbnail saved from captured frame.',
+    });
+  }
+
+  return res.status(422).json({
+    success: false,
+    error: 'Could not render from source video and no valid frame was provided.',
+  });
+}));
+
+/**
+ * POST /speed-ramp
+ * Beat-synced speed ramp plan. The editor's renderer applies setpts ramps at
+ * the returned beat markers.
+ */
+router.post('/speed-ramp', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId, intensity, preserveAudio, trackId, trackSource } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'No videoId provided' });
+  }
+
+  const result = await creativeTools.applySpeedRamp(
+    videoId,
+    { intensity, preserveAudio, trackId, trackSource },
+    getUserId(req)
+  );
+  res.json(result);
+}));
+
+/**
+ * POST /eye-contact
+ * Honest not-implemented response (returns { success: false, notImplemented: true })
+ * — no fake success. Frontend surfaces this as a "coming soon" state.
+ */
+router.post('/eye-contact', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'No videoId provided' });
+  }
+
+  const result = await creativeTools.fixEyeContact(videoId, getUserId(req));
+  res.json(result);
+}));
+
+/**
+ * POST /background-swap
+ * Honest not-implemented response. General background removal needs a
+ * segmentation model (rembg); true green-screen is handled by the chroma-key
+ * route in manual-editing.js.
+ */
+router.post('/background-swap', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId, bgMode, backgroundUrl, blurAmount, greenScreen, keyColor } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'No videoId provided' });
+  }
+
+  const result = await creativeTools.swapBackground(
+    videoId,
+    backgroundUrl || bgMode || null,
+    blurAmount,
+    getUserId(req),
+    { greenScreen: greenScreen === true || greenScreen === 'true', keyColor }
+  );
+  res.json(result);
+}));
+
+/**
+ * POST /localize
+ * Voice localization / dubbing. Real ElevenLabs dub when a key is configured;
+ * otherwise an honest not-implemented response (visual lip-sync is roadmap).
+ */
+router.post('/localize', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId, targetLanguage } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'No videoId provided' });
+  }
+
+  const result = await aiLocalizationService.localizeVideo(videoId, targetLanguage || 'Spanish');
+  res.json(result);
+}));
+
+/**
+ * POST /outpaint
+ * Convert a horizontal video to 9:16 vertical via real FFmpeg blur-pad
+ * (centered source over a zoomed, blurred fill).
+ */
+router.post('/outpaint', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'No videoId provided' });
+  }
+
+  const result = await aiOutpaintingService.outpaintToVertical(videoId);
+  res.json(result);
+}));
+
+/**
+ * POST /fonts
+ * Upload a custom font (OTF/TTF/WOFF) and serve it from /uploads/fonts.
+ */
+router.post('/fonts', auth, fontUpload.single('font'), asyncHandler(async (req, res) => {
+  const file = req.file;
+  if (!file) return res.status(400).json({ success: false, error: 'No font file provided' });
+
+  // Validate ext
+  const originalExt = path.extname(file.originalname).toLowerCase();
+  if (!['.ttf', '.otf', '.woff', '.woff2'].includes(originalExt)) {
+    fs.promises.unlink(file.path).catch(() => {});
+    return res.status(400).json({ success: false, error: 'Invalid font format. Use TTF, OTF, or WOFF.' });
+  }
+
+  // Rename file to proper extension (async to avoid blocking the event loop).
+  const newFileName = `${file.filename}${originalExt}`;
+  const newPath = path.join(fontDir, newFileName);
+  await fs.promises.rename(file.path, newPath);
+
+  res.json({
+    success: true,
+    fontFamily: path.basename(file.originalname, originalExt),
+    url: `/uploads/fonts/${newFileName}`,
+  });
+}));
 
 module.exports = router;

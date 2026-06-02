@@ -1018,26 +1018,26 @@ async function applyAdvancedRefreshStrategy(recycleId, strategy = 'smart') {
 
     case 'smart':
     default:
-      // Smart refresh based on performance
-      const performanceRatio = recycle.repostPerformance?.engagement 
-        ? (recycle.repostPerformance.engagement / (recycle.originalPerformance?.engagement || 1))
-        : 1;
+    // Smart refresh based on performance
+    { const performanceRatio = recycle.repostPerformance?.engagement 
+      ? (recycle.repostPerformance.engagement / (recycle.originalPerformance?.engagement || 1))
+      : 1;
 
-      if (performanceRatio < 0.7) {
-        // Poor performance: aggressive refresh
-        refresh.title = await generateRefreshedTitle(originalContent);
-        refresh.description = await generateRefreshedDescription(originalContent);
-        refresh.hashtags = await generateFreshHashtags(originalContent);
-        refresh.caption = await generateRefreshedCaption(originalContent);
-      } else if (performanceRatio < 0.9) {
-        // Moderate performance: moderate refresh
-        refresh.hashtags = await generateFreshHashtags(originalContent);
-        refresh.caption = await generateRefreshedCaption(originalContent);
-      } else {
-        // Good performance: minimal refresh
-        refresh.hashtags = await generateFreshHashtags(originalContent);
-      }
-      break;
+    if (performanceRatio < 0.7) {
+      // Poor performance: aggressive refresh
+      refresh.title = await generateRefreshedTitle(originalContent);
+      refresh.description = await generateRefreshedDescription(originalContent);
+      refresh.hashtags = await generateFreshHashtags(originalContent);
+      refresh.caption = await generateRefreshedCaption(originalContent);
+    } else if (performanceRatio < 0.9) {
+      // Moderate performance: moderate refresh
+      refresh.hashtags = await generateFreshHashtags(originalContent);
+      refresh.caption = await generateRefreshedCaption(originalContent);
+    } else {
+      // Good performance: minimal refresh
+      refresh.hashtags = await generateFreshHashtags(originalContent);
+    }
+    break; }
     }
 
     return refresh;

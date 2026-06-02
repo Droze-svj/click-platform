@@ -129,7 +129,7 @@ export default function RevenueOracle() {
                  {[40, 60, 90, 70, 45, 80, 50, 65, 95].map((h, i) => (
                    <motion.div 
                      key={i}
-                     initial={{ height: 0 }}
+                     initial={{ height: '0%' }}
                      animate={{ height: `${h}%` }}
                      transition={{ duration: 1, delay: i * 0.05 }}
                      className="w-full bg-indigo-500/40 rounded-t-sm"
@@ -177,7 +177,7 @@ export default function RevenueOracle() {
                       <p className="text-[9px] font-black text-white italic tabular-nums">{val}%</p>
                    </div>
                    <motion.div 
-                     initial={{ height: 0 }}
+                     initial={{ height: '0%' }}
                      animate={{ height: `${val}%` }}
                      transition={{ duration: 2.5, delay: i * 0.1, ease: 'circOut' }}
                      className="w-full rounded-2xl bg-gradient-to-t from-emerald-500/10 via-emerald-500 to-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.2)] relative overflow-hidden"

@@ -17,6 +17,11 @@ describe('Infrastructure Integration Tests', () => {
     const { initDatabases } = require('../../server/config/database');
     await initDatabases();
     
+    // Clean up any stale test users from previous runs
+    await User.deleteMany({ 
+      email: { $in: ['admin-infra@example.com', 'regular-infra@example.com'] }
+    });
+    
     // Create admin user
     adminUser = new User({
       name: 'Admin User',

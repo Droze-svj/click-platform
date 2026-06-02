@@ -258,7 +258,7 @@ async function buildRetentionCampaignPlan(userId, niche, platform, analyticsData
       const postDate = new Date(now);
       postDate.setDate(postDate.getDate() + (post.dayOffset || i * 3));
       const [hour, minute] = times[i % times.length].split(':');
-      postDate.setHours(parseInt(hour), parseInt(minute), 0, 0);
+      postDate.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
 
       return {
         ...post,

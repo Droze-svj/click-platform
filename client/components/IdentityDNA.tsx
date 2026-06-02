@@ -246,7 +246,7 @@ export default function IdentityDNA() {
                        {[60, 45, 90, 70, 85, 95, 80, 50, 65, 98, 88].map((h, i) => (
                          <div key={i} className="flex-1 space-y-4 group">
                             <motion.div 
-                              initial={{ height: 0 }}
+                              initial={{ height: '0%' }}
                               animate={{ height: `${h}%` }}
                               transition={{ duration: 2.5, delay: i * 0.1, ease: 'circOut' }}
                               className={`w-full rounded-2xl bg-gradient-to-t from-indigo-500/40 via-indigo-500 to-indigo-400 shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform duration-700`}

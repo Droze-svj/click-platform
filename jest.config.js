@@ -22,6 +22,7 @@ module.exports = {
       statements: 70
     }
   },
+  setupFiles: ['<rootDir>/tests/setup-env.js'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   testTimeout: 30000,
   // Handle ES modules in node_modules (for isomorphic-dompurify)
@@ -37,7 +38,10 @@ module.exports = {
   projects: [
     {
       displayName: 'unit',
-      testMatch: ['<rootDir>/tests/server/**/*.test.js'],
+      testMatch: [
+        '<rootDir>/tests/server/**/*.test.js',
+        '<rootDir>/tests/services/**/*.test.js'
+      ],
       // Route tests in tests/server/routes/ now have a working app
       // (server/index.js exports it, jest-loaded require skips the boot
       // block via JEST_WORKER_ID). They still fail because the test
@@ -53,6 +57,7 @@ module.exports = {
     {
       displayName: 'e2e',
       testMatch: ['<rootDir>/tests/e2e/**/*.test.js'],
+      setupFiles: ['<rootDir>/tests/setup-env.js'],
     },
     {
       displayName: 'performance',

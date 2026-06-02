@@ -4,6 +4,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
+const { safeJsonParse } = require('../utils/safeJson');
 const { createClient } = require('@supabase/supabase-js');
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -229,7 +230,13 @@ async function exchangeCodeForToken(userId, code, state) {
   const { access_token, expires_in, refresh_token, id_token } = response.data;
   if (!access_token) throw new Error('Google did not return an access token');
 
-  const userInfo = JSON.parse(Buffer.from(id_token.split('.')[1], 'base64').toString());
+  if (!id_token || typeof id_token !== 'string' || id_token.split('.').length < 2) {
+    throw new Error('Google did not return a valid id_token');
+  }
+  const userInfo = safeJsonParse(Buffer.from(id_token.split('.')[1], 'base64').toString(), null);
+  if (!userInfo) {
+    throw new Error('Google returned a malformed id_token payload');
+  }
   const profileResponse = await axios.get(USERINFO_URL, {
     headers: { Authorization: `Bearer ${access_token}` },
   });

@@ -61,7 +61,7 @@ router.post('/verify', auth, async (req, res) => {
               });
               await newUserDoc.save();
             } catch (e) {
-              console.error('Failed to create user doc for subscription settings', e);
+              logger.error('Failed to create user doc for subscription settings', e);
             }
           }
         }
@@ -96,32 +96,28 @@ router.post('/verify', auth, async (req, res) => {
 // Get subscription status
 router.get('/status', auth, async (req, res) => {
   const statusPromise = (async () => {
-    try {
-      const userId = req.user?._id || req.user?.id;
-      const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-      const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-      const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
+    const userId = req.user?._id || req.user?.id;
+    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
 
-      // Developer bypass for testing - instant response
-      if (allowDevMode && userId && (String(userId).startsWith('dev-') || String(userId) === 'dev-user-123')) {
-        return {
-          subscription: {
-            status: 'active',
-            plan: 'pro',
-            startDate: new Date(),
-            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          },
-          usage: req.user.usage || {}
-        };
-      }
-
+    // Developer bypass for testing - instant response
+    if (allowDevMode && userId && (String(userId).startsWith('dev-') || String(userId) === 'dev-user-123')) {
       return {
-        subscription: req.user.subscription || { status: 'none', plan: 'free' },
+        subscription: {
+          status: 'active',
+          plan: 'pro',
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        },
         usage: req.user.usage || {}
       };
-    } catch (err) {
-      throw err;
     }
+
+    return {
+      subscription: req.user.subscription || { status: 'none', plan: 'free' },
+      usage: req.user.usage || {}
+    };
   })();
 
   // 2s timeout for critical dashboard load

@@ -92,7 +92,7 @@ router.post('/variations/:contentId', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/suggestions', auth, asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit, 10) || 10;
 
   try {
     const result = await getPerformanceBasedSuggestions(req.user._id, limit);

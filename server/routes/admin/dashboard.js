@@ -30,7 +30,7 @@ router.use(requireAdmin);
  *       - bearerAuth: []
  */
 router.get('/overview', asyncHandler(async (req, res) => {
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
 
   try {
     const overview = await getDashboardOverview(period);
@@ -66,10 +66,10 @@ router.get('/users', asyncHandler(async (req, res) => {
       search,
       role,
       status,
-      limit: parseInt(limit),
-      skip: parseInt(skip),
+      limit: parseInt(limit, 10),
+      skip: parseInt(skip, 10),
       sortBy,
-      sortOrder: parseInt(sortOrder),
+      sortOrder: parseInt(sortOrder, 10),
     });
     sendSuccess(res, 'User management data fetched', 200, result);
   } catch (error) {
@@ -88,7 +88,7 @@ router.get('/users', asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/content', asyncHandler(async (req, res) => {
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
 
   try {
     const analytics = await getContentAnalytics(period);

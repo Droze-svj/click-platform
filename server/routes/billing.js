@@ -158,7 +158,7 @@ router.get('/usage', auth, asyncHandler(async (req, res) => {
  * Get usage statistics
  */
 router.get('/usage/stats', auth, asyncHandler(async (req, res) => {
-  const months = parseInt(req.query.months) || 3;
+  const months = parseInt(req.query.months, 10) || 3;
   const stats = await getUsageStats(req.user._id, months);
   sendSuccess(res, 'Usage statistics retrieved', 200, stats);
 }));
@@ -174,7 +174,7 @@ router.get('/usage/check', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Usage type is required', 400);
   }
 
-  const check = await canPerformAction(req.user._id, type, parseInt(amount) || 1);
+  const check = await canPerformAction(req.user._id, type, parseInt(amount, 10) || 1);
   sendSuccess(res, 'Usage check completed', 200, check);
 }));
 
@@ -244,14 +244,14 @@ router.get('/promo-codes', asyncHandler(async (req, res) => {
  */
 router.get('/history', auth, asyncHandler(async (req, res) => {
   const { limit = 20, page = 1 } = req.query;
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
   const changes = await SubscriptionChange.find({ userId: req.user._id })
     .populate('fromPackage', 'name slug')
     .populate('toPackage', 'name slug')
     .populate('addOns.addOnId', 'name')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit))
+    .limit(parseInt(limit, 10))
     .skip(skip)
     .lean();
 
@@ -260,10 +260,10 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Billing history retrieved', 200, {
     changes,
     pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
       total,
-      pages: Math.ceil(total / parseInt(limit))
+      pages: Math.ceil(total / parseInt(limit, 10))
     }
   });
 }));

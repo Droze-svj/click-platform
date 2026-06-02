@@ -43,7 +43,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
  */
 router.get('/trends', asyncHandler(async (req, res) => {
   const { days = 7 } = req.query;
-  const trends = await getErrorTrends(parseInt(days));
+  const trends = await getErrorTrends(parseInt(days, 10));
   sendSuccess(res, 'Error trends fetched', 200, trends);
 }));
 
@@ -53,7 +53,7 @@ router.get('/trends', asyncHandler(async (req, res) => {
  */
 router.get('/common', asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
-  const errors = await getMostCommonErrors(parseInt(limit));
+  const errors = await getMostCommonErrors(parseInt(limit, 10));
   sendSuccess(res, 'Most common errors fetched', 200, errors);
 }));
 
@@ -63,7 +63,7 @@ router.get('/common', asyncHandler(async (req, res) => {
  */
 router.get('/rate-check', asyncHandler(async (req, res) => {
   const { threshold = 100 } = req.query;
-  const result = await checkErrorRateThreshold(parseInt(threshold));
+  const result = await checkErrorRateThreshold(parseInt(threshold, 10));
   sendSuccess(res, 'Error rate checked', 200, result);
 }));
 

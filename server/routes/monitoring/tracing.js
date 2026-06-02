@@ -62,10 +62,10 @@ router.get('/search', auth, requireAdmin, asyncHandler(async (req, res) => {
     const filters = {};
     if (serviceName) filters.serviceName = serviceName;
     if (operationName) filters.operationName = operationName;
-    if (minDuration) filters.minDuration = parseInt(minDuration);
-    if (maxDuration) filters.maxDuration = parseInt(maxDuration);
-    if (startTime) filters.startTime = parseInt(startTime);
-    if (endTime) filters.endTime = parseInt(endTime);
+    if (minDuration) filters.minDuration = parseInt(minDuration, 10);
+    if (maxDuration) filters.maxDuration = parseInt(maxDuration, 10);
+    if (startTime) filters.startTime = parseInt(startTime, 10);
+    if (endTime) filters.endTime = parseInt(endTime, 10);
 
     const traces = searchTraces(filters);
     sendSuccess(res, 'Traces searched', 200, traces);

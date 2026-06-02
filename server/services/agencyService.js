@@ -877,14 +877,14 @@ async function executeOnboardingStep(onboardingId, stepNumber) {
       result = { success: true };
       break;
     case 'setup_portal':
-      // Create white-label portal
-      const portal = await createWhiteLabelPortal(
-        onboarding.agencyWorkspaceId,
-        onboarding.clientWorkspaceId,
-        { subdomain: onboarding.metadata.clientName.toLowerCase().replace(/\s+/g, '-') }
-      );
-      result = { success: true, portalId: portal._id };
-      break;
+    // Create white-label portal
+    { const portal = await createWhiteLabelPortal(
+      onboarding.agencyWorkspaceId,
+      onboarding.clientWorkspaceId,
+      { subdomain: onboarding.metadata.clientName.toLowerCase().replace(/\s+/g, '-') }
+    );
+    result = { success: true, portalId: portal._id };
+    break; }
     case 'configure_branding':
       // Configure branding
       result = { success: true };

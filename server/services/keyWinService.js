@@ -73,7 +73,7 @@ async function getKeyWins(clientWorkspaceId, filters = {}) {
     const wins = await KeyWin.find(query)
       .populate('postId', 'content platform postedAt')
       .sort({ 'win.date': -1 })
-      .limit(parseInt(limit))
+      .limit(parseInt(limit, 10))
       .lean();
 
     return wins;

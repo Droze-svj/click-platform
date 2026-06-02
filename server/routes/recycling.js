@@ -44,7 +44,7 @@ const router = express.Router();
  */
 router.get('/suggestions', auth, asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
-  const suggestions = await suggestRecyclableContent(req.user._id, parseInt(limit));
+  const suggestions = await suggestRecyclableContent(req.user._id, parseInt(limit, 10));
   sendSuccess(res, 'Suggestions retrieved', 200, { suggestions });
 }));
 
@@ -64,11 +64,11 @@ router.get('/recyclable', auth, asyncHandler(async (req, res) => {
   const platformArray = platforms ? platforms.split(',') : null;
 
   const recyclable = await identifyRecyclableContent(req.user._id, {
-    minEngagement: parseInt(minEngagement),
+    minEngagement: parseInt(minEngagement, 10),
     minEngagementRate: parseFloat(minEngagementRate),
-    daysSincePost: parseInt(daysSincePost),
+    daysSincePost: parseInt(daysSincePost, 10),
     platforms: platformArray,
-    limit: parseInt(limit)
+    limit: parseInt(limit, 10)
   });
 
   sendSuccess(res, 'Recyclable content identified', 200, { recyclable });
@@ -219,7 +219,7 @@ router.post('/bulk-create', auth, asyncHandler(async (req, res) => {
  */
 router.get('/analytics/advanced', auth, asyncHandler(async (req, res) => {
   const { period = 30 } = req.query;
-  const analytics = await getAdvancedAnalytics(req.user._id, parseInt(period));
+  const analytics = await getAdvancedAnalytics(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'Advanced analytics retrieved', 200, analytics);
 }));
 
@@ -422,7 +422,7 @@ router.get('/:recycleId/forecast', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Recycling plan not found', 404);
   }
 
-  const forecast = await forecastRepostEngagement(req.user._id, recycleId, parseInt(forecastDays));
+  const forecast = await forecastRepostEngagement(req.user._id, recycleId, parseInt(forecastDays, 10));
   sendSuccess(res, 'Engagement forecasted', 200, forecast);
 }));
 

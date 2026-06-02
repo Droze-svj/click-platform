@@ -77,7 +77,7 @@ async function initCache() {
         setTimeout(
           () => reject(new Error('Redis connection timeout')),
           (process.env.NODE_ENV === 'test' || process.env.REDIS_CONNECT_TIMEOUT)
-            ? parseInt(process.env.REDIS_CONNECT_TIMEOUT || '500')
+            ? parseInt(process.env.REDIS_CONNECT_TIMEOUT || '500', 10)
             : 5000
         )
       )

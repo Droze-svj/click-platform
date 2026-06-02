@@ -493,52 +493,52 @@ async function getAssetRecommendations(userId, options = {}) {
 
     switch (basedOn) {
     case 'usage':
-      // Most used assets
-      const posts = await ScheduledPost.find({
-        userId,
-        status: 'posted'
-      }).lean();
+    // Most used assets
+    { const posts = await ScheduledPost.find({
+      userId,
+      status: 'posted'
+    }).lean();
 
-      const usageCount = {};
-      posts.forEach(post => {
-        const cid = post.contentId?.toString();
-        if (cid) {
-          usageCount[cid] = (usageCount[cid] || 0) + 1;
-        }
-      });
+    const usageCount = {};
+    posts.forEach(post => {
+      const cid = post.contentId?.toString();
+      if (cid) {
+        usageCount[cid] = (usageCount[cid] || 0) + 1;
+      }
+    });
 
-      const topUsed = Object.entries(usageCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, limit)
-        .map(([id]) => id);
+    const topUsed = Object.entries(usageCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id);
 
-      recommendations = await Content.find({
-        _id: { $in: topUsed },
-        userId
-      }).limit(limit).lean();
-      break;
+    recommendations = await Content.find({
+      _id: { $in: topUsed },
+      userId
+    }).limit(limit).lean();
+    break; }
 
     case 'performance':
-      // Best performing assets
-      const performancePosts = await ScheduledPost.find({
-        userId,
-        status: 'posted',
-        'analytics.engagement': { $exists: true }
-      })
-        .sort({ 'analytics.engagement': -1 })
-        .limit(limit)
-        .lean();
+    // Best performing assets
+    { const performancePosts = await ScheduledPost.find({
+      userId,
+      status: 'posted',
+      'analytics.engagement': { $exists: true }
+    })
+      .sort({ 'analytics.engagement': -1 })
+      .limit(limit)
+      .lean();
 
-      const topPerformingIds = performancePosts.map(p => p.contentId).filter(Boolean);
-      recommendations = await Content.find({
-        _id: { $in: topPerformingIds },
-        userId
-      }).limit(limit).lean();
-      break;
+    const topPerformingIds = performancePosts.map(p => p.contentId).filter(Boolean);
+    recommendations = await Content.find({
+      _id: { $in: topPerformingIds },
+      userId
+    }).limit(limit).lean();
+    break; }
 
     case 'recency':
-      // Recently created
-      const query = { userId };
+    // Recently created
+    { const query = { userId };
       if (type) query.type = type;
       if (category) query.category = category;
 
@@ -546,7 +546,7 @@ async function getAssetRecommendations(userId, options = {}) {
         .sort({ createdAt: -1 })
         .limit(limit)
         .lean();
-      break;
+      break; }
 
     case 'similarity':
       // Similar assets (by tags/category)
@@ -671,8 +671,8 @@ async function advancedAssetSearch(userId, searchQuery, filters = {}) {
 
     let content = await Content.find(query)
       .sort(sort)
-      .limit(parseInt(limit))
-      .skip(parseInt(offset))
+      .limit(parseInt(limit, 10))
+      .skip(parseInt(offset, 10))
       .populate('folderId', 'name color')
       .lean();
 
@@ -707,8 +707,8 @@ async function advancedAssetSearch(userId, searchQuery, filters = {}) {
     return {
       content,
       total,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
       filters: {
         searchQuery,
         ...filters

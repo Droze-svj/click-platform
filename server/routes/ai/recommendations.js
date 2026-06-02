@@ -42,7 +42,7 @@ router.get('/personalized', auth, asyncHandler(async (req, res) => {
   
   try {
     const result = await getPersonalizedRecommendations(userId, {
-      limit: limit ? parseInt(limit) : 10,
+      limit: limit ? parseInt(limit, 10) : 10,
       type: type || null,
       platform: platform || null,
     });

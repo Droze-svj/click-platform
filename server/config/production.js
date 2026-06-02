@@ -12,7 +12,14 @@ function validateProductionEnv() {
     'NODE_ENV'
   ];
 
-  const missing = required.filter(key => !process.env[key]);
+  const getEnvSafe = (key) => {
+    if (typeof key !== 'string' || key === '__proto__' || key === 'constructor') {
+      return undefined;
+    }
+    return process.env[key];
+  };
+
+  const missing = required.filter(key => !getEnvSafe(key));
 
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
@@ -27,7 +34,7 @@ function validateProductionEnv() {
     'REDIS_URL'
   ];
 
-  const missingRecommended = recommended.filter(key => !process.env[key]);
+  const missingRecommended = recommended.filter(key => !getEnvSafe(key));
   if (missingRecommended.length > 0) {
     logger.warn('Missing recommended environment variables:', {
       variables: missingRecommended,
@@ -90,8 +97,8 @@ function getProductionConfig() {
 
     // Rate Limiting
     rateLimit: {
-      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-      max: parseInt(process.env.RATE_LIMIT_MAX) || 100
+      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000, // 15 minutes
+      max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100
     },
 
     // CORS

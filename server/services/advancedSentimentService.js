@@ -37,6 +37,20 @@ async function analyzeAdvancedSentiment(text, options = {}) {
  * Advanced sentiment analysis
  */
 async function analyzeSentimentAdvanced(text) {
+  // Prefer the real ML engine (AFINN lexicon via the `sentiment` lib, or a
+  // TF model when available). It returns the same { overall, scores,
+  // confidence } shape and has its own keyword fallback, so this is a strict
+  // upgrade over the inline word-list below (kept as a final safety net).
+  try {
+    const mlEngine = require('./ml/mlEngine');
+    const r = mlEngine.classifySentiment(text);
+    if (r && r.overall) {
+      return { overall: r.overall, scores: r.scores, confidence: Math.round(r.confidence) };
+    }
+  } catch (e) {
+    // fall through to the inline heuristic
+  }
+
   const positiveWords = [
     'great', 'amazing', 'love', 'best', 'excellent', 'wonderful', 'fantastic', 'awesome',
     'perfect', 'brilliant', 'outstanding', 'superb', 'incredible', 'phenomenal', 'stellar'

@@ -137,9 +137,7 @@ async function runSelfReflectiveLoop(initialContext) {
     state.iterations++;
   }
 
-  if (state.score < 90) {
-    
-  }
+  if (state.score < 90) { /* intentionally empty */ }
 
   return {
     finalTimeline: state.timelineJSON,

@@ -453,6 +453,24 @@ Return only valid JSON.`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 1400, temperature: 0.88 });
     const parsed = safeJsonParse(response, {});
+
+    if (!parsed.variants || !Array.isArray(parsed.variants)) {
+      const lines = contentText.split('\n');
+      return {
+        original: { text: contentText, predictedLift: '0%', hypothesis: 'Control' },
+        variants: [
+          { label: 'A — Curiosity Gap', text: `What if everything about ${niche} is slightly wrong?\n\n${lines.slice(1).join('\n')}`, predictedLift: '+15–30%', hypothesis: 'Curiosity gap opening outperforms statement openings' },
+          { label: 'B — Data-Led', text: `78% of ${niche} creators do this — and it's costing them.\n\n${lines.slice(1).join('\n')}`, predictedLift: '+10–25%', hypothesis: 'Specific numbers increase credibility and click-through' },
+          { label: 'C — Contrarian', text: `Unpopular opinion: the most popular ${niche} advice is wrong.\n\n${lines.slice(1).join('\n')}`, predictedLift: '+20–40%', hypothesis: 'Contrarian positioning triggers cognitive dissonance' },
+        ],
+        testingGuide: `Run each variant for 72 hours at similar posting times. Declare winner by: for ${platform} — compare ${['instagram','youtube'].includes(platform) ? 'saves + shares' : 'comments + reshares'}`,
+        source: 'template-variants',
+        platform,
+        niche,
+        generatedAt: new Date().toISOString(),
+      };
+    }
+
     return { ...parsed, original: { text: contentText }, platform, niche, source: 'ai-powered', generatedAt: new Date().toISOString() };
   } catch (error) {
     logger.error('generateABVariants error', { error: error.message, userId });

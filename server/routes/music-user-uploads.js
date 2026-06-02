@@ -100,15 +100,13 @@ router.post('/user-uploads', auth, upload.single('audio'), asyncHandler(async (r
     await music.save();
 
     // Cleanup temp file
-    if (fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
+    await fs.promises.unlink(req.file.path).catch(() => {});
 
     sendSuccess(res, 'Music uploaded successfully', 200, { music });
   } catch (error) {
     // Cleanup temp file on error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (req.file && req.file.path) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
     }
 
     logger.error('Error uploading user music', {
@@ -139,8 +137,8 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
       return sendSuccess(res, 'User music retrieved (dev mode)', 200, {
         tracks: [],
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page: parseInt(page, 10),
+          limit: parseInt(limit, 10),
           total: 0,
           totalPages: 0
         }
@@ -158,8 +156,8 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
       return sendSuccess(res, 'User music retrieved', 200, {
         tracks: [],
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page: parseInt(page, 10),
+          limit: parseInt(limit, 10),
           total: 0,
           totalPages: 0
         }
@@ -182,12 +180,12 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
       ];
     }
 
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const tracks = await Music.find(query)
       .sort({ createdAt: -1 })
       .skip(offset)
-      .limit(parseInt(limit))
+      .limit(parseInt(limit, 10))
       .lean();
 
     const total = await Music.countDocuments(query);
@@ -195,10 +193,10 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'User music retrieved', 200, {
       tracks,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total,
-        totalPages: Math.ceil(total / parseInt(limit))
+        totalPages: Math.ceil(total / parseInt(limit, 10))
       }
     });
   } catch (error) {

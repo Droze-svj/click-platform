@@ -32,7 +32,7 @@ router.post('/ai-suggestions', auth, asyncHandler(async (req, res) => {
       req.user._id,
       {
         platform,
-        count: parseInt(count),
+        count: parseInt(count, 10),
         includeExistingTracks: includeExistingTracks !== false,
         includeAIGenerated: includeAIGenerated !== false
       }

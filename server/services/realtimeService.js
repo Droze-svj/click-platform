@@ -3,6 +3,7 @@
 const logger = require('../utils/logger');
 
 function getSocketService() {
+  if (process.env.NODE_ENV === 'test') return null;
   // Lazy load to avoid circular dependency
   try {
     return require('./socketService').getSocketService();

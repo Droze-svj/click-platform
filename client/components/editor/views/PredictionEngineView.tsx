@@ -311,7 +311,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
                  return (
                     <motion.div
                        key={i}
-                       initial={{ height: 0 }}
+                       initial={{ height: '0%' }}
                        animate={{ height: `${height}%` }}
                        transition={{ duration: 1, delay: i * 0.02, ease: 'easeOut' }}
                        className={`flex-1 rounded-t-sm ${color} transition-colors min-h-[4px] relative group/bar`}

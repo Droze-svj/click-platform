@@ -56,7 +56,7 @@ router.get('/audience-growth', authenticate, async (req, res) => {
     // Predict audience growth
     const predictions = await predictionService.predictAudienceGrowth(
       userId,
-      parseInt(days)
+      parseInt(days, 10)
     );
 
     return sendSuccess(res, predictions);

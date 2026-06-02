@@ -126,7 +126,7 @@ router.get('/users', auth, requireAdmin, asyncHandler(async (req, res) => {
     } = req.query;
 
     const supabase = getSupabaseClient();
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     let query = supabase
       .from('users')
@@ -146,7 +146,7 @@ router.get('/users', auth, requireAdmin, asyncHandler(async (req, res) => {
     const sortField = validSortFields.includes(sort_by) ? sort_by : 'created_at';
     const ascending = sort_order === 'asc';
 
-    query = query.order(sortField, { ascending }).range(offset, offset + parseInt(limit) - 1);
+    query = query.order(sortField, { ascending }).range(offset, offset + parseInt(limit, 10) - 1);
 
     const { data: users, error, count } = await query;
 
@@ -158,10 +158,10 @@ router.get('/users', auth, requireAdmin, asyncHandler(async (req, res) => {
       success: true,
       users: users || [],
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total: count || 0,
-        pages: Math.ceil((count || 0) / parseInt(limit))
+        pages: Math.ceil((count || 0) / parseInt(limit, 10))
       }
     });
 
@@ -212,15 +212,20 @@ router.get('/users/:id', auth, requireAdmin, asyncHandler(async (req, res) => {
       .eq('user_id', id);
 
     // Get user's analytics summary
-    const { data: analytics } = await supabase
-      .from('post_analytics')
-      .select('platform, views, likes, shares, comments')
-      .in('post_id',
-        supabase
-          .from('posts')
-          .select('id')
-          .eq('author_id', id)
-      );
+    const { data: postRows } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('author_id', id);
+    const postIds = Array.isArray(postRows) ? postRows.map(r => r.id) : [];
+
+    let analytics = [];
+    if (postIds.length > 0) {
+      const { data: sbAnalytics } = await supabase
+        .from('post_analytics')
+        .select('platform, views, likes, shares, comments')
+        .in('post_id', postIds);
+      analytics = sbAnalytics || [];
+    }
 
     const analyticsSummary = analytics?.reduce((acc, item) => ({
       total_views: acc.total_views + (item.views || 0),
@@ -378,7 +383,7 @@ router.get('/posts', auth, requireAdmin, asyncHandler(async (req, res) => {
     } = req.query;
 
     const supabase = getSupabaseClient();
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     let query = supabase
       .from('posts')
@@ -408,7 +413,7 @@ router.get('/posts', auth, requireAdmin, asyncHandler(async (req, res) => {
     const sortField = validSortFields.includes(sort_by) ? sort_by : 'created_at';
     const ascending = sort_order === 'asc';
 
-    query = query.order(sortField, { ascending }).range(offset, offset + parseInt(limit) - 1);
+    query = query.order(sortField, { ascending }).range(offset, offset + parseInt(limit, 10) - 1);
 
     const { data: posts, error, count } = await query;
 
@@ -420,10 +425,10 @@ router.get('/posts', auth, requireAdmin, asyncHandler(async (req, res) => {
       success: true,
       posts: posts || [],
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total: count || 0,
-        pages: Math.ceil((count || 0) / parseInt(limit))
+        pages: Math.ceil((count || 0) / parseInt(limit, 10))
       }
     });
 

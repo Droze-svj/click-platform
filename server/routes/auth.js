@@ -1345,9 +1345,9 @@ router.post(
         logger.warn('Cloudinary avatar upload failed, falling back to data URL', { error: cloudErr.message });
         // Fallback path — only safe for small images. Read, encode, store
         // inline on the user row. Then unlink the temp file.
-        const buf = fs.readFileSync(req.file.path);
+        const buf = await fs.promises.readFile(req.file.path);
         avatarUrl = `data:${req.file.mimetype};base64,${buf.toString('base64')}`;
-        try { fs.unlinkSync(req.file.path); } catch (_) { /* best-effort */ }
+        await fs.promises.unlink(req.file.path).catch(() => { /* best-effort */ });
       }
 
       // Dev users live entirely in-memory — return the encoded avatar so
@@ -1375,7 +1375,7 @@ router.post(
       res.json({ success: true, avatar: avatarUrl });
     } catch (error) {
       // Make sure the temp file doesn't survive an error path.
-      if (req.file?.path) { try { fs.unlinkSync(req.file.path); } catch (_) { /* best-effort */ } }
+      if (req.file?.path) { await fs.promises.unlink(req.file.path).catch(() => { /* best-effort */ }); }
       logger.error('POST /auth/avatar threw', { error: error.message });
       res.status(500).json({ success: false, error: error.message || 'Avatar upload failed' });
     }
@@ -2228,7 +2228,7 @@ router.post('/revoke-sessions', require('../middleware/auth'), async (req, res) 
 router.get('/security-events', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit, 10) || 20;
 
     // Get user's security-related data
     const { data: user, error } = await supabase

@@ -87,20 +87,90 @@ async function runViralPipeline(contentId, videoPath, user, pipelineOptions = {}
       }
     }
 
-    // 4. One-Click AI Editing (Neural & Dynamic)
+    // 4. One-Click AI Editing (Neural & Dynamic with Creator DNA & Repetition Defense)
     updateProgress(userId, contentId, 'editing', 60, 'Removing silence, auto-zooming, and applying styles...');
     
+    const creatorDnaService = require('./creatorDnaService');
+    const creativityEngineService = require('./creativityEngineService');
+
+    let dna = null;
+    try {
+      dna = await creatorDnaService.getCreatorDNA(userId);
+      logger.info('🎨 Loaded Creator DNA for dynamic edit styling', { userId, confidence: dna.confidence });
+    } catch (dnaErr) {
+      logger.warn('Failed to load Creator DNA, using defaults', { error: dnaErr.message });
+    }
+
+    let recentContent = [];
+    try {
+      const query = Content.find({ userId, status: 'completed' });
+      if (query && typeof query.sort === 'function') {
+        recentContent = await query
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .lean();
+      } else if (query && typeof query.then === 'function') {
+        recentContent = await query;
+      }
+    } catch (err) {
+      logger.warn('Failed to query recent content for repetition analysis', { error: err.message });
+    }
+
+    let creativityReport = null;
+    let repetitionReport = null;
+    let inspirationDrop = null;
+    try {
+      creativityReport = await creativityEngineService.analyzeCreativityScore(userId, recentContent);
+      repetitionReport = await creativityEngineService.detectRepetition(userId, recentContent);
+      inspirationDrop = creativityEngineService.getInspirationDrop(user.niche || content.metadata?.niche || 'business', 'video');
+      logger.info('🎨 Creativity metrics evaluated', { userId, score: creativityReport.score, repetitionSeverity: repetitionReport.severity });
+    } catch (creativityErr) {
+      logger.warn('Creativity Engine processing failed', { error: creativityErr.message });
+    }
+
     const editingOptions = {
       removeSilence: true,
       optimizePacing: true,
       enableAutoZoom: true,
       enableColorGrading: true,
       enableSmartCaptions: true,
-      captionStyle: 'tiktok-pop',
+      captionStyle: dna?.topCaptionStyles?.[0] || 'tiktok-pop',
       platform: targetPlatforms[0] || 'tiktok',
       prioritizeHook: true,
-      pacingIntensity: 'aggressive'
+      pacingIntensity: dna?.weightedTopPacing?.[0] || 'aggressive',
+      colorGrade: dna?.topColorGrades?.[0] || null,
+      transitionStyle: dna?.topTransitions?.[0] || null,
     };
+
+    // Auto-inject dynamic pattern interrupt if high repetition or low originality is detected
+    if (repetitionReport && (repetitionReport.severity === 'high' || repetitionReport.severity === 'medium')) {
+      logger.info('🔥 Scroll-Stance Repetition defense triggered: injecting custom visual pattern interrupt', { contentId });
+      editingOptions.colorGrade = 'cyberpunk_neon'; // Override with a highly vivid scroll stopper
+      editingOptions.pacingIntensity = 'aggressive';
+      editingOptions.customInstructions = 'Pattern Interrupt Sequencing: Open with immediate high energy and contrast boost.';
+    }
+
+    // Persist creativity feedback & drops onto content model
+    if (creativityReport || repetitionReport || inspirationDrop) {
+      try {
+        content.metadata = {
+          ...content.metadata,
+          creativityScore: creativityReport?.score || 100,
+          creativityVerdict: creativityReport?.verdict || 'Aesthetic alignment confirmed',
+          repetitionSeverity: repetitionReport?.severity || 'none',
+          inspirationDrop: inspirationDrop ? {
+            framework: inspirationDrop.framework,
+            principle: inspirationDrop.principle,
+            execution: inspirationDrop.execution,
+            example: inspirationDrop.example,
+            challengeForToday: inspirationDrop.challengeForToday
+          } : null
+        };
+        await content.save();
+      } catch (saveErr) {
+        logger.warn('Failed to save creativity metrics to content', { error: saveErr.message });
+      }
+    }
 
     const editResult = await autoEditVideo(contentId, editingOptions, userId);
     

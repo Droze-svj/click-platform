@@ -1,8 +1,5 @@
-console.log('🏗️ requestTimeout: start requires');
 const logger = require('../utils/logger');
-console.log('🏗️ requestTimeout: logger loaded');
 const { sendError } = require('../utils/response');
-console.log('🏗️ requestTimeout: response loaded');
 
 /**
  * Request timeout middleware
@@ -24,9 +21,8 @@ function requestTimeout(timeoutMs = 30000) {
         u.includes('/search') ||
         u.includes('/onboarding') ||
         u.includes('/auth/me')
-      ) {
-      }
-    } catch { }
+      ) { /* intentionally empty */ }
+    } catch { /* intentionally empty */ }
     // #endregion
 
     // Set timeout
@@ -39,8 +35,7 @@ function requestTimeout(timeoutMs = 30000) {
         });
 
         // #region agent log
-        try {
-        } catch { }
+        try { /* intentionally empty */ } catch { /* intentionally empty */ }
         // #endregion
 
         res.status(504).json({

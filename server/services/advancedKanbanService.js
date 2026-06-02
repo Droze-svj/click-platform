@@ -83,9 +83,9 @@ async function getKanbanBoardWithFilters(clientWorkspaceId, agencyWorkspaceId, f
 
         switch (sortBy) {
         case 'priority':
-          const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+        { const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
           comparison = priorityOrder[b.priority] - priorityOrder[a.priority];
-          break;
+          break; }
         case 'dueDate':
           if (a.dueDate && b.dueDate) {
             comparison = new Date(a.dueDate) - new Date(b.dueDate);

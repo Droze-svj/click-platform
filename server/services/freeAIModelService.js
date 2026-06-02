@@ -9,7 +9,8 @@ const {
 } = require('../utils/errorHandler');
 const { checkRateLimit, recordUsage } = require('./freeAIModelRateLimiter');
 const { trackModelUsage } = require('./aiModelLearningService');
-const { shouldUseNewVersion, updateRolloutMetrics } = require('./modelVersionGradualRollout');
+const { shouldUseNewVersion, updateRolloutMetrics, getRolloutStatus } = require('./modelVersionGradualRollout');
+const ModelVersion = require('../models/ModelVersion');
 
 /**
  * Retry with exponential backoff
@@ -111,6 +112,9 @@ const modelLearning = {
  * Initialize free AI provider
  */
 function initFreeAIProvider(providerName = 'openrouter') {
+  if (typeof providerName !== 'string' || providerName === '__proto__' || providerName === 'constructor') {
+    throw new AppError('Invalid provider name', 400);
+  }
   const provider = FREE_AI_PROVIDERS[providerName];
   
   if (!provider) {
@@ -130,6 +134,9 @@ function initFreeAIProvider(providerName = 'openrouter') {
  * Get available models for provider
  */
 function getAvailableModels(providerName = 'openrouter') {
+  if (typeof providerName !== 'string' || providerName === '__proto__' || providerName === 'constructor') {
+    return [];
+  }
   const provider = FREE_AI_PROVIDERS[providerName];
   if (!provider) {
     return [];
@@ -163,6 +170,7 @@ function selectBestModel(taskType, options = {}) {
   let bestScore = 0;
 
   for (const model of models) {
+    if (model === '__proto__' || model === 'constructor') continue;
     const score = taskPerformance[model]?.score || 0;
     if (score > bestScore) {
       bestScore = score;
@@ -193,7 +201,6 @@ async function generateWithFreeModel(prompt, options = {}) {
   const currentVersion = await getCurrentVersionFromDB(provider, selectedModel);
   if (currentVersion) {
     // Check if there's an active rollout for a newer version
-    const { getRolloutStatus } = require('./modelVersionGradualRollout');
     const rollouts = await getActiveRollouts(provider, selectedModel);
     
     for (const rollout of rollouts) {
@@ -365,8 +372,15 @@ async function generateWithOpenRouter(prompt, model, options) {
     { headers, timeout: 30000 }
   );
 
+  const choice = response.data.choices?.[0];
+  if (!choice) {
+    throw new Error('Invalid response from OpenRouter API');
+  }
+  if (choice.message?.refusal) {
+    throw new Error(`OpenRouter model refused request: ${choice.message.refusal}`);
+  }
   return {
-    content: response.data.choices[0].message.content,
+    content: choice.message.content,
     tokens: response.data.usage?.total_tokens || 0,
   };
 }
@@ -433,8 +447,15 @@ async function generateWithCerebras(prompt, model, options) {
     { headers, timeout: 30000 }
   );
 
+  const choice = response.data.choices?.[0];
+  if (!choice) {
+    throw new Error('Invalid response from Cerebras API');
+  }
+  if (choice.message?.refusal) {
+    throw new Error(`Cerebras model refused request: ${choice.message.refusal}`);
+  }
   return {
-    content: response.data.choices[0].message.content,
+    content: choice.message.content,
     tokens: response.data.usage?.total_tokens || 0,
   };
 }
@@ -490,8 +511,11 @@ async function generateWithReplicate(prompt, model, options) {
  * Track model performance for continuous learning
  */
 function trackModelPerformance(taskType, model, response, options) {
+  if (typeof taskType !== 'string' || taskType === '__proto__' || taskType === 'constructor') return;
+  if (typeof model !== 'string' || model === '__proto__' || model === 'constructor') return;
+
   if (!modelLearning.performance.has(taskType)) {
-    modelLearning.performance.set(taskType, {});
+    modelLearning.performance.set(taskType, Object.create(null));
   }
 
   const taskPerf = modelLearning.performance.get(taskType);
@@ -564,7 +588,6 @@ function calculateResponseScore(response, options) {
  */
 async function getCurrentVersionFromDB(provider, model) {
   try {
-    const ModelVersion = require('../models/ModelVersion');
     const version = await ModelVersion.findOne({
       provider,
       model,
@@ -582,14 +605,8 @@ async function getCurrentVersionFromDB(provider, model) {
  * Get active rollouts for model
  */
 async function getActiveRollouts(provider, model) {
-  try {
-    const { getRolloutStatus } = require('./modelVersionGradualRollout');
-    // This would need to be enhanced to get all active rollouts
-    // For now, return empty array
-    return [];
-  } catch (error) {
-    return [];
-  }
+  // This would be enhanced to get all active rollouts. Placeholder for now.
+  return [];
 }
 
 /**
@@ -635,14 +652,16 @@ function updateModelVersion(model, newVersion, improvements = []) {
  * Get system prompt for task
  */
 function getSystemPromptForTask(taskType) {
-  const prompts = {
-    'content-generation': 'You are a creative content writer specializing in social media content.',
-    'caption-generation': 'You are an expert at creating engaging social media captions.',
-    'hashtag-generation': 'You are a hashtag research expert.',
-    'content-optimization': 'You are a content optimization specialist.',
-    'translation': 'You are a professional translator.',
-  };
+  const prompts = Object.create(null);
+  prompts['content-generation'] = 'You are a creative content writer specializing in social media content.';
+  prompts['caption-generation'] = 'You are an expert at creating engaging social media captions.';
+  prompts['hashtag-generation'] = 'You are a hashtag research expert.';
+  prompts['content-optimization'] = 'You are a content optimization specialist.';
+  prompts['translation'] = 'You are a professional translator.';
 
+  if (typeof taskType !== 'string' || taskType === '__proto__' || taskType === 'constructor') {
+    return 'You are a helpful AI assistant.';
+  }
   return prompts[taskType] || 'You are a helpful AI assistant.';
 }
 
@@ -658,10 +677,12 @@ function getLearningInsights() {
 
   // Find best model for each task
   for (const [taskType, performance] of modelLearning.performance.entries()) {
+    if (taskType === '__proto__' || taskType === 'constructor') continue;
     let bestModel = null;
     let bestScore = 0;
 
     for (const [model, perf] of Object.entries(performance)) {
+      if (model === '__proto__' || model === 'constructor') continue;
       if (perf.score > bestScore) {
         bestScore = perf.score;
         bestModel = model;

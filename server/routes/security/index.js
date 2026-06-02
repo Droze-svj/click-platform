@@ -161,7 +161,7 @@ router.get('/events', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     const { limit = 50 } = req.query;
-    const events = securityService.getSecurityEvents(userId, parseInt(limit));
+    const events = securityService.getSecurityEvents(userId, parseInt(limit, 10));
     return sendSuccess(res, { events });
   } catch (error) {
     logger.error('Error getting security events', { error: error.message });

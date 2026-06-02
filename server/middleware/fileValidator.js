@@ -33,7 +33,7 @@ function validateVideoFile(file) {
   }
 
   // Check file size (default 1GB)
-  const maxSize = parseInt(process.env.MAX_FILE_SIZE) || 1073741824;
+  const maxSize = parseInt(process.env.MAX_FILE_SIZE, 10) || 1073741824;
   if (file.size > maxSize) {
     throw new Error(`File too large. Maximum size: ${Math.round(maxSize / 1024 / 1024)}MB`);
   }

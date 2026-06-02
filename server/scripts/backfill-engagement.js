@@ -75,11 +75,7 @@ async function backfillEngagement() {
       .from('engagement_history')
       .insert(batch);
 
-    if (insertError) {
-      
-    } else {
-      
-    }
+    if (insertError) { /* intentionally empty */ } else { /* intentionally empty */ }
   }
 
   

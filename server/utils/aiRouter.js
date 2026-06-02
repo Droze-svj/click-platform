@@ -169,32 +169,63 @@ async function callOpenAI(prompt, opts) {
   messages.push({ role: 'user', content: prompt });
   const taskKind = opts.taskKind || 'default';
   const model = opts.openaiModel || MODEL_DEFAULTS.openai[taskKind] || MODEL_DEFAULTS.openai.default;
-  const completion = await openai.chat.completions.create({
-    model,
-    messages,
-    max_tokens: opts.maxTokens || 1024,
-    temperature: opts.temperature ?? 0.7,
-    ...(opts.jsonMode ? { response_format: { type: 'json_object' } } : {}),
-  });
-  const text = completion?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('openai-empty-response');
-  return text;
+  try {
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      max_tokens: opts.maxTokens || 1024,
+      temperature: opts.temperature ?? 0.7,
+      user: opts.userId || 'anonymous-click-user',
+      ...(opts.jsonMode ? { response_format: { type: 'json_object' } } : {}),
+    });
+    const text = completion?.choices?.[0]?.message?.content;
+    if (!text) throw new Error('openai-empty-response');
+    return text;
+  } catch (err) {
+    logger.error('callOpenAI API call failed', { error: err.message });
+    throw err;
+  }
 }
 
 async function callAnthropic(prompt, opts) {
   if (!anthropic) throw new Error('anthropic-not-configured');
   const taskKind = opts.taskKind || 'default';
   const model = opts.anthropicModel || MODEL_DEFAULTS.anthropic[taskKind] || MODEL_DEFAULTS.anthropic.default;
-  const msg = await anthropic.messages.create({
-    model,
-    max_tokens: opts.maxTokens || 1024,
-    temperature: opts.temperature ?? 0.7,
-    system: opts.systemPrompt || undefined,
-    messages: [{ role: 'user', content: prompt }],
-  });
-  const text = msg?.content?.[0]?.text;
-  if (!text) throw new Error('anthropic-empty-response');
-  return text;
+  try {
+    const crypto = require('crypto');
+    const rawUserId = opts.userId || 'anonymous-click-user';
+    const hashedUserId = crypto.createHash('sha256').update(rawUserId).digest('hex');
+
+    // Prompt caching: send the (stable) system prompt as a cacheable content
+    // block so repeated orchestration/creative calls that share a system prompt
+    // (e.g. the marketingKnowledge playbook) read the prefix from cache instead
+    // of re-billing it. Harmless when the prefix is below the cache-min size —
+    // it simply won't cache. See the claude-api prompt-caching guidance.
+    const systemParam = opts.systemPrompt
+      ? [{ type: 'text', text: opts.systemPrompt, cache_control: { type: 'ephemeral' } }]
+      : undefined;
+
+    // Opus 4.7 / 4.8 removed the sampling parameters — sending `temperature`
+    // (or top_p/top_k) returns a 400. Only include it for models that accept it.
+    const rejectsSampling = /claude-opus-4-(7|8)/.test(model);
+
+    const params = {
+      model,
+      max_tokens: opts.maxTokens || 1024,
+      system: systemParam,
+      messages: [{ role: 'user', content: prompt }],
+      metadata: { user_id: hashedUserId },
+    };
+    if (!rejectsSampling) params.temperature = opts.temperature ?? 0.7;
+
+    const msg = await anthropic.messages.create(params);
+    const text = msg?.content?.[0]?.text;
+    if (!text) throw new Error('anthropic-empty-response');
+    return text;
+  } catch (err) {
+    logger.error('callAnthropic API call failed', { error: err.message });
+    throw err;
+  }
 }
 
 const PROVIDER_FNS = { gemini: callGemini, openai: callOpenAI, anthropic: callAnthropic };
@@ -233,8 +264,9 @@ async function aiCall(prompt, opts = {}) {
   // Task-kind picks the right provider chain (Claude-first for
   // orchestration, OpenAI-first for vision, Gemini-first for fast text).
   // Explicit preferredProvider always wins.
-  const baseChain = opts.taskKind && TASK_PROVIDER_CHAIN[opts.taskKind]
-    ? TASK_PROVIDER_CHAIN[opts.taskKind]
+  const safeTaskKind = typeof opts.taskKind === 'string' && opts.taskKind !== '__proto__' && opts.taskKind !== 'constructor' ? opts.taskKind : null;
+  const baseChain = safeTaskKind && TASK_PROVIDER_CHAIN[safeTaskKind]
+    ? TASK_PROVIDER_CHAIN[safeTaskKind]
     : PROVIDER_ORDER;
   const order = opts.preferredProvider
     ? [opts.preferredProvider, ...baseChain.filter(p => p !== opts.preferredProvider)]
@@ -249,6 +281,7 @@ async function aiCall(prompt, opts = {}) {
   const errors = [];
   for (const provider of order) {
     if (!isProviderAvailable(provider)) continue;
+    if (typeof provider !== 'string' || provider === '__proto__' || provider === 'constructor' || !PROVIDER_FNS[provider]) continue;
     const fn = PROVIDER_FNS[provider];
     const promptForProvider = provider === 'gemini' ? geminiPrompt : prompt;
     try {
@@ -275,7 +308,7 @@ async function aiCall(prompt, opts = {}) {
       });
       // OpenAI rate-limits clear quickly — one short retry inside the same
       // provider before falling through.
-      if (isQuota && PROVIDER_RETRY_MS[provider] > 0) {
+      if (isQuota && typeof provider === 'string' && provider !== '__proto__' && provider !== 'constructor' && PROVIDER_RETRY_MS[provider] > 0) {
         await sleep(PROVIDER_RETRY_MS[provider]);
         try {
           const text = await fn(promptForProvider, opts);
@@ -309,9 +342,62 @@ async function aiCallJson(prompt, fallback = null, opts = {}) {
   return safeJsonParse(r.text, fallback);
 }
 
+/**
+ * Lightweight key/type schema check. `schema` maps key → expected type
+ * ('string' | 'number' | 'boolean' | 'array' | 'object'). Keys suffixed with
+ * '?' are optional. Returns { valid, missing } so callers/repair can act.
+ */
+function validateShape(obj, schema) {
+  if (!obj || typeof obj !== 'object') return { valid: false, missing: ['<root not an object>'] };
+  const missing = [];
+  for (const rawKey of Object.keys(schema || {})) {
+    const optional = rawKey.endsWith('?');
+    const key = optional ? rawKey.slice(0, -1) : rawKey;
+    const want = schema[rawKey];
+    const val = obj[key];
+    if (val === undefined || val === null) {
+      if (!optional) missing.push(key);
+      continue;
+    }
+    const actual = Array.isArray(val) ? 'array' : typeof val;
+    if (want && actual !== want) missing.push(`${key}:${actual}!=${want}`);
+  }
+  return { valid: missing.length === 0, missing };
+}
+
+/**
+ * aiCallJson + schema validation + ONE repair re-prompt. This is the accuracy
+ * upgrade: if the model returns malformed/incomplete JSON, we re-prompt once
+ * with the exact validation errors before giving up to the fallback. Never
+ * throws (unless KILL_FALLBACK).
+ *
+ * @param {string} prompt
+ * @param {object} options - { schema, fallback, ...aiCallOpts }
+ */
+async function aiCallJsonValidated(prompt, { schema = null, fallback = null, ...opts } = {}) {
+  const first = await aiCallJson(prompt, null, opts);
+  if (first != null && (!schema || validateShape(first, schema).valid)) return first;
+
+  // Repair pass — tell the model precisely what was wrong.
+  const why = first == null
+    ? 'Your previous response was not valid JSON.'
+    : `Your previous JSON was missing/mistyped: ${validateShape(first, schema).missing.join(', ')}.`;
+  const repairPrompt = `${prompt}\n\n── Correction ──\n${why} Return ONLY a single valid JSON object that satisfies every required field. No prose, no code fences.`;
+  const second = await aiCallJson(repairPrompt, null, opts);
+  if (second != null && (!schema || validateShape(second, schema).valid)) return second;
+
+  logger.warn('aiCallJsonValidated: schema unmet after repair, using fallback', {
+    taskType: opts.taskType || 'unknown',
+    missing: schema ? validateShape(second || first || {}, schema).missing : undefined,
+  });
+  return fallback;
+}
+
 module.exports = {
   aiCall,
   aiCallJson,
+  aiCallJsonValidated,
+  validateShape,
   safeJsonParse,
   isProviderAvailable,
   // Useful for tests + telemetry.

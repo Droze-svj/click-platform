@@ -251,7 +251,9 @@ function getMetrics() {
       },
       database: {
         totalQueries: metrics.database.queries,
-        slowQueries: metrics.database.slowQueries,
+        // Was a duplicate `slowQueries` key — the count below was silently
+        // dropped by the array assignment. Surface the count under its own key.
+        slowQueryCount: metrics.database.slowQueries,
         avgQueryTime: Math.round(dbAvgQueryTime) + 'ms',
         slowQueries: slowQueries,
       },

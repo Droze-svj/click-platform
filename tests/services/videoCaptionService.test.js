@@ -1,4 +1,5 @@
 // Unit tests for videoCaptionService
+process.env.OPENAI_API_KEY = 'mock-key';
 
 const videoCaptionService = require('../../server/services/videoCaptionService');
 const Content = require('../../server/models/Content');
@@ -7,25 +8,29 @@ const path = require('path');
 
 // Mock dependencies
 jest.mock('../../server/models/Content');
-jest.mock('fs', () => ({
-  promises: {
-    readFile: jest.fn(),
+jest.mock('fs', () => {
+  const originalFs = jest.requireActual('fs');
+  return {
+    ...originalFs,
+    createReadStream: jest.fn().mockReturnValue({}),
+  };
+});
+
+const mockOpenaiInstance = {
+  audio: {
+    transcriptions: {
+      create: jest.fn(),
+    },
   },
-}));
+  chat: {
+    completions: {
+      create: jest.fn(),
+    },
+  },
+};
 
 jest.mock('openai', () => {
-  return jest.fn().mockImplementation(() => ({
-    audio: {
-      transcriptions: {
-        create: jest.fn(),
-      },
-    },
-    chat: {
-      completions: {
-        create: jest.fn(),
-      },
-    },
-  }));
+  return jest.fn().mockImplementation(() => mockOpenaiInstance);
 });
 
 describe('Video Caption Service', () => {

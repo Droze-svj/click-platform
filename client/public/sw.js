@@ -383,9 +383,11 @@ async function cacheFirstWithExpiration(request) {
 // ====================
 
 function isStaticAsset(url) {
+  const path = url.pathname;
   return CACHE_CONFIG.static.some(pattern =>
-    url.pathname.includes(pattern) ||
-    url.pathname.match(new RegExp(pattern.replace(/\*/g, '.*')))
+    path === pattern ||
+    path.startsWith(pattern) ||
+    path.includes(pattern)
   );
 }
 

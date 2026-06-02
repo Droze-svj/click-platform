@@ -170,7 +170,7 @@ router.get('/:id/logs', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Webhook not found', 404);
   }
 
-  const logs = await getWebhookLogs(req.params.id, parseInt(req.query.limit) || 50);
+  const logs = await getWebhookLogs(req.params.id, parseInt(req.query.limit, 10) || 50);
   sendSuccess(res, 'Webhook logs retrieved', 200, logs);
 }));
 

@@ -1,4 +1,4 @@
-import { TimelineSegmentType, EditorContentPreferences, EditorCategory, EDITOR_CONTENT_PREFS_KEY } from '../types/editor'
+import { TimelineSegmentType, EditorContentPreferences, EditorCategory, EDITOR_CONTENT_PREFS_KEY, TimelineSegment } from '../types/editor'
 
 /** Format seconds as M:SS, or H:MM:SS for long videos */
 export const formatTime = (time: number): string => {
@@ -189,3 +189,85 @@ export function pushRecentSection(category: EditorCategory): void {
   const next = [category, ...filtered].slice(0, 5)
   saveEditorContentPreferences({ recentSections: next })
 }
+
+/**
+ * Resolves overlap collisions on a given timeline track by rippling/shifting subsequent segments to the right.
+ * Also deduplicates exact visual duplicates on the same track.
+ */
+export function resolveTimelineOverlaps(
+  segments: TimelineSegment[],
+  draggedId: string,
+  proposedStart: number,
+  proposedEnd: number,
+  proposedTrack: number
+): TimelineSegment[] {
+  const duration = Math.max(0.1, proposedEnd - proposedStart)
+  const finalStart = Math.max(0, proposedStart)
+  const finalEnd = finalStart + duration
+
+  // 1. Separate the dragged/edited segment from all other segments
+  const otherSegments = segments.filter(s => s.id !== draggedId)
+
+  // 2. Extract and sort other segments on the target track
+  const trackSegments = otherSegments
+    .filter(s => (s.track ?? 0) === proposedTrack)
+    .sort((a, b) => a.startTime - b.startTime)
+
+  // 3. Find the original dragged segment to clone its properties
+  const draggedSegment = segments.find(s => s.id === draggedId)
+  if (!draggedSegment) return segments
+
+  const tempDragged: TimelineSegment = {
+    ...draggedSegment,
+    startTime: finalStart,
+    endTime: finalEnd,
+    duration,
+    track: proposedTrack
+  }
+
+  // 4. Combine and sort all segments on this track
+  const combined = [...trackSegments, tempDragged].sort((a, b) => a.startTime - b.startTime)
+
+  // 5. Cascade overlap resolution: shift overlapping segments to the right
+  for (let i = 1; i < combined.length; i++) {
+    const prev = combined[i - 1]
+    const curr = combined[i]
+    if (curr.startTime < prev.endTime) {
+      const dur = Math.max(0.1, curr.endTime - curr.startTime)
+      curr.startTime = prev.endTime
+      curr.endTime = curr.startTime + dur
+      curr.duration = dur
+    }
+  }
+
+  // 6. Deduplicate: remove any exact visual duplicates (same start and end times)
+  const uniqueTrackSegments: TimelineSegment[] = []
+  const seen = new Set<string>()
+  for (const s of combined) {
+    const key = `${s.startTime.toFixed(3)}-${s.endTime.toFixed(3)}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      uniqueTrackSegments.push(s)
+    }
+  }
+
+  // 7. Reconstruct the final timeline segment list
+  return segments
+    .map(s => {
+      if (s.id === draggedId) {
+        const resolved = uniqueTrackSegments.find(x => x.id === draggedId)
+        return resolved ? resolved : { ...s, startTime: finalStart, endTime: finalEnd, duration, track: proposedTrack }
+      }
+      
+      if ((s.track ?? 0) === proposedTrack) {
+        // If it was on the same track, return the resolved version (shifted and deduplicated)
+        const resolved = uniqueTrackSegments.find(x => x.id === s.id)
+        if (!resolved) return null // Removed as duplicate
+        return resolved
+      }
+      
+      return s
+    })
+    .filter((s): s is TimelineSegment => s !== null)
+}
+

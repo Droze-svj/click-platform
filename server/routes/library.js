@@ -143,8 +143,8 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
     return sendSuccess(res, 'Content fetched', 200, {
       content: [],
       total: 0,
-      limit: parseInt(req.query.limit) || 50,
-      offset: parseInt(req.query.offset) || 0
+      limit: parseInt(req.query.limit, 10) || 50,
+      offset: parseInt(req.query.offset, 10) || 0
     });
   }
 
@@ -205,8 +205,8 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
     [content, total] = await Promise.all([
       Content.find(query)
         .sort(sort)
-        .limit(parseInt(limit))
-        .skip(parseInt(offset))
+        .limit(parseInt(limit, 10))
+        .skip(parseInt(offset, 10))
         .populate('folderId', 'name color')
         .maxTimeMS(8000),
       Content.countDocuments(query).maxTimeMS(8000)
@@ -221,8 +221,8 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Content fetched', 200, {
     content,
     total,
-    limit: parseInt(limit),
-    offset: parseInt(offset)
+    limit: parseInt(limit, 10),
+    offset: parseInt(offset, 10)
   });
 }));
 
@@ -525,7 +525,7 @@ router.get('/recommendations', auth, asyncHandler(async (req, res) => {
   } = req.query;
 
   const recommendations = await getAssetRecommendations(req.user._id, {
-    limit: parseInt(limit),
+    limit: parseInt(limit, 10),
     type,
     category,
     basedOn,

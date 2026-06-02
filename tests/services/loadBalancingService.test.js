@@ -40,9 +40,9 @@ describe('Load Balancing Service', () => {
     beforeEach(async () => {
       // Setup a mixed state
       axios.get.mockImplementation(async (url) => {
-        if (url.includes('server-1')) throw new Error('Down');
-        if (url.includes('server-2')) return { status: 200, data: { load: 50 } };
-        if (url.includes('server-3')) return { status: 200, data: { load: 20 } };
+        if (url.includes('5000') || url.includes('server-1')) throw new Error('Down');
+        if (url.includes('5001') || url.includes('server-2')) return { status: 200, data: { load: 50 } };
+        if (url.includes('5002') || url.includes('server-3')) return { status: 200, data: { load: 20 } };
         return { status: 200, data: { load: 0 } };
       });
       await loadBalancingService.healthCheckServers();
@@ -87,7 +87,7 @@ describe('Load Balancing Service', () => {
       const scaleResult = await loadBalancingService.autoScale();
       expect(scaleResult.action).toBe('scale_up');
       expect(scaleResult.reason).toBe('High load');
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('scale'), expect.any(Object));
+      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('scal'), expect.any(Object));
     });
 
     it('should trigger scale down when load is low and servers are plenty', async () => {

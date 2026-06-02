@@ -304,12 +304,15 @@ router.post('/pre-publish-report', auth, (req, res) => {
 //   3. (Future) creator's historical engagement-by-hour — placeholder for now,
 //      surfaced as a fourth window with `signal: 'creator-history'` once
 //      analytics ingestion is live.
-router.get('/optimal-windows', auth, (req, res) => {
+router.get('/optimal-windows', auth, async (req, res) => {
   const niche = (req.query.niche || 'other').toString().toLowerCase();
   const platform = (req.query.platform || 'tiktok').toString().toLowerCase();
 
   const platformPlaybook = PLATFORM_PLAYBOOKS[platform] || PLATFORM_PLAYBOOKS.tiktok;
-  const nicheWindows = NICHE_POSTING_WINDOWS[niche] || NICHE_POSTING_WINDOWS.other;
+  // Guard against an unknown niche AND a missing `.other` fallback — the
+  // handler is async now, so a `.map` of undefined would surface as an
+  // unhandled rejection rather than a catchable sync throw.
+  const nicheWindows = NICHE_POSTING_WINDOWS[niche] || NICHE_POSTING_WINDOWS.other || [];
 
   // Synthesize top-3 windows by intersecting niche windows with the platform's
   // implicit peak (encoded loosely in the playbook's `idealLength` framing —
@@ -332,12 +335,40 @@ router.get('/optimal-windows', auth, (req, res) => {
     };
   });
 
+  // Real creator-history signal: the user's peak engagement hour from their
+  // own posted posts (grows with the user as they publish more). Surfaced as a
+  // high-confidence window once there are enough data points.
+  try {
+    const ScheduledPost = require('../models/ScheduledPost');
+    const userId = String(req.user?._id || req.user?.id || '');
+    const rows = await ScheduledPost.aggregate([
+      { $match: { userId, status: 'posted', postedAt: { $ne: null } } },
+      { $group: { _id: { $hour: '$postedAt' }, totalEngagement: { $sum: { $ifNull: ['$analytics.engagement', 0] } }, n: { $sum: 1 } } },
+      { $sort: { totalEngagement: -1 } },
+      { $limit: 1 },
+    ]).catch(() => []);
+    if (rows[0] && rows[0].n >= 3) {
+      const peakHour = rows[0]._id;
+      windows.unshift({
+        hour: peakHour,
+        window: { start: peakHour, end: (peakHour + 1) % 24 },
+        label: `Your peak engagement hour (~${peakHour}:00 UTC)`,
+        rationale: [`Creator history: your ${rows[0].n} posts engage most around ${peakHour}:00.`],
+        confidence: 0.9,
+        source: 'creator-history',
+        signal: 'creator-history',
+      });
+    }
+  } catch (e) {
+    // No history yet — fall back to the niche+platform windows above.
+  }
+
   res.json({
     success: true,
     data: {
       niche,
       platform,
-      windows,
+      windows: windows.slice(0, 4),
       platformBrief: {
         idealLength: platformPlaybook.idealLength,
         captionStyle: platformPlaybook.captionStyle,

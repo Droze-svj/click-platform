@@ -12,10 +12,6 @@ require('dotenv').config({ path: '.env.test' });
 
 let mongoServer;
 
-// Set test environment variables
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key';
-
 // Mock isomorphic-dompurify before any modules require it
 jest.mock('isomorphic-dompurify', () => {
   return {
@@ -100,11 +96,75 @@ beforeAll(async () => {
 });
 
 // Mock external services in tests
+jest.mock('bullmq', () => {
+  const mockQueue = {
+    add: jest.fn().mockImplementation((name, data, opts) => Promise.resolve({
+      id: 'test-job-id',
+      name,
+      data,
+      opts,
+      getState: jest.fn().mockResolvedValue('waiting'),
+      progress: 0,
+    })),
+    getJob: jest.fn().mockImplementation((jobId) => {
+      if (jobId === 'non-existent') return Promise.resolve(null);
+      return Promise.resolve({
+        id: jobId,
+        name: 'test-job',
+        data: { test: 'data' },
+        getState: jest.fn().mockResolvedValue('active'),
+        progress: 50,
+        timestamp: Date.now(),
+      });
+    }),
+    getWaitingCount: jest.fn().mockResolvedValue(1),
+    getActiveCount: jest.fn().mockResolvedValue(0),
+    getCompletedCount: jest.fn().mockResolvedValue(5),
+    getFailedCount: jest.fn().mockResolvedValue(0),
+    getDelayedCount: jest.fn().mockResolvedValue(0),
+    close: jest.fn().mockResolvedValue(),
+  };
+
+  return {
+    Queue: jest.fn().mockImplementation(() => mockQueue),
+    Worker: jest.fn().mockImplementation(() => ({
+      close: jest.fn().mockResolvedValue(),
+      on: jest.fn(),
+    })),
+    QueueEvents: jest.fn().mockImplementation(() => ({
+      close: jest.fn().mockResolvedValue(),
+      on: jest.fn(),
+    })),
+  };
+});
+
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => ({
+    on: jest.fn(),
+    ping: jest.fn().mockResolvedValue('PONG'),
+    quit: jest.fn().mockResolvedValue(),
+    disconnect: jest.fn(),
+  }));
+});
+
 jest.mock('../server/services/emailService', () => ({
   sendEmail: jest.fn(() => Promise.resolve({ success: true })),
   sendWelcomeEmail: jest.fn(() => Promise.resolve({ success: true })),
   sendPasswordResetEmail: jest.fn(() => Promise.resolve({ success: true })),
 }));
+
+jest.mock('@prisma/client', () => {
+  const mockPrismaClient = {
+    user: {
+      count: jest.fn().mockResolvedValue(0),
+    },
+    $disconnect: jest.fn().mockResolvedValue(),
+    $connect: jest.fn().mockResolvedValue(),
+  };
+  return {
+    PrismaClient: jest.fn().mockImplementation(() => mockPrismaClient),
+  };
+});
 
 // Suppress console logs in tests
 global.console = {

@@ -72,7 +72,7 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
   }
 
   try {
-    const suggestions = await getSuggestions(index, q, parseInt(size));
+    const suggestions = await getSuggestions(index, q, parseInt(size, 10));
     sendSuccess(res, 'Suggestions fetched', 200, { suggestions });
   } catch (error) {
     logger.error('Get suggestions error', { error: error.message });

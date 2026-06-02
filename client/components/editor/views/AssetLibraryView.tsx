@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
+import { getAssetUrl } from '../../../utils/url'
 import {
   ShapeOverlay,
   ImageOverlay,
@@ -147,10 +148,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
       const videoData = videoRes?.data || videoRes || []
       const brollAssets: Asset[] = (Array.isArray(videoData) ? videoData : []).map((v: any) => ({
         id: v._id,
-        url: v.originalFile?.url,
+        url: getAssetUrl(v.originalFile?.url || ''),
         title: v.title || v.originalFile?.filename || 'Uploaded Video',
         type: 'broll',
-        thumbnail: v.generatedContent?.shortVideos?.[0]?.thumbnail || v.originalFile?.url,
+        thumbnail: getAssetUrl(v.generatedContent?.shortVideos?.[0]?.thumbnail || v.originalFile?.url || ''),
         source: 'upload',
         createdAt: v.createdAt
       }))
@@ -160,7 +161,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
       const musicData = musicRes?.data?.tracks || musicRes?.tracks || []
       const musicAssets: Asset[] = (Array.isArray(musicData) ? musicData : []).map((m: any) => ({
         id: m._id,
-        url: m.file?.url,
+        url: getAssetUrl(m.file?.url || ''),
         title: m.title || 'Uploaded Music',
         type: 'music',
         duration: m.file?.duration,
@@ -205,12 +206,12 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
 
   const mapStockItem = useCallback((item: any, type: 'music' | 'image' | 'broll' | 'sfx'): Asset => ({
     id: item.id || `stock-${type}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    url: item.url,
+    url: getAssetUrl(item.url || ''),
     title: item.title || item.name || 'Asset',
     name: item.name,
     type,
     duration: item.duration,
-    thumbnail: item.thumbnail || (type === 'image' ? item.url : undefined),
+    thumbnail: item.thumbnail ? getAssetUrl(item.thumbnail) : (type === 'image' ? getAssetUrl(item.url || '') : undefined),
     source: 'click',
   }), [])
 

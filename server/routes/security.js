@@ -2,15 +2,10 @@
 
 const express = require('express');
 const auth = require('../middleware/auth');
-// Temporarily disable security audit service
-// const {
-//   getUserSecurityEvents,
-//   getSecurityStats,
-// } = require('../services/securityAuditService');
-
-// Mock functions for now
-const getUserSecurityEvents = async () => ({ events: [], total: 0 });
-const getSecurityStats = async () => ({ totalEvents: 0, recentEvents: [] });
+const {
+  getUserSecurityEvents,
+  getSecurityStatistics,
+} = require('../services/securityAuditService');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
@@ -27,24 +22,10 @@ const router = express.Router();
  */
 router.get('/events', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const {
-    limit = 50,
-    skip = 0,
-    eventType,
-    severity,
-    startDate,
-    endDate,
-  } = req.query;
+  const { limit = 50 } = req.query;
 
   try {
-    const result = await getUserSecurityEvents(userId, {
-      limit: parseInt(limit),
-      skip: parseInt(skip),
-      eventType,
-      severity,
-      startDate,
-      endDate,
-    });
+    const result = await getUserSecurityEvents(userId, parseInt(limit, 10) || 50);
 
     sendSuccess(res, 'Security events fetched', 200, result);
   } catch (error) {
@@ -64,10 +45,11 @@ router.get('/events', auth, asyncHandler(async (req, res) => {
  */
 router.get('/stats', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
+  const startDate = new Date(Date.now() - period * 24 * 60 * 60 * 1000);
 
   try {
-    const stats = await getSecurityStats(userId, period);
+    const stats = await getSecurityStatistics({ userId, startDate, endDate: new Date() });
     sendSuccess(res, 'Security stats fetched', 200, stats);
   } catch (error) {
     logger.error('Get security stats error', { error: error.message, userId });

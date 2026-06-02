@@ -37,7 +37,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
 router.get('/forecast', auth, asyncHandler(async (req, res) => {
   const { days = 30 } = req.query;
   
-  const forecast = await getContentForecast(req.user._id, parseInt(days));
+  const forecast = await getContentForecast(req.user._id, parseInt(days, 10));
   
   sendSuccess(res, 'Forecast generated', 200, forecast);
 }));

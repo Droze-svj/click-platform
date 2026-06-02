@@ -79,7 +79,7 @@ router.get('/:contentId/ranked', auth, asyncHandler(async (req, res) => {
     });
 
     // Apply limit if provided
-    const limited = limit ? ranked.slice(0, parseInt(limit)) : ranked;
+    const limited = limit ? ranked.slice(0, parseInt(limit, 10)) : ranked;
 
     sendSuccess(res, 'Scenes ranked by quality', 200, {
       scenes: limited,

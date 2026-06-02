@@ -2,6 +2,8 @@
 // Uses GOOGLE_AI_API_KEY (Gemini API key from AI Studio: https://aistudio.google.com/apikey)
 // 2026 Upgrade: gemini-2.5-flash — faster, better JSON, improved creative reasoning
 
+const logger = require('./logger');
+
 let genAI = null;
 let model = null;
 let embeddingModel = null;
@@ -13,20 +15,26 @@ try {
   // Optional dependency in some local environments
 }
 
+const safetySettings = [
+  { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+];
+
 try {
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (apiKey) {
-    const logger = require('./logger');
     genAI = new GoogleGenerativeAI(apiKey);
-    model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    embeddingModel = genAI.getGenerativeModel({ model: 'embedding-001' });
+    model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      systemInstruction: 'You are an elite creative director and copywriter. Generate high-impact content, scripts, and video metadata optimized for digital reach and maximum engagement.'
+    });
+    embeddingModel = genAI.getGenerativeModel({ model: 'text-embedding-004' });
     logger.info(`🛡️ [GoogleAI] Model initialized (Key: ${apiKey.substring(0, 6)}...${apiKey.slice(-4)})`);
   } else {
-    try {
-      const logger = require('./logger');
-      logger.warn('⚠️ [GoogleAI] No API key found; will use mock data in dev mode.');
-    } catch (_) { /* logger optional */ }
+    logger.warn('⚠️ [GoogleAI] No API key found; will use mock data in dev mode.');
   }
 } catch (err) {
   // Package not installed or init failed
@@ -41,7 +49,6 @@ try {
 async function generateContent(prompt, options = {}) {
   if (!model) {
     if (process.env.NODE_ENV !== 'production') {
-      const logger = require('./logger');
       const lowerPrompt = prompt.toLowerCase();
       logger.info('🛡️ [GoogleAI] Dev Fallback: analyzing prompt for mock', { 
         promptLength: prompt.length,
@@ -233,6 +240,7 @@ async function generateContent(prompt, options = {}) {
           topK: options.topK ?? 40,
           responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
         },
+        safetySettings,
       });
       const response = result.response;
       if (!response || !response.text) return null;
@@ -241,7 +249,6 @@ async function generateContent(prompt, options = {}) {
       const msg = err?.message || '';
       const isQuota = /429|RESOURCE_EXHAUSTED|quota|rate ?limit/i.test(msg);
       try {
-        const logger = require('./logger');
         logger[isQuota ? 'warn' : 'error']('[GoogleAI] generateContent failed', {
           error: msg.slice(0, 240),
           isQuota,
@@ -281,6 +288,7 @@ async function generateContent(prompt, options = {}) {
               topK: options.topK ?? 40,
               responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
             },
+            safetySettings,
           });
 
           const response = result.response;
@@ -300,7 +308,6 @@ async function generateContent(prompt, options = {}) {
           // their structured fallbacks rather than 500-ing the request.
           span.setStatus?.({ code: 'error', message: (err?.message || '').slice(0, 100) })
           try {
-            const logger = require('./logger');
             logger.error('[GoogleAI] generateContent failed (in span)', { 
               error: err?.message?.slice(0, 240),
               stack: err?.stack?.slice(0, 500)
@@ -326,13 +333,12 @@ async function generateEmbeddings(text) {
     return result.embedding.values;
   } catch (err) {
     try {
-      const logger = require('./logger');
       logger.error('[GoogleAI] Embedding failed:', { error: err.message });
       if (process.env.NODE_ENV !== 'production') {
         logger.info('🛡️ [GoogleAI] Dev Fallback: Returning mock embedding vector');
       }
     } catch (_) {
-      // Logger import or invocation failed
+      // Logger invocation failed
     }
     if (process.env.NODE_ENV !== 'production') {
       return new Array(768).fill(0.01);

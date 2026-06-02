@@ -125,13 +125,13 @@ function calculateNextGeneration(schedule) {
     }
     break;
   case 'weekly':
-    const dayDiff = schedule.dayOfWeek - next.getDay();
+  { const dayDiff = schedule.dayOfWeek - next.getDay();
     if (dayDiff < 0 || (dayDiff === 0 && next <= now)) {
       next.setDate(next.getDate() + (7 + dayDiff));
     } else {
       next.setDate(next.getDate() + dayDiff);
     }
-    break;
+    break; }
   case 'monthly':
     next.setDate(schedule.dayOfMonth || 1);
     if (next <= now) {

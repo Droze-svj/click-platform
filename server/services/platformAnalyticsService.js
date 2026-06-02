@@ -164,13 +164,13 @@ async function syncFacebookAnalytics(userId, postId, platformPostId) {
 
     insights.forEach(insight => {
       if (insight.name === 'post_impressions') {
-        metrics.impressions = parseInt(insight.values[0]?.value || 0);
+        metrics.impressions = parseInt(insight.values[0]?.value || 0, 10);
       } else if (insight.name === 'post_engaged_users') {
-        metrics.engagement = parseInt(insight.values[0]?.value || 0);
+        metrics.engagement = parseInt(insight.values[0]?.value || 0, 10);
       } else if (insight.name === 'post_clicks') {
-        metrics.clicks = parseInt(insight.values[0]?.value || 0);
+        metrics.clicks = parseInt(insight.values[0]?.value || 0, 10);
       } else if (insight.name === 'post_reach') {
-        metrics.reach = parseInt(insight.values[0]?.value || 0);
+        metrics.reach = parseInt(insight.values[0]?.value || 0, 10);
       }
     });
 

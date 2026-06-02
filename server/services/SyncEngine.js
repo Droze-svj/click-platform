@@ -1,6 +1,7 @@
 const Content = require('../models/Content');
 const ContentTranslation = require('../models/ContentTranslation');
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 const { identifyModifiedSegments } = require('../utils/diffUtils');
 
 const { translateSegments } = require('./translationService');
@@ -33,14 +34,14 @@ class SyncEngine {
     if (translations.length === 0) return { translationsCount: 0 };
 
     const updatePromises = translations.map(async (translation) => {
-      console.log(`[SyncEngine] Detecting change for ${translation.language} in content ${contentId}`);
+      logger.info(`[SyncEngine] Detecting change for ${translation.language} in content ${contentId}`);
       
       // Mark as outdated and flag segments
       translation.syncStatus = 'outdated';
       translation.metadata.sourceVersion = content.syncVersion || 1;
       
       // Map segments to outdated if they don't match (simplified logic for POC)
-      translation.segments.forEach(seg => {
+      (translation.segments || []).forEach(seg => {
         if (seg.status !== 'pending') seg.status = 'outdated';
       });
 
@@ -73,7 +74,7 @@ class SyncEngine {
     await translation.save();
 
     try {
-      console.log(`[SyncEngine] Re-translating ${outdatedSegments.length} segments for ${translation.language}`);
+      logger.info(`[SyncEngine] Re-translating ${outdatedSegments.length} segments for ${translation.language}`);
       
       const results = await translateSegments(
         translation.contentId,

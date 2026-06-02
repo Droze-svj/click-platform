@@ -105,7 +105,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
   const query = {};
   if (workspaceId) query.workspaceId = workspaceId;
   if (status) query.status = status;
-  if (stage !== undefined) query.currentStage = parseInt(stage);
+  if (stage !== undefined) query.currentStage = parseInt(stage, 10);
 
   if (assignedToMe === 'true') {
     query['assignedTo.userId'] = req.user._id;

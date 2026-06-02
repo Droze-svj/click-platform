@@ -18,6 +18,7 @@ const {
   getPersonalizedSuggestions,
 } = require('../services/helpCenterAIService');
 const asyncHandler = require('../middleware/asyncHandler');
+const { parseRequestJson } = require('../utils/safeJson');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const router = express.Router();
@@ -43,8 +44,8 @@ router.get('/articles', asyncHandler(async (req, res) => {
       category,
       search,
       featured: featured === 'true',
-      limit: parseInt(limit),
-      skip: parseInt(skip),
+      limit: parseInt(limit, 10),
+      skip: parseInt(skip, 10),
     });
     sendSuccess(res, 'Help articles fetched', 200, result);
   } catch (error) {
@@ -157,8 +158,8 @@ router.get('/tickets', auth, asyncHandler(async (req, res) => {
   try {
     const result = await getUserTickets(req.user._id, {
       status,
-      limit: parseInt(limit),
-      skip: parseInt(skip),
+      limit: parseInt(limit, 10),
+      skip: parseInt(skip, 10),
     });
     sendSuccess(res, 'Tickets fetched', 200, result);
   } catch (error) {
@@ -276,7 +277,7 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
   try {
     const suggestions = await getPersonalizedSuggestions(
       req.user._id,
-      context ? JSON.parse(context) : {}
+      context ? parseRequestJson(context, 'context') : {}
     );
     sendSuccess(res, 'Suggestions fetched', 200, suggestions);
   } catch (error) {

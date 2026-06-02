@@ -4,7 +4,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const Content = require('../models/Content');
 const asyncHandler = require('../middleware/asyncHandler');
-const { sendSuccess, sendError } = require('../utils/response');
+const { sendSuccess } = require('../utils/response');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -24,46 +24,18 @@ router.get('/challenges', auth, asyncHandler(async (req, res) => {
       return sendSuccess(res, 'Challenges fetched', 200, []);
     }
 
-    // Check both host header and x-forwarded-host (for proxy requests)
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
-                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
-    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // In development mode OR when on localhost, use mock data for dev users
+    // Content.userId is a String, so dev/Supabase ids query cleanly — compute
+    // real challenge progress for every user (no dev-mode short-circuit).
     let todayContent = 0;
-    let totalContent = 0;
     let videos = 0;
-
-    if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
-      // Use mock data for dev users
-      todayContent = 0;
-      totalContent = 0;
-      videos = 0;
-    } else {
-      // Get user's content stats for today
-      try {
-        todayContent = await Content.countDocuments({
-          userId,
-          createdAt: { $gte: today },
-        });
-        totalContent = await Content.countDocuments({ userId });
-        videos = await Content.countDocuments({ userId, type: 'video' });
-      } catch (dbError) {
-        // Handle CastError gracefully for dev mode
-        if (allowDevMode && (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId'))) {
-          logger.warn('CastError in challenges query, using default values for dev mode', { error: dbError.message, userId });
-        } else {
-          logger.warn('Error counting content for challenges', { error: dbError.message, userId });
-        }
-        // Use default values if database query fails
-        todayContent = 0;
-        totalContent = 0;
-        videos = 0;
-      }
+    try {
+      todayContent = await Content.countDocuments({ userId, createdAt: { $gte: today } });
+      videos = await Content.countDocuments({ userId, type: 'video' });
+    } catch (dbError) {
+      logger.warn('Error counting content for challenges', { error: dbError.message, userId });
     }
 
     // Generate challenges based on user activity
@@ -128,34 +100,19 @@ router.get('/activities', auth, asyncHandler(async (req, res) => {
       return sendSuccess(res, 'Activities fetched', 200, { activities: [] });
     }
 
-    // Check both host header and x-forwarded-host (for proxy requests)
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
-                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
-    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-
-    // In development mode OR when on localhost, return empty array for dev users
-    if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
-      return sendSuccess(res, 'Activities fetched', 200, { activities: [] });
-    }
-
+    // Real activity feed for every user. Activity.userId may be an ObjectId;
+    // a non-castable id (Supabase UUID) just yields an empty list via catch.
     const Activity = require('../models/Activity');
 
     let activities = [];
     try {
       activities = await Activity.find({ userId })
         .sort({ createdAt: -1 })
-        .limit(parseInt(limit))
+        .limit(parseInt(limit, 10) || 20)
         .lean();
     } catch (dbError) {
-      // Handle CastError gracefully for dev mode
-      if (allowDevMode && (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId'))) {
-        logger.warn('CastError in activities query, returning empty array for dev mode', { error: dbError.message, userId });
-        activities = [];
-      } else {
-        logger.warn('Error fetching activities from database', { error: dbError.message, userId });
-        activities = [];
-      }
+      logger.warn('Error fetching activities from database', { error: dbError.message, userId });
+      activities = [];
     }
 
     sendSuccess(res, 'Activities fetched', 200, { activities: activities || [] });

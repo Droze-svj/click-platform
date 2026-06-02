@@ -80,8 +80,8 @@ async function checkAudienceAlerts(userId) {
         // Check threshold
         switch (alert.threshold) {
         case 'increase':
-          // Compare with previous period
-          const previousInsights = await getAudienceInsights(userId, { period: 14 });
+        // Compare with previous period
+        { const previousInsights = await getAudienceInsights(userId, { period: 14 });
           if (previousInsights.hasData) {
             const previousValue = alert.metric === 'engagement'
               ? previousInsights.insights.overview.avgEngagement
@@ -92,9 +92,9 @@ async function checkAudienceAlerts(userId) {
             const increase = ((currentValue / previousValue) - 1) * 100;
             shouldTrigger = increase >= alert.value;
           }
-          break;
+          break; }
         case 'decrease':
-          const prevInsights = await getAudienceInsights(userId, { period: 14 });
+        { const prevInsights = await getAudienceInsights(userId, { period: 14 });
           if (prevInsights.hasData) {
             const prevValue = alert.metric === 'engagement'
               ? prevInsights.insights.overview.avgEngagement
@@ -105,7 +105,7 @@ async function checkAudienceAlerts(userId) {
             const decrease = ((1 - (currentValue / prevValue)) * 100);
             shouldTrigger = decrease >= alert.value;
           }
-          break;
+          break; }
         case 'above':
           shouldTrigger = currentValue >= alert.value;
           break;

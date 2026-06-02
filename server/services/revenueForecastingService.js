@@ -244,7 +244,8 @@ async function generateClickForecast(userId, workspaceId, days = 7) {
       }
 
       // Viral Component
-      const viralMultiplier = 1 + (marketTrends.trendingTopics.length * 0.03);
+      const trendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
+      const viralMultiplier = 1 + (trendingTopicsList.length * 0.03);
       
       const finalWeight = spectralMultiplier * viralMultiplier;
 
@@ -261,6 +262,7 @@ async function generateClickForecast(userId, workspaceId, days = 7) {
     });
 
     const totalRevenue = dailyForecast.reduce((sum, d) => sum + d.revenue, 0);
+    const finalTrendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
 
     return {
       daily: dailyForecast,
@@ -271,7 +273,7 @@ async function generateClickForecast(userId, workspaceId, days = 7) {
       spectralAnalysis: {
         sentimentDrift: driftValue,
         elasticityState: driftValue < -0.05 ? 'CRITICAL_MARKDOWN' : (driftValue > 0.05 ? 'GROWTH_RESONANCE' : 'STABLE_NOISE'),
-        marketAlignment: marketTrends.trendingTopics.length > 5 ? 'High' : 'Medium'
+        marketAlignment: finalTrendingTopicsList.length > 5 ? 'High' : 'Medium'
       }
     };
   } catch (error) {

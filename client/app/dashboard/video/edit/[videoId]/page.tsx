@@ -283,20 +283,7 @@ export default function VideoEditPage({ params }: PageProps) {
         }
 
         if (videoData.originalFile?.url) {
-          let videoUrl = videoData.originalFile.url
-          if (videoUrl.startsWith('/uploads/')) {
-            const backendUrl = (
-              process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, '') ||
-              (typeof window !== 'undefined' ? window.location.origin : '')
-            )
-            videoUrl = `${backendUrl}${videoUrl}`
-          } else if (videoUrl.startsWith('/')) {
-            const baseUrl = typeof window !== 'undefined'
-              ? window.location.origin
-              : (API_URL.startsWith('http') ? new URL(API_URL).origin : '')
-            videoUrl = `${baseUrl}${videoUrl}`
-          }
-          videoData.originalFile.url = videoUrl
+          videoData.originalFile.url = getAssetUrl(videoData.originalFile.url)
         }
         setVideo(videoData)
       } catch (error: any) {

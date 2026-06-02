@@ -178,34 +178,120 @@ async function magicBRoll(videoId, transcript, userId, opts = {}) {
   }
 }
 
-// ── Eye Contact Fix (still TODO; honest "coming-soon" instead of fake success) ─
+// ── Eye Contact Fix ───────────────────────────────────────────────────────────
+// Gaze redirection needs a specialized neural provider (e.g. Sieve eye-contact,
+// NVIDIA Maxine). Real, provider-agnostic integration gated on
+// EYE_CONTACT_API_URL + EYE_CONTACT_API_KEY; honest not-implemented until set.
 async function fixEyeContact(videoId, userId) {
-  try {
-    logger.info('[CreativeTools] fixEyeContact (not implemented yet)', { videoId, userId });
+  const apiUrl = process.env.EYE_CONTACT_API_URL;
+  const apiKey = process.env.EYE_CONTACT_API_KEY;
+  if (!apiUrl || !apiKey) {
+    logger.info('[CreativeTools] fixEyeContact: no provider configured', { videoId, userId });
     return {
       success: false,
       notImplemented: true,
       videoId,
-      message: 'Eye contact correction is on the roadmap (Synthesia neural gaze integration). The editor will surface this once a provider is wired.',
+      message: 'Eye-contact correction needs a gaze-redirection provider. Set EYE_CONTACT_API_URL + EYE_CONTACT_API_KEY (e.g. Sieve eye-contact or NVIDIA Maxine) to enable it.',
     };
+  }
+  try {
+    const resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ videoId }),
+    });
+    if (!resp.ok) throw new Error(`provider returned ${resp.status}`);
+    const job = await resp.json().catch(() => ({}));
+    return { success: true, videoId, provider: 'external', job };
   } catch (err) {
-    logger.error('[CreativeTools] fixEyeContact failed', { error: err.message, videoId });
-    throw err;
+    logger.error('[CreativeTools] fixEyeContact provider call failed', { error: err.message, videoId });
+    return { success: false, error: err.message };
   }
 }
 
-// ── Background Swap (still TODO; honest "coming-soon") ───────────────────────
-async function swapBackground(videoId, backgroundUrl, blurAmount, userId) {
+// ── Background Swap ──────────────────────────────────────────────────────────
+// Real green-screen compositing via FFmpeg chromakey when the source is a
+// green/blue screen and a background asset is supplied. General (non-greenscreen)
+// background removal needs a segmentation model (rembg/MediaPipe) that isn't
+// installed here, so that path returns an honest not-implemented response.
+async function swapBackground(videoId, backgroundUrl, blurAmount, userId, opts = {}) {
   try {
-    logger.info('[CreativeTools] swapBackground (not implemented yet)', { videoId, blurAmount, userId });
-    return {
-      success: false,
-      notImplemented: true,
-      videoId,
-      backgroundUrl: backgroundUrl || null,
-      blurAmount,
-      message: 'Background swap is on the roadmap (rembg + composite pipeline). For now, use the editor\'s blur effect on V1 to mask backgrounds.',
-    };
+    const greenScreen = opts.greenScreen || opts.chromaKey || false;
+
+    if (!backgroundUrl || !greenScreen) {
+      logger.info('[CreativeTools] swapBackground: no green-screen background supplied', { videoId, userId });
+      return {
+        success: false,
+        notImplemented: true,
+        videoId,
+        backgroundUrl: backgroundUrl || null,
+        blurAmount,
+        message: 'General background removal needs a segmentation model (rembg/MediaPipe), which isn\'t installed. Green-screen swap is supported: send a backgroundUrl plus greenScreen:true with green/blue-screen footage.',
+      };
+    }
+
+    const fs = require('fs');
+    const path = require('path');
+    const { resolveVideoPath } = require('./aiOutpaintingService');
+    const { run: ffmpegRun } = require('../utils/ffmpegRunner');
+
+    const inputPath = await resolveVideoPath(videoId);
+    if (!inputPath) {
+      return { success: false, error: 'Source video not found on disk. Re-upload the clip and try again.' };
+    }
+
+    // Resolve the background: remote URLs pass straight to FFmpeg; local
+    // /uploads paths resolve against the project root.
+    const projectRoot = path.join(__dirname, '..', '..');
+    const bgIsRemote = /^https?:\/\//i.test(backgroundUrl);
+    const bgInput = bgIsRemote
+      ? backgroundUrl
+      : (backgroundUrl.startsWith('/') ? path.join(projectRoot, backgroundUrl) : backgroundUrl);
+    if (!bgIsRemote && !fs.existsSync(bgInput)) {
+      return { success: false, error: 'Background asset not found.' };
+    }
+    const bgIsImage = /\.(png|jpe?g|webp|bmp)$/i.test(bgInput);
+
+    const outDir = path.join(projectRoot, 'uploads', 'processed');
+    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+    const outputPath = path.join(outDir, `${videoId}_bg_swapped_${Date.now()}.mp4`);
+    const publicUrl = `/uploads/processed/${path.basename(outputPath)}`;
+
+    const keyColor = opts.keyColor || '0x00FF00';
+    const similarity = opts.similarity ?? 0.30;
+    const blend = opts.blend ?? 0.10;
+
+    logger.info('[CreativeTools] swapBackground: chromakey composite', { videoId, bgIsImage, userId });
+
+    await ffmpegRun(
+      (ffmpeg) => {
+        // Background is input 0, source video is input 1. scale2ref scales the
+        // background to the source frame size; the source is chromakeyed and
+        // overlaid on top.
+        const cmd = ffmpeg();
+        if (bgIsImage) cmd.input(bgInput).inputOptions(['-loop', '1']);
+        else cmd.input(bgInput);
+        cmd.input(inputPath);
+        return cmd
+          .complexFilter([
+            '[0:v][1:v]scale2ref[bg][src]',
+            `[src]chromakey=${keyColor}:${similarity}:${blend}[keyed]`,
+            '[bg][keyed]overlay=shortest=1[out]',
+          ], 'out')
+          .outputOptions([
+            '-map', '1:a?',
+            '-c:v', 'libx264',
+            '-crf', '23',
+            '-preset', 'veryfast',
+            '-c:a', 'aac',
+            '-shortest',
+            '-movflags', '+faststart',
+          ]);
+      },
+      { label: `bg-swap-${videoId}`, output: outputPath }
+    );
+
+    return { success: true, videoId, outputUrl: publicUrl, technique: 'chromakey', keyColor };
   } catch (err) {
     logger.error('[CreativeTools] swapBackground failed', { error: err.message, videoId });
     throw err;
@@ -271,22 +357,25 @@ async function applySpeedRamp(videoId, options, userId) {
   }
 }
 
-// ── AI Avatar (still TODO; honest "coming-soon") ─────────────────────────────
-async function generateAiAvatar(videoId, options, userId) {
-  const { referenceClipUrl = null, script, voiceId } = options;
+// ── AI Avatar ─────────────────────────────────────────────────────────────────
+// Delegates to the real (HeyGen/Sora-gated) digitalTwinService. When no provider
+// key is configured the underlying job comes back as `unavailable` /
+// notImplemented — no fabricated video.
+async function generateAiAvatar(videoId, options = {}, userId) {
+  const { referenceClipUrl = null, voiceId } = options;
   try {
-    logger.info('[CreativeTools] generateAiAvatar (not implemented yet)', { videoId, hasReferenceClip: !!referenceClipUrl, userId });
-    return {
-      success: false,
-      notImplemented: true,
-      videoId,
-      voiceId: voiceId || null,
-      message: 'AI Avatar synthesis is on the roadmap (HeyGen / Synthesia integration). Until it lands, use the voiceover panel to generate narration without a talking head.',
-      scriptWords: script?.split(/\s+/).length || 0,
-    };
+    const digitalTwinService = require('./digitalTwinService');
+    const job = await digitalTwinService.createAvatarVideo(userId, referenceClipUrl, {
+      ...options,
+      voiceId,
+    });
+    if (job?.notImplemented || job?.status === 'unavailable') {
+      return { success: false, notImplemented: true, videoId, jobId: job.id, message: job.message };
+    }
+    return { success: true, videoId, jobId: job.id, status: job.status, provider: job.provider };
   } catch (err) {
     logger.error('[CreativeTools] generateAiAvatar failed', { error: err.message, videoId });
-    throw err;
+    return { success: false, error: err.message };
   }
 }
 

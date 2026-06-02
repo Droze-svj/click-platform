@@ -11,7 +11,7 @@ const router = express.Router();
  * Get recent decision audit trail from the Sovereign Ledger
  */
 router.get('/ledger', auth, asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit, 10) || 20;
   const audits = sovereignLedger.getRecentAudits(limit);
   const state = sovereignLedger.getLedgerState();
 
@@ -60,17 +60,37 @@ router.get('/status', auth, asyncHandler(async (req, res) => {
  * Returns AI-generated creative and performance insights
  */
 router.get('/insights', auth, asyncHandler(async (req, res) => {
-  // Placeholder for advanced AI insights logic
-  const insights = [
-    { type: 'creative', text: 'Hook resonance is up 12% in the finance niche.', score: 0.92 },
-    { type: 'distribution', text: 'TikTok saturation detected; pivot to LinkedIn suggested.', score: 0.85 },
-    { type: 'monetization', text: 'High-intent triggers identified at 00:42.', score: 0.78 }
-  ];
+  // Real insights derived from the user's ACTUAL published-post performance
+  // via the cognitive loop (Gemini-analyzed). Honest cold-start message when
+  // there's no performance data yet — no fabricated numbers.
+  const { analyzeStrategicPivots } = require('../services/cognitiveLoopService');
+  const workspaceId = req.user?.workspaceId || req.user?._id || req.user?.id;
+  const niche = req.query.niche || req.user?.niche || 'General';
 
-  sendSuccess(res, 'Sovereign insights retrieved', 200, {
-    insights,
-    timestamp: new Date()
-  });
+  let insights = [];
+  let meta = { status: 'active', niche };
+  try {
+    const result = await analyzeStrategicPivots(workspaceId, niche, { userId: req.user?._id || req.user?.id });
+    if (result?.status === 'cold_start' || result?.status === 'manual') {
+      meta.status = result.status;
+      insights = [{ type: 'onboarding', text: result.message, score: null }];
+    } else if (result?.plan) {
+      const plan = result.plan;
+      if (plan.currentWins) insights.push({ type: 'creative', text: String(plan.currentWins).slice(0, 280), score: 0.9 });
+      (plan.recommendedPivots || []).forEach((p) => {
+        insights.push({ type: 'distribution', text: `${p.pivot} — ${p.reason}`, expectedImpact: p.expectedImpact, score: 0.82 });
+      });
+      if (plan.suggestedToneAdjustment) insights.push({ type: 'monetization', text: `Tone: ${plan.suggestedToneAdjustment}`, score: 0.78 });
+      meta.analyzedVideos = result.analyzedVideos;
+    }
+  } catch (e) {
+    const logger = require('../utils/logger');
+    logger.warn('sovereign insights failed', { error: e.message });
+    insights = [{ type: 'onboarding', text: 'Insights are warming up — publish a few posts so Click can learn what works for you.', score: null }];
+    meta.status = 'unavailable';
+  }
+
+  sendSuccess(res, 'Sovereign insights retrieved', 200, { insights, ...meta, timestamp: new Date() });
 }));
 
 /**
@@ -78,18 +98,38 @@ router.get('/insights', auth, asyncHandler(async (req, res) => {
  * Returns the current consensus state of the AI agent swarm
  */
 router.get('/swarm/flux', auth, asyncHandler(async (req, res) => {
-  const consensus = {
-    status: 'stable',
-    agentCount: 12,
-    agreementLevel: 0.94,
-    activeDecisions: [
-      { id: 'd1', topic: 'Algorithm Pivot', status: 'voted' },
-      { id: 'd2', topic: 'Creative Tone shift', status: 'deliberating' }
-    ],
-    fluxVelocity: 0.12
-  };
+  // Real agent activity: derive the "swarm" state from actual AgenticJob runs
+  // for this user plus recent ledger decisions — not a hardcoded consensus.
+  const userId = String(req.user?._id || req.user?.id || '');
+  let running = 0;
+  let done = 0;
+  let total = 0;
+  let activeDecisions = [];
+  try {
+    const AgenticJob = require('../models/AgenticJob');
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const jobs = await AgenticJob.find({ userId, createdAt: { $gte: since } })
+      .select('jobId status currentStep videoId').sort({ createdAt: -1 }).limit(20).lean().catch(() => []);
+    total = jobs.length;
+    running = jobs.filter(j => j.status === 'running').length;
+    done = jobs.filter(j => j.status === 'done').length;
+    activeDecisions = jobs.slice(0, 5).map(j => ({ id: j.jobId, topic: `Pipeline ${j.videoId || ''}`.trim(), status: j.status === 'running' ? `step:${j.currentStep}` : j.status }));
+  } catch { /* model absent */ }
 
-  sendSuccess(res, 'Swarm consensus flux retrieved', 200, consensus);
+  // Agreement level = share of agent runs that completed successfully.
+  const agreementLevel = total > 0 ? Math.round((done / total) * 100) / 100 : 1;
+  const recentAudits = (sovereignLedger.getRecentAudits(10) || []).length;
+
+  sendSuccess(res, 'Swarm consensus flux retrieved', 200, {
+    status: running > 0 ? 'active' : 'stable',
+    agentCount: total,
+    runningAgents: running,
+    completedAgents: done,
+    agreementLevel,
+    activeDecisions,
+    ledgerDecisions: recentAudits,
+    fluxVelocity: total > 0 ? Math.round((running / total) * 100) / 100 : 0,
+  });
 }));
 
 module.exports = router;

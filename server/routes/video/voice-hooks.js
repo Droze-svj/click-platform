@@ -6,6 +6,7 @@ const multer = require('multer');
 const router = express.Router();
 const auth = require('../../middleware/auth');
 const voiceHookService = require('../../services/voiceHookService');
+const { safeJsonParse } = require('../../utils/safeJson');
 const logger = require('../../utils/logger');
 
 // Configure multer for voice hook uploads
@@ -76,7 +77,7 @@ router.post('/add-to-video', auth, upload.fields([
       return res.status(400).json({ success: false, error: 'Voice hook file is required' });
     }
 
-    const parsedOptions = options ? JSON.parse(options) : {};
+    const parsedOptions = options ? safeJsonParse(options, {}) : {};
     const resultPath = await voiceHookService.addVoiceHookToVideo(
       videoFile.path,
       voiceHookFile.path,
@@ -112,7 +113,7 @@ router.post('/upload-custom', auth, upload.single('voiceHook'), async (req, res)
       return res.status(400).json({ success: false, error: 'Voice hook file is required' });
     }
 
-    const parsedOptions = options ? JSON.parse(options) : {};
+    const parsedOptions = options ? safeJsonParse(options, {}) : {};
     const processedPath = await voiceHookService.processCustomVoiceHook(voiceHookFile.path, parsedOptions);
 
     // Clean up original file
@@ -252,7 +253,7 @@ router.post('/advanced-mixing', auth, upload.fields([
       return res.status(400).json({ success: false, error: 'Video file is required' });
     }
 
-    const parsedSettings = audioSettings ? JSON.parse(audioSettings) : {};
+    const parsedSettings = audioSettings ? safeJsonParse(audioSettings, {}) : {};
 
     // Convert uploaded files to hook objects
     const voiceHooks = voiceHookFiles.map(file => ({

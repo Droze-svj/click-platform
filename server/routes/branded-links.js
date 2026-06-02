@@ -36,8 +36,8 @@ router.get('/:agencyWorkspaceId/links', auth, requireWorkspaceAccess(), asyncHan
   const links = await getBrandedLinks(agencyWorkspaceId, clientWorkspaceId, {
     search,
     isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
-    limit: parseInt(limit) || 50,
-    skip: parseInt(skip) || 0
+    limit: parseInt(limit, 10) || 50,
+    skip: parseInt(skip, 10) || 0
   });
 
   sendSuccess(res, 'Links retrieved', 200, { links });
@@ -135,6 +135,19 @@ router.get('/l/:shortCode', asyncHandler(async (req, res) => {
 
   try {
     const result = await resolveBrandedLink(shortCode, clickData);
+    
+    // Validate redirect URL to prevent open redirect vulnerabilities
+    let safeUrl;
+    try {
+      safeUrl = new URL(result.originalUrl);
+    } catch (e) {
+      return res.status(400).send('Invalid redirect URL format');
+    }
+
+    if (safeUrl.protocol !== 'http:' && safeUrl.protocol !== 'https:') {
+      return res.status(400).send('Invalid redirect protocol. Only HTTP and HTTPS are allowed.');
+    }
+
     res.redirect(result.originalUrl);
   } catch (error) {
     res.status(404).send('Link not found or expired');

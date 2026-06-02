@@ -30,7 +30,7 @@ router.get('/insights', auth, asyncHandler(async (req, res) => {
   const { period = 90, platform = null } = req.query;
 
   const insights = await getAudienceInsights(req.user._id, {
-    period: parseInt(period),
+    period: parseInt(period, 10),
     platform: platform || null
   });
 
@@ -45,8 +45,8 @@ router.get('/predict', auth, asyncHandler(async (req, res) => {
   const { period = 90, forecastDays = 30 } = req.query;
 
   const prediction = await predictAudienceBehavior(req.user._id, {
-    period: parseInt(period),
-    forecastDays: parseInt(forecastDays)
+    period: parseInt(period, 10),
+    forecastDays: parseInt(forecastDays, 10)
   });
 
   sendSuccess(res, 'Behavior predicted', 200, prediction);
@@ -60,9 +60,9 @@ router.get('/personas', auth, asyncHandler(async (req, res) => {
   const { period = 90, minSegments = 3, maxSegments = 5 } = req.query;
 
   const personas = await createAudiencePersonas(req.user._id, {
-    period: parseInt(period),
-    minSegments: parseInt(minSegments),
-    maxSegments: parseInt(maxSegments)
+    period: parseInt(period, 10),
+    minSegments: parseInt(minSegments, 10),
+    maxSegments: parseInt(maxSegments, 10)
   });
 
   sendSuccess(res, 'Personas created', 200, personas);
@@ -76,7 +76,7 @@ router.get('/sentiment', auth, asyncHandler(async (req, res) => {
   const { period = 30 } = req.query;
 
   const sentiment = await analyzeAudienceSentiment(req.user._id, {
-    period: parseInt(period)
+    period: parseInt(period, 10)
   });
 
   sendSuccess(res, 'Sentiment analyzed', 200, sentiment);
@@ -90,8 +90,8 @@ router.get('/influencers', auth, asyncHandler(async (req, res) => {
   const { period = 90, topN = 10 } = req.query;
 
   const influencers = await identifyInfluencers(req.user._id, {
-    period: parseInt(period),
-    topN: parseInt(topN)
+    period: parseInt(period, 10),
+    topN: parseInt(topN, 10)
   });
 
   sendSuccess(res, 'Influencers identified', 200, influencers);
@@ -105,7 +105,7 @@ router.get('/retention', auth, asyncHandler(async (req, res) => {
   const { period = 90 } = req.query;
 
   const retention = await analyzeAudienceRetention(req.user._id, {
-    period: parseInt(period)
+    period: parseInt(period, 10)
   });
 
   sendSuccess(res, 'Retention analyzed', 200, retention);
@@ -119,7 +119,7 @@ router.get('/cross-platform', auth, asyncHandler(async (req, res) => {
   const { period = 90 } = req.query;
 
   const analysis = await getCrossPlatformAnalysis(req.user._id, {
-    period: parseInt(period)
+    period: parseInt(period, 10)
   });
 
   sendSuccess(res, 'Cross-platform analysis completed', 200, analysis);

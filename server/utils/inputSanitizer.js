@@ -4,7 +4,7 @@ let DOMPurify;
 try {
   DOMPurify = require('isomorphic-dompurify');
 } catch (error) {
-  
+  DOMPurify = null;
 }
 const validator = require('validator');
 

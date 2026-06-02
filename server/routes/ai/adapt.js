@@ -60,7 +60,7 @@ router.post('/repurpose', auth, asyncHandler(async (req, res) => {
 router.get('/smart-suggestions', auth, asyncHandler(async (req, res) => {
   const { limit = 5 } = req.query;
   
-  const suggestions = await getSmartSuggestions(req.user._id, parseInt(limit));
+  const suggestions = await getSmartSuggestions(req.user._id, parseInt(limit, 10));
   
   sendSuccess(res, 'Suggestions retrieved', 200, {
     suggestions

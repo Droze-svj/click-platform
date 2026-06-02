@@ -88,11 +88,7 @@ async function seedSupabase() {
     .from('post_analytics')
     .insert(analytics);
 
-  if (analyticsError) {
-    
-  } else {
-    
-  }
+  if (analyticsError) { /* intentionally empty */ } else { /* intentionally empty */ }
 
   
 }

@@ -21,7 +21,7 @@ router.get('/insights', auth, async (req, res) => {
   try {
     const { period = '30' } = req.query; // days
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(period));
+    startDate.setDate(startDate.getDate() - parseInt(period, 10));
 
     // Get user's content
     const contents = await Content.find({
@@ -66,7 +66,7 @@ router.get('/insights', auth, async (req, res) => {
     }));
 
     // Content velocity (content per day)
-    const days = parseInt(period);
+    const days = parseInt(period, 10);
     insights.contentVelocity = days > 0 ? contents.length / days : 0;
 
     res.json({

@@ -57,7 +57,6 @@ const draftSchema = new mongoose.Schema(
     lastSavedAt: {
       type: Date,
       default: Date.now,
-      index: true,
     },
   },
   { timestamps: true }

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const vectorMemoryService = require('../services/vectorMemoryService');
+const logger = require('../utils/logger');
 
 // In production, add a requireAuth middleware to these routes
 const authenticate = (req, res, next) => {
@@ -26,7 +27,7 @@ router.post('/store', authenticate, async (req, res) => {
 
     res.json({ message: "Contextual memory securely stashed.", status: 200 });
   } catch (error) {
-    console.error('[VectorMemory] Store Error:', error);
+    logger.error('[VectorMemory] Store Error:', error);
     res.status(500).json({ error: "Server Error storing semantic memory" });
   }
 });

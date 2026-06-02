@@ -1,5 +1,6 @@
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
+const { safeJsonParse } = require('../utils/safeJson');
 let Sentry = null;
 try {
   Sentry = require('@sentry/node');
@@ -50,7 +51,7 @@ Return only valid JSON.`;
       const fullPrompt = `You are an Elite Viral Scriptwriter. ${roleInstructions[role] || roleInstructions.expert}\n\n${prompt}`;
       const response = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 1000 });
       const cleanedResponse = this.cleanAIResponse(response);
-      const scriptData = JSON.parse(cleanedResponse || '{}');
+      const scriptData = safeJsonParse(cleanedResponse, {});
 
       return {
         success: true,
@@ -135,7 +136,7 @@ Return only valid JSON.`;
       }
 
       const cleanedResponse = this.cleanAIResponse(response);
-      const data = JSON.parse(cleanedResponse || '{"quotes":[]}');
+      const data = safeJsonParse(cleanedResponse, { quotes: [] });
 
       return {
         success: true,

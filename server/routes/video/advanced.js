@@ -12,6 +12,7 @@ const {
 } = require('../../services/advancedVideoProcessingService');
 const { generateNeuralThumbnail } = require('../../services/thumbnailService');
 const asyncHandler = require('../../middleware/asyncHandler');
+const { safeJsonParse } = require('../../utils/safeJson');
 const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const multer = require('multer');
@@ -91,8 +92,11 @@ async function downloadToUploadsTemp(videoUrl) {
   // Fast-path: local uploads file already on disk
   if (url.startsWith('/uploads/')) {
     const localPath = path.join(uploadsRoot, url.replace('/uploads/', ''));
-    if (fs.existsSync(localPath)) {
+    try {
+      await fs.promises.access(localPath);
       return localPath;
+    } catch (_) {
+      // Not present locally — fall through to fetch.
     }
   }
 
@@ -115,7 +119,7 @@ async function downloadToUploadsTemp(videoUrl) {
   const ext = path.extname(new URL(resolved).pathname) || '.mp4';
   const tmpPath = path.join(tmpDir, `video-src-${Date.now()}${ext}`);
   const buf = Buffer.from(await resp.arrayBuffer());
-  fs.writeFileSync(tmpPath, buf);
+  await fs.promises.writeFile(tmpPath, buf);
   return tmpPath;
 }
 
@@ -202,14 +206,14 @@ router.post('/compress', auth, upload.single('video'), asyncHandler(async (req, 
 
       // Cleanup downloaded temp input (keep uploaded file for now; user might want it)
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
+        await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ });
       }
 
       return {
         videoId,
         operation,
         resultUrl: toUploadsUrl(resultPath),
-        size: fs.statSync(resultPath).size,
+        size: (await fs.promises.stat(resultPath)).size,
       };
     },
   });
@@ -263,15 +267,15 @@ router.post('/thumbnail', auth, upload.single('video'), asyncHandler(async (req,
           postId: bodyVideoId && /^[0-9a-f]{24}$/i.test(bodyVideoId) ? bodyVideoId : undefined,
         },
         {
-          width: parseInt(width) || 1280,
-          height: parseInt(height) || 720,
-          quality: parseInt(quality) || 90,
+          width: parseInt(width, 10) || 1280,
+          height: parseInt(height, 10) || 720,
+          quality: parseInt(quality, 10) || 90,
         }
       );
       onProgress(95, 'Finalizing');
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
+        await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ });
       }
 
       return {
@@ -313,7 +317,7 @@ router.post('/metadata', auth, upload.single('video'), asyncHandler(async (req, 
       onProgress(100, 'Done');
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
+        await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ });
       }
 
       return { videoId, operation, metadata };
@@ -361,7 +365,7 @@ router.post('/convert', auth, upload.single('video'), asyncHandler(async (req, r
       });
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
+        await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ });
       }
 
       return { videoId, operation, format, resultUrl: toUploadsUrl(resultPath) };
@@ -409,7 +413,7 @@ router.post('/trim', auth, upload.single('video'), asyncHandler(async (req, res)
       });
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
+        await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ });
       }
 
       return { videoId, operation, startTime, duration, resultUrl: toUploadsUrl(resultPath) };
@@ -454,7 +458,7 @@ router.post('/extract-audio', auth, upload.single('video'), asyncHandler(async (
       });
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
+        await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ });
       }
 
       return { videoId, operation, format: outFormat, resultUrl: toUploadsUrl(resultPath) };
@@ -490,7 +494,7 @@ router.post('/add-text', auth, upload.single('video'), asyncHandler(async (req, 
     try {
       const result = await require('../../services/enhancedVideoProcessingService').addTextOverlays(
         videoUrl || videoPath,
-        JSON.parse(textOverlays || '[]'),
+        safeJsonParse(textOverlays, []),
         { jobId, userId: req.user._id }
       )
 
@@ -531,7 +535,7 @@ router.post('/apply-filters', auth, upload.single('video'), asyncHandler(async (
     try {
       const result = await require('../../services/enhancedVideoProcessingService').applyVideoFilters(
         videoUrl || videoPath,
-        JSON.parse(filters || '{}'),
+        safeJsonParse(filters, {}),
         { jobId, userId: req.user._id }
       )
 
@@ -577,7 +581,7 @@ router.post('/add-audio', auth, upload.fields([
       const result = await require('../../services/enhancedVideoProcessingService').addAudioToVideo(
         videoUrl || videoPath,
         audioUrl || audioPath,
-        { volume: parseInt(audioVolume) || 50, jobId, userId: req.user._id }
+        { volume: parseInt(audioVolume, 10) || 50, jobId, userId: req.user._id }
       )
 
       await progressTracker.updateJob(jobId, 'completed', result)
@@ -617,7 +621,7 @@ router.post('/crop', auth, upload.single('video'), asyncHandler(async (req, res)
     try {
       const result = await require('../../services/enhancedVideoProcessingService').cropVideo(
         videoUrl || videoPath,
-        JSON.parse(cropArea || '{}'),
+        safeJsonParse(cropArea, {}),
         { jobId, userId: req.user._id }
       )
 
@@ -658,7 +662,7 @@ router.post('/split-merge', auth, upload.single('video'), asyncHandler(async (re
     try {
       const result = await require('../../services/enhancedVideoProcessingService').splitAndMergeVideo(
         videoUrl || videoPath,
-        JSON.parse(segments || '[]'),
+        safeJsonParse(segments, []),
         { jobId, userId: req.user._id }
       )
 
@@ -997,7 +1001,7 @@ router.post('/remove-silence', auth, upload.single('video'), asyncHandler(async 
       onProgress(95, 'Finalising')
 
       if (videoPath && inputPath !== videoPath && inputPath.includes(`${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath) } catch (_) { /* ignore deletion error */ }
+        await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ })
       }
 
       return {

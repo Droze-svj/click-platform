@@ -84,38 +84,44 @@ async function addBackgroundMusic(videoPath, musicPath, options = {}) {
       startTime = 0 // When to start music in video
     } = options;
 
-    let command = ffmpeg(videoPath);
-
-    // Add audio input
-    command = command.input(musicPath);
-
-    // Mix audio
-    const audioFilters = [];
-
-    // Set background music volume
-    audioFilters.push(`volume=${volume}`);
-
-    // Add fade effects
-    if (fadeIn > 0) audioFilters.push(`afade=t=in:ss=0:d=${fadeIn}`);
-    if (fadeOut > 0) audioFilters.push(`afade=t=out:st=${fadeOut - 2}:d=2`);
-
-    // Combine filters
-    if (audioFilters.length > 0) {
-      command = command.audioFilters(audioFilters.join(','));
-    }
-
-    // Mix original audio with background music
-    command = command.audioFilters('amix=inputs=2:duration=first');
-
     return new Promise((resolve, reject) => {
-      command
-        .output(outputPath)
-        .outputOptions('-c:v copy') // Copy video codec
-        .outputOptions('-c:a aac') // Encode audio
-        .outputOptions('-shortest') // End when shortest input ends
-        .on('end', () => resolve(outputPath))
-        .on('error', reject)
-        .run();
+      ffmpeg.ffprobe(videoPath, (err, videoMeta) => {
+        if (err) return reject(new Error(`Failed to probe video: ${err.message}`));
+        const videoDuration = videoMeta.format.duration || 0;
+
+        const loopArgs = loop ? ['-stream_loop', '-1'] : [];
+        let command = ffmpeg(videoPath)
+          .input(musicPath)
+          .inputOptions(['-ss', String(startTime), ...loopArgs]);
+
+        // Build complex filter to process background music exclusively [1:a] before mixing
+        const fadeOutStart = Math.max(0, videoDuration - fadeOut);
+        
+        let musicPrep = `[1:a]volume=${volume}`;
+        if (fadeIn > 0) musicPrep += `,afade=t=in:st=0:d=${fadeIn}`;
+        if (fadeOut > 0) musicPrep += `,afade=t=out:st=${fadeOutStart}:d=${fadeOut}`;
+        musicPrep += `[music_ready]`;
+
+        const filterGraph = [
+          musicPrep,
+          `[0:a][music_ready]amix=inputs=2:duration=first:dropout_transition=0:weights=1 1[final_audio]`
+        ];
+
+        command
+          .complexFilter(filterGraph)
+          .outputOptions([
+            '-map 0:v',
+            '-map [final_audio]',
+            '-c:v copy',
+            '-c:a aac',
+            '-b:a 192k',
+            '-shortest'
+          ])
+          .output(outputPath)
+          .on('end', () => resolve(outputPath))
+          .on('error', reject)
+          .run();
+      });
     });
 
   } catch (error) {
@@ -132,9 +138,16 @@ async function addImageOverlay(videoPath, imageConfigs) {
     const outputPath = videoPath.replace('.mp4', '_with_images.mp4');
     let command = ffmpeg(videoPath);
 
-    const imageFilters = imageConfigs.map((config, index) => {
+    // Add input images
+    imageConfigs.forEach(config => {
+      command = command.input(config.imagePath);
+    });
+
+    const imageFilters = [];
+    let currentIn = '0:v';
+
+    imageConfigs.forEach((config, index) => {
       const {
-        imagePath,
         x = 10,
         y = 10,
         width = 100,
@@ -145,36 +158,30 @@ async function addImageOverlay(videoPath, imageConfigs) {
         rotation = 0
       } = config;
 
-      // Scale and position image overlay
-      let filter = `[${index + 1}:v]scale=${width}:${height}`;
+      const scaleLabel = `scaled_img${index}`;
+      const outLabel = `v_overlay${index}`;
 
+      let imgFilter = `[${index + 1}:v]scale=${width}:${height}`;
       if (rotation !== 0) {
-        filter += `,rotate=${rotation}*PI/180`;
+        imgFilter += `,rotate=${rotation}*PI/180`;
       }
+      imgFilter += `,format=rgba,colorchannelmixer=aa=${opacity}[${scaleLabel}]`;
+      imageFilters.push(imgFilter);
 
-      filter += `,format=rgba,colorchannelmixer=aa=${opacity}`;
-
-      // Add to main video
-      filter += `[img${index}];[0:v][img${index}]overlay=${x}:${y}`;
-
-      // Add timing
+      let overlayFilter = `[${currentIn}][${scaleLabel}]overlay=${x}:${y}`;
       if (start > 0 || end) {
-        const enableCondition = end ?
-          `between(t,${start},${end})` :
-          `gte(t,${start})`;
-        filter += `:enable='${enableCondition}'`;
+        const enableCondition = end ? `between(t\\,${start}\\,${end})` : `gte(t\\,${start})`;
+        overlayFilter += `:enable='${enableCondition}'`;
       }
+      overlayFilter += `[${outLabel}]`;
+      imageFilters.push(overlayFilter);
 
-      return filter;
-    });
-
-    // Add input images
-    imageConfigs.forEach(config => {
-      command = command.input(config.imagePath);
+      currentIn = outLabel;
     });
 
     if (imageFilters.length > 0) {
-      command = command.complexFilter(imageFilters.join(';'));
+      command = command.complexFilter(imageFilters);
+      command = command.outputOptions([`-map [${currentIn}]`, '-map 0:a?']);
     }
 
     return new Promise((resolve, reject) => {
@@ -213,11 +220,29 @@ async function addTextOverlay(videoPath, textConfigs) {
         end
       } = config;
 
-      let filter = `drawtext=text='${text.replace(/'/g, "’")}':x=${x}:y=${y}:fontsize=${fontsize}:fontcolor=${fontcolor}`;
+      const escapedText = String(text || '')
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "’")
+        .replace(/`/g, '\\`')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,')
+        .replace(/\[/g, '\\[')
+        .replace(/\]/g, '\\]')
+        .replace(/:/g, '\\:')
+        .replace(/%/g, '\\%');
 
-      if (fontfile) filter += `:fontfile=${fontfile}`;
+      let filter = `drawtext=text='${escapedText}':x=${x}:y=${y}:fontsize=${fontsize}:fontcolor=${fontcolor}`;
+
+      if (fontfile) {
+        const escapedFont = fontfile.replace(/\\/g, '/').replace(/:/g, '\\:');
+        filter += `:fontfile='${escapedFont}'`;
+      }
       if (box) filter += `:box=${box}:boxcolor=${boxcolor}`;
-      if (start > 0) filter += `:enable='between(t,${start},${end || 'inf'})'`;
+      if (start > 0 || end) {
+        const enableCondition = end ? `between(t\\,${start}\\,${end})` : `gte(t\\,${start})`;
+        filter += `:enable='${enableCondition}'`;
+      }
 
       return filter;
     });
@@ -325,9 +350,19 @@ async function applyAdvancedCaptions(videoPath, captions, styleConfig) {
 
     const captionFilters = captions.map(caption => {
       const { text, startTime, endTime } = caption;
-      const escapedText = text.replace(/'/g, "’").replace(/:/g, '\\:');
+      const escapedText = String(text || '')
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "’")
+        .replace(/`/g, '\\`')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,')
+        .replace(/\[/g, '\\[')
+        .replace(/\]/g, '\\]')
+        .replace(/:/g, '\\:')
+        .replace(/%/g, '\\%');
 
-      return `drawtext=text='${escapedText}':x=(w-text_w)/2:y=${yPosition}:fontsize=${fontSize}:fontcolor=${fontColor}:box=1:boxcolor=${backgroundColor}:outline=${outlineColor}:outline_width=${outlineWidth}:enable='between(t,${startTime},${endTime})'`;
+      return `drawtext=text='${escapedText}':x=(w-text_w)/2:y=${yPosition}:fontsize=${fontSize}:fontcolor=${fontColor}:box=1:boxcolor=${backgroundColor}:bordercolor=${outlineColor}:borderw=${outlineWidth}:enable='between(t\\,${startTime}\\,${endTime})'`;
     });
 
     let command = ffmpeg(videoPath);

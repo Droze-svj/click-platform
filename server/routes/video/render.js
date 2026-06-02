@@ -139,7 +139,7 @@ async function runRender({ tree, ratio, jobId, userId }) {
   // SHA-256 the unsigned output, then attempt to inject a C2PA manifest.
   // Signing is best-effort; if c2patool / c2pa-node isn't installed we still
   // return the (unsigned) MP4 with a warning rather than failing the render.
-  const unsignedBuf = fs.readFileSync(outputPath);
+  const unsignedBuf = await fs.promises.readFile(outputPath);
   const unsignedSha = crypto.createHash('sha256').update(unsignedBuf).digest('hex');
   const unsignedSize = unsignedBuf.length;
 
@@ -316,14 +316,16 @@ router.get(
     if (!/^[a-f0-9-]{8,}$/.test(jobId)) return sendError(res, 'Invalid jobId', 400);
 
     const expectedPath = path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
-    if (fs.existsSync(expectedPath)) {
-      const stat = fs.statSync(expectedPath);
+    try {
+      const stat = await fs.promises.stat(expectedPath);
       return sendSuccess(res, {
         jobId,
         status: 'completed',
         sizeBytes: stat.size,
         downloadUrl: `/api/video/render/${jobId}/download`,
       });
+    } catch (_) {
+      // Output not present yet — fall through to queue-aware status.
     }
 
     // Queue-aware status (best effort)
@@ -352,7 +354,11 @@ router.get(
     const { jobId } = req.params;
     if (!/^[a-f0-9-]{8,}$/.test(jobId)) return sendError(res, 'Invalid jobId', 400);
     const filePath = path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
-    if (!fs.existsSync(filePath)) return sendError(res, 'Render not found or not yet complete', 404);
+    try {
+      await fs.promises.access(filePath);
+    } catch (_) {
+      return sendError(res, 'Render not found or not yet complete', 404);
+    }
     res.setHeader('Content-Type', 'video/mp4');
     res.setHeader('Content-Disposition', `attachment; filename="click-${jobId}.mp4"`);
     fs.createReadStream(filePath).pipe(res);

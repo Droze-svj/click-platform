@@ -46,7 +46,8 @@ const errorHandler = (err, req, res, next) => {
       query: req.query
     });
   } catch (loggerErr) {
-    // Fallback to console if logger fails
+    // Fallback to console if logger fails — console is the only safe transport here.
+    // eslint-disable-next-line no-console
     console.error('Request error (logger failed):', {
       error: err.message,
       url: req.originalUrl,
@@ -253,7 +254,8 @@ const errorHandler = (err, req, res, next) => {
           code: 'ERROR_HANDLER_FAILED'
         });
       } catch (e) {
-        // If we can't even send a response, log and give up
+        // If we can't even send a response, log and give up — last-resort console.
+        // eslint-disable-next-line no-console
         console.error('CRITICAL: Error handler completely failed', {
           originalError: err.message,
           handlerError: finalError.message,

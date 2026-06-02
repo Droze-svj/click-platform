@@ -42,7 +42,6 @@ const teamInvitationSchema = new mongoose.Schema({
 });
 
 teamInvitationSchema.index({ email: 1 });
-teamInvitationSchema.index({ token: 1 });
 teamInvitationSchema.index({ teamId: 1 });
 
 module.exports = mongoose.model('TeamInvitation', teamInvitationSchema);

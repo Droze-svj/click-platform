@@ -66,7 +66,7 @@ router.post('/:uploadId', auth, upload.single('chunk'), asyncHandler(async (req,
   try {
     const result = await uploadChunk(
       uploadId,
-      parseInt(chunkNumber),
+      parseInt(chunkNumber, 10),
       req.file.buffer,
       req.file.size
     );

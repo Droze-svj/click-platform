@@ -1,11 +1,13 @@
 // Supabase Configuration
 const { createClient } = require('@supabase/supabase-js');
+const logger = require('../utils/logger');
 let PrismaClient = null;
 try {
   const prismaModule = require('@prisma/client');
   PrismaClient = prismaModule.PrismaClient;
 } catch (e) {
-  
+  // @prisma/client is optional here — Supabase is the primary client. If the
+  // Prisma package isn't generated/installed, we simply skip the Prisma path.
 }
 
 // Supabase client for backend operations. Uses the SERVICE_ROLE key so the

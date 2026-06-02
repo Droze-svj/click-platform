@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 // Get niche packs
@@ -125,7 +126,7 @@ router.put('/select', auth, async (req, res) => {
             });
             await newUserDoc.save();
           } catch (e) {
-            console.error('Failed to create user doc for niche selection', e);
+            logger.error('Failed to create user doc for niche selection', e);
           }
         }
       }
@@ -216,7 +217,7 @@ router.put('/brand', auth, async (req, res) => {
             });
             await newUserDoc.save();
           } catch (e) {
-            console.error('Failed to create user doc for brand settings', e);
+            logger.error('Failed to create user doc for brand settings', e);
           }
         }
       }

@@ -77,10 +77,10 @@ async function getRemainingBudgetUsd(userId) {
   let User;
   try {
     UsageMeter = require('../models/UsageMeter');
-  } catch {}
+  } catch { /* intentionally empty */ }
   try {
     User = require('../models/User');
-  } catch {}
+  } catch { /* intentionally empty */ }
 
   const tier = await (async () => {
     if (!User) return 'free';

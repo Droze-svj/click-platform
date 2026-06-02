@@ -11,6 +11,12 @@ export function getBackendUrl(): string {
     }
     if (envUrl) return envUrl;
     
+    // Fallback to local dev API port 5001 if on localhost
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
+      return 'http://localhost:5001';
+    }
+    
     // Default to relative if no env var, which works with proxy
     return '';
   }

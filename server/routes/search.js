@@ -40,7 +40,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
   const { query, type, limit = 10 } = req.query;
   const results = await textSearch(req.user._id, query || '', {
     contentType: type,
-    limit: parseInt(limit)
+    limit: parseInt(limit, 10)
   });
   sendSuccess(res, 'Search completed', 200, { results });
 }));
@@ -110,7 +110,7 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
     return sendSuccess(res, 'Suggestions retrieved', 200, { suggestions: [] });
   }
 
-  const suggestions = await getSearchSuggestions(req.user._id, q, parseInt(limit));
+  const suggestions = await getSearchSuggestions(req.user._id, q, parseInt(limit, 10));
   sendSuccess(res, 'Suggestions retrieved', 200, { suggestions });
 }));
 
@@ -152,7 +152,7 @@ router.get('/discovery', auth, asyncHandler(async (req, res) => {
   const excludeArray = excludeIds ? (Array.isArray(excludeIds) ? excludeIds : excludeIds.split(',')) : [];
 
   const recommendations = await getDiscoveryRecommendations(req.user._id, {
-    limit: parseInt(limit),
+    limit: parseInt(limit, 10),
     basedOn,
     excludeIds: excludeArray
   });
@@ -204,7 +204,7 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
 
     const history = await SearchHistory.find({ userId: req.user._id })
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
+      .limit(parseInt(limit, 10))
       .lean();
 
     sendSuccess(res, 'Search history retrieved', 200, { history: history || [] });
@@ -220,7 +220,7 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
  */
 router.get('/analytics', auth, asyncHandler(async (req, res) => {
   const { period = 30 } = req.query;
-  const analytics = await getSearchAnalytics(req.user._id, parseInt(period));
+  const analytics = await getSearchAnalytics(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'Search analytics retrieved', 200, analytics);
 }));
 

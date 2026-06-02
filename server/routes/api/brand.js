@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const brandService = require('../../services/brandService');
+const logger = require('../../utils/logger');
 
 /**
  * @route GET /api/brand/profiles
@@ -12,7 +13,7 @@ router.get('/profiles', async (req, res) => {
     const profiles = await brandService.getProfiles(userId);
     res.json({ success: true, data: profiles });
   } catch (error) {
-    console.error('Error fetching brand profiles:', error);
+    logger.error('Error fetching brand profiles:', error);
     res.status(500).json({ success: false, message: 'Neural Archive Retrieval Failed' });
   }
 });
@@ -28,7 +29,7 @@ router.post('/profiles', async (req, res) => {
     const newProfile = await brandService.saveProfile(userId, profileData);
     res.json({ success: true, data: newProfile });
   } catch (error) {
-    console.error('Error saving brand profile:', error);
+    logger.error('Error saving brand profile:', error);
     res.status(500).json({ success: false, message: 'DNA Capture Failed' });
   }
 });
@@ -43,7 +44,7 @@ router.post('/evolve', async (req, res) => {
     const evolvedDNA = await brandService.evolveDNA(currentDNA, telemetryHistory);
     res.json({ success: true, data: evolvedDNA });
   } catch (error) {
-    console.error('Error evolving DNA:', error);
+    logger.error('Error evolving DNA:', error);
     res.status(500).json({ success: false, message: 'Sentiment Drift Calculation Failed' });
   }
 });

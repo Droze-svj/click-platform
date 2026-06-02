@@ -26,6 +26,15 @@ async function createBrandedLink(agencyWorkspaceId, userId, linkData) {
       throw new Error('Original URL is required');
     }
 
+    try {
+      const parsedUrl = new URL(originalUrl);
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new Error('Only HTTP and HTTPS protocols are allowed');
+      }
+    } catch (e) {
+      throw new Error('Invalid original URL format. Must be a valid absolute HTTP or HTTPS URL.');
+    }
+
     // Get agency workspace for default domain
     const agencyWorkspace = await Workspace.findById(agencyWorkspaceId);
     if (!agencyWorkspace) {

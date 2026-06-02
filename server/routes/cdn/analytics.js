@@ -63,7 +63,7 @@ router.get('/stats', auth, requireAdmin, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/paths', auth, requireAdmin, asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit, 10) || 20;
 
   try {
     const paths = getPathStats(limit);

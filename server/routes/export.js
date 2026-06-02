@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 
 const asyncHandler = require('../middleware/asyncHandler');
+const { parseRequestJson } = require('../utils/safeJson');
 const { sendSuccess, sendError } = require('../utils/response');
 const { createExportJob, getExportJobStatus, retryExport } = require('../services/robustExportService');
 const { createExportTemplate, getExportTemplates, useExportTemplate, getExportHistory, getExportAnalytics, scheduleExport } = require('../services/exportEnhancementService');
@@ -188,8 +189,8 @@ router.get('/preview', auth, asyncHandler(async (req, res) => {
   const preview = await generateExportPreview(userId, {
     type,
     format,
-    filters: filters ? JSON.parse(filters) : {}
-  }, parseInt(limit));
+    filters: filters ? parseRequestJson(filters, 'filters') : {}
+  }, parseInt(limit, 10));
 
   sendSuccess(res, 'Preview generated', 200, preview);
 }));

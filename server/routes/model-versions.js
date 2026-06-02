@@ -160,7 +160,7 @@ router.get('/:provider/:model/analytics', auth, asyncHandler(async (req, res) =>
   const { provider, model } = req.params;
   const { days = 30 } = req.query;
 
-  const analytics = await getVersionAnalytics(provider, model, parseInt(days));
+  const analytics = await getVersionAnalytics(provider, model, parseInt(days, 10));
 
   if (!analytics) {
     return sendError(res, 'Could not get analytics', 500);
@@ -233,8 +233,8 @@ router.get('/:provider/:model/rollback-check', auth, asyncHandler(async (req, re
 
   const check = await checkRollbackNeeded(provider, model, {
     minQualityThreshold: minQualityThreshold ? parseFloat(minQualityThreshold) : 0.6,
-    minUsageCount: minUsageCount ? parseInt(minUsageCount) : 20,
-    daysSinceUpgrade: daysSinceUpgrade ? parseInt(daysSinceUpgrade) : 7,
+    minUsageCount: minUsageCount ? parseInt(minUsageCount, 10) : 20,
+    daysSinceUpgrade: daysSinceUpgrade ? parseInt(daysSinceUpgrade, 10) : 7,
   });
 
   return sendSuccess(res, { check });

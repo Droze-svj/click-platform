@@ -64,10 +64,23 @@ router.post('/', auth, requireFeature('ai_analysis'), asyncHandler(async (req, r
         ],
         temperature: 0.3,
         max_tokens: 1500,
-        response_format: { type: 'json_object' }
+        response_format: { type: 'json_object' },
+        user: String(req.user._id)
       });
 
-      const analysis = normalizeAnalysis(JSON.parse(completion.choices[0].message.content), transcript);
+      const choice = completion.choices?.[0];
+      if (!choice) {
+        throw new Error('Invalid response from OpenAI API');
+      }
+      if (choice.message?.refusal) {
+        throw new Error(`OpenAI model refused request: ${choice.message.refusal}`);
+      }
+      const content = choice.message?.content;
+      if (!content) {
+        throw new Error('Empty response from OpenAI API');
+      }
+
+      const analysis = normalizeAnalysis(JSON.parse(content), transcript);
       logger.info('GPT-4o hook analysis completed', { videoId, viralPotential: analysis.viralPotential });
       return sendSuccess(res, 'Hook analysis complete', 200, { ...analysis, engine: 'gpt-4o' });
     } catch (error) {

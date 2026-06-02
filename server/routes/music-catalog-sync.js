@@ -25,7 +25,7 @@ router.post('/sync', auth, requireAdmin, asyncHandler(async (req, res) => {
     const result = await syncCatalogFromProviders({
       providers: providers || null,
       fullSync: full,
-      maxTracks: parseInt(maxTracks)
+      maxTracks: parseInt(maxTracks, 10)
     });
 
     sendSuccess(res, 'Catalog sync completed', 200, result);

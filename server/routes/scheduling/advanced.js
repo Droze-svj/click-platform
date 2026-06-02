@@ -249,7 +249,7 @@ router.post('/optimize', auth, asyncHandler(async (req, res) => {
 router.get('/analytics', auth, asyncHandler(async (req, res) => {
   const { period = 30 } = req.query;
 
-  const analytics = await getScheduleAnalytics(req.user._id, parseInt(period));
+  const analytics = await getScheduleAnalytics(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'Schedule analytics retrieved', 200, analytics);
 }));
 
@@ -276,10 +276,10 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
   const { dateRange = 7, platforms, minPostsPerDay = 1, maxPostsPerDay = 5 } = req.query;
 
   const suggestions = await getScheduleSuggestions(req.user._id, {
-    dateRange: parseInt(dateRange),
+    dateRange: parseInt(dateRange, 10),
     platforms: platforms ? platforms.split(',') : null,
-    minPostsPerDay: parseInt(minPostsPerDay),
-    maxPostsPerDay: parseInt(maxPostsPerDay)
+    minPostsPerDay: parseInt(minPostsPerDay, 10),
+    maxPostsPerDay: parseInt(maxPostsPerDay, 10)
   });
 
   sendSuccess(res, 'Schedule suggestions retrieved', 200, suggestions);
@@ -303,7 +303,7 @@ router.post('/auto-reschedule/:postId', auth, asyncHandler(async (req, res) => {
 router.get('/health', auth, asyncHandler(async (req, res) => {
   const { dateRange = 7 } = req.query;
 
-  const health = await monitorScheduleHealth(req.user._id, parseInt(dateRange));
+  const health = await monitorScheduleHealth(req.user._id, parseInt(dateRange, 10));
   sendSuccess(res, 'Schedule health retrieved', 200, health);
 }));
 

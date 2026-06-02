@@ -90,7 +90,7 @@ async function getErrorStatistics(options = {}) {
         .map(([type, count]) => ({ type, count })),
       errorsByStatusCode: Object.entries(errorsByStatusCode)
         .sort((a, b) => b[1] - a[1])
-        .map(([code, count]) => ({ code: parseInt(code), count })),
+        .map(([code, count]) => ({ code: parseInt(code, 10), count })),
       topErrorPaths: Object.entries(errorsByPath)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10)
@@ -115,9 +115,9 @@ function getTimeKey(timestamp, groupBy) {
   case 'day':
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   case 'week':
-    const weekStart = new Date(date);
+  { const weekStart = new Date(date);
     weekStart.setDate(date.getDate() - date.getDay());
-    return `${weekStart.getFullYear()}-W${String(Math.ceil((weekStart.getDate() + 6) / 7)).padStart(2, '0')}`;
+    return `${weekStart.getFullYear()}-W${String(Math.ceil((weekStart.getDate() + 6) / 7)).padStart(2, '0')}`; }
   default:
     return date.toISOString();
   }

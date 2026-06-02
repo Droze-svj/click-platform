@@ -74,24 +74,50 @@ async function extractFrames(videoPath, options = {}) {
   })
 }
 
-// Analyze video pacing and rhythm
+// Analyze video pacing and rhythm — REAL: derives a deterministic score from
+// the actual cut cadence (FFmpeg scene-change detection) over the real
+// duration. Peaks around ~25 cuts/min for engaging short-form.
 async function analyzePacing(videoPath, options = {}) {
   const { userId } = options
 
-  // This would typically involve audio analysis for speech patterns
-  // For now, we'll provide mock intelligent analysis
+  try {
+    const { ffprobe } = require('../utils/ffmpegRunner')
+    const { detectSceneChanges } = require('./aiVideoEditingService')
 
-  const pacingAnalysis = {
-    score: Math.floor(Math.random() * 30) + 70, // 70-100 score
-    suggestions: [
-      'Consider adding pauses between key points for better retention',
-      'The pacing is generally good but could benefit from more dynamic transitions',
-      'Audio levels are consistent throughout the video'
-    ]
+    const meta = await ffprobe(videoPath).catch(() => null)
+    const duration = meta?.format?.duration ? Number(meta.format.duration) : 0
+    const scenes = await detectSceneChanges(videoPath).catch(() => [])
+    const cuts = Array.isArray(scenes) ? scenes.length : 0
+    const cutsPerMin = duration > 0 ? (cuts / duration) * 60 : null
+
+    let score = 75
+    if (cutsPerMin != null) {
+      const ideal = 25
+      const spread = 16
+      score = Math.round(60 + 40 * Math.exp(-Math.pow(cutsPerMin - ideal, 2) / (2 * spread * spread)))
+    }
+
+    const suggestions = []
+    if (cutsPerMin != null && cutsPerMin < 10) {
+      suggestions.push('Pacing is slow — tighten dead air and add cuts to hold attention.')
+    } else if (cutsPerMin != null && cutsPerMin > 50) {
+      suggestions.push('Very high cut rate — keep cuts on the beat so it does not feel jarring.')
+    } else {
+      suggestions.push('Pacing is in a healthy range for short-form retention.')
+    }
+
+    logger.info('Pacing analysis completed', { userId, score, cutsPerMin })
+    return {
+      score,
+      cutsPerMin: cutsPerMin != null ? Math.round(cutsPerMin * 10) / 10 : null,
+      cuts,
+      durationSec: Math.round(duration),
+      suggestions,
+    }
+  } catch (err) {
+    logger.warn('Pacing analysis failed; returning neutral score', { userId, error: err.message })
+    return { score: 72, cutsPerMin: null, suggestions: ['Pacing analysis unavailable for this file.'] }
   }
-
-  logger.info('Pacing analysis completed', { userId, score: pacingAnalysis.score })
-  return pacingAnalysis
 }
 
 // Detect highlight moments using AI
@@ -143,22 +169,42 @@ async function detectHighlights(videoPath, options = {}) {
   }
 }
 
-// Analyze engagement patterns
+// Analyze engagement patterns — REAL: engagement potential is derived from
+// visual variety (scene-change cadence) over the real duration, and peak
+// moments are the actual detected scene-change timestamps (not hardcoded).
 async function analyzeEngagement(videoPath, options = {}) {
   const { userId } = options
 
-  // Mock engagement analysis
-  const engagementAnalysis = {
-    score: Math.floor(Math.random() * 25) + 75, // 75-100 score
-    peakMoments: [
-      { time: 12, intensity: 85 },
-      { time: 45, intensity: 92 },
-      { time: 78, intensity: 88 }
-    ]
-  }
+  try {
+    const { ffprobe } = require('../utils/ffmpegRunner')
+    const { detectSceneChanges } = require('./aiVideoEditingService')
 
-  logger.info('Engagement analysis completed', { userId, score: engagementAnalysis.score })
-  return engagementAnalysis
+    const meta = await ffprobe(videoPath).catch(() => null)
+    const duration = meta?.format?.duration ? Number(meta.format.duration) : 0
+    const scenes = await detectSceneChanges(videoPath).catch(() => [])
+    const list = Array.isArray(scenes) ? scenes : []
+    const cutsPerMin = duration > 0 ? (list.length / duration) * 60 : null
+
+    let score = 70
+    if (cutsPerMin != null) {
+      const ideal = 25
+      const spread = 18
+      score = Math.round(55 + 40 * Math.exp(-Math.pow(cutsPerMin - ideal, 2) / (2 * spread * spread)))
+    }
+
+    const peakMoments = list.slice(0, 5).map((s, i) => {
+      const time = Math.round(Number((typeof s === 'number' ? s : (s.time ?? s.timestamp ?? s.start)) ?? i))
+      const strength = typeof s === 'object' && typeof s.score === 'number' ? s.score : null
+      const intensity = strength != null ? Math.round(60 + Math.min(40, strength * 40)) : 80
+      return { time, intensity }
+    })
+
+    logger.info('Engagement analysis completed', { userId, score })
+    return { score, peakMoments, cutsPerMin: cutsPerMin != null ? Math.round(cutsPerMin * 10) / 10 : null }
+  } catch (err) {
+    logger.warn('Engagement analysis failed; neutral score', { userId, error: err.message })
+    return { score: 70, peakMoments: [] }
+  }
 }
 
 // Technical quality analysis

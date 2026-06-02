@@ -125,7 +125,7 @@ async function signWithC2patool({ inputPath, outputPath, manifest }) {
   } finally {
     try {
       fs.rmSync(tmp, { recursive: true, force: true });
-    } catch {}
+    } catch { /* intentionally empty */ }
   }
 }
 
@@ -172,7 +172,7 @@ async function signRender({ inputPath, tree, jobId, userId }) {
       if (r.ok) {
         try {
           fs.renameSync(outputPath, inputPath);
-        } catch {}
+        } catch { /* intentionally empty */ }
         const signedBuf = fs.readFileSync(inputPath);
         const signedSha = crypto.createHash('sha256').update(signedBuf).digest('hex');
         return {
@@ -196,7 +196,7 @@ async function signRender({ inputPath, tree, jobId, userId }) {
     if (r.ok) {
       try {
         fs.renameSync(outputPath, inputPath);
-      } catch {}
+      } catch { /* intentionally empty */ }
       const signedBuf = fs.readFileSync(inputPath);
       const signedSha = crypto.createHash('sha256').update(signedBuf).digest('hex');
       return {

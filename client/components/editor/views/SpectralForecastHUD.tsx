@@ -188,8 +188,15 @@ export const SpectralForecastHUD: React.FC = () => {
                             <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar">
                                 <div className="w-full relative">
                                     <motion.div 
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${(day.revenue / (data.totals.revenue / 4)) * 100}%` }}
+                                        initial={{ height: '0%' }}
+                                        animate={{ 
+                                            height: (() => {
+                                                const total = data.totals.revenue || 0;
+                                                if (total <= 0) return '0%';
+                                                const ratio = (day.revenue / (total / 4)) * 100;
+                                                return `${Number.isNaN(ratio) || !Number.isFinite(ratio) ? 0 : ratio}%`;
+                                            })()
+                                        }}
                                         transition={{ delay: i * 0.1, type: 'spring' }}
                                         className={`w-full rounded-t-2xl relative transition-all group-hover/bar:brightness-110 ${
                                             day.spectralIndicators.isElastic ? 'bg-amber-500/40 border border-amber-500/30' : 'bg-blue-600'

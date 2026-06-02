@@ -227,8 +227,8 @@ router.get('/', auth, async (req, res) => {
           success: true,
           data: [],
           pagination: {
-            page: parseInt(req.query.page || 1),
-            limit: parseInt(req.query.limit || 50),
+            page: parseInt(req.query.page || 1, 10),
+            limit: parseInt(req.query.limit || 50, 10),
             total: 0,
             pages: 0
           }
@@ -241,8 +241,8 @@ router.get('/', auth, async (req, res) => {
           success: true,
           data: [],
           pagination: {
-            page: parseInt(req.query.page || 1),
-            limit: parseInt(req.query.limit || 50),
+            page: parseInt(req.query.page || 1, 10),
+            limit: parseInt(req.query.limit || 50, 10),
             total: 0,
             pages: 0
           }
@@ -278,8 +278,8 @@ router.get('/', auth, async (req, res) => {
         success: true,
         data: [],
         pagination: {
-          page: parseInt(req.query.page || 1),
-          limit: parseInt(req.query.limit || 50),
+          page: parseInt(req.query.page || 1, 10),
+          limit: parseInt(req.query.limit || 50, 10),
           total: 0,
           pages: 0
         }
@@ -310,7 +310,7 @@ router.get('/', auth, async (req, res) => {
       const query = { userId };
       if (type) query.type = type;
       if (status) query.status = status;
-      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
       const { optimizeQuery } = require('../utils/queryOptimizer');
 
@@ -319,7 +319,7 @@ router.get('/', auth, async (req, res) => {
         lean: true,
         sort: { createdAt: -1 },
         skip,
-        limit: parseInt(limit)
+        limit: parseInt(limit, 10)
       });
 
       // Execute queries - optimizeQuery already applied lean(), just need exec()
@@ -347,10 +347,10 @@ router.get('/', auth, async (req, res) => {
       success: true,
       data: scripts || [],
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total: total || 0,
-        pages: Math.ceil((total || 0) / parseInt(limit))
+        pages: Math.ceil((total || 0) / parseInt(limit, 10))
       }
     });
   } catch (error) {

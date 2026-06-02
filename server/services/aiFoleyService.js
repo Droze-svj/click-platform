@@ -3,18 +3,25 @@
  * Generative Auto-Sound Design using ElevenLabs Sound Effects API.
  * Detects visual keyframe velocity and dynamically generates text prompts to hit those cuts perfectly.
  */
-const { ElevenLabsClient } = require('@elevenlabs/elevenlabs-js');
 const fs = require('fs');
 const path = require('path');
 const logger = require('../utils/logger');
 
 let elevenlabsClient = null;
 
+// Lazily construct the ElevenLabs client. The SDK is an OPTIONAL dependency —
+// requiring it at module top-level crashed anything that imported this service
+// when the package wasn't installed. Load on demand and degrade gracefully
+// (return null → callers skip foley) when the key or package is missing.
 function getClient() {
-  if (!elevenlabsClient && process.env.ELEVENLABS_API_KEY) {
-    elevenlabsClient = new ElevenLabsClient({
-      apiKey: process.env.ELEVENLABS_API_KEY
-    });
+  if (elevenlabsClient) return elevenlabsClient;
+  if (!process.env.ELEVENLABS_API_KEY) return null;
+  try {
+    const { ElevenLabsClient } = require('@elevenlabs/elevenlabs-js');
+    elevenlabsClient = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
+  } catch (err) {
+    logger.warn('[Foley] ElevenLabs SDK not installed; foley generation unavailable.', { error: err.message });
+    return null;
   }
   return elevenlabsClient;
 }

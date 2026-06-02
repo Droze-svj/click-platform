@@ -72,7 +72,7 @@ async function parseNaturalLanguageQuery(query) {
         } else if (key === 'minEngagement') {
           const engMatch = matches[0].match(/(\d+)/);
           if (engMatch) {
-            parsed.filters.minEngagement = parseInt(engMatch[1]);
+            parsed.filters.minEngagement = parseInt(engMatch[1], 10);
           }
         } else if (key === 'isFavorite') {
           parsed.filters.isFavorite = true;
