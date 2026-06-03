@@ -1,10 +1,14 @@
 name: Deploy to Production
 
+# Manual-trigger only. Legacy Docker→GHCR + self-hosted SSH deploy. Click's
+# primary production deploy is Render (backend, native) + Vercel (frontend);
+# this is an opt-in fallback. It does NOT run on push, and the deploy job aborts
+# cleanly if the SSH secrets are not configured.
+#
+# Required secrets to actually deploy (Settings → Secrets and variables → Actions):
+#   SSH_PRIVATE_KEY, SSH_USER, SSH_HOST, PRODUCTION_DOMAIN
+#   (TEST_MONGODB_URI for the test job; SLACK_WEBHOOK_URL optional)
 on:
-  push:
-    branches: [ main ]
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       environment:
@@ -95,13 +99,31 @@ jobs:
   deploy:
     needs: [test, build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     environment:
       name: ${{ github.event.inputs.environment || 'production' }}
       url: https://${{ secrets.PRODUCTION_DOMAIN }}
+    env:
+      # Job-level so the notify step's `if: env.SLACK_WEBHOOK_URL != ''` guard works.
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
+      - name: Verify required secrets
+        run: |
+          missing=""
+          for s in SSH_PRIVATE_KEY SSH_USER SSH_HOST; do
+            if [ -z "${!s}" ]; then missing="$missing $s"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Self-hosted deploy is not configured. Missing secrets:$missing"
+            echo "::error::Set them under Settings → Secrets and variables → Actions, or rely on Render/Vercel native deploys."
+            exit 1
+          fi
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+
       - uses: actions/checkout@v3
-      
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
@@ -156,12 +178,11 @@ jobs:
           EOF
       
       - name: Notify deployment
-        if: always()
+        if: ${{ always() && env.SLACK_WEBHOOK_URL != '' }}
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-          text: 'Deployment to ${{ github.event.inputs.environment || "production" }} ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          text: "Deployment to ${{ github.event.inputs.environment || 'production' }}: ${{ job.status }}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

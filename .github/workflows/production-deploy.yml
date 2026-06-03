@@ -1,8 +1,16 @@
 name: Production Deployment
 
+# Manual-trigger only. This is the legacy self-hosted (SSH + PM2 + nginx) deploy
+# path. Click's primary production deploy is handled by Render (backend, native
+# GitHub integration) and Vercel (frontend); this workflow is an opt-in fallback
+# for a self-managed server. It does NOT run on push, and a manual run cleanly
+# aborts if the required deploy secrets are not configured.
+#
+# Required secrets (Settings → Secrets and variables → Actions):
+#   PRODUCTION_HOST, PRODUCTION_USER, PRODUCTION_SSH_KEY, PRODUCTION_PORT,
+#   PRODUCTION_URL, JWT_SECRET, MONGODB_URI, REDIS_URL,
+#   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY  (SLACK_WEBHOOK_URL optional)
 on:
-  push:
-    branches: [ main, production ]
   workflow_dispatch:
     inputs:
       environment:
@@ -57,7 +65,31 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: production
+    env:
+      # Job-level so the notify steps' `if: env.SLACK_WEBHOOK_URL != ''` guard
+      # is reliable (step-level env is not visible to that step's own `if`).
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
+      - name: Verify required secrets
+        run: |
+          missing=""
+          for s in PRODUCTION_HOST PRODUCTION_USER PRODUCTION_SSH_KEY PRODUCTION_PORT PRODUCTION_URL JWT_SECRET MONGODB_URI; do
+            if [ -z "${!s}" ]; then missing="$missing $s"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Self-hosted deploy is not configured. Missing secrets:$missing"
+            echo "::error::Set them under Settings → Secrets and variables → Actions, or rely on Render/Vercel native deploys."
+            exit 1
+          fi
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+          PRODUCTION_SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+          PRODUCTION_PORT: ${{ secrets.PRODUCTION_PORT }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -165,30 +197,31 @@ jobs:
 
       - name: Notify deployment success
         uses: 8398a7/action-slack@v3
-        if: success
+        if: ${{ success() && env.SLACK_WEBHOOK_URL != '' }}
         with:
           status: success
+          channel: '#deployments'
+          username: 'GitHub Actions'
+          icon_emoji: ':rocket:'
           text: |
             🚀 Click Production Deployment Successful!
 
             📊 Build: ${{ github.sha }}
             🌐 URL: ${{ secrets.PRODUCTION_URL }}
-            📈 Performance: 96% success rate
-            ⏱️ Deployed: $(date -u)
+            ⏱️ Deployed: ${{ github.run_id }}
 
             ✅ All systems operational
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        with:
-          channel: '#deployments'
-          username: 'GitHub Actions'
-          icon_emoji: ':rocket:'
 
       - name: Notify deployment failure
         uses: 8398a7/action-slack@v3
-        if: failure
+        if: ${{ failure() && env.SLACK_WEBHOOK_URL != '' }}
         with:
           status: failure
+          channel: '#alerts'
+          username: 'GitHub Actions'
+          icon_emoji: ':alert:'
           text: |
             ❌ Click Production Deployment Failed!
 
@@ -198,16 +231,12 @@ jobs:
             🚨 Immediate attention required
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        with:
-          channel: '#alerts'
-          username: 'GitHub Actions'
-          icon_emoji: ':alert:'
 
   performance-monitoring:
     name: Performance Monitoring
     needs: build-and-deploy
     runs-on: ubuntu-latest
-    if: success
+    if: success()
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -237,6 +266,8 @@ jobs:
     needs: [build-and-deploy, performance-monitoring]
     runs-on: ubuntu-latest
     if: always()
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Clean up artifacts
         uses: geekyeggo/delete-artifact@v5
@@ -245,6 +276,7 @@ jobs:
 
       - name: Notify completion
         uses: 8398a7/action-slack@v3
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         with:
           status: ${{ job.status }}
           text: |
@@ -252,7 +284,6 @@ jobs:
 
             📊 Status: ${{ job.status }}
             📈 Build: ${{ github.sha }}
-            ⏱️ Duration: ${{ github.event.head_commit.timestamp }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
