@@ -4,6 +4,7 @@ const omniRouter = require('../services/omniRouterService');
 const spatialMemory = require('../services/spatialMemoryService');
 const aeoMetadata = require('../services/aeoMetadataService');
 const ugcSynthesizer = require('../services/ugcSynthesizerService');
+const zeroPartyData = require('../services/ZeroPartyDataService');
 const auth = require('../middleware/auth');
 const logger = require('../utils/logger');
 
@@ -27,7 +28,7 @@ router.post('/omni-router/route', auth, async (req, res) => {
 router.post('/spatial/build', auth, async (req, res) => {
   try {
     const { projectId, script } = req.body;
-    const result = await spatialMemory.buildLedger(projectId, req.user.id, script);
+    const result = await spatialMemory.buildSpatialLedger(script || { scenes: [] }, projectId);
     res.json(result);
   } catch (err) {
     logger.error('Spatial Memory API error', { error: err.message });
@@ -73,6 +74,22 @@ router.post('/ugc/degradation-manifest', auth, async (req, res) => {
     res.json({ manifest });
   } catch (err) {
     res.status(500).json({ error: 'Manifest generation failed' });
+  }
+});
+
+// 🎯 Zero-Party Data Overlays
+router.get('/zpd/overlay-types', auth, (req, res) => {
+  res.json(zeroPartyData.getOverlayTypes());
+});
+
+router.post('/zpd/generate', auth, async (req, res) => {
+  try {
+    const { videoData, options } = req.body;
+    const result = await zeroPartyData.generateOverlayManifest(videoData || {}, options || {});
+    res.json(result);
+  } catch (err) {
+    logger.error('ZPD generate API error', { error: err.message });
+    res.status(500).json({ error: 'Overlay generation failed' });
   }
 });
 

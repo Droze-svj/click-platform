@@ -25,7 +25,9 @@ class SpatialMemoryService {
           globalEntities[ent] = {
             sceneIds: [],
             lastSeenIn: s.id,
-            visualTraits: ent === 'agent' ? ['blue hoodie', 'shorthair'] : [],
+            // Visual traits are only populated when actually extracted from the
+            // script (none implemented yet) — no fabricated defaults.
+            visualTraits: [],
             persistent: true
           };
         }
@@ -35,7 +37,23 @@ class SpatialMemoryService {
     });
 
     const ledgerId = `ledger_${crypto.randomBytes(8).toString('hex')}`;
-    const riskScore = 25;
+
+    // Real continuity-risk score: the share of (entity, later-scene) pairs where
+    // a previously-introduced persistent entity drops out of the scene. 0 when
+    // there's nothing to drift.
+    let driftCount = 0;
+    let checks = 0;
+    const seen = new Set();
+    scenes.forEach((s, idx) => {
+      if (idx > 0) {
+        seen.forEach(ent => {
+          checks += 1;
+          if (!s.entities.includes(ent)) driftCount += 1;
+        });
+      }
+      s.entities.forEach(e => seen.add(e));
+    });
+    const riskScore = checks > 0 ? Math.round((driftCount / checks) * 100) : 0;
 
     const result = {
       success: true,
