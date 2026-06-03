@@ -23,7 +23,7 @@ const router = express.Router();
  */
 router.get('/metrics', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
 
   try {
     const metrics = await getBusinessMetrics(userId, period);
@@ -45,7 +45,7 @@ router.get('/metrics', auth, asyncHandler(async (req, res) => {
  */
 router.get('/trends', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
   const granularity = req.query.granularity || 'day';
 
   try {

@@ -122,7 +122,7 @@ router.get('/performance/:workspaceId', auth, asyncHandler(async (req, res) => {
   }
 
   try {
-    const metrics = await getPerformanceMetrics(workspaceId, parseInt(days));
+    const metrics = await getPerformanceMetrics(workspaceId, parseInt(days, 10));
     sendSuccess(res, 'Performance metrics retrieved', 200, metrics);
   } catch (error) {
     logger.error('Error getting performance metrics', { error: error.message, workspaceId });
@@ -145,7 +145,7 @@ router.get('/performance/:workspaceId/trends', auth, asyncHandler(async (req, re
   }
 
   try {
-    const trends = await getPerformanceTrends(workspaceId, parseInt(days));
+    const trends = await getPerformanceTrends(workspaceId, parseInt(days, 10));
     sendSuccess(res, 'Performance trends retrieved', 200, { trends });
   } catch (error) {
     logger.error('Error getting performance trends', { error: error.message, workspaceId });
@@ -190,7 +190,7 @@ router.get('/cost/:workspaceId', auth, asyncHandler(async (req, res) => {
   }
 
   try {
-    const costs = await getCostEstimates(workspaceId, parseInt(days));
+    const costs = await getCostEstimates(workspaceId, parseInt(days, 10));
     sendSuccess(res, 'Cost estimates retrieved', 200, costs);
   } catch (error) {
     logger.error('Error getting cost estimates', { error: error.message, workspaceId });

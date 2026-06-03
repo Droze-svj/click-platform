@@ -23,8 +23,8 @@ class StyleVaultExtractor {
     const durationMatches = [...xmlString.matchAll(/duration="(\d+)\/?(\d*)s?"/gi)];
 
     durationMatches.forEach(match => {
-      let num = parseInt(match[1]);
-      let den = match[2] ? parseInt(match[2]) : 1;
+      let num = parseInt(match[1], 10);
+      let den = match[2] ? parseInt(match[2], 10) : 1;
       if (!isNaN(num) && !isNaN(den) && den > 0) {
         totalDurationFrames += (num / den);
       }

@@ -140,9 +140,14 @@ router.get('/posts/:postId', auth, asyncHandler(async (req, res) => {
       .limit(1)
       .single();
 
-    // Map aggregate metrics with deeper spectral signals
+    // Map aggregate metrics with deeper spectral signals.
+    // completion/hook-dropoff are averaged ONLY over records that actually
+    // report them (tracked via *_count) — we never fabricate a default value
+    // for posts that lack the metric, which would inflate the average.
     const aggregateMetrics = (analytics || []).reduce((acc, curr) => {
       const meta = curr.metadata || {};
+      const hasCompletion = typeof meta.completionRate === 'number';
+      const hasHookDropoff = typeof meta.hookDropOff === 'number';
       return {
         total_views: acc.total_views + (curr.views || 0),
         total_likes: acc.total_likes + (curr.likes || 0),
@@ -151,20 +156,24 @@ router.get('/posts/:postId', auth, asyncHandler(async (req, res) => {
         total_retweets: acc.total_retweets + (curr.retweets || 0),
         total_saves: acc.total_saves + (curr.saves || 0),
         platforms_count: acc.platforms_count + 1,
-        // Spectral Metadata Aggregation (weighted average or latest)
-        avg_completion_rate: acc.avg_completion_rate + (meta.completionRate || 65),
-        avg_hook_dropoff: acc.avg_hook_dropoff + (meta.hookDropOff || 15)
+        avg_completion_rate: acc.avg_completion_rate + (hasCompletion ? meta.completionRate : 0),
+        completion_count: acc.completion_count + (hasCompletion ? 1 : 0),
+        avg_hook_dropoff: acc.avg_hook_dropoff + (hasHookDropoff ? meta.hookDropOff : 0),
+        hook_dropoff_count: acc.hook_dropoff_count + (hasHookDropoff ? 1 : 0)
       };
     }, {
       total_views: 0, total_likes: 0, total_shares: 0,
       total_comments: 0, total_retweets: 0, total_saves: 0,
-      platforms_count: 0, avg_completion_rate: 0, avg_hook_dropoff: 0
+      platforms_count: 0, avg_completion_rate: 0, completion_count: 0,
+      avg_hook_dropoff: 0, hook_dropoff_count: 0
     });
 
-    if (aggregateMetrics.platforms_count > 0) {
-      aggregateMetrics.avg_completion_rate = Math.round(aggregateMetrics.avg_completion_rate / aggregateMetrics.platforms_count);
-      aggregateMetrics.avg_hook_dropoff = Math.round(aggregateMetrics.avg_hook_dropoff / aggregateMetrics.platforms_count);
-    }
+    aggregateMetrics.avg_completion_rate = aggregateMetrics.completion_count > 0
+      ? Math.round(aggregateMetrics.avg_completion_rate / aggregateMetrics.completion_count)
+      : 0;
+    aggregateMetrics.avg_hook_dropoff = aggregateMetrics.hook_dropoff_count > 0
+      ? Math.round(aggregateMetrics.avg_hook_dropoff / aggregateMetrics.hook_dropoff_count)
+      : 0;
 
     // Calculate core engagement resonance
     const totalEngagement = aggregateMetrics.total_likes + aggregateMetrics.total_comments + aggregateMetrics.total_shares;
@@ -437,15 +446,14 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
       .limit(10);
 
     // Get platform distribution
-    const { data: platformStats } = await supabase
-      .from('post_analytics')
-      .select('platform, views, likes, shares, comments')
-      .in('post_id',
-        supabase
-          .from('posts')
-          .select('id')
-          .eq('author_id', userId)
-      );
+    let platformStats = [];
+    if (postIds.length > 0) {
+      const { data } = await supabase
+        .from('post_analytics')
+        .select('platform, views, likes, shares, comments')
+        .in('post_id', postIds);
+      platformStats = Array.isArray(data) ? data : [];
+    }
 
     const platformDistribution = {};
     platformStats?.forEach(stat => {
@@ -483,8 +491,8 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
       .limit(5);
 
     // Calculate performance scores for top posts
-    const topPostsWithScores = topPosts?.map(post => {
-      const analytics = post.post_analytics || [];
+    const topPostsWithScores = Array.isArray(topPosts) ? topPosts.map(post => {
+      const analytics = Array.isArray(post?.post_analytics) ? post.post_analytics : [];
       const totalViews = analytics.reduce((sum, a) => sum + (a.views || 0), 0);
       const totalEngagement = analytics.reduce((sum, a) => sum + (a.likes || 0) + (a.shares || 0) + (a.comments || 0), 0);
 
@@ -494,7 +502,7 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
         total_engagement: totalEngagement,
         avg_engagement_rate: totalViews > 0 ? (totalEngagement / totalViews * 100).toFixed(2) : 0
       };
-    }).sort((a, b) => b.total_engagement - a.total_engagement) || [];
+    }).sort((a, b) => (b.total_engagement || 0) - (a.total_engagement || 0)) : [];
 
     // Empty-state for new accounts. Previously returned phantom 4.5M
     // views + 284K engagement which made fresh accounts look prolific.
@@ -614,8 +622,8 @@ router.get('/insights/:postId', auth, asyncHandler(async (req, res) => {
     const insights = {
       post_id: postId,
       user_id: req.user.id,
-      performance_score: matrix.potencyScore || 70,
-      best_posting_time: generateBestPostingTime(),
+      performance_score: matrix.potencyScore ?? null,
+      best_posting_time: await computeBestPostingTime(supabase, req.user.id),
       recommended_hashtags: matrix.signalGaps || [],
       content_improvements: [matrix.action, matrix.opportunity],
       audience_reach_estimate: analytics?.reduce((s, a) => s + (a.views || 0), 0) || 0,
@@ -661,33 +669,42 @@ router.get('/performance', auth, asyncHandler(async (req, res) => {
     // Trigger background sync if requested (Spectral Pulse)
     if (sync === 'true') {
       const { syncAllPlatformsAudienceGrowth } = require('../../services/audienceGrowthSyncService');
-      // Fire and forget, don't block the request
+      // Fire and forget, don't block the request — but log failures so a broken
+      // background sync isn't silently swallowed.
       syncAllPlatformsAudienceGrowth(userId).catch(err => {
-        
+        logger.warn('Background audience growth sync failed', { userId, error: err.message });
       });
     }
 
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - parseInt(period));
+    startDate.setDate(startDate.getDate() - parseInt(period, 10));
 
-    // Get engagement history
-    const { data: history, error: historyError } = await supabase
-      .from('engagement_history')
-      .select(`
-        recorded_at,
-        views,
-        likes,
-        shares,
-        comments
-      `)
-      .in('post_id', 
-        supabase
-          .from('posts')
-          .select('id')
-          .eq('author_id', userId)
-      )
-      .gte('recorded_at', startDate.toISOString())
-      .order('recorded_at', { ascending: true });
+    // Fetch post IDs first
+    const { data: postRows } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('author_id', userId);
+    const postIds = Array.isArray(postRows) ? postRows.map(r => r.id) : [];
+
+    let history = [];
+    let historyError = null;
+
+    if (postIds.length > 0) {
+      const { data, error } = await supabase
+        .from('engagement_history')
+        .select(`
+          recorded_at,
+          views,
+          likes,
+          shares,
+          comments
+        `)
+        .in('post_id', postIds)
+        .gte('recorded_at', startDate.toISOString())
+        .order('recorded_at', { ascending: true });
+      history = data;
+      historyError = error;
+    }
 
     if (historyError) throw historyError;
 
@@ -764,12 +781,23 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
       });
     }
 
-    const { data: analytics, error } = await supabase
-      .from('post_analytics')
-      .select('views, likes, shares, comments, engagement_rate')
-      .in('post_id',
-        supabase.from('posts').select('id').eq('author_id', userId)
-      );
+    const { data: postRows } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('author_id', userId);
+    const postIds = Array.isArray(postRows) ? postRows.map(r => r.id) : [];
+
+    let analytics = [];
+    let error = null;
+
+    if (postIds.length > 0) {
+      const { data, error: sbError } = await supabase
+        .from('post_analytics')
+        .select('views, likes, shares, comments, engagement_rate')
+        .in('post_id', postIds);
+      analytics = data;
+      error = sbError;
+    }
 
     if (error) throw error;
 
@@ -865,17 +893,19 @@ router.get('/performance/top-nodes', auth, asyncHandler(async (req, res) => {
     }
 
     const stats = posts.map(p => {
-      const a = p.post_analytics[0] || {};
-      const i = p.content_insights[0] || {};
+      const a = (Array.isArray(p.post_analytics) ? p.post_analytics[0] : p.post_analytics) || {};
+      const i = (Array.isArray(p.content_insights) ? p.content_insights[0] : p.content_insights) || {};
       const engagement = (a.likes || 0) + (a.shares || 0) + (a.comments || 0);
       return {
         id: p.id,
         title: p.title,
         views: a.views || 0,
         engagement: a.views > 0 ? (engagement / a.views * 100).toFixed(1) : 0,
-        potency: i.performance_score || 70,
+        // Use the real performance score; 0 (not a fabricated 70) when none exists.
+        potency: i.performance_score ?? 0,
         top_platform: p.platform || 'General',
-        roi_prediction: i.metadata?.predictive_roi ? `${i.metadata.predictive_roi}%` : '85%',
+        // Only surface an ROI prediction when one was actually computed.
+        roi_prediction: i.metadata?.predictive_roi != null ? `${i.metadata.predictive_roi}%` : null,
         trajectory: engagement > 50 ? 'surging' : 'stable'
       };
     });
@@ -892,9 +922,58 @@ router.get('/performance/top-nodes', auth, asyncHandler(async (req, res) => {
 }));
 
 // Utility functions for analytics
-function generateBestPostingTime() {
-  const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM'];
-  return times[Math.floor(Math.random() * times.length)];
+
+/**
+ * Compute the best posting time for a user from REAL data: the hour of day at
+ * which their published posts have historically earned the highest average
+ * engagement. Returns null when there isn't enough data to say — never a
+ * fabricated/random time.
+ */
+async function computeBestPostingTime(supabase, userId) {
+  try {
+    const { data: posts, error } = await supabase
+      .from('posts')
+      .select('created_at, post_analytics ( views, likes, shares, comments )')
+      .eq('author_id', userId)
+      .eq('status', 'published');
+
+    if (error || !posts || posts.length === 0) return null;
+
+    const hourBuckets = {}; // hour -> { engagement, count }
+    for (const p of posts) {
+      if (!p.created_at) continue;
+      const a = Array.isArray(p.post_analytics) ? (p.post_analytics[0] || {}) : (p.post_analytics || {});
+      const engagement = (a.likes || 0) + (a.shares || 0) + (a.comments || 0);
+      const hour = new Date(p.created_at).getHours();
+      if (Number.isNaN(hour)) continue;
+      if (!hourBuckets[hour]) hourBuckets[hour] = { engagement: 0, count: 0 };
+      hourBuckets[hour].engagement += engagement;
+      hourBuckets[hour].count += 1;
+    }
+
+    const hours = Object.keys(hourBuckets);
+    if (hours.length === 0) return null;
+
+    let bestHour = null;
+    let bestAvg = -1;
+    for (const h of hours) {
+      const bucket = hourBuckets[h];
+      const avg = bucket.engagement / bucket.count;
+      if (avg > bestAvg) {
+        bestAvg = avg;
+        bestHour = parseInt(h, 10);
+      }
+    }
+
+    // No engagement signal anywhere -> can't recommend a time honestly.
+    if (bestHour === null || bestAvg <= 0) return null;
+
+    const period = bestHour >= 12 ? 'PM' : 'AM';
+    const display = bestHour % 12 === 0 ? 12 : bestHour % 12;
+    return `${display}:00 ${period}`;
+  } catch (e) {
+    return null;
+  }
 }
 
 /**
@@ -957,12 +1036,12 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
           const analysis = await analyzePost(p);
           return {
             ...p,
-            potencyScore: analysis.score || 75,
+            potencyScore: analysis.score ?? null,
             anomalies: analysis.anomalies || [],
           };
         } catch (err) {
           logger.warn('Post analysis failed', { postId: p.postId, error: err.message });
-          return { ...p, potencyScore: 70, anomalies: [] };
+          return { ...p, potencyScore: null, anomalies: [] };
         }
       })
     );
@@ -1006,7 +1085,7 @@ router.get('/creator/stats', auth, asyncHandler(async (req, res) => {
     }
 
     const stats = (posts || []).map(p => {
-      const a = p.post_analytics[0] || {};
+      const a = (Array.isArray(p.post_analytics) ? p.post_analytics[0] : p.post_analytics) || {};
       const metadata = a.metadata || {};
       return {
         id: p.id,
@@ -1016,13 +1095,15 @@ router.get('/creator/stats', auth, asyncHandler(async (req, res) => {
         likes: a.likes || 0,
         shares: a.shares || 0,
         comments: a.comments || 0,
-        completionRate: metadata.completionRate || 65,
-        hookDropOff: metadata.hookDropOff || 15,
-        editStyle: metadata.editStyle || 'Balanced Kinetic',
-        hookType: metadata.hookType || 'question',
+        // Real metric values only; null when the post doesn't report them
+        // (the UI renders these as "—" rather than a fabricated default).
+        completionRate: metadata.completionRate ?? null,
+        hookDropOff: metadata.hookDropOff ?? null,
+        editStyle: metadata.editStyle || null,
+        hookType: metadata.hookType || null,
         publishedAt: p.created_at,
-        viralScore: Math.round((a.engagement_rate || 0) * 10) || 75,
-        trend: 'up',
+        viralScore: Math.round((a.engagement_rate || 0) * 10),
+        trend: null,
         engagementRate: a.engagement_rate || 0
       };
     });
@@ -1070,7 +1151,7 @@ router.post('/process-insights/:id', auth, asyncHandler(async (req, res) => {
 
     // 2. Synthesize with Gemini
     const platform = post.platform || 'tiktok';
-    const analytics = post.post_analytics[0] || {};
+    const analytics = (Array.isArray(post.post_analytics) ? post.post_analytics[0] : post.post_analytics) || {};
     
     
 

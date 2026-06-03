@@ -77,7 +77,7 @@ router.get('/:agencyWorkspaceId/calendar/reschedule-suggestions/:postId', auth, 
   const options = {
     suggestOptimal: req.query.suggestOptimal !== 'false',
     suggestAlternatives: req.query.suggestAlternatives !== 'false',
-    maxSuggestions: parseInt(req.query.maxSuggestions) || 5
+    maxSuggestions: parseInt(req.query.maxSuggestions, 10) || 5
   };
 
   const suggestions = await getRescheduleSuggestions(postId, options);

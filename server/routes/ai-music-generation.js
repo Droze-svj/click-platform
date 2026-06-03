@@ -222,7 +222,7 @@ router.get('/generations', auth, asyncHandler(async (req, res) => {
       MusicGeneration.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(parseInt(limit, 10))
         .populate('musicId')
         .lean(),
       MusicGeneration.countDocuments(query)
@@ -231,8 +231,8 @@ router.get('/generations', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Generations retrieved', 200, {
       generations,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total,
         totalPages: Math.ceil(total / limit)
       }

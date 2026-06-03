@@ -74,8 +74,8 @@ router.get('/search', auth, asyncHandler(async (req, res) => {
   }
 
   const results = await searchTranscripts(req.user._id, query, {
-    limit: parseInt(limit) || 20,
-    offset: parseInt(offset) || 0,
+    limit: parseInt(limit, 10) || 20,
+    offset: parseInt(offset, 10) || 0,
   });
 
   sendSuccess(res, 'Transcripts found', 200, results);

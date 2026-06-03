@@ -3,6 +3,7 @@ const enhancedVideoProcessing = require('./enhancedVideoProcessingService');
 const videoCommentService = require('./videoCommentService');
 const communityAgentService = require('./communityAgentService');
 const Content = require('../models/Content');
+const Music = require('../models/Music');
 
 /**
  * RemediationService
@@ -86,11 +87,21 @@ class RemediationService {
     try {
       for (const action of actionPlan) {
         if (action.type === 'ADJUST_VOLUME') {
-          // Note: In a real scenario, we'd need the audioPath separate, 
-          // but we'll use placeholder mixing logic here
-          const result = await enhancedVideoProcessing.addAudioToVideo(currentPath, 'placeholder_audio.mp3', { 
+          // Resolve the real audio track attached to this content (the
+          // music the creator actually mixed in). If none exists there is
+          // no audio source to re-mix, so we skip the action honestly
+          // rather than mixing a non-existent placeholder file.
+          const track = content.musicId ? await Music.findById(content.musicId).lean() : null;
+          const audioUrl = track && track.file ? track.file.url : null;
+
+          if (!audioUrl) {
+            logger.warn('Remediation: ADJUST_VOLUME requested but no audio track is attached to content; skipping', { contentId });
+            continue;
+          }
+
+          const result = await enhancedVideoProcessing.addAudioToVideo(currentPath, audioUrl, {
             volume: action.value,
-            userId 
+            userId
           });
           currentPath = result.resultUrl;
         }

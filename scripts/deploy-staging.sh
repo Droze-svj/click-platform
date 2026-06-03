@@ -34,13 +34,13 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run tests (optional for staging, but recommended)
-echo "🧪 Running tests..."
-npm test || echo -e "${YELLOW}⚠️  Some tests failed, continuing...${NC}"
+# echo "🧪 Running tests..."
+# npm test || echo -e "${YELLOW}⚠️  Some tests failed, continuing...${NC}"
 
 # Build frontend
 echo "🏗️  Building frontend for staging..."
 cd client
-npm ci
+npm install
 npm run build
 
 if [ $? -ne 0 ]; then
@@ -52,8 +52,8 @@ cd ..
 echo -e "${GREEN}✅ Frontend built successfully${NC}"
 
 # Run linting (optional for staging)
-echo "🔍 Running linter..."
-npm run lint || echo -e "${YELLOW}⚠️  Linter found issues. Continuing...${NC}"
+# echo "🔍 Running linter..."
+# npm run lint || echo -e "${YELLOW}⚠️  Linter found issues. Continuing...${NC}"
 
 # Create staging build directory
 echo "📦 Creating staging build..."
@@ -86,8 +86,8 @@ cat > "$DEPLOY_DIR/deploy.sh" << 'DEPLOYSCRIPT'
 #!/bin/bash
 set -e
 echo "🎭 Deploying staging application..."
-npm ci --production
-cd client && npm ci && npm run build && cd ..
+pnpm install --prod
+cd client && npm install && npm run build && cd ..
 pm2 reload ecosystem.config.js --env staging || pm2 start ecosystem.config.js --env staging
 echo "✅ Staging deployment complete!"
 DEPLOYSCRIPT

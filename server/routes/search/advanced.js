@@ -36,8 +36,8 @@ router.post('/', auth, asyncHandler(async (req, res) => {
     filters,
     sortBy,
     sortOrder,
-    limit: parseInt(limit),
-    skip: parseInt(skip)
+    limit: parseInt(limit, 10),
+    skip: parseInt(skip, 10)
   });
 
   sendSuccess(res, 'Search completed', 200, results);
@@ -59,7 +59,7 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
     return sendSuccess(res, 'Suggestions fetched', 200, []);
   }
 
-  const suggestions = await getSearchSuggestions(req.user._id, q, parseInt(limit));
+  const suggestions = await getSearchSuggestions(req.user._id, q, parseInt(limit, 10));
   sendSuccess(res, 'Suggestions fetched', 200, suggestions);
 }));
 

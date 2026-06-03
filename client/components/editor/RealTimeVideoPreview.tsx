@@ -14,6 +14,7 @@ import { usePreviewRecorder } from '../../hooks/usePreviewRecorder'
 import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
 import { Rnd } from 'react-rnd'
+import { getAssetUrl } from '../../utils/url'
 
 import { WebGPURenderer } from '../../lib/rendering/WebGPURenderer'
 
@@ -32,11 +33,12 @@ function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; cur
     if (isPlaying) el.play().catch(() => { })
     else el.pause()
   }, [isPlaying])
+  const normalizedUrl = getAssetUrl(seg.sourceUrl || '')
   return (
     <video
       ref={ref}
-      src={seg.sourceUrl}
-      className="max-w-full max-h-full object-contain video-fit-contain"
+      src={normalizedUrl}
+      className="max-w-full max-h-full object-contain video-fit-contain w-full h-full"
       muted
       playsInline
     />
@@ -101,7 +103,8 @@ function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogue
     return () => cancelAnimationFrame(frameId)
   }, [volume, isMuted, isDialogueActive, seg.track])
 
-  return <audio ref={ref} src={seg.sourceUrl} />
+  const normalizedAudioUrl = getAssetUrl(seg.sourceUrl || '')
+  return <audio ref={ref} src={normalizedAudioUrl} />
 }
 
 /** Compute opacity, transform, and optional filter for text overlay animation based on currentTime */
@@ -359,6 +362,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], svgOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}, previewQuality = 'full', chromaKey, onUpdateOverlay, selectedOverlayId, onSelectOverlay, isNeuralActive, videoTransform, videoTransformKeyframes, videoCrop, isTransformMode, onUpdateVideoTransform
 }) => {
   const isDraft = previewQuality === 'draft'
+  const normalizedVideoUrl = getAssetUrl(videoUrl || '')
+  
+  // Overlay active B-roll on top of the main video
+  const activeBroll = timelineSegments.find(s => 
+    (s.type === 'broll' || s.track === 1) && 
+    currentTime >= s.startTime && 
+    currentTime <= s.endTime && 
+    (trackVisibility[s.track] !== false)
+  )
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoRefRight = useRef<HTMLVideoElement>(null)
   const previewRecorder = usePreviewRecorder(videoRef)
@@ -680,7 +692,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
           >
             <video
               ref={videoRef}
-              src={videoUrl}
+              src={normalizedVideoUrl}
               className="w-full h-full object-contain pointer-events-none"
               style={{
                 '--v-filter': filterString,
@@ -694,6 +706,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               autoPlay={isPlaying}
               muted={isMuted}
             />
+            {activeBroll && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
+                <BrollVideo
+                  seg={activeBroll}
+                  currentTime={currentTime}
+                  isPlaying={isPlaying}
+                />
+              </div>
+            )}
           </Rnd>
           <canvas ref={webGpuCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-0" />
           {/* AI Mixing Engine: Detect active dialogue for ducking */}
@@ -883,68 +904,27 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
           })}
 
           {/* Engine Telemetry Overlay */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 pointer-events-none">
-            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
-              <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">Status</span>
-                <span className="text-xs font-mono font-bold text-white">{isPlaying ? 'PLAYING' : 'PAUSED'}</span>
-              </div>
-            </div>
-            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
-              <Activity className="w-3.5 h-3.5 text-indigo-400" />
-               <div className="flex flex-col">
-                 <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Metrics</span>
-                 <div className="flex gap-2 text-xs font-mono font-bold text-indigo-300">
-                   <span>{fps} FPS</span>
-                   <span className="opacity-50">|</span>
-                   <span>{latency}ms</span>
-                   <span className="opacity-50">|</span>
-                   <span
-                     className={
-                       gpuStatus === 'ready' ? 'text-emerald-400'
-                       : gpuStatus === 'unavailable' ? 'text-amber-400'
-                       : 'text-white/40'
-                     }
-                     title={
-                       gpuStatus === 'ready' ? 'WebGPU acceleration active'
-                       : gpuStatus === 'unavailable' ? 'WebGPU unavailable — using fallback video preview'
-                       : 'Initializing GPU renderer…'
-                     }
-                   >
-                     {gpuStatus === 'ready' ? 'GPU' : gpuStatus === 'unavailable' ? 'GPU off' : 'GPU…'}
-                   </span>
-                 </div>
-               </div>
-            </div>
-            {(() => {
-              const ops = timelineHasExportOnlyOps(timelineSegments || [])
-              const total = ops.reverse + ops.jcut + ops.lcut
-              if (total === 0) return null
-              const parts: string[] = []
-              if (ops.reverse) parts.push(`${ops.reverse}× reverse`)
-              if (ops.jcut) parts.push(`${ops.jcut}× J-cut`)
-              if (ops.lcut) parts.push(`${ops.lcut}× L-cut`)
-              return (
+          {/* Engine Telemetry Overlay */}
+          {(() => {
+            const ops = timelineHasExportOnlyOps(timelineSegments || [])
+            const total = ops.reverse + ops.jcut + ops.lcut
+            if (total === 0) return null
+            const parts: string[] = []
+            if (ops.reverse) parts.push(`${ops.reverse}× reverse`)
+            if (ops.jcut) parts.push(`${ops.jcut}× J-cut`)
+            if (ops.lcut) parts.push(`${ops.lcut}× L-cut`)
+            return (
+              <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 pointer-events-none">
                 <div
-                  className="flex bg-amber-500/10 backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2"
+                  className="flex bg-amber-500/10 backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2 pointer-events-auto"
                   title="These ops are applied at export time only — preview shows segments in their original direction with normal audio sync."
                 >
                   <span className="text-[9px] font-black uppercase text-amber-300/80 tracking-wider">Export-only</span>
                   <span className="text-[10px] font-mono font-bold text-amber-200">{parts.join(' · ')}</span>
                 </div>
-              )
-            })()}
-            </div>
-            {/* Magnetic Snapping Toggle */}
-            <button
-              type="button"
-              onClick={() => setMagneticSnapping(!magneticSnapping)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md transition-all ${magneticSnapping ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400' : 'bg-black/40 border-white/10 text-white/40'}`}
-            >
-              <Crosshair size={12} className={magneticSnapping ? 'animate-spin-slow' : ''} />
-              <span className="text-[10px] font-black uppercase tracking-wider">Magnetic Snapping</span>
-            </button>
+              </div>
+            )
+          })()}
           </div>
 
           {/* Image Overlays */}
@@ -1011,7 +991,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                     </>
                   )}
                   <img
-                    src={img.url}
+                    src={getAssetUrl(img.url)}
                     alt="Image Layer"
                     className="w-full h-full object-contain pointer-events-none"
                     style={{
@@ -1154,7 +1134,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                     <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: svg.url }} />
                   ) : (
                     <img
-                      src={svg.url}
+                      src={getAssetUrl(svg.url)}
                       alt="SVG Layer"
                       className="w-full h-full object-contain pointer-events-none"
                     />

@@ -67,7 +67,10 @@ function computeCriticalPath(milestones) {
     if (isEnd && finish >= maxFinish - 0.001) {
       criticalPathIds.add(id);
       let current = id;
-      while (true) {
+      // Bounded by the milestone count so cyclic dependency data can't spin
+      // forever (also satisfies no-constant-condition vs. `while (true)`).
+      let guard = 0;
+      while (current != null && guard++ <= idToM.size) {
         const currM = idToM.get(current);
         if (!currM?.dependencyMilestoneIds?.length) break;
         let latestPred = -1;

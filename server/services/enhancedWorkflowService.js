@@ -154,17 +154,17 @@ async function checkCondition(condition, userId, context) {
   try {
     switch (condition.type) {
     case 'content_count':
-      const count = await Content.countDocuments({ userId });
-      return compareValues(count, condition.operator || '>=', condition.value || 0);
+    { const count = await Content.countDocuments({ userId });
+      return compareValues(count, condition.operator || '>=', condition.value || 0); }
 
     case 'post_count':
-      const postCount = await ScheduledPost.countDocuments({ userId });
-      return compareValues(postCount, condition.operator || '>=', condition.value || 0);
+    { const postCount = await ScheduledPost.countDocuments({ userId });
+      return compareValues(postCount, condition.operator || '>=', condition.value || 0); }
 
     case 'date':
-      const now = new Date();
+    { const now = new Date();
       const targetDate = new Date(condition.value);
-      return compareDates(now, condition.operator || '>=', targetDate);
+      return compareDates(now, condition.operator || '>=', targetDate); }
 
     case 'custom':
       // Custom condition evaluation

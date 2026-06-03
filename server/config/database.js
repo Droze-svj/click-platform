@@ -27,12 +27,8 @@ const initSupabase = async () => {
         return true;
       }
       
-    } catch (error) {
-      
-    }
-  } else {
-    
-  }
+    } catch (error) { /* intentionally empty */ }
+  } else { /* intentionally empty */ }
   return false;
 };
 
@@ -45,9 +41,7 @@ const initPrisma = async () => {
       databaseStatus.prisma = true;
       
       return true;
-    } catch (error) {
-      
-    }
+    } catch (error) { /* intentionally empty */ }
   } else if (process.env.DATABASE_URL) {
     // Only warn if they tried to set a URL but config says it's not ready
     
@@ -122,11 +116,15 @@ const initDatabases = async () => {
   ]);
 
   results.forEach((res, i) => {
-    const labels = ['Supabase', 'Prisma', 'MongoDB'];
+    let label = 'Unknown';
+    if (i === 0) label = 'Supabase';
+    else if (i === 1) label = 'Prisma';
+    else if (i === 2) label = 'MongoDB';
+
     if (res.status === 'rejected') {
-      logger.warn(`⚠️  ${labels[i]} initialization failed or timed out: ${res.reason.message}`);
+      logger.warn(`⚠️  ${label} initialization failed or timed out: ${res.reason.message}`);
     } else {
-      logger.info(`🏗️  ${labels[i]} initialized`, { connected: res.value });
+      logger.info(`🏗️  ${label} initialized`, { connected: res.value });
     }
   });
 

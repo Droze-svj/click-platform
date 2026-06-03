@@ -11,11 +11,8 @@ const logger = require('../utils/logger');
 // 🚢 Phase 10: Fleet Management
 router.get('/fleet/status', auth, async (req, res) => {
   try {
+    // Real fleet status (empty nodes array when none registered — no demo data).
     const status = await fleetManagement.getFleetStatus(req.user.id);
-    if (status.nodes.length === 0) {
-      const demo = await fleetManagement.getDemoFleet(req.user.id);
-      return res.json(demo);
-    }
     res.json(status);
   } catch (err) {
     res.status(500).json({ error: 'Fleet status fetch failed' });
@@ -63,20 +60,57 @@ router.post('/fleet/register', auth, async (req, res) => {
 // 💵 Phase 11: Arbitrage Steering
 router.get('/arbitrage/manifest', auth, async (req, res) => {
   try {
-    const manifest = await arbitrageSteering.getSteeringManifest();
+    const manifest = await arbitrageSteering.getSteeringManifest(req.user.id);
     res.json(manifest);
   } catch (err) {
     res.status(500).json({ error: 'Manifest fetch failed' });
   }
 });
 
+// Real offers derived from the user's monetization plans + live performance.
+router.get('/arbitrage/offers', auth, async (req, res) => {
+  try {
+    const offers = await arbitrageSteering.getActiveOffers(req.user.id);
+    res.json({ offers });
+  } catch (err) {
+    logger.error('Arbitrage offers fetch failed', { error: err.message });
+    res.status(500).json({ error: 'Offers fetch failed' });
+  }
+});
+
+// Persist a real steering decision.
+router.post('/arbitrage/steer', auth, async (req, res) => {
+  try {
+    const { offerId, targetNiche } = req.body;
+    if (!offerId) {
+      return res.status(400).json({ error: 'offerId is required' });
+    }
+    const result = await arbitrageSteering.steerFunnel(req.user.id, offerId, targetNiche);
+    res.json(result);
+  } catch (err) {
+    logger.error('Arbitrage steer failed', { error: err.message });
+    res.status(500).json({ error: 'Steering failed' });
+  }
+});
+
 // 🌐 Phase 12: Knowledge Pulse
 router.get('/intelligence/ledger', auth, async (req, res) => {
   try {
-    const ledger = await s2sIntelligence.getKnowledgeLedger();
+    const ledger = await s2sIntelligence.getKnowledgeLedger(req.user.id);
     res.json(ledger);
   } catch (err) {
     res.status(500).json({ error: 'Ledger fetch failed' });
+  }
+});
+
+// Real network health (fleet + revenue + recent activity).
+router.get('/s2s/network-health', auth, async (req, res) => {
+  try {
+    const health = await s2sIntelligence.getNetworkHealth(req.user.id);
+    res.json(health);
+  } catch (err) {
+    logger.error('S2S network-health fetch failed', { error: err.message });
+    res.status(500).json({ error: 'Network health fetch failed' });
   }
 });
 

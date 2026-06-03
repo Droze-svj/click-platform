@@ -149,15 +149,15 @@ describe('Error Scenarios and Edge Cases', () => {
 
   describe('Rate Limiting', () => {
     test('Should handle rate limit errors gracefully', async () => {
-      // Make multiple rapid requests
-      const requests = Array(10).fill(null).map(() =>
-        request(app)
+      // Make multiple rapid requests sequentially to prevent socket hang ups under high test load
+      const responses = [];
+      for (let i = 0; i < 10; i++) {
+        const response = await request(app)
           .get('/api/ai/multi-model/models')
           .set('Authorization', `Bearer ${authToken}`)
-        .set('x-test-user-id', testUser._id.toString())
-      );
-
-      const responses = await Promise.all(requests);
+          .set('x-test-user-id', testUser._id.toString());
+        responses.push(response);
+      }
 
       // Some requests should succeed, some may be rate limited
       responses.forEach((response) => {

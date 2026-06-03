@@ -329,7 +329,7 @@ function calculateNextPostTime(library) {
 
   // Set time
   const [hours, minutes] = times[0].split(':');
-  nextDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+  nextDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
   return nextDate;
 }

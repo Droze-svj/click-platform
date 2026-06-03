@@ -39,8 +39,8 @@ router.get('/', asyncHandler(async (req, res) => {
       niche,
       search,
       sortBy,
-      limit: parseInt(limit),
-      skip: parseInt(skip),
+      limit: parseInt(limit, 10),
+      skip: parseInt(skip, 10),
     });
     sendSuccess(res, 'Marketplace templates fetched', 200, result);
   } catch (error) {
@@ -57,7 +57,7 @@ router.get('/', asyncHandler(async (req, res) => {
  *     tags: [Templates]
  */
 router.get('/featured', asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit, 10) || 10;
 
   try {
     const templates = await getFeaturedTemplates(limit);
@@ -76,7 +76,7 @@ router.get('/featured', asyncHandler(async (req, res) => {
  *     tags: [Templates]
  */
 router.get('/trending', asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit, 10) || 10;
 
   try {
     const templates = await getTrendingTemplates(limit);

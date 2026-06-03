@@ -28,8 +28,8 @@ class DatabaseOptimizer {
 
     const options = {
       // Connection pool settings
-      maxPoolSize: parseInt(process.env.DB_MAX_POOL_SIZE) || 10, // Maximum connection pool size
-      minPoolSize: parseInt(process.env.DB_MIN_POOL_SIZE) || 2,  // Minimum connection pool size
+      maxPoolSize: parseInt(process.env.DB_MAX_POOL_SIZE, 10) || 10, // Maximum connection pool size
+      minPoolSize: parseInt(process.env.DB_MIN_POOL_SIZE, 10) || 2,  // Minimum connection pool size
       maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
       serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity

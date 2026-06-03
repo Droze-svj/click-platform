@@ -11,11 +11,46 @@
  */
 
 const crypto = require('crypto')
-const { runSelfReflectiveLoop } = require('./agentCyclicGraph')
-const { alignFoleyToTimeline } = require('./aiFoleyService')
+// NOTE: agentCyclicGraph and aiFoleyService are lazy-required at call sites
+// (inside try/catch) rather than at module load — aiFoleyService pulls in the
+// optional @elevenlabs SDK, and requiring it here would break server boot when
+// that package isn't installed.
 
-// In-memory job store (replace with Redis in production for multi-worker support)
+// In-memory job store for fast live progress. Mirrored to Mongo (AgenticJob)
+// on every transition so status survives restarts and the agent dashboards
+// have a real source of truth.
 const jobs = new Map()
+
+/**
+ * Fire-and-forget persistence of a job to Mongo. Never blocks the pipeline and
+ * never throws (the model may be absent in some envs).
+ */
+function persistJob(job) {
+  try {
+    const AgenticJob = require('../models/AgenticJob')
+    AgenticJob.updateOne(
+      { jobId: job.jobId },
+      {
+        $set: {
+          jobId: job.jobId,
+          userId: String(job.userId || ''),
+          videoId: job.videoId || null,
+          goals: job.goals || [],
+          status: job.status,
+          currentStep: job.currentStep,
+          progress: job.progress,
+          steps: job.steps,
+          logs: job.logs,
+          result: job.result || null,
+          error: job.error || null,
+          autoPublish: job.autoPublish === true,
+          ...(job.status !== 'running' ? { completedAt: new Date() } : {}),
+        },
+      },
+      { upsert: true }
+    ).catch(() => {})
+  } catch { /* model unavailable — pipeline still completes */ }
+}
 
 /**
  * Start an agentic pipeline job.
@@ -41,12 +76,13 @@ async function startAgentPipeline(videoId, goals, userId) {
     startedAt: Date.now(),
   }
   jobs.set(jobId, job)
+  persistJob(job)
 
   // Run pipeline asynchronously (do not await in the request handler)
   runPipeline(job).catch(err => {
-    
     job.status = 'error'
     job.error = err.message
+    persistJob(job)
   })
 
   return { jobId }
@@ -57,9 +93,16 @@ async function startAgentPipeline(videoId, goals, userId) {
  * @param {string} jobId
  * @returns {object|null}
  */
-function getJobStatus(jobId) {
-  const job = jobs.get(jobId)
-  if (!job) return null
+async function getJobStatus(jobId) {
+  let job = jobs.get(jobId)
+  if (!job) {
+    // Not in memory (e.g. after a restart) — read the persisted record.
+    try {
+      const AgenticJob = require('../models/AgenticJob')
+      job = await AgenticJob.findOne({ jobId }).lean()
+    } catch { job = null }
+    if (!job) return null
+  }
   return {
     jobId: job.jobId,
     status: job.status,
@@ -123,11 +166,14 @@ async function runPipeline(job) {
       } catch (err) {
         if (attempts >= 2) {
           job.steps.push({ id: step.id, label: step.label, status: 'error', error: err.message });
+          persistJob(job);
           throw err;
         }
         job.logs.push(`[Reasoning] ${step.label} failed: ${err.message}. Retrying...`);
       }
     }
+    // Mirror progress to Mongo after each completed step.
+    persistJob(job);
   }
 
   job.status = 'done'
@@ -137,6 +183,7 @@ async function runPipeline(job) {
   job.logs.push('[AgenticGraph] Initiating Editor->Critic->Revision Cyclic Loop...')
   let finalGraphOutput;
   try {
+    const { runSelfReflectiveLoop } = require('./agentCyclicGraph');
     finalGraphOutput = await runSelfReflectiveLoop(job.transcript || 'Create a high-retention video timeline.');
     job.logs.push(`[AgenticGraph] Graph approved timeline with score ${finalGraphOutput.finalScore} over ${finalGraphOutput.totalIterations} iterations.`);
   } catch (err) {
@@ -148,7 +195,9 @@ async function runPipeline(job) {
   let foleyNodes = [];
   try {
     const approvedClips = finalGraphOutput?.finalTimeline?.clips || [];
-    // Await the generation of SFX aligned to the cuts
+    // Await the generation of SFX aligned to the cuts (lazy require — pulls
+    // the optional @elevenlabs SDK).
+    const { alignFoleyToTimeline } = require('./aiFoleyService');
     foleyNodes = await alignFoleyToTimeline(approvedClips, job.videoId);
     job.logs.push(`[AgenticGraph] Sourced ${foleyNodes.length} SFX nodes.`);
   } catch (err) {
@@ -168,13 +217,27 @@ async function runPipeline(job) {
     color: '#F59E0B'
   }));
 
+  // Real metadata from the `metadata` pipeline step (falls back to mock only
+  // if that step produced nothing). Real publish slot from the `publish` step.
+  const metaStep = (job.steps || []).find(s => s.id === 'metadata' && s.result);
+  const realMetadata = (metaStep && (metaStep.result.title || metaStep.result.hashtags))
+    ? {
+      titles: [metaStep.result.title].filter(Boolean),
+      description: metaStep.result.description,
+      hashtags: metaStep.result.hashtags,
+    }
+    : generateMockMetadata();
+  const publishStep = (job.steps || []).find(s => s.id === 'publish' && s.result);
+
   job.result = {
     clips: [...baseClips, ...brollClips],
     sfx: foleyNodes,
-    metadata: generateMockMetadata(),
-    calendarSlots: ['Mon 9am', 'Tue 9am', 'Wed 9am'],
+    metadata: realMetadata,
+    publish: publishStep?.result || null,
     agenticPerformance: finalGraphOutput ? { score: finalGraphOutput.finalScore, iterations: finalGraphOutput.totalIterations } : null
   }
+
+  persistJob(job)
 }
 
 const { transcribeVideo: transcribeVideoService } = require('./aiTranscriptionService');
@@ -217,7 +280,10 @@ function pickNextDefaultSlot(now) {
 
 async function executeStep(stepId, job, isRetry = false) {
   const { videoId, userId } = job;
-  const content = await require('../models/Content').findById(videoId);
+  // videoId may be a non-ObjectId (clip/dev id) — ScheduledPost.contentId is
+  // String-typed for exactly this reason. Guard the lookup so a CastError
+  // doesn't escape into the retry loop; steps degrade via their own fallbacks.
+  const content = await require('../models/Content').findById(videoId).catch(() => null);
   const videoPath = content?.originalFile?.url?.replace(/^\//, ''); // Basic path resolution
 
   try {
@@ -304,31 +370,87 @@ async function executeStep(stepId, job, isRetry = false) {
         const niche = content?.niche || content?.metadata?.niche || 'business';
         const platform = job.goals?.targetPlatform || (Array.isArray(content?.targetPlatforms) ? content.targetPlatforms[0] : null) || 'tiktok';
         const { NICHE_POSTING_WINDOWS } = require('./marketingKnowledge');
-        // Pick the next-soonest optimal window from the niche playbook,
-        // capped to within the next 72h so the creator sees the post go
-        // out without a long wait — and so we don't queue at a stale day.
-        const windowsForPlatform = NICHE_POSTING_WINDOWS?.[niche]?.[platform];
+        // NICHE_POSTING_WINDOWS[niche] is an array of { start, end, label }
+        // hour-ranges (NOT keyed by platform). pickNextWindow() expects
+        // "HH:MM" strings, so convert each window to its center hour. Without
+        // this conversion the niche-optimal scheduling was dead and every
+        // draft fell back to the 9 AM default.
+        const nicheWindows = NICHE_POSTING_WINDOWS?.[niche];
+        const windowTimes = Array.isArray(nicheWindows)
+          ? nicheWindows
+            .filter((w) => typeof w?.start === 'number' && typeof w?.end === 'number')
+            .map((w) => `${String(Math.round((w.start + w.end) / 2)).padStart(2, '0')}:00`)
+          : [];
         const now = new Date();
-        const slot = pickNextWindow(now, windowsForPlatform) || pickNextDefaultSlot(now);
-        // Best-effort persist into ScheduledPost if the model exists.
-        let scheduledPostId = null;
+
+        // Fully autonomous publish (default), gated by the AGENT_AUTOPUBLISH
+        // kill-switch AND by the account actually being connected. When both
+        // hold we fire NOW (the existing publishing worker posts it); otherwise
+        // we queue at the next optimal window for human review.
+        const killSwitchOff = process.env.AGENT_AUTOPUBLISH === 'false';
+        let connected = false;
         try {
-          const ScheduledPost = require('../models/ScheduledPost');
-          const doc = await ScheduledPost.create({
-            userId,
-            contentId: videoId,
-            platform,
-            scheduledFor: slot,
-            status: 'pending',
-            source: 'agent',
-          }).catch(() => null);
-          scheduledPostId = doc?._id?.toString?.() || null;
-        } catch { /* model not present in some envs — pipeline still completes */ }
+          const SocialConnection = require('../models/SocialConnection');
+          connected = !!(await SocialConnection.findOne({ userId: String(userId), platform, isActive: true })
+            .lean().catch(() => null));
+        } catch { /* model absent — treat as not connected */ }
+        const autoPublish = !killSwitchOff && connected;
+
+        // Build a real post body from the metadata step (title/description).
+        const metaStep = (job.steps || []).find(s => s.id === 'metadata' && s.result);
+        const postText = metaStep?.result?.description || metaStep?.result?.title || content?.title || 'New clip';
+        const hashtags = metaStep?.result?.hashtags || [];
+
+        let scheduledPostId = null;
+        let slot = null;
+
+        if (autoPublish) {
+          // Create a `scheduled` post due NOW. jobScheduler.processScheduledPosts
+          // only scans status:'scheduled' with scheduledTime <= now (and no
+          // pending holdUntil), so this is the status that actually gets posted.
+          // (A 'pending' row here would be orphaned — never scanned, never shown
+          // in the calendar.) We omit holdUntil so it fires on the next cron tick.
+          slot = now;
+          try {
+            const ScheduledPost = require('../models/ScheduledPost');
+            const doc = await ScheduledPost.create({
+              userId: String(userId),
+              contentId: videoId,
+              platform,
+              content: { text: postText, hashtags },
+              scheduledTime: slot,
+              status: 'scheduled',
+              source: 'agent',
+            }).catch((e) => { logger.warn('Agent publish: ScheduledPost create failed', { error: e.message }); return null; });
+            scheduledPostId = doc?._id?.toString?.() || null;
+          } catch { /* model not present in some envs — pipeline still completes */ }
+        } else {
+          // Kill-switch on (AGENT_AUTOPUBLISH=false) or the account isn't
+          // connected — do NOT create an autonomous posting row (it would either
+          // be orphaned or fail at the platform). Surface the recommended slot
+          // so the human publishes the clip from the editor's schedule UI.
+          slot = pickNextWindow(now, windowTimes) || pickNextDefaultSlot(now);
+        }
+
+        // Audit every publish decision to the sovereign ledger.
+        try {
+          const ledger = require('./sovereignLedgerService');
+          await ledger.recordDecision('autonomous_publish', 'ContentAgent', {
+            videoId, platform, niche, scheduledPostId,
+            mode: autoPublish ? 'auto' : 'draft',
+            connected, killSwitchOff,
+            scheduledTime: slot.toISOString(),
+          });
+        } catch { /* ledger optional */ }
+
         return {
-          scheduledFor: slot.toISOString(),
+          scheduledTime: slot.toISOString(),
           platform,
           niche,
           scheduledPostId,
+          autoPublished: autoPublish,
+          mode: autoPublish ? 'auto' : 'draft',
+          reason: autoPublish ? null : (killSwitchOff ? 'autopublish-disabled' : 'account-not-connected'),
           via: scheduledPostId ? 'scheduled-post-collection' : 'plan-only',
         };
       } catch (err) {
@@ -355,12 +477,17 @@ function generateMockClips(videoId) {
 }
 
 function generateMockMetadata() {
+  const titles = [
+    'This Will Double Your Revenue In 30 Days',
+    'The Strategy Nobody Is Talking About',
+    'Watch This Before Your Next Launch',
+  ]
+  // Include `description` so the shape matches the real metadata-step path
+  // (which returns { titles, description, hashtags }) — clients reading
+  // metadata.description get a value on both paths.
   return {
-    titles: [
-      'This Will Double Your Revenue In 30 Days',
-      'The Strategy Nobody Is Talking About',
-      'Watch This Before Your Next Launch',
-    ],
+    titles,
+    description: titles[0],
     hashtags: ['#growth', '#marketing', '#viral', '#creator', '#2026'],
   }
 }
@@ -383,8 +510,8 @@ async function parseClientComment(comment) {
   const timeMatch = lower.match(/at\s+(\d+):(\d+)/) || lower.match(/at\s+(\d+)\s*s/)
   if (timeMatch) {
     timestamp = timeMatch[2] !== undefined
-      ? parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2])
-      : parseInt(timeMatch[1])
+      ? parseInt(timeMatch[1], 10) * 60 + parseInt(timeMatch[2], 10)
+      : parseInt(timeMatch[1], 10)
   }
 
   if (lower.includes('music') && (lower.includes('quiet') || lower.includes('lower') || lower.includes('reduce'))) {

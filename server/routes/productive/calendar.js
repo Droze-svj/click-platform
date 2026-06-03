@@ -88,7 +88,7 @@ router.get('/gaps', auth, asyncHandler(async (req, res) => {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
       platforms: platforms ? platforms.split(',') : ['instagram', 'twitter', 'linkedin'],
-      minPostsPerWeek: minPostsPerWeek ? parseInt(minPostsPerWeek) : 3,
+      minPostsPerWeek: minPostsPerWeek ? parseInt(minPostsPerWeek, 10) : 3,
     });
     sendSuccess(res, 'Calendar gaps analyzed', 200, gaps);
   } catch (error) {
@@ -178,7 +178,7 @@ router.post('/smart-schedule', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/optimize-mix', auth, asyncHandler(async (req, res) => {
-  const dateRange = parseInt(req.query.dateRange) || 7;
+  const dateRange = parseInt(req.query.dateRange, 10) || 7;
 
   try {
     const result = await optimizeContentMix(req.user._id, dateRange);

@@ -6,6 +6,7 @@
 const nodemailer = require('nodemailer')
 const { WebClient } = require('@slack/web-api')
 const logger = require('./logger');
+const { safeJsonParse } = require('./safeJson');
 
 class AlertingSystem {
   constructor() {
@@ -18,7 +19,7 @@ class AlertingSystem {
     const emailConfig = {
       enabled: !!process.env.SMTP_HOST,
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT) || 587,
+      port: parseInt(process.env.SMTP_PORT, 10) || 587,
       secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
@@ -39,7 +40,7 @@ class AlertingSystem {
       enabled: !!process.env.ALERT_WEBHOOK_URL,
       url: process.env.ALERT_WEBHOOK_URL,
       headers: process.env.ALERT_WEBHOOK_HEADERS ?
-        JSON.parse(process.env.ALERT_WEBHOOK_HEADERS) : {}
+        safeJsonParse(process.env.ALERT_WEBHOOK_HEADERS, {}) : {}
     }
 
     this.config = {
@@ -50,8 +51,8 @@ class AlertingSystem {
         enabled: process.env.NODE_ENV === 'development' || !emailConfig.enabled && !slackConfig.enabled && !webhookConfig.enabled,
         detailed: process.env.NEXT_PUBLIC_ENABLE_DETAILED_LOGGING === 'true'
       },
-      cooldownMinutes: parseInt(process.env.ALERT_COOLDOWN_MINUTES) || 5,
-      maxAlertsPerHour: parseInt(process.env.MAX_ALERTS_PER_HOUR) || 10
+      cooldownMinutes: parseInt(process.env.ALERT_COOLDOWN_MINUTES, 10) || 5,
+      maxAlertsPerHour: parseInt(process.env.MAX_ALERTS_PER_HOUR, 10) || 10
     }
 
     this.initialize()

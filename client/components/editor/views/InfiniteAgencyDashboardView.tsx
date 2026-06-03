@@ -337,7 +337,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                               {heatmapData.map((d, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar">
                                    <div className="w-full h-full relative flex flex-col justify-end">
-                                      <motion.div initial={{ height: 0 }} animate={{ height: `${d.score}%` }} transition={{ duration: 2.5, delay: i * 0.1, ease: "circOut" }}
+                                      <motion.div initial={{ height: '0%' }} animate={{ height: `${d.score}%` }} transition={{ duration: 2.5, delay: i * 0.1, ease: "circOut" }}
                                         className={`w-full rounded-t-2xl transition-all duration-[2s] relative overflow-hidden ${d.level === 'high' ? 'bg-indigo-500/50 shadow-[0_0_40px_rgba(99,102,241,0.4)]' : d.level === 'medium' ? 'bg-indigo-500/20' : 'bg-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.3)]'}`}
                                       >
                                          <div className="absolute inset-0 bg-white/10 animate-shimmer" />

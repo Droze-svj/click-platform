@@ -62,7 +62,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
         // Add timeout to prevent buffering timeout errors
         const templates = await ContentTemplate.find(query)
           .sort(sort)
-          .limit(parseInt(limit) || 50)
+          .limit(parseInt(limit, 10) || 50)
           .maxTimeMS(5000) // 5 second timeout (well below 10s buffering limit)
           .lean();
         return sendSuccess(res, 'Templates fetched', 200, templates || []);
@@ -110,7 +110,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     try {
       templates = await ContentTemplate.find(query)
         .sort(sort)
-        .limit(parseInt(limit) || 50)
+        .limit(parseInt(limit, 10) || 50)
         .maxTimeMS(5000) // 5 second timeout to prevent buffering timeout
         .lean();
     } catch (dbError) {
@@ -129,7 +129,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
           if (niche) publicQuery.niche = niche;
           templates = await ContentTemplate.find(publicQuery)
             .sort(sort)
-            .limit(parseInt(limit) || 50)
+            .limit(parseInt(limit, 10) || 50)
             .maxTimeMS(5000)
             .lean();
         } catch (e) {
@@ -381,8 +381,8 @@ router.get('/marketplace', auth, asyncHandler(async (req, res) => {
       templates = await ContentTemplate.find(query)
         .populate('createdBy', 'name email')
         .sort(sort)
-        .skip(parseInt(skip))
-        .limit(parseInt(limit))
+        .skip(parseInt(skip, 10))
+        .limit(parseInt(limit, 10))
         .maxTimeMS(5000) // 5 second timeout to prevent buffering timeout
         .lean();
     } catch (dbError) {

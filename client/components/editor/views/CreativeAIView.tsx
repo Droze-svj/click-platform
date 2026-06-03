@@ -125,6 +125,8 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       if (res?.success) {
         setEyeContactFixed(true)
         showToast('Eye contact successfully recalibrated.', 'success')
+      } else if (res?.notImplemented) {
+        showToast(res.message || 'Eye Contact Fix is coming soon.', 'info')
       } else {
         showToast('Vector calibration failed.', 'error')
       }
@@ -142,6 +144,8 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       const res = await apiPost<any>('/video/creative/background-swap', { videoId })
       if (res?.success) {
         showToast('Background swapped successfully.', 'success')
+      } else if (res?.notImplemented) {
+        showToast(res.message || 'Neural Depth Swap is coming soon.', 'info')
       } else {
         showToast('Depth mapping failed to lock.', 'error')
       }
@@ -211,6 +215,10 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       if (res?.success) {
         setLocalized(true)
         showToast('Video Localized with Voice Cloning & Lip-Sync.', 'success')
+      } else if (res?.notImplemented) {
+        showToast(res.message || 'Global Native localization is coming soon.', 'info')
+      } else {
+        showToast('Localization failed.', 'error')
       }
     } catch (e) {
         showToast('Localization engine timeout.', 'error')
@@ -226,7 +234,11 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       const res = await apiPost<any>('/video/creative/outpaint', { videoId })
       if (res?.success) {
         setOutpainted(true)
-        showToast('Outpainting complete — context-aware fill applied.', 'success')
+        showToast('Outpainting complete — 9:16 blur-pad fill applied.', 'success')
+      } else if (res?.notImplemented) {
+        showToast(res.message || 'Omni-Format outpainting is coming soon.', 'info')
+      } else {
+        showToast(res?.error || 'Generative fill failed.', 'error')
       }
     } catch (e) {
         showToast('Generative fill failed.', 'error')

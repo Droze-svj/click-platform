@@ -28,7 +28,7 @@ const webhookEventSchema = new mongoose.Schema(
       required: true,
     },
     eventType: { type: String },
-    receivedAt: { type: Date, default: Date.now, index: true },
+    receivedAt: { type: Date, default: Date.now },
     result: { type: mongoose.Schema.Types.Mixed },
   },
   { timestamps: true }

@@ -100,18 +100,19 @@ class NotificationService {
         suggestion: options.suggestion || null,
         data: options.data || {}
       });
+      const plainDoc = doc.toObject();
       const payload = {
-        id: doc._id.toString(),
-        type: doc.type,
-        title: doc.title,
-        message: doc.message,
-        link: doc.link,
-        category: doc.category,
-        context: doc.context,
-        aiSummary: doc.aiSummary,
-        suggestion: doc.suggestion,
-        data: doc.data || {},
-        timestamp: doc.createdAt,
+        id: plainDoc._id.toString(),
+        type: plainDoc.type,
+        title: plainDoc.title,
+        message: plainDoc.message,
+        link: plainDoc.link,
+        category: plainDoc.category,
+        context: plainDoc.context || {},
+        aiSummary: plainDoc.aiSummary,
+        suggestion: plainDoc.suggestion,
+        data: plainDoc.data || {},
+        timestamp: plainDoc.createdAt,
         read: false
       };
       this.notifyUser(uid, { ...payload, message: payload.message, data: payload.data });

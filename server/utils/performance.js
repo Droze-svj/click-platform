@@ -1,6 +1,4 @@
-console.log('🏗️ performance: start requires');
 const logger = require('./logger');
-console.log('🏗️ performance: requires loaded');
 
 // Response time tracking middleware
 function trackResponseTime(req, res, next) {

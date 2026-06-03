@@ -420,7 +420,7 @@ router.post('/workflow-templates/:templateId/publish', auth, asyncHandler(async 
  */
 router.get('/workflow-templates/marketplace', auth, asyncHandler(async (req, res) => {
   const { category = null, limit = 20 } = req.query;
-  const templates = await getMarketplaceTemplates(category, parseInt(limit));
+  const templates = await getMarketplaceTemplates(category, parseInt(limit, 10));
   sendSuccess(res, 'Marketplace templates retrieved', 200, { templates });
 }));
 

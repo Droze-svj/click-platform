@@ -59,7 +59,7 @@ router.get('/:clientId/forecast', auth, asyncHandler(async (req, res) => {
   const { clientId } = req.params;
   const { periods = 3 } = req.query;
 
-  const forecast = await forecastWorkload(userId, clientId, parseInt(periods));
+  const forecast = await forecastWorkload(userId, clientId, parseInt(periods, 10));
   sendSuccess(res, 'Workload forecast retrieved', 200, forecast);
 }));
 

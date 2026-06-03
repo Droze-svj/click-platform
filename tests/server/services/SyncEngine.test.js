@@ -1,14 +1,16 @@
 /* global jest, describe, it, expect, afterEach */
-const SyncEngine = require('./SyncEngine');
-const Content = require('../models/Content');
-const ContentTranslation = require('../models/ContentTranslation');
-const { identifyModifiedSegments } = require('../utils/diffUtils');
+// Relocated from server/services/SyncEngine.test.js — jest's `roots` only scans
+// tests/, so it never ran from the services dir (and broke require-all sweeps).
+const SyncEngine = require('../../../server/services/SyncEngine');
+const Content = require('../../../server/models/Content');
+const ContentTranslation = require('../../../server/models/ContentTranslation');
+const { identifyModifiedSegments } = require('../../../server/utils/diffUtils');
 
 // Mock dependencies
-jest.mock('../models/Content');
-jest.mock('../models/ContentTranslation');
-jest.mock('../utils/diffUtils');
-jest.mock('./translationService', () => ({
+jest.mock('../../../server/models/Content');
+jest.mock('../../../server/models/ContentTranslation');
+jest.mock('../../../server/utils/diffUtils');
+jest.mock('../../../server/services/translationService', () => ({
   translateSegments: jest.fn()
 }));
 
@@ -36,11 +38,12 @@ describe('SyncEngine', () => {
   describe('syncContent', () => {
     it('should mark translations as outdated if hashes mismatch', async () => {
       const mockContent = { _id: 'c1', syncVersion: 2, title: 'New', description: '', transcript: '' };
-      const mockTranslation = { 
-        contentId: 'c1', 
-        language: 'ES', 
-        syncStatus: 'current', 
+      const mockTranslation = {
+        contentId: 'c1',
+        language: 'ES',
+        syncStatus: 'current',
         metadata: { sourceHash: 'old-hash' },
+        segments: [{ status: 'synced' }],
         save: jest.fn()
       };
 
@@ -49,11 +52,13 @@ describe('SyncEngine', () => {
       identifyModifiedSegments.mockReturnValue([]);
 
       const results = await SyncEngine.syncContent('c1');
-      
+
       expect(mockTranslation.syncStatus).toBe('outdated');
       expect(mockTranslation.metadata.sourceVersion).toBe(2);
+      expect(mockTranslation.segments[0].status).toBe('outdated');
       expect(mockTranslation.save).toHaveBeenCalled();
-      expect(results[0].language).toBe('ES');
+      // syncContent returns a summary, not the translations array.
+      expect(results.translationsCount).toBe(1);
     });
   });
 });

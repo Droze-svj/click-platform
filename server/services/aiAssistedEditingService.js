@@ -4,6 +4,7 @@
 
 const logger = require('../utils/logger');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const { safeJsonParse } = require('../utils/aiHelper');
 // Pull in the V6 learning brain to feed the Auto Edit Engine
 const { getActiveBlueprint } = require('./continuousLearningService');
 const { getClickPersonalityRules } = require('./marketingKnowledge');
@@ -29,8 +30,7 @@ async function fetchMemoryContext(userId, queryText) {
  */
 async function callGemini(prompt, opts = {}) {
   const raw = await geminiGenerate(prompt, { temperature: opts.temperature ?? 0.3, maxTokens: opts.maxTokens ?? 1200 });
-  const cleaned = (raw || '{}').replace(/```json\n?|\n?```/g, '').trim();
-  return JSON.parse(cleaned);
+  return safeJsonParse(raw, {});
 }
 
 /**
@@ -48,7 +48,7 @@ async function analyzeVideoForManualEdit(videoId, transcript, metadata, userId =
       const Content = require('../models/Content');
       const content = await Content.findById(videoId).select('userId').lean();
       userId = content?.userId;
-    } catch (_) {}
+    } catch (_) { /* intentionally empty */ }
   }
 
   try {
@@ -100,7 +100,7 @@ async function getSmartCutSuggestions(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
@@ -149,7 +149,7 @@ async function findBestMoments(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
@@ -228,7 +228,7 @@ async function analyzePacing(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
@@ -266,7 +266,7 @@ async function qualityCheck(videoId, metadata, transcript) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
@@ -300,7 +300,7 @@ async function generateCaptionsForManualEdit(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const analysis = await analyzeVideoForManualEdit(videoId, transcript, metadata, userId);
@@ -346,7 +346,7 @@ async function generateCreativeDirectorBrief(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const duration = metadata?.duration || 0;
@@ -420,7 +420,7 @@ async function generateAICaptions(videoId, transcript, metadata, style = 'hormoz
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const duration = metadata?.duration || 0;
@@ -490,7 +490,7 @@ async function suggestColorGrade(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const result = await callGemini(`You are Click's world-class Hollywood colorist. Analyze this video content and recommend the PERFECT color grade.
@@ -534,7 +534,7 @@ async function suggestTransitions(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const result = await callGemini(`You are Click's professional video editor. Suggest optimal transitions for this video.
@@ -582,7 +582,7 @@ async function autoEditSequence(videoId, transcript, metadata, userId = null, br
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     // Check if transcript is verbose/object (Word-Level Data)
@@ -714,7 +714,7 @@ async function generateEngagementPrediction(videoId, transcript, metadata, editS
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const engagementMemory = await fetchMemoryContext(userId, (transcript || '').substring(0, 500));
@@ -877,7 +877,7 @@ async function generateViralSnapshots(videoId, transcript, metadata) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const duration = metadata?.duration || 0;
@@ -937,7 +937,7 @@ async function generateMarketingStrategy(videoId, transcript, metadata, niche) {
         const Content = require('../models/Content');
         const content = await Content.findById(videoId).select('userId').lean();
         userId = content?.userId;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     // Inject creator memory + active blueprint for personalised marketing advice
@@ -949,7 +949,7 @@ async function generateMarketingStrategy(videoId, transcript, metadata, niche) {
         const prefs = await UserPreferences.findOne({ userId }).lean();
         const bp = prefs?.marketingIntelligence?.activeCreativeBlueprint;
         if (bp) blueprintContext = `\n\nCreator AI Blueprint (personalised from real performance data):\n${JSON.stringify(bp)}`;
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
 
     const result = await callGemini(`You are Click's omniscient, billion-dollar Growth Hacker and Neuro-Marketing AI.

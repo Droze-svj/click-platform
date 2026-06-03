@@ -75,10 +75,10 @@ fi
 
 # Install dependencies
 echo "📦 Installing dependencies..."
-npm ci
+pnpm install
 
 if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ npm install failed!${NC}"
+    echo -e "${RED}❌ pnpm install failed!${NC}"
     exit 1
 fi
 
@@ -87,7 +87,7 @@ echo -e "${GREEN}✅ Dependencies installed${NC}"
 # Install client dependencies
 echo "📦 Installing client dependencies..."
 cd client
-npm ci
+npm install
 cd ..
 
 echo -e "${GREEN}✅ Client dependencies installed${NC}"

@@ -30,7 +30,7 @@ router.get('/:workspaceId/content/top-performing', auth, requireWorkspaceAccess(
 
   const result = await getTopPerformingPosts(workspaceId, {
     metric,
-    limit: parseInt(limit),
+    limit: parseInt(limit, 10),
     platform,
     startDate,
     endDate,

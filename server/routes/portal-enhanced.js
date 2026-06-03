@@ -17,6 +17,31 @@ const LinkGroup = require('../models/LinkGroup');
 const router = express.Router();
 
 /**
+ * Derive a link group's analytics from its member links.
+ * LinkGroup.analytics is computed on read (never persisted on every click), so
+ * we always recompute from the source BrandedLink documents to avoid serving
+ * stale zeros. `links` may be populated BrandedLink docs or an array of ids.
+ */
+function computeGroupAnalytics(links = []) {
+  const populated = links.filter(l => l && typeof l === 'object' && l.analytics);
+  let topLink = null;
+  let topClicks = -1;
+  for (const link of populated) {
+    const clicks = link.analytics?.totalClicks || 0;
+    if (clicks > topClicks) {
+      topClicks = clicks;
+      topLink = link._id;
+    }
+  }
+  return {
+    totalClicks: populated.reduce((sum, l) => sum + (l.analytics?.totalClicks || 0), 0),
+    uniqueClicks: populated.reduce((sum, l) => sum + (l.analytics?.uniqueClicks || 0), 0),
+    totalLinks: links.length,
+    topLink
+  };
+}
+
+/**
  * GET /api/client-portal/:portalId/activity
  * Get activity feed
  */
@@ -33,8 +58,8 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
     .populate('actor.userId', 'name email')
     .populate('actor.portalUserId', 'name email')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit))
-    .skip(parseInt(offset))
+    .limit(parseInt(limit, 10))
+    .skip(parseInt(offset, 10))
     .lean();
 
   const unreadCount = await PortalActivity.countDocuments({
@@ -46,8 +71,8 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
     activities,
     unreadCount,
     pagination: {
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
       total: await PortalActivity.countDocuments(query)
     }
   });
@@ -98,8 +123,8 @@ router.get('/:agencyWorkspaceId/links/:linkId/qr-code', auth, requireWorkspaceAc
   } = req.query;
 
   const qrCode = await generateQRCode(linkId, {
-    size: parseInt(size),
-    margin: parseInt(margin),
+    size: parseInt(size, 10),
+    margin: parseInt(margin, 10),
     color,
     backgroundColor
   });
@@ -190,7 +215,12 @@ router.get('/:agencyWorkspaceId/links/groups', auth, requireWorkspaceAccess(), a
     .sort({ createdAt: -1 })
     .lean();
 
-  sendSuccess(res, 'Link groups retrieved', 200, { groups });
+  const groupsWithAnalytics = groups.map(group => ({
+    ...group,
+    analytics: computeGroupAnalytics(group.links)
+  }));
+
+  sendSuccess(res, 'Link groups retrieved', 200, { groups: groupsWithAnalytics });
 }));
 
 /**
@@ -208,19 +238,10 @@ router.get('/:agencyWorkspaceId/links/groups/:groupId', auth, requireWorkspaceAc
     return sendError(res, 'Link group not found', 404);
   }
 
-  // Calculate group analytics
-  const BrandedLink = require('../models/BrandedLink');
-  const links = await BrandedLink.find({ _id: { $in: group.links } }).lean();
-  
-  const analytics = {
-    totalClicks: links.reduce((sum, link) => sum + (link.analytics?.totalClicks || 0), 0),
-    uniqueClicks: links.reduce((sum, link) => sum + (link.analytics?.uniqueClicks || 0), 0),
-    totalLinks: links.length
-  };
-
+  // Calculate group analytics from the populated member links (computed on read)
   sendSuccess(res, 'Link group retrieved', 200, {
     ...group,
-    analytics
+    analytics: computeGroupAnalytics(group.links)
   });
 }));
 

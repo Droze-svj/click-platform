@@ -19,13 +19,22 @@ class NeuralBroadcasterService {
 
     // 1. Calculate optimal timing using existing Smart Scheduling intelligence
     const optimalTimes = await getOptimalPostingTimes(userId, platforms);
-    
+
+    // Whether the scheduled time was derived from the user's real historical
+    // performance data (true) vs. fell back to platform defaults (false).
+    // We only claim a higher optimization confidence when it is data-backed.
+    const hasRealTimingData = platforms.some(p => Array.isArray(optimalTimes[p]) && optimalTimes[p].length > 0);
+
     const deployments = [];
 
     for (const platform of platforms) {
       // Find the "Golden Minute" (next peak engagement window)
       const scheduledTime = this.calculateGoldenMinute(platform, optimalTimes);
-      
+
+      // Optimization score: honest, derived from whether we have real timing
+      // intelligence for this platform. No fabricated/randomized confidence.
+      const optimizationScore = (Array.isArray(optimalTimes[platform]) && optimalTimes[platform].length > 0) ? 75 : 50;
+
       // 2. Generate platform-specific manifests with Niche Expertise
       const manifest = {
         userId,
@@ -37,7 +46,7 @@ class NeuralBroadcasterService {
         },
         scheduledTime,
         status: 'scheduled',
-        optimizationScore: 85 + Math.floor(Math.random() * 14)
+        optimizationScore
       };
 
       // 3. Persist to Global Intelligence Ledger (ScheduledPost)
@@ -55,10 +64,18 @@ class NeuralBroadcasterService {
       });
     }
 
+    // Predicted velocity: averaged from the per-deployment optimization scores
+    // (which are themselves grounded in real timing data availability), not a
+    // fabricated random number.
+    const avgOptimization = deployments.length > 0
+      ? deployments.reduce((sum, d) => sum + d.confidence, 0) / deployments.length
+      : 0;
+
     return {
       pipelineId: `pipe_${crypto.randomBytes(4).toString('hex')}`,
       globalSync: true,
-      predictedVelocity: 0.88 + Math.random() * 0.1,
+      predictedVelocity: avgOptimization,
+      hasRealTimingData,
       deployments
     };
   }

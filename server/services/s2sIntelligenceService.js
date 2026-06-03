@@ -1,70 +1,165 @@
-const logger = require('../utils/logger');
+const mongoose = require('mongoose');
 const crypto = require('crypto');
+const KnowledgeEntry = require('../models/KnowledgeEntry');
+const FleetNode = require('../models/FleetNode');
+const Conversion = require('../models/Conversion');
+const logger = require('../utils/logger');
 
 /**
- * S2SIntelligenceService (Server-to-Server)
- * Orchestrates collective intelligence across the decentralized fleet.
- * Handles federated pattern sharing and tactical ledger synchronization.
+ * S2SIntelligenceService (Phase 12)
+ *
+ * Tactical knowledge ledger + network health, backed by real persistence and
+ * the user's real fleet/conversion data. Replaces the previous in-memory
+ * hardcoded ledger and Math.random()-based "pulse" numbers.
  */
 
 class S2SIntelligenceService {
-  constructor() {
-    // Current swarm consensus on high-performing tactics
-    this.knowledgeLedger = [
-      { tactic: 'Subtle UGC Humanization', viralScore: 0.94, nodesSynced: 142, lastSource: 'Sovereign-Alpha', drift: -0.02 },
-      { tactic: 'Spatial Continuity Hooks', viralScore: 0.81, nodesSynced: 45, lastSource: 'Sovereign-Tokyo', drift: 0.05 },
-      { tactic: 'Chrono-Bait Pacing', viralScore: 0.76, nodesSynced: 89, lastSource: 'Sovereign-Berlin', drift: 0.12 }
-    ];
-  }
-
   /**
-   * Broadcast a Knowledge Pulse across the decentralized nodes
+   * Broadcast a Knowledge Pulse: persist/reinforce a tactic in the ledger.
+   * "nodesInformed" is the user's REAL fleet size (not a random number).
    */
-  async broadcastPulse(userId, tacticData) {
-    logger.info(`S2S Pulse: Propagating pattern for user ${userId}`, { tactic: tacticData.tactic });
-    
-    const pulseId = `kp_${crypto.randomBytes(4).toString('hex')}`;
-    
-    // Simulate propagation across the federated network
-    const impact = {
-      propagationTime: '42ms',
-      nodesInformed: Math.floor(100 + Math.random() * 50),
-      globalConfidenceShift: (Math.random() * 0.1).toFixed(3),
-      consensusReached: true
-    };
+  async broadcastPulse(userId, tacticData = {}) {
+    if (!tacticData.tactic) {
+      throw new Error('tactic is required to broadcast a pulse');
+    }
 
-    // Update local ledger with the new pulse
-    const existing = this.knowledgeLedger.find(l => l.tactic === tacticData.tactic);
+    const pulseId = `kp_${crypto.randomBytes(4).toString('hex')}`;
+    const nodesInformed = userId ? await FleetNode.countDocuments({ userId, status: 'online' }) : 0;
+    const confidence = typeof tacticData.confidence === 'number' ? tacticData.confidence : 0.5;
+
+    const existing = await KnowledgeEntry.findOne({ userId: userId || null, tactic: tacticData.tactic });
+    let entry;
     if (existing) {
-      existing.nodesSynced += impact.nodesInformed;
-      existing.viralScore = (existing.viralScore + (tacticData.confidence || 0.5)) / 2;
+      // Reinforce: rolling average of viral score, real pulse count.
+      existing.viralScore = Math.max(0, Math.min(1, (existing.viralScore + confidence) / 2));
+      existing.pulseCount += 1;
+      existing.lastSource = tacticData.source || 'local';
+      entry = await existing.save();
     } else {
-      this.knowledgeLedger.push({
+      entry = await KnowledgeEntry.create({
+        userId: userId || null,
         tactic: tacticData.tactic,
-        viralScore: tacticData.confidence || 0.5,
-        nodesSynced: impact.nodesInformed,
-        lastSource: 'Local-Pulse',
-        drift: 0
+        viralScore: Math.max(0, Math.min(1, confidence)),
+        pulseCount: 1,
+        lastSource: tacticData.source || 'local'
       });
     }
 
+    logger.info('S2S pulse persisted', { userId, tactic: tacticData.tactic, nodesInformed });
+
     return {
       pulseId,
-      tactic: tacticData.tactic,
-      impact,
+      tactic: entry.tactic,
+      impact: {
+        nodesInformed,
+        viralScore: entry.viralScore,
+        pulseCount: entry.pulseCount
+      },
       timestamp: new Date()
     };
   }
 
   /**
-   * Get the current knowledge ledger snapshot
+   * Real knowledge-ledger snapshot from persisted entries.
    */
-  async getKnowledgeLedger() {
+  async getKnowledgeLedger(userId = null) {
+    const entries = await KnowledgeEntry.find({ userId: userId || null })
+      .sort({ viralScore: -1 })
+      .limit(50)
+      .lean();
+
+    const swarmHealth = entries.length
+      ? entries.reduce((sum, e) => sum + (e.viralScore || 0), 0) / entries.length
+      : 0;
+
     return {
-      ledger: this.knowledgeLedger.sort((a, b) => b.viralScore - a.viralScore),
-      swarmHealth: 0.98,
-      entropyLevel: 0.08,
+      ledger: entries.map(e => ({
+        tactic: e.tactic,
+        viralScore: e.viralScore,
+        pulseCount: e.pulseCount,
+        lastSource: e.lastSource
+      })),
+      swarmHealth,
       lastSync: new Date()
+    };
+  }
+
+  /**
+   * Real network health for the overlord encirclement panel:
+   *  - health: derived from the user's real FleetNode online ratio + health scores
+   *  - overLordStats.totalRevenueAggregated: real attributed revenue
+   *  - overLordStats.victoriesToday: real conversions recorded today
+   *  - ledger: real recent conversion activity
+   */
+  async getNetworkHealth(userId) {
+    if (!userId) {
+      return {
+        timestamp: new Date(),
+        health: 0,
+        overLordStats: { totalRevenueAggregated: 0, victoriesToday: 0, totalNodes: 0, onlineNodes: 0 },
+        ledger: []
+      };
+    }
+
+    const nodes = await FleetNode.find({ userId }).lean();
+    const onlineNodes = nodes.filter(n => n.status === 'online').length;
+    const avgHealth = nodes.length
+      ? nodes.reduce((sum, n) => sum + ((n.metrics?.healthScore || 0) / 100), 0) / nodes.length
+      : 0;
+    // 0..1 health: half from online ratio, half from average node health.
+    const health = nodes.length
+      ? ((onlineNodes / nodes.length) * 0.5) + (avgHealth * 0.5)
+      : 0;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    let userObjectId = null;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    } catch (e) {
+      userObjectId = null;
+    }
+
+    const victoriesToday = await Conversion.countDocuments({
+      userId,
+      'conversionData.timestamp': { $gte: startOfDay }
+    });
+
+    let totalRevenueAggregated = 0;
+    if (userObjectId) {
+      const agg = await Conversion.aggregate([
+        { $match: { userId: userObjectId } },
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$revenue.attributed', '$conversionValue'] } } } }
+      ]);
+      totalRevenueAggregated = agg[0]?.total || 0;
+    }
+
+    const recent = await Conversion.find({ userId })
+      .sort({ 'conversionData.timestamp': -1 })
+      .limit(12)
+      .lean();
+
+    const ledger = recent.map(c => {
+      const ts = c.conversionData?.timestamp || c.createdAt || new Date();
+      const value = c.revenue?.attributed || c.conversionValue || 0;
+      return {
+        timestamp: new Date(ts).toLocaleTimeString(),
+        channel: (c.platform || 'system').toUpperCase(),
+        message: `${c.conversionType || 'conversion'} • $${Number(value).toFixed(2)}`
+      };
+    });
+
+    return {
+      timestamp: new Date(),
+      health,
+      overLordStats: {
+        totalRevenueAggregated,
+        victoriesToday,
+        totalNodes: nodes.length,
+        onlineNodes
+      },
+      ledger
     };
   }
 }

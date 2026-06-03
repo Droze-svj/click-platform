@@ -4643,7 +4643,7 @@ async function getQualityRecommendations(videoId) {
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       }),
       estimatedImprovement: recommendations.reduce((sum, r) => {
-        const points = parseInt(r.impact.match(/\d+/)?.[0] || '0');
+        const points = parseInt(r.impact.match(/\d+/)?.[0] || '0', 10);
         return sum + points;
       }, 0),
     };

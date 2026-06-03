@@ -9,8 +9,8 @@ const logger = require('../utils/logger');
 function optimizeConnectionPool() {
   try {
     const options = {
-      maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE) || 10,
-      minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE) || 2,
+      maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE, 10) || 10,
+      minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE, 10) || 2,
       maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,

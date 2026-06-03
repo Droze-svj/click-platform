@@ -154,8 +154,22 @@ router.get('/:platform/callback', validateCallback, asyncHandler(async (req, res
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=missing_params`);
   }
 
+  // Decode the base64 `state` defensively — a malformed/forged value must
+  // redirect with a clear invalid_state error, not fall through to the
+  // generic token-exchange catch (which would mislabel it as a provider error).
+  let stateData;
   try {
-    const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+    stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+  } catch (e) {
+    logger.warn(`OAuth callback received malformed state for ${platform}`);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=invalid_state`);
+  }
+  if (!stateData || typeof stateData !== 'object' || !stateData.userId) {
+    logger.warn(`OAuth callback state missing userId for ${platform}`);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=invalid_state`);
+  }
+
+  try {
     const { userId, redirectUri: originalRedirectUri, codeVerifier } = stateData;
 
     // Standardize token exchange

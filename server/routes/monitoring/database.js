@@ -27,7 +27,7 @@ router.get('/', auth, requireRole('admin'), asyncHandler(async (req, res) => {
  * Get slow queries (Admin only)
  */
 router.get('/slow-queries', auth, requireRole('admin'), asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit, 10) || 20;
   const queries = getSlowQueries(limit);
   sendSuccess(res, 'Slow queries retrieved', 200, { queries });
 }));

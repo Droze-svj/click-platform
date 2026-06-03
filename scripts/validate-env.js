@@ -20,7 +20,7 @@ const requiredVars = {
   core: [
     'MONGODB_URI',
     'JWT_SECRET',
-    'OPENAI_API_KEY',
+    'GOOGLE_AI_API_KEY',
   ],
   optional: {
     sentry: ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN'],

@@ -25,7 +25,7 @@ router.post('/run', authenticateToken, requireFeature('ai_agent'), async (req, r
 // GET /api/agentic/status/:jobId — Poll pipeline progress
 router.get('/status/:jobId', authenticateToken, async (req, res) => {
   try {
-    const job = getJobStatus(req.params.jobId)
+    const job = await getJobStatus(req.params.jobId)
     if (!job) return res.status(404).json({ error: 'Job not found' })
     res.json(job)
   } catch (err) {
@@ -51,14 +51,24 @@ router.post('/generate-broll', authenticateToken, requireFeature('b_roll_ai'), a
     const { description, duration = 5 } = req.body
     if (!description) return res.status(400).json({ error: 'description is required' })
 
-    // In production: route to Sora or Veo 3 API
+    // Real stock-footage retrieval (Pexels via stockFootageService, with its
+    // own placeholder fallback when PEXELS_API_KEY is unset). Returns actual
+    // clip URLs + thumbnails instead of null-filled stubs.
+    const stockFootage = require('../services/stockFootageService')
+    const hits = await stockFootage.searchVideos(description, { perPage: 3 }).catch(() => [])
+    const clips = (hits || []).map((h, i) => ({
+      id: String(i + 1),
+      title: description.slice(0, 40),
+      duration,
+      thumbnailUrl: h.thumbnail || h.image || null,
+      videoUrl: h.url || h.videoUrl || null,
+      provider: h.source || h.provider || 'pexels',
+    }))
     res.json({
-      clips: [
-        { id: '1', title: description.slice(0, 40), duration, thumbnailUrl: null, videoUrl: null, provider: 'sora' },
-        { id: '2', title: `${description.slice(0, 30)} (alt)`, duration, thumbnailUrl: null, videoUrl: null, provider: 'veo' },
-        { id: '3', title: `${description.slice(0, 30)} (cinematic)`, duration, thumbnailUrl: null, videoUrl: null, provider: 'sora' },
-      ],
-      message: 'B-roll generation queued — clips will appear in Asset Library when ready',
+      clips,
+      message: clips.length
+        ? `${clips.length} B-roll clip${clips.length === 1 ? '' : 's'} matched — add them from the Asset Library`
+        : 'No matching stock footage; try a more concrete, visualisable description',
     })
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate B-roll' })

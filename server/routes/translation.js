@@ -263,7 +263,7 @@ router.get('/analytics/performance', auth, asyncHandler(async (req, res) => {
   const { period = 30, platforms, languages } = req.query;
 
   const analytics = await getLanguagePerformance(req.user._id, {
-    period: parseInt(period),
+    period: parseInt(period, 10),
     platforms: platforms ? platforms.split(',') : null,
     languages: languages ? languages.split(',') : null
   });

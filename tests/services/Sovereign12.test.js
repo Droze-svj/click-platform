@@ -1,27 +1,56 @@
-const ArbitrageSteeringService = require('../../server/services/ArbitrageSteeringService');
+const ArbitrageSteeringService = require('../../server/services/arbitrageSteeringService');
 const S2SProtocolService = require('../../server/services/S2SProtocolService');
+const MonetizationPlan = require('../../server/models/MonetizationPlan');
+const Conversion = require('../../server/models/Conversion');
+const ClickTracking = require('../../server/models/ClickTracking');
+const SteeringDecision = require('../../server/models/SteeringDecision');
 
 describe('Sovereign 12 Services - Phase 11 & 12', () => {
-    describe('Phase 11: Arbitrage Steering', () => {
-        it('should fetch active high-ticket offers', async () => {
+    describe('Phase 11: Arbitrage Steering (real, data-driven)', () => {
+        afterEach(() => jest.restoreAllMocks());
+
+        it('builds real offers from the user\'s monetization plans + conversion data', async () => {
+            jest.spyOn(MonetizationPlan, 'find').mockReturnValue({
+                lean: () => Promise.resolve([
+                    { provider: 'whop', triggers: [{ productId: 'p1', productName: 'Alpha Course', productPrice: 99, isActive: true }] }
+                ])
+            });
+            // 10 clicks in the window; 2 conversions for the product.
+            jest.spyOn(ClickTracking, 'countDocuments').mockResolvedValue(10);
+            jest.spyOn(Conversion, 'countDocuments').mockResolvedValue(2);
+
+            const offers = await ArbitrageSteeringService.getActiveOffers('user_1');
+            expect(offers.length).toBe(1);
+            expect(offers[0]).toHaveProperty('pcv', 99);
+            expect(offers[0].conversionRate).toBeCloseTo(0.2); // 2 / 10
+            expect(offers[0]).toHaveProperty('velocity');
+        });
+
+        it('returns no offers when the user has none configured', async () => {
+            // No userId -> honest empty (and no DB calls).
             const offers = await ArbitrageSteeringService.getActiveOffers();
-            expect(offers.length).toBeGreaterThan(0);
-            expect(offers[0]).toHaveProperty('pcv');
+            expect(Array.isArray(offers)).toBe(true);
+            expect(offers.length).toBe(0);
         });
 
-        it('should correctly steer the funnel to a target niche', async () => {
-            const result = await ArbitrageSteeringService.steerFunnel('off_998', 'finance_coaching');
-            expect(result.status).toBe('re-routed');
-            expect(result.nodesAffected).toBeGreaterThan(0);
+        it('persists a real steering decision when steering the funnel', async () => {
+            jest.spyOn(MonetizationPlan, 'find').mockReturnValue({ lean: () => Promise.resolve([]) });
+            const createSpy = jest.spyOn(SteeringDecision, 'create').mockResolvedValue({
+                offerId: 'p1', offerName: '', targetNiche: 'finance_coaching', createdAt: new Date()
+            });
+
+            const result = await ArbitrageSteeringService.steerFunnel('user_1', 'p1', 'finance_coaching');
+            expect(createSpy).toHaveBeenCalled();
+            expect(result.status).toBe('steered');
+            expect(result.offerId).toBe('p1');
+            expect(result.targetNiche).toBe('finance_coaching');
         });
 
-        it('should scale node budgets based on ROAS', async () => {
-            const lowRoas = await ArbitrageSteeringService.scaleNodeBudget('node_1', 1.5);
-            expect(lowRoas.scaled).toBe(false);
-
-            const highRoas = await ArbitrageSteeringService.scaleNodeBudget('node_2', 3.5);
-            expect(highRoas.scaled).toBe(true);
-            expect(highRoas.newBudgetIncrement).toBe(50.0);
+        it('reports NO_ACTIVE_OFFERS in the manifest when there are none', async () => {
+            const manifest = await ArbitrageSteeringService.getSteeringManifest();
+            expect(manifest.activeSteer).toBeNull();
+            expect(manifest.manifest).toEqual([]);
+            expect(manifest.autonomyState.recommendation).toBe('NO_ACTIVE_OFFERS');
         });
     });
 
@@ -49,13 +78,13 @@ describe('Sovereign 12 Services - Phase 11 & 12', () => {
             const hookHash = 'trend_2026_xyz';
             const pulse1 = { instanceId: 'node_A', hookHash, pi: 0.9, ia: 5 };
             const pulse2 = { instanceId: 'node_B', hookHash, pi: 0.9, ia: 10 };
-            
+
             await S2SProtocolService.processVictoryPulse(pulse1);
             const w1 = S2SProtocolService.getEncirclementWeight(hookHash);
-            
+
             await S2SProtocolService.processVictoryPulse(pulse2);
             const w2 = S2SProtocolService.getEncirclementWeight(hookHash);
-            
+
             expect(w2).toBeGreaterThan(w1);
         });
 

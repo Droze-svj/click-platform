@@ -117,7 +117,7 @@ async function getOptimalPostingTimes(userId, platforms = null) {
     Object.keys(performanceByHour).forEach(platform => {
       const hours = Object.entries(performanceByHour[platform])
         .map(([hour, data]) => ({
-          hour: parseInt(hour),
+          hour: parseInt(hour, 10),
           avgPerformance: data.total / data.count,
         }))
         .sort((a, b) => b.avgPerformance - a.avgPerformance)

@@ -74,9 +74,19 @@ async function semanticSearch(userId, query, options = {}) {
  */
 async function scoreContentRelevance(contentArray, query) {
   try {
-    // For now, use simple text matching with weights
-    // In production, use embeddings or AI service
-    return contentArray.map(content => {
+    // Real semantic relevance: embed the query and candidates with the ML
+    // engine (TensorFlow USE locally, Gemini embeddings otherwise) and blend
+    // cosine similarity with the keyword score below. Bounded to a small
+    // candidate set so we don't fire an embedding call per result at scale —
+    // beyond that we degrade to keyword-only (still real, just not semantic).
+    const mlEngine = require('./ml/mlEngine');
+    const SEMANTIC_LIMIT = 30;
+    let queryVec = null;
+    if (contentArray.length <= SEMANTIC_LIMIT) {
+      try { queryVec = await mlEngine.embed(query); } catch { queryVec = null; }
+    }
+
+    return await Promise.all(contentArray.map(async (content) => {
       const text = `${content.title || ''} ${content.description || ''} ${content.transcript || ''}`.toLowerCase();
       const queryLower = query.toLowerCase();
       const queryWords = queryLower.split(/\s+/);
@@ -84,6 +94,19 @@ async function scoreContentRelevance(contentArray, query) {
       let score = 0;
       const matchedFields = [];
       const highlights = [];
+
+      // Semantic component (cosine similarity, weighted into the score).
+      let semanticScore = 0;
+      if (queryVec) {
+        try {
+          const cVec = await mlEngine.embed(`${content.title || ''} ${content.description || ''}`.slice(0, 1000));
+          if (cVec) {
+            semanticScore = Math.max(0, mlEngine.cosineSimilarity(queryVec, cVec)) * 40;
+            if (semanticScore > 8 && !matchedFields.includes('semantic')) matchedFields.push('semantic');
+          }
+        } catch { /* keyword-only for this item */ }
+      }
+      score += semanticScore;
 
       // Title match (highest weight)
       if (content.title) {
@@ -136,11 +159,12 @@ async function scoreContentRelevance(contentArray, query) {
 
       return {
         content,
-        relevanceScore: score,
+        relevanceScore: Math.round(score),
+        semanticScore: Math.round(semanticScore),
         matchedFields,
         highlights
       };
-    });
+    }));
   } catch (error) {
     logger.error('Error scoring content relevance', { error: error.message });
     return contentArray.map(content => ({

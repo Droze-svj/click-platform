@@ -171,7 +171,7 @@ async function getClickAnalytics(postId, filters = {}) {
 
     const analytics = {
       totalClicks: clicks.length,
-      uniqueClicks: clicks.filter(c => c.click.isUnique).length,
+      uniqueClicks: clicks.filter(c => c.click?.isUnique).length,
       clicksByDevice: {},
       clicksByCountry: {},
       clicksByUTM: {},
@@ -181,15 +181,15 @@ async function getClickAnalytics(postId, filters = {}) {
 
     clicks.forEach(click => {
       // Device breakdown
-      const device = click.click.device || 'unknown';
+      const device = click.click?.device || 'unknown';
       analytics.clicksByDevice[device] = (analytics.clicksByDevice[device] || 0) + 1;
 
       // Country breakdown
-      const country = click.click.country || 'unknown';
+      const country = click.click?.country || 'unknown';
       analytics.clicksByCountry[country] = (analytics.clicksByCountry[country] || 0) + 1;
 
       // UTM breakdown
-      if (click.utm.campaign) {
+      if (click.utm?.campaign) {
         if (!analytics.clicksByUTM[click.utm.campaign]) {
           analytics.clicksByUTM[click.utm.campaign] = 0;
         }
@@ -197,7 +197,7 @@ async function getClickAnalytics(postId, filters = {}) {
       }
 
       // Conversions
-      if (click.conversion.converted) {
+      if (click.conversion?.converted) {
         analytics.conversionRate = (analytics.conversionRate || 0) + 1;
       }
     });

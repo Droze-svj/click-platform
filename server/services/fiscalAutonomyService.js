@@ -55,7 +55,7 @@ class FiscalAutonomyService {
       logger.info('Fiscal: Seeking optimal monetization node', { niche });
       
       // 1. Get manifest from Arbitrage Steering
-      const steer = await arbitrageSteering.getSteeringManifest();
+      const steer = await arbitrageSteering.getSteeringManifest(userId);
       
       // 2. Select offer based on niche alignment
       const bestOffer = steer.manifest.find(o => 
@@ -94,7 +94,7 @@ class FiscalAutonomyService {
     const AGGRESSIVE_THRESHOLD = 0.20; 
     
     try {
-      const steer = await arbitrageSteering.getSteeringManifest();
+      const steer = await arbitrageSteering.getSteeringManifest(userId);
       if (steer.autonomyState.superiority > AGGRESSIVE_THRESHOLD) {
         logger.info('Fiscal: High-Yield gap detected. Triggering autonomous monetize pivot.', { 
           delta: steer.autonomyState.superiority 

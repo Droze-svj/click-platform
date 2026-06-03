@@ -2,6 +2,15 @@ const { generateEmbeddings } = require('../utils/googleAI');
 const redisClient = require('../utils/redisCache');
 const VectorMemory = require('../models/VectorMemory');
 
+// IMPORTANT: VectorMemory is a PERSISTED store. Its vectors are written at one
+// time and compared at another, so the embedding provider MUST stay constant
+// across the lifetime of the data — mixing 768-dim Gemini vectors with 512-dim
+// TensorFlow-USE vectors makes cosine similarity silently return 0 (length
+// mismatch) and breaks retrieval. We therefore pin this store to Gemini
+// `text-embedding-004` (the dimensionality all existing rows were written with).
+// The TF/USE path in mlEngine is reserved for same-request comparisons (e.g.
+// semantic search, where query + candidates are embedded together).
+
 
 /**
  * Calculates cosine similarity between two vectors.

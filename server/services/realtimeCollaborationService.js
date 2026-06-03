@@ -2,7 +2,7 @@
 
 const Content = require('../models/Content');
 const User = require('../models/User');
-const { emitToUser, emitToRoom, broadcast } = require('./realtimeService');
+const { emitToUser } = require('./realtimeService');
 const logger = require('../utils/logger');
 
 // Store active editing sessions
@@ -136,7 +136,7 @@ function updateCursor(contentId, userId, cursor) {
  */
 async function handleContentChange(contentId, userId, change) {
   try {
-    const { operation, version, content } = change;
+    const { operation, content } = change;
 
     // Get current content
     const doc = await Content.findById(contentId);
@@ -298,6 +298,58 @@ function cleanupInactiveSessions() {
   }
 }
 
+// Active locks map: contentId -> Map(segmentId -> userId)
+const activeLocks = new Map();
+
+/**
+ * Handle heartbeat to prevent session cleanup
+ */
+function handleHeartbeat(contentId, userId) {
+  if (activeSessions.has(contentId)) {
+    const session = activeSessions.get(contentId);
+    const userSession = session.get(userId.toString());
+    if (userSession) {
+      userSession.lastActivity = new Date();
+    }
+  }
+}
+
+/**
+ * Lock a specific content segment
+ */
+function lockSegment(contentId, userId, segmentId) {
+  if (!activeLocks.has(contentId)) {
+    activeLocks.set(contentId, new Map());
+  }
+  const contentLocks = activeLocks.get(contentId);
+  const currentLockOwner = contentLocks.get(segmentId);
+
+  if (currentLockOwner && currentLockOwner !== userId.toString()) {
+    return { success: false, lockedBy: currentLockOwner };
+  }
+
+  contentLocks.set(segmentId, userId.toString());
+  return { success: true };
+}
+
+/**
+ * Unlock a specific content segment
+ */
+function unlockSegment(contentId, userId, segmentId) {
+  if (!activeLocks.has(contentId)) {
+    return { success: false };
+  }
+  const contentLocks = activeLocks.get(contentId);
+  const currentLockOwner = contentLocks.get(segmentId);
+
+  if (currentLockOwner === userId.toString()) {
+    contentLocks.delete(segmentId);
+    return { success: true };
+  }
+
+  return { success: false };
+}
+
 // Run cleanup every minute
 setInterval(cleanupInactiveSessions, 60 * 1000);
 
@@ -308,6 +360,9 @@ module.exports = {
   handleContentChange,
   getActiveUsers,
   sendRealtimeComment,
+  handleHeartbeat,
+  lockSegment,
+  unlockSegment,
 };
 
 

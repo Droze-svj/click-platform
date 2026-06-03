@@ -87,11 +87,11 @@ router.post('/restore', auth, upload.single('backup'), asyncHandler(async (req, 
     let backupData;
     
     try {
-      backupData = JSON.parse(fs.readFileSync(req.file.path, 'utf8'));
+      backupData = JSON.parse(await fs.promises.readFile(req.file.path, 'utf8'));
     } catch (parseError) {
       // Might be encrypted
       if (password) {
-        const encryptedContent = fs.readFileSync(req.file.path, 'utf8');
+        const encryptedContent = await fs.promises.readFile(req.file.path, 'utf8');
         const decrypted = decryptBackup(encryptedContent, password);
         backupData = JSON.parse(decrypted);
       } else {
@@ -108,7 +108,7 @@ router.post('/restore', auth, upload.single('backup'), asyncHandler(async (req, 
     const result = await restoreFromBackup(userId, backupData, options || {});
 
     // Clean up uploaded file
-    fs.unlinkSync(req.file.path);
+    await fs.promises.unlink(req.file.path).catch(() => {});
 
     sendSuccess(res, 'Backup restored successfully', 200, result);
   } catch (error) {
@@ -235,14 +235,14 @@ router.post('/preview', auth, upload.single('backup'), asyncHandler(async (req, 
 
   try {
     const fs = require('fs');
-    let backupData = JSON.parse(fs.readFileSync(req.file.path, 'utf8'));
+    let backupData = JSON.parse(await fs.promises.readFile(req.file.path, 'utf8'));
 
     // Decrypt if needed
     if (backupData.metadata?.encrypted) {
       if (!password) {
         return sendError(res, 'Password required for encrypted backup', 400);
       }
-      const encryptedContent = fs.readFileSync(req.file.path, 'utf8');
+      const encryptedContent = await fs.promises.readFile(req.file.path, 'utf8');
       const decrypted = decryptBackup(encryptedContent, password);
       backupData = JSON.parse(decrypted);
     }
@@ -254,7 +254,7 @@ router.post('/preview', auth, upload.single('backup'), asyncHandler(async (req, 
     });
 
     // Clean up uploaded file
-    fs.unlinkSync(req.file.path);
+    await fs.promises.unlink(req.file.path).catch(() => {});
 
     sendSuccess(res, 'Restore preview completed', 200, result);
   } catch (error) {

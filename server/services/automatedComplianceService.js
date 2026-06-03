@@ -254,7 +254,7 @@ function extractPhraseFromViolation(violation) {
  */
 function extractNumberFromViolation(violation) {
   const match = violation.message.match(/(\d+)/);
-  return match ? parseInt(match[1]) : 0;
+  return match ? parseInt(match[1], 10) : 0;
 }
 
 /**

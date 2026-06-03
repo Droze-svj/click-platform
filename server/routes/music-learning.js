@@ -60,8 +60,8 @@ router.get('/learning/preferences', auth, asyncHandler(async (req, res) => {
 
   try {
     const preferences = await getUserMusicPreferences(req.user._id, {
-      minSelections: parseInt(minSelections),
-      lookbackDays: parseInt(lookbackDays)
+      minSelections: parseInt(minSelections, 10),
+      lookbackDays: parseInt(lookbackDays, 10)
     });
 
     sendSuccess(res, 'Preferences retrieved', 200, { preferences });

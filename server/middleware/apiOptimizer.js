@@ -34,9 +34,7 @@ const responseTimeMiddleware = (req, res, next) => {
     const status = res.statusCode
 
     // Log slow requests (> 1 second)
-    if (duration > 1000) {
-      
-    }
+    if (duration > 1000) { /* intentionally empty */ }
 
     // Track in APM if available
     if (global.apmMonitor) {
@@ -112,7 +110,7 @@ const requestOptimizationMiddleware = (req, res, next) => {
 
   // Optimize JSON parsing for large payloads
   if (req.headers['content-type']?.includes('application/json') &&
-      parseInt(req.headers['content-length'] || '0') > 1024 * 1024) { // > 1MB
+      parseInt(req.headers['content-length'] || '0', 10) > 1024 * 1024) { // > 1MB
     
   }
 
@@ -176,9 +174,7 @@ const rateLimitEnhancementMiddleware = (req, res, next) => {
     })
 
     // Warn when approaching limit
-    if (remaining < 10) {
-      
-    }
+    if (remaining < 10) { /* intentionally empty */ }
   }
 
   next()

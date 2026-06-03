@@ -389,7 +389,7 @@ async function determineOptimalCadence(workspaceId, platform, data) {
   const bestPostingTimes = Object.entries(hourPerformance)
     .sort((a, b) => (b[1].totalScore / b[1].count) - (a[1].totalScore / a[1].count))
     .slice(0, 3)
-    .map(([hour]) => parseInt(hour));
+    .map(([hour]) => parseInt(hour, 10));
 
   return {
     recommendedPostsPerWeek,

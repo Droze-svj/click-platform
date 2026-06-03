@@ -3,7 +3,7 @@
 
 const Content = require('../models/Content');
 const User = require('../models/User');
-const { generateSocialContent, generateBlogSummary, generateViralIdeas } = require('./aiService');
+const { generateSocialContent, generateBlogSummary, generateViralIdeas, generateContentAdaptation, generateContentIdea } = require('./aiService');
 const { emitToUser } = require('./socketService');
 const logger = require('../utils/logger');
 
@@ -91,11 +91,57 @@ async function generateContentFromText(contentId, text, user, platforms = DEFAUL
  */
 async function generateContentFromLongForm(content, options = {}) {
   try {
-    logger.debug('Content generation stub: generateContentFromLongForm', {
-      platform: options?.platform,
+    const text = content?.content || content?.text || '';
+    const title = content?.title || 'Original Video';
+    const platform = options?.platform || 'twitter';
+    const niche = content?.niche || 'general';
+
+    logger.info('Generating social content from long-form', {
+      platform,
       contentId: content?._id || content?.id
     });
-    return { success: false, message: 'Service not available' };
+
+    // Call generateSocialContent from aiService
+    const result = await generateSocialContent(text, niche, [platform]);
+    const post = result[platform];
+    if (post) {
+      return {
+        success: true,
+        posts: [{
+          platform: post.platform,
+          content: post.text,
+          hashtags: post.hashtags || [],
+        }]
+      };
+    }
+    
+    // Fallback using generateContentAdaptation
+    const adaptationResult = await generateContentAdaptation({
+      text,
+      title,
+      platform,
+      rules: {
+        maxLength: platform === 'twitter' ? 280 : 1000,
+        hashtags: 3,
+        professional: true,
+        visual: false,
+        trending: true
+      },
+      examples: []
+    });
+
+    if (adaptationResult && adaptationResult.content) {
+      return {
+        success: true,
+        posts: [{
+          platform,
+          content: adaptationResult.content,
+          hashtags: adaptationResult.hashtags || [],
+        }]
+      };
+    }
+
+    return { success: false, message: 'Could not generate content from long-form' };
   } catch (err) {
     logger.warn('generateContentFromLongForm error', { error: err.message });
     return { success: false, message: err.message || 'Service not available' };
@@ -110,11 +156,36 @@ async function generateContentFromLongForm(content, options = {}) {
  */
 async function generateContent(context, options = {}) {
   try {
-    logger.debug('Content generation stub: generateContent', {
-      category: context?.category,
-      clientWorkspaceId: context?.clientWorkspaceId
+    const category = context?.category || 'general';
+    const topic = context?.topic || 'viral trends';
+    const niche = options?.niche || 'general';
+    
+    logger.info('Generating gap-filling content outline', {
+      category,
+      topic,
+      niche
     });
-    return { success: false, message: 'Service not available' };
+
+    // Call generateContentIdea from aiService
+    const ideaResult = await generateContentIdea(niche, category);
+    
+    if (ideaResult && ideaResult.title) {
+      return {
+        success: true,
+        content: {
+          title: ideaResult.title,
+          description: ideaResult.hook || ideaResult.description || 'Generated content recommendation',
+          category,
+          topic,
+          suggestedPosts: ideaResult.hashtags ? [{
+            platform: options?.platform || 'twitter',
+            text: `${ideaResult.title} - ${ideaResult.hook}`,
+            hashtags: ideaResult.hashtags
+          }] : []
+        }
+      };
+    }
+    return { success: false, message: 'Could not generate content idea' };
   } catch (err) {
     logger.warn('generateContent error', { error: err.message });
     return { success: false, message: err.message || 'Service not available' };

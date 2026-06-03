@@ -51,6 +51,8 @@ export default function SovereignAnalyticsMatrix() {
   const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [fetchError, setFetchError] = useState(false)
+  const [platformFilter, setPlatformFilter] = useState<string>('all')
+  const [showFilterMenu, setShowFilterMenu] = useState(false)
 
   const fetchMatrix = useCallback(async () => {
     setRefreshing(true)
@@ -73,10 +75,15 @@ export default function SovereignAnalyticsMatrix() {
 
   useEffect(() => { fetchMatrix() }, [fetchMatrix])
 
-  const filteredNodes = nodes.filter(node => 
-    node.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    node.platform.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const availablePlatforms = Array.from(new Set(nodes.map(n => n.platform).filter(Boolean)))
+
+  const filteredNodes = nodes.filter(node => {
+    const matchesSearch =
+      node.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      node.platform.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesPlatform = platformFilter === 'all' || node.platform === platformFilter
+    return matchesSearch && matchesPlatform
+  })
 
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-surface-page dark:bg-black min-h-screen transition-colors duration-500">
@@ -275,9 +282,35 @@ export default function SovereignAnalyticsMatrix() {
                        className="w-full pl-16 pr-8 py-5 bg-black/40 border-2 border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest italic placeholder:text-slate-800 focus:outline-none focus:border-primary-500 transition-all shadow-inner"
                     />
                  </div>
-                  <button type="button" onClick={() => {/* handle filter */}} title="Filter posts" aria-label="Filter posts" className="w-16 h-16 rounded-2xl bg-black/40 border-2 border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-2xl active:scale-90 shrink-0">
-                    <Filter size={24} />
-                 </button>
+                  <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowFilterMenu(v => !v)}
+                      title="Filter posts by platform"
+                      aria-label="Filter posts by platform"
+                      aria-haspopup="menu"
+                      aria-expanded={showFilterMenu ? 'true' : 'false'}
+                      className={`w-16 h-16 rounded-2xl bg-black/40 border-2 flex items-center justify-center transition-all shadow-2xl active:scale-90 ${platformFilter !== 'all' ? 'border-primary-500/50 text-primary-400' : 'border-white/5 text-slate-400 hover:text-white'}`}
+                    >
+                      <Filter size={24} />
+                    </button>
+                    {showFilterMenu && (
+                      <div role="menu" className="absolute right-0 mt-3 w-56 bg-black/90 border-2 border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl">
+                        {['all', ...availablePlatforms].map(platform => (
+                          <button
+                            key={platform}
+                            type="button"
+                            role="menuitemradio"
+                            aria-checked={platformFilter === platform ? 'true' : 'false'}
+                            onClick={() => { setPlatformFilter(platform); setShowFilterMenu(false); }}
+                            className={`w-full text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest italic transition-colors ${platformFilter === platform ? 'bg-primary-500/20 text-primary-400' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                          >
+                            {platform === 'all' ? 'All platforms' : platform}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
               </div>
            </div>
 
@@ -289,6 +322,7 @@ export default function SovereignAnalyticsMatrix() {
                     aria-label={`View details for ${node.title}`}
                     role="button"
                     tabIndex={0}
+                    onClick={() => router.push(`/dashboard/video/edit/${node.id}`)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/dashboard/video/edit/${node.id}`); }}
                     className="flex items-center gap-10 px-10 sm:px-14 py-10 hover:bg-white/5 transition-all duration-700 cursor-pointer group border-l-[12px] border-l-transparent hover:border-l-primary-500 relative overflow-hidden"
                  >
@@ -318,7 +352,7 @@ export default function SovereignAnalyticsMatrix() {
                        <span className="text-xl sm:text-2xl font-black italic leading-none">{node.viralScore ?? 0}</span>
                        <span className="text-[6px] sm:text-[8px] font-black mt-0.5 sm:mt-1 uppercase tracking-widest">Score</span>
                      </div>
-                     <button type="button" onClick={(e) => { e.stopPropagation(); /* show options */ }} title="Post options" aria-label="Post options" className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-slate-800 hover:text-primary-500 hover:border-primary-500/30 transition-all active:scale-90">
+                     <button type="button" onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/analytics/posts/${node.id}`); }} title="View post analytics" aria-label="View post analytics" className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-slate-800 hover:text-primary-500 hover:border-primary-500/30 transition-all active:scale-90">
                         <MoreHorizontal size={20} />
                      </button>
                    </div>
@@ -335,14 +369,11 @@ export default function SovereignAnalyticsMatrix() {
            </div>
            <div className="px-10 py-8 bg-black/40 border-t-2 border-white/5 flex items-center justify-between">
               <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.5em] italic">Secure connection</p>
-              <div className="flex items-center gap-4">
-                 <div className="flex -space-x-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                       <div key={i} className="w-10 h-10 rounded-xl bg-black/40 border-2 border-white/5 flex items-center justify-center text-[10px] font-black italic shadow-lg">ID</div>
-                    ))}
-                 </div>
-                 <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic ml-4">+248 followers active</span>
-              </div>
+              <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic">
+                {filteredNodes.length === nodes.length
+                  ? `${nodes.length} ${nodes.length === 1 ? 'post' : 'posts'} tracked`
+                  : `${filteredNodes.length} of ${nodes.length} posts`}
+              </span>
            </div>
         </section>
 

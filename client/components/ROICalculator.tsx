@@ -25,11 +25,13 @@ interface ROIData {
 export default function ROICalculator() {
   const [roiData, setRoiData] = useState<ROIData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d')
   const [hourlyRate, setHourlyRate] = useState(50)
 
   const loadROIData = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const token = localStorage.getItem('token')
 
@@ -40,9 +42,14 @@ export default function ROICalculator() {
 
       if (response.data.success) {
         setRoiData(response.data.data)
+      } else {
+        setRoiData(null)
+        setError('Unable to load ROI data.')
       }
     } catch (error: any) {
       console.error('ROI data error:', error)
+      setRoiData(null)
+      setError('Unable to load ROI data. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -82,7 +89,28 @@ export default function ROICalculator() {
   }
 
   if (!roiData) {
-    return null
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Calculator className="w-6 h-6 text-green-600" />
+          <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
+            ROI Calculator
+          </h3>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            {error || 'No ROI data yet.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => loadROIData()}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

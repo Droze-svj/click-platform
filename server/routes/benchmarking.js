@@ -50,7 +50,7 @@ router.get('/content/:contentId', auth, asyncHandler(async (req, res) => {
 router.get('/user', auth, asyncHandler(async (req, res) => {
   const { period = 30 } = req.query;
 
-  const benchmark = await benchmarkUserPerformance(req.user._id, parseInt(period));
+  const benchmark = await benchmarkUserPerformance(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'User performance benchmarked', 200, benchmark);
 }));
 
@@ -72,7 +72,7 @@ router.get('/content/:contentId/compare', auth, asyncHandler(async (req, res) =>
 router.get('/trends', auth, asyncHandler(async (req, res) => {
   const { period = 90 } = req.query;
 
-  const trends = await getPerformanceTrends(req.user._id, parseInt(period));
+  const trends = await getPerformanceTrends(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'Trends retrieved', 200, trends);
 }));
 

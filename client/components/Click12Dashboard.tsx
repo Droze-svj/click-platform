@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Globe, Zap, Brain, Activity, 
-  ShieldCheck, Database, Network, TrendingUp, AlertTriangle,
-  DollarSign, Terminal, Shield, CheckCircle2, Cloud,
-  BarChart3, Orbit, Cpu, ZapOff, ActivityIcon
+  Globe, Zap, Brain,
+  ShieldCheck, Network, TrendingUp, AlertTriangle,
+  DollarSign, Terminal, Shield, CheckCircle2,
+  Orbit, ZapOff, ActivityIcon
 } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
@@ -122,12 +122,14 @@ const ArbitragePanel = () => {
 // ─── Phase 12: Encirclement Panel ────────────────────────────────────────────
 const EncirclementPanel = () => {
     const [network, setNetwork] = useState<any>(null)
+    const [ledger, setLedger] = useState<any[]>([])
     const { showToast } = useToast()
 
     const loadNetwork = useCallback(async () => {
         try {
             const res = await apiGet('/phase12/s2s/network-health')
             if (res.health !== undefined) setNetwork(res)
+            if (Array.isArray(res?.ledger)) setLedger(res.ledger)
         } catch {
             showToast('S2S Network down', 'error')
         }
@@ -136,9 +138,9 @@ const EncirclementPanel = () => {
     useEffect(() => { loadNetwork() }, [loadNetwork])
 
     const stats = [
-        { label: 'Lattice Health', value: network ? (network.health * 100).toFixed(1) : '---', unit: '%', color: 'text-purple-400', icon: ShieldCheck },
-        { label: 'Aggregated Revenue', value: network ? (network.overLordStats.totalRevenueAggregated / 1000000).toFixed(1) : '---', unit: 'M+', color: 'text-emerald-400', icon: TrendingUp },
-        { label: 'Victory Vectors', value: network ? network.overLordStats.victoriesToday : '---', unit: 'FLUX', color: 'text-fuchsia-400', icon: Zap },
+        { label: 'Lattice Health', value: typeof network?.health === 'number' ? (network.health * 100).toFixed(1) : '---', unit: '%', color: 'text-purple-400', icon: ShieldCheck },
+        { label: 'Aggregated Revenue', value: typeof network?.overLordStats?.totalRevenueAggregated === 'number' ? (network.overLordStats.totalRevenueAggregated / 1000000).toFixed(1) : '---', unit: 'M+', color: 'text-emerald-400', icon: TrendingUp },
+        { label: 'Victory Vectors', value: network?.overLordStats?.victoriesToday ?? '---', unit: 'FLUX', color: 'text-fuchsia-400', icon: Zap },
     ]
 
     return (
@@ -165,16 +167,15 @@ const EncirclementPanel = () => {
                         <Terminal size={20} className="text-purple-400 animate-pulse" />
                         <span className="text-[11px] font-black text-purple-400 uppercase tracking-[0.6em] italic leading-none">Decentralized Intelligence Ledger</span>
                     </div>
-                    <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest italic opacity-40">SYNC_LATENCY: 12ms</span>
                 </div>
                 <div className="space-y-4 font-mono text-[13px] text-purple-300 leading-relaxed max-h-[300px] overflow-y-auto pr-8 custom-scrollbar">
-                    <p className="opacity-40 uppercase tracking-widest border-b border-purple-500/10 pb-2 mb-4">--- INITIATING SECURE ENCIRCLEMENT ---</p>
-                    <p className="flex gap-4"><span>[21:42:01]</span> <span className="text-white font-bold">SYSTEM</span> <span>Initializing S2S encrypted tunnel to sibling node alpha-zero...</span></p>
-                    <p className="flex gap-4"><span>[21:42:04]</span> <span className="text-white font-bold">SYSTEM</span> <span>Encirclement active. 14 sibling instances connected across substrate.</span></p>
-                    <p className="flex gap-4"><span>[21:43:12]</span> <span className="text-fuchsia-400 font-bold">PULSE</span> <span>Vector Received: Hook &quot;e7a1b&quot; dominating in Cluster-East. Velocity: +142/hr.</span></p>
-                    <p className="flex gap-4"><span>[21:43:15]</span> <span className="text-emerald-400 font-bold">UPLINK</span> <span>Local Synthesis updated with +14% velocity weighting from sibling pulse.</span></p>
-                    <p className="flex gap-4"><span>[21:44:28]</span> <span className="text-amber-400 font-bold">ROUTING</span> <span>Arbitrage Funnel adjusted in Node_Beta based on sibling ROAS data (2.45x).</span></p>
-                    <p className="flex gap-4 animate-pulse"><span>[21:45:00]</span> <span className="text-purple-400 font-bold">STABLE</span> <span>Lattice integrity maintained at 98.4%. Continuing mission.</span></p>
+                    {ledger.length === 0 ? (
+                        <p className="opacity-40 uppercase tracking-widest border-b border-purple-500/10 pb-2 mb-4">--- AWAITING ENCIRCLEMENT LEDGER PULSE ---</p>
+                    ) : (
+                        ledger.map((entry: any, i: number) => (
+                            <p key={i} className="flex gap-4"><span>{entry.timestamp ?? '--:--:--'}</span> <span className="text-white font-bold">{entry.channel ?? 'SYSTEM'}</span> <span>{entry.message ?? ''}</span></p>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
@@ -183,37 +184,78 @@ const EncirclementPanel = () => {
 
 // ─── Stability: System Health Panel ──────────────────────────────────────────
 const StabilityPanel = () => {
+    const [subsystems, setSubsystems] = useState<any[] | null>(null)
+    const { showToast } = useToast()
+
+    const loadHealth = useCallback(async () => {
+        try {
+            // GET /api/click/network-health returns real per-platform bridge
+            // health: { status, platforms: { linkedin: { status, message }, ... } }
+            const res = await apiGet('/click/network-health')
+            const platforms = res?.platforms && typeof res.platforms === 'object' ? res.platforms : null
+            if (platforms) {
+                setSubsystems(Object.entries(platforms).map(([label, v]: [string, any]) => ({
+                    label,
+                    status: v?.status ?? 'unknown',
+                    desc: v?.message ?? ''
+                })))
+            } else {
+                setSubsystems([])
+            }
+        } catch {
+            setSubsystems([])
+            showToast('System health unavailable', 'error')
+        }
+    }, [showToast])
+
+    // Map a real bridge status to a visual health bar width + tone (no fabricated number).
+    const statusWidth = (status: string) => {
+        if (status === 'healthy') return '100%'
+        if (status === 'warning') return '66%'
+        return '33%'
+    }
+    const isHealthy = (status: string) => status === 'healthy'
+
+    useEffect(() => { loadHealth() }, [loadHealth])
+
     return (
         <div className="space-y-16">
-            <SectionHeader icon={Shield} title="Production Hardening" subtitle="Infrastructure Matrix & Click Resilience Protocol" color="cyan" badge="STABLE SUBSYSTEMS" />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                {[
-                    { label: 'Phase 1: Performance Firewall', status: '82% coverage', icon: CheckCircle2, color: 'text-emerald-400', desc: 'Comprehensive unit & integration test suite' },
-                    { label: 'Phase 2: Persistent Identity', status: 'LOCKED', icon: Zap, color: 'text-cyan-400', desc: 'OAuth token persistence & refresh sync' },
-                    { label: 'Phase 3: Spectral Storage', status: 'IN_PROGRESS', icon: Cloud, color: 'text-amber-400', desc: 'Direct-to-S3 high-velocity asset migration' }
-                ].map((item, i) => (
-                    <motion.div key={item.label} whileHover={{ scale: 1.02, backgroundColor: 'rgba(6,182,212,0.03)' }}
-                      className={`${glass} p-10 flex flex-col justify-between border-cyan-500/10 hover:border-cyan-500/40 transition-all duration-700 group min-h-[320px] shadow-[0_40px_100px_rgba(0,0,0,0.4)]`}>
-                        <div className="space-y-8">
-                            <div className="flex items-center justify-between">
-                                <div className={`w-14 h-14 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-700`}>
-                                   <item.icon className={item.color} size={28} />
+            <SectionHeader icon={Shield} title="Production Hardening" subtitle="Distribution Bridge Health & Resilience Protocol" color="cyan" badge="LIVE BRIDGE STATUS" />
+
+            {subsystems && subsystems.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    {subsystems.map((item: any, i: number) => (
+                        <motion.div key={item.label ?? i} whileHover={{ scale: 1.02, backgroundColor: 'rgba(6,182,212,0.03)' }}
+                          className={`${glass} p-10 flex flex-col justify-between border-cyan-500/10 hover:border-cyan-500/40 transition-all duration-700 group min-h-[320px] shadow-[0_40px_100px_rgba(0,0,0,0.4)]`}>
+                            <div className="space-y-8">
+                                <div className="flex items-center justify-between">
+                                    <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-700 ${isHealthy(item.status) ? 'bg-cyan-500/5 border-cyan-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
+                                       {isHealthy(item.status)
+                                         ? <CheckCircle2 className="text-cyan-400" size={28} />
+                                         : <AlertTriangle className="text-rose-400" size={28} />}
+                                    </div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest italic ${isHealthy(item.status) ? 'text-cyan-400' : 'text-rose-400'}`}>{item.status ?? '—'}</span>
                                 </div>
-                                <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest italic">{item.status}</span>
+                                <div>
+                                    <h4 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4 leading-none">{item.label ?? '—'}</h4>
+                                    <p className="text-[11px] font-bold text-slate-800 uppercase tracking-widest italic opacity-60 leading-relaxed">{item.desc ?? ''}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4 leading-none">{item.label}</h4>
-                                <p className="text-[11px] font-bold text-slate-800 uppercase tracking-widest italic opacity-60 leading-relaxed">{item.desc}</p>
+                            <div className="h-1 w-full bg-black/40 rounded-full overflow-hidden mt-8 border border-white/5">
+                                <motion.div initial={{ width: 0 }} animate={{ width: statusWidth(item.status) }} transition={{ duration: 2, delay: i * 0.2 }}
+                                  className={`h-full shadow-[0_0_20px_rgba(6,182,212,0.5)] ${isHealthy(item.status) ? 'bg-cyan-400' : 'bg-rose-400'}`} />
                             </div>
-                        </div>
-                        <div className="h-1 w-full bg-black/40 rounded-full overflow-hidden mt-8 border border-white/5">
-                            <motion.div initial={{ width: 0 }} animate={{ width: item.status.includes('%') ? item.status : '100%' }} transition={{ duration: 2, delay: i * 0.2 }}
-                              className={`h-full bg-gradient-to-r ${item.color.replace('text', 'from')} to-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.5)]`} />
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            ) : (
+                <div className={`${glass} p-24 text-center flex flex-col items-center justify-center space-y-8 border-dashed border-cyan-500/10`}>
+                    <Shield size={64} className="text-slate-800 opacity-20" />
+                    <p className="text-2xl font-black text-slate-800 uppercase tracking-widest italic opacity-40">
+                        {subsystems === null ? 'Loading bridge status…' : 'No connected bridges yet.'}
+                    </p>
+                </div>
+            )}
 
             <div className={`p-10 rounded-[3rem] ${glass} bg-rose-500/5 border-rose-500/20 flex flex-col md:flex-row items-center justify-between gap-12 hover:border-rose-500/40 transition-all duration-700 shadow-[0_50px_150px_rgba(244,63,94,0.1)]`}>
                 <div className="flex items-center gap-8">
@@ -223,10 +265,6 @@ const StabilityPanel = () => {
                         <p className="text-[12px] font-bold text-slate-800 uppercase tracking-[0.4em] italic opacity-60">Instant lattice disconnect // Zero-Day Protocol</p>
                     </div>
                 </div>
-                <button className="px-16 py-6 bg-rose-600 text-white font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3rem] hover:bg-rose-700 transition-all shadow-[0_20px_60px_rgba(244,63,94,0.4)] active:scale-95 group overflow-hidden relative">
-                    <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    EXECUTE_TERMINATE
-                </button>
             </div>
         </div>
     )

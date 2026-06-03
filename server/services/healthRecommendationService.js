@@ -84,52 +84,52 @@ async function generateComponentRecommendations(clientWorkspaceId, component, sc
 
   switch (component) {
   case 'awareness':
-    // Get brand awareness data
-    const awareness = await BrandAwareness.find({
-      workspaceId
-    })
-      .sort({ 'period.startDate': -1 })
-      .limit(1)
-      .lean();
+  // Get brand awareness data
+  { const awareness = await BrandAwareness.find({
+    workspaceId
+  })
+    .sort({ 'period.startDate': -1 })
+    .limit(1)
+    .lean();
 
-    if (awareness.length > 0 && awareness[0].profile.visitsGrowth < 5) {
-      recommendations.push({
-        component: 'awareness',
-        priority: 'high',
-        title: 'Increase Profile Visits',
-        description: 'Profile visits growth is below optimal. Focus on driving traffic to profile.',
-        actions: [
-          'Add profile link in bio/website',
-          'Cross-promote across platforms',
-          'Engage with trending topics',
-          'Use profile visit tracking links'
-        ],
-        expectedImpact: '+15-20 points',
-        timeframe: '2-4 weeks'
-      });
-    }
+  if (awareness.length > 0 && awareness[0].profile.visitsGrowth < 5) {
+    recommendations.push({
+      component: 'awareness',
+      priority: 'high',
+      title: 'Increase Profile Visits',
+      description: 'Profile visits growth is below optimal. Focus on driving traffic to profile.',
+      actions: [
+        'Add profile link in bio/website',
+        'Cross-promote across platforms',
+        'Engage with trending topics',
+        'Use profile visit tracking links'
+      ],
+      expectedImpact: '+15-20 points',
+      timeframe: '2-4 weeks'
+    });
+  }
 
-    if (awareness[0]?.shareOfVoice.total < 10) {
-      recommendations.push({
-        component: 'awareness',
-        priority: 'medium',
-        title: 'Increase Share of Voice',
-        description: 'Share of voice is below market average. Increase brand mentions.',
-        actions: [
-          'Increase branded hashtag usage',
-          'Encourage user-generated content',
-          'Partner with influencers',
-          'Engage in industry conversations'
-        ],
-        expectedImpact: '+10-15 points',
-        timeframe: '4-6 weeks'
-      });
-    }
-    break;
+  if (awareness[0]?.shareOfVoice.total < 10) {
+    recommendations.push({
+      component: 'awareness',
+      priority: 'medium',
+      title: 'Increase Share of Voice',
+      description: 'Share of voice is below market average. Increase brand mentions.',
+      actions: [
+        'Increase branded hashtag usage',
+        'Encourage user-generated content',
+        'Partner with influencers',
+        'Engage in industry conversations'
+      ],
+      expectedImpact: '+10-15 points',
+      timeframe: '4-6 weeks'
+    });
+  }
+  break; }
 
   case 'engagement':
-    // Get top performing posts
-    const topPosts = await getTopPerformingPosts(workspaceId, { limit: 10 });
+  // Get top performing posts
+  { const topPosts = await getTopPerformingPosts(workspaceId, { limit: 10 });
       
     if (topPosts.posts.length > 0) {
       const bestFormat = topPosts.insights.commonElements.find(e => e.element === 'format');
@@ -181,7 +181,7 @@ async function generateComponentRecommendations(clientWorkspaceId, component, sc
       expectedImpact: '+10-15 points',
       timeframe: '2-3 weeks'
     });
-    break;
+    break; }
 
   case 'growth':
     if (health.components.growth.score < 40) {
@@ -204,32 +204,32 @@ async function generateComponentRecommendations(clientWorkspaceId, component, sc
     break;
 
   case 'quality':
-    // Get content quality data
-    const performances = await ContentPerformance.find({
-      workspaceId
-    })
-      .sort({ 'scores.overall': 1 })
-      .limit(10)
-      .lean();
+  // Get content quality data
+  { const performances = await ContentPerformance.find({
+    workspaceId
+  })
+    .sort({ 'scores.overall': 1 })
+    .limit(10)
+    .lean();
 
-    if (performances.length > 0 && performances[0].scores.overall < 50) {
-      recommendations.push({
-        component: 'quality',
-        priority: 'high',
-        title: 'Improve Content Quality',
-        description: 'Content quality scores are below average. Focus on quality over quantity.',
-        actions: [
-          'Review and improve low-performing content',
-          'Add high-quality visuals',
-          'Improve copywriting',
-          'Use optimal hashtag counts',
-          'Add clear CTAs'
-        ],
-        expectedImpact: '+20-25 points',
-        timeframe: '3-4 weeks'
-      });
-    }
-    break;
+  if (performances.length > 0 && performances[0].scores.overall < 50) {
+    recommendations.push({
+      component: 'quality',
+      priority: 'high',
+      title: 'Improve Content Quality',
+      description: 'Content quality scores are below average. Focus on quality over quantity.',
+      actions: [
+        'Review and improve low-performing content',
+        'Add high-quality visuals',
+        'Improve copywriting',
+        'Use optimal hashtag counts',
+        'Add clear CTAs'
+      ],
+      expectedImpact: '+20-25 points',
+      timeframe: '3-4 weeks'
+    });
+  }
+  break; }
 
   case 'sentiment':
     recommendations.push({

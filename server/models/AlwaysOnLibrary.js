@@ -127,18 +127,18 @@ alwaysOnLibrarySchema.methods.getNextContent = function() {
 
   switch (this.settings.rotation.type) {
   case 'sequential':
-    // Get content that hasn't been posted recently
-    const sorted = activeContent.sort((a, b) => 
-      (a.performance.lastPosted || new Date(0)) - (b.performance.lastPosted || new Date(0))
-    );
-    return sorted[0];
+  // Get content that hasn't been posted recently
+  { const sorted = activeContent.sort((a, b) => 
+    (a.performance.lastPosted || new Date(0)) - (b.performance.lastPosted || new Date(0))
+  );
+  return sorted[0]; }
     
   case 'random':
     return activeContent[Math.floor(Math.random() * activeContent.length)];
     
   case 'performance_based':
-    // Sort by performance, but respect minDaysBetween
-    const now = new Date();
+  // Sort by performance, but respect minDaysBetween
+  { const now = new Date();
     const eligible = activeContent.filter(c => {
       const lastPosted = c.performance.lastPosted || new Date(0);
       const daysSince = (now - lastPosted) / (1000 * 60 * 60 * 24);
@@ -155,7 +155,7 @@ alwaysOnLibrarySchema.methods.getNextContent = function() {
     // Sort by performance
     return eligible.sort((a, b) => 
       (b.performance.avgEngagement || 0) - (a.performance.avgEngagement || 0)
-    )[0];
+    )[0]; }
     
   default:
     return activeContent[0];

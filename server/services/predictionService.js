@@ -273,7 +273,7 @@ async function predictOptimalPostingTime(contentData) {
       const avg = data.total / data.count;
       if (avg > bestAvg) {
         bestAvg = avg;
-        bestHour = parseInt(hour);
+        bestHour = parseInt(hour, 10);
       }
     });
 
@@ -498,10 +498,18 @@ async function ingestMarketTrends() {
 
     const cacheKey = 'market:trends:velocity';
     await set(cacheKey, trends, 3600 * 24); // Cache for 24 hours
+
+    // Enhance standard array with custom properties to support both array and object usages
+    trends.trendingTopics = trends.map(t => t.topic);
+    trends.lastUpdate = new Date();
+
     return trends;
   } catch (error) {
     logger.error('Error ingesting market trends', { error: error.message });
-    return [];
+    const fallback = [];
+    fallback.trendingTopics = [];
+    fallback.lastUpdate = new Date();
+    return fallback;
   }
 }
 
@@ -721,7 +729,8 @@ function calculateSpectralResonance(contentData) {
 async function verifyTrendAlignment(niche, claims) {
   try {
     const trends = await ingestMarketTrends();
-    const trendingTopics = trends.trendingTopics.map(t => t.toLowerCase());
+    const trendingTopicsList = trends.trendingTopics || (Array.isArray(trends) ? trends.map(t => t.topic || t) : []);
+    const trendingTopics = trendingTopicsList.map(t => typeof t === 'string' ? t.toLowerCase() : String(t).toLowerCase());
     
     const results = claims.map(claim => {
       const tokens = claim.toLowerCase().split(' ');

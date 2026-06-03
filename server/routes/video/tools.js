@@ -124,7 +124,12 @@ router.post('/edit-by-text', auth, asyncHandler(async (req, res) => {
 
   const inputPath = toAbsolutePath(owned.originalFile?.url);
 
-  if (!inputPath || !fs.existsSync(inputPath)) {
+  if (!inputPath) {
+    return sendError(res, 'Source video file not found on disk', 404);
+  }
+  try {
+    await fs.promises.access(inputPath);
+  } catch (_) {
     return sendError(res, 'Source video file not found on disk', 404);
   }
 

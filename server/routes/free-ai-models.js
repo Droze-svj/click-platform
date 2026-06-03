@@ -116,7 +116,7 @@ router.get('/best-model/:taskType', auth, asyncHandler(async (req, res) => {
 
   const best = await getBestModelForTask(taskType, {
     provider: provider || null,
-    minUsageCount: minUsageCount ? parseInt(minUsageCount) : 10,
+    minUsageCount: minUsageCount ? parseInt(minUsageCount, 10) : 10,
     minQualityScore: minQualityScore ? parseFloat(minQualityScore) : 0.5,
   });
 
@@ -133,7 +133,7 @@ router.get('/learning-insights', auth, asyncHandler(async (req, res) => {
   const insights = await getAILearningInsights({
     provider: provider || null,
     taskType: taskType || null,
-    days: days ? parseInt(days) : 30,
+    days: days ? parseInt(days, 10) : 30,
   });
 
   return sendSuccess(res, { insights });

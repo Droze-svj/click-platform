@@ -1,5 +1,13 @@
 // Traffic, Conversions, and Revenue Routes
 // CTR, conversions, ROAS/ROI tracking
+//
+// NOTE: This single router is mounted at multiple prefixes in server/index.js
+// (/api/clicks, /api/posts, /api/conversions, /api/workspaces, /api/webhooks).
+// Because all mounts share this one router, every internal route path must be
+// globally unique — two handlers on the same internal path (e.g. POST '/track')
+// would collide and the first-registered one would always win. Keep paths
+// resource-specific (e.g. '/track' for clicks, '/track-conversion' for
+// conversions) to avoid silent shadowing.
 
 const express = require('express');
 const auth = require('../middleware/auth');
@@ -52,10 +60,11 @@ router.post('/:postId/ctr/calculate', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
- * POST /api/conversions/track
+ * POST /api/conversions/track-conversion
  * Track a conversion
+ * (Distinct internal path from the click '/track' route above — see header note.)
  */
-router.post('/track', asyncHandler(async (req, res) => {
+router.post('/track-conversion', asyncHandler(async (req, res) => {
   const { postId, ...conversionData } = req.body;
 
   if (!postId) {

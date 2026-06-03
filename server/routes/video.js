@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 logger.debug('🎬 Video route initialization sequence starting...');
 const express = require('express');
+const { safeJsonParse } = require('../utils/safeJson');
 logger.debug('📦 express loaded');
 const multer = require('multer');
 logger.debug('📦 multer loaded');
@@ -88,7 +89,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5368709120 }, // 5GB for cinematic dev headroom
+  limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 5368709120 }, // 5GB for cinematic dev headroom
   fileFilter: (req, file, cb) => {
     const devModeAllowed = checkAllowDevMode(req);
     const isDev = isDevUser(req.user);
@@ -284,8 +285,8 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
       validateVideoFile(req.file);
     } catch (validationError) {
       // Clean up uploaded file
-      if (req.file.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+      if (req.file.path) {
+        await fs.promises.unlink(req.file.path).catch(() => {});
       }
       return res.status(400).json({
         success: false,
@@ -317,8 +318,8 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
           storageType = uploadResult.storage || 'local';
 
           // Delete local file if uploaded to cloud storage
-          if (uploadResult.storage === 's3' && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+          if (uploadResult.storage === 's3') {
+            await fs.promises.unlink(req.file.path).catch(() => {});
             logger.info('Local file deleted after cloud upload', { path: req.file.path });
           }
         }
@@ -345,8 +346,8 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
       status: 'processing',
       musicId: req.body.musicId || null,
       processingOptions: {
-        effects: req.body.effects ? (Array.isArray(req.body.effects) ? req.body.effects : JSON.parse(req.body.effects)) : [],
-        textOverlay: req.body.textOverlay ? (typeof req.body.textOverlay === 'string' ? JSON.parse(req.body.textOverlay) : req.body.textOverlay) : null,
+        effects: req.body.effects ? (Array.isArray(req.body.effects) ? req.body.effects : safeJsonParse(req.body.effects, [])) : [],
+        textOverlay: req.body.textOverlay ? (typeof req.body.textOverlay === 'string' ? safeJsonParse(req.body.textOverlay, null) : req.body.textOverlay) : null,
         watermark: req.body.watermarkPath || null
       }
     });
@@ -431,10 +432,10 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
         } finally {
           activeProcessCount--;
           // Final safety cleanup of original file if still present, ONLY if it has been uploaded to cloud storage
-          if (storageType !== 'local' && fs.existsSync(req.file.path)) {
-            fs.unlink(req.file.path, (err) => {
-              if (!err) logger.info('Cleaned up original local file in finally', { path: req.file.path });
-            });
+          if (storageType !== 'local') {
+            await fs.promises.unlink(req.file.path)
+              .then(() => logger.info('Cleaned up original local file in finally', { path: req.file.path }))
+              .catch(() => {});
           }
         }
       });
@@ -488,12 +489,10 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
     });
 
     // Clean up file if upload failed
-    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (cleanupError) {
+    if (req.file && req.file.path) {
+      await fs.promises.unlink(req.file.path).catch((cleanupError) => {
         logger.error('Failed to cleanup file', { error: cleanupError.message });
-      }
+      });
     }
 
     if (!res.headersSent) {
@@ -593,9 +592,7 @@ async function processVideo(contentId, videoPath, user, options = {}) {
 
       // Ensure clips directory exists
       const clipsDir = path.dirname(clipPath);
-      if (!fs.existsSync(clipsDir)) {
-        fs.mkdirSync(clipsDir, { recursive: true });
-      }
+      await fs.promises.mkdir(clipsDir, { recursive: true });
 
       // Extract clip with retry
       await retry(
@@ -632,9 +629,7 @@ async function processVideo(contentId, videoPath, user, options = {}) {
       const thumbnailFilename = `thumb-${clipFilename.replace('.mp4', '.jpg')}`;
       const thumbnailPath = path.join(process.cwd(), 'uploads/thumbnails', thumbnailFilename);
       const thumbnailsDir = path.dirname(thumbnailPath);
-      if (!fs.existsSync(thumbnailsDir)) {
-        fs.mkdirSync(thumbnailsDir, { recursive: true });
-      }
+      await fs.promises.mkdir(thumbnailsDir, { recursive: true });
       // Neural variant: heatmap-driven frame selection when a postId is known,
       // otherwise an ffprobe midpoint (a real frame, not the second-0 black frame).
       // This clip hasn't been published yet, so no postId is available — but the
@@ -655,9 +650,9 @@ async function processVideo(contentId, videoPath, user, options = {}) {
         height: 720,
         quality: 85,
         format: 'jpeg'
-      }).then(() => {
+      }).then(async () => {
         try {
-          fs.renameSync(optimizedThumbnailPath, thumbnailPath);
+          await fs.promises.rename(optimizedThumbnailPath, thumbnailPath);
         } catch (renameErr) {
           logger.warn('Thumbnail optimize rename failed, keeping original', { error: renameErr.message });
         }
@@ -677,8 +672,8 @@ async function processVideo(contentId, videoPath, user, options = {}) {
           const effectPath = processedClipPath.replace('.mp4', `-${effect}.mp4`);
           await applyVideoEffect(processedClipPath, effectPath, effect);
           // Delete intermediate file if it's not the original clip
-          if (processedClipPath !== finalClipPath && fs.existsSync(processedClipPath)) {
-            fs.unlinkSync(processedClipPath);
+          if (processedClipPath !== finalClipPath) {
+            await fs.promises.unlink(processedClipPath).catch(() => {});
           }
           processedClipPath = effectPath;
         }
@@ -688,22 +683,25 @@ async function processVideo(contentId, videoPath, user, options = {}) {
       if (textOverlay && textOverlay.text) {
         const textPath = processedClipPath.replace('.mp4', '-text.mp4');
         await addTextOverlay(processedClipPath, textPath, textOverlay);
-        if (processedClipPath !== finalClipPath && fs.existsSync(processedClipPath)) {
-          fs.unlinkSync(processedClipPath);
+        if (processedClipPath !== finalClipPath) {
+          await fs.promises.unlink(processedClipPath).catch(() => {});
         }
         processedClipPath = textPath;
       }
 
       // Add watermark
-      if (watermarkPath && fs.existsSync(watermarkPath)) {
+      const watermarkAvailable = watermarkPath
+        ? await fs.promises.access(watermarkPath).then(() => true).catch(() => false)
+        : false;
+      if (watermarkAvailable) {
         const watermarkOutputPath = processedClipPath.replace('.mp4', '-watermark.mp4');
         await addWatermark(processedClipPath, watermarkPath, watermarkOutputPath, {
           position: 'bottom-right',
           scale: 0.1,
           opacity: 0.7
         });
-        if (processedClipPath !== finalClipPath && fs.existsSync(processedClipPath)) {
-          fs.unlinkSync(processedClipPath);
+        if (processedClipPath !== finalClipPath) {
+          await fs.promises.unlink(processedClipPath).catch(() => {});
         }
         processedClipPath = watermarkOutputPath;
       }
@@ -732,15 +730,15 @@ async function processVideo(contentId, videoPath, user, options = {}) {
         thumbUrl = thumbUpload.url;
 
         // Cleanup local files
-        if (clipUpload.storage !== 'local' && fs.existsSync(processedClipPath)) {
-          fs.unlinkSync(processedClipPath);
+        if (clipUpload.storage !== 'local') {
+          await fs.promises.unlink(processedClipPath).catch(() => {});
         }
-        if (thumbUpload.storage !== 'local' && fs.existsSync(thumbnailPath)) {
-          fs.unlinkSync(thumbnailPath);
+        if (thumbUpload.storage !== 'local') {
+          await fs.promises.unlink(thumbnailPath).catch(() => {});
         }
         // Cleanup original local clip too
-        if (finalClipPath !== processedClipPath && fs.existsSync(finalClipPath)) {
-          fs.unlinkSync(finalClipPath);
+        if (finalClipPath !== processedClipPath) {
+          await fs.promises.unlink(finalClipPath).catch(() => {});
         }
       } catch (uploadError) {
         logger.warn('Failed to upload clip/thumbnail to cloud, using local fallbacks', { error: uploadError.message });
@@ -944,7 +942,7 @@ router.get('/:contentId/status', auth, async (req, res) => {
 
       // Extract timestamp from contentId to simulate processing time for mock uploads
       const timestampMatch = contentId.toString().match(/\d+/);
-      const uploadTime = timestampMatch ? parseInt(timestampMatch[0]) : Date.now();
+      const uploadTime = timestampMatch ? parseInt(timestampMatch[0], 10) : Date.now();
       const elapsedTime = Date.now() - uploadTime;
       // Simulate processing completes after 10 seconds
       const processingCompleteTime = 10000;
@@ -1048,7 +1046,7 @@ router.get('/:contentId/status', auth, async (req, res) => {
 
         // Simulate completion after 10 seconds for dev mode
         const timestampMatch = contentId.toString().match(/\d+/);
-        const uploadTime = timestampMatch ? parseInt(timestampMatch[0]) : Date.now();
+        const uploadTime = timestampMatch ? parseInt(timestampMatch[0], 10) : Date.now();
         const elapsedTime = Date.now() - uploadTime;
         const processingCompleteTime = 10000;
 
@@ -1168,8 +1166,8 @@ router.get('/', auth, async (req, res) => {
         success: true,
         data: [],
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page: parseInt(page, 10),
+          limit: parseInt(limit, 10),
           total: 0,
           pages: 0
         }
@@ -1186,8 +1184,8 @@ router.get('/', auth, async (req, res) => {
           success: true,
           data: [],
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: parseInt(page, 10),
+            limit: parseInt(limit, 10),
             total: 0,
             pages: 0
           }
@@ -1204,12 +1202,12 @@ router.get('/', auth, async (req, res) => {
     const query = { userId };
     if (status) query.status = status;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const videos = await Content.find(query)
       .select('title description originalFile status createdAt processingOptions')
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
+      .limit(parseInt(limit, 10))
       .skip(skip)
       .lean();
 
@@ -1219,10 +1217,10 @@ router.get('/', auth, async (req, res) => {
       success: true,
       data: videos || [],
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total: total || 0,
-        pages: Math.ceil((total || 0) / parseInt(limit))
+        pages: Math.ceil((total || 0) / parseInt(limit, 10))
       }
     });
   } catch (error) {
@@ -1309,7 +1307,7 @@ router.get('/:contentId', auth, async (req, res) => {
 
       // Fallback: return mock data if not found in store (for backward compatibility)
       const timestampMatch = contentId.toString().match(/\d+/);
-      const uploadTime = timestampMatch ? parseInt(timestampMatch[0]) : Date.now();
+      const uploadTime = timestampMatch ? parseInt(timestampMatch[0], 10) : Date.now();
 
       
 
@@ -1364,7 +1362,7 @@ router.get('/:contentId', auth, async (req, res) => {
     if (allowDevMode && (error.name === 'CastError' || error.message?.includes('Cast to ObjectId'))) {
       const contentId = req.params.contentId;
       const timestampMatch = contentId.toString().match(/\d+/);
-      const uploadTime = timestampMatch ? parseInt(timestampMatch[0]) : Date.now();
+      const uploadTime = timestampMatch ? parseInt(timestampMatch[0], 10) : Date.now();
 
       return res.json({
         success: true,
@@ -2149,7 +2147,9 @@ router.post('/transcribe-editor', auth, async (req, res) => {
     const filename = path.basename(fileUrl.replace(/^\//, ''));
     const videoPath = path.join(__dirname, '../../uploads/videos', filename);
 
-    if (!fs.existsSync(videoPath)) {
+    try {
+      await fs.promises.access(videoPath);
+    } catch (_) {
       return res.status(404).json({
         success: false,
         code: 'FILE_NOT_FOUND',

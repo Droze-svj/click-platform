@@ -34,7 +34,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
 
     const suggestions = await getEnhancedSuggestions(req.user._id, {
       niche,
-      count: parseInt(count),
+      count: parseInt(count, 10),
       includeTrending: includeTrending === 'true',
       includeGaps: includeGaps === 'true',
       includeSeasonal: includeSeasonal === 'true'
@@ -79,7 +79,7 @@ router.get('/trending', auth, asyncHandler(async (req, res) => {
 router.get('/gaps', auth, asyncHandler(async (req, res) => {
   try {
     const { period = 30 } = req.query;
-    const gaps = await getContentGaps(req.user._id, parseInt(period));
+    const gaps = await getContentGaps(req.user._id, parseInt(period, 10));
     sendSuccess(res, 'Content gaps fetched', 200, gaps || {
       daysWithoutContent: [],
       missingPlatforms: [],

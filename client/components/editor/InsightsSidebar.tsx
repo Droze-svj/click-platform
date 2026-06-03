@@ -8,6 +8,7 @@ import {
   Sparkles,
   MessageSquare,
   ChevronDown,
+  ChevronRight,
   ArrowUpRight,
   TrendingUp,
   Target,
@@ -17,11 +18,9 @@ import {
   PlaySquare,
   Flame,
   Brain,
-  UserCheck,
-  Headphones,
   BookOpen,
-  PieChart as PieChartIcon,
-  Globe
+  Globe,
+  Loader2
 } from 'lucide-react'
 import { EngagementScore, ContentNiche, CaptionTextStyle, PlatformNiche } from '../../types/editor'
 
@@ -34,6 +33,9 @@ interface InsightsSidebarProps {
   onScheduleUpload: () => void
   onLanguageChange?: (language: string) => void
   targetLanguage?: string
+  selectedCaptionStyle?: CaptionTextStyle
+  showToast?: (m: string, t: 'success' | 'info' | 'error') => void
+  onCollapse?: () => void
 }
 
 const nicheOptions: { id: ContentNiche; label: string }[] = [
@@ -46,10 +48,16 @@ const nicheOptions: { id: ContentNiche; label: string }[] = [
 ]
 
 const styleOptions: { id: CaptionTextStyle; label: string }[] = [
-  { id: 'bold', label: 'MrBeast Style' },
-  { id: 'pill', label: 'Alex Hormozi Style' },
-  { id: 'minimal', label: 'Clean Corporate' },
-  { id: 'neon', label: 'Pulse Gaming' },
+  { id: 'bold', label: '⚡ MrBeast Style' },
+  { id: 'pill', label: '💊 Alex Hormozi' },
+  { id: 'minimal', label: '💼 Clean Corporate' },
+  { id: 'neon', label: '🌌 Pulse Gaming' },
+  { id: 'kinetic', label: '🔥 Kinetic Impact' },
+  { id: 'cinematic', label: '🎬 Cinematic Film' },
+  { id: 'subtitle', label: '💬 Classic Subtitle' },
+  { id: 'gradient', label: '🌈 Rainbow Gradient' },
+  { id: 'karaoke', label: '🎤 Karaoke Spot' },
+  { id: 'retro', label: '📻 Retro Vibe' }
 ]
 
 const platforms: { id: PlatformNiche; label: string; icon: React.FC<any>; color: string }[] = [
@@ -66,79 +74,194 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
   onManualOverride,
   onScheduleUpload,
   onLanguageChange,
-  targetLanguage = 'en'
+  targetLanguage = 'en',
+  selectedCaptionStyle = 'bold',
+  showToast,
+  onCollapse
 }) => {
   const [overrideText, setOverrideText] = useState('')
   const [activePlatform, setActivePlatform] = useState<PlatformNiche>('tiktok')
-  const [currentScore, setCurrentScore] = useState<EngagementScore>(initialScore)
+  const [currentScore, setCurrentScore] = useState<EngagementScore>(() => ({
+    overall: initialScore?.overall ?? 85,
+    viralPotential: initialScore?.viralPotential ?? 78,
+    hookStrength: initialScore?.hookStrength ?? 92,
+    sentimentDensity: initialScore?.sentimentDensity ?? 70,
+    trendAlignment: initialScore?.trendAlignment ?? 82,
+    retentionHeatmap: initialScore?.retentionHeatmap || Array(20).fill(80).map((v, i) => v - i * 2),
+    psychology: initialScore?.psychology || {
+      fomo: 65,
+      curiosity: 82,
+      value: 70,
+      readability: '8th Grade'
+    }
+  }))
   const [advice, setAdvice] = useState('')
+  const [isEcosystemCollapsed, setIsEcosystemCollapsed] = useState(false)
+  const [isOptimizing, setIsOptimizing] = useState(false)
 
-  // Realistic Algorithmic recalculation based on platform
+  // Hydration-safe localStorage load on mount
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('click-target-ecosystem-collapsed')
+      if (stored !== null) {
+        setIsEcosystemCollapsed(stored === 'true')
+      }
+    }
+  }, [])
+
+  const toggleEcosystemCollapse = () => {
+    const nextVal = !isEcosystemCollapsed
+    setIsEcosystemCollapsed(nextVal)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('click-target-ecosystem-collapsed', String(nextVal))
+    }
+  }
+
+  // Realistic multidimensional algorithmic recalibration combining Platform and Niche
+  useEffect(() => {
+    if (!initialScore) return
+
     let viralMod = 0
     let hookMod = 0
-    let retentionDrops: number[] = [...initialScore.retentionHeatmap]
+    let sentimentMod = 0
+    let trendMod = 0
+    let overallMod = 0
+    const rawHeatmap = initialScore.retentionHeatmap || []
+    let retentionDrops: number[] = [...rawHeatmap]
     let platformAdvice = ''
 
+    // 1. Platform Rules
     if (activePlatform === 'tiktok') {
-      // TikTok demands high hooks; if hook < 70, retention drops aggressively at 3s
-      if (initialScore.hookStrength < 70) {
-        retentionDrops = retentionDrops.map((v, i) => (i > 2 ? Math.max(0, v - 30) : v))
-        viralMod = -15
+      if ((initialScore.hookStrength || 0) < 70) {
+        retentionDrops = retentionDrops.map((v, i) => (i > 2 ? Math.max(0, v - 25) : v))
+        viralMod -= 12
         platformAdvice = "CRITICAL: TikTok requires a stronger 3-second hook. Add a visual burst or text pop."
       } else {
-        retentionDrops = retentionDrops.map((v, i) => (i > 2 ? Math.min(100, v + 10) : v))
-        viralMod = 12
-        hookMod = 5
+        retentionDrops = retentionDrops.map((v, i) => (i > 2 ? Math.min(100, v + 8) : v))
+        viralMod += 10
+        hookMod += 5
         platformAdvice = "Excellent pacing. High probability of entering the 'For You' stream."
       }
     } else if (activePlatform === 'shorts') {
-      // Shorts allows slightly longer build (5s) but rewards sentiment and loops
-      if (initialScore.sentimentDensity > 60) {
-        viralMod = 8
+      if ((initialScore.sentimentDensity || 0) > 60) {
+        viralMod += 8
         platformAdvice = "Good sentiment density. YouTube Shorts rewards high-emotion payoffs."
       } else {
-        retentionDrops = retentionDrops.map((v, i) => (i > 4 ? Math.max(0, v - 15) : v))
-        viralMod = -5
+        retentionDrops = retentionDrops.map((v, i) => (i > 4 ? Math.max(0, v - 12) : v))
+        viralMod -= 5
         platformAdvice = "Increase emotional payoff near the end to improve loop rate."
       }
     } else if (activePlatform === 'reels') {
-      // Reels favors aesthetics and trend alignment
-      if (initialScore.trendAlignment > 75) {
-        viralMod = 20
-        hookMod = 8
+      if ((initialScore.trendAlignment || 0) > 75) {
+        viralMod += 15
+        hookMod += 5
         platformAdvice = "Strong trend alignment detected. High viral edge on Instagram Reels."
       } else {
-        viralMod = -10
+        viralMod -= 8
         platformAdvice = "Reels algorithm limits reach for non-trending audio. Consider syncing to a trending track."
       }
     }
 
+    // 2. Audience Niche Multipliers & Psychological Adjustments
+    let fomoScore = 65
+    let curiosityScore = 82
+    let valueScore = 70
+    let readabilityLabel = '8th Grade'
+
+    if (niche === 'gaming') {
+      viralMod += 6
+      hookMod += 10
+      trendMod += 10
+      fomoScore = 88
+      curiosityScore = 90
+      valueScore = 50
+      readabilityLabel = '5th Grade'
+      platformAdvice += " [Gaming Niche]: Hyper-fast pacing optimized for high-arousal retention."
+    } else if (niche === 'educational') {
+      overallMod += 8
+      valueScore = 95
+      curiosityScore = 80
+      fomoScore = 35
+      readabilityLabel = '10th Grade'
+      platformAdvice += " [Educational Niche]: Maximizing strategic instructional value to drive saves."
+    } else if (niche === 'b2b') {
+      viralMod -= 10
+      overallMod += 10
+      valueScore = 90
+      curiosityScore = 70
+      fomoScore = 45
+      readabilityLabel = 'College Level'
+      platformAdvice += " [B2B Niche]: Professional metrics dialed for institutional authority."
+    } else if (niche === 'comedy') {
+      viralMod += 15
+      sentimentMod += 18
+      fomoScore = 70
+      curiosityScore = 85
+      valueScore = 40
+      readabilityLabel = '6th Grade'
+      platformAdvice += " [Comedy Niche]: Pacing highlights comedic timing. High share-ability potential."
+    } else if (niche === 'fitness') {
+      viralMod += 8
+      fomoScore = 92
+      curiosityScore = 75
+      valueScore = 82
+      readabilityLabel = '7th Grade'
+      platformAdvice += " [Fitness Niche]: Elevated motivational FOMO drives community engagement."
+    } else if (niche === 'vlog') {
+      sentimentMod += 10
+      curiosityScore = 88
+      fomoScore = 55
+      valueScore = 60
+      readabilityLabel = '8th Grade'
+      platformAdvice += " [Vlog Niche]: Personal storytelling focus optimizes mid-sequence retention."
+    }
+
     setCurrentScore({
       ...initialScore,
-      viralPotential: Math.max(0, Math.min(100, initialScore.viralPotential + viralMod)),
-      hookStrength: Math.max(0, Math.min(100, initialScore.hookStrength + hookMod)),
+      overall: Math.max(0, Math.min(100, (initialScore.overall || 85) + overallMod)),
+      viralPotential: Math.max(0, Math.min(100, (initialScore.viralPotential || 78) + viralMod)),
+      hookStrength: Math.max(0, Math.min(100, (initialScore.hookStrength || 92) + hookMod)),
+      sentimentDensity: Math.max(0, Math.min(100, (initialScore.sentimentDensity || 70) + sentimentMod)),
+      trendAlignment: Math.max(0, Math.min(100, (initialScore.trendAlignment || 82) + trendMod)),
       retentionHeatmap: retentionDrops,
-      // Default psychological scores if missing
-      psychology: initialScore.psychology || {
-        fomo: 65,
-        curiosity: 82,
-        value: 70,
-        readability: '8th Grade'
+      psychology: {
+        fomo: fomoScore,
+        curiosity: curiosityScore,
+        value: valueScore,
+        readability: readabilityLabel
       }
     })
     setAdvice(platformAdvice)
-  }, [activePlatform, initialScore])
+  }, [activePlatform, niche, initialScore])
 
-  const getStatusColor = (val: number) => {
+  const getStatusColor = (val: number = 0) => {
     if (val > 80) return 'bg-emerald-500'
     if (val > 50) return 'bg-amber-500'
     return 'bg-rose-500'
   }
 
+  const hasHighDropoff = (currentScore.retentionHeatmap || []).some(v => v < 60)
+
   return (
     <div className="flex flex-col h-full bg-black/40 backdrop-blur-3xl border-l border-white/5 w-80 p-6 overflow-y-auto custom-scrollbar">
-      {/* Universal Expert HUD (Phase 11) */}
+      
+      {/* Sidebar Header with Collapse Button */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5 shrink-0">
+         <div className="flex items-center gap-2">
+            <Brain className="w-4 h-4 text-indigo-400 animate-pulse" />
+            <h2 className="text-xs font-black uppercase tracking-widest text-white italic">AI Strategic Expert</h2>
+         </div>
+         <button
+           type="button"
+           onClick={onCollapse}
+           className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white transition-all flex items-center justify-center group active:scale-95 animate-in fade-in"
+           title="Collapse Insights Sidebar"
+         >
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+         </button>
+      </div>
+
+      {/* Universal Expert HUD */}
       <div className="mb-6 p-4 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 relative group overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="flex items-center gap-3 mb-2 relative z-10">
@@ -156,40 +279,63 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
       {/* Platform Selector */}
       <div className="mb-6 space-y-3">
-         <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-slate-400" />
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Ecosystem</h3>
+         <div 
+           className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity select-none group/eco"
+           onClick={toggleEcosystemCollapse}
+         >
+           <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-slate-400 animate-pulse" />
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Ecosystem</h3>
+           </div>
+           <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-300 ${isEcosystemCollapsed ? '-rotate-90' : 'rotate-0'}`} />
          </div>
-         <div className="flex gap-2 bg-white/5 p-1 rounded-xl">
-           {platforms.map(p => {
-              const hasSynergy = currentScore.viralPotential > 80 && activePlatform === p.id
-              return (
-                <button
-                  type="button"
-                  key={p.id}
-                  onClick={() => setActivePlatform(p.id)}
-                  aria-label={`Select ${p.label}`}
-                  title={p.label}
-                  className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-all relative ${
-                    activePlatform === p.id
-                      ? 'bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] border border-white/10'
-                      : 'hover:bg-white/5 opacity-50 hover:opacity-100'
-                  }`}
-                >
-                  <p.icon className={`w-4 h-4 ${activePlatform === p.id ? p.color : 'text-slate-400'}`} />
-                  {hasSynergy && (
-                    <motion.div
-                      layoutId="platform-glow"
-                      className={`absolute inset-0 rounded-lg blur-md ${p.color.replace('text', 'bg')} opacity-20`}
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: 1.2 }}
-                      transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
-                    />
-                  )}
-                </button>
-              )
-           })}
-         </div>
+         <AnimatePresence initial={false}>
+           {!isEcosystemCollapsed && (
+             <motion.div
+               initial={{ height: 0, opacity: 0 }}
+               animate={{ height: 'auto', opacity: 1 }}
+               exit={{ height: 0, opacity: 0 }}
+               transition={{ duration: 0.25, ease: 'easeInOut' }}
+               className="overflow-hidden"
+             >
+                <div className="flex gap-2 bg-white/5 p-1 rounded-xl mt-1 relative z-0">
+                  {platforms.map(p => {
+                     const isSelected = activePlatform === p.id
+                     const hasSynergy = currentScore.viralPotential > 80 && isSelected
+                     return (
+                       <button
+                         type="button"
+                         key={p.id}
+                         onClick={() => setActivePlatform(p.id)}
+                         aria-label={`Select ${p.label}`}
+                         title={p.label}
+                         className="flex-1 flex items-center justify-center py-2 rounded-lg transition-all relative group"
+                       >
+                         {isSelected && (
+                           <motion.div
+                             layoutId="active-platform-bg"
+                             className="absolute inset-0 bg-white/10 rounded-lg border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"
+                             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                           />
+                         )}
+                         <p.icon className={`w-4 h-4 relative z-10 transition-colors ${isSelected ? p.color : 'text-slate-400 opacity-60 group-hover:opacity-100 group-hover:text-white'}`} />
+                         
+                         {hasSynergy && (
+                           <motion.div
+                             layoutId="platform-glow"
+                             className={`absolute inset-0 rounded-lg blur-md ${p.color.replace('text', 'bg')} opacity-20`}
+                             initial={{ scale: 0.8 }}
+                             animate={{ scale: 1.2 }}
+                             transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
+                           />
+                         )}
+                       </button>
+                     )
+                  })}
+                </div>
+             </motion.div>
+           )}
+         </AnimatePresence>
       </div>
 
       {/* Neural Forecast Ticker */}
@@ -206,8 +352,14 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
               <motion.div
                 key={i}
                 initial={{ height: 2 }}
-                animate={{ height: [2, Math.random() * 24 + 4, 2] }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
+                animate={{ height: Math.abs(Math.sin(i * 0.5) * 24) + 4 }}
+                transition={{
+                  duration: 0.8 + Math.abs(Math.sin(i * 0.2)) * 0.4,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                  ease: 'easeInOut',
+                  delay: i * 0.04
+                }}
                 className="flex-1 bg-indigo-500/30 rounded-t-full"
               />
             ))}
@@ -238,9 +390,9 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
             </span>
           </div>
 
-          {/* Mini Heatmap Visualization (Animated) */}
+          {/* Mini Heatmap Visualization (Animated & Safe) */}
           <div className="flex items-end gap-1 h-20 px-2 mt-auto relative z-0">
-            {currentScore.retentionHeatmap.map((val, i) => (
+            {(currentScore.retentionHeatmap || []).map((val, i) => (
               <motion.div
                 key={i}
                 initial={{ height: '0%' }}
@@ -267,13 +419,13 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
            </motion.div>
         )}
 
-        {/* Multi-Dimensional Metrics */}
+        {/* Multi-Dimensional Metrics (Safe Math) */}
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Hook', val: currentScore.hookStrength, icon: Zap },
-            { label: 'Sentiment', val: currentScore.sentimentDensity, icon: Sparkles },
-            { label: 'Trends', val: currentScore.trendAlignment, icon: ArrowUpRight },
-            { label: 'Retention', val: Math.floor(currentScore.overall), icon: BarChart3 },
+            { label: 'Hook', val: currentScore.hookStrength ?? 0, icon: Zap },
+            { label: 'Sentiment', val: currentScore.sentimentDensity ?? 0, icon: Sparkles },
+            { label: 'Trends', val: currentScore.trendAlignment ?? 0, icon: ArrowUpRight },
+            { label: 'Retention', val: Math.floor(currentScore.overall ?? 0), icon: BarChart3 },
           ].map((m) => (
             <div key={m.label} className="bg-white/5 rounded-2xl p-3 border border-white/5">
               <div className="flex items-center justify-between mb-1">
@@ -294,7 +446,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
         <div className="h-px bg-white/5" />
 
-        {/* Psychological Hook Strategy (New Phase 10) */}
+        {/* Psychological Hook Strategy */}
         <div className="space-y-4">
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -306,9 +458,9 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
            
            <div className="space-y-3">
               {[
-                { label: 'FOMO / Scarcity', val: currentScore.psychology?.fomo || 65, color: 'bg-orange-500' },
-                { label: 'Curiosity Gap', val: currentScore.psychology?.curiosity || 82, color: 'bg-indigo-500' },
-                { label: 'Core Value', val: currentScore.psychology?.value || 70, color: 'bg-emerald-500' },
+                { label: 'FOMO / Scarcity', val: currentScore.psychology?.fomo ?? 65, color: 'bg-orange-500' },
+                { label: 'Curiosity Gap', val: currentScore.psychology?.curiosity ?? 82, color: 'bg-indigo-500' },
+                { label: 'Core Value', val: currentScore.psychology?.value ?? 70, color: 'bg-emerald-500' },
               ].map((psyc) => (
                 <div key={psyc.label} className="space-y-1.5">
                    <div className="flex justify-between text-[8px] font-bold text-slate-500 uppercase tracking-tighter">
@@ -325,7 +477,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
         <div className="h-px bg-white/5" />
 
-        {/* CTA Placement Optimizer (New Phase 10) */}
+        {/* CTA Placement Optimizer */}
         <div className="space-y-4">
            <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-emerald-400" />
@@ -344,7 +496,94 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
         <div className="h-px bg-white/5" />
 
-        {/* Readability HUD (New Phase 10) */}
+        {/* Real-time Strategic Action Center (New Premium Feature) */}
+        <div className="space-y-4">
+           <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-400 animate-pulse" />
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Strategic Actions</h3>
+              </div>
+              <span className="text-[8px] font-black text-amber-400 uppercase bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Fixes Available</span>
+           </div>
+           
+           <div className="space-y-2">
+              {currentScore.hookStrength < 85 && (
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="p-3 rounded-2xl bg-rose-500/5 border border-rose-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-rose-500/[0.08]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest">Weak Hook ({currentScore.hookStrength}%)</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onManualOverride('inject high-energy kinetic zoom and pattern interrupt graphic in first 2 seconds');
+                        showToast?.('AI Hook Optimizer engaged: injecting kinetic zoom preset at 0.5s', 'success');
+                      }}
+                      className="px-2 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[8px] font-black uppercase hover:bg-rose-500 hover:text-black transition-all"
+                    >
+                      Fix Hook
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                    First 3 seconds are slow. Inject an energetic kinetic zoom pattern-interrupt graphic to capture viewer interest immediately.
+                  </p>
+                </motion.div>
+              )}
+
+              {currentScore.trendAlignment < 85 && (
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-amber-500/[0.08]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">Low Trend Fit ({currentScore.trendAlignment}%)</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onManualOverride('apply viral rhythmic sound effects and sync transition pacing to high-engagement style');
+                        showToast?.('AI Trend Optimizer engaged: syncing transition pacing with viral style DNA', 'success');
+                      }}
+                      className="px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-black uppercase hover:bg-amber-500 hover:text-black transition-all"
+                    >
+                      Boost Fit
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                    Pacing is slightly generic. Sync transitions to viral style patterns and inject high-tempo sfx hooks.
+                  </p>
+                </motion.div>
+              )}
+
+              {hasHighDropoff && (
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="p-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-indigo-500/[0.08]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Retention Clip Drop</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onManualOverride('tighten timeline edits: auto-detect dead air, remove filler words, and split slow sections');
+                        showToast?.('AI Pacing Optimizer engaged: tightening segments to eliminate dead air', 'success');
+                      }}
+                      className="px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[8px] font-black uppercase hover:bg-indigo-500 hover:text-black transition-all"
+                    >
+                      Tighten
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                    Viewer drop-offs detected. Tighten pacing by automatically stripping out filler gaps and silences.
+                  </p>
+                </motion.div>
+              )}
+           </div>
+        </div>
+
+        <div className="h-px bg-white/5" />
+
+        {/* Readability HUD */}
         <div className="space-y-4">
            <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-amber-400" />
@@ -355,8 +594,26 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                  <div className="text-xl font-black text-white italic uppercase">{currentScore.psychology?.readability || '8th Grade'}</div>
                  <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Complexity Level</div>
               </div>
-              <button className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-black uppercase hover:bg-amber-500 hover:text-black transition-all">
-                 Simplify
+              <button
+                type="button"
+                disabled={isOptimizing}
+                onClick={() => {
+                  if (isOptimizing) return
+                  setIsOptimizing(true)
+                  onManualOverride('simplify vocabulary, shorten phrases, and optimize readability');
+                  showToast?.('AI Readability Optimizer engaged: simplifying pacing and vocabulary', 'success');
+                  setTimeout(() => setIsOptimizing(false), 1200)
+                }}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-black uppercase hover:bg-amber-500 hover:text-black transition-all flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+              >
+                 {isOptimizing ? (
+                   <>
+                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                     Optimizing
+                   </>
+                 ) : (
+                   'Simplify'
+                 )}
               </button>
            </div>
         </div>
@@ -377,7 +634,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                 onClick={() => onNicheChange(opt.id)}
                 className={`py-2 px-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all border ${
                   niche === opt.id
-                    ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg'
+                    ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/20'
                     : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'
                 }`}
               >
@@ -407,21 +664,21 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
               title="Select Target Language"
               className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-[11px] font-bold text-white appearance-none focus:outline-none focus:border-sky-500 transition-all cursor-pointer"
             >
-              <option value="en" className="bg-[#0a0a0a]">English</option>
-              <option value="es" className="bg-[#0a0a0a]">Spanish (Español)</option>
-              <option value="fr" className="bg-[#0a0a0a]">French (Français)</option>
-              <option value="de" className="bg-[#0a0a0a]">German (Deutsch)</option>
-              <option value="it" className="bg-[#0a0a0a]">Italian (Italiano)</option>
-              <option value="pt" className="bg-[#0a0a0a]">Portuguese (Português)</option>
-              <option value="ru" className="bg-[#0a0a0a]">Russian (Русский)</option>
-              <option value="ja" className="bg-[#0a0a0a]">Japanese (日本語)</option>
-              <option value="ko" className="bg-[#0a0a0a]">Korean (한국어)</option>
-              <option value="zh" className="bg-[#0a0a0a]">Chinese (中文)</option>
-              <option value="ar" className="bg-[#0a0a0a]">Arabic (العربية)</option>
-              <option value="hi" className="bg-[#0a0a0a]">Hindi (हिन्दी)</option>
-              <option value="nl" className="bg-[#0a0a0a]">Dutch (Nederlands)</option>
-              <option value="pl" className="bg-[#0a0a0a]">Polish (Polski)</option>
-              <option value="tr" className="bg-[#0a0a0a]">Turkish (Türkçe)</option>
+              <option value="en" className="bg-[#0a0a0a]">🇺🇸 English</option>
+              <option value="es" className="bg-[#0a0a0a]">🇪🇸 Spanish (Español)</option>
+              <option value="fr" className="bg-[#0a0a0a]">🇫🇷 French (Français)</option>
+              <option value="de" className="bg-[#0a0a0a]">🇩🇪 German (Deutsch)</option>
+              <option value="it" className="bg-[#0a0a0a]">🇮🇹 Italian (Italiano)</option>
+              <option value="pt" className="bg-[#0a0a0a]">🇵🇹 Portuguese (Português)</option>
+              <option value="ru" className="bg-[#0a0a0a]">🇷🇺 Russian (Русский)</option>
+              <option value="ja" className="bg-[#0a0a0a]">🇯🇵 Japanese (日本語)</option>
+              <option value="ko" className="bg-[#0a0a0a]">🇰🇷 Korean (한국어)</option>
+              <option value="zh" className="bg-[#0a0a0a]">🇨🇳 Chinese (中文)</option>
+              <option value="ar" className="bg-[#0a0a0a]">🇦🇪 Arabic (العربية)</option>
+              <option value="hi" className="bg-[#0a0a0a]">🇮🇳 Hindi (हिन्दी)</option>
+              <option value="nl" className="bg-[#0a0a0a]">🇳🇱 Dutch (Nederlands)</option>
+              <option value="pl" className="bg-[#0a0a0a]">🇵🇱 Polish (Polski)</option>
+              <option value="tr" className="bg-[#0a0a0a]">🇹🇷 Turkish (Türkçe)</option>
             </select>
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-hover:text-white transition-colors" />
           </div>
@@ -429,7 +686,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
         <div className="h-px bg-white/5" />
 
-        {/* Caption Mood-Switcher */}
+        {/* Caption Style Mood-Switcher */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-amber-400" />
@@ -437,6 +694,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
           </div>
           <div className="relative group">
             <select
+              value={selectedCaptionStyle}
               onChange={(e) => onCaptionStyleChange(e.target.value as CaptionTextStyle)}
               title="Select caption text style"
               className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-[11px] font-bold text-white appearance-none focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
@@ -482,7 +740,9 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
           onClick={onScheduleUpload}
           className="w-full mt-6 bg-gradient-to-r from-indigo-600 to-fuchsia-600 border border-white/20 py-4 rounded-2xl flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl"
         >
-          <Calendar className="w-4 h-4 text-white" />
+          <motion.div whileHover={{ rotate: 15 }} transition={{ type: 'spring', stiffness: 300 }}>
+            <Calendar className="w-4 h-4 text-white" />
+          </motion.div>
           <span className="text-[11px] font-black uppercase tracking-widest text-white italic">Schedule Neural Launch</span>
         </button>
       </div>

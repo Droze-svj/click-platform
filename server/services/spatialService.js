@@ -11,7 +11,10 @@ class SpatialService {
     this.apiKey = process.env.GOOGLE_AI_API_KEY;
     if (this.apiKey) {
       this.genAI = new GoogleGenerativeAI(this.apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      this.model = this.genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        systemInstruction: 'You are a precise spatial awareness visual assistant specializing in coordinate modeling.'
+      });
     }
   }
 

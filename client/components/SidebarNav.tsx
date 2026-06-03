@@ -137,14 +137,14 @@ export default function SidebarNav() {
         </AnimatePresence>
         {collapsed && <div className="mx-auto"><ClickLogo size={36} /></div>}
         {!collapsed && (
-          <button type="button" onClick={() => setCollapsed(true)} aria-label="Collapse sidebar" className="w-10 h-10 rounded-2xl bg-surface-page dark:bg-white/5 hover:bg-surface-card dark:hover:bg-white/10 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all ml-auto group active:scale-90">
+          <button type="button" onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" className="w-10 h-10 rounded-2xl bg-surface-page dark:bg-white/5 hover:bg-surface-card dark:hover:bg-white/10 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all ml-auto group active:scale-90">
             <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
           </button>
         )}
       </div>
 
       {collapsed && (
-        <button type="button" onClick={() => setCollapsed(false)} aria-label="Expand sidebar" className="absolute -right-4 top-20 z-50 w-9 h-9 rounded-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 shadow-2xl transition-all active:scale-90">
+        <button type="button" onClick={() => setCollapsed(false)} title="Expand sidebar" aria-label="Expand sidebar" className="absolute -right-4 top-20 z-50 w-9 h-9 rounded-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 shadow-2xl transition-all active:scale-90">
           <ChevronRight size={18} />
         </button>
       )}
@@ -227,6 +227,7 @@ export default function SidebarNav() {
           <button 
             type="button" 
             onClick={toggle} 
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'} 
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} 
             className="flex items-center justify-center p-3.5 rounded-2xl bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 text-surface-400 hover:text-primary-500 hover:border-primary-500/20 hover:bg-white dark:hover:bg-white/10 transition-all shadow-inner active:scale-95 group relative overflow-hidden"
           >
@@ -241,6 +242,7 @@ export default function SidebarNav() {
           <button
             type="button"
             onClick={toggleFocusMode}
+            title={focusMode ? 'Focus mode on — click to disable' : 'Focus mode off — click to enable'}
             aria-label={focusMode ? 'Focus mode on — click to disable' : 'Focus mode off — click to enable'}
             className={`flex items-center justify-center p-3.5 rounded-2xl border-2 transition-all active:scale-90 shadow-inner ${focusMode ? 'bg-primary-500/10 border-primary-500/30 text-primary-500 animate-pulse' : 'bg-surface-page dark:bg-white/5 border-surface-100 dark:border-white/10 text-surface-400 hover:text-primary-500 hover:border-primary-500/20'}`}
           >
@@ -269,7 +271,7 @@ export default function SidebarNav() {
             </div>
           )}
           {!collapsed && (
-            <button type="button" onClick={logout} aria-label="Log out" className="w-10 h-10 flex items-center justify-center text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all active:scale-90">
+            <button type="button" onClick={logout} title="Log out" aria-label="Log out" className="w-10 h-10 flex items-center justify-center text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all active:scale-90">
               <LogOut size={18} />
             </button>
           )}

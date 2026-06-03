@@ -75,7 +75,19 @@ export default function HeuristicMatrixPage() {
     setRefreshing(true)
     try {
       const res = await apiGet('/analytics/creator/stats')
-      const list: VideoStat[] = res.stats || []
+      const raw: any[] = res.stats || []
+      // The API returns null for metrics a post doesn't actually report. Coerce
+      // to honest, non-fabricated display defaults (0 / 'Unknown' / 'flat') so
+      // the UI never crashes and never shows an invented value like "55%".
+      const list: VideoStat[] = raw.map(v => ({
+        ...v,
+        completionRate: v.completionRate ?? 0,
+        hookDropOff: v.hookDropOff ?? 0,
+        editStyle: v.editStyle || 'Unknown',
+        hookType: v.hookType || 'unknown',
+        trend: v.trend || 'flat',
+        viralScore: v.viralScore ?? 0,
+      }))
       setVideos(list)
       // Auto-ingest each unique post into the editor's learning brain. We
       // mark seen ids in localStorage so we don't double-count when the
@@ -85,13 +97,15 @@ export default function HeuristicMatrixPage() {
       try {
         const seenKey = 'click.style-profile.ingested'
         const seen = new Set<string>(JSON.parse(localStorage.getItem(seenKey) || '[]'))
-        const fresh = list.filter(v => v?.id && !seen.has(v.id))
+        // Only ingest posts that actually report a completion rate — feeding a
+        // fabricated default into the learning brain would skew the profile.
+        const fresh = raw.filter(v => v?.id && !seen.has(v.id) && typeof v.completionRate === 'number')
         if (fresh.length) {
           await Promise.allSettled(fresh.map(v => apiPost('/style-profile/ingest-post', {
             contentId: v.id,
             metrics: {
-              completionRate: (v.completionRate ?? 55) / 100,
-              retentionRate:  (v.completionRate ?? 55) / 100,
+              completionRate: v.completionRate / 100,
+              retentionRate:  v.completionRate / 100,
               viewCount: v.views,
               likes: v.likes,
               shares: v.shares,

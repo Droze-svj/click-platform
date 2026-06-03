@@ -370,8 +370,8 @@ async function resolveConflicts(userId, postId, strategy = 'auto') {
 
     switch (strategy) {
     case 'auto':
-      // Find next available slot
-      const { getOptimalPostingTimes } = require('./contentCalendarService');
+    // Find next available slot
+    { const { getOptimalPostingTimes } = require('./contentCalendarService');
       const optimalTimes = await getOptimalPostingTimes(userId, [post.platform]);
         
       // Try next optimal time
@@ -388,7 +388,7 @@ async function resolveConflicts(userId, postId, strategy = 'auto') {
         newTime.setHours(newTime.getHours() + 1);
         attempts++;
       }
-      break;
+      break; }
 
     case 'delay':
       newTime = new Date(post.scheduledTime);
@@ -557,7 +557,7 @@ async function optimizeSchedule(userId, dateRange = 7) {
       if (platformOptimal.length === 0) continue;
 
       const currentHour = new Date(post.scheduledTime).getHours();
-      const optimalHour = parseInt(platformOptimal[0].split(':')[0]);
+      const optimalHour = parseInt(platformOptimal[0].split(':')[0], 10);
 
       // If not at optimal time, suggest change
       if (Math.abs(currentHour - optimalHour) > 1) {
@@ -592,7 +592,7 @@ function calculateOptimizationScore(post, optimizedTime, optimalTimes) {
   let score = 50; // Base score
 
   const optimizedHour = optimizedTime.getHours();
-  const optimalHour = parseInt(optimalTimes[0].split(':')[0]);
+  const optimalHour = parseInt(optimalTimes[0].split(':')[0], 10);
 
   // Closer to optimal = higher score
   const hourDiff = Math.abs(optimizedHour - optimalHour);
@@ -600,7 +600,7 @@ function calculateOptimizationScore(post, optimizedTime, optimalTimes) {
 
   // Check if in optimal time window
   if (optimalTimes.some(time => {
-    const hour = parseInt(time.split(':')[0]);
+    const hour = parseInt(time.split(':')[0], 10);
     return Math.abs(optimizedHour - hour) <= 1;
   })) {
     score += 20;

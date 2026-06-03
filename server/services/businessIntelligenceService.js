@@ -213,31 +213,101 @@ async function getActiveUsers(startDate) {
 }
 
 /**
- * Get engagement metrics
+ * Get engagement metrics — real aggregation over the user's posted content.
+ * ScheduledPost.userId is a String (ObjectId or Supabase UUID).
  */
 async function getEngagementMetrics(userId, startDate) {
-  // This would integrate with analytics data
-  // For now, return placeholder structure
-  return {
-    totalViews: 0,
-    totalEngagement: 0,
-    averageEngagementRate: 0,
-    topPerformingContent: [],
-  };
+  try {
+    const match = { userId: String(userId), status: 'posted' };
+    if (startDate) match.postedAt = { $gte: startDate };
+
+    const rows = await ScheduledPost.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: null,
+          totalViews: { $sum: { $ifNull: ['$analytics.engagementBreakdown.views', 0] } },
+          totalEngagement: { $sum: { $ifNull: ['$analytics.engagement', 0] } },
+          totalReach: { $sum: { $ifNull: ['$analytics.reach', 0] } },
+        },
+      },
+    ]);
+    const r = rows[0] || {};
+    const totalViews = r.totalViews || 0;
+    const totalEngagement = r.totalEngagement || 0;
+    const totalReach = r.totalReach || 0;
+    const averageEngagementRate = totalReach > 0
+      ? parseFloat(((totalEngagement / totalReach) * 100).toFixed(2))
+      : 0;
+
+    const top = await ScheduledPost.find(match)
+      .select('platform analytics.engagement analytics.reach postedAt')
+      .sort({ 'analytics.engagement': -1 })
+      .limit(5)
+      .lean();
+    const topPerformingContent = (top || []).map((p) => ({
+      id: String(p._id),
+      platform: p.platform,
+      engagement: p.analytics?.engagement || 0,
+      reach: p.analytics?.reach || 0,
+      postedAt: p.postedAt,
+    }));
+
+    return { totalViews, totalEngagement, averageEngagementRate, topPerformingContent };
+  } catch (error) {
+    logger.error('Get engagement metrics error', { error: error.message, userId });
+    return { totalViews: 0, totalEngagement: 0, averageEngagementRate: 0, topPerformingContent: [] };
+  }
 }
 
 /**
- * Get revenue metrics
+ * Get revenue metrics — real aggregation over completed billing records.
+ * Scoped to a single user when `userId` is provided; otherwise platform-wide.
+ * BillingHistory.userId is an ObjectId.
  */
 async function getRevenueMetrics(userId, startDate) {
-  // This would integrate with subscription/payment data
-  // For now, return placeholder structure
-  return {
-    totalRevenue: 0,
-    monthlyRecurringRevenue: 0,
-    averageRevenuePerUser: 0,
-    subscriptionBreakdown: [],
-  };
+  try {
+    const BillingHistory = require('../models/BillingHistory');
+    const { ensureObjectId } = require('../utils/devUser');
+
+    const match = { 'payment.status': 'completed' };
+    if (userId) match.userId = ensureObjectId(userId);
+    if (startDate) match['invoice.date'] = { $gte: startDate };
+
+    const totalAgg = await BillingHistory.aggregate([
+      { $match: match },
+      { $group: { _id: null, total: { $sum: { $ifNull: ['$invoice.amount.total', 0] } } } },
+    ]);
+    const totalRevenue = totalAgg[0]?.total || 0;
+
+    // MRR proxy: completed billing in the trailing 30 days.
+    const mrrSince = new Date();
+    mrrSince.setDate(mrrSince.getDate() - 30);
+    const mrrAgg = await BillingHistory.aggregate([
+      { $match: { ...match, 'invoice.date': { $gte: mrrSince } } },
+      { $group: { _id: null, total: { $sum: { $ifNull: ['$invoice.amount.total', 0] } } } },
+    ]);
+    const monthlyRecurringRevenue = mrrAgg[0]?.total || 0;
+
+    let averageRevenuePerUser = totalRevenue; // single-user scope
+    let subscriptionBreakdown = [];
+    if (!userId) {
+      const payingUsers = await BillingHistory.distinct('userId', match);
+      averageRevenuePerUser = payingUsers.length > 0
+        ? parseFloat((totalRevenue / payingUsers.length).toFixed(2))
+        : 0;
+      subscriptionBreakdown = await User.aggregate([
+        { $group: { _id: '$subscription.plan', count: { $sum: 1 } } },
+        { $project: { _id: 0, plan: '$_id', count: 1 } },
+        { $sort: { count: -1 } },
+      ]);
+    }
+
+    return { totalRevenue, monthlyRecurringRevenue, averageRevenuePerUser, subscriptionBreakdown };
+  } catch (error) {
+    logger.error('Get revenue metrics error', { error: error.message, userId });
+    return { totalRevenue: 0, monthlyRecurringRevenue: 0, averageRevenuePerUser: 0, subscriptionBreakdown: [] };
+  }
 }
 
 /**

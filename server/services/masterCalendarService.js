@@ -337,14 +337,14 @@ async function getCalendarView(agencyWorkspaceId, viewType = 'month', date = new
       endDate.setHours(23, 59, 59, 999);
       break;
     case 'week':
-      const dayOfWeek = date.getDay();
+    { const dayOfWeek = date.getDay();
       startDate = new Date(date);
       startDate.setDate(date.getDate() - dayOfWeek);
       startDate.setHours(0, 0, 0, 0);
       endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 6);
       endDate.setHours(23, 59, 59, 999);
-      break;
+      break; }
     case 'month':
     default:
       startDate = new Date(date.getFullYear(), date.getMonth(), 1);

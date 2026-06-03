@@ -320,7 +320,7 @@ async function mergeVideos(inputPaths, outputPath) {
     if (fs.existsSync(concatFile)) {
       try {
         fs.unlinkSync(concatFile);
-      } catch (_) {}
+      } catch (_) { /* intentionally empty */ }
     }
     logger.error('Merge videos error', { error: error.message });
     captureException(error, { tags: { service: 'video', operation: 'merge' } });

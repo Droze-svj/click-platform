@@ -4,9 +4,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { 
-  Sparkles, Brain, Flame, Send, X, Command, 
-  Cpu, Sliders, ChevronRight, MessageSquare, Play, 
-  RefreshCw, CheckCircle2, ShieldAlert, GripHorizontal, 
+  Sparkles, Brain, Flame, Send, X, Command,
+  Cpu, Sliders, MessageSquare, Play,
+  RefreshCw, ShieldAlert, GripHorizontal,
   Volume2, Check, ArrowRight
 } from 'lucide-react'
 import { apiPost } from '../../lib/api'
@@ -53,11 +53,6 @@ const SWARM_CONFIGS: Record<SwarmMode, SwarmConfig> = {
   }
 }
 
-interface Subtask {
-  label: string
-  completed: boolean
-}
-
 // Neural sound-wave visualizer when Click is thinking
 function NeuralSoundWave({ color }: { color: string }) {
   return (
@@ -88,13 +83,7 @@ export default function ClickDynamicIsland() {
   const [chatInput, setChatInput] = useState('')
   const [chatLog, setChatLog] = useState<{ sender: 'user' | 'click'; text: string }[]>([])
   const [loadingChat, setLoadingChat] = useState(false)
-  
-  // Collapsible detailed subtasks HUD
-  const [showSubtasks, setShowSubtasks] = useState(false)
-  const [taskProgress, setTaskProgress] = useState(0)
-  const [activeTask, setActiveTask] = useState<string | null>(null)
-  const [subtasks, setSubtasks] = useState<Subtask[]>([])
-  
+
   const containerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -134,35 +123,19 @@ export default function ClickDynamicIsland() {
     }
   }, [])
 
+  // Reflect an ambient presence mood based on the current route. This only
+  // drives Click's voice/glow — it does NOT fabricate task progress. (A previous
+  // version simulated fake task percentages/subtasks here; that was removed in
+  // favour of showing real state only.)
   useEffect(() => {
     if (pathname.includes('/forge')) {
       setAmbientState('presence.learning')
-      setActiveTask('Analyzing channel DNA')
-      setSubtasks([
-        { label: 'Map visual pacing boundaries', completed: true },
-        { label: 'Vector check metadata anchors', completed: false },
-        { label: 'Compute A/B hooks splitting', completed: false }
-      ])
-      setTaskProgress(45)
     } else if (pathname.includes('/video')) {
       setAmbientState('presence.rendering')
-      setActiveTask('Stitching caption timeline')
-      setSubtasks([
-        { label: 'Compile color-grade nodes', completed: true },
-        { label: 'Sync multilingual subtitle grids', completed: true },
-        { label: 'Generate micro-glowing transitions', completed: false }
-      ])
-      setTaskProgress(82)
     } else if (pathname.includes('/scheduler') || pathname.includes('/social')) {
       setAmbientState('presence.drafting')
-      setActiveTask(null)
-      setSubtasks([])
-      setTaskProgress(0)
     } else {
       setAmbientState('presence.idle')
-      setActiveTask(null)
-      setSubtasks([])
-      setTaskProgress(0)
     }
   }, [pathname])
 
@@ -187,26 +160,6 @@ export default function ClickDynamicIsland() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-
-  // Auto-progress background task simulation
-  useEffect(() => {
-    if (taskProgress > 0 && taskProgress < 100) {
-      const timer = setTimeout(() => {
-        const nextProg = Math.min(taskProgress + Math.floor(Math.random() * 5) + 1, 100)
-        setTaskProgress(nextProg)
-        
-        // Stagger checklist completion based on progress
-        if (subtasks.length > 0) {
-          setSubtasks(prev => prev.map((sub, idx) => {
-            if (idx === 1 && nextProg > 65) return { ...sub, completed: true }
-            if (idx === 2 && nextProg > 90) return { ...sub, completed: true }
-            return sub
-          }))
-        }
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [taskProgress, subtasks.length])
 
   const activeCopy = clickVoice(ambientState)
 
@@ -239,27 +192,13 @@ export default function ClickDynamicIsland() {
         }
       })
 
-      let reply = response?.data?.text || ''
-      if (!reply) {
-        const fallbacks = [
-          "Let's cook that topic! I'd recommend a bold minimalist serif lower-third caption style.",
-          "Snappy pace beats boring intros. Let me chop the silent frames from that concept.",
-          "Solid angle. The competitors are sleeping on this hooks format. Let's forge it!",
-          "Swarm analysis shows 19:00 UTC holds the highest resonance for finance payloads.",
-          "I locked that topic into your taste graph. Ready to process footage whenever you are."
-        ]
-        reply = fallbacks[Math.floor(Math.random() * fallbacks.length)]
-      }
-
-      setChatLog(prev => [...prev, { sender: 'click', text: reply }])
+      const reply = response?.data?.text?.trim()
+      // Be honest when the model returns nothing — don't fabricate an "AI" reply.
+      const message = reply || "I couldn't generate a response just now. Try rephrasing or send that again."
+      setChatLog(prev => [...prev, { sender: 'click', text: message }])
     } catch (err) {
-      const offlineReplies = [
-        "Network hit a snag, but my intelligence is local. Let's keep cooking details!",
-        "Stitching responses offline. Let's draft a high-energy glitch speed hook instead.",
-        "Your topic is locked in my buffer. Synchronize when connected!"
-      ]
-      const reply = offlineReplies[Math.floor(Math.random() * offlineReplies.length)]
-      setChatLog(prev => [...prev, { sender: 'click', text: reply }])
+      // Surface a clear connection error instead of a canned fake reply.
+      setChatLog(prev => [...prev, { sender: 'click', text: "I can't reach the assistant right now — check your connection and try again." }])
     } finally {
       setLoadingChat(false)
     }
@@ -322,21 +261,6 @@ export default function ClickDynamicIsland() {
               </div>
 
               <div className="flex items-center gap-2">
-                {taskProgress > 0 && taskProgress < 100 && (
-                  <div className="relative w-4 h-4 flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" fill="transparent" />
-                      <circle 
-                        cx="8" cy="8" r="6" 
-                        stroke="rgb(99, 102, 241)" 
-                        strokeWidth="1.5" 
-                        fill="transparent" 
-                        strokeDasharray={2 * Math.PI * 6}
-                        strokeDashoffset={2 * Math.PI * 6 * (1 - taskProgress / 100)}
-                      />
-                    </svg>
-                  </div>
-                )}
                 <Command className="w-3.5 h-3.5 text-slate-400 opacity-60 group-hover:opacity-100" />
               </div>
             </motion.div>
@@ -423,63 +347,6 @@ export default function ClickDynamicIsland() {
                   {activeSwarm.desc}
                 </p>
               </div>
-
-              {/* Active Background Task HUD & Collapsible checklist */}
-              {activeTask && (
-                <div className="space-y-3 p-4 rounded-2xl bg-slate-900/50 border border-white/5">
-                  <div 
-                    onClick={() => setShowSubtasks(!showSubtasks)}
-                    className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-white transition-colors"
-                  >
-                    <span className="flex items-center gap-2">
-                      <RefreshCw className="w-3 h-3 text-indigo-400 animate-spin" />
-                      {activeTask}
-                    </span>
-                    <span className="font-mono text-indigo-400 flex items-center gap-1">
-                      {taskProgress}%
-                      <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showSubtasks ? 'rotate-90' : ''}`} />
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-white/5">
-                    <motion.div 
-                      className={`h-full bg-gradient-to-r ${activeSwarm.color}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${taskProgress}%` }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  </div>
-
-                  {/* Subtasks dropdown */}
-                  <AnimatePresence>
-                    {showSubtasks && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="space-y-2 pt-2 border-t border-white/5 overflow-hidden"
-                      >
-                        {subtasks.map((sub, i) => (
-                          <div key={i} className="flex items-center justify-between text-[10px] text-slate-300 font-semibold leading-relaxed">
-                            <span className="flex items-center gap-2">
-                              {sub.completed ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                              ) : (
-                                <div className="w-3.5 h-3.5 rounded-full border border-slate-500 flex items-center justify-center shrink-0">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                                </div>
-                              )}
-                              {sub.label}
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-500">
-                              {sub.completed ? 'DONE' : 'PENDING'}
-                            </span>
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
 
               {/* Mini Assistant Console */}
               <div className="space-y-3">

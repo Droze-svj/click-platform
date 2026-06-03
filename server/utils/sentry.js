@@ -5,12 +5,13 @@ let ProfilingIntegration = null;
 
 try {
   if (process.env.SENTRY_DSN && process.env.NODE_ENV === 'production') {
-    console.log('REQUIRING SENTRY');
     Sentry = require('@sentry/node');
     ProfilingIntegration = require('@sentry/profiling-node').ProfilingIntegration;
-    console.log('SENTRY REQUIRED');
   }
 } catch (e) {
+  // This is the Sentry bootstrap itself — logger may not be wired yet, so
+  // console is the only safe transport for a load failure.
+  // eslint-disable-next-line no-console
   console.warn('Sentry failed to load:', e.message);
 }
 

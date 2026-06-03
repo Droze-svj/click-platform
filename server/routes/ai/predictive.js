@@ -47,7 +47,7 @@ router.get('/trends', auth, asyncHandler(async (req, res) => {
     const forecast = await forecastContentTrends(
       platform || 'instagram',
       category || null,
-      days ? parseInt(days) : 30
+      days ? parseInt(days, 10) : 30
     );
     sendSuccess(res, 'Trends forecasted', 200, forecast);
   } catch (error) {

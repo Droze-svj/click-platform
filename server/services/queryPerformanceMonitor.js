@@ -37,8 +37,7 @@ function initQueryMonitoring() {
     mongoose.Query.prototype.exec = function(...args) {
       __agentExecWrapCount += 1;
       // #region agent log
-      if (__agentExecWrapCount <= 3 || __agentExecWrapCount === 10) {
-      }
+      if (__agentExecWrapCount <= 3 || __agentExecWrapCount === 10) { /* intentionally empty */ }
       // #endregion
 
       const queryStart = Date.now();

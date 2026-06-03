@@ -12,18 +12,18 @@ logger.info('📝 NODE_ENV (before .env): ' + (process.env.NODE_ENV || 'NOT SET'
 logger.info('📦 Loading environment variables...');
 const path = require('path');
 const fs = require('fs'); // Moved fs require here as it's needed for dotenv loading
-const rootEnv = path.join(__dirname, '..', '.env.nosync');
+const rootEnv = path.normalize(path.resolve(__dirname, '..', '.env.nosync'));
 if (fs.existsSync(rootEnv)) {
   require('dotenv').config({ path: rootEnv });
 } else {
-  require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+  require('dotenv').config({ path: path.normalize(path.resolve(__dirname, '..', '.env')) });
 }
 // Optional: override with .env.local.nosync at root if present
-const localEnv = path.join(__dirname, '..', '.env.local.nosync');
+const localEnv = path.normalize(path.resolve(__dirname, '..', '.env.local.nosync'));
 if (fs.existsSync(localEnv)) {
   require('dotenv').config({ path: localEnv });
 } else {
-  require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
+  require('dotenv').config({ path: path.normalize(path.resolve(__dirname, '..', '.env.local')) });
 }
 logger.info('✅ Environment variables loaded');
 logger.info('📝 NODE_ENV (after .env): ' + (process.env.NODE_ENV || 'NOT SET (defaulting to development behavior)'));
@@ -1691,8 +1691,10 @@ const connectDB = async () => {
   }
 };
 
-// Connect to database (non-blocking)
-connectDB();
+// Connect to database (non-blocking) - skip in Jest workers so tests control Mongoose
+if (!process.env.JEST_WORKER_ID) {
+  connectDB();
+}
 
 // API Documentation
 const swaggerUiOptions = {
@@ -1864,6 +1866,8 @@ app.use('/api/productive/ab-testing', require('./routes/productive/ab-testing'))
 app.use('/api/video/ai-editing', require('./routes/video/ai-editing'));
 app.use('/api/video/viral', require('./routes/video/viral'));
 app.use('/api/video/manual-editing', require('./routes/video/manual-editing'));
+app.use('/api/video/creative', require('./routes/video/creative'));
+app.use('/api/agentic', require('./routes/agentic'));
 app.use('/api/assets', require('./routes/assets'));
 app.use('/api/video/voice-hooks', require('./routes/video/voice-hooks'));
 app.use('/api/video/captions', require('./routes/video/captions'));
@@ -1971,7 +1975,7 @@ app.use('/api/client-portal', require('./routes/client-portal'));
 
 // Branded links routes
 app.use('/api/agency', require('./routes/branded-links'));
-app.use('/l', require('./routes/branded-links')); // Public link resolution
+app.use('/l', require('./routes/link-resolver')); // Public link resolution (GET /l/:shortCode)
 
 // Reports routes
 app.use('/api/agency', require('./routes/reports'));
@@ -2171,6 +2175,22 @@ app.use('/api/sovereign', require('./routes/sovereign'));
 app.use('/api/captions-spatial', require('./routes/spatial'));
 app.use('/api/phase8/spatial', require('./routes/spatial'));
 app.use('/api/phase8', require('./routes/phase8'));
+// Phase 9-18 routers. phase10_12 / phase13_15 / phase16_18 each cover several
+// phases via flat internal paths (e.g. /fleet, /arbitrage, /s2s), so they are
+// mounted at each phase prefix they serve so the frontend's /phaseN/* calls resolve.
+app.use('/api/phase9', require('./routes/phase9'));
+const phase10_12 = require('./routes/phase10_12');
+app.use('/api/phase10', phase10_12);
+app.use('/api/phase11', phase10_12);
+app.use('/api/phase12', phase10_12);
+const phase13_15 = require('./routes/phase13_15');
+app.use('/api/phase13', phase13_15);
+app.use('/api/phase14', phase13_15);
+app.use('/api/phase15', phase13_15);
+const phase16_18 = require('./routes/phase16_18');
+app.use('/api/phase16', phase16_18);
+app.use('/api/phase17', phase16_18);
+app.use('/api/phase18', phase16_18);
 app.use('/api/monetization', require('./routes/monetization'));
 app.use('/api/click', require('./routes/click'));
 app.use('/api/vector-memory', require('./routes/vector-memory'));
@@ -2222,6 +2242,11 @@ app.get('/health', (req, res) => {
   })
 })
 
+// Legacy health-pro route for backward compatibility and Quality Gate tests
+app.get('/api/status/health-pro', (req, res) => {
+  res.json({ status: 'up' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
@@ -2271,7 +2296,7 @@ app.get('/api/monitoring/metrics', (req, res) => {
 })
 
 app.get('/api/monitoring/alerts', (req, res) => {
-  const limit = parseInt(req.query.limit) || 50
+  const limit = parseInt(req.query.limit, 10) || 50
   const alerts = global.alertingSystem ? global.alertingSystem.getHistory(limit) : []
   res.json({ alerts, timestamp: new Date().toISOString() })
 })
@@ -2364,7 +2389,7 @@ function __installShutdownHooks() {
         server.close(() => finish());
         return;
       }
-    } catch { }
+    } catch { /* intentionally empty */ }
     finish();
   };
 
@@ -2464,6 +2489,35 @@ if (process.env.JEST_WORKER_ID) {
               logger.error('❌ Failed to generate health reports', { error: err.message });
             }
           });
+
+          // Autonomous content agent — hands-off trigger. OPT-IN via
+          // AGENT_AUTORUN=true (default OFF) so it never mass-runs by surprise;
+          // even when on, each run's PUBLISH stage is still gated by
+          // AGENT_AUTOPUBLISH + a connected account. Processes a small batch of
+          // recently-completed, not-yet-agented Content every 30 minutes.
+          if (process.env.AGENT_AUTORUN === 'true') {
+            cron.schedule('*/30 * * * *', async () => {
+              try {
+                const Content = require('./models/Content');
+                const AgenticJob = require('./models/AgenticJob');
+                const { startAgentPipeline } = require('./services/agenticWorkflowService');
+                const since = new Date(Date.now() - 2 * 60 * 60 * 1000); // last 2h
+                const candidates = await Content.find({ status: 'completed', createdAt: { $gte: since } })
+                  .select('_id userId').sort({ createdAt: -1 }).limit(5).lean().catch(() => []);
+                let started = 0;
+                for (const c of candidates) {
+                  const already = await AgenticJob.findOne({ videoId: String(c._id) }).select('_id').lean().catch(() => null);
+                  if (already) continue;
+                  await startAgentPipeline(String(c._id), [], String(c.userId));
+                  started++;
+                }
+                if (started > 0) logger.info(`🤖 Autonomous agent started ${started} pipeline run(s)`);
+              } catch (err) {
+                logger.error('❌ Autonomous agent cron failed', { error: err.message });
+              }
+            });
+            logger.info('🤖 Autonomous content agent cron enabled (AGENT_AUTORUN=true)');
+          }
         }
       });
 

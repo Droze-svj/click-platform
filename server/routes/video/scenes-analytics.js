@@ -50,7 +50,7 @@ router.get('/analytics/:workspaceId/effectiveness', auth, asyncHandler(async (re
   }
 
   try {
-    const metrics = await getDetectionEffectivenessMetrics(workspaceId, parseInt(days));
+    const metrics = await getDetectionEffectivenessMetrics(workspaceId, parseInt(days, 10));
     sendSuccess(res, 'Effectiveness metrics retrieved', 200, { metrics });
   } catch (error) {
     logger.error('Error getting effectiveness metrics', { error: error.message, workspaceId });

@@ -24,20 +24,9 @@ router.get('/comprehensive', auth, asyncHandler(async (req, res) => {
   // #region agent log
   // #endregion
 
-  try {
-    const { period = 30 } = req.query;
-    // #region agent log
-    // #endregion
-
-    const analytics = await getComprehensiveAnalytics(req.user._id, parseInt(period));
-    // #region agent log
-    // #endregion
-    sendSuccess(res, 'Comprehensive analytics fetched', 200, analytics);
-  } catch (error) {
-    // #region agent log
-    // #endregion
-    throw error;
-  }
+  const { period = 30 } = req.query;
+  const analytics = await getComprehensiveAnalytics(req.user._id, parseInt(period, 10));
+  sendSuccess(res, 'Comprehensive analytics fetched', 200, analytics);
 }));
 
 /**
@@ -53,20 +42,9 @@ router.get('/trends', auth, asyncHandler(async (req, res) => {
   // #region agent log
   // #endregion
 
-  try {
-    const { period = 30 } = req.query;
-    // #region agent log
-    // #endregion
-
-    const trends = await getPerformanceTrends(req.user._id, parseInt(period));
-    // #region agent log
-    // #endregion
-    sendSuccess(res, 'Performance trends fetched', 200, trends);
-  } catch (error) {
-    // #region agent log
-    // #endregion
-    throw error;
-  }
+  const { period = 30 } = req.query;
+  const trends = await getPerformanceTrends(req.user._id, parseInt(period, 10));
+  sendSuccess(res, 'Performance trends fetched', 200, trends);
 }));
 
 /**
@@ -81,7 +59,7 @@ router.get('/trends', auth, asyncHandler(async (req, res) => {
 router.get('/export', auth, asyncHandler(async (req, res) => {
   const { format = 'json', period = 30 } = req.query;
 
-  const data = await exportAnalytics(req.user._id, format, parseInt(period));
+  const data = await exportAnalytics(req.user._id, format, parseInt(period, 10));
 
   if (format === 'csv') {
     res.header('Content-Type', 'text/csv');

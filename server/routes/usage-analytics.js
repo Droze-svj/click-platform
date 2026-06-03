@@ -26,13 +26,11 @@ const router = express.Router();
 router.get('/dashboard', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id || req.user.id;
   
-  // Check both host header and x-forwarded-host (for proxy requests)
-  const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
-                      (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
-  const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-  
-  const mockData = {
+  // Empty-shaped fallback used only when the DB is genuinely unavailable —
+  // not as a dev short-circuit. The real usage service already returns safe
+  // zero-defaults for non-castable ids (Supabase UUID / dev users), so every
+  // user now flows through the real query path.
+  const emptyData = {
     current: {
       usage: { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 },
       limits: { videosProcessed: -1, contentGenerated: -1, postsScheduled: -1, storageUsed: -1 },
@@ -43,14 +41,9 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
     trends: { videosProcessed: { trend: 'stable', change: 0 }, contentGenerated: { trend: 'stable', change: 0 }, postsScheduled: { trend: 'stable', change: 0 } },
     projections: { videosProcessed: { projected: 0, willExceed: false }, contentGenerated: { projected: 0, willExceed: false } },
     alerts: [],
-    package: { name: 'Development Plan', slug: 'dev-plan' }
+    package: { name: 'Free', slug: 'free' }
   };
-  
-  // In development mode OR when on localhost, return mock data for dev users
-  if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
-    return sendSuccess(res, 'Usage dashboard retrieved (dev mode)', 200, mockData);
-  }
-  
+
   let user, currentUsage, stats;
   try {
     // Supabase users (UUID) don't have a Mongo doc; skip the populate.
@@ -60,14 +53,8 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
     currentUsage = await getCurrentUsage(userId);
     stats = await getUsageStats(userId, 6); // Last 6 months
   } catch (dbError) {
-    // Handle CastError gracefully for dev mode
-    if (allowDevMode && (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId'))) {
-      logger.warn('CastError in usage analytics dashboard, returning mock data for dev mode', { error: dbError.message, userId });
-      return sendSuccess(res, 'Usage dashboard retrieved (dev mode)', 200, mockData);
-    }
     logger.warn('Database error in usage analytics dashboard', { error: dbError.message, userId });
-    // Return empty data if database is unavailable
-    return sendSuccess(res, 'Usage dashboard retrieved', 200, mockData);
+    return sendSuccess(res, 'Usage dashboard retrieved', 200, emptyData);
   }
 
   // Calculate trends

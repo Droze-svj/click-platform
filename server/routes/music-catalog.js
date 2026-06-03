@@ -43,17 +43,17 @@ router.get('/search', auth, asyncHandler(async (req, res) => {
     const filters = {};
     if (genre && genre !== 'all') filters.genre = genre;
     if (mood && mood !== 'all') filters.mood = mood;
-    if (bpm) filters.bpm = parseInt(bpm);
-    if (duration) filters.duration = parseInt(duration);
+    if (bpm) filters.bpm = parseInt(bpm, 10);
+    if (duration) filters.duration = parseInt(duration, 10);
     if (vocals) filters.vocals = vocals === 'true';
 
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     const options = {
       includeLicensed: !source || source === 'licensed' || source === 'all',
       includeAIGenerated: !source || source === 'ai_generated' || source === 'all',
       includeUserUploads: !source || source === 'user_upload' || source === 'all',
-      limit: parseInt(limit),
+      limit: parseInt(limit, 10),
       offset
     };
 
@@ -74,10 +74,10 @@ router.get('/search', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Catalog search completed', 200, {
       tracks: results.tracks,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total: results.total,
-        totalPages: Math.ceil(results.total / parseInt(limit))
+        totalPages: Math.ceil(results.total / parseInt(limit, 10))
       },
       sources: results.sources
     });
@@ -344,7 +344,7 @@ router.get('/search/popular-terms', auth, asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
 
   try {
-    const popularTerms = await getPopularSearchTerms(parseInt(limit));
+    const popularTerms = await getPopularSearchTerms(parseInt(limit, 10));
 
     sendSuccess(res, 'Popular terms retrieved', 200, { popularTerms });
   } catch (error) {
@@ -369,7 +369,7 @@ router.get('/recommendations', auth, asyncHandler(async (req, res) => {
   try {
     const excludeIds = excludeTrackIds ? excludeTrackIds.split(',') : [];
     const recommendations = await getRecommendedTracks(req.user._id, {
-      limit: parseInt(limit),
+      limit: parseInt(limit, 10),
       basedOn,
       trackId,
       excludeTrackIds: excludeIds
@@ -396,7 +396,7 @@ router.post('/recommendations/content', auth, asyncHandler(async (req, res) => {
 
   try {
     const recommendations = await recommendTracksForContent(contentMetadata, {
-      limit: parseInt(limit)
+      limit: parseInt(limit, 10)
     });
 
     sendSuccess(res, 'Content recommendations retrieved', 200, recommendations);
@@ -421,7 +421,7 @@ router.get('/popular', auth, asyncHandler(async (req, res) => {
 
   try {
     const tracks = await getPopularTracks({
-      limit: parseInt(limit),
+      limit: parseInt(limit, 10),
       timeRange,
       genre: genre || null,
       mood: mood || null
@@ -443,7 +443,7 @@ router.get('/trending', auth, asyncHandler(async (req, res) => {
   const { limit = 20 } = req.query;
 
   try {
-    const tracks = await getTrendingTracks(parseInt(limit));
+    const tracks = await getTrendingTracks(parseInt(limit, 10));
 
     sendSuccess(res, 'Trending tracks retrieved', 200, { tracks });
   } catch (error) {

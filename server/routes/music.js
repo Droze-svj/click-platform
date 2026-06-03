@@ -78,7 +78,7 @@ router.get('/', auth, async (req, res) => {
       try {
         const music = await Music.find(query)
           .sort({ createdAt: -1 })
-          .limit(parseInt(req.query.limit || 50));
+          .limit(parseInt(req.query.limit || 50, 10));
         return res.json({ success: true, data: music || [] });
       } catch (dbError) {
         // If MongoDB not connected or error, return empty array for dev mode
@@ -109,7 +109,7 @@ router.get('/', auth, async (req, res) => {
 
     const music = await Music.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit));
+      .limit(parseInt(limit, 10));
 
     res.json({
       success: true,
@@ -190,8 +190,8 @@ router.post('/upload', auth, uploadLimiter, upload.single('music'), async (req, 
       storageType = uploadResult.storage || 'local';
       
       // Delete local file if uploaded to cloud storage
-      if (uploadResult.storage === 's3' && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+      if (uploadResult.storage === 's3') {
+        await fs.promises.unlink(req.file.path).catch(() => {});
         logger.info('Local file deleted after cloud upload', { path: req.file.path });
       }
     } catch (uploadError) {
@@ -234,10 +234,10 @@ router.post('/upload', auth, uploadLimiter, upload.single('music'), async (req, 
   } catch (error) {
     logger.error('Music upload error', { error: error.message });
     
-    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (req.file && req.file.path) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
     }
-    
+
     res.status(500).json({
       success: false,
       error: error.message
@@ -271,9 +271,7 @@ router.delete('/:musicId', auth, async (req, res) => {
     // Delete file
     if (music.file.url) {
       const filePath = path.join(__dirname, '../../', music.file.url);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+      await fs.promises.unlink(filePath).catch(() => {});
     }
 
     await music.deleteOne();

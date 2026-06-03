@@ -42,7 +42,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       scheduled_before
     } = req.query;
 
-    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     let query = createSupabaseClient()
       .from('posts')
@@ -65,7 +65,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       `, { count: 'exact' })
       .eq('author_id', req.user.id)
       .order('created_at', { ascending: false })
-      .range(offset, offset + parseInt(limit) - 1);
+      .range(offset, offset + parseInt(limit, 10) - 1);
 
     // Apply filters
     if (status) {
@@ -92,7 +92,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       return res.json({
         success: true,
         posts: [],
-        pagination: { page: parseInt(page), limit: parseInt(limit), total: 0, pages: 0 },
+        pagination: { page: parseInt(page, 10), limit: parseInt(limit, 10), total: 0, pages: 0 },
         isFallback: true,
       });
     }
@@ -101,10 +101,10 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       success: true,
       posts: posts || [],
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
         total: count || 0,
-        pages: Math.ceil((count || 0) / parseInt(limit))
+        pages: Math.ceil((count || 0) / parseInt(limit, 10))
       }
     });
 

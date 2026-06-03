@@ -17,7 +17,7 @@ const router = express.Router();
  * Get performance metrics (Admin only)
  */
 router.get('/', auth, requireRole('admin'), asyncHandler(async (req, res) => {
-  const timeWindow = parseInt(req.query.timeWindow) || 3600000; // Default 1 hour
+  const timeWindow = parseInt(req.query.timeWindow, 10) || 3600000; // Default 1 hour
   const metrics = getMetrics(timeWindow);
   sendSuccess(res, 'Performance metrics retrieved', 200, metrics);
 }));
@@ -27,7 +27,7 @@ router.get('/', auth, requireRole('admin'), asyncHandler(async (req, res) => {
  * Get slow queries (Admin only)
  */
 router.get('/slow-queries', auth, requireRole('admin'), asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit, 10) || 20;
   const slowQueries = getSlowQueries(limit);
   sendSuccess(res, 'Slow queries retrieved', 200, { queries: slowQueries });
 }));
@@ -37,7 +37,7 @@ router.get('/slow-queries', auth, requireRole('admin'), asyncHandler(async (req,
  * Get recent errors (Admin only)
  */
 router.get('/recent-errors', auth, requireRole('admin'), asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit, 10) || 20;
   const errors = getRecentErrors(limit);
   sendSuccess(res, 'Recent errors retrieved', 200, { errors });
 }));

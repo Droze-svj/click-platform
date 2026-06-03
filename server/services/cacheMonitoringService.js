@@ -118,7 +118,7 @@ async function getCacheSize() {
       const usedMemoryHuman = info.match(/used_memory_human:([^\r\n]+)/)?.[1];
       
       return {
-        usedMemory: usedMemory ? parseInt(usedMemory) : null,
+        usedMemory: usedMemory ? parseInt(usedMemory, 10) : null,
         usedMemoryHuman: usedMemoryHuman || null,
       };
     }

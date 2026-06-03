@@ -70,7 +70,6 @@ const userSettingsSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 }, {});
 
-userSettingsSchema.index({ userId: 1 });
 userSettingsSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();

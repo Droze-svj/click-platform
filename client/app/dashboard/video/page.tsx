@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTheme } from '../../../components/ThemeProvider'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { getAssetUrl } from '../../../utils/url'
 
 interface VideoItem {
   _id: string
@@ -343,7 +344,7 @@ export default function VideoStudioPage() {
                 return (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.05 }} layout key={video._id} className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[3.5rem] overflow-hidden group flex flex-col hover:border-primary-500/50 transition-all duration-700 shadow-2xl relative">
                     <div className="aspect-video relative bg-surface-page dark:bg-surface-950 overflow-hidden border-b-2 border-surface-100 dark:border-surface-800">
-                      <video src={video.originalFile?.url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
+                      <video src={getAssetUrl(video.originalFile?.url || '')} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
                         <button type="button" onClick={() => router.push(editLink(video._id))} aria-label={`Open ${video.title || 'video'} in editor`} title={`Open ${video.title || 'video'} in editor`} className="w-20 h-20 bg-white text-black rounded-[2rem] flex items-center justify-center shadow-[0_40px_100px_rgba(255,255,255,0.4)] transform translate-y-12 group-hover:translate-y-0 transition-all duration-700 active:scale-90 border-none group/play">
                           <Play size={36} className="ml-1 fill-current group-hover:scale-125 transition-transform" />

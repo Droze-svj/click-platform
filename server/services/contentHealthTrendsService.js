@@ -105,8 +105,8 @@ function getPeriodKey(date, period) {
   case 'daily':
     return d.toISOString().split('T')[0];
   case 'weekly':
-    const week = Math.floor(d.getDate() / 7);
-    return `${d.getFullYear()}-W${week}`;
+  { const week = Math.floor(d.getDate() / 7);
+    return `${d.getFullYear()}-W${week}`; }
   case 'monthly':
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   default:

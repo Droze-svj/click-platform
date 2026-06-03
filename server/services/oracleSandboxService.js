@@ -16,6 +16,10 @@ class OracleSandboxService {
 
     const sandboxId = `sb_${crypto.randomBytes(4).toString('hex')}`;
     const variants = [];
+
+    // Concept archetypes the sandbox can test. These are real configuration
+    // options (not fabricated metrics). Selected deterministically so a given
+    // variantCount always yields the same, defined set — no Math.random.
     const archetypes = [
       { type: 'Face-to-Cam', hook: 'High-Trust Direct Address' },
       { type: 'ASMR Edit', hook: 'Extreme Sensory Retention' },
@@ -24,23 +28,26 @@ class OracleSandboxService {
       { type: 'Rapid Jump-Cut', hook: 'Pattern Interrupt' }
     ];
 
-    // Select random archetypes for this sandbox
-    const selected = archetypes.sort(() => 0.5 - Math.random()).slice(0, variantCount);
+    const count = Math.min(Math.max(parseInt(variantCount, 10) || 3, 1), archetypes.length);
+    const selected = archetypes.slice(0, count);
 
     for (let i = 0; i < selected.length; i++) {
-      const velocity = 0.15 + (Math.random() * 0.8);
+      // The variants have just been provisioned — no ad spend or telemetry has
+      // been collected yet. Return honest zero/empty metrics rather than
+      // fabricated velocity/ROI/retention numbers. These fields are populated
+      // once a real ad-delivery + metrics integration reports back.
       variants.push({
         variantId: `v_${i + 1}`,
         type: selected[i].type,
         hook: selected[i].hook,
-        budget: 5.00, // $5 micro-budget per variant
-        status: velocity > 0.7 ? 'SCALING_AUTO' : 'STABLE_PULSE',
-        velocity,
-        predictedROI: 1.2 + (velocity * 4),
+        budget: 5.00, // $5 micro-budget allocation per variant (config, not a metric)
+        status: 'PENDING_DATA',
+        velocity: 0,
+        predictedROI: 0,
         telemetry: {
-          retentionAvg: 0.4 + (Math.random() * 0.5),
-          cpmPredicted: 12 + (Math.random() * 30),
-          interactionRate: 0.05 + (Math.random() * 0.1)
+          retentionAvg: 0,
+          cpmPredicted: 0,
+          interactionRate: 0
         }
       });
     }
@@ -50,9 +57,10 @@ class OracleSandboxService {
       status: 'active',
       scalingLogic: 'velocity_threshold_trigger',
       variants,
-      scheduledScaleTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // 90 min window
-      networkIntegrity: 0.98,
-      syncStatus: 'synced_to_swarm'
+      scheduledScaleTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // 90 min window (config)
+      // No real network-health source exists for this aspirational feature.
+      networkIntegrity: null,
+      syncStatus: 'pending'
     };
   }
 }

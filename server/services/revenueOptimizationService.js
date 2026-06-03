@@ -211,7 +211,7 @@ function analyzeTimePerformance(posts, conversions) {
   });
 
   const results = Object.entries(hourPerformance).map(([hour, data]) => ({
-    hour: parseInt(hour),
+    hour: parseInt(hour, 10),
     posts: data.posts,
     revenue: data.revenue,
     revenuePerPost: data.posts > 0 ? data.revenue / data.posts : 0

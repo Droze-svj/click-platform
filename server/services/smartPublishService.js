@@ -271,7 +271,10 @@ async function fetchRecentCaptions(userId, limit = 20) {
       { $unwind: '$clips' },
       { $match: {
         'clips.published': true,
-        'clips.publishedCaption': { $exists: true, $ne: null, $ne: '' },
+        // $ne can't appear twice in one object (the second silently wins, so
+        // the $ne:null check was being dropped). $nin excludes both null and
+        // empty-string, which is the real intent.
+        'clips.publishedCaption': { $exists: true, $nin: [null, ''] },
       } },
       { $sort: { 'clips.publishedAt': -1 } },
       { $limit: limit },

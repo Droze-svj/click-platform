@@ -130,12 +130,14 @@ export default function DmcaPage() {
             )}
 
             <div>
-              <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">
+              <label htmlFor="signature" className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">
                 Electronic signature (type your full name)
               </label>
               <input
+                id="signature"
                 name="signature"
                 required
+                placeholder="Your full legal name"
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 focus:outline-none"
               />
             </div>
@@ -179,21 +181,25 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">
+      <label htmlFor={name} className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">
         {label} {required && <span className="text-rose-400">*</span>}
       </label>
       {textarea ? (
         <textarea
+          id={name}
           name={name}
           required={required}
           rows={3}
+          placeholder={label}
           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 focus:outline-none"
         />
       ) : (
         <input
+          id={name}
           name={name}
           type={type}
           required={required}
+          placeholder={label}
           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 focus:outline-none"
         />
       )}

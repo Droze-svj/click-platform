@@ -262,12 +262,12 @@ router.post('/tracks/:trackId/align', auth, asyncHandler(async (req, res) => {
 
     switch (alignmentType) {
     case 'scene_boundary':
-      if (!sceneId) {
-        return sendError(res, 'sceneId is required for scene_boundary alignment', 400);
-      }
-      const { alignTo } = req.body;
-      result = await alignToSceneBoundary(trackId, sceneId, alignTo || 'start', req.user._id);
-      break;
+    { if (!sceneId) {
+      return sendError(res, 'sceneId is required for scene_boundary alignment', 400);
+    }
+    const { alignTo } = req.body;
+    result = await alignToSceneBoundary(trackId, sceneId, alignTo || 'start', req.user._id);
+    break; }
 
     case 'key_moment':
       if (!contentId) {
@@ -535,7 +535,7 @@ router.get('/tracks/:trackId/waveform', auth, asyncHandler(async (req, res) => {
 
   try {
     const waveform = await generateTrackWaveform(trackId, req.user._id, {
-      width: parseInt(width),
+      width: parseInt(width, 10),
       precision: parseFloat(precision),
       format: 'json'
     });

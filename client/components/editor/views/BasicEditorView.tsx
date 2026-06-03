@@ -1492,7 +1492,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               onClick={() => setActiveEditTab(id)}
               title={`${t(`editor.tabs.${id}`)} (${altShortcut})`}
               className={`relative flex-1 flex flex-col items-center gap-1.5 py-2.5 px-3 min-w-[55px] rounded-xl transition-all duration-300 z-10 group shrink-0 ${
-                activeEditTab === id ? 'text-white' : 'text-slate-555 hover:text-slate-300'
+                activeEditTab === id ? 'text-white' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               {activeEditTab === id && (

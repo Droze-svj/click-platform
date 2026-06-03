@@ -99,8 +99,8 @@ router.get('/Users', asyncHandler(async (req, res) => {
 
   try {
     const result = await listSCIMUsers(req.scimProvider, {
-      startIndex: parseInt(startIndex),
-      count: parseInt(count),
+      startIndex: parseInt(startIndex, 10),
+      count: parseInt(count, 10),
       filter,
     });
     res.json(result);

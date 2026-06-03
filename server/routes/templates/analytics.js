@@ -21,7 +21,7 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
 
   try {
     const analytics = await getCreatorAnalytics(req.user._id, period);
@@ -43,7 +43,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:templateId/trends', auth, asyncHandler(async (req, res) => {
   const { templateId } = req.params;
-  const period = parseInt(req.query.period) || 30;
+  const period = parseInt(req.query.period, 10) || 30;
 
   try {
     const trends = await getTemplateTrends(templateId, period);

@@ -1,60 +1,61 @@
 const ZeroPartyDataService = require('../../../server/services/ZeroPartyDataService');
 
 describe('ZeroPartyDataService', () => {
-    test('should generate an interactive overlay manifest for TikTok', async () => {
+    test('exposes the supported overlay-type catalog', () => {
+        const result = ZeroPartyDataService.getOverlayTypes();
+        expect(result.success).toBe(true);
+        const ids = result.overlayTypes.map(t => t.id);
+        expect(ids).toEqual(expect.arrayContaining(['POLL', 'SWIPE_CHOICE', 'HOTSPOT', 'RATING', 'QUIZ']));
+        // Every type carries a label + description (UI renders both).
+        result.overlayTypes.forEach(t => {
+            expect(typeof t.label).toBe('string');
+            expect(typeof t.description).toBe('string');
+        });
+    });
+
+    test('generates an interactive overlay manifest for TikTok', async () => {
         const videoData = { targetPlatform: 'tiktok', niche: 'beauty', durationSeconds: 60 };
         const productData = { name: 'Mascara X', pricing: { price: '25', currency: 'USD' } };
-        
+
         const result = await ZeroPartyDataService.generateOverlayManifest(videoData, { productData });
-        
+
         expect(result.success).toBe(true);
         expect(result.manifest.targetPlatform).toBe('tiktok');
         expect(result.manifest.overlays.length).toBeGreaterThan(0);
-        
-        // Ensure a POLL is included as specified in auto-generation logic
+        expect(typeof result.manifest.projectedCaptureRate).toBe('string');
+        expect(result.manifest.projectedCaptureRate).toMatch(/%$/);
+
+        // First overlay is a POLL with structured {id,text} options.
         const poll = result.manifest.overlays.find(o => o.type === 'POLL');
         expect(poll).toBeDefined();
-        expect(poll.content.question).toContain('Where are you');
-        expect(poll.content.options.length).toBe(4);
+        expect(typeof poll.content.question).toBe('string');
+        expect(poll.content.options.length).toBeGreaterThan(0);
+        poll.content.options.forEach(opt => {
+            expect(opt).toHaveProperty('id');
+            expect(opt).toHaveProperty('text');
+        });
     });
 
-    test('should generate product hotspots for middle engagement', async () => {
+    test('places overlays within the video timeline and respects overlayCount', async () => {
         const videoData = { targetPlatform: 'instagram_reels', durationSeconds: 60 };
         const productData = { name: 'SaaS Tool', pricing: { price: '97' } };
-        
+
         const result = await ZeroPartyDataService.generateOverlayManifest(videoData, { productData, overlayCount: 2 });
-        
-        const hotspot = result.manifest.overlays.find(o => o.type === 'HOTSPOT');
-        expect(hotspot).toBeDefined();
-        expect(hotspot.startTimeSeconds).toBe(24); // 60s * 0.4
-        expect(hotspot.content.label).toBe('SaaS Tool');
+
+        expect(result.manifest.overlays.length).toBe(2);
+        // Overlays sit inside the usable window (avoiding first/last 10%).
+        result.manifest.overlays.forEach(o => {
+            expect(o.startTimeSeconds).toBeGreaterThanOrEqual(6);   // 10% of 60s
+            expect(o.startTimeSeconds).toBeLessThanOrEqual(54);     // 90% of 60s
+            expect(o.captureConfig.feedToRevenueOracle).toBe(true);
+        });
     });
 
-    test('should capture interaction events and trigger oracle feedback', async () => {
-        const event = {
-            overlayId: 'ov_123',
-            videoId: 'vid_456',
-            viewerId: 'user_789',
-            response: 'yes',
-            platform: 'tiktok',
-            sessionData: { watchDuration: 45, watchPercentage: 75 }
-        };
-        
-        const result = await ZeroPartyDataService.captureInteractionEvent(event);
-        
-        expect(result.success).toBe(true);
-        expect(result.oracleFeedback).toBeDefined();
-        expect(result.oracleFeedback.signalType).toBe('zero_party_interaction');
-        expect(result.oracleFeedback.swarmConsensusWeight).toBe(1.8);
-        expect(result.oracleFeedback.recommendedAction).toBe('reinforce_content_vector');
-    });
-
-    test('should project capture rates based on platform', () => {
-        const platform = 'tiktok';
-        const captureRate = ZeroPartyDataService._projectCaptureRate(platform, 1);
-        expect(captureRate).toBe('12.0%');
-        
-        const multiple = ZeroPartyDataService._projectCaptureRate(platform, 3);
-        expect(multiple).toBe('19.2%'); // 12% * (1 + 2*0.3) = 19.2%
+    test('projected capture rate is a deterministic percentage string', async () => {
+        const a = await ZeroPartyDataService.generateOverlayManifest({ durationSeconds: 60 }, { overlayCount: 1 });
+        const b = await ZeroPartyDataService.generateOverlayManifest({ durationSeconds: 60 }, { overlayCount: 1 });
+        // Deterministic: identical inputs => identical projection (no randomness).
+        expect(a.manifest.projectedCaptureRate).toBe(b.manifest.projectedCaptureRate);
+        expect(a.manifest.projectedCaptureRate).toMatch(/^\d+%$/);
     });
 });

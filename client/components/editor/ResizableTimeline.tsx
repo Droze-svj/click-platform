@@ -52,7 +52,7 @@ import {
   AIDirectorSuggestion,
   EngagementScore
 } from '../../types/editor'
-import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS } from '../../utils/editorUtils'
+import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS, resolveTimelineOverlaps } from '../../utils/editorUtils'
 import { getSegmentColor } from '../../utils/editorUtils'
 
 interface ResizableTimelineProps {
@@ -667,7 +667,10 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     if (newEnd <= maxDur + 0.01) {
       const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `seg-${Date.now()}-${Math.random().toString(36).slice(2)}`
       const copy: TimelineSegment = { ...seg, id: newId, startTime: newStart, endTime: newEnd, duration: segDur }
-      onSegmentsChange((prev) => [...prev, copy])
+      onSegmentsChange((prev) => {
+        const next = [...prev, copy]
+        return resolveTimelineOverlaps(next, copy.id, copy.startTime, copy.endTime, copy.track ?? 0)
+      })
       onSegmentSelect?.(newId, false)
     }
   }, [maxDur, onSegmentsChange, onSegmentSelect])
@@ -692,7 +695,13 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       }
     })
     if (copies.length > 0) {
-      onSegmentsChange((prev) => [...prev, ...copies])
+      onSegmentsChange((prev) => {
+        let next = [...prev]
+        copies.forEach(copy => {
+          next = resolveTimelineOverlaps([...next, copy], copy.id, copy.startTime, copy.endTime, copy.track ?? 0)
+        })
+        return next
+      })
       onSegmentSelect?.(copies[0].id, false)
     }
   }, [selectedIds, segments, duplicateSegment, onSegmentsChange, maxDur, onSegmentSelect])
@@ -794,10 +803,19 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       moveSegmentTo(draggingSegmentId, origStart, origEnd, deltaTime, newTrack)
     }
     const onUp = () => {
+      const segId = draggingSegmentId
       setDraggingSegmentId(null)
       dragSegmentStartRef.current = null
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+
+      if (segId && onSegmentsChange) {
+        onSegmentsChange((prev) => {
+          const dragged = prev.find(s => s.id === segId)
+          if (!dragged) return prev
+          return resolveTimelineOverlaps(prev, segId, dragged.startTime, dragged.endTime, dragged.track ?? 0)
+        })
+      }
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
@@ -805,7 +823,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
-  }, [draggingSegmentId, maxDur, moveSegmentTo])
+  }, [draggingSegmentId, maxDur, moveSegmentTo, onSegmentsChange])
 
   const handleSegmentBodyMouseDown = useCallback((e: React.MouseEvent, seg: TimelineSegment) => {
     if ((e.target as HTMLElement).closest('[data-resize-handle]')) return

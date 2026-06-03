@@ -53,20 +53,20 @@ function executeTimelineAction(action, timeline) {
 
   switch (action.actionType) {
   case 'UPDATE_VOLUME':
-    // Simplified: find layer and update volume at time
-    const layer = newTimeline.layers.find(l => l.id === action.params.layerId) || newTimeline.layers[0];
+  // Simplified: find layer and update volume at time
+  { const layer = newTimeline.layers.find(l => l.id === action.params.layerId) || newTimeline.layers[0];
     if (layer) {
       layer.volume = action.params.value;
       layer.events = [...(layer.events || []), { type: 'volume_change', time: action.params.time, value: action.params.value }];
     }
-    break;
+    break; }
   case 'TRIM_CLIP':
-    const clip = newTimeline.clips.find(c => c.id === action.params.clipId);
+  { const clip = newTimeline.clips.find(c => c.id === action.params.clipId);
     if (clip) {
       clip.start += action.params.startDelta || 0;
       clip.end += action.params.endDelta || 0;
     }
-    break;
+    break; }
   default:
     logger.info('Action requires manual execution', { actionType: action.actionType });
   }

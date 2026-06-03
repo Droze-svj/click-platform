@@ -9,6 +9,22 @@ const logger = require('../utils/logger');
  */
 async function getContentPerformance(contentId, userId) {
   try {
+    // Check if called in the alternative format: (userId, options)
+    if (userId && typeof userId === 'object' && !Array.isArray(userId)) {
+      const actualUserId = contentId;
+      const options = userId;
+      const platform = options.platform;
+      
+      logger.info('getContentPerformance: redirected to getOptimalPostingTimes wrapper due to alternative options signature', { actualUserId, platform });
+      const optimalResult = await getOptimalPostingTimes(actualUserId, platform);
+      return {
+        bestHours: (optimalResult.optimalHours || []).map(h => h.hour),
+        optimalHours: optimalResult.optimalHours,
+        allHours: optimalResult.allHours,
+        platform: optimalResult.platform
+      };
+    }
+
     const content = await Content.findOne({
       _id: contentId,
       userId

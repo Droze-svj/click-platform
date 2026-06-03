@@ -56,7 +56,7 @@ router.post('/:contentId/create', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:contentId/:versionNumber', auth, asyncHandler(async (req, res) => {
   const { contentId, versionNumber } = req.params;
-  const version = await getVersion(contentId, parseInt(versionNumber));
+  const version = await getVersion(contentId, parseInt(versionNumber, 10));
 
   if (!version) {
     return sendError(res, 'Version not found', 404);
@@ -76,7 +76,7 @@ router.get('/:contentId/:versionNumber', auth, asyncHandler(async (req, res) => 
  */
 router.post('/:contentId/:versionNumber/restore', auth, asyncHandler(async (req, res) => {
   const { contentId, versionNumber } = req.params;
-  const content = await restoreToVersion(contentId, parseInt(versionNumber), req.user._id);
+  const content = await restoreToVersion(contentId, parseInt(versionNumber, 10), req.user._id);
   sendSuccess(res, 'Content restored', 200, content);
 }));
 
@@ -99,8 +99,8 @@ router.get('/:contentId/compare', auth, asyncHandler(async (req, res) => {
 
   const comparison = await compareVersions(
     contentId,
-    parseInt(version1),
-    parseInt(version2)
+    parseInt(version1, 10),
+    parseInt(version2, 10)
   );
 
   sendSuccess(res, 'Versions compared', 200, comparison);

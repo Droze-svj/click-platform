@@ -205,7 +205,7 @@ router.post('/:id/health', auth, asyncHandler(async (req, res) => {
  */
 router.get('/marketplace/popular', auth, asyncHandler(async (req, res) => {
   const { getPopularIntegrations } = require('../services/integrationService');
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit, 10) || 10;
   const integrations = await getPopularIntegrations(limit);
   sendSuccess(res, 'Popular integrations retrieved', 200, { integrations });
 }));

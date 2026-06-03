@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const logger = require('../utils/logger');
 
 const contentSchema = new mongoose.Schema({
   userId: {
@@ -326,6 +327,10 @@ contentSchema.index({ folderId: 1 }); // Content in folders
 
 // Index in Elasticsearch after save and trigger multi-language sync
 contentSchema.post('save', async function (doc) {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
   // Elastic indexing
   const es = this.isNew ? 
     require('../middleware/elasticsearchIndexer').indexContent(doc) : 
@@ -334,7 +339,7 @@ contentSchema.post('save', async function (doc) {
   // Sync Engine triggering
   const SyncEngine = require('../services/SyncEngine');
   const sync = SyncEngine.syncContent(doc._id).catch(err => {
-    console.error('[ContentModel] Failed to trigger sync engine', { contentId: doc._id, error: err.message });
+    logger.error('[ContentModel] Failed to trigger sync engine', { contentId: doc._id, error: err.message });
   });
 
   await Promise.all([es, sync]);
@@ -357,7 +362,7 @@ contentSchema.pre('save', function (next) {
     
     if (hasSyncPulse) {
       this.syncVersion = (this.syncVersion || 1) + 1;
-      console.log(`[ContentModel] Sync pulse detected. Incrementing version to ${this.syncVersion} for ${this._id}`);
+      logger.info(`[ContentModel] Sync pulse detected. Incrementing version to ${this.syncVersion} for ${this._id}`);
     }
   }
   next();

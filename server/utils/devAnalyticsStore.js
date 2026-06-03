@@ -1,3 +1,4 @@
+/* eslint-disable no-console */ // dev-only analytics store — console is intentional dev visibility
 // Persistent store for dev analytics and insights
 // Ensures dashboard progress and AI findings are saved across restarts
 

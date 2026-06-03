@@ -69,7 +69,7 @@ async function getUserAnalytics(userId, timeRange = '30d') {
   try {
     if (isDevUser(userId)) {
       return {
-        timeRange: `${parseInt(timeRange) || 30} days`,
+        timeRange: `${parseInt(timeRange, 10) || 30} days`,
         content: { created: 0, scheduled: 0, published: 0 },
         usage: { videosProcessed: 0, contentGenerated: 0, quotesCreated: 0, postsScheduled: 0, scriptsGenerated: 0 },
         timestamp: new Date()
@@ -85,7 +85,7 @@ async function getUserAnalytics(userId, timeRange = '30d') {
       if (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId')) {
         logger.warn('CastError in getUserAnalytics, returning mock data', { error: dbError.message, userId });
         return {
-          timeRange: `${parseInt(timeRange) || 30} days`,
+          timeRange: `${parseInt(timeRange, 10) || 30} days`,
           content: { created: 0, scheduled: 0, published: 0 },
           usage: { videosProcessed: 0, contentGenerated: 0, quotesCreated: 0, postsScheduled: 0, scriptsGenerated: 0 },
           timestamp: new Date()
@@ -98,7 +98,7 @@ async function getUserAnalytics(userId, timeRange = '30d') {
       return { error: 'Analytics not enabled for this user' };
     }
 
-    const days = parseInt(timeRange) || 30;
+    const days = parseInt(timeRange, 10) || 30;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -150,7 +150,7 @@ async function getUserAnalytics(userId, timeRange = '30d') {
  */
 async function getPlatformAnalytics(timeRange = '30d') {
   try {
-    const days = parseInt(timeRange) || 30;
+    const days = parseInt(timeRange, 10) || 30;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 

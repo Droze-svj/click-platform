@@ -114,7 +114,7 @@ router.get('/:clientId/predict', auth, asyncHandler(async (req, res) => {
   const { clientId } = req.params;
   const { horizon = 30 } = req.query;
   
-  const predictions = await predictFutureRisks(userId, clientId, parseInt(horizon));
+  const predictions = await predictFutureRisks(userId, clientId, parseInt(horizon, 10));
   sendSuccess(res, 'Risks predicted', 200, predictions);
 }));
 

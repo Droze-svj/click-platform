@@ -410,8 +410,8 @@ async function getAuditLogs(workspaceId, filters = {}) {
     const logs = await AuditLog.find(query)
       .populate('userId', 'name email')
       .sort({ timestamp: -1 })
-      .limit(parseInt(limit))
-      .skip(parseInt(offset))
+      .limit(parseInt(limit, 10))
+      .skip(parseInt(offset, 10))
       .lean();
 
     const total = await AuditLog.countDocuments(query);
@@ -419,8 +419,8 @@ async function getAuditLogs(workspaceId, filters = {}) {
     return {
       logs,
       total,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10)
     };
   } catch (error) {
     logger.error('Error getting audit logs', { error: error.message, workspaceId });

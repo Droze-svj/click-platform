@@ -203,7 +203,7 @@ async function translateContent(contentId, targetLanguage, options = {}) {
       if (jsonMatch) {
         try {
           translated = JSON.parse(jsonMatch[0]);
-        } catch (_) {}
+        } catch (_) { /* intentionally empty */ }
       }
     }
 
@@ -554,7 +554,7 @@ async function translateSegments(contentId, language, segmentsToTranslate, conte
       if (match) {
         try {
           results = JSON.parse(match[0]);
-        } catch (_) {}
+        } catch (_) { /* intentionally empty */ }
       }
     }
 

@@ -13,6 +13,9 @@ class RedisCache {
     this.isConnected = false;
     this.cachePrefix = 'click:cache:';
     this.defaultTTL = 300; // 5 minutes default
+    // Real hit/miss counters so calculateHitRate() reports actual performance.
+    this.hits = 0;
+    this.misses = 0;
     this.connect();
   }
 
@@ -111,9 +114,11 @@ class RedisCache {
 
     try {
       const data = await this.client.get(key);
-      return data ? JSON.parse(data) : null;
+      if (data) { this.hits++; return JSON.parse(data); }
+      this.misses++;
+      return null;
     } catch (error) {
-      
+      this.misses++;
       return null;
     }
   }
@@ -207,19 +212,20 @@ class RedisCache {
     const lines = info.split('\n');
     for (const line of lines) {
       if (line.startsWith('used_memory:')) {
-        return parseInt(line.split(':')[1]) || 0;
+        return parseInt(line.split(':')[1], 10) || 0;
       }
     }
     return 0;
   }
 
   /**
-   * Calculate cache hit rate (simplified)
+   * Real cache hit rate from tracked hits/misses since process start.
+   * Returns 0 when there have been no reads yet (honest, not a fake 0.85).
    */
   async calculateHitRate() {
-    // This is a simplified implementation
-    // In production, you'd track hits/misses separately
-    return 0.85; // Assume 85% hit rate for demo
+    const total = this.hits + this.misses;
+    if (total === 0) return 0;
+    return Math.round((this.hits / total) * 1000) / 1000;
   }
 
   /**

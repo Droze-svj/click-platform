@@ -264,7 +264,7 @@ async function getDemographicInsights(posts) {
 
   const activeHours = Object.entries(insights.activeHours)
     .map(([hour, data]) => ({
-      hour: parseInt(hour),
+      hour: parseInt(hour, 10),
       avgEngagement: Math.round(data.total / data.count),
       posts: data.count
     }))
@@ -948,7 +948,7 @@ function getActiveTimes(posts, segment) {
   });
 
   const hourAverages = Object.entries(hourEngagement).map(([hour, engagements]) => ({
-    hour: parseInt(hour),
+    hour: parseInt(hour, 10),
     avgEngagement: engagements.reduce((sum, e) => sum + e, 0) / engagements.length
   })).sort((a, b) => b.avgEngagement - a.avgEngagement);
 

@@ -372,7 +372,7 @@ async function getWebhookStats(webhookId, timeframe = '7d') {
       throw new Error('Webhook not found');
     }
 
-    const days = parseInt(timeframe) || 7;
+    const days = parseInt(timeframe, 10) || 7;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 

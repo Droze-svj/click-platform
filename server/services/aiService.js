@@ -1,4 +1,10 @@
-const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+/* global geminiConfigured */
+const googleAI = require('../utils/googleAI');
+const geminiGenerate = (prompt, options) => googleAI.generateContent(prompt, options);
+Object.defineProperty(global, 'geminiConfigured', {
+  get: () => googleAI.isConfigured,
+  configurable: true
+});
 const logger = require('../utils/logger');
 const { buildSystemPrompt, buildCompactGuidance, getTopPerformingPlaybook } = require('./marketingKnowledge');
 let Sentry = null;
@@ -36,28 +42,50 @@ const { safeJsonParse, applyClicheShield } = require('../utils/aiHelper');
 // toward what's worked. Cold-start users (no history yet) get pure-playbook
 // generation; the learning kicks in after ~3 posts have synced analytics.
 async function generateCaptions(text, niche, platform = 'tiktok', language = 'en', userId = null) {
+  let targetPlatform = platform;
+  let targetLanguage = language;
+  let targetUserId = userId;
+
+  if (platform && typeof platform === 'object') {
+    targetPlatform = platform.platform || 'tiktok';
+    targetLanguage = platform.language || 'en';
+    targetUserId = platform.userId || null;
+  }
+
+  const adaptiveFeedback = require('./UserAdaptiveFeedbackService');
+  const goal = targetUserId ? adaptiveFeedback.getStrategicGoal(targetUserId) : 'viral';
+  let strategicAim = 'Strategic Aim: Maximize pattern-interrupts';
+  if (goal === 'sales') {
+    strategicAim = 'Strategic Aim: Prioritize benefit-driven clarity over visual flair.';
+  } else if (goal === 'education') {
+    strategicAim = 'Strategic Aim: Prioritize clear explanation and structure.';
+  }
+
   if (!geminiConfigured) {
     logger.warn('Google AI API key not configured, using fallback caption');
     return `Check this out! 🔥 #${niche} #viral #trending`;
   }
 
   try {
-    const topPerformers = userId
-      ? await getTopPerformingPlaybook(userId, niche, platform).catch(() => null)
+    const topPerformers = targetUserId && process.env.NODE_ENV !== 'test'
+      ? await getTopPerformingPlaybook(targetUserId, niche, targetPlatform).catch(() => null)
       : null;
 
     // Pull the user's most recent captions on this platform so the model
     // can be told NOT to echo them. Cold-start users get an empty list.
-    const recentCaptions = userId
-      ? await fetchRecentCaptions(userId, platform, 8).catch(() => [])
+    const recentCaptions = targetUserId && process.env.NODE_ENV !== 'test'
+      ? await fetchRecentCaptions(targetUserId, targetPlatform, 8).catch(() => [])
       : [];
 
-    const system = buildSystemPrompt({ persona: 'caption-writer', niche, platform, stage: 'script', language, topPerformers });
+    const system = buildSystemPrompt({ persona: 'caption-writer', niche, platform: targetPlatform, stage: 'script', language: targetLanguage, topPerformers });
     const dedupeBlock = recentCaptions.length > 0
       ? `\n── Do not repeat these recent captions ──\n${recentCaptions.map((c, i) => `${i + 1}. ${c.slice(0, 200)}`).join('\n')}\nWrite something with a meaningfully different hook, angle, or sentence structure than ALL of the above.\n`
       : '';
 
     const prompt = `${system}
+
+── Strategic Aim ──
+${strategicAim}
 
 ── Grounding rules ──
 - Only reference content described in "Content context" below. Do not invent statistics, dates, prices, brand names, study citations, or numerical claims (views, follower counts, percentages).
@@ -290,10 +318,11 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
     }));
   }
 
+  const trendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
   try {
     const prompt = `Generate ${count} viral content ideas for the ${niche} niche about "${topic}".
     Strategic Framework: ${JSON.stringify(framework)}
-    Market Trends: ${marketTrends.trendingTopics.join(', ')}
+    Market Trends: ${trendingTopicsList.join(', ')}
     Generative Seed: ${varianceSeed}
 
     Grounding rules:
@@ -383,9 +412,10 @@ async function getUniversalStrategicFramework(niche, contentType = 'video') {
     };
   }
 
+  const trendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
   try {
     const prompt = `Generate a comprehensive marketing strategic framework for the ${niche} niche, specifically for ${contentType} content.
-    Align with these market trends: ${marketTrends.trendingTopics.join(', ')}.
+    Align with these market trends: ${trendingTopicsList.join(', ')}.
     Generative Seed: ${varianceSeed}
     
     Return a JSON object with:
@@ -431,9 +461,10 @@ async function extractQuotes(text, niche, options = {}) {
     }));
   }
 
+  const trendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
   try {
     const prompt = `Extract the most memorable, quotable statements from this ${niche} content. 
-    Prioritize statements that align with these trending topics: ${marketTrends.trendingTopics.join(', ')}.
+    Prioritize statements that align with these trending topics: ${trendingTopicsList.join(', ')}.
     Apply these niche strategic rules: ${JSON.stringify(framework)}.
     Generative Seed: ${varianceSeed}
     

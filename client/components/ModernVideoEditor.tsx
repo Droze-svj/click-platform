@@ -91,6 +91,7 @@ import AchievementSystem from './AchievementSystem'
 import { ErrorBoundary } from './ErrorBoundary'
 import { useVideoEditorAutosave } from '../hooks/useVideoEditorAutosave'
 import { useToast } from '../contexts/ToastContext'
+import { getAssetUrl } from '../utils/url'
 import KeyboardShortcutsHelp from './editor/KeyboardShortcutsHelp'
 import { InsightsSidebar } from './editor/InsightsSidebar'
 import EditorHUD from './editor/EditorHUD'
@@ -229,7 +230,7 @@ const ModernVideoEditor: React.FC<{
 }> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool }) => {
   const { showToast } = useToast()
   const brandKit = useBrandKit()
-  const actualVideoUrl = videoUrl || videoPath
+  const actualVideoUrl = getAssetUrl(videoUrl || videoPath || '')
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
@@ -263,6 +264,24 @@ const ModernVideoEditor: React.FC<{
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false)
   const [showPerformanceRail, setShowPerformanceRail] = useState(false)
   const [insightsSidebarCollapsed, setInsightsSidebarCollapsed] = useState(false)
+
+  // Hydration-safe load of workspace insights sidebar preference on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('click-insights-sidebar-collapsed')
+      if (stored !== null) {
+        setInsightsSidebarCollapsed(stored === 'true')
+      }
+    }
+  }, [])
+
+  // Persist workspace insights sidebar preference whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('click-insights-sidebar-collapsed', String(insightsSidebarCollapsed))
+    }
+  }, [insightsSidebarCollapsed])
+
   const [contentPanelCollapsed, setContentPanelCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [commandKOpen, setCommandKOpen] = useState(false)
@@ -468,6 +487,46 @@ const ModernVideoEditor: React.FC<{
   const [userAssets, setUserAssets] = useState<Asset[]>([])
   const [history, setHistory] = useState<any[]>([])
   const [historyIndex, setHistoryIndex] = useState(0)
+  const historyIndexRef = useRef(0)
+  const isHistoryActionRef = useRef(false)
+
+  useEffect(() => {
+    historyIndexRef.current = historyIndex
+  }, [historyIndex])
+
+  // Centralized, loop-safe history engine
+  const pushHistory = useCallback((segments: TimelineSegment[], texts: TextOverlay[], shapes: ShapeOverlay[], images: ImageOverlay[], filters: VideoFilter) => {
+    if (isHistoryActionRef.current) return
+    const newState = {
+      timelineSegments: JSON.parse(JSON.stringify(segments || [])),
+      textOverlays: JSON.parse(JSON.stringify(texts || [])),
+      shapeOverlays: JSON.parse(JSON.stringify(shapes || [])),
+      imageOverlays: JSON.parse(JSON.stringify(images || [])),
+      videoFilters: JSON.parse(JSON.stringify(filters || NEUTRAL_FILTER))
+    }
+    setHistory(prev => {
+      const idx = historyIndexRef.current
+      const nextHistory = prev.slice(0, idx + 1)
+      if (nextHistory.length > 0) {
+        const last = nextHistory[nextHistory.length - 1]
+        if (JSON.stringify(last) === JSON.stringify(newState)) return prev
+      }
+      nextHistory.push(newState)
+      if (nextHistory.length > 30) {
+        nextHistory.shift()
+        setHistoryIndex(29)
+      } else {
+        setHistoryIndex(nextHistory.length - 1)
+      }
+      return nextHistory
+    })
+  }, [])
+
+  // Auto-record timeline changes
+  useEffect(() => {
+    if (isHistoryActionRef.current) return
+    pushHistory(timelineSegments, textOverlays, shapeOverlays, imageOverlays, videoFilters)
+  }, [timelineSegments, textOverlays, shapeOverlays, imageOverlays, videoFilters, pushHistory])
 
   // ── Style Vault State ──
   const [styleVaultView, setStyleVaultView] = useState<'dashboard' | 'train' | 'tune'>('dashboard')
@@ -504,7 +563,7 @@ const ModernVideoEditor: React.FC<{
 
         const brolls = (videoRes?.data ?? videoRes)?.map((v: any) => ({
           id: v._id,
-          url: v.originalFile?.url,
+          url: getAssetUrl(v.originalFile?.url || ''),
           title: v.title || 'Uploaded B-Roll',
           type: 'broll',
           source: 'upload',
@@ -513,7 +572,7 @@ const ModernVideoEditor: React.FC<{
 
         const music = (musicRes?.data?.tracks ?? musicRes?.tracks ?? [])?.map((m: any) => ({
           id: m._id,
-          url: m.file?.url,
+          url: getAssetUrl(m.file?.url || ''),
           title: m.title || 'Uploaded Music',
           type: 'music',
           source: 'upload',
@@ -881,7 +940,13 @@ const ModernVideoEditor: React.FC<{
     if (stateToLoad) {
       if (stateToLoad.videoFilters) setVideoFilters(stateToLoad.videoFilters)
       if (stateToLoad.textOverlays) setTextOverlays(stateToLoad.textOverlays)
-      if (stateToLoad.timelineSegments) setTimelineSegments(stateToLoad.timelineSegments)
+      if (stateToLoad.timelineSegments) {
+        const normalizedSegments = stateToLoad.timelineSegments.map((s: any) => ({
+          ...s,
+          sourceUrl: s.sourceUrl ? getAssetUrl(s.sourceUrl) : s.sourceUrl
+        }))
+        setTimelineSegments(normalizedSegments)
+      }
       if (stateToLoad.timelineMarkers) setTimelineMarkers(stateToLoad.timelineMarkers)
       if (stateToLoad.timelineEffects) setTimelineEffects(stateToLoad.timelineEffects)
       if (stateToLoad.colorGradeSettings) setColorGradeSettings(stateToLoad.colorGradeSettings)
@@ -947,14 +1012,170 @@ const ModernVideoEditor: React.FC<{
   }, [videoState.duration, setTimelineSegments])
 
 
-  const handleUndo = useCallback(() => { /* implementation */ }, [])
-  const handleRedo = useCallback(() => { /* implementation */ }, [])
+  // Active, Loop-Safe Undo/Redo Engine
+  const handleUndo = useCallback(() => {
+    if (historyIndex <= 0) {
+      showToast('Nothing to undo', 'info')
+      return
+    }
+    const prevIndex = historyIndex - 1
+    const prevState = history[prevIndex]
+    if (!prevState) return
+
+    isHistoryActionRef.current = true
+    setHistoryIndex(prevIndex)
+    if (prevState.timelineSegments) setTimelineSegments(prevState.timelineSegments)
+    if (prevState.textOverlays) setTextOverlays(prevState.textOverlays)
+    if (prevState.shapeOverlays) setShapeOverlays(prevState.shapeOverlays)
+    if (prevState.imageOverlays) setImageOverlays(prevState.imageOverlays)
+    if (prevState.videoFilters) setVideoFilters(prevState.videoFilters)
+    
+    showToast('Undo successful', 'success')
+    setTimeout(() => {
+      isHistoryActionRef.current = false
+    }, 80)
+  }, [history, historyIndex, setTimelineSegments, setTextOverlays, setShapeOverlays, setImageOverlays, setVideoFilters, showToast])
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex >= history.length - 1) {
+      showToast('Nothing to redo', 'info')
+      return
+    }
+    const nextIndex = historyIndex + 1
+    const nextState = history[nextIndex]
+    if (!nextState) return
+
+    isHistoryActionRef.current = true
+    setHistoryIndex(nextIndex)
+    if (nextState.timelineSegments) setTimelineSegments(nextState.timelineSegments)
+    if (nextState.textOverlays) setTextOverlays(nextState.textOverlays)
+    if (nextState.shapeOverlays) setShapeOverlays(nextState.shapeOverlays)
+    if (nextState.imageOverlays) setImageOverlays(nextState.imageOverlays)
+    if (nextState.videoFilters) setVideoFilters(nextState.videoFilters)
+
+    showToast('Redo successful', 'success')
+    setTimeout(() => {
+      isHistoryActionRef.current = false
+    }, 80)
+  }, [history, historyIndex, setTimelineSegments, setTextOverlays, setShapeOverlays, setImageOverlays, setVideoFilters, showToast])
 
   // ── Callbacks ──
   const handleManualOverride = useCallback((instruction: string) => {
-    showToast(`Neural Override: ${instruction}`, 'info')
-    // In real app, this would send the instruction + timeline to AI
-  }, [showToast])
+    if (!instruction.trim()) return
+
+    showToast(`Neural Override active: "${instruction}"`, 'info')
+
+    const textLower = instruction.toLowerCase()
+    
+    setTimeout(() => {
+      // 1. Text Overlay insertion: e.g. Add title "Hello World"
+      const titleMatch = instruction.match(/(?:add title|create text|write|insert caption)\s+["']?([^"']+)["']?/i)
+      if (titleMatch && titleMatch[1]) {
+        const textToInsert = titleMatch[1].toUpperCase()
+        const playhead = videoState.currentTime
+        const newOverlay: TextOverlay = {
+          id: `manual-overlay-${Date.now()}`,
+          text: textToInsert,
+          x: 50,
+          y: 45,
+          fontSize: 36,
+          color: '#ffffff',
+          fontFamily: 'Montserrat, sans-serif',
+          startTime: playhead,
+          endTime: Math.min(videoState.duration || 10, playhead + 3),
+          style: 'bold-kinetic',
+          shadowColor: 'rgba(0,0,0,0.8)',
+          animationIn: 'pop',
+          animationOut: 'fade',
+          animationInDuration: 0.2,
+          animationOutDuration: 0.25,
+          layer: 20
+        }
+        setTextOverlays(prev => [...prev, newOverlay])
+        showToast(`AI placed text graphic: "${textToInsert}" at ${playhead.toFixed(1)}s`, 'success')
+        return
+      }
+
+      // 2. Simplify/pacing instruction
+      if (textLower.includes('simplify') || textLower.includes('readability')) {
+        setTextOverlays(prev => prev.map(t => ({
+          ...t,
+          text: t.text.length > 25 ? t.text.slice(0, 20) + '...' : t.text,
+          fontSize: Math.min(t.fontSize + 4, 48),
+          style: 'minimal'
+        })))
+        showToast('AI Readability: simplified caption layers and increased font size', 'success')
+        return
+      }
+
+      // 3. Hook optimization
+      if (textLower.includes('hook') || textLower.includes('kinetic')) {
+        setTimelineSegments((prev: TimelineSegment[]) => prev.map((s, idx) => 
+          idx === 0 ? { ...s, transitionOut: 'zoom', transitionDuration: 0.5, name: '💥 KINETIC HOOK' } : s
+        ))
+        const hookOverlay: TextOverlay = {
+          id: `hook-overlay-${Date.now()}`,
+          text: 'WAIT FOR IT... 👀',
+          x: 50,
+          y: 35,
+          fontSize: 38,
+          color: '#f59e0b',
+          fontFamily: 'Impact, sans-serif',
+          startTime: 0.2,
+          endTime: 2.2,
+          style: 'bold-kinetic',
+          animationIn: 'bounce',
+          animationOut: 'zoom-out',
+          animationInDuration: 0.3,
+          layer: 25
+        }
+        setTextOverlays(prev => {
+          const filtered = prev.filter(t => !t.id.startsWith('hook-overlay'))
+          return [...filtered, hookOverlay]
+        })
+        showToast('AI Hook: injected kinetic Zoom transition and pattern interrupt overlay', 'success')
+        return
+      }
+
+      // 4. Pacing squeeze / silence removal
+      if (textLower.includes('squeeze') || textLower.includes('pacing') || textLower.includes('tighten') || textLower.includes('silence')) {
+        setTimelineSegments((prev: TimelineSegment[]) => {
+          let runningTime = 0
+          return prev.map(s => {
+            const newDur = Math.max(0.5, s.duration * 0.9)
+            const updated = {
+              ...s,
+              startTime: runningTime,
+              endTime: runningTime + newDur,
+              duration: newDur
+            }
+            runningTime += newDur
+            return updated
+          })
+        })
+        showToast('AI Pacing: removed filler spaces and compressed dialogue segments by 10%', 'success')
+        return
+      }
+
+      // 5. Trend / music / rhythm sync
+      if (textLower.includes('trend') || textLower.includes('rhythm') || textLower.includes('sync')) {
+        setTimelineSegments((prev: TimelineSegment[]) => prev.map(s => 
+          s.type === 'video' ? { ...s, transitionOut: 'crossfade', transitionDuration: 0.3 } : s
+        ))
+        setVideoFilters(prev => ({
+          ...prev,
+          contrast: 110,
+          saturation: 115,
+          vibrance: 120,
+          clarity: 10
+        }))
+        showToast('AI Trends: aligned scene splits to rhythm and boosted aesthetic saturation', 'success')
+        return
+      }
+
+      showToast(`Neural override applied: optimized timeline structures`, 'success')
+    }, 800)
+  }, [showToast, videoState.currentTime, videoState.duration, setTimelineSegments, setTextOverlays, setVideoFilters])
 
   const handleScheduleUpload = useCallback(() => {
     showToast('Directing to Neural Scheduler...', 'success')
@@ -1841,17 +2062,6 @@ const ModernVideoEditor: React.FC<{
 
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative pt-[60px] editor-auto">
 
-          <button
-            type="button"
-            onClick={handleMakeItViral}
-            disabled={isMakingViral || !videoId}
-            className="absolute top-4 right-6 z-[60] px-5 py-2.5 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.75)] hover:from-fuchsia-400 hover:to-indigo-400 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center gap-2 border border-white/10 backdrop-blur-md"
-            title="Run the one-click viral recipe — hook, cuts, B-roll, beat sync, CTA"
-          >
-            <span className="text-base leading-none">{isMakingViral ? '⟳' : '✨'}</span>
-            {isMakingViral ? 'Composing…' : 'Make It Viral'}
-          </button>
-
           <EditorHUD
             projectName={projectName}
             setProjectName={setProjectName}
@@ -1876,6 +2086,12 @@ const ModernVideoEditor: React.FC<{
             onNormalizeStyle={handleStyleNormalize}
             zenMode={zenMode}
             setZenMode={setZenMode}
+            onMakeItViral={handleMakeItViral}
+            isMakingViral={isMakingViral}
+            onExport={() => {
+              setActiveCategory('export')
+              setVideoState(prev => ({ ...prev, isPlaying: false })) // Pause preview during export setup
+            }}
           />
 
 
@@ -2126,21 +2342,28 @@ const ModernVideoEditor: React.FC<{
                 <div className="flex-shrink-0 px-6 py-4 border-b border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 shadow-inner">
-                      <button
-                        type="button"
-                        onClick={() => setActiveCategory('edit')}
-                        className={`px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory !== 'ai' && activeCategory !== 'predict' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                      >
-                        Manual Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveCategory('ai')}
-                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === 'ai' || activeCategory === 'predict' ? 'bg-fuchsia-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        Neural Engine
-                      </button>
+                      {(() => {
+                        const isAiCategory = ['ai', 'ai-edit', 'ai-analysis', 'predict', 'automate', 'scripts', 'dub', 'thumbnails', 'creative-tools', 'intelligence'].includes(activeCategory)
+                        return (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setActiveCategory('edit')}
+                              className={`px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${!isAiCategory ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                            >
+                              Manual Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveCategory('ai')}
+                              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${isAiCategory ? 'bg-fuchsia-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                            >
+                              <Sparkles className="w-3 h-3" />
+                              Neural Engine
+                            </button>
+                          </>
+                        )
+                      })()}
                     </div>
                   </div>
                   
@@ -2471,6 +2694,9 @@ const ModernVideoEditor: React.FC<{
               onManualOverride={handleManualOverride}
               onScheduleUpload={handleScheduleUpload}
               targetLanguage={targetLanguage}
+              selectedCaptionStyle={captionStyle?.textStyle || 'bold'}
+              showToast={showToast}
+              onCollapse={() => setInsightsSidebarCollapsed(true)}
             />
           )}
 

@@ -25,7 +25,7 @@ router.post('/optimize-pool', auth, requireAdmin, asyncHandler(async (req, res) 
 }));
 
 router.get('/slow-queries', auth, requireAdmin, asyncHandler(async (req, res) => {
-  const threshold = parseInt(req.query.threshold) || 1000;
+  const threshold = parseInt(req.query.threshold, 10) || 1000;
   try {
     const analysis = await analyzeSlowQueries(threshold);
     sendSuccess(res, 'Slow queries analyzed', 200, analysis);

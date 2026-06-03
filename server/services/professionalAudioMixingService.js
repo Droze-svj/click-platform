@@ -377,10 +377,10 @@ async function analyzeAudio(videoPath) {
       
       const analysis = {
         duration: parseFloat(audioStream.duration) || 0,
-        sampleRate: parseInt(audioStream.sample_rate) || 44100,
-        channels: parseInt(audioStream.channels) || 2,
+        sampleRate: parseInt(audioStream.sample_rate, 10) || 44100,
+        channels: parseInt(audioStream.channels, 10) || 2,
         codec: audioStream.codec_name,
-        bitrate: parseInt(audioStream.bit_rate) || 0,
+        bitrate: parseInt(audioStream.bit_rate, 10) || 0,
         format: audioStream.codec_name
       };
       

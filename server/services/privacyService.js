@@ -144,7 +144,7 @@ async function exportUserData(userId) {
  */
 async function checkDataRetention() {
   try {
-    const retentionDays = parseInt(process.env.DATA_RETENTION_DAYS || '365');
+    const retentionDays = parseInt(process.env.DATA_RETENTION_DAYS || '365', 10);
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 

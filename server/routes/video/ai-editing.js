@@ -278,8 +278,10 @@ router.post('/analyze', auth, asyncHandler(async (req, res) => {
     logger.warn('Niche/style hydration failed for /analyze', { error: e.message });
   }
 
-  // Dev users short-circuit — see devEditingMock() comment above.
-  if (isDevUser(req.user)) {
+  // Dev users short-circuit — see devEditingMock() comment above. Hard-gated
+  // off in production so a seeded dev/test account can never receive mock
+  // analysis instead of the real pipeline.
+  if (isDevUser(req.user) && process.env.NODE_ENV !== 'production') {
     return sendSuccess(res, 'Video analyzed (dev mode)', 200, await devEditingMock('analyze', videoId, req));
   }
 
@@ -394,7 +396,7 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
   // an explicit ?dev_mock=true escape hatch for the rare cases where
   // the local ffmpeg build is missing a filter — but it must be
   // opt-in, never silent.
-  if (isDevUser(req.user) && req.query.dev_mock === 'true') {
+  if (isDevUser(req.user) && req.query.dev_mock === 'true' && process.env.NODE_ENV !== 'production') {
     return sendSuccess(res, 'Auto-edit simulated (dev mode — explicit ?dev_mock=true)', 200, await devEditingMock('auto-edit', videoId, req));
   }
 

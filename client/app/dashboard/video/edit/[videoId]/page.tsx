@@ -8,6 +8,7 @@ import { useSocket } from '../../../../../hooks/useSocket'
 import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, TrendingUp, Layout, Moon, Sun, Wand2, Scissors, Music, Type, Hash, Flame, Mic, Film, Gauge } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
+import { getAssetUrl } from '../../../../../utils/url'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
 import { useTheme } from '../../../../../components/ThemeProvider'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
@@ -282,20 +283,7 @@ export default function VideoEditPage({ params }: PageProps) {
         }
 
         if (videoData.originalFile?.url) {
-          let videoUrl = videoData.originalFile.url
-          if (videoUrl.startsWith('/uploads/')) {
-            const backendUrl = (
-              process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, '') ||
-              (typeof window !== 'undefined' ? window.location.origin : '')
-            )
-            videoUrl = `${backendUrl}${videoUrl}`
-          } else if (videoUrl.startsWith('/')) {
-            const baseUrl = typeof window !== 'undefined'
-              ? window.location.origin
-              : (API_URL.startsWith('http') ? new URL(API_URL).origin : '')
-            videoUrl = `${baseUrl}${videoUrl}`
-          }
-          videoData.originalFile.url = videoUrl
+          videoData.originalFile.url = getAssetUrl(videoData.originalFile.url)
         }
         setVideo(videoData)
       } catch (error: any) {
@@ -614,9 +602,7 @@ export default function VideoEditPage({ params }: PageProps) {
   )
 
   const videoUrl = video?.originalFile?.url
-  // clipUrl is passed from the Clips Hub when editing an already-rendered clip —
-  // give it priority so the manual editor opens the clip MP4, not the parent source.
-  const editorVideoUrl = clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl
+  const editorVideoUrl = getAssetUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl || '')
 
   const selectionUI = (
     <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-24 transition-colors duration-500">

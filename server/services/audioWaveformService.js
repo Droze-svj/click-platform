@@ -30,7 +30,7 @@ async function generateWaveformData(audioPath, options = {}) {
 
       duration = metadata.format.duration || 0;
       const audioStream = metadata.streams.find(s => s.codec_type === 'audio');
-      const sampleRate = parseInt(audioStream?.sample_rate) || 44100;
+      const sampleRate = parseInt(audioStream?.sample_rate, 10) || 44100;
 
       // Extract waveform using FFmpeg
       // This is a simplified version - full implementation would use more sophisticated analysis

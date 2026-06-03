@@ -193,7 +193,7 @@ async function ingestUrlHandler(req, res) {
       });
     }
 
-    const stats = fs.statSync(destPath);
+    const stats = await fs.promises.stat(destPath);
     const contentId = (devModeAllowed && (!userId || isDevUser(req.user)))
       ? `dev-content-${Date.now()}`
       : `ingest-${Date.now()}`;

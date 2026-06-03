@@ -48,7 +48,7 @@ router.get('/:contentId/audio-visualization', auth, asyncHandler(async (req, res
           duration: null
         });
 
-        waveformData = generateWaveformData(audioFeatures, parseInt(waveformResolution) || 1000);
+        waveformData = generateWaveformData(audioFeatures, parseInt(waveformResolution, 10) || 1000);
       } catch (error) {
         logger.warn('Failed to generate waveform data', { error: error.message, contentId });
         // Continue without waveform data

@@ -221,7 +221,7 @@ async function generateOptimalTimeRecommendations(posts, clientWorkspaceIds) {
       // Find gaps where we could add posts
       const currentTimes = clientPosts.map(p => new Date(p.scheduledTime).getHours());
       const suggestedTimes = optimalTimes.filter(time => {
-        const hour = parseInt(time.split(':')[0]);
+        const hour = parseInt(time.split(':')[0], 10);
         return !currentTimes.includes(hour);
       });
 

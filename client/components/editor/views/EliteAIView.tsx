@@ -33,6 +33,48 @@ import StyleMimicView from './StyleMimicView'
 import VariantFactoryView from './VariantFactoryView'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 
+const ENGINE_COLORS: Record<'gpt4' | 'claude' | 'gemini', { active: string; inactive: string }> = {
+  gpt4: {
+    active: 'bg-fuchsia-500/20 border-fuchsia-500/40 text-fuchsia-400',
+    inactive: 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-white',
+  },
+  claude: {
+    active: 'bg-orange-500/20 border-orange-500/40 text-orange-400',
+    inactive: 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-white',
+  },
+  gemini: {
+    active: 'bg-blue-500/20 border-blue-500/40 text-blue-400',
+    inactive: 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-white',
+  },
+}
+
+const PERSONA_COLORS: Record<'beast' | 'minimalist' | 'architect' | 'educator', { active: string; inactive: string; activeIconBg: string; inactiveIconBg: string }> = {
+  beast: {
+    active: 'bg-orange-500/10 border-orange-500/30 text-orange-400 shadow-[0_0_30px_rgba(249,115,22,0.15)]',
+    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    activeIconBg: 'bg-orange-500/20',
+    inactiveIconBg: 'bg-white/5',
+  },
+  minimalist: {
+    active: 'bg-slate-500/10 border-slate-500/30 text-slate-400 shadow-[0_0_30px_rgba(148,163,184,0.15)]',
+    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    activeIconBg: 'bg-slate-500/20',
+    inactiveIconBg: 'bg-white/5',
+  },
+  architect: {
+    active: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.15)]',
+    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    activeIconBg: 'bg-indigo-500/20',
+    inactiveIconBg: 'bg-white/5',
+  },
+  educator: {
+    active: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.15)]',
+    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    activeIconBg: 'bg-emerald-500/20',
+    inactiveIconBg: 'bg-white/5',
+  },
+}
+
 interface EliteAIViewProps {
   videoId: string
   isTranscribing: boolean
@@ -222,59 +264,140 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
     showToast('Generating styled captions…', 'info')
 
-    const categories = {
-      urgency: {
-        words: ['secret', 'massive', 'crazy', 'insane', 'never', 'finally', 'stop', 'look', 'viral', 'now', 'quickly'],
-        color: '#ff4d4d',
-        glow: 'rgba(255, 77, 77, 0.6)'
-      },
-      curiosity: {
-        words: ['why', 'how', 'hidden', 'unknown', 'mysterious', 'imagine', 'discover'],
-        color: '#818cf8',
-        glow: 'rgba(129, 140, 248, 0.6)'
-      },
-      authority: {
-        words: ['verified', 'guaranteed', 'proof', 'expert', 'result', 'master', 'alpha'],
-        color: '#10b981',
-        glow: 'rgba(16, 185, 129, 0.4)'
+    const emotionTriggers = {
+      urgency: ['secret', 'massive', 'crazy', 'insane', 'never', 'finally', 'stop', 'look', 'viral', 'now', 'quickly', 'deadly', 'warning', 'destroy', 'dangerous', 'shocking', 'panic'],
+      curiosity: ['why', 'how', 'hidden', 'unknown', 'mysterious', 'imagine', 'discover', 'unbelievable', 'underground', 'revealed', 'key', 'method', 'formula'],
+      authority: ['verified', 'guaranteed', 'proof', 'expert', 'result', 'master', 'alpha', 'perfect', 'million', 'billion', 'rich', 'success', 'winning', 'growth'],
+      hype: ['epic', 'insane', 'amazing', 'wild', 'boom', 'legendary', 'unreal', 'godly', 'crushing', 'absolute', 'omega']
+    }
+
+    const words = transcript.words
+    const phrases: { words: any[]; start: number; end: number }[] = []
+    let currentPhrase: any[] = []
+    
+    for (let idx = 0; idx < words.length; idx++) {
+      const w = words[idx]
+      currentPhrase.push(w)
+      
+      const hasPause = idx < words.length - 1 && (words[idx+1].start - w.end > 0.4)
+      const endsWithPunctuation = /[.?!]$/.test((w.text || w.word || '').trim())
+      
+      if (currentPhrase.length >= 3 || hasPause || endsWithPunctuation || idx === words.length - 1) {
+         phrases.push({
+           words: currentPhrase,
+           start: currentPhrase[0].start,
+           end: w.end
+         })
+         currentPhrase = []
       }
     }
 
-    const semanticOverlays = transcript.words.filter((_: any, i: number) => i % 6 === 0).map((w: any, i: number) => {
-        const text = (w.text || w.word || '').trim().toLowerCase().replace(/[^\w\s]/gi, '')
+    // Color swatches for alternating dynamic highlight paths
+    const beastColors = ['#fbbf24', '#34d399', '#f87171', '#ffffff'] // Yellow, Green, Red, White
+    const architectColors = ['#f472b6', '#22d3ee', '#fbbf24', '#ffffff'] // Fuchsia, Cyan, Amber, White
+    const educatorColors = ['#60a5fa', '#34d399', '#ffffff'] // Blue, Green, White
 
-        let style = {
-            fontSize: 42,
-            color: '#ffffff',
-            glow: 'rgba(0,0,0,0.8)'
-        }
+    const semanticOverlays = phrases.map((phrase, i) => {
+      const phraseText = phrase.words.map(w => w.text || w.word || '').join(' ')
+      const cleanedWords = phrase.words.map(w => (w.text || w.word || '').trim().toLowerCase().replace(/[^\w]/g, ''))
+      
+      // Check emotional context triggers
+      let category: 'urgency' | 'curiosity' | 'authority' | 'hype' | 'neutral' = 'neutral'
+      if (cleanedWords.some(w => emotionTriggers.urgency.includes(w))) category = 'urgency'
+      else if (cleanedWords.some(w => emotionTriggers.curiosity.includes(w))) category = 'curiosity'
+      else if (cleanedWords.some(w => emotionTriggers.authority.includes(w))) category = 'authority'
+      else if (cleanedWords.some(w => emotionTriggers.hype.includes(w))) category = 'hype'
 
-        if (categories.urgency.words.includes(text)) {
-            style = { fontSize: 72, color: categories.urgency.color, glow: categories.urgency.glow }
-        } else if (categories.curiosity.words.includes(text)) {
-            style = { fontSize: 54, color: categories.curiosity.color, glow: categories.curiosity.glow }
-        } else if (categories.authority.words.includes(text)) {
-            style = { fontSize: 54, color: categories.authority.color, glow: categories.authority.glow }
-        }
+      // Base default layout configurations
+      let config = {
+        fontSize: 32,
+        color: '#ffffff',
+        fontFamily: 'Inter',
+        style: 'shadow' as any,
+        shadowColor: 'rgba(0,0,0,0.8)',
+        outlineColor: undefined as string | undefined,
+        animationIn: 'pop' as any,
+        animationOut: 'fade' as any,
+        x: 30, // Centered range 30-70% (width 40%)
+        y: 75,
+        width: 40,
+        text: phraseText
+      }
 
-        return {
-          id: `semantic-cap-${Date.now()}-${i}`,
-          text: (w.text || w.word || '').toUpperCase(),
-          startTime: w.start,
-          endTime: w.start + 1.2,
-          style: {
-            fontSize: style.fontSize,
-            color: style.color,
-            fontWeight: '900',
-            fontFamily: 'Inter',
-            textTransform: 'uppercase',
-            textShadow: `0 0 30px ${style.glow}`
-          }
-        }
+      // Persona customization
+      if (activePersona === 'beast') {
+        // High impact, kinetic center focus
+        const beastColor = beastColors[i % beastColors.length]
+        config.fontSize = category !== 'neutral' ? 54 : 42
+        config.color = category === 'urgency' ? '#f87171' : category === 'authority' ? '#34d399' : beastColor
+        config.style = 'shadow'
+        config.shadowColor = 'rgba(0,0,0,0.95)'
+        config.x = 25
+        config.width = 50
+        config.y = 45 // Center eye contact focus
+        config.text = phraseText.toUpperCase()
+        config.fontFamily = 'Arial, Helvetica, sans-serif'
+        config.animationIn = 'pop'
+      } else if (activePersona === 'minimalist') {
+        // Clean lower third, elegant styling
+        config.fontSize = 24
+        config.color = category === 'urgency' ? '#cbd5e1' : '#ffffff'
+        config.style = 'minimal'
+        config.x = 20
+        config.width = 60
+        config.y = 78
+        config.text = phraseText.toLowerCase()
+        config.fontFamily = 'Inter, sans-serif'
+        config.animationIn = 'fade'
+      } else if (activePersona === 'architect') {
+        // Neon fast-paced hooks
+        const archColor = architectColors[i % architectColors.length]
+        config.fontSize = category !== 'neutral' ? 44 : 36
+        config.color = category === 'hype' ? '#22d3ee' : category === 'urgency' ? '#f472b6' : archColor
+        config.style = 'neon'
+        config.shadowColor = config.color
+        config.x = 20
+        config.width = 60
+        config.y = 35 // Upper middle quadrant
+        config.text = phraseText.toUpperCase()
+        config.fontFamily = 'Montserrat, sans-serif'
+        config.animationIn = 'blur-in'
+      } else if (activePersona === 'educator') {
+        // Highly readable outline or structured caps
+        const edColor = educatorColors[i % educatorColors.length]
+        config.fontSize = 28
+        config.color = edColor
+        config.style = 'outline'
+        config.outlineColor = '#000000'
+        config.x = 15
+        config.width = 70
+        config.y = 72
+        config.text = phraseText.replace(/\b\w/g, c => c.toUpperCase()) // Title case
+        config.fontFamily = 'Roboto, sans-serif'
+        config.animationIn = 'slide-bottom'
+      }
+
+      return {
+        id: `semantic-cap-${Date.now()}-${i}`,
+        text: config.text,
+        x: config.x,
+        y: config.y,
+        width: config.width,
+        fontSize: config.fontSize,
+        color: config.color,
+        fontFamily: config.fontFamily,
+        startTime: phrase.start,
+        endTime: phrase.end + 0.1, // Soft tail buffer
+        style: config.style,
+        shadowColor: config.shadowColor,
+        outlineColor: config.outlineColor,
+        animationIn: config.animationIn,
+        animationOut: config.animationOut
+      }
     })
 
     setTextOverlays((prev: any[]) => [...prev, ...semanticOverlays])
-    showToast('Semantic Categories Synthesized', 'success')
+    showToast('Dynamic styled captions synthesized successfully.', 'success')
   }
 
   const copyToClipboard = (text: string) => {
@@ -411,11 +534,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               AI Storyteller
             </h1>
 
-            <div className="flex items-center gap-4 mt-6">
+            <div className="flex flex-wrap items-center gap-4 mt-6">
               <button
                 type="button"
                 onClick={() => setView('mimic')}
-                className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center gap-3 group shadow-[0_0_20px_rgba(79,70,229,0.3)]"
+                className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center gap-3 group shadow-[0_0_20px_rgba(79,70,229,0.3)] flex-shrink-0"
               >
                 <Fingerprint className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-black text-white uppercase tracking-widest italic">The Mimic</span>
@@ -424,7 +547,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               <button
                 type="button"
                 onClick={() => setView('variant-factory')}
-                className="px-6 py-3 rounded-2xl bg-fuchsia-600/10 border border-fuchsia-500/20 hover:bg-fuchsia-600/20 transition-all flex items-center gap-3 group"
+                className="px-6 py-3 rounded-2xl bg-fuchsia-600/10 border border-fuchsia-500/20 hover:bg-fuchsia-600/20 transition-all flex items-center gap-3 group flex-shrink-0"
               >
                 <Target className="w-4 h-4 text-fuchsia-400 group-hover:scale-125 transition-transform" />
                 <span className="text-xs font-black text-fuchsia-400 uppercase tracking-widest italic">Variant Factory</span>
@@ -433,37 +556,37 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               <button
                 type="button"
                 onClick={onBeatSync}
-                className="px-6 py-3 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 transition-all flex items-center gap-3 group"
+                className="px-6 py-3 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 transition-all flex items-center gap-3 group flex-shrink-0"
               >
                 <Radio className="w-4 h-4 text-emerald-400 group-hover:animate-ping" />
                 <span className="text-xs font-black text-emerald-400 uppercase tracking-widest italic">Beat-Sync</span>
               </button>
-            </div>
 
-              <div className="h-10 w-px bg-white/10 mx-2" />
-              <div className="flex gap-2">
+              <div className="hidden md:block h-8 w-px bg-white/10 mx-2 flex-shrink-0" />
+
+              <div className="flex flex-wrap gap-2 flex-shrink-0">
                 {engines.map(engine => {
-                const Icon = engine.icon
-                const isActive = activeEngine === engine.id
-                return (
-                  <button
-                    type="button"
-                    key={engine.id}
-                    onClick={() => setActiveEngine(engine.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all border ${
-                      isActive
-                        ? `bg-${engine.color}-500/20 border-${engine.color}-500/40 text-${engine.color}-400`
-                        : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <div className="text-left">
-                      <div className="text-[10px] font-black uppercase tracking-widest leading-none">{engine.name}</div>
-                      <div className="text-[8px] uppercase tracking-tighter opacity-60 mt-0.5 leading-none">{engine.maker}</div>
-                    </div>
-                  </button>
-                )
-              })}
+                  const Icon = engine.icon
+                  const isActive = activeEngine === engine.id
+                  const colors = ENGINE_COLORS[engine.id]
+                  return (
+                    <button
+                      type="button"
+                      key={engine.id}
+                      onClick={() => setActiveEngine(engine.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all border ${
+                        isActive ? colors.active : colors.inactive
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <div className="text-left">
+                        <div className="text-[10px] font-black uppercase tracking-widest leading-none">{engine.name}</div>
+                        <div className="text-[8px] uppercase tracking-tighter opacity-60 mt-0.5 leading-none">{engine.maker}</div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Persona Switcher */}
@@ -473,22 +596,17 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 {personas.map(persona => {
                   const Icon = persona.icon
                   const isActive = activePersona === persona.id
+                  const colors = PERSONA_COLORS[persona.id]
                   return (
                     <button
                       type="button"
                       key={persona.id}
                       onClick={() => setActivePersona(persona.id)}
                       className={`flex flex-col gap-3 p-4 rounded-2xl transition-all border text-left group ${
-                        isActive
-                          ? `bg-${persona.color}-500/10 border-${persona.color}-500/30 text-${persona.color}-400 ${
-                              persona.color === 'orange' ? 'shadow-[0_0_30px_rgba(249,115,22,0.1)]' :
-                              persona.color === 'indigo' ? 'shadow-[0_0_30px_rgba(99,102,241,0.1)]' :
-                              'shadow-[0_0_30px_rgba(16,185,129,0.1)]'
-                            }`
-                          : 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white'
+                        isActive ? colors.active : colors.inactive
                       }`}
                     >
-                      <div className={`p-2 w-fit rounded-lg ${isActive ? `bg-${persona.color}-500/20` : 'bg-white/5'}`}>
+                      <div className={`p-2 w-fit rounded-lg ${isActive ? colors.activeIconBg : colors.inactiveIconBg}`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
@@ -643,18 +761,18 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
           <div className="flex gap-6">
             <motion.button
               variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, borderColor: 'rgba(99, 102, 241, 0.3)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.15)' }}
               whileTap={{ scale: 0.98 }}
               onClick={applySemanticCaptions}
-              className="flex-1 p-10 bg-white shadow-2xl rounded-[3rem] border border-white/20 flex flex-col items-center justify-center gap-6 group/btn relative overflow-hidden"
+              className="flex-1 p-10 bg-white/[0.02] hover:bg-white/[0.04] rounded-[3rem] border border-white/5 flex flex-col items-center justify-center gap-6 group/btn relative overflow-hidden transition-all duration-500"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
-              <div className="w-16 h-16 rounded-[1.4rem] bg-indigo-500/10 flex items-center justify-center group-hover/btn:bg-indigo-500 transition-colors duration-500 relative z-10">
-                <Type className="w-8 h-8 text-indigo-500 group-hover/btn:text-white transition-colors duration-500" />
+              <div className="w-16 h-16 rounded-[1.4rem] bg-indigo-500/10 flex items-center justify-center group-hover/btn:bg-indigo-500 border border-indigo-500/20 transition-all duration-500 relative z-10">
+                <Type className="w-8 h-8 text-indigo-400 group-hover/btn:text-white transition-colors duration-500" />
               </div>
               <div className="text-center space-y-2 relative z-10">
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic group-hover/btn:text-indigo-500">Node Synthesis</p>
-                <p className="text-xl font-black text-slate-800 uppercase tracking-tighter">Semantic Captions</p>
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic group-hover/btn:text-indigo-400">Node Synthesis</p>
+                <p className="text-xl font-black text-white uppercase tracking-tighter">Semantic Captions</p>
               </div>
             </motion.button>
           </div>
@@ -811,7 +929,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     <div className="flex items-center justify-between mb-6">
                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic">Variation 0{i+1}</span>
                       <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold">
-                        {clip.engagementScore.overall}% RANK
+                        {clip.engagementScore?.overall || 0}% RANK
                       </div>
                     </div>
                     <h5 className="text-xl font-black text-white italic truncate mb-4 uppercase">{clip.name}</h5>
@@ -819,11 +937,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                        <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${clip.engagementScore.viralPotential}%` }}
+                            animate={{ width: `${clip.engagementScore?.viralPotential || 0}%` }}
                             className="h-full bg-indigo-500"
                           />
                        </div>
-                       <span className="text-[9px] font-bold text-slate-400">VIRAL:{clip.engagementScore.viralPotential}</span>
+                       <span className="text-[9px] font-bold text-slate-400">VIRAL:{clip.engagementScore?.viralPotential || 0}</span>
                     </div>
                     <button
                       type="button"

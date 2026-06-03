@@ -27,7 +27,9 @@ class CommunityAgentService {
       startTime: new Date(),
       engagementCount: 0,
       telemetry: {
-        avgSentiment: 0.85,
+        // No community activity analyzed yet — start neutral, not a fabricated
+        // 0.85. Real sentiment is computed in getStatus() via calculateCommunityPulse.
+        avgSentiment: 0,
         driftDirection: 'stable',
         threatLevel: 'low',
         lastPulse: null
@@ -80,14 +82,26 @@ class CommunityAgentService {
       const existingDraft = await AgentResponse.findOne({ commentId: comment._id });
       if (existingDraft) continue;
 
-      // Simulate LLM response generation with expert niche knowledge
+      // Template-based expert response generation (deterministic, real).
       const suggestedText = this.generateExpertResponse(comment.text);
-      
+
+      // Real per-comment sentiment from the SentimentEngine instead of a
+      // hardcoded 0.82. Falls back to 0 (neutral/unknown) if analysis fails.
+      let sentimentAtTime = 0;
+      try {
+        const vibe = await SentimentEngine.analyzeVibe([comment], 'high');
+        if (vibe && typeof vibe.potency === 'number') {
+          sentimentAtTime = vibe.potency / 100;
+        }
+      } catch (err) {
+        logger.error('CM-Agent: Per-comment sentiment failed, defaulting to neutral', { error: err.message });
+      }
+
       await AgentResponse.create({
         userId,
         commentId: comment._id,
         suggestedText,
-        sentimentAtTime: 0.82, // Simulated from SentimentEngine
+        sentimentAtTime,
         status: 'draft'
       });
       
@@ -128,8 +142,10 @@ class CommunityAgentService {
    */
   async calculateCommunityPulse(userId) {
     const comments = await PostComment.find({ userId }).sort({ createdAt: -1 }).limit(20).lean();
-    if (comments.length === 0) return { potency: 85, direction: 'stable', diffractionDetected: false };
-    
+    // No comments to analyze — return an honest neutral/zero pulse rather than
+    // a fabricated potency of 85.
+    if (comments.length === 0) return { potency: 0, direction: 'stable', diffractionDetected: false };
+
     return await SentimentEngine.analyzeVibe(comments, 'high');
   }
 

@@ -129,7 +129,7 @@ function errorInjectionMiddleware(req, res, next) {
     try {
       injectError(errorType, {
         message: req.headers['x-inject-error-message'],
-        statusCode: parseInt(req.headers['x-inject-error-status'] || '500'),
+        statusCode: parseInt(req.headers['x-inject-error-status'] || '500', 10),
       });
     } catch (error) {
       return next(error);

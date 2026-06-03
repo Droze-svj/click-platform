@@ -82,8 +82,8 @@ const auth = async (req, res, next) => {
     // Get user from MongoDB (Mongoose) - Primary Legacy/Dev Source
     let user = null;
     const health = getDatabaseHealth();
-    const isDbConnected = health.status === 'connected';
-    const isMongoConnected = health.mongodb;
+    const isDbConnected = health.status === 'connected' || mongoose.connection.readyState === 1;
+    const isMongoConnected = health.mongodb || mongoose.connection.readyState === 1;
 
     if (mongoose.Types.ObjectId.isValid(userId)) {
       if (isMongoConnected) {

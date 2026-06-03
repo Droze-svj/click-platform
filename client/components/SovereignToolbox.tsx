@@ -43,7 +43,18 @@ interface Tool {
   roi?: number;
 }
 
-export default function SovereignToolbox() {
+// Tools that operate on a specific source video and therefore require a videoId.
+const VIDEO_DEPENDENT_TOOLS = new Set([
+  'silence-removal',
+  'auto-cut',
+  'bg-swap',
+  'auto-captions',
+  'text-editor',
+  'ai-avatar',
+  'cinematic-3d'
+])
+
+export default function SovereignToolbox({ videoId }: { videoId?: string } = {}) {
   const { showToast } = useToast()
   const [tools, setTools] = useState<Tool[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,13 +81,19 @@ export default function SovereignToolbox() {
   }, [fetchTools])
 
   const executeTool = async (toolId: string) => {
+    // Video-dependent tools cannot run without a real source video.
+    if (VIDEO_DEPENDENT_TOOLS.has(toolId) && !videoId) {
+      showToast('Select or upload a video before running this tool.', 'error')
+      return
+    }
+
     try {
       setExecutingToolId(toolId)
       showToast(`Initializing ${toolId} Sovereign Upgrade...`, 'info')
-      
+
       const res = await apiPost('/toolbox/execute', {
         toolId,
-        videoId: 'placeholder-v1',
+        ...(videoId ? { videoId } : {}),
         options: {
           intensity: 'aggressive',
           sovereign: true
@@ -199,10 +216,12 @@ export default function SovereignToolbox() {
                 </p>
 
                 <div className="flex items-center gap-4 mt-8 pt-8 border-t-2 border-white/5">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 shadow-sm">
-                    <Zap size={14} className="text-emerald-400" />
-                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">+{(tool.roi || (Math.random() * 15 + 20).toFixed(1))}% ROI</span>
-                  </div>
+                  {typeof tool.roi === 'number' && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 shadow-sm">
+                      <Zap size={14} className="text-emerald-400" />
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">+{tool.roi.toFixed(1)}% ROI</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary-500/5 border border-primary-500/10 shadow-sm">
                     <Cpu size={14} className="text-primary-400" />
                     <span className="text-[10px] font-black text-primary-400 uppercase tracking-widest italic">ULTRA_SYNC</span>

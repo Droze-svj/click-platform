@@ -50,6 +50,8 @@ export function Nav() {
           
           <button
             type="button"
+            title={mobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
+            aria-label={mobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
             className="md:hidden w-14 h-14 rounded-2xl bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center text-surface-900 dark:text-white transition-all active:scale-90 magnetic-hover"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >

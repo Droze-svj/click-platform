@@ -37,15 +37,15 @@ async function applyTransition(clip1Path, clip2Path, outputPath, transition) {
           filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration}`;
           break;
         case 'wipe':
-          const wipeDirection = direction === 'left' ? 'wipeleft' : direction === 'right' ? 'wiperight' : 
-            direction === 'up' ? 'wipeup' : 'wipedown';
-          filter = `xfade=transition=${wipeDirection}:duration=${duration}:offset=${duration1 - duration}`;
-          break;
+        { const wipeDirection = direction === 'left' ? 'wipeleft' : direction === 'right' ? 'wiperight' : 
+          direction === 'up' ? 'wipeup' : 'wipedown';
+        filter = `xfade=transition=${wipeDirection}:duration=${duration}:offset=${duration1 - duration}`;
+        break; }
         case 'slide':
-          const slideDirection = direction === 'left' ? 'slideleft' : direction === 'right' ? 'slideright' :
-            direction === 'up' ? 'slideup' : 'slidedown';
-          filter = `xfade=transition=${slideDirection}:duration=${duration}:offset=${duration1 - duration}`;
-          break;
+        { const slideDirection = direction === 'left' ? 'slideleft' : direction === 'right' ? 'slideright' :
+          direction === 'up' ? 'slideup' : 'slidedown';
+        filter = `xfade=transition=${slideDirection}:duration=${duration}:offset=${duration1 - duration}`;
+        break; }
         case 'zoom':
           filter = `xfade=transition=zoom:duration=${duration}:offset=${duration1 - duration}`;
           break;

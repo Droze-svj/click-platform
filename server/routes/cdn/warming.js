@@ -49,7 +49,7 @@ router.post('/warm', auth, requireAdmin, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.post('/popular', auth, requireAdmin, asyncHandler(async (req, res) => {
-  const limit = parseInt(req.body.limit) || 100;
+  const limit = parseInt(req.body.limit, 10) || 100;
 
   try {
     const result = await warmPopularContent(limit);

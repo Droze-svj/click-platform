@@ -22,8 +22,8 @@ router.get('/:entityId/compare', auth, asyncHandler(async (req, res) => {
 
   const comparison = await compareVersionsSideBySide(
     entityId,
-    parseInt(version1),
-    parseInt(version2),
+    parseInt(version1, 10),
+    parseInt(version2, 10),
     entityType
   );
 
@@ -44,8 +44,8 @@ router.get('/:entityId/compare/export', auth, asyncHandler(async (req, res) => {
 
   const exportData = await exportVersionComparison(
     entityId,
-    parseInt(version1),
-    parseInt(version2),
+    parseInt(version1, 10),
+    parseInt(version2, 10),
     entityType,
     format
   );

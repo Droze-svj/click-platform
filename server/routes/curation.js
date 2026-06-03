@@ -83,7 +83,7 @@ router.post('/auto-curate', auth, asyncHandler(async (req, res) => {
  */
 router.get('/insights', auth, asyncHandler(async (req, res) => {
   const { period = 30 } = req.query;
-  const insights = await getCurationInsights(req.user._id, parseInt(period));
+  const insights = await getCurationInsights(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'Insights retrieved', 200, insights);
 }));
 
@@ -119,8 +119,8 @@ router.get('/feed', auth, asyncHandler(async (req, res) => {
   const contentTypesArray = contentTypes ? contentTypes.split(',') : null;
 
   const feed = await getCuratedFeed(req.user._id, {
-    limit: parseInt(limit),
-    minScore: parseInt(minScore),
+    limit: parseInt(limit, 10),
+    minScore: parseInt(minScore, 10),
     platforms: platformsArray,
     contentTypes: contentTypesArray,
     sortBy
@@ -217,7 +217,7 @@ router.get('/freshness/:contentId', auth, asyncHandler(async (req, res) => {
 router.get('/gaps', auth, asyncHandler(async (req, res) => {
   const { period = 90 } = req.query;
 
-  const gaps = await analyzeContentGaps(req.user._id, parseInt(period));
+  const gaps = await analyzeContentGaps(req.user._id, parseInt(period, 10));
   sendSuccess(res, 'Gaps analyzed', 200, gaps);
 }));
 
@@ -297,7 +297,7 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
  */
 router.get('/templates/public', auth, asyncHandler(async (req, res) => {
   const { limit = 20 } = req.query;
-  const templates = await getPublicTemplates(parseInt(limit));
+  const templates = await getPublicTemplates(parseInt(limit, 10));
   sendSuccess(res, 'Public templates retrieved', 200, { templates });
 }));
 

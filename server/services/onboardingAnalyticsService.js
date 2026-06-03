@@ -146,7 +146,7 @@ async function identifyDropOffPoints(startDate) {
   });
 
   return Object.keys(dropOffs).map(step => ({
-    step: parseInt(step),
+    step: parseInt(step, 10),
     count: dropOffs[step],
   })).sort((a, b) => b.count - a.count);
 }

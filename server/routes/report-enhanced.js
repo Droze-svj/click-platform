@@ -171,7 +171,7 @@ router.get('/charts/:metricType/interactive', auth, asyncHandler(async (req, res
     clientWorkspaceId,
     period,
     chartType,
-    parseInt(drillDownLevel)
+    parseInt(drillDownLevel, 10)
   );
 
   sendSuccess(res, 'Interactive chart generated', 200, chart);

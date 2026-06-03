@@ -1,4 +1,4 @@
-const AEOMetadataService = require('../../../server/services/AEOMetadataService');
+const AEOMetadataService = require('../../../server/services/aeoMetadataService');
 
 describe('AEOMetadataService', () => {
     test('should build a schema-compliant AEO payload', () => {

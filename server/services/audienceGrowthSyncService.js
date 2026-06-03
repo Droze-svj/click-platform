@@ -164,7 +164,7 @@ async function syncYouTubeFollowers(userId, accessToken, connection) {
     const stats = channel?.statistics || {};
 
     return {
-      followers: parseInt(stats.subscriberCount) || 0,
+      followers: parseInt(stats.subscriberCount, 10) || 0,
       following: 0
     };
   } catch (error) {

@@ -252,76 +252,221 @@ async function detectScenes(config, context) {
 }
 
 /**
- * Create content (placeholder)
+ * Resolve the acting user id from action config or execution context.
+ */
+function resolveUserId(config, context) {
+  return (
+    config.userId ||
+    context.userId ||
+    context.user?._id?.toString() ||
+    context.user?.id ||
+    null
+  );
+}
+
+/**
+ * Resolve a content id from action config or execution context.
+ */
+function resolveContentId(config, context) {
+  return (
+    config.contentId ||
+    context.contentId ||
+    context.content?._id?.toString() ||
+    context.content?.id ||
+    null
+  );
+}
+
+/**
+ * Create content — inserts a real Content document.
  */
 async function createContent(config, context) {
-  // Would create content
-  logger.info('Automation: Create content', { config, context });
-  return { success: true };
+  const Content = require('../models/Content');
+  const userId = resolveUserId(config, context);
+  if (!userId) throw new Error('userId required to create content');
+
+  const doc = await Content.create({
+    userId: String(userId),
+    type: config.type || 'video',
+    title: config.title || 'Automated content',
+    description: config.description || '',
+    status: config.status || 'processing',
+    workspaceId: context.workspaceId || config.workspaceId,
+    tags: Array.isArray(config.tags) ? config.tags : [],
+  });
+
+  logger.info('Automation: content created', { contentId: doc._id.toString(), userId });
+  return { success: true, contentId: doc._id.toString() };
 }
 
 /**
- * Update content (placeholder)
+ * Update content — applies a whitelisted set of field updates to a Content doc.
  */
 async function updateContent(config, context) {
-  logger.info('Automation: Update content', { config, context });
-  return { success: true };
+  const Content = require('../models/Content');
+  const contentId = resolveContentId(config, context);
+  if (!contentId) throw new Error('contentId required to update content');
+
+  const updates = config.updates || config.fields || {};
+  const allowed = ['title', 'description', 'status', 'tags', 'category', 'isFavorite', 'isArchived'];
+  const $set = { updatedAt: new Date() };
+  for (const key of allowed) {
+    if (updates[key] !== undefined) $set[key] = updates[key];
+  }
+
+  const doc = await Content.findByIdAndUpdate(contentId, { $set }, { new: true });
+  if (!doc) throw new Error('Content not found');
+  return { success: true, contentId, updated: Object.keys($set).filter((k) => k !== 'updatedAt') };
 }
 
 /**
- * Publish content (placeholder)
+ * Publish content — schedules the post for immediate publishing so the
+ * existing publishing worker picks it up on its next pass.
  */
 async function publishContent(config, context) {
-  logger.info('Automation: Publish content', { config, context });
-  return { success: true };
+  const { scheduleWithOptimalTiming } = require('./contentSchedulingService');
+  const userId = resolveUserId(config, context);
+  const contentId = resolveContentId(config, context);
+  const platform = config.platform || context.platform;
+  if (!userId || !contentId || !platform) {
+    throw new Error('userId, contentId and platform required to publish content');
+  }
+
+  const post = await scheduleWithOptimalTiming(userId, contentId, platform, {
+    scheduledTime: new Date(), // publish now
+  });
+  return { success: true, scheduledPostId: post._id.toString(), platform, publishAt: post.scheduledTime };
 }
 
 /**
- * Schedule content (placeholder)
+ * Schedule content — creates a ScheduledPost at the requested (or optimal) time.
  */
 async function scheduleContent(config, context) {
-  logger.info('Automation: Schedule content', { config, context });
-  return { success: true };
+  const { scheduleWithOptimalTiming } = require('./contentSchedulingService');
+  const userId = resolveUserId(config, context);
+  const contentId = resolveContentId(config, context);
+  const platform = config.platform || context.platform;
+  if (!userId || !contentId || !platform) {
+    throw new Error('userId, contentId and platform required to schedule content');
+  }
+
+  const options = {};
+  if (config.scheduledTime) options.scheduledTime = config.scheduledTime;
+  const post = await scheduleWithOptimalTiming(userId, contentId, platform, options);
+  return { success: true, scheduledPostId: post._id.toString(), platform, scheduledTime: post.scheduledTime };
 }
 
 /**
- * Send notification (placeholder)
+ * Send notification — persists an in-app notification for the user.
  */
 async function sendNotification(config, context) {
-  logger.info('Automation: Send notification', { config, context });
-  return { success: true };
+  const notificationService = require('./notificationService');
+  const userId = resolveUserId(config, context);
+  if (!userId) throw new Error('userId required to send notification');
+
+  const notification = await notificationService.createNotification(
+    userId,
+    config.title || 'Automation',
+    config.message || config.body || 'An automation rule ran.',
+    config.notificationType || config.type || 'automation',
+    config.link || null,
+    config.options || {}
+  );
+  return { success: true, notificationId: notification?._id?.toString?.() || notification?.id || null };
 }
 
 /**
- * Assign task (placeholder)
+ * Assign task — creates a Task assigned to the target user.
  */
 async function assignTask(config, context) {
-  logger.info('Automation: Assign task', { config, context });
-  return { success: true };
+  const Task = require('../models/Task');
+  const assigneeId = config.assigneeId || config.assignTo || resolveUserId(config, context);
+  if (!assigneeId) throw new Error('assigneeId required to assign task');
+  if (!config.title) throw new Error('title required to assign task');
+
+  const task = await Task.create({
+    userId: assigneeId,
+    title: config.title,
+    description: config.description || '',
+    priority: config.priority || 'medium',
+    dueDate: config.dueDate ? new Date(config.dueDate) : undefined,
+    workspaceId: context.workspaceId || config.workspaceId,
+    tags: Array.isArray(config.tags) ? config.tags : [],
+  });
+  return { success: true, taskId: task._id.toString() };
 }
 
 /**
- * Update status (placeholder)
+ * Update status — updates the status field on a Content document.
  */
 async function updateStatus(config, context) {
-  logger.info('Automation: Update status', { config, context });
-  return { success: true };
+  const Content = require('../models/Content');
+  const contentId = resolveContentId(config, context);
+  const status = config.status;
+  if (!contentId) throw new Error('contentId required to update status');
+  if (!status) throw new Error('status required to update status');
+
+  const doc = await Content.findByIdAndUpdate(
+    contentId,
+    { $set: { status, updatedAt: new Date() } },
+    { new: true }
+  );
+  if (!doc) throw new Error('Content not found');
+  return { success: true, contentId, status };
 }
 
 /**
- * Call webhook (placeholder)
+ * Call webhook — POSTs the configured payload to an external URL.
  */
 async function callWebhook(config, context) {
-  logger.info('Automation: Call webhook', { config, context });
-  return { success: true };
+  const url = config.url || config.webhookUrl;
+  if (!url) throw new Error('url required to call webhook');
+
+  const payload = config.payload || {
+    event: 'automation.action',
+    ruleId: context.ruleId || null,
+    contentId: resolveContentId(config, context),
+    timestamp: new Date().toISOString(),
+  };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), config.timeoutMs || 10000);
+  try {
+    const response = await fetch(url, {
+      method: config.method || 'POST',
+      headers: { 'Content-Type': 'application/json', ...(config.headers || {}) },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    return { success: response.ok, status: response.status, url };
+  } catch (error) {
+    throw new Error(`Webhook call failed: ${error.message}`);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 /**
- * Send email (placeholder)
+ * Send email — delivers a real email via the configured transport.
  */
 async function sendEmail(config, context) {
-  logger.info('Automation: Send email', { config, context });
-  return { success: true };
+  const emailService = require('./emailService');
+  const to = config.to || context.user?.email || config.email;
+  if (!to) throw new Error('recipient (to) required to send email');
+  if (!config.subject) throw new Error('subject required to send email');
+
+  const result = await emailService.sendEmail({
+    to,
+    subject: config.subject,
+    html: config.html || config.body || config.text,
+    text: config.text,
+    cc: config.cc,
+    bcc: config.bcc,
+  });
+  if (!result.success) {
+    throw new Error(result.error || 'Email send failed');
+  }
+  return { success: true, messageId: result.messageId, to };
 }
 
 /**
@@ -435,14 +580,15 @@ async function checkAudioConditions(scenes, conditions) {
 
       // Check if condition is met
       switch (condition.operator) {
-      case 'has_audio_tag':
+      case 'has_audio_tag': {
         const requiredTags = condition.audioCriteria.audioTags || [];
         const hasRequiredTags = filteredScenes.length > 0;
         if (!hasRequiredTags && requiredTags.length > 0) {
           return false;
         }
         break;
-      case 'audio_energy_range':
+      }
+      case 'audio_energy_range': {
         const minEnergy = condition.value?.min || 0;
         const maxEnergy = condition.value?.max || 1;
         const allInRange = filteredScenes.every(scene => {
@@ -453,6 +599,7 @@ async function checkAudioConditions(scenes, conditions) {
           return false;
         }
         break;
+      }
       }
     }
   }

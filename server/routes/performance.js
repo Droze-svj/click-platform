@@ -18,7 +18,7 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/queries/slow', auth, asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 50;
+  const limit = parseInt(req.query.limit, 10) || 50;
 
   try {
     const queries = getSlowQueries(limit);

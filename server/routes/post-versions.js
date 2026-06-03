@@ -88,7 +88,7 @@ router.get('/:postId/versions/:versionNumber', auth, asyncHandler(async (req, re
   const post = await ScheduledPost.findOne({ _id: postId, userId }).select('_id').lean();
   if (!post) return sendError(res, 'Post not found', 404);
 
-  const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber) })
+  const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber, 10) })
     .populate('createdBy', 'name email')
     .populate('comments.userId', 'name email')
     .lean();
@@ -114,8 +114,8 @@ router.get('/:postId/versions/compare', auth, asyncHandler(async (req, res) => {
 
   const comparison = await compareVersions(
     postId,
-    parseInt(version1),
-    parseInt(version2)
+    parseInt(version1, 10),
+    parseInt(version2, 10)
   );
 
   sendSuccess(res, 'Versions compared', 200, comparison);
@@ -133,7 +133,7 @@ router.post('/:postId/versions/:versionNumber/comments', auth, asyncHandler(asyn
     return sendError(res, 'Comment text is required', 400);
   }
 
-  const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber) });
+  const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber, 10) });
   if (!version) {
     return sendError(res, 'Version not found', 404);
   }

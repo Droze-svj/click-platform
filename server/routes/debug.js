@@ -23,13 +23,13 @@ function appendLocalLog(obj) {
     const p = path.join(process.cwd(), 'logs', 'agent_debug.ndjson');
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.appendFileSync(p, JSON.stringify(obj) + '\n', 'utf8');
-  } catch { }
+  } catch { /* intentionally empty */ }
 
   try {
     const p = path.join(process.cwd(), '.cursor', 'debug.log');
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.appendFileSync(p, JSON.stringify(obj) + '\n', 'utf8');
-  } catch { }
+  } catch { /* intentionally empty */ }
 }
 
 function redact(obj) {

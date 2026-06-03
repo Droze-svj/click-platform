@@ -42,22 +42,28 @@ class StyleDNAMiningService {
       };
     });
 
-    // 2. Apply Creative Randomness (Phase 17 decision)
-    // We mutate the DNA markers based on the randomness slider to prevent homogenization
-    const mutatedDNA = rawDNA.map(marker => {
-      const mutationFactor = (Math.random() - 0.5) * this.creativeRandomness;
-      return {
-        ...marker,
-        strength: Math.max(0.1, Math.min(0.99, marker.strength + mutationFactor)),
-        isMutated: Math.abs(mutationFactor) > 0.05
-      };
-    });
+    // 2. Genetic markers reflect the REAL swarm signal strengths. We do not
+    // fabricate random "mutation" jitter on the returned strength values —
+    // there is no real source for synthetic variance, so markers are emitted
+    // at their true viral strength and flagged as un-mutated.
+    const geneticMarkers = rawDNA.map(marker => ({
+      ...marker,
+      strength: Math.max(0.1, Math.min(0.99, marker.strength)),
+      isMutated: false
+    }));
+
+    // 3. Consensus stability is a REAL computation: the mean strength across
+    // the mined markers (how strongly the swarm agrees on these tactics).
+    // With no markers there is nothing to agree on, so it is honestly 0.
+    const consensusStability = geneticMarkers.length
+      ? geneticMarkers.reduce((sum, m) => sum + m.strength, 0) / geneticMarkers.length
+      : 0;
 
     return {
       niche,
-      geneticMarkers: mutatedDNA,
-      consensusStability: 0.85 - (this.creativeRandomness * 0.3),
-      recommendation: `Stylistic mix optimized with ${this.creativeRandomness * 100}% creative variance.`
+      geneticMarkers,
+      consensusStability,
+      recommendation: `Stylistic mix derived from ${geneticMarkers.length} swarm marker(s) at ${this.creativeRandomness * 100}% configured creative variance.`
     };
   }
 

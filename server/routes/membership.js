@@ -284,10 +284,10 @@ router.get('/pricing/recommend', auth, asyncHandler(async (req, res) => {
   } = req.query;
 
   const usageData = {
-    videosPerMonth: parseInt(videosPerMonth) || 0,
-    contentGenerationsPerMonth: parseInt(contentGenerationsPerMonth) || 0,
-    brands: parseInt(brands) || 1,
-    teamMembers: parseInt(teamMembers) || 1,
+    videosPerMonth: parseInt(videosPerMonth, 10) || 0,
+    contentGenerationsPerMonth: parseInt(contentGenerationsPerMonth, 10) || 0,
+    brands: parseInt(brands, 10) || 1,
+    teamMembers: parseInt(teamMembers, 10) || 1,
     needsMultiClient: needsMultiClient === 'true',
     needsWhiteLabel: needsWhiteLabel === 'true',
     needsSSO: needsSSO === 'true'

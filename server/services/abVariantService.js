@@ -6,6 +6,19 @@ const ScheduledPost = require('../models/ScheduledPost');
 const ContentRecycle = require('../models/ContentRecycle');
 const logger = require('../utils/logger');
 
+// Moved imports from internal functions to top of file to avoid lazy-loading sync overhead
+const { generateContentVariation } = require('./contentVariationService');
+const aiService = require('./aiService');
+const { predictOptimalTime } = require('./smartScheduleOptimizationService');
+const { adaptContentForPlatform } = require('./contentAdaptationService');
+
+const safetySettings = [
+  { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+];
+
 /**
  * Generate A/B variants from base asset
  */
@@ -60,8 +73,6 @@ async function generateABVariants(userId, baseContentId, options = {}) {
  * Create a single variant
  */
 async function createVariant(baseContent, index, variationTypes, platforms) {
-  const { generateContentVariation } = require('./contentVariationService');
-  const aiService = require('./aiService');
 
   const variant = {
     contentId: baseContent._id,
@@ -107,8 +118,6 @@ async function createVariant(baseContent, index, variationTypes, platforms) {
  * Generate headline variant
  */
 async function generateHeadlineVariant(baseContent, index) {
-  const aiService = require('./aiService');
-  
   const prompts = [
     'Create a more engaging, curiosity-driven headline',
     'Create a benefit-focused headline',
@@ -116,14 +125,16 @@ async function generateHeadlineVariant(baseContent, index) {
     'Create a number/stat-based headline'
   ];
 
-  const prompt = prompts[index % prompts.length];
+  const safeIndex = Math.abs(parseInt(index, 10) || 0) % prompts.length;
+  const prompt = prompts[safeIndex];
   
   try {
     const result = await aiService.generateContent({
       type: 'headline',
       baseText: baseContent.title || baseContent.content?.text || '',
       prompt,
-      tone: baseContent.metadata?.tone || 'professional'
+      tone: baseContent.metadata?.tone || 'professional',
+      safetySettings
     });
     return result.content || result;
   } catch (error) {
@@ -136,8 +147,6 @@ async function generateHeadlineVariant(baseContent, index) {
  * Generate caption variant
  */
 async function generateCaptionVariant(baseContent, index) {
-  const aiService = require('./aiService');
-  
   const styles = [
     'conversational and friendly',
     'professional and authoritative',
@@ -145,14 +154,16 @@ async function generateCaptionVariant(baseContent, index) {
     'storytelling and narrative'
   ];
 
-  const style = styles[index % styles.length];
+  const safeIndex = Math.abs(parseInt(index, 10) || 0) % styles.length;
+  const style = styles[safeIndex];
   
   try {
     const result = await aiService.generateContent({
       type: 'caption',
       baseText: baseContent.content?.text || '',
       style,
-      length: 'medium'
+      length: 'medium',
+      safetySettings
     });
     return result.content || result;
   } catch (error) {
@@ -165,8 +176,6 @@ async function generateCaptionVariant(baseContent, index) {
  * Generate hashtag variant
  */
 async function generateHashtagVariant(baseContent, index) {
-  const { generateHashtags } = require('./aiService');
-  
   const strategies = [
     'trending',
     'niche',
@@ -174,10 +183,11 @@ async function generateHashtagVariant(baseContent, index) {
     'branded'
   ];
 
-  const strategy = strategies[index % strategies.length];
+  const safeIndex = Math.abs(parseInt(index, 10) || 0) % strategies.length;
+  const strategy = strategies[safeIndex];
   
   try {
-    const result = await generateHashtags(baseContent.content?.text || '', strategy);
+    const result = await aiService.generateHashtags(baseContent.content?.text || '', strategy);
     return Array.isArray(result) ? result : result.hashtags || [];
   } catch (error) {
     logger.warn('Error generating hashtag variant', { error: error.message });
@@ -189,11 +199,10 @@ async function generateHashtagVariant(baseContent, index) {
  * Generate timing variant
  */
 async function generateTimingVariant(baseContent, index) {
-  const { predictOptimalTime } = require('./smartScheduleOptimizationService');
-  
   // Get optimal times for different days
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-  const day = days[index % days.length];
+  const safeIndex = Math.abs(parseInt(index, 10) || 0) % days.length;
+  const day = days[safeIndex];
   
   try {
     const optimal = await predictOptimalTime(baseContent.userId, 'twitter', 'UTC');
@@ -216,7 +225,6 @@ async function generateTimingVariant(baseContent, index) {
  * Adapt variant for platform
  */
 async function adaptVariantForPlatform(variant, platform, baseContent) {
-  const { adaptContentForPlatform } = require('./contentAdaptationService');
   
   const adapted = {
     platform,
@@ -329,8 +337,9 @@ async function getLearningData(userId, baseContentId) {
  * Get most common items
  */
 function getMostCommon(items, limit) {
-  const counts = {};
+  const counts = Object.create(null);
   items.forEach(item => {
+    if (typeof item !== 'string' || item === '__proto__' || item === 'constructor') return;
     counts[item] = (counts[item] || 0) + 1;
   });
   return Object.entries(counts)
@@ -512,7 +521,6 @@ async function autoSelectWinner(testId, variantResults, options = {}) {
     let deployed = false;
     if (autoDeploy && winner.contentId) {
       // Mark winner as primary variant
-      const Content = require('../models/Content');
       await Content.findByIdAndUpdate(winner.contentId, {
         'metadata.isWinner': true,
         'metadata.wonTest': testId,
@@ -627,9 +635,10 @@ async function learnFromCrossPlatformVariants(userId, baseContentId) {
     }
 
     // Group by platform
-    const platformData = {};
+    const platformData = Object.create(null);
     posts.forEach(post => {
       const platform = post.platform;
+      if (!platform || platform === '__proto__' || platform === 'constructor') return;
       if (!platformData[platform]) {
         platformData[platform] = [];
       }
