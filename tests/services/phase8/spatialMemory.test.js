@@ -1,4 +1,4 @@
-const SpatialMemoryService = require('../../../server/services/SpatialMemoryService');
+const SpatialMemoryService = require('../../../server/services/spatialMemoryService');
 
 describe('SpatialMemoryService', () => {
     test('should build a spatial ledger from a script', async () => {

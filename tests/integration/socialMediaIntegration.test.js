@@ -3,13 +3,13 @@ const TikTokSocialService = require('../../server/services/TikTokSocialService')
 const YouTubeSocialService = require('../../server/services/YouTubeSocialService');
 const TwitterSocialService = require('../../server/services/TwitterSocialService');
 const Content = require('../../server/models/Content');
-const OAuthService = require('../../server/services/OAuthService');
+const OAuthService = require('../../server/services/oauthService');
 
 // Mock dependencies
 jest.mock('../../server/services/TikTokSocialService');
 jest.mock('../../server/services/YouTubeSocialService');
 jest.mock('../../server/services/TwitterSocialService');
-jest.mock('../../server/services/OAuthService');
+jest.mock('../../server/services/oauthService');
 jest.mock('../../server/models/Content');
 jest.mock('../../server/utils/logger', () => ({
   info: jest.fn(),

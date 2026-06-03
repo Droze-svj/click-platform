@@ -20,6 +20,14 @@ jest.mock('fs', () => ({
   unlinkSync: jest.fn(),
 }));
 
+// The service shells out to `ffmpeg -version` / `ffprobe -version` to verify the
+// binaries exist. CI runners don't have ffmpeg installed, so stub execSync to a
+// no-op (the actual ffmpeg work is exercised via the mocked fluent-ffmpeg below).
+jest.mock('child_process', () => ({
+  ...jest.requireActual('child_process'),
+  execSync: jest.fn(),
+}));
+
 jest.mock('fluent-ffmpeg', () => {
   const mFfmpeg = jest.fn(() => ({
     complexFilter: jest.fn().mockReturnThis(),
