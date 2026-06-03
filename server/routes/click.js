@@ -125,7 +125,7 @@ router.get('/fiscal-velocity', auth, asyncHandler(async (req, res) => {
  * Active monetization targets and EPC (Phase 25)
  */
 router.get('/monetization-nodes', auth, asyncHandler(async (req, res) => {
-  const steer = await arbitrageSteering.getSteeringManifest();
+  const steer = await arbitrageSteering.getSteeringManifest(req.user.id);
   res.json(steer.manifest);
 }));
 

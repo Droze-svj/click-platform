@@ -1,46 +1,136 @@
+const MonetizationPlan = require('../models/MonetizationPlan');
+const Conversion = require('../models/Conversion');
+const ClickTracking = require('../models/ClickTracking');
+const SteeringDecision = require('../models/SteeringDecision');
+const logger = require('../utils/logger');
+
+/**
+ * ArbitrageSteeringService (Phase 11)
+ *
+ * Builds the user's REAL monetization offer set from their configured
+ * MonetizationPlan triggers and enriches each with REAL performance computed
+ * from their actual Conversion / ClickTracking data. Steering decisions are
+ * persisted as real records. No hardcoded offers, no fabricated metrics.
+ */
+
+const WINDOW_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 class ArbitrageSteeringService {
-  constructor() {
-    this.activeOffers = [
-      { id: 'whop_mastermind', name: 'Sovereign Alpha Access', platform: 'Whop', cvr: 0.12, pcv: 299, category: 'High-Ticket', tags: ['#wealth', '#ai', '#growth'] },
-      { id: 'saas_automated', name: 'Click Pro (Sovereign)', platform: 'Sovereign', cvr: 0.08, pcv: 49, category: 'Software', tags: ['#productivity', '#automation'] },
-      { id: 'affiliate_bio', name: 'Node Hardware (Ref)', platform: 'Vultr', cvr: 0.03, pcv: 200, category: 'Affiliate', tags: ['#hardware', '#crypto'] },
-      { id: 'ecom_aurora', name: 'Aurora Ambient Lamp', platform: 'Shopify', cvr: 0.04, pcv: 25, category: 'E-com', tags: ['#aesthetic', '#homestyle'] }
-    ];
-  }
+  /**
+   * Real offers derived from the user's monetization plans + live performance.
+   * Returns [] when the user has configured no monetization products.
+   */
+  async getActiveOffers(userId) {
+    if (!userId) return [];
 
-  async getActiveOffers() {
-    return this.activeOffers;
-  }
+    const since = new Date(Date.now() - WINDOW_DAYS * DAY_MS);
+    const sevenDaysAgo = new Date(Date.now() - 7 * DAY_MS);
 
-  async steerFunnel(_offerId, _niche) {
-    return {
-      status: 're-routed',
-      nodesAffected: 5
-    };
-  }
+    const plans = await MonetizationPlan.find({ userId }).lean();
 
-  async scaleNodeBudget(nodeId, roas) {
-    if (roas >= 2.0) {
-      return {
-        scaled: true,
-        newBudgetIncrement: 50.0
-      };
+    // Collect distinct products (offers) across all of the user's plans.
+    const products = new Map();
+    for (const plan of plans) {
+      for (const trigger of (plan.triggers || [])) {
+        if (!trigger || trigger.isActive === false) continue;
+        const key = trigger.productId || trigger.productName;
+        if (!key) continue;
+        if (!products.has(String(key))) {
+          products.set(String(key), {
+            id: String(key),
+            name: trigger.productName || 'Untitled Offer',
+            platform: plan.provider || 'custom',
+            category: plan.provider || 'monetization',
+            pcv: trigger.productPrice || 0,
+            checkoutUrl: trigger.checkoutUrl || null,
+            tags: []
+          });
+        }
+      }
     }
+
+    if (products.size === 0) return [];
+
+    // Real denominator for conversion rate: the user's clicks in the window.
+    const totalClicks = await ClickTracking.countDocuments({
+      userId,
+      'click.timestamp': { $gte: since }
+    });
+
+    const offers = [];
+    for (const [key, offer] of products) {
+      const baseFilter = { userId, 'conversionData.productId': key };
+      const conversions = await Conversion.countDocuments({
+        ...baseFilter,
+        'conversionData.timestamp': { $gte: since }
+      });
+      const recent7 = await Conversion.countDocuments({
+        ...baseFilter,
+        'conversionData.timestamp': { $gte: sevenDaysAgo }
+      });
+
+      const conversionRate = totalClicks > 0 ? conversions / totalClicks : 0;
+      const velocity = recent7 >= 10 ? 'High' : recent7 >= 3 ? 'Medium' : recent7 > 0 ? 'Low' : 'Idle';
+
+      offers.push({
+        ...offer,
+        conversions,
+        conversionRate,
+        // `cvr` kept as an alias for backward-compatible consumers.
+        cvr: conversionRate,
+        velocity
+      });
+    }
+
+    // Highest expected value first (real conversion rate × real payout value).
+    offers.sort((a, b) => (b.conversionRate * b.pcv) - (a.conversionRate * a.pcv));
+    return offers;
+  }
+
+  /**
+   * Persist a real steering decision and return a confirmation.
+   */
+  async steerFunnel(userId, offerId, targetNiche) {
+    if (!userId || !offerId) {
+      throw new Error('userId and offerId are required to steer the funnel');
+    }
+
+    let offerName = '';
+    try {
+      const offers = await this.getActiveOffers(userId);
+      offerName = offers.find(o => o.id === String(offerId))?.name || '';
+    } catch (e) {
+      // Non-fatal — record the decision regardless.
+    }
+
+    const decision = await SteeringDecision.create({
+      userId,
+      offerId: String(offerId),
+      offerName,
+      targetNiche: targetNiche || null
+    });
+
+    logger.info('Arbitrage funnel steered', { userId, offerId, targetNiche });
     return {
-      scaled: false,
-      newBudgetIncrement: 0
+      status: 'steered',
+      offerId: decision.offerId,
+      offerName: decision.offerName,
+      targetNiche: decision.targetNiche,
+      steeredAt: decision.createdAt
     };
   }
 
-  async getSteeringManifest() {
-    const prioritized = this.activeOffers
-      .map(o => ({ ...o, priority: o.cvr * o.pcv }))
-      .sort((a, b) => b.priority - a.priority);
+  /**
+   * Steering manifest computed from the user's real offers.
+   */
+  async getSteeringManifest(userId) {
+    const offers = await this.getActiveOffers(userId);
+    const prioritized = offers.map(o => ({ ...o, priority: o.conversionRate * o.pcv }));
 
     const currentWinner = prioritized[0];
     const competitor = prioritized[1];
 
-    // No active offers — nothing to steer toward.
     if (!currentWinner) {
       return {
         activeSteer: null,
@@ -55,7 +145,6 @@ class ArbitrageSteeringService {
       };
     }
 
-    // With only one offer there is no competitor to compute a delta against.
     const superiority = (competitor && competitor.priority > 0)
       ? (currentWinner.priority - competitor.priority) / competitor.priority
       : null;

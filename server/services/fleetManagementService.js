@@ -47,13 +47,17 @@ class FleetManagementService {
     const now = new Date();
     const stalenessThreshold = 5 * 60 * 1000; // 5 minutes
 
+    const pulseOf = (n) => n.metrics?.lastPulse ? new Date(n.metrics.lastPulse).getTime() : 0;
     const aggregation = {
       totalNodes: nodes.length,
-      onlineNodes: nodes.filter(n => (now - n.lastPulse) < stalenessThreshold && n.status === 'online').length,
-      warningNodes: nodes.filter(n => (now - n.lastPulse) >= stalenessThreshold && n.status !== 'offline').length,
+      onlineNodes: nodes.filter(n => (now - pulseOf(n)) < stalenessThreshold && n.status === 'online').length,
+      warningNodes: nodes.filter(n => (now - pulseOf(n)) >= stalenessThreshold && n.status !== 'offline').length,
       totalRevenue: nodes.reduce((sum, n) => sum + (n.metrics?.revenueDay || 0), 0),
       activeGenerations: nodes.reduce((sum, n) => sum + (n.metrics?.activeGenerations || 0), 0),
-      networkIntegrity: 0.99 // Calculated from hardware-level verification
+      // Real integrity = average node health score (0..1); 0 when no nodes.
+      networkIntegrity: nodes.length
+        ? nodes.reduce((sum, n) => sum + ((n.metrics?.healthScore || 0) / 100), 0) / nodes.length
+        : 0
     };
 
     return {
@@ -106,35 +110,6 @@ class FleetManagementService {
       },
       { new: true }
     );
-  }
-  
-  /**
-   * Simulate a fleet if no physical nodes are registered
-   */
-  async getDemoFleet(userId) {
-    const demoNodes = [
-      { name: 'Sovereign-Alpha', status: 'online', nodeType: 'local_subaccount', metrics: { revenueDay: 482, activeGenerations: 4, healthScore: 99 }, lastPulse: new Date() },
-      { name: 'Sovereign-Beta (DE)', status: 'online', nodeType: 'remote_instance', metrics: { revenueDay: 312, activeGenerations: 8, healthScore: 94 }, lastPulse: new Date() },
-      { name: 'Sovereign-Gamma (JP)', status: 'warning', nodeType: 'remote_instance', metrics: { revenueDay: 102, activeGenerations: 1, healthScore: 72 }, lastPulse: new Date(Date.now() - 10 * 60 * 1000) }
-    ];
-    
-    return {
-      nodes: demoNodes,
-      aggregation: {
-        totalNodes: 3,
-        onlineNodes: 2,
-        totalRevenue: 896,
-        activeGenerations: 13,
-        networkIntegrity: 0.88
-      },
-      recommendation: {
-        type: 'SCALE_UP',
-        msg: 'Fleet revenue approaching $1k threshold. Analyze Vultr API for deployment.',
-        priority: 'medium',
-        potentialLift: 0.08
-      },
-      isDemo: true
-    };
   }
 }
 
