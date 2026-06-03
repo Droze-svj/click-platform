@@ -137,7 +137,7 @@ function calculateTrends(revenue, conversions, posts) {
     conversions.reduce((sum, c) => sum + (c.revenue.attributed || c.conversionValue || 0), 0);
   const totalConversions = conversions.length;
   const totalPosts = posts.length;
-  const totalDays = Math.max(1, (new Date() - new Date(revenue[0]?.period.startDate || new Date())) / (1000 * 60 * 60 * 24));
+  const totalDays = Math.max(1, (new Date() - new Date(revenue[0]?.period?.startDate || new Date())) / (1000 * 60 * 60 * 24));
 
   trends.averages.revenuePerPost = totalPosts > 0 ? totalRevenue / totalPosts : 0;
   trends.averages.revenuePerConversion = totalConversions > 0 ? totalRevenue / totalConversions : 0;
@@ -249,11 +249,15 @@ async function generateClickForecast(userId, workspaceId, days = 7) {
       
       const finalWeight = spectralMultiplier * viralMultiplier;
 
+      // Drift erodes confidence, but never below zero (large drift must not
+      // produce a negative/nonsensical confidence score).
+      const confidenceFactor = Math.max(0, 1 - Math.abs(driftValue));
+
       return {
         ...f,
         revenue: Math.round(f.revenue * finalWeight * 100) / 100,
         conversions: Math.round(f.conversions * finalWeight),
-        confidence: Math.round(f.confidence * (1 - Math.abs(driftValue))),
+        confidence: Math.max(0, Math.round(f.confidence * confidenceFactor)),
         spectralIndicators: {
           multiplier: finalWeight,
           isElastic: Math.abs(driftValue) > 0.05

@@ -39,18 +39,39 @@ class ArbitrageSteeringService {
 
     const currentWinner = prioritized[0];
     const competitor = prioritized[1];
-    const superiority = (currentWinner.priority - competitor.priority) / competitor.priority;
-    const canAutoSteer = superiority > 0.30;
+
+    // No active offers — nothing to steer toward.
+    if (!currentWinner) {
+      return {
+        activeSteer: null,
+        manifest: [],
+        autonomyState: {
+          canAutoSteer: false,
+          superiority: '0.00',
+          recommendation: 'NO_ACTIVE_OFFERS'
+        },
+        recommendation: 'No active monetization offers to steer toward.',
+        timestamp: new Date()
+      };
+    }
+
+    // With only one offer there is no competitor to compute a delta against.
+    const superiority = (competitor && competitor.priority > 0)
+      ? (currentWinner.priority - competitor.priority) / competitor.priority
+      : null;
+    const canAutoSteer = superiority !== null && superiority > 0.30;
 
     return {
       activeSteer: currentWinner,
       manifest: prioritized,
       autonomyState: {
         canAutoSteer,
-        superiority: superiority.toFixed(2),
+        superiority: superiority !== null ? superiority.toFixed(2) : null,
         recommendation: canAutoSteer ? 'EXECUTE_AUTO_PIVOT' : 'AWAIT_APPROVAL'
       },
-      recommendation: `High-Confidence pivot toward ${currentWinner.name} (${(superiority * 100).toFixed(0)}% delta).`,
+      recommendation: superiority !== null
+        ? `High-Confidence pivot toward ${currentWinner.name} (${(superiority * 100).toFixed(0)}% delta).`
+        : `Only one active offer (${currentWinner.name}); no competing offer to compare.`,
       timestamp: new Date()
     };
   }

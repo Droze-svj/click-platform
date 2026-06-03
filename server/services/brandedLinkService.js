@@ -107,7 +107,7 @@ async function createBrandedLink(agencyWorkspaceId, userId, linkData) {
 
     return {
       ...link.toObject(),
-      shortUrl: `https://${finalDomain}/${shortCode}`
+      shortUrl: `https://${finalDomain}/l/${shortCode}`
     };
   } catch (error) {
     logger.error('Error creating branded link', { error: error.message, agencyWorkspaceId });
@@ -116,13 +116,15 @@ async function createBrandedLink(agencyWorkspaceId, userId, linkData) {
 }
 
 /**
- * Generate short code
+ * Generate short code.
+ * Uses crypto.randomInt for cryptographically strong, unbiased characters so
+ * codes are not guessable/predictable (Math.random is unsuitable for this).
  */
 function generateShortCode(length = 6) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
   for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars.charAt(crypto.randomInt(chars.length));
   }
   return code;
 }
@@ -175,7 +177,7 @@ async function resolveBrandedLink(shortCode, clickData = {}) {
  */
 async function trackClick(linkId, clickData, trackingOptions) {
   try {
-    const LinkClick = require('../models/LinkClick');
+    // LinkClick imported at module top
     const {
       ipAddress,
       userAgent,
@@ -231,7 +233,8 @@ async function updateLinkAnalytics(linkId, click) {
     const link = await BrandedLink.findById(linkId);
     if (!link) return;
 
-    // Update unique clicks (simplified - would need IP tracking in production)
+    // Unique clicks = count of distinct non-null IP addresses recorded for this
+    // link. Requires trackGeolocation to be enabled (otherwise IPs are null).
     const uniqueClicks = await LinkClick.distinct('ipAddress', {
       linkId,
       ipAddress: { $ne: null }
@@ -289,17 +292,25 @@ async function updateLinkAnalytics(linkId, click) {
       deviceEntry.clicks++;
     }
 
-    // Update referrer analytics
+    // Update referrer analytics. Guard against malformed referrer values so a
+    // bad URL doesn't abort the whole analytics update.
     if (click.referrer) {
-      const domain = new URL(click.referrer).hostname;
-      let referrerEntry = link.analytics.clicksByReferrer.find(
-        e => e.referrer === domain
-      );
-      if (!referrerEntry) {
-        referrerEntry = { referrer: domain, clicks: 0 };
-        link.analytics.clicksByReferrer.push(referrerEntry);
+      let domain = null;
+      try {
+        domain = new URL(click.referrer).hostname;
+      } catch (e) {
+        domain = null;
       }
-      referrerEntry.clicks++;
+      if (domain) {
+        let referrerEntry = link.analytics.clicksByReferrer.find(
+          e => e.referrer === domain
+        );
+        if (!referrerEntry) {
+          referrerEntry = { referrer: domain, clicks: 0 };
+          link.analytics.clicksByReferrer.push(referrerEntry);
+        }
+        referrerEntry.clicks++;
+      }
     }
 
     await link.save();
@@ -337,7 +348,7 @@ async function getLinkAnalytics(linkId, filters = {}) {
       link: {
         shortCode: link.shortCode,
         originalUrl: link.originalUrl,
-        shortUrl: `https://${link.domain}/${link.shortCode}`,
+        shortUrl: `https://${link.domain}/l/${link.shortCode}`,
         metadata: link.metadata
       },
       summary: {
@@ -390,7 +401,7 @@ async function getBrandedLinks(agencyWorkspaceId, clientWorkspaceId = null, filt
 
     return links.map(link => ({
       ...link,
-      shortUrl: `https://${link.domain}/${link.shortCode}`
+      shortUrl: `https://${link.domain}/l/${link.shortCode}`
     }));
   } catch (error) {
     logger.error('Error getting branded links', { error: error.message, agencyWorkspaceId });

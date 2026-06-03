@@ -14,7 +14,6 @@ import {
   Sparkles,
   BarChart,
   Target,
-  ArrowRight,
   RefreshCw,
   Search,
   CheckCircle2,
@@ -31,7 +30,7 @@ import {
 const glassStyle = "relative overflow-hidden rounded-[2.5rem] border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl shadow-2xl transition-all"
 
 const PacingHeatmap = ({ segments }: { segments: any[] }) => {
-  if (!segments || segments.length === 0) return null
+  const hasData = Array.isArray(segments) && segments.length > 0
 
   return (
     <div className="space-y-4 pt-4 border-t border-white/[0.05]">
@@ -49,23 +48,29 @@ const PacingHeatmap = ({ segments }: { segments: any[] }) => {
           </div>
         </div>
       </div>
-      <div className="flex h-4 w-full rounded-2xl overflow-hidden bg-white/5 border border-white/5 p-0.5">
-        {segments.map((s, i) => {
-          const color = s.status === 'too-dense' ? 'bg-rose-500/60' : s.status === 'too-slow' ? 'bg-amber-500/60' : 'bg-emerald-500/60'
-          return (
-            <div
-              key={i}
-              style={{ width: `${(s.duration / segments.reduce((acc, curr) => acc + curr.duration, 0)) * 100}%` }}
-              className={`${color} h-full border-r border-black/20 last:border-0 relative group first:rounded-l-xl last:rounded-r-xl`}
-            >
-              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl bg-[#080810]/95 text-[9px] text-white opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap pointer-events-none border border-white/10 shadow-2xl z-20">
-                <span className="font-black italic uppercase text-indigo-400 mr-2">{s.section}</span>
-                <span className="font-bold">{s.density.toFixed(1)} W/S</span>
+      {hasData ? (
+        <div className="flex h-4 w-full rounded-2xl overflow-hidden bg-white/5 border border-white/5 p-0.5">
+          {segments.map((s, i) => {
+            const color = s.status === 'too-dense' ? 'bg-rose-500/60' : s.status === 'too-slow' ? 'bg-amber-500/60' : 'bg-emerald-500/60'
+            return (
+              <div
+                key={i}
+                style={{ width: `${(s.duration / segments.reduce((acc, curr) => acc + curr.duration, 0)) * 100}%` }}
+                className={`${color} h-full border-r border-black/20 last:border-0 relative group first:rounded-l-xl last:rounded-r-xl`}
+              >
+                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl bg-[#080810]/95 text-[9px] text-white opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap pointer-events-none border border-white/10 shadow-2xl z-20">
+                  <span className="font-black italic uppercase text-indigo-400 mr-2">{s.section}</span>
+                  <span className="font-bold">{typeof s.density === 'number' ? `${s.density.toFixed(1)} W/S` : '—'}</span>
+                </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-12 w-full rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+          No pacing data yet
+        </div>
+      )}
     </div>
   )
 }
@@ -94,17 +99,7 @@ export default function NeuralStrategyHub() {
         hook: 'question',
         pacing: 'fast'
       })
-      const mockHeatmap = [
-        { section: 'Intro', duration: 3, density: 4.2, status: 'too-dense' },
-        { section: 'Problem', duration: 15, density: 2.8, status: 'optimal' },
-        { section: 'Solution', duration: 10, density: 3.1, status: 'optimal' },
-        { section: 'Bonus Tip', duration: 5, density: 1.2, status: 'too-slow' },
-        { section: 'CTA', duration: 4, density: 2.9, status: 'optimal' }
-      ]
-      setPrediction({
-        ...res.prediction,
-        pacingHeatmap: mockHeatmap
-      })
+      setPrediction(res.prediction)
       showToast('Success Intelligence synchronized', 'success')
     } catch (err) {
       showToast('Viral forecasting offline', 'error')
@@ -266,7 +261,7 @@ export default function NeuralStrategyHub() {
                     ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-emerald-500/10'
                     : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
                   }`}>
-                    {prediction.tier} TIER REACHED
+                    {prediction.tier ? `${prediction.tier} TIER REACHED` : 'TIER PENDING'}
                   </div>
                 </div>
  
@@ -274,7 +269,7 @@ export default function NeuralStrategyHub() {
                   <div className="space-y-6">
                     <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Growth Probability</div>
                     <div className="flex items-baseline gap-2">
-                       <span className="text-8xl font-black text-white italic leading-[0.7]">{prediction.probability}</span>
+                       <span className="text-8xl font-black text-white italic leading-[0.7]">{typeof prediction.probability === 'number' && !isNaN(prediction.probability) ? prediction.probability : '—'}</span>
                        <span className="text-3xl font-black text-indigo-400 italic">%</span>
                     </div>
                     <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
@@ -296,9 +291,9 @@ export default function NeuralStrategyHub() {
                              <Users className="w-3.5 h-3.5" /> Forecasted Audience
                           </div>
                           <div className="text-2xl font-black text-white italic uppercase tracking-tighter relative z-10">
-                             {prediction.forecastedReach?.[0]?.toLocaleString() || '50K'}
+                             {prediction.forecastedReach?.[0]?.toLocaleString() ?? '—'}
                              <span className="text-slate-700 mx-2">/</span>
-                             {prediction.forecastedReach?.[1]?.toLocaleString() || '250K'}
+                             {prediction.forecastedReach?.[1]?.toLocaleString() ?? '—'}
                           </div>
                        </div>
                        <div className="p-6 rounded-[2rem] bg-emerald-500/03 border border-emerald-500/10 hover:bg-emerald-500/05 transition-all group overflow-hidden relative">
@@ -307,9 +302,9 @@ export default function NeuralStrategyHub() {
                              <DollarSign className="w-3.5 h-3.5" /> ROI Projection
                           </div>
                           <div className="text-2xl font-black text-white italic tracking-tighter relative z-10">
-                             ${prediction.roi?.minRevenue || '1.2K'}
+                             {prediction.roi?.minRevenue != null ? `$${prediction.roi.minRevenue}` : '—'}
                              <span className="text-slate-700 mx-2">TO</span>
-                             ${prediction.roi?.maxRevenue || '8.4K'}
+                             {prediction.roi?.maxRevenue != null ? `$${prediction.roi.maxRevenue}` : '—'}
                           </div>
                        </div>
                     </div>
@@ -318,14 +313,20 @@ export default function NeuralStrategyHub() {
                   <div className="space-y-8">
                     <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Neural Confidence Chain</div>
                     <div className="space-y-3">
-                      {prediction.factors.map((f: string, i: number) => (
-                        <div key={i} className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-slate-200 text-xs font-bold transition-all hover:bg-white/[0.05] group">
-                          <div className="w-5 h-5 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                             <CheckCircle2 className="w-3 h-3 text-emerald-400 group-hover:scale-125 transition-transform" />
+                      {Array.isArray(prediction.factors) && prediction.factors.length > 0 ? (
+                        prediction.factors.map((f: string, i: number) => (
+                          <div key={i} className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-slate-200 text-xs font-bold transition-all hover:bg-white/[0.05] group">
+                            <div className="w-5 h-5 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                               <CheckCircle2 className="w-3 h-3 text-emerald-400 group-hover:scale-125 transition-transform" />
+                            </div>
+                            <span className="tracking-tight">{f}</span>
                           </div>
-                          <span className="tracking-tight">{f}</span>
+                        ))
+                      ) : (
+                        <div className="px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-slate-600 text-xs font-bold uppercase tracking-widest">
+                          No confidence factors yet
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -333,23 +334,22 @@ export default function NeuralStrategyHub() {
                 {/* Heatmap Visualization */}
                 <PacingHeatmap segments={prediction.pacingHeatmap} />
  
-                <div className="p-10 rounded-[2.5rem] bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-10 pointer-events-none" />
-                  <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center animate-pulse border border-amber-500/30 flex-shrink-0 relative z-10">
-                    <Zap className="w-10 h-10 text-amber-400" />
-                  </div>
-                  <div className="flex-1 relative z-10 text-center md:text-left">
-                    <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 mb-2">
-                       <ShieldCheck className="w-3 h-3" /> Actionable Sovereignty
+                {prediction.improvementTip && (
+                  <div className="p-10 rounded-[2.5rem] bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-10 pointer-events-none" />
+                    <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center animate-pulse border border-amber-500/30 flex-shrink-0 relative z-10">
+                      <Zap className="w-10 h-10 text-amber-400" />
                     </div>
-                    <p className="text-xl text-white font-black italic group-hover:text-amber-200 transition-colors leading-[1.1] uppercase">
-                      &quot;{prediction.improvementTip}&quot;
-                    </p>
+                    <div className="flex-1 relative z-10 text-center md:text-left">
+                      <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 mb-2">
+                         <ShieldCheck className="w-3 h-3" /> Actionable Sovereignty
+                      </div>
+                      <p className="text-xl text-white font-black italic group-hover:text-amber-200 transition-colors leading-[1.1] uppercase">
+                        &quot;{prediction.improvementTip}&quot;
+                      </p>
+                    </div>
                   </div>
-                  <button className="px-10 py-5 rounded-2xl bg-amber-500 text-black font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all relative z-10 flex items-center gap-2">
-                    Execute Optimization <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
+                )}
               </motion.div>
             )}
  
@@ -374,7 +374,7 @@ export default function NeuralStrategyHub() {
                     "Swarm Agent ALPHA fetching global trends (TikTok API v5)...",
                     "Swarm Agent BETA mapping success probability density...",
                     "Swarm Agent GAMMA calculating projected ROI engagement delta...",
-                    "Neural Consensus reached (94.2%). Viral trajectory foreseen.",
+                    "Neural Consensus reached. Viral trajectory foreseen.",
                     "Sovereignty Ledger updated with latest trend DNA.",
                     "Optimization recommendation generated via Autonomous Reasoning."
                   ].map((log, i) => (

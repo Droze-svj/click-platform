@@ -8,7 +8,6 @@ const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const {
   createBrandedLink,
-  resolveBrandedLink,
   getLinkAnalytics,
   getBrandedLinks
 } = require('../services/brandedLinkService');
@@ -57,7 +56,7 @@ router.get('/:agencyWorkspaceId/links/:linkId', auth, requireWorkspaceAccess(), 
 
   sendSuccess(res, 'Link retrieved', 200, {
     ...link,
-    shortUrl: `https://${link.domain}/${link.shortCode}`
+    shortUrl: `https://${link.domain}/l/${link.shortCode}`
   });
 }));
 
@@ -99,7 +98,7 @@ router.put('/:agencyWorkspaceId/links/:linkId', auth, requireWorkspaceAccess('ca
 
   sendSuccess(res, 'Link updated', 200, {
     ...link.toObject(),
-    shortUrl: `https://${link.domain}/${link.shortCode}`
+    shortUrl: `https://${link.domain}/l/${link.shortCode}`
   });
 }));
 
@@ -113,46 +112,9 @@ router.delete('/:agencyWorkspaceId/links/:linkId', auth, requireWorkspaceAccess(
   sendSuccess(res, 'Link deleted', 200);
 }));
 
-/**
- * GET /l/:shortCode
- * Resolve branded link (public)
- */
-router.get('/l/:shortCode', asyncHandler(async (req, res) => {
-  const { shortCode } = req.params;
-
-  // Extract click data from request
-  const clickData = {
-    ipAddress: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-    userAgent: req.headers['user-agent'],
-    referrer: req.headers['referer'],
-    country: req.headers['cf-ipcountry'] || null, // Cloudflare header
-    utmSource: req.query.utm_source,
-    utmMedium: req.query.utm_medium,
-    utmCampaign: req.query.utm_campaign,
-    utmTerm: req.query.utm_term,
-    utmContent: req.query.utm_content
-  };
-
-  try {
-    const result = await resolveBrandedLink(shortCode, clickData);
-    
-    // Validate redirect URL to prevent open redirect vulnerabilities
-    let safeUrl;
-    try {
-      safeUrl = new URL(result.originalUrl);
-    } catch (e) {
-      return res.status(400).send('Invalid redirect URL format');
-    }
-
-    if (safeUrl.protocol !== 'http:' && safeUrl.protocol !== 'https:') {
-      return res.status(400).send('Invalid redirect protocol. Only HTTP and HTTPS are allowed.');
-    }
-
-    res.redirect(result.originalUrl);
-  } catch (error) {
-    res.status(404).send('Link not found or expired');
-  }
-}));
+// NOTE: Public short-link resolution (GET /l/:shortCode) lives in its own
+// router at routes/link-resolver.js so the catch-all path cannot shadow the
+// authenticated /api/agency management routes above.
 
 module.exports = router;
 

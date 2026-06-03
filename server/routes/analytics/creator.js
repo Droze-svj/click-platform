@@ -77,7 +77,8 @@ router.get('/stats', auth, asyncHandler(async (req, res) => {
         shares,
         comments,
         engagementRate,
-        completionRate: post.analytics?.completionRate ?? 55,
+        // Real completion rate only; null when the post doesn't report one.
+        completionRate: post.analytics?.completionRate ?? null,
         viralScore: parseFloat((avgViral || 0).toFixed(1)),
         status: post.status,
         publishedAt: post.postedAt || post.updatedAt,

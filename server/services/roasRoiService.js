@@ -5,6 +5,7 @@ const RevenueAttribution = require('../models/RevenueAttribution');
 const Conversion = require('../models/Conversion');
 const ClickTracking = require('../models/ClickTracking');
 const ScheduledPost = require('../models/ScheduledPost');
+const { netFromGross, estimateLifetimeValue } = require('../config/revenueAssumptions');
 const logger = require('../utils/logger');
 
 /**
@@ -58,7 +59,7 @@ async function calculateROASROI(workspaceId, period, filters = {}) {
     // Calculate revenue
     let totalRevenue = 0;
     conversions.forEach(conversion => {
-      totalRevenue += conversion.revenue.attributed || conversion.conversionValue || 0;
+      totalRevenue += conversion.revenue?.attributed || conversion.conversionValue || 0;
     });
 
     // Calculate costs
@@ -160,9 +161,9 @@ async function calculateROASROI(workspaceId, period, filters = {}) {
           },
           revenue: {
             gross: totalRevenue,
-            net: totalRevenue * 0.8, // Assuming 20% costs
+            net: netFromGross(totalRevenue),
             attributed: totalRevenue,
-            lifetimeValue: totalRevenue * 1.5 // Assuming 1.5x LTV
+            lifetimeValue: estimateLifetimeValue(totalRevenue)
           },
           costs,
           metrics,
@@ -212,6 +213,7 @@ async function getROASROIDashboard(workspaceId, filters = {}) {
     const dashboard = {
       totalRevenue: 0,
       totalCosts: 0,
+      totalAdSpend: 0,
       totalROAS: 0,
       totalROI: 0,
       byPlatform: {},
@@ -221,8 +223,13 @@ async function getROASROIDashboard(workspaceId, filters = {}) {
     };
 
     attributions.forEach(attribution => {
-      dashboard.totalRevenue += attribution.revenue.attributed || 0;
-      dashboard.totalCosts += attribution.costs.total || 0;
+      const revenue = attribution.revenue?.attributed || 0;
+      const cost = attribution.costs?.total || 0;
+      const adSpend = attribution.costs?.adSpend || 0;
+
+      dashboard.totalRevenue += revenue;
+      dashboard.totalCosts += cost;
+      dashboard.totalAdSpend += adSpend;
 
       // By platform
       if (attribution.platform) {
@@ -230,12 +237,14 @@ async function getROASROIDashboard(workspaceId, filters = {}) {
           dashboard.byPlatform[attribution.platform] = {
             revenue: 0,
             costs: 0,
+            adSpend: 0,
             roas: 0,
             roi: 0
           };
         }
-        dashboard.byPlatform[attribution.platform].revenue += attribution.revenue.attributed || 0;
-        dashboard.byPlatform[attribution.platform].costs += attribution.costs.total || 0;
+        dashboard.byPlatform[attribution.platform].revenue += revenue;
+        dashboard.byPlatform[attribution.platform].costs += cost;
+        dashboard.byPlatform[attribution.platform].adSpend += adSpend;
       }
 
       // By campaign
@@ -245,58 +254,68 @@ async function getROASROIDashboard(workspaceId, filters = {}) {
           dashboard.byCampaign[campaignId] = {
             revenue: 0,
             costs: 0,
+            adSpend: 0,
             roas: 0,
             roi: 0
           };
         }
-        dashboard.byCampaign[campaignId].revenue += attribution.revenue.attributed || 0;
-        dashboard.byCampaign[campaignId].costs += attribution.costs.total || 0;
+        dashboard.byCampaign[campaignId].revenue += revenue;
+        dashboard.byCampaign[campaignId].costs += cost;
+        dashboard.byCampaign[campaignId].adSpend += adSpend;
       }
 
       // Trends
       dashboard.trends.push({
-        date: attribution.period.startDate,
-        revenue: attribution.revenue.attributed || 0,
-        costs: attribution.costs.total || 0,
-        roas: attribution.roas.value || 0,
-        roi: attribution.roi.percentage || 0
+        date: attribution.period?.startDate,
+        revenue,
+        costs: cost,
+        roas: attribution.roas?.value || 0,
+        roi: attribution.roi?.percentage || 0
       });
     });
 
-    // Calculate totals
+    // Calculate totals.
+    // ROAS measures return on AD SPEND (revenue / adSpend), matching the
+    // per-record roas.value definition. ROI measures return on TOTAL cost.
+    if (dashboard.totalAdSpend > 0) {
+      dashboard.totalROAS = dashboard.totalRevenue / dashboard.totalAdSpend;
+    }
     if (dashboard.totalCosts > 0) {
-      dashboard.totalROAS = dashboard.totalRevenue / dashboard.totalCosts;
       dashboard.totalROI = ((dashboard.totalRevenue - dashboard.totalCosts) / dashboard.totalCosts) * 100;
     }
 
-    // Calculate platform/campaign ROAS/ROI
+    // Calculate platform/campaign ROAS (on ad spend) / ROI (on total costs)
     Object.keys(dashboard.byPlatform).forEach(platform => {
       const data = dashboard.byPlatform[platform];
+      if (data.adSpend > 0) {
+        data.roas = data.revenue / data.adSpend;
+      }
       if (data.costs > 0) {
-        data.roas = data.revenue / data.costs;
         data.roi = ((data.revenue - data.costs) / data.costs) * 100;
       }
     });
 
     Object.keys(dashboard.byCampaign).forEach(campaignId => {
       const data = dashboard.byCampaign[campaignId];
+      if (data.adSpend > 0) {
+        data.roas = data.revenue / data.adSpend;
+      }
       if (data.costs > 0) {
-        data.roas = data.revenue / data.costs;
         data.roi = ((data.revenue - data.costs) / data.costs) * 100;
       }
     });
 
     // Top performers
     dashboard.topPerformers = attributions
-      .sort((a, b) => (b.roi.percentage || 0) - (a.roi.percentage || 0))
+      .sort((a, b) => (b.roi?.percentage || 0) - (a.roi?.percentage || 0))
       .slice(0, 10)
       .map(attribution => ({
         platform: attribution.platform,
         campaignId: attribution.campaignId,
-        revenue: attribution.revenue.attributed || 0,
-        costs: attribution.costs.total || 0,
-        roas: attribution.roas.value || 0,
-        roi: attribution.roi.percentage || 0
+        revenue: attribution.revenue?.attributed || 0,
+        costs: attribution.costs?.total || 0,
+        roas: attribution.roas?.value || 0,
+        roi: attribution.roi?.percentage || 0
       }));
 
     return dashboard;

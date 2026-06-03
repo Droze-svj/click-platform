@@ -1975,7 +1975,7 @@ app.use('/api/client-portal', require('./routes/client-portal'));
 
 // Branded links routes
 app.use('/api/agency', require('./routes/branded-links'));
-app.use('/l', require('./routes/branded-links')); // Public link resolution
+app.use('/l', require('./routes/link-resolver')); // Public link resolution (GET /l/:shortCode)
 
 // Reports routes
 app.use('/api/agency', require('./routes/reports'));

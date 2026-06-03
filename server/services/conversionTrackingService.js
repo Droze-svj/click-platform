@@ -5,6 +5,7 @@ const Conversion = require('../models/Conversion');
 const ClickTracking = require('../models/ClickTracking');
 const ScheduledPost = require('../models/ScheduledPost');
 const { updateCustomerLTV } = require('./customerLTVService');
+const { netFromGross } = require('../config/revenueAssumptions');
 const logger = require('../utils/logger');
 
 /**
@@ -39,7 +40,7 @@ async function trackConversion(postId, conversionData) {
 
     // Calculate time to convert
     let timeToConvert = 0;
-    if (click && click.click.timestamp) {
+    if (click?.click?.timestamp) {
       timeToConvert = (new Date() - new Date(click.click.timestamp)) / (1000 * 60 * 60); // Hours
     }
 
@@ -75,7 +76,7 @@ async function trackConversion(postId, conversionData) {
       },
       revenue: {
         gross: conversionValue,
-        net: conversionValue * 0.8, // Assuming 20% costs
+        net: netFromGross(conversionValue, conversionData.costRatio),
         attributed: conversionValue
       }
     });
@@ -146,8 +147,7 @@ async function getConversionAnalytics(workspaceId, filters = {}) {
 
     const conversions = await Conversion.find(query).lean();
 
-    // Get clicks for conversion rate
-    const ClickTracking = require('../models/ClickTracking');
+    // Get clicks for conversion rate (ClickTracking imported at module top)
     const clickQuery = { workspaceId };
     if (startDate || endDate) {
       clickQuery['click.timestamp'] = {};
@@ -172,44 +172,48 @@ async function getConversionAnalytics(workspaceId, filters = {}) {
     let conversionsWithTime = 0;
 
     conversions.forEach(conversion => {
+      const revenue = conversion.revenue?.attributed || conversion.conversionValue || 0;
+
       // Revenue
-      analytics.totalRevenue += conversion.revenue.attributed || conversion.conversionValue || 0;
+      analytics.totalRevenue += revenue;
 
       // By type
-      const type = conversion.conversionType;
+      const type = conversion.conversionType || 'unknown';
       if (!analytics.byType[type]) {
         analytics.byType[type] = { count: 0, revenue: 0 };
       }
       analytics.byType[type].count++;
-      analytics.byType[type].revenue += conversion.revenue.attributed || conversion.conversionValue || 0;
+      analytics.byType[type].revenue += revenue;
 
       // By platform
-      const platform = conversion.platform;
+      const platform = conversion.platform || 'unknown';
       if (!analytics.byPlatform[platform]) {
         analytics.byPlatform[platform] = { count: 0, revenue: 0 };
       }
       analytics.byPlatform[platform].count++;
-      analytics.byPlatform[platform].revenue += conversion.revenue.attributed || conversion.conversionValue || 0;
+      analytics.byPlatform[platform].revenue += revenue;
 
       // By campaign
-      if (conversion.attribution.campaign) {
+      if (conversion.attribution?.campaign) {
         const campaign = conversion.attribution.campaign;
         if (!analytics.byCampaign[campaign]) {
           analytics.byCampaign[campaign] = { count: 0, revenue: 0 };
         }
         analytics.byCampaign[campaign].count++;
-        analytics.byCampaign[campaign].revenue += conversion.revenue.attributed || conversion.conversionValue || 0;
+        analytics.byCampaign[campaign].revenue += revenue;
       }
 
       // Funnel breakdown
-      const stage = conversion.funnel.stage;
-      if (!analytics.funnelBreakdown[stage]) {
-        analytics.funnelBreakdown[stage] = 0;
+      const stage = conversion.funnel?.stage;
+      if (stage) {
+        if (!analytics.funnelBreakdown[stage]) {
+          analytics.funnelBreakdown[stage] = 0;
+        }
+        analytics.funnelBreakdown[stage]++;
       }
-      analytics.funnelBreakdown[stage]++;
 
       // Time to convert
-      if (conversion.funnel.timeToConvert > 0) {
+      if (conversion.funnel?.timeToConvert > 0) {
         totalTimeToConvert += conversion.funnel.timeToConvert;
         conversionsWithTime++;
       }
@@ -262,8 +266,8 @@ async function getConversionFunnel(workspaceId, filters = {}) {
     };
 
     conversions.forEach(conversion => {
-      const stage = conversion.funnel.stage;
-      if (Object.prototype.hasOwnProperty.call(funnel, stage)) {
+      const stage = conversion.funnel?.stage;
+      if (stage && Object.prototype.hasOwnProperty.call(funnel, stage)) {
         funnel[stage]++;
       }
     });

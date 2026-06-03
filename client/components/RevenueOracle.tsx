@@ -1,49 +1,50 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  TrendingUp, DollarSign, Zap, Activity, ShieldCheck, 
-  BarChart3, Target, Calendar, ArrowUpRight, ArrowDownRight,
-  Info, Sparkles, Orbit, Cpu
+import { motion } from 'framer-motion'
+import {
+  TrendingUp, Zap, Activity, ShieldCheck,
+  BarChart3, Orbit, Cpu
 } from 'lucide-react'
+import { apiGet } from '../lib/api'
 
 const glassStyle = 'backdrop-blur-3xl bg-black/40 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.5)]'
 
+interface OracleInsight {
+  type: string
+  text: string
+  score: number | null
+  expectedImpact?: string
+}
+
 export default function RevenueOracle() {
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState({
-    predictedROI: 4820.50,
-    dollarLift: 1240.23,
-    salesScore: 94,
-    consensusIntegrity: 98.2,
-    pacingVelocity: 1.4,
-    trajectory: [65, 78, 85, 92, 98, 94, 96]
-  })
+  const [insights, setInsights] = useState<OracleInsight[]>([])
+  const [meta, setMeta] = useState<{ status?: string; niche?: string; analyzedVideos?: number }>({})
 
   useEffect(() => {
+    let cancelled = false
     async function fetchInsights() {
       try {
-        const res = await fetch('/api/sovereign/insights')
-        if (res.ok) {
-          const json = await res.json()
-          setData(prev => ({
-            ...prev,
-            consensusIntegrity: json.stats.integrityScore,
-            salesScore: 85 + Math.floor(Math.random() * 10),
-            predictedROI: 4000 + (json.stats.operationalPayloads * 58.5)
-          }))
+        // Real, authenticated insights derived from the user's own published-post
+        // performance (GET /api/sovereign/insights). No fabricated numbers.
+        const res: any = await apiGet('/sovereign/insights')
+        const payload = res?.data ?? res
+        if (!cancelled) {
+          setInsights(Array.isArray(payload?.insights) ? payload.insights : [])
+          setMeta({ status: payload?.status, niche: payload?.niche, analyzedVideos: payload?.analyzedVideos })
         }
       } catch (err) {
         console.error('RevenueOracle: Failed to fetch insights', err)
+        if (!cancelled) setInsights([])
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
-    
+
     fetchInsights()
     const interval = setInterval(fetchInsights, 15000)
-    return () => clearInterval(interval)
+    return () => { cancelled = true; clearInterval(interval) }
   }, [])
 
   if (loading) {
@@ -81,16 +82,20 @@ export default function RevenueOracle() {
         
         <div className="flex items-center gap-6 p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
            <div className="text-right">
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">Estimated_Global_ROI</p>
-              <p className="text-3xl font-black text-white italic tabular-nums leading-none tracking-tighter">${data.predictedROI.toLocaleString()}</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">Posts_Analyzed</p>
+              <p className="text-3xl font-black text-white italic tabular-nums leading-none tracking-tighter">
+                {typeof meta.analyzedVideos === 'number' ? meta.analyzedVideos : '—'}
+              </p>
            </div>
            <div className="w-[1px] h-12 bg-white/10" />
            <div className="flex flex-col items-end">
               <span className="flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest italic">
-                 <ArrowUpRight size={14} />
-                 +24.2% Lift
+                 <ShieldCheck size={14} />
+                 Niche
               </span>
-              <p className="text-[8px] font-black text-emerald-500/40 uppercase tracking-widest mt-1">Lattice_Confidence: High</p>
+              <p className="text-[8px] font-black text-emerald-500/40 uppercase tracking-widest mt-1">
+                {meta.niche || '—'}
+              </p>
            </div>
         </div>
       </header>
@@ -104,17 +109,10 @@ export default function RevenueOracle() {
                     <Zap className="text-amber-400" size={18} />
                     <span className="text-[11px] font-black text-white uppercase tracking-widest italic">Sales Resonance</span>
                  </div>
-                 <span className="text-2xl font-black text-white italic tabular-nums">94%</span>
+                 <span className="text-2xl font-black text-slate-600 italic tabular-nums">—</span>
               </div>
-              <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
-                 <motion.div 
-                   initial={{ width: 0 }}
-                   animate={{ width: '94%' }}
-                   transition={{ duration: 2, ease: 'circOut' }}
-                   className="h-full bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" 
-                 />
-              </div>
-              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic opacity-0 group-hover/stat:opacity-100 transition-opacity">Optimal_Conversion_Velocity</p>
+              <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative" />
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">Awaiting resonance data</p>
            </div>
 
            <div className="p-8 rounded-[2.8rem] bg-white/[0.03] border border-white/10 group/stat hover:bg-indigo-500/5 transition-all duration-700">
@@ -123,20 +121,12 @@ export default function RevenueOracle() {
                     <BarChart3 className="text-indigo-400" size={18} />
                     <span className="text-[11px] font-black text-white uppercase tracking-widest italic">Neural Pacing</span>
                  </div>
-                 <span className="text-2xl font-black text-white italic tabular-nums">1.4s</span>
+                 <span className="text-2xl font-black text-slate-600 italic tabular-nums">—</span>
               </div>
-               <div className="flex justify-between gap-1 h-12 items-end px-2">
-                 {[40, 60, 90, 70, 45, 80, 50, 65, 95].map((h, i) => (
-                   <motion.div 
-                     key={i}
-                     initial={{ height: '0%' }}
-                     animate={{ height: `${h}%` }}
-                     transition={{ duration: 1, delay: i * 0.05 }}
-                     className="w-full bg-indigo-500/40 rounded-t-sm"
-                   />
-                 ))}
+               <div className="flex justify-center items-center h-12 px-2">
+                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">No pacing telemetry</p>
                </div>
-              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">BPM_Sync: 128Hz // {data.pacingVelocity}s Cut_Frequency</p>
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">Awaiting cut-frequency data</p>
            </div>
 
            <div className="p-8 rounded-[2.8rem] bg-emerald-500/10 border border-emerald-500/20">
@@ -145,65 +135,49 @@ export default function RevenueOracle() {
                  <h3 className="text-[12px] font-black text-emerald-400 uppercase tracking-widest leading-none italic">Oracle Insights</h3>
               </div>
               <p className="text-[11px] font-black text-white leading-relaxed uppercase italic opacity-80">
-                Lattice consensus confirms <span className="text-emerald-400">High Product Resonance</span>. Recommend shifting budget +15% to high-velocity segments to capture early-adopter surge.
+                {insights[0]?.text || 'Publish a few posts so Click can learn what works for you — insights will appear here.'}
               </p>
            </div>
         </div>
 
         {/* Center Trajectory Visualization */}
         <div className="col-span-12 lg:col-span-8 flex flex-col justify-end p-12 rounded-[3.5rem] bg-black/60 border border-white/5 relative group/viz overflow-hidden">
-           <div className="absolute top-12 left-12 flex items-center gap-4">
+           <div className="absolute top-12 left-12 right-12 flex items-center gap-4">
               <Activity className="text-emerald-400 animate-pulse" size={20} />
               <div>
-                 <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">ROI Trajectory Lattice</h3>
-                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Real-Time Forecast // $ +{(data.predictedROI * 0.1).toFixed(2)} Volatility Index</p>
+                 <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">Strategic Insight Feed</h3>
+                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">AI-Analyzed // From your published-post performance</p>
               </div>
            </div>
 
-           <div className="h-[250px] w-full mt-24 relative flex items-end justify-between gap-3 px-8">
-              {/* Decorative Mesh */}
-               <div className="absolute inset-0 opacity-10 pointer-events-none">
-                  <div className="w-full h-[1px] bg-white/5 absolute top-[0%]" />
-                  <div className="w-full h-[1px] bg-white/5 absolute top-[20%]" />
-                  <div className="w-full h-[1px] bg-white/5 absolute top-[40%]" />
-                  <div className="w-full h-[1px] bg-white/5 absolute top-[60%]" />
-                  <div className="w-full h-[1px] bg-white/5 absolute top-[80%]" />
-                  <div className="w-full h-[1px] bg-white/5 absolute top-[100%]" />
-               </div>
-
-              {data.trajectory.map((val, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center group/point">
-                   <div className="mb-4 opacity-0 group-hover/point:opacity-100 transition-opacity">
-                      <p className="text-[9px] font-black text-white italic tabular-nums">{val}%</p>
-                   </div>
-                   <motion.div 
-                     initial={{ height: '0%' }}
-                     animate={{ height: `${val}%` }}
-                     transition={{ duration: 2.5, delay: i * 0.1, ease: 'circOut' }}
-                     className="w-full rounded-2xl bg-gradient-to-t from-emerald-500/10 via-emerald-500 to-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.2)] relative overflow-hidden"
-                   >
-                     <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/point:opacity-100 animate-shimmer" />
-                   </motion.div>
-                   <p className="text-[8px] font-black text-slate-800 uppercase italic mt-4 opacity-40 group-hover/point:opacity-100">D_0{i+1}</p>
+           <div className="w-full mt-28 relative z-10 space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+              {insights.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-4 py-16">
+                   <Activity className="text-slate-700" size={40} />
+                   <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] italic text-center">
+                     {meta.status === 'cold_start' || meta.status === 'manual'
+                       ? 'Publish posts so Click can analyze what works'
+                       : 'No insights yet'}
+                   </p>
                 </div>
-              ))}
-           </div>
-           
-           <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                    <span className="text-[9px] font-black text-white/40 uppercase italic tracking-widest">Target_ROI</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-white/10" />
-                    <span className="text-[9px] font-black text-white/40 uppercase italic tracking-widest">Baseline_Growth</span>
-                 </div>
-              </div>
-              <button className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-2xl text-[10px] font-black uppercase tracking-widest italic hover:bg-emerald-500 hover:text-white transition-all duration-700 shadow-xl active:scale-95">
-                 EXPORT_FORECAST
-                 <ArrowUpRight size={14} />
-              </button>
+              ) : (
+                insights.map((insight, i) => (
+                  <div key={i} className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 flex items-start gap-5">
+                     <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest italic shrink-0 mt-0.5">
+                       {insight.type}
+                     </span>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-[12px] font-bold text-white/90 leading-relaxed italic">{insight.text}</p>
+                       {insight.expectedImpact && (
+                         <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest mt-2 italic">Impact: {insight.expectedImpact}</p>
+                       )}
+                     </div>
+                     {typeof insight.score === 'number' && (
+                       <span className="text-[10px] font-black text-emerald-400 italic tabular-nums shrink-0 mt-0.5">{Math.round(insight.score * 100)}%</span>
+                     )}
+                  </div>
+                ))
+              )}
            </div>
         </div>
       </div>
