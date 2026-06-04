@@ -1,0 +1,48 @@
+# Click soak/load profile (artillery).
+#
+# Defaults to a SHORT validation profile. For the real 48h staging soak, drive
+# duration/rate via scripts/run-soak.sh (it passes --overrides), so this single
+# file serves both the smoke validation and the long run.
+#
+#   SOAK_TARGET=https://staging-host npx artillery run tests/soak/soak.yml
+#   ./scripts/run-soak.sh https://staging-host 172800 5     # 48h @ 5 rps
+config:
+  target: "{{ $processEnvironment.SOAK_TARGET }}"
+  http:
+    timeout: 20
+  phases:
+    - name: warmup
+      duration: 30
+      arrivalRate: 1
+      rampTo: 3
+    - name: sustained
+      duration: 120
+      arrivalRate: 3
+  defaults:
+    headers:
+      User-Agent: "click-soak/1.0"
+  ensure:
+    # Fail the run if the service degrades — these are the soak pass/fail gates.
+    thresholds:
+      - http.response_time.p95: 2000
+    conditions:
+      - expression: "http.codes.500 == 0"
+
+scenarios:
+  - name: health-and-readiness
+    weight: 6
+    flow:
+      - get:
+          url: "/api/health/light"     # liveness — always cheap
+      - think: 2
+      - get:
+          url: "/api/health"           # deep readiness probe (DB/redis/etc.)
+          expect:
+            - statusCode: [200, 503]
+      - think: 3
+  - name: liveness-only
+    weight: 4
+    flow:
+      - get:
+          url: "/api/health/light"
+      - think: 1
