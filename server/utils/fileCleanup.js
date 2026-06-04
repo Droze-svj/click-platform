@@ -25,6 +25,46 @@ async function cleanupOldFiles(directory, daysOld = 7) {
   }
 }
 
+// Sweep a temp directory of orphaned entries older than `hoursOld`. Unlike
+// cleanupOldFiles this (a) measures age in hours (temp files are short-lived),
+// (b) removes stale sub-directories too (recursively), and (c) isolates errors
+// per entry so one undeletable file doesn't abort the sweep. Safe to point at
+// uploads/temp, tmp, etc. — anything older than the window is an ffmpeg/process
+// leftover that should have been cleaned at process completion.
+async function cleanupTempFiles(directory, hoursOld = 6) {
+  let removed = 0;
+  try {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+    const now = Date.now();
+    const maxAge = hoursOld * 60 * 60 * 1000;
+
+    for (const entry of entries) {
+      const entryPath = path.join(directory, entry.name);
+      try {
+        const stats = await fs.stat(entryPath);
+        if (now - stats.mtime.getTime() <= maxAge) continue;
+        if (entry.isDirectory()) {
+          await fs.rm(entryPath, { recursive: true, force: true });
+        } else {
+          await fs.unlink(entryPath);
+        }
+        removed++;
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          logger.warn('Temp sweep: could not remove entry', { entryPath, error: err.message });
+        }
+      }
+    }
+    if (removed > 0) logger.info('Temp sweep complete', { directory, removed, hoursOld });
+  } catch (error) {
+    // Directory may not exist yet — that's fine.
+    if (error.code !== 'ENOENT') {
+      logger.error('Error sweeping temp directory', { directory, error: error.message });
+    }
+  }
+  return removed;
+}
+
 // Clean up files associated with failed content
 async function cleanupFailedContent(contentId, filePaths) {
   try {
@@ -47,6 +87,7 @@ async function cleanupFailedContent(contentId, filePaths) {
 
 module.exports = {
   cleanupOldFiles,
+  cleanupTempFiles,
   cleanupFailedContent
 };
 

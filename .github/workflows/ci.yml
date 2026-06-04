@@ -137,15 +137,12 @@ jobs:
     - name: Generate Prisma Client
       run: npm run prisma:generate
 
-    # Scope audit to runtime deps + critical only. The repo currently
-    # carries ~15 high-severity advisories in transitive runtime chains
-    # (axios DoS, lodash prototype pollution, hono JWK alg confusion,
-    # effect via @prisma/config, etc.) that need follow-up overrides /
-    # upgrades — see docs/security-debt.md (todo). Critical-level catches
-    # the showstoppers (e.g. fast-xml-parser DoS — fixed via override in
-    # package.json) without blocking on the larger backlog.
+    # Runtime deps are clean at high/critical (all prior highs fixed via direct
+    # bumps + overrides — see docs/security-debt.md). Gate at high so no new
+    # high/critical advisory can merge unnoticed. The 4 remaining moderates need
+    # major bumps and are documented/accepted in docs/security-debt.md.
     - name: Run security audit
-      run: npm audit --omit=dev --audit-level=critical
+      run: npm audit --omit=dev --audit-level=high
 
     - name: Run security tests
       run: npm run test:security

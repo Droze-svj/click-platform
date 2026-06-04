@@ -12,11 +12,12 @@ import {
   Globe, Settings,
   ActivitySquare, Plug, BarChart3, Users, Clock, Moon, Sun,
   Box, Hammer, Signal, ChevronRight, Play, LayoutGrid, ArrowUpRight,
-  Target, Cpu, Monitor, Fingerprint, Activity, Terminal, Shield,
+  Target, Monitor, Fingerprint, Activity, Terminal, Shield,
   Star, MessageSquare, Heart, Share2, Layers, Boxes, Hexagon,
   Camera, Check, X as XIcon, Pencil
 } from 'lucide-react'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
+import { StatsCardSkeleton, ContentSkeleton } from '../../components/LoadingSkeleton'
 import ToastContainer from '../../components/ToastContainer'
 import SubscriptionBanner from '../../components/SubscriptionBanner'
 import AILearningIndicator from '../../components/AILearningIndicator'
@@ -490,9 +491,11 @@ export default function NeuralDashboard() {
   }, [fetchData])
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
-        <Cpu size={80} className="text-primary-500 animate-spin mb-12" />
-        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Syncing Dashboard Ledger...</p>
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading dashboard">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <ContentSkeleton />
      </div>
   );
 

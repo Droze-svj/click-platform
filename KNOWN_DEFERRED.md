@@ -25,6 +25,28 @@ Last updated: 2026-05-16, after the full polish + verification sweep.
 
 ---
 
+## ✅ Since-completed (formerly deferred — updated 2026-06-04)
+
+Hardening sweep cleared several items previously listed below:
+
+- **Phase 1.3 — FFmpeg temp-file cleanup**: added `cleanupTempFiles()` + a 6-hourly
+  cron that sweeps `uploads/temp`, `tmp`, `tmp/uploads` of orphaned ffmpeg/processing
+  leftovers (and prunes stale `logs/` ffmpeg logs). Safety net independent of each
+  service's own cleanup. (server/utils/fileCleanup.js, server/index.js)
+- **Phase 1.5 — Short access-token TTL**: access token is 1h with a 90d refresh token;
+  every auth path issues a pair (issueTokenPair) and the client auto-refreshes on 401.
+- **Phase 5.3 — Observability + auto-rollback**: `/api/health` is a real readiness
+  probe (503 on required-dep failure) wired as Render's `healthCheckPath` (native
+  health-gated deploy = auto-rollback), `/api/health/light` liveness, Sentry +
+  structured logging + client error telemetry (`/api/health/error-log`). The legacy
+  SSH deploy workflow now also auto-rolls-back to the previous release on a failed
+  post-deploy health check.
+- **Dependency security**: production `npm audit` cleared of all high/critical
+  (20→4 moderate residuals, documented in docs/security-debt.md); CI gate tightened
+  to `--audit-level=high`.
+- **Phase 3.2 — Loading skeletons**: partial — applied to the dashboard home + posts
+  pages; remaining pages follow the same LoadingSkeleton pattern.
+
 ## 🟡 Deferred — with reason
 
 ### Phase 1.3 — FFmpeg temp-file cleanup audit (20+ services)

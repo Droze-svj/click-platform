@@ -6,11 +6,11 @@
  * pair is a short-lived access token (used as the Bearer) plus a longer
  * refresh token (used to mint new access tokens without re-authenticating).
  *
- * Migration note (2026-05): we are intentionally keeping the access token
- * at 30 days for this rollout. Existing clients without a refresh token
- * stay valid until their token expires. New clients get a refresh token
- * pair so a future change to drop access to 1h becomes a one-line edit
- * (ACCESS_TTL → '1h') instead of a coordinated client+server rollout.
+ * Status (2026-06): access token is short-lived (1h) with a 90d refresh token.
+ * Every login/register/oauth path issues a pair via issueTokenPair, and the
+ * client (client/lib/api.ts) auto-refreshes on 401 via a singleton in-flight
+ * /auth/refresh call before falling through to logout — so the short access
+ * lifetime is transparent to users.
  *
  * The refresh endpoint at server/routes/auth.js:/refresh accepts the
  * refresh token (type='refresh') and returns a fresh pair.

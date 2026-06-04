@@ -161,19 +161,37 @@ jobs:
             # Create backup
             node scripts/backup-database.js
             
-            # Switch to new version
+            # Switch to new version (from the deploy root). Capture the
+            # currently-live release first so we can auto-roll-back on a bad deploy.
+            cd /var/www/click
+            PREV_RELEASE="$(readlink -f current 2>/dev/null || true)"
             rm -rf current
-            ln -s $RELEASE_DIR current
-            
+            ln -s "$RELEASE_DIR" current
+
             # Restart application
             pm2 reload ecosystem.config.js --env production
-            
-            # Health check
+
+            # Health check WITH auto-rollback: if the new release isn't healthy,
+            # restore the previous release and fail the deploy.
             sleep 10
-            curl -f http://localhost:5001/api/health || exit 1
-            
+            if ! curl -fsS http://localhost:5001/api/health >/dev/null; then
+              echo "::error::Post-deploy health check failed — rolling back"
+              if [ -n "$PREV_RELEASE" ] && [ -d "$PREV_RELEASE" ]; then
+                rm -rf current
+                ln -s "$PREV_RELEASE" current
+                pm2 reload ecosystem.config.js --env production
+                sleep 5
+                curl -fsS http://localhost:5001/api/health >/dev/null \
+                  && echo "Rolled back to previous release: $PREV_RELEASE" \
+                  || echo "::error::Rollback restored $PREV_RELEASE but health still failing"
+              else
+                echo "::error::No previous release to roll back to"
+              fi
+              exit 1
+            fi
+
             # Cleanup old releases (keep last 5)
-            cd releases
+            cd /var/www/click/releases
             ls -t | tail -n +6 | xargs rm -rf
           EOF
       

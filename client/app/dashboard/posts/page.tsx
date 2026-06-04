@@ -16,6 +16,7 @@ import {
   Workflow, Binary, Orbit, Scan, Command, Sparkle, UserCheck, Key
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
 import ToastContainer from '../../../components/ToastContainer'
 
 interface Post {
@@ -99,9 +100,13 @@ export default function SignalDiffusionArchivePage() {
   }
 
   if (loading && posts.length === 0) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen font-inter gap-6 transition-colors duration-500">
-        <RefreshCw size={48} className="text-primary-500 animate-spin" />
-        <span className="text-[12px] font-black text-surface-400 uppercase tracking-[0.6em] italic">Synchronizing Signal Diffusion Ledger...</span>
+     <div className="min-h-screen bg-surface-page font-inter transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading posts">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <div className="space-y-4">
+           {Array.from({ length: 6 }).map((_, i) => <ListItemSkeleton key={i} />)}
+        </div>
      </div>
   )
 

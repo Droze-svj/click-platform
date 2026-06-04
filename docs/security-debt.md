@@ -1,27 +1,50 @@
 # Security debt
 
-Tracking transitive npm advisories that are not currently patched at the source. CI's audit gate (`.github/workflows/ci.yml`) runs at `--audit-level=critical` so these `high` items don't block merges. They should be cleared whenever the affected ranges' upstream consumers ship updates.
+Tracking npm advisories for runtime deps. CI's audit gate
+(`.github/workflows/ci.yml` `security` job) runs at `--audit-level=high` for
+production deps, so no new `high`/`critical` advisory can merge unnoticed. The
+overrides are mirrored in both `overrides` (npm / `npm ci`) and `pnpm.overrides`
+(the Docker/pnpm build) so both package managers get the patches.
 
-## Cleared (current as of 2026-04-28)
+## Cleared (current as of 2026-06-04)
 
-These are patched via `package.json` `overrides` or direct dependency bumps:
+Production `npm audit`: **0 critical, 0 high.** Patched via direct bumps +
+`overrides`:
 
 | Package | Strategy | Note |
 |---|---|---|
-| axios | bumped to `^1.15.2` | Was `^1.13.2`. Patches DoS via `__proto__` in `mergeConfig`. |
-| lodash | bumped to `^4.18.1` | Was `^4.17.23`. Patches code injection via `_.template`. |
-| `@hono/node-server` | override `^1.19.14` | Patches authorization bypass. |
-| fast-xml-parser | override `^5.7.2` | Patches DoS via numeric entities. |
-| path-to-regexp | override `^0.1.13` | Patches ReDoS in route matching. Stays within Express 4's compatible 0.1.x range. |
-| picomatch | override `^2.3.2` | Patches POSIX char-class injection. |
-| socket.io-parser | override `^4.2.6` | Patches unbounded binary attachments. |
-| tar | override `^7.5.13` | Patches arbitrary file create/overwrite via hardlink path traversal. Knocks out the transitive `@mapbox/node-pre-gyp` advisory too. |
-| undici | override `^7.25.0` | Patches unbounded decompression chain in fetch responses. |
-| minimatch | override `^10.2.5` | Patches ReDoS via repeated wildcards. Forces all minimatch consumers to 10.x. Watch for regressions from consumers that were on 3.x, 5.x, or 9.x. |
+| axios | bumped to `^1.17.0` | Patches NO_PROXY bypass (incomplete fix for CVE-2025-62718) + earlier `mergeConfig` DoS. |
+| mongoose | bumped to `^8.24.0` | Patches `$nor` NoSQL-injection in `sanitizeFilter`. Stays within major 8. |
+| postcss | bumped to `^8.5.15` | Patches XSS via unescaped `</style>` in stringify. |
+| lodash | bumped to `^4.18.1` | Code injection via `_.template`. |
+| ws | override `^8.21.0` | Uninitialized memory disclosure. Clears the engine.io / socket.io-adapter advisories too. |
+| qs | override `^6.15.2` | arrayLimit bypass DoS. Clears express/body-parser qs advisories. |
+| tmp | override `^0.2.7` | Path traversal via unsanitized prefix/postfix. |
+| follow-redirects | override `^1.16.0` | Leaks auth headers on cross-domain redirect. |
+| dompurify | override `^3.4.8` | XSS bypass. |
+| bn.js | override `^5.2.3` | Infinite loop. |
+| brace-expansion | override `^2.0.2` | Large-range `max` DoS. |
+| fast-xml-parser | override `^5.8.0` | DoS + builder attribute-quote bypass. |
+| `@hono/node-server` | override `^1.19.14` | Authorization bypass. |
+| path-to-regexp | override `^0.1.13` | ReDoS (within Express 4's 0.1.x). |
+| picomatch | override `^2.3.2` | POSIX char-class injection. |
+| socket.io-parser | override `^4.2.6` | Unbounded binary attachments. |
+| tar | override `^7.5.13` | Hardlink path-traversal. |
+| undici | override `^7.25.0` | Unbounded decompression. |
+| minimatch | override `^10.2.5` | ReDoS via repeated wildcards. |
 
-## Outstanding
+## Outstanding (4 moderate, accepted)
 
-None at `high` or `critical` for runtime deps. `npm audit --omit=dev --audit-level=high` returns clean.
+All require a **semver-major** bump of a direct dep and have **low real
+exploitability** for how Click uses them; deferred to avoid breaking a
+market-ready app. None are `high`/`critical`.
+
+| Package | Advisory | Why deferred |
+|---|---|---|
+| nodemailer | SMTP injection via `envelope.size` | Needs v8 (major). Mail is sent with fixed config; `envelope.size` is never user-set. |
+| uuid | bounds check in v3/v5/v6 when `buf` provided | Needs v14 (ESM-only, breaks `require()`). Click uses `uuidv4()` with no `buf`. |
+| exceljs | transitive `uuid` | Fix needs a major exceljs change; same low-risk uuid path. |
+| node-cron | transitive `uuid` | Needs v4 (major); same low-risk uuid path. |
 
 ## How to refresh this list
 
