@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
 import { extractApiData } from '../../../utils/apiResponse'
 import {
@@ -49,6 +50,7 @@ const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 export default function ContentCalendarPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
+  const { t } = useTranslation()
   const { showToast } = useToast()
 
   const [posts, setPosts] = useState<ScheduledPost[]>([])
@@ -74,9 +76,9 @@ export default function ContentCalendarPage() {
       const res = await axios.get(`${API_URL}/scheduler?startDate=${start.toISOString()}&endDate=${end.toISOString()}`)
       const data = extractApiData<ScheduledPost[]>(res) || []
       setPosts(Array.isArray(data) ? data : [])
-    } catch { showToast('Failed to sync calendar data', 'error') }
+    } catch { showToast(t('calendarPage.syncFailed'), 'error') }
     finally { setLoading(false); setRefreshing(false) }
-  }, [currentDate, view, showToast])
+  }, [currentDate, view, showToast, t])
 
   useEffect(() => { 
     if (authLoading) return
@@ -101,25 +103,25 @@ export default function ContentCalendarPage() {
     e.preventDefault(); setDragOverDate(null)
     if (!draggedPost || !targetDate) return
     try {
-      const t = new Date(targetDate)
-      t.setHours(draggedPost.originalDate.getHours(), draggedPost.originalDate.getMinutes(), 0)
-      await axios.put(`${API_URL}/scheduler/posts/${draggedPost.postId}`, { scheduledTime: t.toISOString() })
-      showToast('Post successfully rescheduled', 'success'); loadCalendar()
-    } catch { showToast('Failed to reschedule post', 'error') }
+      const targetDt = new Date(targetDate)
+      targetDt.setHours(draggedPost.originalDate.getHours(), draggedPost.originalDate.getMinutes(), 0)
+      await axios.put(`${API_URL}/scheduler/posts/${draggedPost.postId}`, { scheduledTime: targetDt.toISOString() })
+      showToast(t('calendarPage.rescheduled'), 'success'); loadCalendar()
+    } catch { showToast(t('calendarPage.rescheduleFailed'), 'error') }
     finally { setDraggedPost(null) }
   }
 
   const handleDelete = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this scheduled post?')) return
+    if (!confirm(t('calendarPage.deleteConfirm'))) return
     try {
       await axios.delete(`${API_URL}/scheduler/posts/${postId}`)
-      showToast('Post deleted', 'success')
+      showToast(t('calendarPage.postDeleted'), 'success')
       setSelectedPost(null); setPosts(prev => prev.filter(p => p._id !== postId))
-    } catch { showToast('Failed to delete post', 'error') }
+    } catch { showToast(t('calendarPage.deleteFailed'), 'error') }
   }
 
   if (loading) return (
-     <div className="min-h-screen bg-surface-50 dark:bg-surface-950 relative z-10 px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen bg-surface-50 dark:bg-surface-950 relative z-10 px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('calendarPage.loading')}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
@@ -135,7 +137,7 @@ export default function ContentCalendarPage() {
           {/* Header */}
           <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-surface-200 dark:border-surface-800 pb-8">
             <div className="flex items-center gap-6">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('calendarPage.backToDashboard')} aria-label={t('calendarPage.backToDashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                 <ArrowLeft size={20} />
               </button>
               <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
@@ -144,22 +146,22 @@ export default function ContentCalendarPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                    Planning
+                    {t('calendarPage.planning')}
                   </span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Content Calendar</h1>
-                <p className="text-surface-500 text-sm mt-2 font-medium">Manage and review your cross-platform content schedule.</p>
+                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">{t('calendarPage.title')}</h1>
+                <p className="text-surface-500 text-sm mt-2 font-medium">{t('calendarPage.subtitle')}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-                <button onClick={() => loadCalendar(true)} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm" aria-label="Refresh">
+                <button onClick={() => loadCalendar(true)} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm" aria-label={t('calendarPage.refresh')}>
                    <RefreshCw size={20} className={refreshing ? 'animate-spin text-primary-500' : ''} />
                 </button>
                 <button 
                   onClick={() => router.push('/dashboard/scheduler')}
                   className="px-6 py-3 rounded-xl text-xs font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2 uppercase tracking-wider">
-                  <Plus size={16} /> Schedule Post
+                  <Plus size={16} /> {t('calendarPage.schedulePost')}
                 </button>
             </div>
           </header>
@@ -167,10 +169,10 @@ export default function ContentCalendarPage() {
           {/* Stats */}
           <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
              {[
-               { label: 'Total Scheduled', val: posts.length, icon: LayoutGrid },
-               { label: 'Upcoming', val: posts.filter(p => p.status === 'scheduled').length, icon: Timer },
-               { label: 'Published', val: posts.filter(p => p.status === 'posted').length, icon: CheckCircle },
-               { label: 'Errors', val: posts.filter(p => p.status === 'failed').length, icon: AlertCircle },
+               { label: t('calendarPage.statTotalScheduled'), val: posts.length, icon: LayoutGrid },
+               { label: t('calendarPage.statUpcoming'), val: posts.filter(p => p.status === 'scheduled').length, icon: Timer },
+               { label: t('calendarPage.statPublished'), val: posts.filter(p => p.status === 'posted').length, icon: CheckCircle },
+               { label: t('calendarPage.statErrors'), val: posts.filter(p => p.status === 'failed').length, icon: AlertCircle },
              ].map((s, i) => (
                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={i} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-6 flex items-center gap-4 shadow-sm">
                   <div className="w-12 h-12 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center">
