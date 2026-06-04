@@ -2351,10 +2351,14 @@ const ModernVideoEditor: React.FC<{
             >
               {viewportWidth < 768 && (
                 <div
-                  className="w-full h-8 flex items-center justify-center cursor-pointer shrink-0"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Close panel"
+                  className="w-full h-11 flex items-center justify-center cursor-pointer shrink-0 touch-none active:bg-white/[0.03]"
                   onClick={() => setContentPanelCollapsed(true)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setContentPanelCollapsed(true) } }}
                 >
-                  <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+                  <div className="w-12 h-1.5 bg-white/30 rounded-full" />
                 </div>
               )}
               <div className={`overflow-hidden flex flex-col h-full bg-surface-900 border border-surface-800 ${viewportWidth < 768 ? 'rounded-none border-none bg-transparent' : 'rounded-xl shadow-lg'}`}>
