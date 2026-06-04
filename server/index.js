@@ -2430,6 +2430,19 @@ if (process.env.JEST_WORKER_ID) {
           logger.info('🔌 Socket.io initialized for real-time updates');
         }
 
+        // C2PA provenance signer check (non-fatal — renders go unsigned if absent)
+        if (process.env.NODE_ENV !== 'test') {
+          require('./services/c2paService').verifyC2paTools()
+            .then((c2pa) => {
+              if (c2pa.available) {
+                logger.info(`🔏 C2PA provenance signer ready: ${c2pa.signer} ${c2pa.version || ''}`.trim());
+              } else {
+                logger.warn('🔏 C2PA signer unavailable — renders will be unsigned', { reason: c2pa.error });
+              }
+            })
+            .catch((err) => logger.warn('C2PA verification check failed', { error: err.message }));
+        }
+
         // Schedule background tasks
         if (process.env.NODE_ENV !== 'test') {
           // File cleanup (daily at 2 AM)

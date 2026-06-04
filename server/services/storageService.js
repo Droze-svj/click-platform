@@ -134,11 +134,12 @@ async function uploadFile(filePath, key, contentType = null, metadata = {}) {
 
       // Ensure directory exists
       if (!fs.existsSync(destDir)) {
-        fs.mkdirSync(destDir, { recursive: true });
+        await fs.promises.mkdir(destDir, { recursive: true });
       }
 
-      // Copy file to destination
-      fs.copyFileSync(filePath, destPath);
+      // Copy file to destination (async — copyFileSync blocks the event loop
+      // for the whole duration of a multi-GB video copy).
+      await fs.promises.copyFile(filePath, destPath);
 
       // Return local URL
       return {

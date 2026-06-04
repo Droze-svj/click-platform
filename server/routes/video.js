@@ -374,7 +374,15 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
       });
     }
 
-    await content.save();
+    try {
+      await content.save();
+    } catch (saveErr) {
+      // Don't leave the just-uploaded file orphaned on disk if the DB write fails.
+      if (req.file?.path) {
+        await fs.promises.unlink(req.file.path).catch(() => {});
+      }
+      throw saveErr;
+    }
 
     // Process video in background using job queue.
     // IMPORTANT: Redis/job queues may not be configured in local/free-tier environments.
