@@ -18,6 +18,7 @@ import { apiGet } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
 import SpectralLoader from '../../../../../components/SpectralLoader'
 import { ErrorBoundary } from '../../../../../components/ErrorBoundary'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
 const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[4rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
@@ -50,6 +51,7 @@ export default function SovereignPostDiagnosticHub() {
   const router = useRouter()
   const params = useParams()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<PostAnalytics | null>(null)
 
@@ -86,8 +88,8 @@ export default function SovereignPostDiagnosticHub() {
     }))
   }, [data?.history])
 
-  if (loading) return <SpectralLoader message="EXTRACTING_KINETIC_SIGNAL_DATA..." />;
-  if (!data) return <div className="min-h-screen flex items-center justify-center text-white bg-black">NODE_NOT_FOUND</div>;
+  if (loading) return <SpectralLoader message={t('analyticsPostPage.loaderMessage')} />;
+  if (!data) return <div className="min-h-screen flex items-center justify-center text-white bg-black">{t('analyticsPostPage.nodeNotFound')}</div>;
 
   const mainStat = data.analytics[0] || { views: 0, likes: 0, shares: 0, comments: 0, engagement_rate: 0 }
 
@@ -105,7 +107,7 @@ export default function SovereignPostDiagnosticHub() {
               <button
                 type="button"
                 onClick={() => router.push('/dashboard/analytics')}
-                title="Back to Analytics" aria-label="Back to Analytics"
+                title={t('analyticsPostPage.backToAnalytics')} aria-label={t('analyticsPostPage.backToAnalytics')}
                 className="w-16 h-16 rounded-[1.8rem] bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl"
               >
                 <ArrowLeft size={32} />
@@ -118,21 +120,21 @@ export default function SovereignPostDiagnosticHub() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Gauge size={14} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Diagnostic Node v9.2.1</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('analyticsPostPage.versionLabel')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Shield size={12} className="text-violet-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{data.post.id?.slice(0, 8).toUpperCase() || 'EXTERNAL'}_NODE</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('analyticsPostPage.nodeBadge', { id: data.post.id?.slice(0, 8).toUpperCase() || t('analyticsPostPage.external') })}</span>
                    </div>
                  </div>
-                 <h1 className="text-4xl sm:text-7xl font-black text-white italic uppercase tracking-tighter leading-[0.9] mb-4 truncate max-w-4xl">{data.post.title || 'Untitled Node'}</h1>
-                 <p className="text-slate-400 text-[10px] sm:text-[11px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">Detailed performance breakdown and heuristic optimization matrix.</p>
+                 <h1 className="text-4xl sm:text-7xl font-black text-white italic uppercase tracking-tighter leading-[0.9] mb-4 truncate max-w-4xl">{data.post.title || t('analyticsPostPage.untitledNode')}</h1>
+                 <p className="text-slate-400 text-[10px] sm:text-[11px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">{t('analyticsPostPage.subtitle')}</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
               <div className="text-right">
-                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Published_Cycle</div>
+                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">{t('analyticsPostPage.publishedCycle')}</div>
                  <div className="text-xl font-black text-white italic tracking-widest">{new Date(data.post.published_at || data.post.created_at || Date.now()).toLocaleDateString()}</div>
               </div>
               <div className={`w-20 h-20 rounded-[2.5rem] bg-gradient-to-br ${data.post.platform === 'tiktok' ? 'from-slate-800 to-black' : 'from-indigo-600 to-indigo-900'} flex items-center justify-center text-white text-4xl shadow-2xl font-black italic border border-white/10`}>
@@ -149,8 +151,8 @@ export default function SovereignPostDiagnosticHub() {
                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 mb-16 relative z-10 px-4 sm:px-8">
                     <div className="p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Activity size={40} className="text-indigo-400" /></div>
                     <div>
-                       <h2 className="text-4xl sm:text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Kinetic Path</h2>
-                       <p className="text-[10px] sm:text-[12px] text-slate-400 font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] italic leading-none">Chronological engagement gravity mapped across the 30-day kinetic window.</p>
+                       <h2 className="text-4xl sm:text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{t('analyticsPostPage.kineticPath')}</h2>
+                       <p className="text-[10px] sm:text-[12px] text-slate-400 font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] italic leading-none">{t('analyticsPostPage.kineticPathSubtitle')}</p>
                     </div>
                  </div>
 
@@ -174,7 +176,7 @@ export default function SovereignPostDiagnosticHub() {
                                   return (
                                     <div className="bg-black/90 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl border-l-[12px] border-l-indigo-500">
                                       <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4 italic">{payload[0].payload.name}</p>
-                                      <div className="text-4xl font-black text-white italic tracking-tighter leading-none">{payload[0].value} <span className="text-[14px] text-slate-400 uppercase not-italic tracking-[0.4em] ml-2">Engagements</span></div>
+                                      <div className="text-4xl font-black text-white italic tracking-tighter leading-none">{payload[0].value} <span className="text-[14px] text-slate-400 uppercase not-italic tracking-[0.4em] ml-2">{t('analyticsPostPage.engagements')}</span></div>
                                     </div>
                                   );
                                 }
@@ -187,16 +189,16 @@ export default function SovereignPostDiagnosticHub() {
                     ) : (
                       <div className="h-full flex flex-col items-center justify-center opacity-10 space-y-8">
                          <Target size={120} className="animate-pulse" />
-                         <div className="text-2xl font-black italic uppercase tracking-widest">Spectral_Null_Path</div>
+                         <div className="text-2xl font-black italic uppercase tracking-widest">{t('analyticsPostPage.nullPath')}</div>
                       </div>
                     )}
                  </div>
 
                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 px-4 sm:px-8 mt-8">
-                    <DiagnosticParam label="Views" value={mainStat.views || 0} color="text-rose-400" />
-                    <DiagnosticParam label="Likes" value={mainStat.likes || 0} color="text-amber-400" />
-                    <DiagnosticParam label="Shares" value={mainStat.shares || 0} color="text-indigo-400" />
-                    <DiagnosticParam label="Eng Rate" value={`${mainStat.engagement_rate || 0}%`} color="text-emerald-400" />
+                    <DiagnosticParam label={t('analyticsPostPage.paramViews')} value={mainStat.views || 0} color="text-rose-400" />
+                    <DiagnosticParam label={t('analyticsPostPage.paramLikes')} value={mainStat.likes || 0} color="text-amber-400" />
+                    <DiagnosticParam label={t('analyticsPostPage.paramShares')} value={mainStat.shares || 0} color="text-indigo-400" />
+                    <DiagnosticParam label={t('analyticsPostPage.paramEngRate')} value={`${mainStat.engagement_rate || 0}%`} color="text-emerald-400" />
                  </div>
               </div>
            </div>
@@ -208,7 +210,7 @@ export default function SovereignPostDiagnosticHub() {
                  
                  <div className="flex items-center gap-6 mb-12 sm:mb-16 relative z-10">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1.5rem] sm:rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center drop-shadow-2xl animate-pulse shadow-emerald-500/20 shadow-inner"><Zap size={32} className="text-emerald-400" /></div>
-                    <h3 className="text-3xl sm:text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Diagnostic Matrix</h3>
+                    <h3 className="text-3xl sm:text-4xl font-black text-white italic uppercase tracking-tighter leading-none">{t('analyticsPostPage.diagnosticMatrix')}</h3>
                  </div>
 
                  <AnimatePresence mode="wait">
@@ -218,12 +220,12 @@ export default function SovereignPostDiagnosticHub() {
                             <div className="text-[6rem] sm:text-[10rem] font-black italic tracking-tighter text-emerald-400 leading-none drop-shadow-2xl group-hover:scale-110 transition-transform duration-300">
                                {data.insights.performance_score}
                             </div>
-                            <div className="text-[12px] sm:text-[14px] font-black text-slate-400 uppercase tracking-[0.4em] sm:tracking-[0.6em] italic border-t border-white/5 pt-8 mt-4 leading-none">SIGNAL_INTEGRITY</div>
+                            <div className="text-[12px] sm:text-[14px] font-black text-slate-400 uppercase tracking-[0.4em] sm:tracking-[0.6em] italic border-t border-white/5 pt-8 mt-4 leading-none">{t('analyticsPostPage.signalIntegrity')}</div>
                          </div>
 
                          <div className="grid grid-cols-1 gap-12 pt-8">
                             <div className="space-y-4">
-                               <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">OPTIMAL_MANIFEST_WINDOW</label>
+                               <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">{t('analyticsPostPage.optimalManifestWindow')}</label>
                                <div className="p-8 rounded-[2.5rem] bg-black/40 border border-white/5 text-white font-black italic tracking-widest text-2xl uppercase shadow-inner border-l-4 border-l-emerald-500">
                                   {data.insights.best_posting_time}
                                </div>
@@ -231,7 +233,7 @@ export default function SovereignPostDiagnosticHub() {
 
                             {data.insights.metadata?.signalGaps && (
                               <div className="space-y-6">
-                                <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">SIGNAL_GAPS_DETECTED</label>
+                                <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">{t('analyticsPostPage.signalGapsDetected')}</label>
                                 <div className="flex flex-wrap gap-3 pl-4">
                                   {data.insights.metadata.signalGaps.map((gap: string, i: number) => (
                                     <span key={i} className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-full text-[10px] font-black text-rose-400 uppercase tracking-widest italic">
@@ -243,7 +245,7 @@ export default function SovereignPostDiagnosticHub() {
                             )}
 
                             <div className="space-y-6">
-                               <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">SUBSTRATE_SPECIFIC_ADVICE</label>
+                               <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">{t('analyticsPostPage.substrateSpecificAdvice')}</label>
                                <div className="space-y-4">
                                   {data.insights.metadata?.platformAdvice ? Object.entries(data.insights.metadata.platformAdvice).map(([plat, advice], i) => (
                                     <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.01] border border-white/5 group/advice hover:bg-violet-500/5 transition-all">
@@ -255,11 +257,11 @@ export default function SovereignPostDiagnosticHub() {
                                        </p>
                                     </div>
                                   )) : (
-                                    <p className="text-[11px] text-slate-400 uppercase italic pl-6 tracking-widest">NO_SUBSTRATE_SIGNAL</p>
+                                    <p className="text-[11px] text-slate-400 uppercase italic pl-6 tracking-widest">{t('analyticsPostPage.noSubstrateSignal')}</p>
                                   )}
                                </div>
                                                          <div className="space-y-6 pt-4">
-                                   <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">GENERAL_OPTIMIZATIONS</label>
+                                   <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">{t('analyticsPostPage.generalOptimizations')}</label>
                                    <div className="space-y-5">
                                       {data.insights.content_improvements?.map((imp: string, i: number) => (
                                         <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: i * 0.1 }}
@@ -282,13 +284,13 @@ export default function SovereignPostDiagnosticHub() {
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
                          <Waves size={100} className="text-violet-500/20 animate-pulse" />
                          <div className="space-y-6">
-                            <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter">GENERATE_HEURISTICS</h4>
-                            <p className="text-[13px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed max-w-xs">Initialize AI recursive logic to extract performance signals and optimization nodes.</p>
+                            <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter">{t('analyticsPostPage.generateHeuristics')}</h4>
+                            <p className="text-[13px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed max-w-xs">{t('analyticsPostPage.generateHeuristicsBody')}</p>
                          </div>
                          <button type="button" onClick={() => router.push(`/dashboard/analytics/insights/${params.id}`)}
                            className="px-16 py-8 bg-white text-black font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3rem] hover:bg-violet-600 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-6 group"
                          >
-                            <Zap size={24} className="group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700" /> INITIATE_SCAN
+                            <Zap size={24} className="group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700" /> {t('analyticsPostPage.initiateScan')}
                          </button>
                       </motion.div>
                     )}
@@ -296,10 +298,10 @@ export default function SovereignPostDiagnosticHub() {
 
                  <div className="mt-auto pt-16 border-t border-white/5 flex items-center justify-between px-8 relative z-10">
                     <div className="flex items-center gap-4 text-slate-400 italic text-[11px] font-black uppercase tracking-widest">
-                       <ActivitySquare size={16} /> DATA_PROTOCOL_SYMMETRIC
+                       <ActivitySquare size={16} /> {t('analyticsPostPage.dataProtocol')}
                     </div>
                     <div className="text-slate-400 text-[11px] font-black uppercase tracking-widest italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
-                       PHANTOM_STREAM_V9.2
+                       {t('analyticsPostPage.phantomStream')}
                     </div>
                  </div>
               </div>
@@ -309,23 +311,23 @@ export default function SovereignPostDiagnosticHub() {
                  <div className={`${premiumCard} p-10 flex items-center gap-8`}>
                     <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center"><Target size={32} className="text-indigo-400" /></div>
                     <div>
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Potency Score</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{t('analyticsPostPage.potencyScore')}</span>
                        <div className="text-4xl font-black text-white italic tracking-tighter">{data.insights?.performance_score || 0}%</div>
                     </div>
                  </div>
                  <div className={`${premiumCard} p-10 flex items-center gap-8`}>
                     <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center"><TrendingUp size={32} className="text-emerald-400" /></div>
                     <div>
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Predictive ROI</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{t('analyticsPostPage.predictiveRoi')}</span>
                        <div className="text-4xl font-black text-emerald-400 italic tracking-tighter">+{data.insights?.metadata?.predictiveROI || 85}%</div>
                     </div>
                  </div>
                  <div className={`${premiumCard} md:col-span-2 p-10 flex items-center gap-8 group`}>
                     <div className="w-16 h-16 rounded-[2rem] bg-violet-500/10 flex items-center justify-center shrink-0"><Cpu size={32} className="text-violet-400 group-hover:scale-110 transition-transform" /></div>
                     <div>
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Strategic Intervention</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{t('analyticsPostPage.strategicIntervention')}</span>
                        <div className="text-[14px] font-black text-white italic uppercase tracking-tight leading-tight opacity-90">
-                          {data.insights?.metadata?.specificAdvice || "System analyzing kinetic resonance signatures for optimal intervention."}
+                          {data.insights?.metadata?.specificAdvice || t('analyticsPostPage.strategicInterventionFallback')}
                        </div>
                     </div>
                  </div>

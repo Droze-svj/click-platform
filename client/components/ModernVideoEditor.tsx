@@ -1626,6 +1626,10 @@ const ModernVideoEditor: React.FC<{
         setShowPerformanceRail(false)
         setLeftPanelWidth(Math.min(width * 0.28, 420))
       }
+      // On compact viewports the Insights panel is an opt-in overlay drawer, so
+      // start it collapsed. We never force it open on desktop — that stays under
+      // the user's saved preference.
+      if (width < 1024) setInsightsSidebarCollapsed(true)
     }
     handleResize() // Run on mount
     window.addEventListener('resize', handleResize)
@@ -1637,6 +1641,18 @@ const ModernVideoEditor: React.FC<{
   const rightPanelEffectiveW = propertiesPanelOpen ? rightPanelWidth : 0
   const maxLeftPanel = Math.max(240, viewportWidth - sidebarW - rightPanelEffectiveW - 300)
   const clampedLeftPanelWidth = Math.min(leftPanelWidth, maxLeftPanel)
+
+  // Below this width the right-hand panels (Inspector / Insights) can't sit as
+  // inline columns without crushing the video preview, so they slide in as a
+  // single full-height overlay drawer instead. PropertiesPanel + PerformanceRail
+  // are already gated to >=1024 / xl, so this only governs Inspector + Insights.
+  const isCompactViewport = viewportWidth < 1024
+  const rightDrawerOpen = isCompactViewport && (!!(selectedSegmentId || selectedOverlayId) || !insightsSidebarCollapsed)
+  const closeRightDrawer = useCallback(() => {
+    setSelectedSegmentIds([])
+    setSelectedOverlayId(null)
+    setInsightsSidebarCollapsed(true)
+  }, [])
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -2626,6 +2642,27 @@ const ModernVideoEditor: React.FC<{
             zenMode={zenMode}
           />
 
+          {/* Backdrop for the compact-viewport right drawer (Inspector + Insights). */}
+          {rightDrawerOpen && (
+            <div
+              className="fixed inset-0 z-[65] bg-black/60 backdrop-blur-sm"
+              onClick={closeRightDrawer}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* On desktop these panels are inline flex columns (display:contents makes
+               this wrapper transparent to layout). On compact viewports they collapse
+               into one full-height slide-in drawer so they never crush the preview. */}
+          <div
+            className={
+              isCompactViewport
+                ? `fixed inset-y-0 right-0 z-[70] w-80 max-w-[90vw] overflow-y-auto overscroll-contain bg-surface-950 shadow-2xl transition-transform duration-300 ${rightDrawerOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'}`
+                : 'contents'
+            }
+            style={isCompactViewport ? { paddingBottom: 'env(safe-area-inset-bottom)' } : undefined}
+          >
+
           {/* Inspector — quick-edit panel for the active selection. Renders to the
                left of PropertiesPanel only when a clip or text overlay is selected,
                so when nothing's picked the layout is unchanged. */}
@@ -2702,6 +2739,8 @@ const ModernVideoEditor: React.FC<{
               onCollapse={() => setInsightsSidebarCollapsed(true)}
             />
           )}
+
+          </div>{/* end right-panel wrapper (inline columns / compact drawer) */}
 
       </div>
 

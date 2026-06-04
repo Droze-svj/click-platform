@@ -32,6 +32,7 @@ import { extractApiError } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-300'
 
@@ -46,6 +47,7 @@ interface SearchResult {
 export default function SignalInterceptionGridPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [type, setType] = useState('')
   const [status, setStatus] = useState('')
@@ -70,7 +72,7 @@ export default function SignalInterceptionGridPage() {
       setResults(Array.isArray(data) ? data : [])
     } catch (err: any) {
       const e = extractApiError(err)
-      setError(typeof e === 'string' ? e : e?.message || 'RECON_FAILED: UPLINK_TIMEOUT')
+      setError(typeof e === 'string' ? e : e?.message || t('searchPage.reconFailed'))
     } finally {
       setLoading(false)
     }
@@ -83,8 +85,8 @@ export default function SignalInterceptionGridPage() {
           <Compass size={80} className="text-indigo-500 animate-spin relative z-10" />
        </div>
        <div className="space-y-4 text-center">
-          <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Probing Registry Lattice...</p>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none">HIGH_BANDWIDTH_INTERCEPTION_ACTIVE</p>
+          <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">{t('searchPage.probingRegistry')}</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none">{t('searchPage.highBandwidthActive')}</p>
        </div>
     </div>
   )
@@ -102,9 +104,9 @@ export default function SignalInterceptionGridPage() {
            <div className="flex items-center gap-12">
               <button
                 type="button"
-                onClick={() => router.push('/dashboard')} 
-                title="Abort Session"
-                aria-label="Back to Dashboard"
+                onClick={() => router.push('/dashboard')}
+                title={t('searchPage.abortSession')}
+                aria-label={t('searchPage.backToDashboard')}
                 className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl hover:border-rose-500/50">
                 <ArrowLeft size={40} />
               </button>
@@ -116,28 +118,28 @@ export default function SignalInterceptionGridPage() {
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-4">
                       <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Signal Interception Grid v12.8</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('searchPage.gridLabel')}</span>
                    </div>
                    <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.5)] animate-ping" />
-                       <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase italic leading-none">SCANNER_READY</span>
+                       <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase italic leading-none">{t('searchPage.scannerReady')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-4">Search</h1>
-                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Find anything across your videos, posts, scripts, and library. Type a keyword, narrow by type, jump straight to the result.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-4">{t('searchPage.title')}</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">{t('searchPage.subtitle')}</p>
               </div>
            </div>
 
            <button
              type="button"
              onClick={handleRecon}
-             title="Execute Grid Probe"
+             title={t('searchPage.executeGridProbe')}
              className="px-16 py-8 bg-white text-black rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_50px_150px_rgba(255,255,255,0.05)] hover:bg-indigo-500 hover:text-white transition-all duration-300 flex items-center gap-8 italic active:scale-95 group overflow-hidden relative"
            >
              <div className="absolute inset-0 bg-indigo-600 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
              <div className="relative z-10 flex items-center gap-6">
-               <RefreshCw size={32} className={loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'} /> 
-               EXECUTE_GRID_PROBE
+               <RefreshCw size={32} className={loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'} />
+               {t('searchPage.executeGridProbe')}
              </div>
            </button>
         </div>
@@ -152,8 +154,8 @@ export default function SignalInterceptionGridPage() {
                  <input
                    id="intercept-input"
                    type="text"
-                   placeholder="INTERCEPT_SIGNAL_OR_PACKET_ID..."
-                   title="Intercept Signal"
+                   placeholder={t('searchPage.interceptPlaceholder')}
+                   title={t('searchPage.interceptSignal')}
                    value={query}
                    onChange={(e) => setQuery(e.target.value)}
                    onKeyPress={(e) => e.key === 'Enter' && handleRecon()}
@@ -165,13 +167,13 @@ export default function SignalInterceptionGridPage() {
                  <select 
                    id="modality-select"
                    value={type} 
-                   onChange={(e) => setType(e.target.value)} 
-                   title="Emission Modalities"
+                   onChange={(e) => setType(e.target.value)}
+                   title={t('searchPage.emissionModalities')}
                    className="w-full appearance-none bg-black/60 border-2 border-white/5 px-16 py-12 rounded-[4rem] text-[18px] font-black uppercase tracking-[0.6em] text-white focus:outline-none cursor-pointer italic shadow-inner hover:border-indigo-500/50 transition-all duration-300">
-                    <option value="">ALL_MODALITIES</option>
-                    <option value="video" className="bg-[#050505]">VISUAL_SYNTHESIS</option>
-                    <option value="article" className="bg-[#050505]">LINGUISTIC_MATRIX</option>
-                    <option value="podcast" className="bg-[#050505]">AUDITORY_RESONANCE</option>
+                    <option value="">{t('searchPage.allModalities')}</option>
+                    <option value="video" className="bg-[#050505]">{t('searchPage.modalityVideo')}</option>
+                    <option value="article" className="bg-[#050505]">{t('searchPage.modalityArticle')}</option>
+                    <option value="podcast" className="bg-[#050505]">{t('searchPage.modalityPodcast')}</option>
                  </select>
                  <ChevronRight size={32} className="absolute right-16 top-1/2 -translate-y-1/2 text-white/20 rotate-90 pointer-events-none group-hover/sel:text-indigo-400 transition-colors duration-300" />
               </div>
@@ -180,13 +182,13 @@ export default function SignalInterceptionGridPage() {
                  <select 
                    id="phase-select"
                    value={status} 
-                   onChange={(e) => setStatus(e.target.value)} 
-                   title="Process Phases"
+                   onChange={(e) => setStatus(e.target.value)}
+                   title={t('searchPage.processPhases')}
                    className="w-full appearance-none bg-black/60 border-2 border-white/5 px-16 py-12 rounded-[4rem] text-[18px] font-black uppercase tracking-[0.6em] text-white focus:outline-none cursor-pointer italic shadow-inner hover:border-indigo-500/50 transition-all duration-300">
-                    <option value="">ALL_PHASES</option>
-                    <option value="completed" className="bg-[#050505]">SECURED_FINAL</option>
-                    <option value="processing" className="bg-[#050505]">SYNTHESIS_ACTIVE</option>
-                    <option value="failed" className="bg-[#050505]">SIGNAL_DIFFRACTED</option>
+                    <option value="">{t('searchPage.allPhases')}</option>
+                    <option value="completed" className="bg-[#050505]">{t('searchPage.phaseCompleted')}</option>
+                    <option value="processing" className="bg-[#050505]">{t('searchPage.phaseProcessing')}</option>
+                    <option value="failed" className="bg-[#050505]">{t('searchPage.phaseFailed')}</option>
                  </select>
                  <ChevronRight size={32} className="absolute right-16 top-1/2 -translate-y-1/2 text-white/20 rotate-90 pointer-events-none group-hover/stat:text-indigo-400 transition-colors duration-300" />
               </div>
@@ -199,7 +201,7 @@ export default function SignalInterceptionGridPage() {
              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="p-10 bg-rose-500/5 border border-rose-500/20 rounded-[3rem] flex items-center gap-8 shadow-2xl">
                 <AlertCircle size={40} className="text-rose-500 animate-pulse" />
                 <div>
-                   <p className="text-[12px] font-black text-rose-500 uppercase tracking-[0.6em] italic leading-none mb-2">RECON_FATAL_ERROR</p>
+                   <p className="text-[12px] font-black text-rose-500 uppercase tracking-[0.6em] italic leading-none mb-2">{t('searchPage.reconFatalError')}</p>
                    <p className="text-xl font-black text-white uppercase italic tracking-tighter leading-none">{error}</p>
                 </div>
              </motion.div>
@@ -208,7 +210,7 @@ export default function SignalInterceptionGridPage() {
             {loading ? (
               <div className="py-64 text-center">
                  <div className="inline-block w-40 h-40 border-8 border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin mb-12 shadow-[0_0_50px_rgba(99,102,241,0.2)]" />
-                 <p className="text-4xl font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none">PROBING_NODES...</p>
+                 <p className="text-4xl font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none">{t('searchPage.probingNodes')}</p>
               </div>
             ) : results.length === 0 ? (
               <div className="py-64 flex flex-col items-center justify-center text-center opacity-[0.05] gap-20">
@@ -217,8 +219,8 @@ export default function SignalInterceptionGridPage() {
                     <Compass size={200} className="text-white animate-pulse relative z-10" />
                  </div>
                  <div className="space-y-8">
-                    <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">NULL_SIGNATURE</h3>
-                    <p className="text-[24px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none">{query ? `NO_MATCHES_IDENTIFIED_FOR [${query.toUpperCase()}]` : "ENTER_PROBE_PARAMETERS_TO_BEGIN_INTERCEPTION"}</p>
+                    <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{t('searchPage.nullSignature')}</h3>
+                    <p className="text-[24px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none">{query ? t('searchPage.noMatchesFor', { query: query.toUpperCase() }) : t('searchPage.enterProbeParameters')}</p>
                  </div>
               </div>
             ) : (
@@ -234,12 +236,12 @@ export default function SignalInterceptionGridPage() {
                    >
                       <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-500 rotate-12 group-hover:rotate-0"><Boxes size={250} /></div>
                       <div className="flex items-center justify-between mb-12">
-                         <span className="px-6 py-2 rounded-2xl bg-indigo-500/10 text-indigo-400 border-2 border-indigo-500/20 text-[12px] font-black uppercase tracking-widest italic shadow-inner">{item.type.toUpperCase()} // MODALITY</span>
+                         <span className="px-6 py-2 rounded-2xl bg-indigo-500/10 text-indigo-400 border-2 border-indigo-500/20 text-[12px] font-black uppercase tracking-widest italic shadow-inner">{t('searchPage.cardModality', { type: item.type.toUpperCase() })}</span>
                          <div className={`w-4 h-4 rounded-full ${item.status === 'completed' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,1)]' : 'bg-amber-500 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.5)]'}`} />
                       </div>
-                      <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none truncate">{item.title || 'UNNAMED_NODE'}</h3>
+                      <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none truncate">{item.title || t('searchPage.unnamedNode')}</h3>
                       <div className="flex items-center justify-between pt-10 border-t-2 border-white/5">
-                         <span className="text-[12px] font-black text-slate-500 uppercase tracking-widest italic">{item.status.toUpperCase()} // SIG_LOCKED</span>
+                         <span className="text-[12px] font-black text-slate-500 uppercase tracking-widest italic">{t('searchPage.cardSigLocked', { status: item.status.toUpperCase() })}</span>
                          <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center text-slate-500 group-hover:text-white group-hover:scale-110 transition-all duration-300">
                             <Eye size={32} />
                          </div>

@@ -16,6 +16,7 @@ import { useUserSocket } from '../../../hooks/useUserSocket'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface ScheduledPost {
   _id: string
@@ -38,6 +39,7 @@ export default function SchedulerPage() {
   const searchParams = useSearchParams()
   const { user } = useAuth()
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const [posts, setPosts] = useState<ScheduledPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,8 +92,8 @@ export default function SchedulerPage() {
         }))
       })
       .catch(() => { /* best-effort prefill */ })
-    showToast(`✓ ${ids.length} clip${ids.length === 1 ? '' : 's'} pre-loaded from forge`, 'success')
-  }, [searchParams, showToast])
+    showToast(t(ids.length === 1 ? 'schedulerPage.toastClipPreloaded' : 'schedulerPage.toastClipsPreloaded', { count: ids.length }), 'success')
+  }, [searchParams, showToast, t])
 
   const [activeTab, setActiveTab] = useState<'queue' | 'history'>('queue')
   const [optimalTimes, setOptimalTimes] = useState<string[]>([])
@@ -117,7 +119,7 @@ export default function SchedulerPage() {
       const translated = res?.data?.translatedText || res?.translatedText
       if (translated) setForm(f => ({ ...f, text: translated }))
     } catch {
-      showToast('TRANSLATE_ERR: Translation service unavailable', 'error')
+      showToast(t('schedulerPage.toastTranslateFailed'), 'error')
     } finally {
       setTranslating(false)
     }
@@ -181,11 +183,11 @@ export default function SchedulerPage() {
       const res: any = await apiGet('/scheduler')
       setPosts(res?.data || res || [])
     } catch {
-      showToast("Could not load your scheduled posts. Retry in a moment.", 'error')
+      showToast(t('schedulerPage.toastLoadFailed'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     if (!user) router.push('/login')
@@ -204,12 +206,12 @@ export default function SchedulerPage() {
       if (payload.status === 'published') {
         showToast(
           payload.url
-            ? `✓ Live on ${payload.platform || 'platform'} — ${payload.url}`
-            : `✓ Posted to ${payload.platform || 'platform'}`,
+            ? t('schedulerPage.toastLiveWithUrl', { platform: payload.platform || t('schedulerPage.platformFallback'), url: payload.url })
+            : t('schedulerPage.toastPosted', { platform: payload.platform || t('schedulerPage.platformFallback') }),
           'success'
         )
       } else if (payload.status === 'failed') {
-        showToast(`✗ ${payload.platform || 'Post'} failed: ${payload.error || 'unknown error'}`, 'error')
+        showToast(t('schedulerPage.toastPostFailed', { platform: payload.platform || t('schedulerPage.postFallback'), error: payload.error || t('schedulerPage.unknownError') }), 'error')
       }
     },
   })
@@ -217,7 +219,7 @@ export default function SchedulerPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.text.trim() || !form.scheduledTime) {
-      showToast('PARAM_ERR: CONTENT_&_TIME_REQUIRED', 'error')
+      showToast(t('schedulerPage.toastContentTimeRequired'), 'error')
       return
     }
 
@@ -243,7 +245,7 @@ export default function SchedulerPage() {
             scheduledTime: new Date(baseTime + i * 5 * 60 * 1000).toISOString(),
           })
         ))
-        showToast(`Scheduled ${queuedClipIds.length} post${queuedClipIds.length === 1 ? '' : 's'} — track them in Posts.`, 'success')
+        showToast(t('schedulerPage.toastScheduledMany', { count: queuedClipIds.length }), 'success')
       } else {
         await apiPost('/scheduler/schedule', {
           platform: form.platform,
@@ -256,20 +258,20 @@ export default function SchedulerPage() {
           contentId: queuedClipIds[0] || undefined,
           scheduledTime: new Date(form.scheduledTime).toISOString()
         })
-        showToast('Post scheduled.', 'success')
+        showToast(t('schedulerPage.toastScheduled'), 'success')
       }
       setForm({ platform: 'instagram', text: '', hashtags: '', scheduledTime: '', mediaUrl: '', accountId: null })
       setQueuedClipIds([])
       loadPosts()
     } catch {
-      showToast("Could not schedule that post. Try again.", 'error')
+      showToast(t('schedulerPage.toastScheduleFailed'), 'error')
     } finally {
       setTimeout(() => setScheduling(false), 800)
     }
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-8 lg:px-12 pt-8 max-w-[1800px] mx-auto" aria-busy="true" aria-label="Loading">
+    <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-8 lg:px-12 pt-8 max-w-[1800px] mx-auto" aria-busy="true" aria-label={t('schedulerPage.loading')}>
        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
        </div>
@@ -287,7 +289,7 @@ export default function SchedulerPage() {
         {/* Header HUD */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-12 border-b border-surface-100 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-8 w-full lg:w-auto">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard"
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('schedulerPage.backToDashboard')} aria-label={t('schedulerPage.backToDashboard')}
                 className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90 group">
                 <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
               </button>
@@ -297,14 +299,14 @@ export default function SchedulerPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-500/10 text-primary-600 dark:text-primary-400 uppercase tracking-[0.2em] border-2 border-primary-500/20 italic leading-none">
-                      Scheduler
+                      {t('schedulerPage.badge')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                        {posts.filter(p => p.status === 'scheduled').length} scheduled
+                        {t('schedulerPage.scheduledCount', { count: posts.filter(p => p.status === 'scheduled').length })}
                     </div>
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Scheduler</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('schedulerPage.title')}</h1>
               </div>
            </div>
 
@@ -312,9 +314,9 @@ export default function SchedulerPage() {
               <button type="button" onClick={() => router.push('/dashboard/calendar')}
                 className="px-8 py-4 bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] italic shadow-xl hover:border-primary-500/40 hover:text-primary-500 transition-all flex items-center gap-4 active:scale-95"
               >
-                <Calendar size={20} /> Open Calendar
+                <Calendar size={20} /> {t('schedulerPage.openCalendar')}
               </button>
-              <button type="button" onClick={() => loadPosts()} title="Refresh Sequences" aria-label="Refresh Sequences"
+              <button type="button" onClick={() => loadPosts()} title={t('schedulerPage.refreshSequences')} aria-label={t('schedulerPage.refreshSequences')}
                 className="w-14 h-14 bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-2xl flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90"
               >
                 <RefreshCw size={24} className={loading ? 'animate-spin text-primary-500' : ''} />
@@ -330,14 +332,14 @@ export default function SchedulerPage() {
                    <Zap size={28} className="text-white animate-pulse" />
                  </div>
                  <div>
-                    <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">New post</h2>
-                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">Pick a platform, write your caption, choose when to publish</p>
+                    <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">{t('schedulerPage.newPost')}</h2>
+                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">{t('schedulerPage.newPostSubtitle')}</p>
                  </div>
               </div>
 
               <form onSubmit={handleSubmit} className="p-10 sm:p-14 space-y-12 flex-1">
                  <div className="space-y-6">
-                    <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Platform</label>
+                    <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('schedulerPage.platform')}</label>
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
                        {PLATFORMS.map(p => {
                          const active = form.platform === p.id
@@ -349,20 +351,20 @@ export default function SchedulerPage() {
                              <button
                                type="button"
                                key={p.id}
-                               onClick={() => showToast('TikTok publishing is coming soon — you can already connect the account.', 'info')}
-                               title="TikTok publishing coming soon — connect your account now to be ready"
-                               aria-label="TikTok (coming soon)"
+                               onClick={() => showToast(t('schedulerPage.tiktokSoonToast'), 'info')}
+                               title={t('schedulerPage.tiktokSoonTitle')}
+                               aria-label={t('schedulerPage.tiktokSoonAria')}
                                className="flex flex-col items-center gap-3 p-4 rounded-2xl border-2 border-amber-500/30 bg-amber-500/5 text-amber-500/70 opacity-80 relative hover:opacity-100 hover:border-amber-500/50 transition-all"
                              >
                                <span className="text-2xl sm:text-3xl opacity-50 grayscale" aria-hidden="true">{p.icon}</span>
                                <span className="text-[8px] font-black uppercase tracking-widest italic">{p.id}</span>
-                               <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-amber-500 text-black text-[7px] font-black uppercase tracking-wider leading-none">SOON</span>
+                               <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-amber-500 text-black text-[7px] font-black uppercase tracking-wider leading-none">{t('schedulerPage.soon')}</span>
                              </button>
                            )
                          }
                          return (
                            <button type="button" key={p.id} onClick={() => setForm(f => ({ ...f, platform: p.id }))}
-                             title={`Select ${p.label}`} aria-label={`Select ${p.label}`}
+                             title={t('schedulerPage.selectPlatform', { platform: p.label })} aria-label={t('schedulerPage.selectPlatform', { platform: p.label })}
                              className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 group/node ${active ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-transparent shadow-2xl scale-110 z-10' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-400 hover:border-primary-500/40'}`}
                            >
                               <span className={`text-2xl sm:text-3xl transition-transform duration-500 ${active ? 'scale-125 rotate-12' : 'opacity-40 grayscale group-hover/node:grayscale-0 group-hover/node:opacity-100 group-hover/node:scale-110'}`} aria-hidden="true">{p.icon}</span>
@@ -385,8 +387,8 @@ export default function SchedulerPage() {
                             href={`/dashboard/social?platform=${form.platform}`}
                             className="mt-4 flex items-center justify-between px-6 py-4 rounded-2xl border-2 border-rose-500/30 bg-rose-500/5 text-rose-500 hover:border-rose-500/60 hover:bg-rose-500/10 transition-all text-xs font-black uppercase tracking-widest italic"
                           >
-                            <span>No {form.platform} account connected</span>
-                            <span className="text-[10px]">Connect →</span>
+                            <span>{t('schedulerPage.noAccountConnected', { platform: form.platform })}</span>
+                            <span className="text-[10px]">{t('schedulerPage.connect')}</span>
                           </a>
                         )
                       }
@@ -395,23 +397,23 @@ export default function SchedulerPage() {
                         return (
                           <div className="mt-4 flex items-center gap-4 px-6 py-3 rounded-2xl border-2 border-emerald-500/20 bg-emerald-500/5 text-xs font-black uppercase tracking-widest italic text-emerald-600 dark:text-emerald-400">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                            <span className="truncate">Posting as {only.platformUsername || only.accountId}</span>
+                            <span className="truncate">{t('schedulerPage.postingAs', { account: only.platformUsername || only.accountId })}</span>
                           </div>
                         )
                       }
                       return (
                         <div className="mt-4 space-y-2">
-                          <label className="text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Account</label>
+                          <label className="text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('schedulerPage.account')}</label>
                           <select
-                            aria-label={`Select ${form.platform} account to post from`}
-                            title={`Select ${form.platform} account to post from`}
+                            aria-label={t('schedulerPage.selectAccount', { platform: form.platform })}
+                            title={t('schedulerPage.selectAccount', { platform: form.platform })}
                             value={form.accountId || ''}
                             onChange={(e) => setForm((f) => ({ ...f, accountId: e.target.value || null }))}
                             className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest italic text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 transition-all"
                           >
                             {accs.map((a) => (
                               <option key={a.accountId} value={a.accountId}>
-                                {a.platformUsername || a.accountId}{a.isPrimary ? ' (primary)' : ''}
+                                {a.platformUsername || a.accountId}{a.isPrimary ? t('schedulerPage.primarySuffix') : ''}
                               </option>
                             ))}
                           </select>
@@ -422,28 +424,28 @@ export default function SchedulerPage() {
 
                  <div className="space-y-6">
                     <div className="flex items-center justify-between pl-2">
-                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">Caption</label>
+                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">{t('schedulerPage.caption')}</label>
                       {userLang !== 'en' && form.text.trim().length > 0 && (
                         <button type="button" onClick={translateCaption} disabled={translating}
                           className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-500 text-[9px] font-black uppercase tracking-widest italic hover:bg-primary-500 hover:text-white transition-all disabled:opacity-40"
                         >
                           {translating ? <RefreshCw size={10} className="animate-spin" /> : <Globe size={10} />}
-                          {translating ? 'Translating…' : `Generate in ${userLang.toUpperCase()}`}
+                          {translating ? t('schedulerPage.translating') : t('schedulerPage.generateIn', { lang: userLang.toUpperCase() })}
                         </button>
                       )}
                     </div>
                     <textarea value={form.text} onChange={e => setForm(f => ({ ...f, text: e.target.value }))}
-                      placeholder="Write your caption…"
+                      placeholder={t('schedulerPage.captionPlaceholder')}
                       className="w-full h-64 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-10 text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight italic focus:outline-none focus:border-primary-500 transition-all shadow-inner resize-none backdrop-blur-xl custom-scrollbar"
                     />
                  </div>
 
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div className="space-y-6">
-                       <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Hashtags</label>
+                       <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('schedulerPage.hashtags')}</label>
                        <div className="relative group/tag">
                           <input type="text" value={form.hashtags} onChange={e => setForm(f => ({ ...f, hashtags: e.target.value }))}
-                            placeholder="VIRAL, GROWTH, TECH..."
+                            placeholder={t('schedulerPage.hashtagsPlaceholder')}
                             className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl pl-12 pr-6 py-5 text-xs font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:outline-none focus:border-primary-500 transition-all shadow-inner"
                           />
                           <Hash size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within/tag:text-primary-500 transition-colors" />
@@ -451,9 +453,9 @@ export default function SchedulerPage() {
                     </div>
                     <div className="space-y-6">
                        <div className="flex items-center justify-between pl-2">
-                         <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">Temporal Anchor (Time)</label>
+                         <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">{t('schedulerPage.temporalAnchor')}</label>
                          {optimalTimes.length > 0 && (
-                           <span className="text-[9px] font-black text-primary-500 uppercase tracking-widest italic">Best times</span>
+                           <span className="text-[9px] font-black text-primary-500 uppercase tracking-widest italic">{t('schedulerPage.bestTimes')}</span>
                          )}
                        </div>
                        {optimalTimes.length > 0 && (
@@ -473,15 +475,15 @@ export default function SchedulerPage() {
                        )}
                        <div className="relative group/time">
                           <input type="datetime-local" value={form.scheduledTime} onChange={e => setForm(f => ({ ...f, scheduledTime: e.target.value }))}
-                            aria-label="Scheduled time"
-                            title="Scheduled time"
+                            aria-label={t('schedulerPage.scheduledTime')}
+                            title={t('schedulerPage.scheduledTime')}
                             className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl pl-12 pr-6 py-5 text-xs font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:outline-none focus:border-primary-500 transition-all shadow-inner appearance-none cursor-pointer"
                           />
                           <Clock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within/time:text-primary-500 transition-colors" />
                        </div>
                        <p className="text-[9px] font-black text-surface-300 dark:text-slate-700 uppercase tracking-[0.3em] italic pl-2 flex items-center gap-2">
                          <Globe size={10} />
-                         {Intl.DateTimeFormat().resolvedOptions().timeZone} (your local time)
+                         {t('schedulerPage.localTimeHint', { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })}
                        </p>
                     </div>
                  </div>
@@ -490,7 +492,7 @@ export default function SchedulerPage() {
                    className="w-full py-10 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-sm font-black uppercase tracking-[1em] italic shadow-[0_40px_100px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all duration-500 hover:-translate-y-2 active:scale-95 border-none flex items-center justify-center gap-10 group/submit"
                  >
                    {scheduling ? <RefreshCw className="animate-spin" size={32} /> : <Target size={32} className="group-hover/submit:scale-125 group-hover/submit:rotate-12 transition-all duration-700 text-primary-500" />}
-                   {scheduling ? 'QUEUEING_SEQUENCE...' : 'INJECT_INTO_QUEUE'}
+                   {scheduling ? t('schedulerPage.queueing') : t('schedulerPage.injectIntoQueue')}
                  </button>
               </form>
            </section>
@@ -502,16 +504,16 @@ export default function SchedulerPage() {
                     <button type="button" onClick={() => setActiveTab('queue')}
                       className={`px-8 py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${activeTab === 'queue' ? 'bg-primary-600 text-white shadow-2xl' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}
                     >
-                      ACTIVE_QUEUE
+                      {t('schedulerPage.activeQueue')}
                     </button>
                     <button type="button" onClick={() => setActiveTab('history')}
                       className={`px-8 py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${activeTab === 'history' ? 'bg-primary-600 text-white shadow-2xl' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}
                     >
-                      ARCHIVE_LOGS
+                      {t('schedulerPage.archiveLogs')}
                     </button>
                  </div>
                  <div className="hidden sm:flex items-center gap-6 text-[10px] font-black text-surface-400 uppercase tracking-[0.5em] italic opacity-60">
-                    <Activity size={16} className="text-emerald-500 animate-pulse" /> LIVE_QUEUE_MONITOR
+                    <Activity size={16} className="text-emerald-500 animate-pulse" /> {t('schedulerPage.liveQueueMonitor')}
                  </div>
               </div>
 
@@ -520,7 +522,7 @@ export default function SchedulerPage() {
                     {posts.filter(p => activeTab === 'queue' ? (p.status === 'scheduled' || p.status === 'draft') : (p.status === 'posted' || p.status === 'failed')).length === 0 ? (
                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-48 flex flex-col items-center justify-center bg-surface-card dark:bg-surface-950/30 border-4 border-dashed border-surface-100 dark:border-surface-800 rounded-[4rem] opacity-20 group/empty hover:opacity-40 transition-all duration-1000">
                           <Layout size={100} className="mb-10 text-surface-400 group-hover/empty:scale-125 transition-transform duration-1000" />
-                          <p className="text-3xl font-black uppercase tracking-[0.8em] italic">NULL_PAYLOAD_DETECTED</p>
+                          <p className="text-3xl font-black uppercase tracking-[0.8em] italic">{t('schedulerPage.nullPayloadDetected')}</p>
                        </motion.div>
                     ) : (
                        posts
@@ -528,10 +530,10 @@ export default function SchedulerPage() {
                         .map((p, idx) => {
                            const pCfg = PLATFORMS.find(pl => pl.id === p.platform) || PLATFORMS[0]
                            const statusCfg = {
-                             scheduled: { label: 'SCHEDULED', icon: Clock, color: 'text-primary-500 bg-primary-500/10 border-primary-500/20' },
-                             posted:    { label: 'PUBLISHED', icon: CheckCircle, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
-                             failed:    { label: 'FAILED',    icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
-                             draft:     { label: 'DRAFT',     icon: Timer, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+                             scheduled: { label: t('schedulerPage.statusScheduled'), icon: Clock, color: 'text-primary-500 bg-primary-500/10 border-primary-500/20' },
+                             posted:    { label: t('schedulerPage.statusPublished'), icon: CheckCircle, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+                             failed:    { label: t('schedulerPage.statusFailed'),    icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
+                             draft:     { label: t('schedulerPage.statusDraft'),     icon: Timer, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
                            }[p.status]
                            const StatusIcon = statusCfg.icon
 
@@ -562,7 +564,7 @@ export default function SchedulerPage() {
                                 </div>
 
                                 <div className="flex items-center gap-3 relative z-10">
-                                   <button type="button" title="View Sequence Details" aria-label="View Sequence Details" className="w-14 h-14 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 hover:text-primary-500 transition-all shadow-xl active:scale-90 group/act border-none">
+                                   <button type="button" title={t('schedulerPage.viewSequenceDetails')} aria-label={t('schedulerPage.viewSequenceDetails')} className="w-14 h-14 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 hover:text-primary-500 transition-all shadow-xl active:scale-90 group/act border-none">
                                       <ChevronRight size={24} className="group-hover/act:translate-x-1 transition-transform" />
                                    </button>
                                 </div>

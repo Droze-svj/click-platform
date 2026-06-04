@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 import LoadingSkeleton from '@/components/LoadingSkeleton'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import ToastContainer from '@/components/ToastContainer'
@@ -97,6 +98,7 @@ interface DashboardData {
 export default function SovereignOversightTerminalPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<DashboardData | null>(null)
@@ -113,7 +115,7 @@ export default function SovereignOversightTerminalPage() {
       setData(response)
     } catch (err: any) {
       console.error('Failed to load admin dashboard:', err)
-      setError(err.message || 'Failed to load admin dashboard')
+      setError(err.message || t('adminPage.failedToLoad'))
     } finally {
       setLoading(false)
     }
@@ -132,7 +134,7 @@ export default function SovereignOversightTerminalPage() {
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
        <Fingerprint size={64} className="text-amber-500 animate-pulse mb-8" />
-       <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] animate-pulse italic">Deciphering Oversight Protocols...</span>
+       <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] animate-pulse italic">{t('adminPage.loading')}</span>
     </div>
   )
 
@@ -140,9 +142,9 @@ export default function SovereignOversightTerminalPage() {
     <div className="min-h-screen bg-[var(--page-bg)] flex items-center justify-center p-10">
        <div className={`${glassStyle} p-12 rounded-[3rem] border-rose-500/20 text-center max-w-xl`}>
           <ShieldAlert size={64} className="text-rose-500 mx-auto mb-8 animate-bounce" />
-          <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4">Oversight Error</h2>
-          <p className="text-[var(--text-dim)] text-[13px] font-black uppercase tracking-widest italic mb-10">{error || 'UNAUTHORIZED_ACCESS_DETECTED'}</p>
-          <button type="button" onClick={loadDashboard} className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-widest italic rounded-2xl hover:bg-rose-500 hover:text-white transition-all">RETRY_SYNC</button>
+          <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4">{t('adminPage.errorTitle')}</h2>
+          <p className="text-[var(--text-dim)] text-[13px] font-black uppercase tracking-widest italic mb-10">{error || t('adminPage.unauthorized')}</p>
+          <button type="button" onClick={loadDashboard} className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-widest italic rounded-2xl hover:bg-rose-500 hover:text-white transition-all">{t('adminPage.retrySync')}</button>
        </div>
     </div>
   )
@@ -168,24 +170,24 @@ export default function SovereignOversightTerminalPage() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Binary size={14} className="text-amber-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-amber-400 italic leading-none">Oversight Matrix v9.2.0</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-amber-400 italic leading-none">{t('adminPage.oversightMatrix')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
                        <ShieldCheck size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">AUTHORIZED_ROOT</span>
+                       <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">{t('adminPage.authorizedRoot')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-2">Admin</h1>
-                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Operator console — global users, cluster health, system vitals. Visible only to staff with the admin role.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-2">{t('adminPage.title')}</h1>
+                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">{t('adminPage.subtitle')}</p>
               </div>
            </div>
 
            <div className="flex items-center gap-6">
               <button type="button" onClick={loadDashboard}
                 className="px-10 py-5 bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white hover:bg-white/[0.05] font-black uppercase text-[11px] tracking-[0.4em] italic rounded-2xl transition-all flex items-center gap-4 group shadow-xl">
-                 <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-700" /> REFRESH_LATTICE
+                 <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-700" /> {t('adminPage.refreshLattice')}
               </button>
-              <button title="Scan Matrix" className="p-5 bg-white text-black hover:bg-amber-500 hover:text-white transition-all rounded-2xl shadow-2xl group active:scale-90">
+              <button title={t('adminPage.scanMatrix')} className="p-5 bg-white text-black hover:bg-amber-500 hover:text-white transition-all rounded-2xl shadow-2xl group active:scale-90">
                  <Scan size={24} className="group-hover:scale-110 transition-transform" />
               </button>
            </div>
@@ -193,10 +195,10 @@ export default function SovereignOversightTerminalPage() {
 
         {/* Global Vitality Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-           <VitalityCard icon={Users} label="Node Operatives" value={data.overview.users.total} trend={`${data.overview.users.verified} Verified`} color="text-indigo-400" bg="bg-indigo-500/10" />
-           <VitalityCard icon={FileText} label="Content Payloads" value={data.overview.posts.total} trend={`${data.overview.posts.published} Published`} color="text-emerald-400" bg="bg-emerald-500/10" />
-           <VitalityCard icon={Orbit} label="Neural Sync Nodes" value={data.overview.social.connected_accounts} trend="LATTICE_ACTIVE" color="text-fuchsia-400" bg="bg-fuchsia-500/10" />
-           <VitalityCard icon={Activity} label="Lattice Vitality" value={data.system_health.database === 'healthy' ? 'OPTIMAL' : 'ANOMALY'} trend={`Uptime: ${formatUptime(data.system_health.uptime)}`} color="text-amber-400" bg="bg-amber-500/10" isHealthy={data.system_health.database === 'healthy'} />
+           <VitalityCard icon={Users} label={t('adminPage.nodeOperatives')} value={data.overview.users.total} trend={t('adminPage.verifiedCount', { count: data.overview.users.verified })} color="text-indigo-400" bg="bg-indigo-500/10" />
+           <VitalityCard icon={FileText} label={t('adminPage.contentPayloads')} value={data.overview.posts.total} trend={t('adminPage.publishedCount', { count: data.overview.posts.published })} color="text-emerald-400" bg="bg-emerald-500/10" />
+           <VitalityCard icon={Orbit} label={t('adminPage.neuralSyncNodes')} value={data.overview.social.connected_accounts} trend={t('adminPage.latticeActive')} color="text-fuchsia-400" bg="bg-fuchsia-500/10" />
+           <VitalityCard icon={Activity} label={t('adminPage.latticeVitality')} value={data.system_health.database === 'healthy' ? t('adminPage.optimal') : t('adminPage.anomaly')} trend={t('adminPage.uptimeTrend', { uptime: formatUptime(data.system_health.uptime) })} color="text-amber-400" bg="bg-amber-500/10" isHealthy={data.system_health.database === 'healthy'} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 relative z-10">
@@ -206,14 +208,14 @@ export default function SovereignOversightTerminalPage() {
                  <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 mb-8">
                     <div className="flex items-center gap-6">
                        <Scan size={24} className="text-amber-400" />
-                       <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">Resonance Feed</h3>
+                       <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">{t('adminPage.resonanceFeed')}</h3>
                     </div>
-                    <button className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest hover:text-white transition-colors italic">VIEW_ALL_LOGS</button>
+                    <button className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest hover:text-white transition-colors italic">{t('adminPage.viewAllLogs')}</button>
                  </div>
                  
                  <div className="space-y-12 p-4">
                     <div className="space-y-6">
-                       <label className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic pl-6">New Operative Signatures</label>
+                       <label className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic pl-6">{t('adminPage.newOperativeSignatures')}</label>
                        <div className="grid grid-cols-1 gap-4">
                           {data.recent_activity.users.slice(0, 4).map((user) => (
                             <div key={user.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-indigo-500/30 transition-all duration-700 flex items-center justify-between shadow-inner">
@@ -228,7 +230,7 @@ export default function SovereignOversightTerminalPage() {
                                </div>
                                <div className="text-right">
                                   <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic opacity-40">{new Date(user.created_at).toLocaleTimeString()}</span>
-                                  <p className="text-[9px] font-black text-indigo-500/60 uppercase tracking-tighter italic mt-1 font-mono">NODE_INIT_COMPLETED</p>
+                                  <p className="text-[9px] font-black text-indigo-500/60 uppercase tracking-tighter italic mt-1 font-mono">{t('adminPage.nodeInitCompleted')}</p>
                                </div>
                             </div>
                           ))}
@@ -236,7 +238,7 @@ export default function SovereignOversightTerminalPage() {
                     </div>
 
                     <div className="space-y-6">
-                       <label className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.6em] italic pl-6">Pending Content Payloads</label>
+                       <label className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.6em] italic pl-6">{t('adminPage.pendingContentPayloads')}</label>
                        <div className="grid grid-cols-1 gap-4">
                           {data.recent_activity.posts.slice(0, 4).map((post) => (
                             <div key={post.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex items-center justify-between shadow-inner">
@@ -245,7 +247,7 @@ export default function SovereignOversightTerminalPage() {
                                      <FileText size={24} />
                                   </div>
                                   <div className="truncate">
-                                     <p className="text-[15px] font-black text-white uppercase italic tracking-widest leading-none mb-2 truncate">{post.title || 'NULL_TITLE'}</p>
+                                     <p className="text-[15px] font-black text-white uppercase italic tracking-widest leading-none mb-2 truncate">{post.title || t('adminPage.nullTitle')}</p>
                                      <p className="text-[11px] font-black text-[var(--text-dim)] uppercase italic tracking-[0.2em] leading-none">{post.users.email}</p>
                                   </div>
                                </div>
@@ -253,7 +255,7 @@ export default function SovereignOversightTerminalPage() {
                                   <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest italic ${
                                      post.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                                   }`}>
-                                     {post.status.toUpperCase()}
+                                     {t(`adminPage.status_${post.status}`)}
                                   </span>
                                   <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-tighter italic mt-2 opacity-40">{new Date(post.created_at).toLocaleDateString()}</p>
                                </div>
@@ -270,16 +272,16 @@ export default function SovereignOversightTerminalPage() {
               <div className={`${glassStyle} p-12 rounded-[5rem] border-white/5 shadow-[inset_0_0_80px_rgba(0,0,0,0.5)] bg-black/40`}>
                  <div className="flex items-center gap-6 border-b border-white/5 pb-8 mb-10 px-4">
                     <Database size={20} className="text-amber-400" />
-                    <h3 className="text-[13px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">Core Vitality</h3>
+                    <h3 className="text-[13px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">{t('adminPage.coreVitality')}</h3>
                  </div>
                  
                  <div className="space-y-10 p-4">
-                    <HealthRow label="Core Ledger" status={data.system_health.database} />
-                    <HealthRow label="Uplink API" status={data.system_health.api} />
+                    <HealthRow label={t('adminPage.coreLedger')} status={data.system_health.database} />
+                    <HealthRow label={t('adminPage.uplinkApi')} status={data.system_health.api} />
                     
                     <div className="pt-6 border-t border-white/5">
                        <div className="flex justify-between items-center mb-4 px-2">
-                          <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">Cognitive Buffer</label>
+                          <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">{t('adminPage.cognitiveBuffer')}</label>
                           <span className="text-[11px] font-mono text-indigo-400 font-bold">
                              {formatMemory(data.system_health.memory.heapUsed)}/ {formatMemory(data.system_health.memory.heapTotal)}
                           </span>
@@ -291,18 +293,18 @@ export default function SovereignOversightTerminalPage() {
                     </div>
 
                     <div className="flex justify-between items-center pt-8 border-t border-white/5 px-2">
-                       <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">Total Uptime</label>
+                       <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">{t('adminPage.totalUptime')}</label>
                        <span className="text-[13px] font-black text-white italic tracking-widest">{formatUptime(data.system_health.uptime).toUpperCase()}</span>
                     </div>
                  </div>
               </div>
 
               <div className="space-y-6">
-                 <h4 className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic pl-8">Quick Oversight Commands</h4>
+                 <h4 className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic pl-8">{t('adminPage.quickOversightCommands')}</h4>
                  <div className="grid grid-cols-1 gap-6">
-                    <CommandButton icon={Users} label="Manage_Node_Operatives" desc="View and calibrate operative permissions" color="text-indigo-400" onClick={() => router.push('/dashboard/admin/users')} />
-                    <CommandButton icon={FileText} label="Moderate_Payloads" desc="Review and authorize content flows" color="text-emerald-400" onClick={() => router.push('/dashboard/admin/posts')} />
-                    <CommandButton icon={BarChart3} label="Global_Lattice_Analytics" desc="Full-spectrum system telemetry" color="text-fuchsia-400" onClick={() => router.push('/dashboard/admin/analytics')} />
+                    <CommandButton icon={Users} label={t('adminPage.cmdManageOperatives')} desc={t('adminPage.cmdManageOperativesDesc')} color="text-indigo-400" onClick={() => router.push('/dashboard/admin/users')} />
+                    <CommandButton icon={FileText} label={t('adminPage.cmdModeratePayloads')} desc={t('adminPage.cmdModeratePayloadsDesc')} color="text-emerald-400" onClick={() => router.push('/dashboard/admin/posts')} />
+                    <CommandButton icon={BarChart3} label={t('adminPage.cmdGlobalAnalytics')} desc={t('adminPage.cmdGlobalAnalyticsDesc')} color="text-fuchsia-400" onClick={() => router.push('/dashboard/admin/analytics')} />
                  </div>
               </div>
            </div>

@@ -7,12 +7,14 @@ import { apiGet, apiDelete } from '../../../../../lib/api'
 import ClipCard, { type Clip } from '../../../../../components/clips/ClipCard'
 import ClipLightbox from '../../../../../components/clips/ClipLightbox'
 import { CardSkeleton } from '../../../../../components/LoadingSkeleton'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type SortKey = 'viralScore' | 'rating' | 'newest' | 'duration'
 
 export default function ClipHubByContentPage() {
   const params = useParams<{ contentId: string }>()
   const router = useRouter()
+  const { t } = useTranslation()
   const searchParams = useSearchParams()
   const contentId = params?.contentId
   const autoClip = searchParams?.get('autoClip') === '1'
@@ -41,7 +43,7 @@ export default function ClipHubByContentPage() {
       setClips(data?.items || [])
       setParentTitle(data?.title || '')
     } catch (err: any) {
-      setError(err?.message || 'Could not load your clips')
+      setError(err?.message || t('clipDetailPage.errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -125,7 +127,7 @@ export default function ClipHubByContentPage() {
 
   const bulkDelete = async () => {
     if (bulkBusy || selectedIds.size === 0) return
-    if (typeof window !== 'undefined' && !window.confirm(`Delete ${selectedIds.size} clip${selectedIds.size === 1 ? '' : 's'}? They’ll be removed from your hub.`)) return
+    if (typeof window !== 'undefined' && !window.confirm(t('clipDetailPage.confirmDelete', { count: selectedIds.size }))) return
     setBulkBusy(true)
     const ids = Array.from(selectedIds)
     // Snapshot the clips we're about to drop so we can restore on failure.
@@ -149,7 +151,7 @@ export default function ClipHubByContentPage() {
       setClips(prev => [...prev, ...failed])
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('toast', { detail: {
-          message: `${failed.length} clip${failed.length === 1 ? '' : 's'} couldn’t be deleted — try again.`,
+          message: t('clipDetailPage.deleteFailed', { count: failed.length }),
           type: 'error',
         }}))
       }
@@ -165,8 +167,8 @@ export default function ClipHubByContentPage() {
           <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
             <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
             <div>
-              <p className="text-[11px] font-black uppercase tracking-widest">Generating your clips…</p>
-              <p className="text-[10px] text-indigo-400/60 mt-0.5">Your video is being processed. Clips will appear automatically — no need to refresh.</p>
+              <p className="text-[11px] font-black uppercase tracking-widest">{t('clipDetailPage.generatingTitle')}</p>
+              <p className="text-[10px] text-indigo-400/60 mt-0.5">{t('clipDetailPage.generatingDescription')}</p>
             </div>
           </div>
         )}
@@ -177,8 +179,8 @@ export default function ClipHubByContentPage() {
             <div className="flex items-center gap-3">
               <Zap className="w-5 h-5 text-emerald-400 flex-shrink-0" />
               <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-emerald-400">Your clips are ready!</p>
-                <p className="text-[10px] text-emerald-400/70 mt-0.5">{clips.filter(c => (c.viralScore || 0) >= 7).length} high-scoring clips auto-selected. Review, then schedule to all platforms.</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-emerald-400">{t('clipDetailPage.clipsReadyTitle')}</p>
+                <p className="text-[10px] text-emerald-400/70 mt-0.5">{t('clipDetailPage.clipsReadyDescription', { count: clips.filter(c => (c.viralScore || 0) >= 7).length })}</p>
               </div>
             </div>
             <button type="button"
@@ -195,7 +197,7 @@ export default function ClipHubByContentPage() {
               }}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-black text-[11px] font-black uppercase tracking-widest hover:bg-emerald-400 transition-colors flex-shrink-0 border-none"
             >
-              <Send className="w-3.5 h-3.5" /> Review &amp; Schedule
+              <Send className="w-3.5 h-3.5" /> {t('clipDetailPage.reviewSchedule')}
             </button>
           </div>
         )}
@@ -205,16 +207,16 @@ export default function ClipHubByContentPage() {
             <button
              type="button"
               onClick={() => router.push('/dashboard/forge')}
-              title="Back to Forge"
-              aria-label="Back to Forge"
+              title={t('clipDetailPage.backToForge')}
+              aria-label={t('clipDetailPage.backToForge')}
               className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all flex-shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 italic">AI Clip Hub</p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase italic tracking-tight truncate">{parentTitle || 'Your AI clips'}</h1>
-              <p className="text-xs font-bold text-[var(--text-dim)] uppercase tracking-widest mt-1 truncate">Auto-saved · 14-day retention · {clips.length} clip{clips.length === 1 ? '' : 's'}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 italic">{t('clipDetailPage.kicker')}</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase italic tracking-tight truncate">{parentTitle || t('clipDetailPage.titleFallback')}</h1>
+              <p className="text-xs font-bold text-[var(--text-dim)] uppercase tracking-widest mt-1 truncate">{t('clipDetailPage.retentionSummary', { count: clips.length })}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -225,8 +227,8 @@ export default function ClipHubByContentPage() {
                 type="text"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search captions"
-                aria-label="Search clip captions"
+                placeholder={t('clipDetailPage.searchPlaceholder')}
+                aria-label={t('clipDetailPage.searchAria')}
                 className="bg-transparent outline-none text-[11px] font-medium text-white placeholder:text-slate-600 w-32"
               />
             </div>
@@ -235,43 +237,43 @@ export default function ClipHubByContentPage() {
              type="button"
               onClick={() => { setSelectMode(v => !v); if (selectMode) clearSelection() }}
               className={`px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${selectMode ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/10 text-[var(--text-main)] hover:bg-white/10'}`}
-              title={selectMode ? "Exit select mode" : "Enter select mode"}
-              aria-label={selectMode ? "Exit select mode" : "Enter select mode"}
+              title={selectMode ? t('clipDetailPage.exitSelectMode') : t('clipDetailPage.enterSelectMode')}
+              aria-label={selectMode ? t('clipDetailPage.exitSelectMode') : t('clipDetailPage.enterSelectMode')}
             >
               {selectMode ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
-              Select
+              {t('clipDetailPage.select')}
             </button>
             <a
               href="/dashboard/clips/hub"
               className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest text-[var(--text-main)] flex items-center gap-2 transition-all"
             >
-              <FolderOpen className="w-3.5 h-3.5" /> All clips
+              <FolderOpen className="w-3.5 h-3.5" /> {t('clipDetailPage.allClips')}
             </a>
             <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
               <Filter className="w-3 h-3 text-[var(--text-dim)]" />
-              <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mr-1">Sort</label>
+              <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mr-1">{t('clipDetailPage.sortLabel')}</label>
               <select
                 value={sort}
                 onChange={e => setSort(e.target.value as SortKey)}
                 className="bg-transparent text-[10px] font-black uppercase tracking-widest text-white outline-none"
-                title="Sort clips"
+                title={t('clipDetailPage.sortClips')}
               >
-                <option value="viralScore" className="bg-[#05080c]">Viral score</option>
-                <option value="rating" className="bg-[#05080c]">Your rating</option>
-                <option value="newest" className="bg-[#05080c]">Newest</option>
-                <option value="duration" className="bg-[#05080c]">Duration</option>
+                <option value="viralScore" className="bg-[#05080c]">{t('clipDetailPage.sortViralScore')}</option>
+                <option value="rating" className="bg-[#05080c]">{t('clipDetailPage.sortRating')}</option>
+                <option value="newest" className="bg-[#05080c]">{t('clipDetailPage.sortNewest')}</option>
+                <option value="duration" className="bg-[#05080c]">{t('clipDetailPage.sortDuration')}</option>
               </select>
             </div>
             {styles.length > 1 && (
               <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-                <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mr-1">Style</label>
+                <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mr-1">{t('clipDetailPage.styleLabel')}</label>
                 <select
                   value={styleFilter}
                   onChange={e => setStyleFilter(e.target.value)}
                   className="bg-transparent text-[10px] font-black uppercase tracking-widest text-white outline-none"
-                  title="Filter by style"
+                  title={t('clipDetailPage.filterByStyle')}
                 >
-                  <option value="all" className="bg-[#05080c]">All</option>
+                  <option value="all" className="bg-[#05080c]">{t('clipDetailPage.styleAll')}</option>
                   {styles.map(s => (
                     <option key={s} value={s} className="bg-[#05080c]">{s}</option>
                   ))}
@@ -282,7 +284,7 @@ export default function ClipHubByContentPage() {
         </header>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5" aria-busy="true" aria-label="Loading">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5" aria-busy="true" aria-label={t('clipDetailPage.loadingAria')}>
             {Array.from({ length: 10 }).map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : error ? (
@@ -292,19 +294,18 @@ export default function ClipHubByContentPage() {
         ) : visible.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-12 text-center">
             <Sparkles className="w-10 h-10 text-indigo-400 mx-auto mb-4" />
-            <h2 className="text-xl font-black uppercase italic tracking-tight mb-2">No clips yet</h2>
+            <h2 className="text-xl font-black uppercase italic tracking-tight mb-2">{t('clipDetailPage.emptyTitle')}</h2>
             <p className="text-sm text-[var(--text-dim)] max-w-md mx-auto">
-              Run the AI Auto Edit on this video to generate your first batch of clips.
-              They&apos;ll show up here automatically with virality ratings.
+              {t('clipDetailPage.emptyDescription')}
             </p>
             <button
              type="button"
               onClick={() => router.push(`/dashboard/video/edit/${contentId}`)}
-              title="Open AI Auto Edit"
-              aria-label="Open AI Auto Edit"
+              title={t('clipDetailPage.openAutoEdit')}
+              aria-label={t('clipDetailPage.openAutoEdit')}
               className="mt-6 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-black uppercase tracking-widest text-white transition-all"
             >
-              Open AI Auto Edit
+              {t('clipDetailPage.openAutoEdit')}
             </button>
           </div>
         ) : (
@@ -328,21 +329,21 @@ export default function ClipHubByContentPage() {
       {selectMode && selectedIds.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 px-4 py-3 rounded-2xl bg-[#0a0a0c] border border-white/10 shadow-2xl flex items-center gap-3">
           <span className="text-[10px] font-black uppercase tracking-widest text-white">
-            {selectedIds.size} selected
+            {t('clipDetailPage.selectedCount', { count: selectedIds.size })}
           </span>
           <button
            type="button"
             onClick={selectAll}
             className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-colors"
           >
-            Select all
+            {t('clipDetailPage.selectAll')}
           </button>
           <button
            type="button"
             onClick={clearSelection}
             className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-colors"
           >
-            Clear
+            {t('clipDetailPage.clear')}
           </button>
           <div className="w-px h-5 bg-white/10" />
           <button
@@ -350,7 +351,7 @@ export default function ClipHubByContentPage() {
             onClick={bulkDownload}
             className="px-3 py-1.5 rounded-lg bg-white text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-transform"
           >
-            <Download className="w-3 h-3" /> Download
+            <Download className="w-3 h-3" /> {t('clipDetailPage.download')}
           </button>
           <button
            type="button"
@@ -358,7 +359,7 @@ export default function ClipHubByContentPage() {
             disabled={bulkBusy}
             className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 text-rose-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors disabled:opacity-50"
           >
-            <Trash2 className="w-3 h-3" /> Delete
+            <Trash2 className="w-3 h-3" /> {t('clipDetailPage.delete')}
           </button>
         </div>
       )}

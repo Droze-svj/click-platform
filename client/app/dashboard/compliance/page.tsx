@@ -3,8 +3,10 @@
 import ComplianceDashboard from '../../../components/ComplianceDashboard'
 import { motion } from 'framer-motion'
 import { Shield } from 'lucide-react'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 export default function CompliancePage() {
+  const { t } = useTranslation()
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -18,8 +20,8 @@ export default function CompliancePage() {
             <Shield size={24} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight">Compliance & Safety</h1>
-            <p className="text-slate-400 font-medium">Protect your brand and ensure platform policy adherence</p>
+            <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight">{t('compliancePage.title')}</h1>
+            <p className="text-slate-400 font-medium">{t('compliancePage.subtitle')}</p>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { TableSkeleton } from '@/components/LoadingSkeleton'
 import ToastContainer from '@/components/ToastContainer'
 import { useToast } from '@/contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 import { Skull, RefreshCw, RotateCw, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
 
 const glass = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl'
@@ -23,6 +24,7 @@ interface DeadLetterJob {
 
 export default function DeadLetterQueuePage() {
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [jobs, setJobs] = useState<DeadLetterJob[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +39,7 @@ export default function DeadLetterQueuePage() {
       const res: any = await apiGet(`/jobs/dead-letter${qs}`, undefined, false)
       setJobs(Array.isArray(res?.data?.jobs) ? res.data.jobs : [])
     } catch (err: any) {
-      setError(err?.response?.status === 403 ? 'Admin access required.' : (err?.message || 'Failed to load dead-letter jobs'))
+      setError(err?.response?.status === 403 ? t('deadLetterPage.adminAccessRequired') : (err?.message || t('deadLetterPage.failedToLoad')))
     } finally {
       setLoading(false)
     }
@@ -51,23 +53,23 @@ export default function DeadLetterQueuePage() {
     setBusyId(job._id)
     try {
       await apiPost(`/jobs/dead-letter/${job._id}/retry`, { queueName: job.originalQueueName })
-      showToast(`Re-queued ${job.jobName || job.originalJobId}`, 'success')
+      showToast(t('deadLetterPage.requeued', { job: job.jobName || job.originalJobId }), 'success')
       await load()
     } catch (err: any) {
-      showToast(`Retry failed: ${err?.message || 'error'}`, 'error')
+      showToast(t('deadLetterPage.retryFailed', { error: err?.message || 'error' }), 'error')
     } finally {
       setBusyId(null)
     }
   }
 
   const cleanup = async () => {
-    if (!confirm('Delete dead-letter jobs older than 30 days?')) return
+    if (!confirm(t('deadLetterPage.cleanupConfirm'))) return
     try {
       const res: any = await apiPost('/jobs/dead-letter/cleanup', { olderThanDays: 30 })
-      showToast(`Cleaned up ${res?.data?.deleted ?? 0} old jobs`, 'success')
+      showToast(t('deadLetterPage.cleanedUp', { count: res?.data?.deleted ?? 0 }), 'success')
       await load()
     } catch (err: any) {
-      showToast(`Cleanup failed: ${err?.message || 'error'}`, 'error')
+      showToast(t('deadLetterPage.cleanupFailed', { error: err?.message || 'error' }), 'error')
     }
   }
 
@@ -82,25 +84,25 @@ export default function DeadLetterQueuePage() {
               <Skull size={32} className="text-rose-400" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter leading-none">Dead-Letter Queue</h1>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-black uppercase tracking-[0.4em] italic mt-2">Permanently-failed jobs · retry or purge</p>
+              <h1 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter leading-none">{t('deadLetterPage.title')}</h1>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-black uppercase tracking-[0.4em] italic mt-2">{t('deadLetterPage.subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <select
               value={queueFilter}
               onChange={(e) => setQueueFilter(e.target.value)}
-              title="Filter by queue"
+              title={t('deadLetterPage.filterByQueue')}
               className="px-4 py-3 rounded-xl bg-black/40 border-2 border-white/10 text-[11px] font-black uppercase tracking-widest italic focus:outline-none focus:border-rose-500"
             >
-              <option value="all">All queues</option>
+              <option value="all">{t('deadLetterPage.allQueues')}</option>
               {queues.map(q => <option key={q} value={q}>{q}</option>)}
             </select>
-            <button type="button" onClick={load} title="Refresh" className="w-12 h-12 rounded-xl bg-black/40 border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90">
+            <button type="button" onClick={load} title={t('deadLetterPage.refresh')} className="w-12 h-12 rounded-xl bg-black/40 border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90">
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             </button>
             <button type="button" onClick={cleanup} className="px-5 py-3 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-300 text-[11px] font-black uppercase tracking-widest italic hover:bg-rose-500/20 transition-all flex items-center gap-2">
-              <Trash2 size={16} /> Cleanup 30d+
+              <Trash2 size={16} /> {t('deadLetterPage.cleanup30d')}
             </button>
           </div>
         </header>
@@ -115,8 +117,8 @@ export default function DeadLetterQueuePage() {
         ) : jobs.length === 0 ? (
           <div className={`${glass} p-20 rounded-[3rem] text-center`}>
             <AlertTriangle size={56} className="text-emerald-500/40 mx-auto mb-6" />
-            <p className="text-2xl font-black uppercase tracking-widest italic text-slate-600">No dead-letter jobs</p>
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] italic text-slate-700 mt-3">Every job has either completed or is still retrying.</p>
+            <p className="text-2xl font-black uppercase tracking-widest italic text-slate-600">{t('deadLetterPage.emptyTitle')}</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] italic text-slate-700 mt-3">{t('deadLetterPage.emptySubtitle')}</p>
           </div>
         ) : (
           <div className={`${glass} rounded-[2.5rem] overflow-hidden`}>
@@ -124,12 +126,12 @@ export default function DeadLetterQueuePage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b-2 border-white/5 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                    <th className="px-6 py-5">Queue</th>
-                    <th className="px-6 py-5">Job</th>
-                    <th className="px-6 py-5">Reason</th>
-                    <th className="px-6 py-5 text-center">Attempts</th>
-                    <th className="px-6 py-5">Moved</th>
-                    <th className="px-6 py-5 text-right">Action</th>
+                    <th className="px-6 py-5">{t('deadLetterPage.colQueue')}</th>
+                    <th className="px-6 py-5">{t('deadLetterPage.colJob')}</th>
+                    <th className="px-6 py-5">{t('deadLetterPage.colReason')}</th>
+                    <th className="px-6 py-5 text-center">{t('deadLetterPage.colAttempts')}</th>
+                    <th className="px-6 py-5">{t('deadLetterPage.colMoved')}</th>
+                    <th className="px-6 py-5 text-right">{t('deadLetterPage.colAction')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -148,7 +150,7 @@ export default function DeadLetterQueuePage() {
                           className="px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-black uppercase tracking-widest italic hover:bg-emerald-500/20 transition-all disabled:opacity-40 inline-flex items-center gap-2"
                         >
                           <RotateCw size={14} className={busyId === job._id ? 'animate-spin' : ''} />
-                          {job.retried ? 'Retried' : 'Retry'}
+                          {job.retried ? t('deadLetterPage.retried') : t('deadLetterPage.retry')}
                         </button>
                       </td>
                     </tr>

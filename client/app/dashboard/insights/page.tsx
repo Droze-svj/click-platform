@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { StatsCardSkeleton, ContentSkeleton } from '../../../components/LoadingSkeleton'
@@ -78,6 +79,7 @@ function formatRelativeTime(iso: string | null | undefined): string {
 export default function CognitiveForecasterPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -114,7 +116,7 @@ export default function CognitiveForecasterPage() {
       const ingestStamp = rawS?.lastIngestedAt ?? rawS?.profile?.lastIngestedAt ?? null
       setLastIngestedAt(ingestStamp || null)
     } catch {
-      setError("Couldn't load insights. Retry in a moment.")
+      setError(t('insightsPage.errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -129,7 +131,7 @@ export default function CognitiveForecasterPage() {
       await apiPost('/analytics/platform/sync-all', { limit: 50 })
       await loadCognitiveData()
     } catch {
-      setError("Couldn't sync your analytics. Check your connections and try again.")
+      setError(t('insightsPage.errorSync'))
     } finally {
       setSyncing(false)
     }
@@ -138,7 +140,7 @@ export default function CognitiveForecasterPage() {
   const connectedCount = accounts ? Object.values(accounts).filter(Boolean).length : 0
 
   if (loading) return (
-     <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label={t('insightsPage.loadingAria')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -154,7 +156,7 @@ export default function CognitiveForecasterPage() {
         {/* Matrix Header */}
         <header className="flex flex-col lg:flex-row justify-between items-center gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-6 w-full lg:w-auto min-w-0">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('insightsPage.backToDashboard')} aria-label={t('insightsPage.backToDashboard')} className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
                 <ArrowLeft size={24} />
               </button>
               <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -163,11 +165,11 @@ export default function CognitiveForecasterPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
-                      Insights
+                      {t('insightsPage.kicker')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                        Live
+                        {t('insightsPage.live')}
                     </div>
                     {/* Data-freshness pill — answers "is this current?".
                         Sourced from UserStyleProfile.lastIngestedAt
@@ -175,13 +177,13 @@ export default function CognitiveForecasterPage() {
                         analytics get folded into the learning profile).
                         Hidden until at least one ingest has run. */}
                     {lastIngestedAt && (
-                      <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black italic shadow-inner" title={`Last data sync: ${new Date(lastIngestedAt).toLocaleString()}`}>
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black italic shadow-inner" title={t('insightsPage.lastSyncTitle', { time: new Date(lastIngestedAt).toLocaleString() })}>
                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        Updated {formatRelativeTime(lastIngestedAt)}
+                        {t('insightsPage.updatedPrefix', { time: formatRelativeTime(lastIngestedAt) })}
                       </div>
                     )}
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Insights</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('insightsPage.title')}</h1>
               </div>
            </div>
 
@@ -193,7 +195,7 @@ export default function CognitiveForecasterPage() {
                       period === p ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-xl scale-110' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'
                     }`}
                   >
-                    {p} days
+                    {t('insightsPage.days', { count: p })}
                   </button>
                 ))}
               </div>
@@ -201,7 +203,7 @@ export default function CognitiveForecasterPage() {
                 className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.6em] italic rounded-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-4 group border-none"
               >
                 <RefreshCw size={22} className={syncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'} />
-                {syncing ? 'Refreshing…' : 'Refresh'}
+                {syncing ? t('insightsPage.refreshing') : t('insightsPage.refresh')}
               </button>
            </div>
         </header>
@@ -216,7 +218,7 @@ export default function CognitiveForecasterPage() {
                      <div className="w-16 h-16 bg-rose-500/20 rounded-2xl flex items-center justify-center border-2 border-rose-500/30 shadow-lg"><AlertCircle className="text-rose-500" size={32} /></div>
                      <p className="text-2xl font-black text-rose-600 dark:text-rose-400 uppercase tracking-tighter italic leading-none">{error}</p>
                   </div>
-                   <button type="button" onClick={() => setError(null)} title="Dismiss Error" aria-label="Dismiss Error" className="w-12 h-12 rounded-xl bg-surface-card border border-rose-500/20 flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all active:scale-90"><X size={24} /></button>
+                   <button type="button" onClick={() => setError(null)} title={t('insightsPage.dismissError')} aria-label={t('insightsPage.dismissError')} className="w-12 h-12 rounded-xl bg-surface-card border border-rose-500/20 flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all active:scale-90"><X size={24} /></button>
                </div>
             </motion.div>
           )}
@@ -231,18 +233,18 @@ export default function CognitiveForecasterPage() {
                 <Link2 className="w-12 h-12 text-primary-600 dark:text-primary-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-4xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-4">Connected platforms</h3>
+                <h3 className="text-4xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-4">{t('insightsPage.connectedPlatforms')}</h3>
                 <p className="text-[12px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.5em] italic leading-snug break-words">
                   {connectedCount > 0
-                    ? `${connectedCount} platforms connected`
-                    : 'Connect a platform to see your insights'}
+                    ? t('insightsPage.platformsConnected', { count: connectedCount })
+                    : t('insightsPage.connectToSee')}
                 </p>
               </div>
             </div>
             <button type="button" onClick={() => router.push('/dashboard/social')}
               className="w-full xl:w-auto px-12 py-7 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.8em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-[0_30px_80px_rgba(0,0,0,0.4)] flex items-center justify-center gap-8 group flex-shrink-0 active:scale-95 border-none"
             >
-              {connectedCount > 0 ? 'Manage' : 'Connect a platform'}
+              {connectedCount > 0 ? t('insightsPage.manage') : t('insightsPage.connectPlatform')}
               <ArrowUpRight className="w-8 h-8 group-hover:translate-x-3 group-hover:-translate-y-3 transition-transform duration-700" />
             </button>
           </div>
@@ -260,11 +262,11 @@ export default function CognitiveForecasterPage() {
           if (hasData) return null
           return (
             <section className="bg-surface-card border-2 border-dashed border-primary-500/30 rounded-[3rem] p-10 sm:p-12 relative z-10 text-center space-y-4">
-              <h3 className="text-xl font-bold text-surface-900 dark:text-white">No data yet</h3>
+              <h3 className="text-xl font-bold text-surface-900 dark:text-white">{t('insightsPage.noDataYet')}</h3>
               <p className="text-sm text-surface-500 max-w-xl mx-auto leading-relaxed">
                 {connectedCount > 0
-                  ? 'Publish your first post — once analytics sync, this page fills in with reach, engagement, and platform breakdowns.'
-                  : 'Connect a platform and publish your first post. Your insights show up here once the data syncs.'}
+                  ? t('insightsPage.noDataHintConnected')
+                  : t('insightsPage.noDataHintDisconnected')}
               </p>
             </section>
           )
@@ -274,10 +276,10 @@ export default function CognitiveForecasterPage() {
             so long labels like "Engagement rate" wrap instead of clipping
             to "ENGAGEMENT RAT…" at the tile edge. */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 relative z-10">
-          <HeuristicStatCard icon={Globe} label="Reach" value={audienceInsights?.insights?.overview?.totalImpressions ?? platformAudience?.totalReach ?? 0} format="number" color="text-indigo-600 dark:text-indigo-400" />
-          <HeuristicStatCard icon={Activity} label="Engagement" value={audienceInsights?.insights?.overview?.totalEngagement ?? platformAudience?.totalEngagement ?? 0} format="number" color="text-emerald-600 dark:text-emerald-400" />
-          <HeuristicStatCard icon={Zap} label="Engagement rate" value={audienceInsights?.insights?.overview?.engagementRate ?? platformAudience?.averageEngagementRate ?? 0} format="percent" color="text-amber-600 dark:text-amber-400" />
-          <HeuristicStatCard icon={Target} label="Top platform" value={platformAudience?.topPlatform ?? 'N/A'} format="text" color="text-rose-600 dark:text-rose-400" />
+          <HeuristicStatCard icon={Globe} label={t('insightsPage.metricReach')} value={audienceInsights?.insights?.overview?.totalImpressions ?? platformAudience?.totalReach ?? 0} format="number" color="text-indigo-600 dark:text-indigo-400" badge={t('insightsPage.insightBadge')} />
+          <HeuristicStatCard icon={Activity} label={t('insightsPage.metricEngagement')} value={audienceInsights?.insights?.overview?.totalEngagement ?? platformAudience?.totalEngagement ?? 0} format="number" color="text-emerald-600 dark:text-emerald-400" badge={t('insightsPage.insightBadge')} />
+          <HeuristicStatCard icon={Zap} label={t('insightsPage.metricEngagementRate')} value={audienceInsights?.insights?.overview?.engagementRate ?? platformAudience?.averageEngagementRate ?? 0} format="percent" color="text-amber-600 dark:text-amber-400" badge={t('insightsPage.insightBadge')} />
+          <HeuristicStatCard icon={Target} label={t('insightsPage.metricTopPlatform')} value={platformAudience?.topPlatform ?? t('insightsPage.notAvailable')} format="text" color="text-rose-600 dark:text-rose-400" badge={t('insightsPage.insightBadge')} />
         </section>
 
         {/* Cognitive Intelligence Layers */}
@@ -286,14 +288,14 @@ export default function CognitiveForecasterPage() {
           <div className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[4rem] overflow-hidden group shadow-2xl transition-all duration-500 hover:shadow-[0_80px_150px_rgba(0,0,0,0.4)]">
             <div className="p-12 border-b-2 border-surface-100 dark:border-surface-800 flex items-center gap-10 bg-primary-500/5">
               <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-lg transition-all group-hover:rotate-12"><Users size={32} className="text-indigo-600 dark:text-indigo-400" /></div>
-              <h3 className="font-black text-surface-900 dark:text-white italic uppercase tracking-tighter text-4xl leading-none">Audience</h3>
+              <h3 className="font-black text-surface-900 dark:text-white italic uppercase tracking-tighter text-4xl leading-none">{t('insightsPage.audience')}</h3>
             </div>
             <div className="p-12 min-h-[550px] flex flex-col justify-center">
               {audienceInsights?.hasData || platformAudience ? (
                 <div className="space-y-12">
                   {audienceInsights?.insights?.overview?.platformDistribution && (
                     <div className="space-y-10">
-                      <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic leading-none pl-6 border-l-4 border-indigo-500/40">Posts by platform</p>
+                      <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic leading-none pl-6 border-l-4 border-indigo-500/40">{t('insightsPage.postsByPlatform')}</p>
                       <div className="grid grid-cols-1 gap-6">
                         {Object.entries(audienceInsights.insights.overview.platformDistribution).map(([p, count], idx) => (
                           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }}
@@ -304,7 +306,7 @@ export default function CognitiveForecasterPage() {
                                <div className="hidden md:block w-48 h-3 bg-surface-card dark:bg-surface-900 rounded-full overflow-hidden border-2 border-surface-100 dark:border-surface-800 shadow-inner p-0.5">
                                   <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((count as number) * 10, 100)}%` }} transition={{ duration: 1, delay: idx * 0.1 }} className="h-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] rounded-full" />
                                </div>
-                               <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 italic tabular-nums leading-none tracking-tighter">{String(count)} posts</span>
+                               <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 italic tabular-nums leading-none tracking-tighter">{t('insightsPage.postsCount', { count: String(count) })}</span>
                             </div>
                           </motion.div>
                         ))}
@@ -316,7 +318,7 @@ export default function CognitiveForecasterPage() {
                       <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover/opt:opacity-[0.08] transition-opacity duration-1000"><Monitor size={250} /></div>
                       <div className="w-24 h-24 bg-primary-500/10 border-2 border-primary-500/20 text-primary-500 rounded-3xl flex items-center justify-center shadow-lg group-hover/opt:rotate-12 transition-transform duration-700 shrink-0"><Calendar size={44} /></div>
                       <div className="relative z-10 min-w-0">
-                          <p className="text-[11px] font-black text-primary-500/60 uppercase tracking-[0.8em] italic mb-4 leading-none truncate">Best time to post</p>
+                          <p className="text-[11px] font-black text-primary-500/60 uppercase tracking-[0.8em] italic mb-4 leading-none truncate">{t('insightsPage.bestTimeToPost')}</p>
                           <p className="text-6xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none truncate">{platformAudience.bestPostingTime}</p>
                       </div>
                     </div>
@@ -325,7 +327,7 @@ export default function CognitiveForecasterPage() {
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center opacity-10 gap-16 group-hover:opacity-20 transition-opacity duration-1000">
                    <PieChart size={150} className="text-surface-300 dark:text-slate-800 animate-pulse" />
-                   <p className="text-4xl font-black text-surface-900 dark:text-white uppercase tracking-[0.8em] italic leading-none max-w-md">No audience data yet</p>
+                   <p className="text-4xl font-black text-surface-900 dark:text-white uppercase tracking-[0.8em] italic leading-none max-w-md">{t('insightsPage.noAudienceData')}</p>
                 </div>
               )}
             </div>
@@ -335,7 +337,7 @@ export default function CognitiveForecasterPage() {
           <div className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[4rem] overflow-hidden group shadow-2xl transition-all duration-500 hover:shadow-[0_80px_150px_rgba(0,0,0,0.4)]">
             <div className="p-12 border-b-2 border-surface-100 dark:border-surface-800 flex items-center gap-10 bg-amber-500/5">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-lg transition-all group-hover:rotate-[-12deg]"><Sparkles size={32} className="text-amber-600 dark:text-amber-400" /></div>
-              <h3 className="font-black text-surface-900 dark:text-white italic uppercase tracking-tighter text-4xl leading-none">Recommendations</h3>
+              <h3 className="font-black text-surface-900 dark:text-white italic uppercase tracking-tighter text-4xl leading-none">{t('insightsPage.recommendations')}</h3>
             </div>
             <div className="p-12 min-h-[550px] flex flex-col justify-center">
               {audienceInsights?.insights?.recommendations && audienceInsights.insights.recommendations.length > 0 ? (
@@ -349,7 +351,7 @@ export default function CognitiveForecasterPage() {
                       </div>
                       <div className="min-w-0">
                           <div className="flex items-center gap-6 mb-3">
-                             <span className="text-[11px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.6em] italic leading-none shrink-0">Tip {i+1}</span>
+                             <span className="text-[11px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.6em] italic leading-none shrink-0">{t('insightsPage.tip', { number: i + 1 })}</span>
                              <div className="h-[2px] flex-1 bg-amber-500/10 rounded-full" />
                           </div>
                           <span className="text-2xl font-black text-surface-900 dark:text-white italic leading-[1.3] uppercase tracking-tight line-clamp-2 group-hover/rec:text-amber-500 transition-colors">{rec}</span>
@@ -361,8 +363,8 @@ export default function CognitiveForecasterPage() {
                 <div className="h-full flex flex-col items-center justify-center text-center opacity-10 gap-16 group-hover:opacity-20 transition-opacity duration-1000">
                    <Shield size={150} className="text-surface-300 dark:text-slate-800 animate-pulse" />
                    <div className="space-y-8">
-                      <p className="text-4xl font-black text-surface-900 dark:text-white uppercase tracking-[0.8em] italic leading-none">No tips yet</p>
-                      <p className="text-sm font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic leading-none max-w-sm mx-auto">Publish a few posts so Click can learn what works for you.</p>
+                      <p className="text-4xl font-black text-surface-900 dark:text-white uppercase tracking-[0.8em] italic leading-none">{t('insightsPage.noTipsYet')}</p>
+                      <p className="text-sm font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic leading-none max-w-sm mx-auto">{t('insightsPage.noTipsHint')}</p>
                    </div>
                 </div>
               )}
@@ -373,9 +375,9 @@ export default function CognitiveForecasterPage() {
         {/* Global Persistence Shortcuts */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-10 relative z-10 pt-16">
           {[
-            { label: 'Analytics', desc: 'Detailed performance metrics.', icon: BarChart3, href: '/dashboard/analytics', color: 'text-indigo-600 dark:text-indigo-400' },
-            { label: 'Scheduler', desc: 'Plan and queue your next posts.', icon: Calendar, href: '/dashboard/scheduler', color: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'AI Studio', desc: 'Generate scripts, captions, and clips.', icon: Sparkles, href: '/dashboard/content', color: 'text-purple-600 dark:text-purple-400' },
+            { label: t('insightsPage.shortcutAnalytics'), desc: t('insightsPage.shortcutAnalyticsDesc'), icon: BarChart3, href: '/dashboard/analytics', color: 'text-indigo-600 dark:text-indigo-400' },
+            { label: t('insightsPage.shortcutScheduler'), desc: t('insightsPage.shortcutSchedulerDesc'), icon: Calendar, href: '/dashboard/scheduler', color: 'text-emerald-600 dark:text-emerald-400' },
+            { label: t('insightsPage.shortcutAiStudio'), desc: t('insightsPage.shortcutAiStudioDesc'), icon: Sparkles, href: '/dashboard/content', color: 'text-purple-600 dark:text-purple-400' },
           ].map((a, i) => (
             <motion.button key={a.label} whileHover={{ y: -15, scale: 1.02 }} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
               onClick={() => router.push(a.href)}
@@ -389,7 +391,7 @@ export default function CognitiveForecasterPage() {
                 <p className="text-[13px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.5em] italic leading-relaxed px-10">{a.desc}</p>
               </div>
               <div className="mt-6 flex items-center gap-6 text-[12px] font-black text-primary-500 uppercase tracking-[1em] italic group-hover:gap-12 transition-all duration-1000">
-                 Open <ArrowRight size={24} />
+                 {t('insightsPage.open')} <ArrowRight size={24} />
               </div>
             </motion.button>
           ))}
@@ -406,7 +408,7 @@ export default function CognitiveForecasterPage() {
   )
 }
 
-function HeuristicStatCard({ icon: Icon, label, value, format, color }: { icon: any; label: string; value: any; format: 'number' | 'percent' | 'text'; color: string }) {
+function HeuristicStatCard({ icon: Icon, label, value, format, color, badge }: { icon: any; label: string; value: any; format: 'number' | 'percent' | 'text'; color: string; badge: string }) {
   const display = format === 'number' ? (typeof value === 'number' ? (value >= 1000 ? (value / 1000).toFixed(1) + 'K' : String(value)) : '0') : format === 'percent' ? (typeof value === 'number' ? value.toFixed(1) + '%' : '0%') : String(value)
 
   return (
@@ -419,7 +421,7 @@ function HeuristicStatCard({ icon: Icon, label, value, format, color }: { icon: 
       </div>
       <div className={`text-6xl font-black italic tabular-nums leading-none tracking-tighter mb-5 text-surface-900 dark:text-white group-hover:text-primary-500 transition-colors duration-700`}>{display.toUpperCase()}</div>
       <div className="text-[12px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.5em] italic leading-none">{label}</div>
-      <div className="text-[10px] text-surface-300 dark:text-slate-800 font-black uppercase tracking-[1em] mt-10 italic bg-surface-page dark:bg-surface-950/50 px-8 py-3 rounded-2xl border-2 border-surface-100 dark:border-surface-800 group-hover:text-primary-500 group-hover:border-primary-500/30 transition-all shadow-inner">Insight</div>
+      <div className="text-[10px] text-surface-300 dark:text-slate-800 font-black uppercase tracking-[1em] mt-10 italic bg-surface-page dark:bg-surface-950/50 px-8 py-3 rounded-2xl border-2 border-surface-100 dark:border-surface-800 group-hover:text-primary-500 group-hover:border-primary-500/30 transition-all shadow-inner">{badge}</div>
     </motion.div>
   )
 }

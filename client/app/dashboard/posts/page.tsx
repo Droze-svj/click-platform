@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Plus, Edit, Trash2, Calendar, Eye, Clock, ArrowLeft,
   RefreshCw, BookOpen, Send, BarChart2, Filter, CheckCircle,
@@ -65,6 +66,7 @@ const MOCK_POSTS: Post[] = [
 export default function SignalDiffusionArchivePage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -94,13 +96,19 @@ export default function SignalDiffusionArchivePage() {
   useEffect(() => { loadLattice() }, [loadLattice])
 
   const handlePurge = async (postId: string) => {
-    if (!confirm('TERMINATE_PAYLOAD_LATTICE_NODE?')) return
+    if (!confirm(t('postsPage.confirmDelete'))) return
     try { await apiDelete(`/posts/${postId}`); loadLattice() }
     catch (err: any) { setError(`PURGE_FAIL: ${err.message}`) }
   }
 
+  const STATUS_LABELS: Record<string, string> = {
+    published: t('postsPage.statusPublished'),
+    scheduled: t('postsPage.statusScheduled'),
+    draft: t('postsPage.statusDraft'),
+  }
+
   if (loading && posts.length === 0) return (
-     <div className="min-h-screen bg-surface-page font-inter transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading posts">
+     <div className="min-h-screen bg-surface-page font-inter transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label={t('postsPage.loadingAria')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -111,10 +119,10 @@ export default function SignalDiffusionArchivePage() {
   )
 
   const STATS = [
-    { label: 'Payload Particles', val: posts.length, color: 'text-surface-900 dark:text-white', icon: Database },
-    { label: 'Deployed Phantoms', val: posts.filter(p => p.status === 'published').length, color: 'text-emerald-600 dark:text-emerald-400', icon: Activity },
-    { label: 'Locked Trajectories', val: posts.filter(p => p.status === 'scheduled').length, color: 'text-primary-600 dark:text-primary-400', icon: Target },
-    { label: 'Inert Particles', val: posts.filter(p => p.status === 'draft').length, color: 'text-rose-600 dark:text-rose-400', icon: Cpu },
+    { label: t('postsPage.statTotal'), val: posts.length, color: 'text-surface-900 dark:text-white', icon: Database },
+    { label: t('postsPage.statPublished'), val: posts.filter(p => p.status === 'published').length, color: 'text-emerald-600 dark:text-emerald-400', icon: Activity },
+    { label: t('postsPage.statScheduled'), val: posts.filter(p => p.status === 'scheduled').length, color: 'text-primary-600 dark:text-primary-400', icon: Target },
+    { label: t('postsPage.statDraft'), val: posts.filter(p => p.status === 'draft').length, color: 'text-rose-600 dark:text-rose-400', icon: Cpu },
   ]
 
   return (
@@ -131,7 +139,7 @@ export default function SignalDiffusionArchivePage() {
         {/* Signal Header HUD */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard"
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('postsPage.backToDashboard')} aria-label={t('postsPage.backToDashboard')}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-[2.5rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-lg backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
@@ -143,27 +151,27 @@ export default function SignalDiffusionArchivePage() {
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
                       <Fingerprint size={16} className="text-primary-500 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-primary-500 italic leading-none">Signal Diffusion v24.8.4</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-primary-500 italic leading-none">{t('postsPage.kicker')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-surface-card dark:bg-black/60 border-2 border-surface-200 dark:border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-primary-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
-                       <span className="text-[10px] font-black text-surface-500 dark:text-slate-400 tracking-widest uppercase italic leading-none">STRATUM_UPLINK_STABLE</span>
+                       <span className="text-[10px] font-black text-surface-500 dark:text-slate-400 tracking-widest uppercase italic leading-none">{t('postsPage.uplinkStatus')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl sm:text-7xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">Posts</h1>
-                 <p className="text-surface-500 dark:text-slate-400 text-sm md:text-base font-medium mt-4 max-w-2xl leading-relaxed">Every clip, draft and scheduled post in one place. Filter by platform, search by topic, and re-edit or republish in two clicks.</p>
+                 <h1 className="text-5xl sm:text-7xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">{t('postsPage.title')}</h1>
+                 <p className="text-surface-500 dark:text-slate-400 text-sm md:text-base font-medium mt-4 max-w-2xl leading-relaxed">{t('postsPage.subtitle')}</p>
               </div>
            </div>
 
            <div className="flex items-center gap-12">
-               <button type="button" onClick={() => loadLattice(true)} title="Refresh Lattice" aria-label="Refresh Lattice" className="w-16 h-16 sm:w-20 sm:h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-lg active:scale-90 border-surface-200 dark:border-white/5 bg-surface-card dark:bg-black/40 backdrop-blur-3xl transition-all">
+               <button type="button" onClick={() => loadLattice(true)} title={t('postsPage.refresh')} aria-label={t('postsPage.refresh')} className="w-16 h-16 sm:w-20 sm:h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-lg active:scale-90 border-surface-200 dark:border-white/5 bg-surface-card dark:bg-black/40 backdrop-blur-3xl transition-all">
                   <RefreshCw size={32} className={`text-surface-400 group-hover:text-primary-500 transition-colors duration-700 ${refreshing ? 'animate-spin' : ''}`} />
                </button>
               <Link href="/dashboard/posts/create"
                 className="px-10 sm:px-16 py-6 sm:py-8 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-xl hover:bg-primary-600 hover:text-white transition-all duration-300 flex items-center gap-8 italic active:scale-95 group relative overflow-hidden outline-none border-none"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-                <Plus size={32} className="group-hover:rotate-90 transition-transform duration-300" /> INITIALIZE_PAYLOAD
+                <Plus size={32} className="group-hover:rotate-90 transition-transform duration-300" /> {t('postsPage.createPost')}
               </Link>
            </div>
         </header>
@@ -194,13 +202,13 @@ export default function SignalDiffusionArchivePage() {
                  {['all','published','scheduled','draft'].map(s => (
                    <button type="button" key={s} onClick={() => setSelectedStatus(s)}
                      className={`px-12 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.5em] transition-all duration-300 italic active:scale-95 border-2 shrink-0 ${selectedStatus === s ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-surface-900 dark:border-white shadow-xl scale-105' : 'text-surface-500 border-transparent hover:text-surface-900 dark:hover:text-white hover:bg-surface-page/50'}`}>
-                     {s === 'all' ? 'FULL_MATRIX' : STATUS_CFG[s as keyof typeof STATUS_CFG].label.split('_')[0]}
+                     {s === 'all' ? t('postsPage.filterAll') : STATUS_LABELS[s]}
                    </button>
                  ))}
               </div>
               <div className="flex items-center gap-10 relative z-10">
                 <div className="text-[13px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.8em] italic leading-none border-l-4 border-primary-500/20 pl-8 ml-4">
-                  {posts.length} TRAJECTORIES_ONLINE
+                  {t('postsPage.trajectoriesOnline', { count: posts.length })}
                 </div>
                 <div className="w-4 h-4 rounded-full bg-primary-500 animate-ping shadow-[0_0_20px_rgba(99,102,241,1)]" />
               </div>
@@ -212,8 +220,8 @@ export default function SignalDiffusionArchivePage() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.2 }} exit={{ opacity: 0 }} key="empty" className="py-16 sm:py-32 text-center flex flex-col items-center gap-8 sm:gap-16 group">
                      <Terminal size={200} className="text-surface-900 dark:text-white animate-pulse group-hover:scale-110 transition-transform duration-700" />
                      <div className="space-y-8">
-                        <p className="text-4xl sm:text-7xl font-black text-surface-900 dark:text-white uppercase tracking-[0.8em] italic drop-shadow-lg underline decoration-primary-500/20 underline-offset-8">NULL_ARCHIVE_SECTOR</p>
-                        <p className="text-[16px] sm:text-[18px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic leading-none max-w-2xl mx-auto">No active content trajectories identified in this stratum. Initiate payload synthesis to begin diffusion.</p>
+                        <p className="text-4xl sm:text-7xl font-black text-surface-900 dark:text-white uppercase tracking-[0.8em] italic drop-shadow-lg underline decoration-primary-500/20 underline-offset-8">{t('postsPage.emptyTitle')}</p>
+                        <p className="text-[16px] sm:text-[18px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic leading-none max-w-2xl mx-auto">{t('postsPage.emptyDescription')}</p>
                      </div>
                   </motion.div>
                 ) : (
@@ -230,7 +238,7 @@ export default function SignalDiffusionArchivePage() {
                             <div className="flex items-center justify-between px-12 py-10 border-b-2 border-surface-100 dark:border-white/5 bg-surface-page/30 dark:bg-white/[0.01] relative z-20">
                                <div className="flex items-center gap-6">
                                   <div className={`w-4 h-4 rounded-full ${cfg.dot} ${cfg.glow} ${post.status === 'published' ? 'animate-pulse' : ''}`} />
-                                  <span className={`text-[12px] font-black uppercase tracking-[0.4em] ${cfg.color} italic leading-none`}>{cfg.label}</span>
+                                  <span className={`text-[12px] font-black uppercase tracking-[0.4em] ${cfg.color} italic leading-none`}>{STATUS_LABELS[post.status] || STATUS_LABELS.draft}</span>
                                </div>
                                {post.categories?.[0] && (
                                  <div className="px-6 py-2 rounded-2xl bg-primary-500/5 text-primary-600 dark:text-primary-400 border-2 border-primary-500/20 text-[10px] font-black uppercase tracking-widest italic shadow-inner">
@@ -240,7 +248,7 @@ export default function SignalDiffusionArchivePage() {
                             </div>
                             
                             <div className="p-14 flex-1 space-y-10 relative z-10 bg-gradient-to-br from-primary-500/5 to-transparent dark:from-white/5">
-                               <h3 className="text-4xl sm:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none group-hover:text-primary-500 transition-colors duration-700 drop-shadow-sm">{post.title || 'UNNAMED_PHANTOM'}</h3>
+                               <h3 className="text-4xl sm:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none group-hover:text-primary-500 transition-colors duration-700 drop-shadow-sm">{post.title || t('postsPage.untitledPost')}</h3>
                                {post.excerpt && <p className="text-[15px] text-surface-500 dark:text-slate-500 font-extrabold italic uppercase leading-relaxed line-clamp-3 tracking-tighter opacity-80 group-hover:text-surface-900 dark:group-hover:text-white transition-colors">{post.excerpt}</p>}
                                <div className="flex flex-wrap gap-4 pt-6 border-t-2 border-surface-100 dark:border-white/5">
                                   {post.tags?.slice(0, 3).map((tag, i) => (
@@ -252,23 +260,23 @@ export default function SignalDiffusionArchivePage() {
                             <div className="px-14 py-12 border-t-2 border-surface-100 dark:border-white/5 bg-surface-page/50 dark:bg-black/40 flex items-center justify-between relative z-20 group-hover:bg-surface-page dark:group-hover:bg-black/60 transition-all gap-4">
                                <div className="flex flex-col sm:flex-row items-center gap-8">
                                   <div className="space-y-3">
-                                     <p className="text-[10px] font-black text-surface-400 dark:text-slate-400 uppercase tracking-[0.6em] italic leading-none opacity-40">CHRONOS_SYNC</p>
+                                     <p className="text-[10px] font-black text-surface-400 dark:text-slate-400 uppercase tracking-[0.6em] italic leading-none opacity-40">{t('postsPage.dateLabel')}</p>
                                      <p className="text-[14px] font-black text-surface-900 dark:text-white italic tabular-nums leading-none tracking-widest bg-surface-page dark:bg-white/[0.03] px-4 py-2 rounded-xl shadow-inner">
-                                        {post.status === 'published' ? new Date(post.published_at!).toLocaleDateString().toUpperCase() : post.status === 'scheduled' ? new Date(post.scheduled_at!).toLocaleDateString().toUpperCase() : 'VAULT_LOCK'}
+                                        {post.status === 'published' ? new Date(post.published_at!).toLocaleDateString().toUpperCase() : post.status === 'scheduled' ? new Date(post.scheduled_at!).toLocaleDateString().toUpperCase() : t('postsPage.noDate')}
                                      </p>
                                   </div>
                                   <div className="hidden sm:block h-16 w-1 bg-surface-100 dark:bg-white/5 rounded-full mx-2" />
                                   <div className="flex items-center gap-5">
-                                     <button type="button" onClick={() => router.push(`/dashboard/posts/${post.id}/edit`)} title="Edit Post" aria-label="Edit Post" className="w-16 h-16 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-lg active:scale-75 group/edit relative overflow-hidden">
+                                     <button type="button" onClick={() => router.push(`/dashboard/posts/${post.id}/edit`)} title={t('postsPage.editPost')} aria-label={t('postsPage.editPost')} className="w-16 h-16 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-lg active:scale-75 group/edit relative overflow-hidden">
                                         <div className="absolute inset-0 bg-primary-500 opacity-0 group-hover/edit:opacity-20 transition-opacity" />
                                         <Edit size={28} className="group-hover/edit:rotate-12 transition-transform relative z-10" />
                                      </button>
-                                     <button type="button" onClick={() => router.push(`/dashboard/analytics`)} title="View Analytics" aria-label="View Analytics" className="w-16 h-16 rounded-[1.8rem] bg-primary-500/5 border-2 border-primary-500/20 flex items-center justify-center text-primary-500 hover:bg-primary-600 hover:text-white transition-all shadow-lg active:scale-75 hover:scale-110 relative overflow-hidden group/stats">
+                                     <button type="button" onClick={() => router.push(`/dashboard/analytics`)} title={t('postsPage.viewAnalytics')} aria-label={t('postsPage.viewAnalytics')} className="w-16 h-16 rounded-[1.8rem] bg-primary-500/5 border-2 border-primary-500/20 flex items-center justify-center text-primary-500 hover:bg-primary-600 hover:text-white transition-all shadow-lg active:scale-75 hover:scale-110 relative overflow-hidden group/stats">
                                         <BarChart2 size={28} className="group-hover/stats:scale-110 transition-transform relative z-10" />
                                      </button>
                                   </div>
                                </div>
-                               <button type="button" onClick={() => handlePurge(post.id)} title="Delete Post" aria-label="Delete Post" className="w-16 h-16 rounded-[1.8rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-lg active:scale-75 group/purge">
+                               <button type="button" onClick={() => handlePurge(post.id)} title={t('postsPage.deletePost')} aria-label={t('postsPage.deletePost')} className="w-16 h-16 rounded-[1.8rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-lg active:scale-75 group/purge">
                                   <Trash2 size={28} className="group-hover/purge:rotate-[30deg] transition-transform" />
                                </button>
                             </div>
@@ -285,12 +293,12 @@ export default function SignalDiffusionArchivePage() {
              <div className="px-8 sm:px-16 py-12 border-t-2 border-surface-100 dark:border-white/5 bg-surface-card dark:bg-black/80 flex flex-col sm:flex-row items-center justify-between relative z-50 backdrop-blur-3xl gap-8">
                 <div className="flex items-center gap-8">
                    <span className="w-3 h-3 rounded-full bg-primary-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,1)]" />
-                   <span className="text-[13px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[1em] italic opacity-40">TEMPORAL_FRAME_{currentPage}</span>
+                   <span className="text-[13px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[1em] italic opacity-40">{t('postsPage.pageLabel', { page: currentPage })}</span>
                 </div>
                 <div className="flex items-center gap-10 p-2 bg-surface-page dark:bg-black/40 rounded-[3rem] border-2 border-surface-100 dark:border-white/5 shadow-inner">
-                   <button type="button" aria-label="Previous Page" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-18 h-18 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-lg hover:border-primary-500/40"><ChevronLeft size={36}/></button>
+                   <button type="button" aria-label={t('postsPage.previousPage')} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-18 h-18 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-lg hover:border-primary-500/40"><ChevronLeft size={36}/></button>
                    <div className="w-1 h-8 bg-surface-100 dark:bg-white/5 rounded-full" />
-                   <button type="button" aria-label="Next Page" onClick={() => setCurrentPage(p => p + 1)} disabled={posts.length < PAGE_SIZE} className="w-18 h-18 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-lg hover:border-primary-500/40"><ChevronRight size={36}/></button>
+                   <button type="button" aria-label={t('postsPage.nextPage')} onClick={() => setCurrentPage(p => p + 1)} disabled={posts.length < PAGE_SIZE} className="w-18 h-18 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-lg hover:border-primary-500/40"><ChevronRight size={36}/></button>
                 </div>
              </div>
            )}

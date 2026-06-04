@@ -13,6 +13,7 @@ import {
   Lock, Key, Anchor, Sparkle, Gauge, Network, UserCheck, Brain
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
+import { useTranslation } from '@/hooks/useTranslation';
 import InfrastructureDashboard from '../../../components/InfrastructureDashboard';
 import ToastContainer from '../../../components/ToastContainer';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
@@ -24,6 +25,7 @@ export const dynamic = 'force-dynamic';
 export default function SubstrateIntegrityTerminalPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -58,7 +60,7 @@ export default function SubstrateIntegrityTerminalPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
         <Server size={64} className="text-indigo-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Substrate Telemetry...</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">{t('infrastructurePage.loading')}</span>
      </div>
   );
 
@@ -74,13 +76,13 @@ export default function SubstrateIntegrityTerminalPage() {
            <div className="w-32 h-32 bg-rose-500/10 rounded-[3.5rem] border-4 border-rose-500/20 flex items-center justify-center mx-auto mb-16 shadow-3xl animate-pulse">
               <ShieldAlert size={80} className="text-rose-500" />
            </div>
-           <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-8 leading-none drop-shadow-2xl">Access Diffracted</h2>
+           <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-8 leading-none drop-shadow-2xl">{t('infrastructurePage.accessDeniedTitle')}</h2>
            <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-relaxed mb-16 max-w-xl mx-auto border-l-4 border-rose-500/20 pl-8">
-             Mission critical substrate telemetry is restricted to administrative entities. Your entry vector has been logged into the Sovereign Integrity Ledger.
+             {t('infrastructurePage.accessDeniedBody')}
            </p>
            <button type="button" onClick={() => router.push('/dashboard')} 
              className="px-16 py-8 bg-white text-black rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] hover:bg-rose-600 hover:text-white transition-all duration-700 italic shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-90 flex items-center gap-6 mx-auto group">
-             <ArrowLeft size={24} className="group-hover:-translate-x-2 transition-transform" /> RETURN_TO_BASE
+             <ArrowLeft size={24} className="group-hover:-translate-x-2 transition-transform" /> {t('infrastructurePage.returnToBase')}
            </button>
         </motion.div>
       </div>
@@ -101,7 +103,7 @@ export default function SubstrateIntegrityTerminalPage() {
         {/* Substrate Integrity Header HUD */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Abort"
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('infrastructurePage.abort')}
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
@@ -113,15 +115,15 @@ export default function SubstrateIntegrityTerminalPage() {
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
                       <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Substrate Telemetry v18.4.2</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">{t('infrastructurePage.substrateTelemetry')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
-                       <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">CORE_STABILITY_SECURED</span>
+                       <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">{t('infrastructurePage.coreStabilitySecured')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Infrastructure</h1>
-                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">System status — uptime, queue depth, storage, latency. Useful when something feels slow and you want to know whether it's you or us.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">{t('infrastructurePage.title')}</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">{t('infrastructurePage.subtitle')}</p>
               </div>
            </div>
 
@@ -131,11 +133,11 @@ export default function SubstrateIntegrityTerminalPage() {
                     <Activity size={32} className="text-indigo-400 animate-pulse" />
                  </div>
                  <div>
-                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">RESISTANCE_STATUS</span>
-                    <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">SYSTEM_OPTIMAL</p>
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">{t('infrastructurePage.resistanceStatus')}</span>
+                    <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">{t('infrastructurePage.systemOptimal')}</p>
                  </div>
               </div>
-              <button type="button" onClick={() => window.location.reload()} title="Refresh Telemetry" aria-label="Refresh Telemetry" className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
+              <button type="button" onClick={() => window.location.reload()} title={t('infrastructurePage.refreshTelemetry')} aria-label={t('infrastructurePage.refreshTelemetry')} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
                 <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 transition-all duration-700 group-hover:rotate-180" />
               </button>
            </div>
@@ -152,13 +154,13 @@ export default function SubstrateIntegrityTerminalPage() {
                  <div className="flex items-center gap-10 relative z-10">
                     <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl"><Database size={40} className="text-indigo-400" /></div>
                     <div>
-                       <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Operations Matrix</h2>
-                       <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Lattice density: 1.4PB // Neural Flux: 12.8 GHz</p>
+                       <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">{t('infrastructurePage.operationsMatrix')}</h2>
+                       <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">{t('infrastructurePage.latticeDensity')}</p>
                     </div>
                  </div>
                  <div className="flex items-center gap-6 relative z-10">
                     <div className="px-10 py-4 bg-black/60 rounded-full border-2 border-white/5 shadow-inner">
-                       <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic">TELEMETRY_SCAN_ACTIVE</span>
+                       <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic">{t('infrastructurePage.telemetryScanActive')}</span>
                     </div>
                  </div>
               </div>
@@ -171,9 +173,9 @@ export default function SubstrateIntegrityTerminalPage() {
            {/* Heuristic Resource Monitoring Grid */}
            <section className="grid grid-cols-1 xl:grid-cols-3 gap-16 relative z-10">
               {[
-                { label: 'Neural Buffer', val: '92.4%', icon: Brain, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                { label: 'Lattice Capacity', val: '42.8 TB', icon: HardDrive, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                { label: 'Swarm Latency', val: '12 ms', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10' }
+                { label: t('infrastructurePage.neuralBuffer'), val: '92.4%', icon: Brain, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+                { label: t('infrastructurePage.latticeCapacity'), val: '42.8 TB', icon: HardDrive, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                { label: t('infrastructurePage.swarmLatency'), val: '12 ms', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10' }
               ].map((s, i) => (
                 <motion.div initial={{ opacity: 0, scale: 0.9, x: i % 2 === 0 ? -50 : 50 }} whileInView={{ opacity: 1, scale: 1, x: 0 }} transition={{ duration: 0.8, delay: i * 0.1 }}
                   key={i} className={`${glassStyle} p-16 rounded-[5.5rem] group bg-black/40 relative overflow-hidden flex flex-col items-center text-center hover:border-indigo-500/40 shadow-3xl border-white/5`}

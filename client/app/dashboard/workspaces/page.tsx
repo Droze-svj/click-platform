@@ -11,6 +11,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Workspace {
   id: string
@@ -45,6 +46,7 @@ const ROLE_CFG: Record<string, { label: string; color: string }> = {
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.6)] transition-all duration-300'
 
 export default function WorkspacesPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
@@ -70,11 +72,11 @@ export default function WorkspacesPage() {
     setWorkspaces(prev => prev.map(w => ({ ...w, active: w.id === id })))
     try { window.localStorage.setItem(STORAGE_KEY, id) } catch {}
     const target = workspaces.find(w => w.id === id)
-    showToast(`✓ SWITCHED → ${(target?.name || 'WORKSPACE').toUpperCase()}`, 'success')
+    showToast(t('workspacesPage.toastSwitched', { name: (target?.name || t('workspacesPage.workspaceFallback')).toUpperCase() }), 'success')
   }
 
   const handleCreate = async () => {
-    if (!newName.trim()) { showToast('NAME_REQUIRED', 'error'); return }
+    if (!newName.trim()) { showToast(t('workspacesPage.toastNameRequired'), 'error'); return }
     setCreating(true)
     await new Promise(r => setTimeout(r, 600))
     const id = `ws-${Date.now()}`
@@ -92,7 +94,7 @@ export default function WorkspacesPage() {
     setWorkspaces(prev => [...prev, newWs])
     setShowCreate(false); setNewName(''); setNewNiche('')
     setCreating(false)
-    showToast(`✓ WORKSPACE_INITIALIZED: ${newWs.name.toUpperCase()}`, 'success')
+    showToast(t('workspacesPage.toastInitialized', { name: newWs.name.toUpperCase() }), 'success')
   }
 
   if (authLoading || !user) return null
@@ -105,7 +107,7 @@ export default function WorkspacesPage() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
+            <button type="button" onClick={() => router.push('/dashboard')} title={t('workspacesPage.back')} className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
             <div className="w-20 h-20 bg-violet-500/10 border-2 border-violet-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
@@ -114,14 +116,14 @@ export default function WorkspacesPage() {
             <div>
               <div className="flex items-center gap-4 mb-3">
                 <Activity size={14} className="text-violet-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-violet-400 italic leading-none">Multi-Brand Lattice</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-violet-400 italic leading-none">{t('workspacesPage.eyebrow')}</span>
               </div>
-              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Workspaces</h1>
-              <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Switch between sovereign brand instances. Each carries isolated assets, schedules, and analytics.</p>
+              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{t('workspacesPage.title')}</h1>
+              <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">{t('workspacesPage.subtitle')}</p>
             </div>
           </div>
           <button type="button" onClick={() => setShowCreate(true)} className="px-12 py-6 bg-white text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.5em] italic flex items-center gap-5 hover:bg-violet-500 hover:text-white transition-colors">
-            <Plus size={22} /> SPAWN_WORKSPACE
+            <Plus size={22} /> {t('workspacesPage.spawnWorkspace')}
           </button>
         </div>
 
@@ -134,12 +136,12 @@ export default function WorkspacesPage() {
                 {activeWs.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0 text-center lg:text-left">
-                <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">ACTIVE_INSTANCE</p>
+                <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{t('workspacesPage.activeInstance')}</p>
                 <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-tight mb-3 truncate">{activeWs.name}</h2>
                 <div className="flex flex-wrap items-center gap-3 justify-center lg:justify-start">
                   <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">{activeWs.handle}</span>
                   <span className="opacity-30 text-slate-500">·</span>
-                  <span className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.4em] italic ${ROLE_CFG[activeWs.role].color}`}>{ROLE_CFG[activeWs.role].label}</span>
+                  <span className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.4em] italic ${ROLE_CFG[activeWs.role].color}`}>{t(`workspacesPage.roleLabel_${activeWs.role}`)}</span>
                   <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-[0.4em] italic flex items-center gap-2"><Users size={11} /> {activeWs.members}</span>
                   <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase tracking-[0.4em] italic flex items-center gap-2"><Crown size={11} /> {activeWs.plan}</span>
                 </div>
@@ -151,10 +153,10 @@ export default function WorkspacesPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Total Workspaces', value: workspaces.length, icon: Layers, color: 'text-white' },
-            { label: 'Owned',            value: workspaces.filter(w => w.role === 'owner').length, icon: Crown, color: 'text-amber-400' },
-            { label: 'Joined',           value: workspaces.filter(w => w.role !== 'owner').length, icon: Users, color: 'text-indigo-400' },
-            { label: 'Total Members',    value: workspaces.reduce((s, w) => s + w.members, 0), icon: Database, color: 'text-violet-400' },
+            { label: t('workspacesPage.statTotalWorkspaces'), value: workspaces.length, icon: Layers, color: 'text-white' },
+            { label: t('workspacesPage.statOwned'),            value: workspaces.filter(w => w.role === 'owner').length, icon: Crown, color: 'text-amber-400' },
+            { label: t('workspacesPage.statJoined'),           value: workspaces.filter(w => w.role !== 'owner').length, icon: Users, color: 'text-indigo-400' },
+            { label: t('workspacesPage.statTotalMembers'),    value: workspaces.reduce((s, w) => s + w.members, 0), icon: Database, color: 'text-violet-400' },
           ].map(s => (
             <div key={s.label} className={`${glassStyle} rounded-[2.5rem] p-8 flex items-center gap-6`}>
               <div className="w-14 h-14 rounded-[1.4rem] bg-white/[0.03] border border-white/10 flex items-center justify-center">
@@ -175,8 +177,8 @@ export default function WorkspacesPage() {
               <Globe size={22} className="text-slate-400" />
             </div>
             <div>
-              <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">All Instances</h3>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">CLICK_TO_SWITCH_CONTEXT</p>
+              <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('workspacesPage.allInstances')}</h3>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{t('workspacesPage.clickToSwitch')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -193,7 +195,7 @@ export default function WorkspacesPage() {
                   <div className={`w-14 h-14 rounded-[1.4rem] bg-gradient-to-br ${ws.color} flex items-center justify-center text-white font-black text-2xl italic shadow-xl`}>
                     {ws.name.charAt(0).toUpperCase()}
                   </div>
-                  {ws.active && <span className="px-2.5 py-1 rounded-full bg-violet-500 text-white text-[8px] font-black uppercase tracking-[0.4em] italic flex items-center gap-1.5"><Check size={10} /> ACTIVE</span>}
+                  {ws.active && <span className="px-2.5 py-1 rounded-full bg-violet-500 text-white text-[8px] font-black uppercase tracking-[0.4em] italic flex items-center gap-1.5"><Check size={10} /> {t('workspacesPage.activeBadge')}</span>}
                 </div>
                 <div className="flex-1 min-w-0 relative z-10">
                   <p className="text-2xl font-black text-white italic uppercase tracking-tight leading-tight mb-1.5 truncate">{ws.name}</p>
@@ -201,7 +203,7 @@ export default function WorkspacesPage() {
                   <p className="text-[11px] text-slate-400 font-medium leading-relaxed">{ws.niche}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap relative z-10">
-                  <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.3em] italic ${ROLE_CFG[ws.role].color}`}>{ROLE_CFG[ws.role].label}</span>
+                  <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.3em] italic ${ROLE_CFG[ws.role].color}`}>{t(`workspacesPage.roleLabel_${ws.role}`)}</span>
                   <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-[0.3em] italic flex items-center gap-1.5"><Users size={10} /> {ws.members}</span>
                   <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-[0.3em] italic">{ws.plan}</span>
                 </div>
@@ -211,8 +213,8 @@ export default function WorkspacesPage() {
               <div className="w-16 h-16 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/20 flex items-center justify-center text-violet-400">
                 <Plus size={28} />
               </div>
-              <p className="text-xl font-black text-white italic uppercase tracking-tight">Spawn Instance</p>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic max-w-[200px] leading-relaxed">Initialize a new sovereign workspace.</p>
+              <p className="text-xl font-black text-white italic uppercase tracking-tight">{t('workspacesPage.spawnInstance')}</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic max-w-[200px] leading-relaxed">{t('workspacesPage.spawnInstanceDesc')}</p>
             </button>
           </div>
         </div>
@@ -226,25 +228,25 @@ export default function WorkspacesPage() {
               <div className="flex items-center gap-6 mb-10">
                 <div className="w-14 h-14 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/30 flex items-center justify-center"><Sparkles size={26} className="text-violet-400" /></div>
                 <div>
-                  <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">SPAWN_PROTOCOL</p>
-                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-tight">New Workspace</h3>
+                  <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{t('workspacesPage.spawnProtocol')}</p>
+                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-tight">{t('workspacesPage.modalTitle')}</h3>
                 </div>
               </div>
               <div className="space-y-6 mb-10">
                 <div className="space-y-3">
-                  <label htmlFor="ws-name" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic block">Brand Designation</label>
-                  <input id="ws-name" autoFocus value={newName} onChange={e => setNewName(e.target.value)} placeholder="ATLAS_FITNESS" className="w-full bg-black/60 border-2 border-white/5 rounded-[1.5rem] px-6 py-4 text-xl font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" />
+                  <label htmlFor="ws-name" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic block">{t('workspacesPage.brandDesignation')}</label>
+                  <input id="ws-name" autoFocus value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('workspacesPage.namePlaceholder')} className="w-full bg-black/60 border-2 border-white/5 rounded-[1.5rem] px-6 py-4 text-xl font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" />
                 </div>
                 <div className="space-y-3">
-                  <label htmlFor="ws-niche" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic block">Niche / Vertical (optional)</label>
-                  <input id="ws-niche" value={newNiche} onChange={e => setNewNiche(e.target.value)} placeholder="HEALTH_AND_WELLNESS" className="w-full bg-black/60 border-2 border-white/5 rounded-[1.5rem] px-6 py-4 text-base font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" />
+                  <label htmlFor="ws-niche" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic block">{t('workspacesPage.nicheLabel')}</label>
+                  <input id="ws-niche" value={newNiche} onChange={e => setNewNiche(e.target.value)} placeholder={t('workspacesPage.nichePlaceholder')} className="w-full bg-black/60 border-2 border-white/5 rounded-[1.5rem] px-6 py-4 text-base font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" />
                 </div>
               </div>
               <div className="flex items-center gap-4 justify-end">
-                <button type="button" disabled={creating} onClick={() => { setShowCreate(false); setNewName(''); setNewNiche('') }} className="px-7 py-3 bg-white/5 border-2 border-white/10 text-slate-300 rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:text-white hover:bg-white/10 italic disabled:opacity-40">CANCEL</button>
+                <button type="button" disabled={creating} onClick={() => { setShowCreate(false); setNewName(''); setNewNiche('') }} className="px-7 py-3 bg-white/5 border-2 border-white/10 text-slate-300 rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:text-white hover:bg-white/10 italic disabled:opacity-40">{t('workspacesPage.cancel')}</button>
                 <button type="button" disabled={creating || !newName.trim()} onClick={handleCreate} className="px-9 py-3 bg-white text-black rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:bg-violet-500 hover:text-white italic disabled:opacity-40 flex items-center gap-3 transition-colors">
                   {creating ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
-                  {creating ? 'SPAWNING...' : 'INITIALIZE'}
+                  {creating ? t('workspacesPage.spawning') : t('workspacesPage.initialize')}
                 </button>
               </div>
             </motion.div>

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Zap, Shield, Sparkles, Binary, Loader2, ArrowLeft, History, Cpu, Network, Gauge, RefreshCw, UploadCloud, CheckCircle2, FileText, Settings, Activity, Box, Monitor, Signal, ChevronRight, LayoutDashboard, BrainCircuit } from 'lucide-react'
 import { apiGet } from '../../../lib/api'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 
@@ -23,6 +24,7 @@ interface ManifestHistory {
 
 export default function OneClickForgePage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [history, setHistory] = useState<ManifestHistory[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
 
@@ -41,9 +43,9 @@ export default function OneClickForgePage() {
   }
 
   useEffect(() => {
-    document.title = 'AI Content Creator | Click'
+    document.title = t('forgePage.documentTitle')
     fetchHistory()
-  }, [])
+  }, [t])
 
   return (
     <ErrorBoundary>
@@ -54,7 +56,7 @@ export default function OneClickForgePage() {
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-12 border-b-2 border-surface-100 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-8 w-full lg:w-auto min-w-0">
               <button type="button" onClick={() => router.push('/dashboard')} 
-                title="Back to Dashboard" aria-label="Back to Dashboard"
+                title={t('forgePage.backToDashboard')} aria-label={t('forgePage.backToDashboard')}
                 className="w-16 h-16 rounded-2xl bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500/30 transition-all shadow-xl active:scale-90 group">
                 <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
               </button>
@@ -64,28 +66,28 @@ export default function OneClickForgePage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-3 flex-wrap">
                     <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-primary-500/10 text-primary-600 dark:text-primary-400 uppercase tracking-[0.3em] border-2 border-primary-500/20 shadow-inner italic leading-none">
-                      Intelligence Factory
+                      {t('forgePage.intelligenceFactory')}
                     </span>
                     <div className="flex items-center gap-3 px-4 py-1.5 rounded-xl bg-surface-card dark:bg-surface-900 text-surface-500 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black italic shadow-inner">
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
-                        CORE_ENGINE_ACTIVE
+                        {t('forgePage.coreEngineActive')}
                     </div>
                  </div>
-                 <h1 className="text-5xl sm:text-6xl font-black tracking-tighter leading-none mt-4 truncate uppercase italic drop-shadow-2xl">One-Click Forge</h1>
+                 <h1 className="text-5xl sm:text-6xl font-black tracking-tighter leading-none mt-4 truncate uppercase italic drop-shadow-2xl">{t('forgePage.title')}</h1>
               </div>
            </div>
 
            <div className="hidden xl:flex items-center gap-12">
               <div className="space-y-3 text-right">
-                <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic leading-none">System_Status</p>
+                <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic leading-none">{t('forgePage.systemStatus')}</p>
                 <div className="flex items-center justify-end gap-4">
                   <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
-                  <span className="text-base font-black text-surface-900 dark:text-white uppercase italic tracking-tighter">ALL_SYSTEMS_OPTIMAL</span>
+                  <span className="text-base font-black text-surface-900 dark:text-white uppercase italic tracking-tighter">{t('forgePage.allSystemsOptimal')}</span>
                 </div>
               </div>
               <div className="w-0.5 h-16 bg-surface-100 dark:bg-surface-800 rounded-full" />
               <div className="bg-surface-card dark:bg-surface-900 backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 px-10 py-5 rounded-[2.5rem] shadow-2xl group hover:border-primary-500/20 transition-all">
-                <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] mb-3 italic leading-none group-hover:text-primary-500">Global_Latency</p>
+                <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] mb-3 italic leading-none group-hover:text-primary-500">{t('forgePage.globalLatency')}</p>
                 <p className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase tabular-nums">45.2 SEC</p>
               </div>
            </div>
@@ -104,8 +106,8 @@ export default function OneClickForgePage() {
                   <UploadCloud size={40} />
                 </div>
                 <div className="text-center sm:text-left">
-                  <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-4">Initialize Payload</h2>
-                  <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-widest leading-relaxed">Upload raw footage, enter a temporal URL, or prompt the core for autonomous synthesis.</p>
+                  <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-4">{t('forgePage.initializePayload')}</h2>
+                  <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-widest leading-relaxed">{t('forgePage.initializePayloadDesc')}</p>
                 </div>
               </header>
               <div className="relative z-10">
@@ -121,8 +123,8 @@ export default function OneClickForgePage() {
                   <Settings size={40} />
                 </div>
                 <div className="text-center sm:text-left">
-                  <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-4">Synthesis Hub</h2>
-                  <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-widest leading-relaxed">Define visual aesthetics, temporal pacing, and agentic parameters for high-velocity output.</p>
+                  <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-4">{t('forgePage.synthesisHub')}</h2>
+                  <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-widest leading-relaxed">{t('forgePage.synthesisHubDesc')}</p>
                 </div>
               </header>
               <div className="relative z-10">
@@ -143,8 +145,8 @@ export default function OneClickForgePage() {
                   <History size={32} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors" />
                 </div>
                 <div>
-                  <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-2">Manifest Archive</h3>
-                  <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic leading-none">RECENT_FACTORY_YIELDS</p>
+                  <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-2">{t('forgePage.manifestArchive')}</h3>
+                  <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic leading-none">{t('forgePage.recentFactoryYields')}</p>
                 </div>
               </header>
 
@@ -155,7 +157,7 @@ export default function OneClickForgePage() {
                        <RefreshCw size={64} className="text-primary-500 animate-spin absolute inset-0" />
                        <div className="absolute inset-0 bg-primary-500/10 blur-xl rounded-full animate-pulse" />
                     </div>
-                    <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.6em] animate-pulse italic">DECODING_HISTORY...</p>
+                    <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.6em] animate-pulse italic">{t('forgePage.decodingHistory')}</p>
                   </div>
                 ) : history.length > 0 ? (
                   history.map((item, idx) => (
@@ -169,9 +171,9 @@ export default function OneClickForgePage() {
                     >
                       <div className="flex items-center justify-between mb-6 relative z-10">
                         <span className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.3em] italic group-hover/item:text-primary-500 transition-colors">
-                          {new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()} CYCLE
+                          {t('forgePage.dateCycle', { date: new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase() })}
                         </span>
-                        <div className="px-4 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500/20 text-[10px] font-black uppercase tracking-widest italic shadow-sm">MANIFESTED</div>
+                        <div className="px-4 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500/20 text-[10px] font-black uppercase tracking-widest italic shadow-sm">{t('forgePage.manifested')}</div>
                       </div>
                       <div className="flex items-start gap-6 relative z-10">
                          <div className="w-14 h-14 rounded-2xl bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-200 dark:text-slate-900 group-hover/item:text-primary-500 group-hover/item:border-primary-500/30 group-hover/item:rotate-12 transition-all shadow-md">
@@ -179,7 +181,7 @@ export default function OneClickForgePage() {
                          </div>
                          <div className="flex-1 min-w-0">
                             <p className="text-lg font-black text-surface-900 dark:text-white tracking-tight leading-tight uppercase italic group-hover/item:text-primary-500 transition-colors line-clamp-2">{item.title}</p>
-                            <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest mt-2">ID: {item._id.slice(-8).toUpperCase()}</p>
+                            <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest mt-2">{t('forgePage.idLabel', { id: item._id.slice(-8).toUpperCase() })}</p>
                          </div>
                       </div>
                     </motion.div>
@@ -187,7 +189,7 @@ export default function OneClickForgePage() {
                 ) : (
                   <div className="py-48 text-center space-y-10 border-4 border-dashed border-surface-100 dark:border-surface-800 rounded-[3rem] bg-surface-page/50 dark:bg-surface-950/20 opacity-30">
                     <History size={80} className="text-surface-200 dark:text-slate-900 mx-auto" />
-                    <p className="text-2xl font-black uppercase tracking-[0.8em] italic leading-none">NULL_HISTORY</p>
+                    <p className="text-2xl font-black uppercase tracking-[0.8em] italic leading-none">{t('forgePage.nullHistory')}</p>
                   </div>
                 )}
               </div>
@@ -195,12 +197,12 @@ export default function OneClickForgePage() {
               <button
                 type="button"
                 onClick={fetchHistory}
-                title="Sync Archive"
-                aria-label="Sync Archive"
+                title={t('forgePage.syncArchive')}
+                aria-label={t('forgePage.syncArchive')}
                 className="mt-12 w-full py-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] text-[12px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic hover:bg-surface-card hover:text-primary-500 hover:border-primary-500/40 transition-all flex items-center justify-center gap-6 shadow-inner active:scale-95 border-none relative z-10"
               >
                 <RefreshCw size={20} className={loadingHistory ? 'animate-spin' : ''} />
-                SYNC_ARCHIVE
+                {t('forgePage.syncArchive')}
               </button>
             </div>
 
@@ -211,13 +213,13 @@ export default function OneClickForgePage() {
                  <div className="flex items-center justify-between mb-10 relative z-10">
                    <div className="flex items-center gap-4">
                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center"><CheckCircle2 className="text-emerald-500" size={24} /></div>
-                     <span className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">Engine Health</span>
+                     <span className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">{t('forgePage.engineHealth')}</span>
                    </div>
                    <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
                  </div>
                  <div className="space-y-8 relative z-10">
                    <div className="flex justify-between items-end">
-                     <span className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic">Network_Availability</span>
+                     <span className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic">{t('forgePage.networkAvailability')}</span>
                      <span className="text-4xl font-black text-surface-900 dark:text-white italic tabular-nums leading-none drop-shadow-2xl">99.9%</span>
                    </div>
                    <div className="h-3.5 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-full overflow-hidden shadow-inner relative">
@@ -229,7 +231,7 @@ export default function OneClickForgePage() {
                <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] p-10 shadow-2xl transition-all duration-700 hover:border-primary-500/30 group relative overflow-hidden">
                  <div className="flex items-center gap-4 mb-10 relative z-10">
                    <div className="w-12 h-12 rounded-xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center"><Activity className="text-primary-500" size={24} /></div>
-                   <span className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">Live Pulse</span>
+                   <span className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">{t('forgePage.livePulse')}</span>
                  </div>
                  <div className="flex items-end gap-3 h-16 relative z-10 px-2">
                    {[...Array(20)].map((_, i) => (
@@ -243,7 +245,7 @@ export default function OneClickForgePage() {
                    ))}
                  </div>
                  <div className="absolute inset-0 bg-gradient-to-t from-primary-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                 <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic mt-8 text-center relative z-10 group-hover:text-primary-500 transition-colors">NEURAL_TRAFFIC_MONITOR_ACTIVE</p>
+                 <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic mt-8 text-center relative z-10 group-hover:text-primary-500 transition-colors">{t('forgePage.neuralTrafficMonitorActive')}</p>
                </div>
             </section>
           </aside>

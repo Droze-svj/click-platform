@@ -32,6 +32,7 @@ import {
   Palette,
 } from 'lucide-react'
 import { apiGet } from '@/lib/api'
+import { useTranslation } from '../../../hooks/useTranslation'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
 import ClickEmptyState from '@/components/click/ClickEmptyState'
 import { clickVoice } from '@/lib/clickVoice'
@@ -91,6 +92,7 @@ function topThree(counters?: Counter[]): Counter[] {
 }
 
 export default function ClickLearningPage() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<StyleProfile | null>(null)
   const [insight, setInsight] = useState<StyleInsight | null>(null)
@@ -148,14 +150,14 @@ export default function ClickLearningPage() {
         <div className="max-w-4xl mx-auto px-6 py-12">
           <ClickEmptyState
             intent="empty.analytics"
-            title="Click is ready to learn"
+            title={t('clickLearningPage.emptyTitle')}
             icon={<Brain className="w-7 h-7 text-indigo-400" />}
             action={
               <Link
                 href="/dashboard/clips/hub"
                 className="px-6 py-3 rounded-2xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
               >
-                Publish your first clip
+                {t('clickLearningPage.publishFirstClip')}
               </Link>
             }
           />
@@ -182,16 +184,13 @@ export default function ClickLearningPage() {
           className="space-y-3"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-300">
-            <Sparkles className="w-3 h-3" /> Click&apos;s Taste Graph
+            <Sparkles className="w-3 h-3" /> {t('clickLearningPage.tasteGraphBadge')}
           </div>
           <h1 className="text-4xl font-black italic tracking-tighter">
-            Click has learned <span className="text-indigo-400">{totalPicks}</span> picks
-            from you
+            {t('clickLearningPage.headlineBefore')} <span className="text-indigo-400">{totalPicks}</span> {t('clickLearningPage.headlineAfter')}
           </h1>
           <p className="text-slate-400 max-w-2xl">
-            {clickVoice('success.learned')} Every clip you publish refines the
-            recommendations below. The more you ship, the sharper Click&apos;s
-            suggestions get.
+            {clickVoice('success.learned')} {t('clickLearningPage.refineCopy')}
           </p>
         </motion.div>
 
@@ -213,11 +212,11 @@ export default function ClickLearningPage() {
                   <div className="flex items-center gap-2 text-slate-300">
                     {meta.icon}
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                      {meta.label}
+                      {t(`clickLearningPage.facets.${facet}`)}
                     </span>
                   </div>
                   <span className="text-[10px] font-bold text-slate-500">
-                    {facetTotal} picks
+                    {t('clickLearningPage.picksCount', { count: facetTotal })}
                   </span>
                 </div>
                 <ul className="space-y-2">
@@ -237,7 +236,7 @@ export default function ClickLearningPage() {
                           {c.key}
                           {isResolvedTop && (
                             <span className="ml-1.5 text-[8px] font-black uppercase tracking-widest text-indigo-400">
-                              · top
+                              {t('clickLearningPage.topBadge')}
                             </span>
                           )}
                         </span>
@@ -267,14 +266,14 @@ export default function ClickLearningPage() {
             <div className="flex items-center gap-2 mb-2 text-slate-300">
               <Type className="w-4 h-4" />
               <span className="text-[10px] font-black uppercase tracking-widest">
-                Average caption length
+                {t('clickLearningPage.avgCaptionLength')}
               </span>
             </div>
             <p className="text-2xl font-black text-white tabular-nums">
-              {Math.round(profile.averages.avgCaptionLength)} chars
+              {t('clickLearningPage.chars', { count: Math.round(profile.averages.avgCaptionLength) })}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              Click drafts future captions around this length when it can.
+              {t('clickLearningPage.captionLengthDesc')}
             </p>
           </div>
         )}
@@ -284,6 +283,7 @@ export default function ClickLearningPage() {
 }
 
 function PageHeader() {
+  const { t } = useTranslation()
   return (
     <header className="border-b border-white/[0.05] bg-[#07070f]/80 backdrop-blur-sm sticky top-0 z-10">
       <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
@@ -291,12 +291,12 @@ function PageHeader() {
           href="/dashboard"
           className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Dashboard
+          <ArrowLeft className="w-4 h-4" /> {t('clickLearningPage.dashboardLink')}
         </Link>
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4 text-indigo-400" />
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-            Click Learning
+            {t('clickLearningPage.headerLabel')}
           </span>
         </div>
       </div>
@@ -311,6 +311,7 @@ function PublishTiming({
   hours?: Counter[]
   days?: Counter[]
 }) {
+  const { t } = useTranslation()
   const topHour = (hours || []).slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0]
   const topDay = (days || []).slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0]
   const hourLabel = topHour ? `${topHour.key}:00` : null
@@ -321,13 +322,12 @@ function PublishTiming({
       <div className="flex items-center gap-2 mb-4 text-slate-300">
         <Clock className="w-4 h-4" />
         <span className="text-[10px] font-black uppercase tracking-widest">
-          Your publishing rhythm
+          {t('clickLearningPage.publishingRhythm')}
         </span>
       </div>
       <p className="text-slate-300 leading-relaxed">
-        You ship most often on <span className="font-bold text-white">{dayLabel}</span>{' '}
-        around <span className="font-bold text-white">{hourLabel}</span>. Click
-        prioritises scheduling around that window.
+        {t('clickLearningPage.rhythmBefore')} <span className="font-bold text-white">{dayLabel}</span>{' '}
+        {t('clickLearningPage.rhythmMiddle')} <span className="font-bold text-white">{hourLabel}</span>{t('clickLearningPage.rhythmAfter')}
       </p>
     </section>
   )

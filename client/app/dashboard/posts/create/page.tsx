@@ -7,10 +7,12 @@ import { useAuth } from '../../../../hooks/useAuth'
 import LoadingSpinner from '../../../../components/LoadingSpinner'
 import ErrorAlert from '../../../../components/ErrorAlert'
 import { Save, Calendar, Image, Tag, X } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function CreatePostPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,12 +39,12 @@ export default function CreatePostPage() {
     if (loading) return
 
     if (!formData.title.trim()) {
-      setError('Title is required')
+      setError(t('postsCreatePage.errorTitleRequired'))
       return
     }
 
     if (!formData.content.trim()) {
-      setError('Content is required')
+      setError(t('postsCreatePage.errorContentRequired'))
       return
     }
 
@@ -63,7 +65,7 @@ export default function CreatePostPage() {
       router.push('/dashboard/posts?success=created')
     } catch (err: any) {
       console.error('Failed to create post:', err)
-      setError(err.response?.data?.error || err.message || 'Failed to create post')
+      setError(err.response?.data?.error || err.message || t('postsCreatePage.errorCreateFailed'))
     } finally {
       setLoading(false)
     }
@@ -82,7 +84,7 @@ export default function CreatePostPage() {
   const removeTag = (tag: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(t => t !== tag)
+      tags: prev.tags.filter(tg => tg !== tag)
     }))
   }
 
@@ -117,8 +119,8 @@ export default function CreatePostPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">Create New Post</h1>
-          <p className="text-gray-600 dark:text-gray-400">Write and schedule your content</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">{t('postsCreatePage.title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t('postsCreatePage.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -126,7 +128,7 @@ export default function CreatePostPage() {
             onClick={() => router.push('/dashboard/posts')}
             className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
-            Cancel
+            {t('postsCreatePage.cancel')}
           </button>
           <button
             type="button"
@@ -137,12 +139,12 @@ export default function CreatePostPage() {
             {loading ? (
               <>
                 <LoadingSpinner size="sm" />
-                Creating...
+                {t('postsCreatePage.creating')}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Create Post
+                {t('postsCreatePage.createButton')}
               </>
             )}
           </button>
@@ -158,15 +160,15 @@ export default function CreatePostPage() {
         {/* Title */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Title *
+            {t('postsCreatePage.titleLabel')}
           </label>
           <input
             type="text"
-            aria-label="Post Title"
+            aria-label={t('postsCreatePage.titleAria')}
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="Enter your post title"
+            placeholder={t('postsCreatePage.titlePlaceholder')}
             required
           />
         </div>
@@ -174,37 +176,37 @@ export default function CreatePostPage() {
         {/* Content */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Content *
+            {t('postsCreatePage.contentLabel')}
           </label>
           <textarea
-            aria-label="Post Content"
+            aria-label={t('postsCreatePage.contentAria')}
             value={formData.content}
             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             rows={12}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="Write your post content here..."
+            placeholder={t('postsCreatePage.contentPlaceholder')}
             required
           />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {formData.content.length} characters
+            {t('postsCreatePage.charCount', { count: formData.content.length })}
           </p>
         </div>
 
         {/* Excerpt */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Excerpt (Optional)
+            {t('postsCreatePage.excerptLabel')}
           </label>
           <textarea
-            aria-label="Post Excerpt"
+            aria-label={t('postsCreatePage.excerptAria')}
             value={formData.excerpt}
             onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
             rows={3}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="Brief summary of your post"
+            placeholder={t('postsCreatePage.excerptPlaceholder')}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {formData.excerpt.length}/200 characters
+            {t('postsCreatePage.excerptCharCount', { count: formData.excerpt.length })}
           </p>
         </div>
 
@@ -212,11 +214,11 @@ export default function CreatePostPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Featured Image URL
+              {t('postsCreatePage.featuredImageLabel')}
             </label>
             <input
               type="url"
-              aria-label="Featured Image URL"
+              aria-label={t('postsCreatePage.featuredImageLabel')}
               value={formData.featured_image}
               onChange={(e) => setFormData(prev => ({ ...prev, featured_image: e.target.value }))}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -225,11 +227,11 @@ export default function CreatePostPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Thumbnail URL
+              {t('postsCreatePage.thumbnailLabel')}
             </label>
             <input
               type="url"
-              aria-label="Thumbnail URL"
+              aria-label={t('postsCreatePage.thumbnailLabel')}
               value={formData.thumbnail}
               onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -241,24 +243,24 @@ export default function CreatePostPage() {
         {/* Tags */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tags
+            {t('postsCreatePage.tagsLabel')}
           </label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
-              aria-label="Add a tag"
+              aria-label={t('postsCreatePage.addTag')}
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="Add a tag"
+              placeholder={t('postsCreatePage.addTag')}
             />
             <button
              type="button"
               onClick={addTag}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Add
+              {t('postsCreatePage.add')}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -271,8 +273,8 @@ export default function CreatePostPage() {
                 <button
                  type="button"
                   onClick={() => removeTag(tag)}
-                  aria-label={`Remove tag ${tag}`}
-                  title={`Remove tag ${tag}`}
+                  aria-label={t('postsCreatePage.removeTag', { tag })}
+                  title={t('postsCreatePage.removeTag', { tag })}
                   className="hover:text-red-600"
                 >
                   <X className="w-3 h-3" />
@@ -285,24 +287,24 @@ export default function CreatePostPage() {
         {/* Categories */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Categories
+            {t('postsCreatePage.categoriesLabel')}
           </label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
-              aria-label="Add a category"
+              aria-label={t('postsCreatePage.addCategory')}
               value={categoryInput}
               onChange={(e) => setCategoryInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCategory())}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="Add a category"
+              placeholder={t('postsCreatePage.addCategory')}
             />
             <button
              type="button"
               onClick={addCategory}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              Add
+              {t('postsCreatePage.add')}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -315,8 +317,8 @@ export default function CreatePostPage() {
                 <button
                  type="button"
                   onClick={() => removeCategory(category)}
-                  aria-label={`Remove category ${category}`}
-                  title={`Remove category ${category}`}
+                  aria-label={t('postsCreatePage.removeCategory', { category })}
+                  title={t('postsCreatePage.removeCategory', { category })}
                   className="hover:text-red-600"
                 >
                   <X className="w-3 h-3" />
@@ -329,7 +331,7 @@ export default function CreatePostPage() {
         {/* Platforms */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Target Platforms
+            {t('postsCreatePage.targetPlatforms')}
           </label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
@@ -343,8 +345,8 @@ export default function CreatePostPage() {
               <button type="button"
                 key={platform.id}
                 onClick={() => togglePlatform(platform.id)}
-                aria-label={formData.platforms.includes(platform.id) ? `${platform.name} — selected` : `Select ${platform.name}`}
-                title={formData.platforms.includes(platform.id) ? `${platform.name} — selected` : `Select ${platform.name}`}
+                aria-label={formData.platforms.includes(platform.id) ? t('postsCreatePage.platformSelected', { platform: platform.name }) : t('postsCreatePage.platformSelect', { platform: platform.name })}
+                title={formData.platforms.includes(platform.id) ? t('postsCreatePage.platformSelected', { platform: platform.name }) : t('postsCreatePage.platformSelect', { platform: platform.name })}
                 className={`p-3 border rounded-lg text-left transition-colors ${
                   formData.platforms.includes(platform.id)
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
@@ -363,34 +365,34 @@ export default function CreatePostPage() {
         {/* Scheduling */}
         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Schedule Post (Optional)
+            {t('postsCreatePage.scheduleLabel')}
           </label>
           <input
             type="datetime-local"
-            aria-label="Schedule Post"
+            aria-label={t('postsCreatePage.scheduleAria')}
             value={formData.scheduled_at}
             onChange={(e) => setFormData(prev => ({ ...prev, scheduled_at: e.target.value }))}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Leave empty to save as draft or publish immediately
+            {t('postsCreatePage.scheduleHint')}
           </p>
         </div>
 
         {/* Status */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Status
+            {t('postsCreatePage.statusLabel')}
           </label>
           <select
-            aria-label="Post Status"
+            aria-label={t('postsCreatePage.statusAria')}
             value={formData.status}
             onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
-            <option value="draft">Draft</option>
-            <option value="published">Publish Now</option>
-            <option value="scheduled">Schedule for Later</option>
+            <option value="draft">{t('postsCreatePage.statusDraft')}</option>
+            <option value="published">{t('postsCreatePage.statusPublishNow')}</option>
+            <option value="scheduled">{t('postsCreatePage.statusScheduleLater')}</option>
           </select>
         </div>
       </form>

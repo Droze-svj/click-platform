@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 import { API_URL } from '../../../lib/api'
 const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
@@ -52,6 +53,7 @@ const allMilestones = [
 
 export default function AscensionLedgerPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [stats, setStats] = useState<EngagementStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -100,7 +102,7 @@ export default function AscensionLedgerPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Trophy size={64} className="text-amber-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Cataloging Evolutionary Ascension...</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">{t('achievementsPage.loading')}</span>
      </div>
   );
 
@@ -117,7 +119,7 @@ export default function AscensionLedgerPage() {
         {/* Ascension Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
+              <button onClick={() => router.push('/dashboard')} title={t('achievementsPage.abort')}
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={32} />
               </button>
@@ -129,15 +131,15 @@ export default function AscensionLedgerPage() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Shield size={16} className="text-amber-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-amber-400 italic leading-none">Ascension Registry v10.4</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-amber-400 italic leading-none">{t('achievementsPage.registryVersion')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <ActivitySquare size={12} className="text-amber-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">LEVEL_{stats?.level}_ASYNC</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('achievementsPage.levelAsync', { level: stats?.level ?? 0 })}</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Ascension Ledger</h1>
-                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Global catalog of neural progression and autonomous breakthroughs.</p>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">{t('achievementsPage.title')}</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">{t('achievementsPage.subtitle')}</p>
               </div>
            </div>
 
@@ -146,7 +148,7 @@ export default function AscensionLedgerPage() {
                 className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] hover:bg-amber-500 hover:text-white transition-all shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-6 group"
               >
                 <RefreshCw size={28} className="group-hover:rotate-180 transition-transform duration-300" />
-                REFRESH_REGISTRY
+                {t('achievementsPage.refreshRegistry')}
               </button>
            </div>
         </header>
@@ -154,10 +156,10 @@ export default function AscensionLedgerPage() {
         {/* Stats Matrix HUD */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
-            <AscensionStatCard icon={Layers} label="Evolutionary Tier" value={`TIER_${stats.level}`} sub={`${(stats.level % 10) * 10}% TO_ASCENSION`} color="text-purple-400" />
-            <AscensionStatCard icon={Award} label="Decrypted Milestones" value={stats.achievements.total} sub="VECTORS_VERIFIED" color="text-blue-400" />
-            <AscensionStatCard icon={Zap} label="Coherence Streak" value={stats.streak.currentStreak} sub={`PEAK_RESONANCE: ${stats.streak.longestStreak}`} color="text-amber-400" pulse />
-            <AscensionStatCard icon={TrendingUp} label="Synthesis Volume" value={stats.stats.totalContent} sub="TOTAL_PAYLOADS_SYNTHESIZED" color="text-emerald-400" />
+            <AscensionStatCard icon={Layers} label={t('achievementsPage.statTierLabel')} value={`TIER_${stats.level}`} sub={t('achievementsPage.statTierSub', { pct: (stats.level % 10) * 10 })} color="text-purple-400" />
+            <AscensionStatCard icon={Award} label={t('achievementsPage.statMilestonesLabel')} value={stats.achievements.total} sub={t('achievementsPage.statMilestonesSub')} color="text-blue-400" />
+            <AscensionStatCard icon={Zap} label={t('achievementsPage.statStreakLabel')} value={stats.streak.currentStreak} sub={t('achievementsPage.statStreakSub', { peak: stats.streak.longestStreak })} color="text-amber-400" pulse />
+            <AscensionStatCard icon={TrendingUp} label={t('achievementsPage.statVolumeLabel')} value={stats.stats.totalContent} sub={t('achievementsPage.statVolumeSub')} color="text-emerald-400" />
           </div>
         )}
 
@@ -170,20 +172,20 @@ export default function AscensionLedgerPage() {
               <div className="text-center lg:text-left space-y-8 max-w-2xl">
                  <div className="flex items-center gap-6 mb-2">
                    <Monitor size={32} className="text-indigo-400" />
-                   <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Neural Progression</h3>
+                   <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('achievementsPage.neuralProgression')}</h3>
                  </div>
                  <p className="text-[16px] text-slate-400 font-black uppercase italic tracking-[0.4em] leading-relaxed">
-                    Real-time synchronization of autonomous output across all operational sectors. Manifesting high-fidelity evolution.
+                    {t('achievementsPage.neuralProgressionDesc')}
                  </p>
                  <div className="pt-8 border-t border-white/5 flex items-center gap-6">
                     <div className="w-4 h-4 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">TELEMETRY_STREAM_ACTIVE</span>
+                    <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">{t('achievementsPage.telemetryActive')}</span>
                  </div>
               </div>
               <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-10 w-full">
-                 <DetailProgCard icon={Video} label="Spectral Renditions" value={stats?.stats.totalVideos || 0} color="text-rose-400" />
-                 <DetailProgCard icon={Sparkles} label="Logic Payloads" value={stats?.stats.totalContent || 0} color="text-blue-400" />
-                 <DetailProgCard icon={Terminal} label="Neural Scripts" value={stats?.stats.totalScripts || 0} color="text-purple-400" />
+                 <DetailProgCard icon={Video} label={t('achievementsPage.detailRenditions')} value={stats?.stats.totalVideos || 0} color="text-rose-400" />
+                 <DetailProgCard icon={Sparkles} label={t('achievementsPage.detailPayloads')} value={stats?.stats.totalContent || 0} color="text-blue-400" />
+                 <DetailProgCard icon={Terminal} label={t('achievementsPage.detailScripts')} value={stats?.stats.totalScripts || 0} color="text-purple-400" />
               </div>
            </div>
         </motion.div>
@@ -194,7 +196,7 @@ export default function AscensionLedgerPage() {
             <div className="space-y-12 relative z-10">
                <div className="flex items-center gap-8">
                   <History size={32} className="text-amber-500" />
-                  <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Recent Breakthroughs</h3>
+                  <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{t('achievementsPage.recentBreakthroughs')}</h3>
                </div>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {stats.achievements.recent.slice(0, 3).map((a, i) => {
@@ -206,11 +208,11 @@ export default function AscensionLedgerPage() {
                       >
                          <div className="text-7xl group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300 drop-shadow-2xl">{data?.emoji || '🏆'}</div>
                          <div>
-                            <p className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 group-hover:text-amber-400 transition-colors">{data?.name || a.achievementType.toUpperCase()}</p>
-                            <p className="text-[11px] font-black text-amber-400/60 uppercase italic tracking-[0.3em] leading-none mb-4">DECRYPTED {new Date(a.unlockedAt).toLocaleDateString()}</p>
+                            <p className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 group-hover:text-amber-400 transition-colors">{data ? t(`achievementsPage.milestones.${data.type}.name`) : a.achievementType.toUpperCase()}</p>
+                            <p className="text-[11px] font-black text-amber-400/60 uppercase italic tracking-[0.3em] leading-none mb-4">{t('achievementsPage.decryptedOn', { date: new Date(a.unlockedAt).toLocaleDateString() })}</p>
                             <div className="flex items-center gap-3">
                                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                               <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">ASCENSION_VERIFIED</span>
+                               <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">{t('achievementsPage.ascensionVerified')}</span>
                             </div>
                          </div>
                       </motion.div>
@@ -225,7 +227,7 @@ export default function AscensionLedgerPage() {
         <div className="space-y-12 relative z-10">
            <div className="flex items-center gap-8">
               <Boxes className="text-indigo-500" size={32} />
-              <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Node Ascension Matrix</h3>
+              <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{t('achievementsPage.nodeMatrix')}</h3>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
               {allMilestones.map((m, idx) => {
@@ -245,20 +247,20 @@ export default function AscensionLedgerPage() {
                      <div className="flex flex-col items-center text-center gap-10">
                         <div className={`text-6xl transition-all duration-300 drop-shadow-2xl ${isDecrypted ? 'group-hover:scale-125 group-hover:rotate-12' : 'grayscale group-hover:grayscale-0'}`}>{m.emoji}</div>
                         <div className="space-y-4">
-                           <h4 className={`text-2xl font-black italic uppercase tracking-tighter leading-none ${isDecrypted ? 'text-white group-hover:text-indigo-400' : 'text-slate-400'}`}>{m.name}</h4>
-                           <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] leading-relaxed italic px-4">{m.description}</p>
+                           <h4 className={`text-2xl font-black italic uppercase tracking-tighter leading-none ${isDecrypted ? 'text-white group-hover:text-indigo-400' : 'text-slate-400'}`}>{t(`achievementsPage.milestones.${m.type}.name`)}</h4>
+                           <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] leading-relaxed italic px-4">{t(`achievementsPage.milestones.${m.type}.description`)}</p>
                         </div>
                         
                         <div className="w-full pt-8 border-t border-white/5 relative">
                            {isDecrypted && unlocked ? (
                              <div className="flex flex-col items-center gap-2">
-                                <p className="text-[10px] font-black text-indigo-400 uppercase italic tracking-[0.3em] leading-none mb-1">DECRYPTED</p>
+                                <p className="text-[10px] font-black text-indigo-400 uppercase italic tracking-[0.3em] leading-none mb-1">{t('achievementsPage.decrypted')}</p>
                                 <p className="text-[12px] font-black text-white italic tracking-tighter leading-none">{new Date(unlocked.unlockedAt).toLocaleDateString()}</p>
                              </div>
                            ) : (
                              <div className="flex flex-col items-center gap-2">
                                 <Lock size={20} className="text-slate-500 mb-1" />
-                                <p className="text-[10px] font-black text-slate-500 uppercase italic tracking-[0.3em] leading-none">LOGIC_GATED</p>
+                                <p className="text-[10px] font-black text-slate-500 uppercase italic tracking-[0.3em] leading-none">{t('achievementsPage.logicGated')}</p>
                              </div>
                            )}
                         </div>

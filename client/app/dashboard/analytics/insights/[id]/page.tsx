@@ -13,6 +13,7 @@ import { apiPost, apiGet } from '../../../../../lib/api'
 import { ErrorBoundary } from '../../../../../components/ErrorBoundary'
 import ToastContainer from '../../../../../components/ToastContainer'
 import SpectralLoader from '../../../../../components/SpectralLoader'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
 const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[4rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
@@ -30,6 +31,7 @@ interface InsightMatrix {
 export default function StrategicSynthesisHub() {
   const params = useParams()
   const router = useRouter()
+  const { t } = useTranslation()
   const [matrix, setMatrix] = useState<InsightMatrix | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -58,17 +60,17 @@ export default function StrategicSynthesisHub() {
     if (params.id) initiateScan()
   }, [params.id, initiateScan])
 
-  if (loading) return <SpectralLoader message="Synthesizing Strategic Blueprint..." subMessage="NEURAL_CORRELATION_IN_PROGRESS" />
+  if (loading) return <SpectralLoader message={t('analyticsInsightPage.loaderMessage')} subMessage={t('analyticsInsightPage.loaderSubMessage')} />
 
   if (error) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-12 text-center">
       <AlertCircle size={80} className="text-rose-500 mb-8 animate-pulse" />
-      <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-6">Link Error</h1>
+      <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-6">{t('analyticsInsightPage.linkError')}</h1>
       <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] mb-12">{error}</p>
-      <button type="button" onClick={() => router.back()} 
-        title="Return to Matrix" aria-label="Return to Matrix"
+      <button type="button" onClick={() => router.back()}
+        title={t('analyticsInsightPage.returnToMatrix')} aria-label={t('analyticsInsightPage.returnToMatrix')}
         className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all hover:bg-rose-500 hover:text-white shadow-2xl">
-        Return to Matrix
+        {t('analyticsInsightPage.returnToMatrix')}
       </button>
     </div>
   )
@@ -92,7 +94,8 @@ export default function StrategicSynthesisHub() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                title="Go Back"
+                title={t('analyticsInsightPage.goBack')}
+                aria-label={t('analyticsInsightPage.goBack')}
                 className="w-24 h-24 bg-white/5 border border-white/10 rounded-[3rem] flex items-center justify-center hover:bg-white/10 transition-all group"
               >
                 <ArrowLeft size={32} className="text-white group-hover:-translate-x-2 transition-transform" />
@@ -101,15 +104,15 @@ export default function StrategicSynthesisHub() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Zap size={16} className="text-violet-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-violet-400 italic leading-none">Scanning Engine v2.0</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-violet-400 italic leading-none">{t('analyticsInsightPage.versionLabel')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Sparkles size={12} className="text-white animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{matrix?.headline || 'MANIFESTING'}</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{matrix?.headline || t('analyticsInsightPage.manifesting')}</span>
                    </div>
                  </div>
-                 <h1 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Strategic Synthesis</h1>
-                 <p className="text-slate-400 text-[10px] sm:text-[14px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">Deep-scan complete. Heuristic optimization manifest generated.</p>
+                 <h1 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{t('analyticsInsightPage.title')}</h1>
+                 <p className="text-slate-400 text-[10px] sm:text-[14px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">{t('analyticsInsightPage.subtitle')}</p>
               </div>
            </div>
         </header>
@@ -123,8 +126,8 @@ export default function StrategicSynthesisHub() {
                  <div className="flex items-center gap-8 mb-16 relative z-10 px-8">
                     <div className="p-6 rounded-[2.5rem] bg-violet-500/5 border border-violet-500/20 shadow-2xl"><TrendingUp size={40} className="text-violet-400" /></div>
                     <div>
-                       <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Predictive ROI Projection</h3>
-                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Heuristic outcome modeling for next 30 global cycles.</p>
+                       <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">{t('analyticsInsightPage.roiTitle')}</h3>
+                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{t('analyticsInsightPage.roiSubtitle')}</p>
                     </div>
                  </div>
 
@@ -136,21 +139,21 @@ export default function StrategicSynthesisHub() {
                        <div className="text-[120px] font-black italic text-white tracking-tighter tabular-nums leading-none">
                           +{matrix?.predictiveROI || 0}%
                        </div>
-                       <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] mt-4">Growth Resonance</div>
+                       <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] mt-4">{t('analyticsInsightPage.growthResonance')}</div>
                     </motion.div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
                        <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 flex items-start gap-8 group hover:bg-white/[0.05] transition-all">
                           <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20 group-hover:scale-110 transition-transform"><Target size={32} className="text-indigo-400" /></div>
                           <div>
-                             <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-2 italic">STRATEGIC_DIRECTIVE</div>
+                             <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-2 italic">{t('analyticsInsightPage.strategicDirective')}</div>
                              <p className="text-[18px] font-black text-white italic leading-tight uppercase tracking-tight">{matrix?.specificAdvice}</p>
                           </div>
                        </div>
                        <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 flex items-start gap-8 group hover:bg-white/[0.05] transition-all">
                           <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20 group-hover:scale-110 transition-transform"><Flame size={32} className="text-rose-400" /></div>
                           <div>
-                             <div className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] mb-2 italic">KINETIC_FLOW</div>
+                             <div className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] mb-2 italic">{t('analyticsInsightPage.kineticFlow')}</div>
                              <p className="text-[18px] font-black text-white italic leading-tight uppercase tracking-tight">{matrix?.kineticResonance}</p>
                           </div>
                        </div>
@@ -167,14 +170,14 @@ export default function StrategicSynthesisHub() {
                  <div className="flex items-center gap-6 mb-16 relative z-10">
                     <div className="p-5 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/20"><Brain size={32} className="text-indigo-400" /></div>
                     <div>
-                       <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Signal Diagnostic</h3>
-                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Detected resonance gaps in content DNA.</p>
+                       <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">{t('analyticsInsightPage.signalDiagnostic')}</h3>
+                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{t('analyticsInsightPage.signalDiagnosticSubtitle')}</p>
                     </div>
                  </div>
 
                  <div className="space-y-10 flex-1 relative z-10">
                     <div className="space-y-6">
-                       <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic">Potency Score</span>
+                       <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic">{t('analyticsInsightPage.potencyScore')}</span>
                        <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
                           <motion.div 
                              initial={{ width: 0 }}
@@ -184,16 +187,16 @@ export default function StrategicSynthesisHub() {
                           />
                        </div>
                        <div className="flex justify-between items-center text-[14px] font-black text-slate-400 italic uppercase">
-                          <span>Neutral</span>
+                          <span>{t('analyticsInsightPage.neutral')}</span>
                           <span className="text-white text-3xl tracking-tighter">{matrix?.potencyScore || 0}/100</span>
-                          <span>Overdrive</span>
+                          <span>{t('analyticsInsightPage.overdrive')}</span>
                        </div>
                     </div>
 
                     <div className="space-y-6 pt-10 border-t border-white/5">
-                       <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic">Signal Gaps Detected</span>
+                       <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic">{t('analyticsInsightPage.signalGapsDetected')}</span>
                        <div className="flex flex-wrap gap-4">
-                          {(matrix?.signalGaps || ['Data Missing']).map(gap => (
+                          {(matrix?.signalGaps || [t('analyticsInsightPage.dataMissing')]).map(gap => (
                             <div key={gap} className="px-8 py-4 rounded-[2rem] bg-black/60 border border-white/10 flex items-center gap-4 group hover:border-indigo-500/40 transition-all">
                                <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,1)]" />
                                <span className="text-[14px] font-black text-white uppercase tracking-tight italic">{gap}</span>
@@ -203,12 +206,12 @@ export default function StrategicSynthesisHub() {
                     </div>
 
                     <div className="mt-12 p-8 rounded-[3rem] bg-white/[0.01] border border-white/5 space-y-4">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] italic">Manifest Platform</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] italic">{t('analyticsInsightPage.manifestPlatform')}</span>
                        <div className="flex items-center gap-6">
                           <div className={`w-14 h-14 rounded-2xl bg-black/80 border border-white/10 flex items-center justify-center text-white text-2xl uppercase font-black italic`}>
                              {matrix?.platform_context === 'tiktok' ? '♪' : matrix?.platform_context === 'instagram' ? '◈' : '▶'}
                           </div>
-                          <span className="text-[20px] font-black text-white uppercase italic tracking-widest">{matrix?.platform_context?.toUpperCase()}_SYNCED</span>
+                          <span className="text-[20px] font-black text-white uppercase italic tracking-widest">{t('analyticsInsightPage.platformSynced', { platform: matrix?.platform_context?.toUpperCase() || '' })}</span>
                        </div>
                     </div>
                  </div>
@@ -219,7 +222,7 @@ export default function StrategicSynthesisHub() {
                   className="w-full mt-16 py-8 bg-white text-black hover:bg-violet-600 hover:text-white font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-6 group relative z-10"
                  >
                     <RefreshCw size={24} className="group-hover:rotate-180 transition-transform duration-300" />
-                    RE_INITIALIZE_SCAN
+                    {t('analyticsInsightPage.reInitializeScan')}
                  </button>
               </div>
            </div>

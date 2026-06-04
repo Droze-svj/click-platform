@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 
 const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
@@ -42,6 +43,7 @@ interface QueueMetrics {
 export default function BackgroundFluxTerminalPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [userJobs, setUserJobs] = useState<{ active: Job[]; completed: Job[]; failed: Job[] }>({ active: [], completed: [], failed: [] })
   const [queueStats, setQueueStats] = useState<Record<string, QueueStats>>({})
@@ -90,7 +92,7 @@ export default function BackgroundFluxTerminalPage() {
   }, [loadLattice, autoRefresh])
 
   const handleCancel = async (id: string) => {
-    if (!confirm('CRITICAL_INTERRUPT: ABORT_ASYNCHRONOUS_RESONANCE_CYCLE?_THIS_MAY_CAUSE_BUFFER_DIFFRACTION.')) return
+    if (!confirm(t('jobsPage.cancelConfirm'))) return
     try {
       await axios.post(`${API_URL}/jobs/user/${id}/cancel`, {})
       loadLattice()
@@ -102,7 +104,7 @@ export default function BackgroundFluxTerminalPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Activity size={80} className="text-blue-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(59,130,246,0.5)]" />
-        <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Calibrating Flux Receivers...</span>
+        <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">{t('jobsPage.loading')}</span>
      </div>
   )
 
@@ -117,7 +119,7 @@ export default function BackgroundFluxTerminalPage() {
         {/* Flux Header */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
+              <button onClick={() => router.push('/dashboard')} title={t('jobsPage.abort')}
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
@@ -129,26 +131,26 @@ export default function BackgroundFluxTerminalPage() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Fingerprint size={16} className="text-blue-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-blue-400 italic leading-none">Flux Matrix v16.2.1</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-blue-400 italic leading-none">{t('jobsPage.fluxMatrix')}</span>
                    </div>
                    <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
                        <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)] animate-pulse" />
-                       <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase italic leading-none">ASYNC_THROTTLE_BYPASS_ACTIVE</span>
+                       <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase italic leading-none">{t('jobsPage.asyncThrottleBypass')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Jobs</h1>
-                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Background tasks Click is running for you — exports, transcriptions, batch posts. Watch progress, retry failed ones, cancel anything stuck.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">{t('jobsPage.title')}</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">{t('jobsPage.subtitle')}</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
-              <button type="button" onClick={loadLattice} title="Refresh job queue" aria-label="Refresh job queue" className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group active:scale-95 border-none bg-white/[0.02] shadow-2xl`}>
+              <button type="button" onClick={loadLattice} title={t('jobsPage.refreshQueue')} aria-label={t('jobsPage.refreshQueue')} className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group active:scale-95 border-none bg-white/[0.02] shadow-2xl`}>
                  <RefreshCw size={36} className={`text-slate-400 group-hover:text-blue-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
               </button>
               <button onClick={() => setAutoRefresh(!autoRefresh)} 
                 className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_150px_rgba(0,0,0,0.6)] transition-all duration-300 flex items-center gap-8 italic border-2 active:scale-95 ${autoRefresh ? 'bg-white text-black border-white' : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'}`}
               >
-                <Timer size={32} className={autoRefresh ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} /> {autoRefresh ? 'LIVE_RESONANCE_STREAM' : 'STATIC_OSCILLATION_MODE'}
+                <Timer size={32} className={autoRefresh ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} /> {autoRefresh ? t('jobsPage.liveStream') : t('jobsPage.staticMode')}
               </button>
            </div>
         </header>
@@ -156,10 +158,10 @@ export default function BackgroundFluxTerminalPage() {
         {/* Neural Flux Metrics HUD */}
         {userMetrics && (
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-             <MetricHUD title="ACCUMULATED_CYCLES" value={userMetrics.total} icon={<Layers size={40}/>} color="blue" subtitle="Total lattice executions" />
-             <MetricHUD title="SUCCESS_RESONANCE" value={`${((userMetrics.successful / Math.max(userMetrics.total, 1)) * 100).toFixed(1)}%`} icon={<ShieldCheck size={40}/>} color="emerald" subtitle="Optimal phase alignment" />
-             <MetricHUD title="FLUX_DIFFRACTIONS" value={userMetrics.failed} icon={<ShieldAlert size={40}/>} color="rose" subtitle="Anomalous termination count" />
-             <MetricHUD title="CUMULATIVE_COMPUTE" value={`$${userMetrics.totalCost.toFixed(4)}`} icon={<Zap size={40}/>} color="amber" subtitle="Resource drain coefficient" />
+             <MetricHUD title={t('jobsPage.metricAccumulatedCycles')} value={userMetrics.total} icon={<Layers size={40}/>} color="blue" subtitle={t('jobsPage.metricAccumulatedCyclesSub')} />
+             <MetricHUD title={t('jobsPage.metricSuccessResonance')} value={`${((userMetrics.successful / Math.max(userMetrics.total, 1)) * 100).toFixed(1)}%`} icon={<ShieldCheck size={40}/>} color="emerald" subtitle={t('jobsPage.metricSuccessResonanceSub')} />
+             <MetricHUD title={t('jobsPage.metricFluxDiffractions')} value={userMetrics.failed} icon={<ShieldAlert size={40}/>} color="rose" subtitle={t('jobsPage.metricFluxDiffractionsSub')} />
+             <MetricHUD title={t('jobsPage.metricCumulativeCompute')} value={`$${userMetrics.totalCost.toFixed(4)}`} icon={<Zap size={40}/>} color="amber" subtitle={t('jobsPage.metricCumulativeComputeSub')} />
           </section>
         )}
 
@@ -173,7 +175,7 @@ export default function BackgroundFluxTerminalPage() {
                        <Search className="text-slate-500 group-focus-within:text-blue-400 transition-all duration-300" size={32} />
                        <div className="w-1 h-8 bg-white/5 rounded-full" />
                     </div>
-                    <input type="text" placeholder="ENTER_ASYNC_CYCLE_SIGNATURE_QUERY..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} 
+                    <input type="text" placeholder={t('jobsPage.searchPlaceholder')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                       className="w-full bg-black/60 border-2 border-white/5 rounded-[4rem] pl-24 pr-12 py-8 text-4xl font-black text-white italic focus:outline-none focus:border-blue-500/50 transition-all duration-300 uppercase placeholder:text-slate-600 tracking-tighter" 
                     />
                  </div>
@@ -191,10 +193,10 @@ export default function BackgroundFluxTerminalPage() {
 
            {/* Active Execution Streams */}
            <div className="xl:col-span-7 space-y-16">
-              <SectionHeader title="KINETIC_FLOW_STREAMS" subtitle="Real-time asynchronous execution resonance" icon={<Zap className="text-amber-500 animate-pulse"/>} />
+              <SectionHeader title={t('jobsPage.sectionActiveTitle')} subtitle={t('jobsPage.sectionActiveSub')} icon={<Zap className="text-amber-500 animate-pulse"/>} />
               <div className="grid grid-cols-1 gap-10">
                  {userJobs.active.length === 0 ? (
-                   <EmptyHUD text="NO_KINETIC_FLUX_DETECTED_IN_SPECTRUM" icon={<Ghost size={80}/>} />
+                   <EmptyHUD text={t('jobsPage.emptyActive')} icon={<Ghost size={80}/>} />
                  ) : (
                    userJobs.active.filter(j => searchQuery === '' || j.name.toLowerCase().includes(searchQuery.toLowerCase())).map((j, idx) => (
                      <FluxCard key={j.id} job={j} onCancel={handleCancel} onView={() => setSelectedJob({ id: j.id, queue: j.queue || 'unknown' })} index={idx} />
@@ -202,10 +204,10 @@ export default function BackgroundFluxTerminalPage() {
                  )}
               </div>
 
-              <SectionHeader title="STASIS_CYCLE_ARCHIVE" subtitle="Manifested background operations historically logged" icon={<Archive className="text-emerald-500"/>} />
+              <SectionHeader title={t('jobsPage.sectionArchiveTitle')} subtitle={t('jobsPage.sectionArchiveSub')} icon={<Archive className="text-emerald-500"/>} />
               <div className="grid grid-cols-1 gap-8">
                  {userJobs.completed.length === 0 ? (
-                    <EmptyHUD text="STASIS_ARCHIVE_VACUUM" icon={<Wind size={80}/>} />
+                    <EmptyHUD text={t('jobsPage.emptyArchive')} icon={<Wind size={80}/>} />
                  ) : (
                     userJobs.completed.filter(j => searchQuery === '' || j.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 15).map((j, idx) => (
                        <FluxCard key={j.id} job={j} onCancel={handleCancel} onView={() => setSelectedJob({ id: j.id, queue: j.queue || 'unknown' })} index={idx} />
@@ -216,10 +218,10 @@ export default function BackgroundFluxTerminalPage() {
 
            {/* Diffraction Monitoring (Failures) */}
            <div className="xl:col-span-5 space-y-16">
-              <SectionHeader title="ANOMALOUS_FLUX_LOGS" subtitle="Diffracted execution intercepts requiring audit" icon={<ShieldAlert className="text-rose-500 animate-pulse"/>} />
+              <SectionHeader title={t('jobsPage.sectionFailedTitle')} subtitle={t('jobsPage.sectionFailedSub')} icon={<ShieldAlert className="text-rose-500 animate-pulse"/>} />
               <div className="grid grid-cols-1 gap-8">
                  {userJobs.failed.length === 0 ? (
-                    <EmptyHUD text="RESONANCE_INTEGRITY_MAXIMAL" icon={<Monitor size={80}/>} />
+                    <EmptyHUD text={t('jobsPage.emptyFailed')} icon={<Monitor size={80}/>} />
                  ) : (
                     userJobs.failed.filter(j => searchQuery === '' || j.name.toLowerCase().includes(searchQuery.toLowerCase())).map((j, idx) => (
                        <FluxCard key={j.id} job={j} onCancel={handleCancel} onView={() => setSelectedJob({ id: j.id, queue: j.queue || 'unknown' })} index={idx} isDiffracted />
@@ -293,6 +295,7 @@ function SectionHeader({ title, subtitle, icon }: { title: string; subtitle: str
 }
 
 function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; onCancel: (id: string) => void; onView: () => void; index: number; isDiffracted?: boolean }) {
+  const { t } = useTranslation()
   const getStatusStyle = (state: string) => {
     switch (state) {
       case 'completed': return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
@@ -314,22 +317,22 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
           <div className="flex items-center gap-10">
              <div className="relative">
                 {job.state === 'active' && <div className="absolute inset-0 bg-blue-500 blur-xl opacity-40 animate-pulse" />}
-                <span className={`px-8 py-3 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] italic border-2 relative z-10 ${getStatusStyle(job.state)}`}>{job.state.replace('_', ' ').toUpperCase()}</span>
+                <span className={`px-8 py-3 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] italic border-2 relative z-10 ${getStatusStyle(job.state)}`}>{t(`jobsPage.state_${job.state}`)}</span>
              </div>
              <div className="space-y-2">
                 <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter group-hover:text-blue-400 transition-colors duration-300 drop-shadow-2xl">{job.name}</h3>
                 <div className="flex items-center gap-4 text-slate-500">
                    <Binary size={14} className="opacity-40" />
-                   <span className="text-[10px] font-black uppercase tracking-widest italic font-mono">CYCLE::HID::{job.id.substring(0, 12).toUpperCase()}</span>
+                   <span className="text-[10px] font-black uppercase tracking-widest italic font-mono">{t('jobsPage.cycleHid', { hid: job.id.substring(0, 12).toUpperCase() })}</span>
                 </div>
              </div>
           </div>
           <div className="flex items-center gap-6">
-             {job.queue && <span className="px-6 py-2 rounded-2xl bg-black/60 border-2 border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic shadow-inner">LATTICE::{job.queue.toUpperCase()}</span>}
+             {job.queue && <span className="px-6 py-2 rounded-2xl bg-black/60 border-2 border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic shadow-inner">{t('jobsPage.latticeQueue', { queue: job.queue.toUpperCase() })}</span>}
              <div className="w-1 h-12 bg-white/5 rounded-full" />
-             <button type="button" onClick={onView} title="View job details" aria-label="View job details" className="w-16 h-16 rounded-[2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all duration-300 hover:bg-blue-600/20 active:scale-75 shadow-2xl"><Eye size={36}/></button>
+             <button type="button" onClick={onView} title={t('jobsPage.viewJobDetails')} aria-label={t('jobsPage.viewJobDetails')} className="w-16 h-16 rounded-[2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all duration-300 hover:bg-blue-600/20 active:scale-75 shadow-2xl"><Eye size={36}/></button>
              {(job.state === 'active' || job.state === 'waiting' || job.state === 'delayed') && (
-                <button type="button" onClick={() => onCancel(job.id)} title="Cancel job" aria-label="Cancel job" className="w-16 h-16 rounded-[2.2rem] bg-rose-950/20 border-2 border-rose-500/20 flex items-center justify-center text-rose-500/30 hover:text-rose-400 hover:bg-rose-500/20 transition-all duration-300 active:scale-75 shadow-2xl"><X size={36}/></button>
+                <button type="button" onClick={() => onCancel(job.id)} title={t('jobsPage.cancelJob')} aria-label={t('jobsPage.cancelJob')} className="w-16 h-16 rounded-[2.2rem] bg-rose-950/20 border-2 border-rose-500/20 flex items-center justify-center text-rose-500/30 hover:text-rose-400 hover:bg-rose-500/20 transition-all duration-300 active:scale-75 shadow-2xl"><X size={36}/></button>
              )}
           </div>
        </div>
@@ -337,7 +340,7 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
        {job.state === 'active' && (
          <div className="mb-10 px-8 relative z-10">
             <div className="flex items-center justify-between text-[14px] font-black text-blue-400 uppercase tracking-[1em] mb-6 italic">
-               <div className="flex items-center gap-4"><Scan size={20} className="animate-pulse" /> SYNCHRONIZING_FLUX_BUFFER</div>
+               <div className="flex items-center gap-4"><Scan size={20} className="animate-pulse" /> {t('jobsPage.synchronizingBuffer')}</div>
                <span className="tabular-nums">{job.progress}%</span>
             </div>
             <div className="w-full h-4 bg-black/60 rounded-full overflow-hidden border-2 border-white/5 group-hover:border-white/10 transition-colors shadow-inner p-0.5">
@@ -356,7 +359,7 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
          >
             <ShieldAlert size={28} className="text-rose-500 flex-shrink-0 mt-1" />
             <div>
-               <p className="text-[12px] font-black text-rose-500 uppercase tracking-[0.8em] italic mb-2">ANOMALY_SIGNATURE_INTERCEPTED</p>
+               <p className="text-[12px] font-black text-rose-500 uppercase tracking-[0.8em] italic mb-2">{t('jobsPage.anomalyIntercepted')}</p>
                <p className="text-[16px] font-black text-white uppercase tracking-tighter italic leading-relaxed opacity-80">{job.failedReason}</p>
             </div>
          </motion.div>
@@ -371,14 +374,14 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
              {job.processedOn && (
                <>
                  <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">PROC_TIME: {new Date(job.processedOn).toLocaleTimeString()}</span>
+                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{t('jobsPage.procTime', { time: new Date(job.processedOn).toLocaleTimeString() })}</span>
                </>
              )}
           </div>
           {job.attemptsMade > 1 && (
              <div className="flex items-center gap-4 px-6 py-2 bg-amber-500/5 border-2 border-amber-500/20 rounded-full">
                 <RefreshCw size={14} className="text-amber-500 animate-spin" style={{ animationDuration: '4s' }} />
-                <span className="text-[11px] font-black text-amber-500 uppercase tracking-widest italic">RETRY_THRESHOLD_CYCLE_0{job.attemptsMade}</span>
+                <span className="text-[11px] font-black text-amber-500 uppercase tracking-widest italic">{t('jobsPage.retryThreshold', { attempts: job.attemptsMade })}</span>
              </div>
           )}
        </footer>
