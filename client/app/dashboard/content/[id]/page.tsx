@@ -13,7 +13,7 @@ import { apiGet, apiPost, API_URL } from '../../../../lib/api'
 import {
   Sparkles, ArrowLeft, Send, Copy, Check, Hash, Zap,
   ChevronRight, RefreshCw, ArrowUpRight, Layers, AlertCircle,
-  CheckCircle, Radio, Cpu, Activity, Shield, Globe, Target, Flame, Terminal, X,
+  CheckCircle, Radio, Cpu, Shield, Globe, Target, Flame, Terminal, X,
   LayoutGrid, LayoutList, FileText, Share2, Network, Gauge, Compass,
   Monitor, Boxes, Command, CircuitBoard, ActivitySquare, Database, Link2,
   Box, Fingerprint, History, MessageSquare, BarChart3, Languages, Star,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../../components/ToastContainer'
+import { ContentSkeleton } from '../../../../components/LoadingSkeleton'
 
 // Lazy load heavy components
 const VersionHistory = lazy(() => import('../../../../components/VersionHistory'))
@@ -175,9 +176,8 @@ export default function ContentDetailPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)]">
-      <Activity size={80} className="text-indigo-500 animate-pulse mb-8" />
-      <span className="text-[14px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Scanning Neural Patterns...</span>
+    <div className="min-h-screen bg-[var(--page-bg)] px-4 sm:px-6 lg:px-12 pt-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label="Loading">
+      <ContentSkeleton />
     </div>
   )
 

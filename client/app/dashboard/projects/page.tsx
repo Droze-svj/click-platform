@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  FolderKanban, Plus, ChevronRight, Target, GitBranch, BarChart3, 
+  FolderKanban, Plus, ChevronRight, Target, BarChart3,
   RefreshCw, Activity, CheckCircle2, Circle, Shield, Zap, Box, 
   Layout, Layers, Search, Settings2, FileText, Pencil, Link2, 
   Clock, ArrowUpRight, ArrowLeft, Terminal, Cpu, Database, 
@@ -19,6 +19,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -200,9 +201,13 @@ export default function ProjectsPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
-        <GitBranch size={80} className="text-primary-500 animate-spin mb-12" />
-        <span className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Syncing Lattice...</span>
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1700px] mx-auto space-y-12" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <div className="space-y-3">
+           {Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)}
+        </div>
      </div>
   )
 

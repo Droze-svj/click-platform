@@ -15,7 +15,7 @@ import {
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 import { API_URL } from '../../../lib/api'
-import ClickLoadingState from '@/components/click/ClickLoadingState'
+import { CardSkeleton } from '../../../components/LoadingSkeleton'
 
 interface ScheduledPost {
   _id: string
@@ -119,8 +119,10 @@ export default function ContentCalendarPage() {
   }
 
   if (loading) return (
-     <div className="flex items-center justify-center py-48 min-h-screen bg-surface-50 dark:bg-surface-950 relative z-10">
-        <ClickLoadingState intent="loading" />
+     <div className="min-h-screen bg-surface-50 dark:bg-surface-950 relative z-10 px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
      </div>
   )
 

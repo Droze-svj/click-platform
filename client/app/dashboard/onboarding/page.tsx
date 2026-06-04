@@ -10,6 +10,7 @@ import {
   Plug, Video, Calendar, Users, Palette, FileText, Hammer
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { ListItemSkeleton } from '../../../components/LoadingSkeleton'
 import { apiGet, apiPost, apiPut } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
@@ -147,12 +148,10 @@ export default function OnboardingPage() {
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-[var(--page-bg)] min-h-screen gap-10 backdrop-blur-3xl">
-      <div className="relative">
-        <div className="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 animate-pulse" />
-        <Compass size={80} className="text-emerald-500 animate-spin relative z-10" />
+    <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1400px] mx-auto space-y-16 bg-[var(--page-bg)]" aria-busy="true" aria-label="Loading">
+      <div className="space-y-3">
+        {Array.from({ length: 6 }).map((_, i) => <ListItemSkeleton key={i} />)}
       </div>
-      <p className="text-[12px] font-black text-emerald-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Loading Activation Sequence...</p>
     </div>
   )
 

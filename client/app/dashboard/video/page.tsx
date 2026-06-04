@@ -155,9 +155,9 @@ export default function VideoStudioPage() {
         removeFingerprintOnSuccess: true,
         metadata: { filename: file.name, filetype: file.type, title: file.name.replace(/\.[^.]+$/, '') },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
-        onError: (err) => reject(err),
-        onProgress: (sent, total) => { if (total) setPageDropProgress(Math.round((sent / total) * 100)) },
-        onAfterResponse: (_req, res) => {
+        onError: (err: Error) => reject(err),
+        onProgress: (sent: number, total: number) => { if (total) setPageDropProgress(Math.round((sent / total) * 100)) },
+        onAfterResponse: (_req: any, res: any) => {
           try { const id = res.getHeader('X-Content-Id'); if (id) contentId = id } catch { /* header optional */ }
         },
         onSuccess: () => resolve({ data: { contentId } }),

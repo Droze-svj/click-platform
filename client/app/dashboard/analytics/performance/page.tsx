@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { apiGet } from '../../../../lib/api'
 import { useAuth } from '../../../../hooks/useAuth'
-import SpectralLoader from '../../../../components/SpectralLoader'
+import { StatsCardSkeleton, ContentSkeleton } from '../../../../components/LoadingSkeleton'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 
@@ -79,7 +79,14 @@ export default function FluxForecastingMatrixPage() {
     }), { views: 0, engage: 0, posts: 0 })
   }
 
-  if (loading) return <SpectralLoader message="DECIPHERING_FLUX_TRAJECTORIES..." />;
+  if (loading) return (
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <ContentSkeleton />
+     </div>
+  );
 
   const stats = getTotalResonance()
   const engageRate = stats.views > 0 ? (stats.engage / stats.views * 100).toFixed(1) : '0'

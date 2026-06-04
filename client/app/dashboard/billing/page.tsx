@@ -9,11 +9,11 @@ import {
   Database, Video, FileText, Calendar, Clock, RefreshCw, Download
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
 import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
-import ClickLoadingState from '@/components/click/ClickLoadingState'
 import { PLANS, buildCheckoutTarget, type BillingPeriod, type Plan as CanonicalPlan } from '../../../lib/plans'
 
 interface UsageRecord {
@@ -114,8 +114,13 @@ export default function BillingPage() {
   ]
 
   if (loading) return (
-    <div className="flex items-center justify-center py-24 bg-surface-page min-h-screen transition-colors duration-500">
-      <ClickLoadingState intent="loading" />
+    <div className="min-h-screen relative z-10 pb-32 px-4 sm:px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label="Loading">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
+      </div>
     </div>
   )
 
