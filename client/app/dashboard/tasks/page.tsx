@@ -22,6 +22,7 @@ import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/Loading
 import ToastContainer from '../../../components/ToastContainer'
 import { useTheme } from '../../../components/ThemeProvider'
 import { useToast } from '../../../contexts/ToastContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -62,6 +63,7 @@ export default function TasksPage() {
   const { socket, connected, on, off } = useSocket(user?.id ?? null)
   const { resolvedTheme } = useTheme()
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -98,30 +100,30 @@ export default function TasksPage() {
   }, [socket, on, off, loadTasks])
 
   const createTask = async (parentId?: string | null) => {
-    const title = newTitle.trim() || 'New Task'
+    const title = newTitle.trim() || t('tasksPage.defaultTaskTitle')
     try {
       await apiPost('/tasks', { title, parentId: parentId || undefined, status: parentId ? undefined : 'todo' })
       setNewTitle(''); setAddingForParent(null); loadTasks()
     } catch {
-      showToast('Failed to create task — please try again.', 'error')
+      showToast(t('tasksPage.toastCreateFailed'), 'error')
     }
   }
 
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
     try { await apiPut(`/tasks/${taskId}`, updates); loadTasks() } catch {
-      showToast('Failed to update task — change was not saved.', 'error')
+      showToast(t('tasksPage.toastUpdateFailed'), 'error')
     }
   }
 
   const deleteTask = async (taskId: string) => {
-    if (!confirm('Are you sure you want to delete this task? This cannot be undone.')) return
+    if (!confirm(t('tasksPage.deleteConfirm'))) return
     try { await apiDelete(`/tasks/${taskId}`); setSelectedTask(null); loadTasks() } catch {
-      showToast('Failed to delete task — please try again.', 'error')
+      showToast(t('tasksPage.toastDeleteFailed'), 'error')
     }
   }
 
   if (loading) return (
-     <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label={t('tasksPage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -142,7 +144,7 @@ export default function TasksPage() {
         {/* Header */}
         <header className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-surface-200 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-5 w-full md:w-auto min-w-0">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-12 h-12 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm">
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('tasksPage.backToDashboard')} aria-label={t('tasksPage.backToDashboard')} className="w-12 h-12 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm">
                 <ArrowLeft size={20} />
               </button>
               <div className="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center shadow-sm flex-shrink-0">
@@ -151,23 +153,23 @@ export default function TasksPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-3 mb-1 flex-wrap">
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                      Workflow Hub
+                      {t('tasksPage.workflowHub')}
                     </span>
                     <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1.5 ${connected ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'}`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
-                        {connected ? 'STABLE' : 'DISCONNECTED'}
+                        {connected ? t('tasksPage.statusStable') : t('tasksPage.statusDisconnected')}
                     </div>
                  </div>
-                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight mt-2 truncate text-surface-900 dark:text-white uppercase italic">Tasks</h1>
+                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight mt-2 truncate text-surface-900 dark:text-white uppercase italic">{t('tasksPage.title')}</h1>
               </div>
            </div>
 
            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
               <div className="flex items-center p-1.5 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 shadow-sm">
                  {[
-                   { id: 'list', icon: LayoutList, label: 'List' },
-                   { id: 'kanban', icon: LayoutGrid, label: 'Kanban' },
-                   { id: 'gantt', icon: BarChart3, label: 'Timeline' }
+                   { id: 'list', icon: LayoutList, label: t('tasksPage.viewList') },
+                   { id: 'kanban', icon: LayoutGrid, label: t('tasksPage.viewKanban') },
+                   { id: 'gantt', icon: BarChart3, label: t('tasksPage.viewTimeline') }
                  ].map(m => (
                    <button type="button" key={m.id} onClick={() => setView(m.id as ViewMode)}
                      className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${view === m.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 shadow-md scale-105' : 'text-surface-500 hover:text-surface-900 dark:hover:text-surface-100'}`}
@@ -181,10 +183,10 @@ export default function TasksPage() {
                 className={`flex items-center gap-2 px-5 py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${sortByUrgency ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50 scale-105' : 'bg-surface-card border-surface-200 dark:border-surface-800 text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800'}`}
               >
                  <Zap size={16} className={sortByUrgency ? 'animate-pulse' : ''} />
-                 <span>Urgency Sort</span>
+                 <span>{t('tasksPage.urgencySort')}</span>
               </button>
 
-              <button type="button" onClick={loadTasks} title="Refresh Tasks" aria-label="Refresh Tasks" className="w-12 h-12 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 flex items-center justify-center hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-90 border-none">
+              <button type="button" onClick={loadTasks} title={t('tasksPage.refreshTasks')} aria-label={t('tasksPage.refreshTasks')} className="w-12 h-12 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 flex items-center justify-center hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-90 border-none">
                 <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
               </button>
            </div>
@@ -196,7 +198,7 @@ export default function TasksPage() {
              <div key={s} className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 p-6 rounded-[2rem] shadow-xl relative overflow-hidden group hover:border-primary-500/40 transition-all duration-500">
                 <div className="flex items-center gap-3 mb-4">
                    <div className={`w-2 h-2 rounded-full ${s === 'done' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`} />
-                   <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] italic">{STATUS_LABELS[s]}</p>
+                   <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] italic">{t(`tasksPage.statusLabels.${s}`)}</p>
                 </div>
                 <div className="flex items-end justify-between">
                    <h4 className="text-4xl font-black text-surface-900 dark:text-white tracking-tight italic">{byStatus(s).length}</h4>
@@ -224,7 +226,7 @@ export default function TasksPage() {
                            <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
                                  <div className={`w-3 h-3 rounded-full ${s === 'done' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`} />
-                                 <h3 className="text-xs font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic">{STATUS_LABELS[s]}</h3>
+                                 <h3 className="text-xs font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic">{t(`tasksPage.statusLabels.${s}`)}</h3>
                               </div>
                               <span className="px-3 py-1 rounded-lg bg-surface-page dark:bg-surface-900 border border-surface-100 dark:border-surface-800 text-[11px] font-black text-surface-500 dark:text-surface-400 tabular-nums shadow-inner">{byStatus(s).length}</span>
                            </div>
@@ -236,7 +238,7 @@ export default function TasksPage() {
                            {byStatus(s).length === 0 && (
                              <div className="h-full flex flex-col items-center justify-center py-32 opacity-10">
                                <Ghost size={64} className="mb-6" />
-                               <p className="text-xs font-black uppercase tracking-[0.4em] italic">Empty Node</p>
+                               <p className="text-xs font-black uppercase tracking-[0.4em] italic">{t('tasksPage.emptyNode')}</p>
                              </div>
                            )}
                         </div>
@@ -249,9 +251,9 @@ export default function TasksPage() {
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3rem] p-8 shadow-2xl transition-all duration-500">
                    <header className="hidden md:flex items-center gap-8 px-6 py-4 mb-6 border-b border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic">
                       <div className="w-10" />
-                      <div className="flex-1">Task Matrix Mapping</div>
-                      <div className="w-48">Temporal Limit</div>
-                      <div className="w-48 text-right">Operational Actions</div>
+                      <div className="flex-1">{t('tasksPage.colTaskMatrix')}</div>
+                      <div className="w-48">{t('tasksPage.colTemporalLimit')}</div>
+                      <div className="w-48 text-right">{t('tasksPage.colActions')}</div>
                    </header>
                    <div className="space-y-3 max-h-[800px] overflow-y-auto pr-4 custom-scrollbar">
                       {rootNodes.map(task => (
@@ -260,7 +262,7 @@ export default function TasksPage() {
                       {rootNodes.length === 0 && (
                         <div className="py-48 text-center opacity-10 flex flex-col items-center gap-8">
                           <Wind size={80} />
-                          <h3 className="text-4xl font-black uppercase italic tracking-[0.2em]">Null Archive</h3>
+                          <h3 className="text-4xl font-black uppercase italic tracking-[0.2em]">{t('tasksPage.nullArchive')}</h3>
                         </div>
                       )}
                    </div>
@@ -271,14 +273,14 @@ export default function TasksPage() {
                 <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3rem] p-10 shadow-2xl overflow-x-auto transition-all duration-500">
                    <div className="min-w-[1400px] space-y-10">
                       <header className="flex items-center gap-10 mb-10 border-b border-surface-100 dark:border-surface-800 pb-8 px-6">
-                         <div className="w-96 text-xs font-black text-surface-400 uppercase tracking-[0.4em] italic">Lattice Anchor Node</div>
+                         <div className="w-96 text-xs font-black text-surface-400 uppercase tracking-[0.4em] italic">{t('tasksPage.latticeAnchorNode')}</div>
                          <div className="flex-1 flex justify-between text-[11px] font-black text-surface-300 dark:text-surface-500 uppercase tracking-[0.6em] italic px-16 relative">
-                            <span>PAST_STRATA</span>
+                            <span>{t('tasksPage.pastStrata')}</span>
                             <div className="flex flex-col items-center relative z-10">
                                <div className="w-0.5 h-10 bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,1)]" />
-                               <span className="mt-2 text-primary-500 font-black tracking-widest scale-110">PRESENT_PULSE</span>
+                               <span className="mt-2 text-primary-500 font-black tracking-widest scale-110">{t('tasksPage.presentPulse')}</span>
                             </div>
-                            <span>FUTURE_TRAJECTORY</span>
+                            <span>{t('tasksPage.futureTrajectory')}</span>
                             <div className="absolute top-5 left-0 right-0 h-px bg-surface-100 dark:bg-surface-800/50 -z-0" />
                          </div>
                       </header>
@@ -318,7 +320,7 @@ export default function TasksPage() {
               </div>
               <div className="flex-1 relative">
                  <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && createTask(addingForParent)} 
-                   placeholder={addingForParent ? `Inject sub-particle to lattice node...` : 'Initialize new task particle...'} 
+                   placeholder={addingForParent ? t('tasksPage.placeholderSubParticle') : t('tasksPage.placeholderNewParticle')}
                    className="w-full bg-transparent border-none focus:ring-0 text-xl font-black text-surface-900 dark:text-white placeholder:text-surface-400 italic uppercase tracking-tighter py-3" 
                  />
               </div>
@@ -326,10 +328,10 @@ export default function TasksPage() {
                  <button type="button" onClick={() => createTask(addingForParent)} 
                     className="px-8 py-4 bg-surface-900 dark:bg-white text-white dark:text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-95 border-none"
                  >
-                    INITIALIZE
+                    {t('tasksPage.initialize')}
                  </button>
                  {addingForParent && (
-                    <button type="button" onClick={() => setAddingForParent(null)} aria-label="Cancel new task" title="Cancel new task" className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center border border-rose-500/20 active:scale-90">
+                    <button type="button" onClick={() => setAddingForParent(null)} aria-label={t('tasksPage.cancelNewTask')} title={t('tasksPage.cancelNewTask')} className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center border border-rose-500/20 active:scale-90">
                        <X size={20}/>
                     </button>
                  )}
@@ -356,6 +358,7 @@ export default function TasksPage() {
 }
 
 function TaskCard({ task, onSelect, onDragStart }: any) {
+  const { t } = useTranslation()
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date()
   const priorityColors: Record<string, string> = {
     urgent: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50',
@@ -374,7 +377,7 @@ function TaskCard({ task, onSelect, onDragStart }: any) {
       <div className="flex justify-between items-start mb-6 relative z-10">
          <div className="flex-1 mr-4">
             <h4 className="text-[15px] font-black text-surface-900 dark:text-white group-hover:text-primary-500 transition-all leading-tight mb-2 italic uppercase tracking-tight">{task.title}</h4>
-            <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest bg-surface-page dark:bg-surface-950 px-2 py-0.5 rounded-md shadow-inner">ID: {task._id.slice(-6).toUpperCase()}</span>
+            <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest bg-surface-page dark:bg-surface-950 px-2 py-0.5 rounded-md shadow-inner">{t('tasksPage.taskIdLabel', { id: task._id.slice(-6).toUpperCase() })}</span>
          </div>
          {task.urgencyScore != null && (
            <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 shadow-sm">
@@ -386,10 +389,10 @@ function TaskCard({ task, onSelect, onDragStart }: any) {
 
       <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-surface-100 dark:border-surface-800 relative z-10">
          <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border flex items-center gap-2 shadow-inner transition-all ${isOverdue ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50' : 'bg-surface-page text-surface-500 border-surface-200 dark:bg-surface-800/50 dark:border-surface-700/50'}`}>
-            <Clock size={12} className={isOverdue ? 'animate-pulse' : ''} /> {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'NO_DEADLINE'}
+            <Clock size={12} className={isOverdue ? 'animate-pulse' : ''} /> {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : t('tasksPage.noDeadline')}
          </div>
          <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shadow-inner transition-all ${priorityColors[task.priority]}`}>
-            {PRIORITY_LABELS[task.priority]}
+            {t(`tasksPage.priorityLabels.${task.priority}`)}
          </div>
       </div>
     </motion.div>
@@ -397,6 +400,7 @@ function TaskCard({ task, onSelect, onDragStart }: any) {
 }
 
 function TaskRow({ task, expanded, expandedTasks, expandToggle, onSelect, onAddSub, onDelete, getSubtasks, depth }: any) {
+  const { t } = useTranslation()
   const sub = getSubtasks(task._id), hasSub = sub.length > 0
   return (
     <section>
@@ -416,8 +420,8 @@ function TaskRow({ task, expanded, expandedTasks, expandToggle, onSelect, onAddS
         <div className="flex items-center gap-6 opacity-0 group-hover:opacity-100 transition-all duration-500">
            {task.dueDate && <div className="flex items-center gap-2 text-[10px] font-black text-surface-400 uppercase tracking-widest italic leading-none"><Clock size={14} className="text-primary-500" /> {new Date(task.dueDate).toLocaleDateString()}</div>}
            <div className="flex items-center gap-3">
-              <button type="button" onClick={() => onAddSub(task._id)} aria-label="Add subtask" title="Add subtask" className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500/40 transition-all shadow-lg active:scale-90"><Plus size={18} /></button>
-              <button type="button" onClick={() => onDelete(task._id)} aria-label="Delete task" title="Delete task" className="w-10 h-10 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-lg active:scale-90"><Trash2 size={18} /></button>
+              <button type="button" onClick={() => onAddSub(task._id)} aria-label={t('tasksPage.addSubtask')} title={t('tasksPage.addSubtask')} className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500/40 transition-all shadow-lg active:scale-90"><Plus size={18} /></button>
+              <button type="button" onClick={() => onDelete(task._id)} aria-label={t('tasksPage.deleteTask')} title={t('tasksPage.deleteTask')} className="w-10 h-10 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-lg active:scale-90"><Trash2 size={18} /></button>
            </div>
         </div>
       </motion.div>
@@ -434,6 +438,7 @@ function TaskRow({ task, expanded, expandedTasks, expandToggle, onSelect, onAddS
 
 function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, socket, userId }: any) {
   const { showToast: modalToast } = useToast()
+  const { t } = useTranslation()
   const sub = getSubtasks(task._id), [msg, setMsg] = useState(''), [messages, setMessages] = useState<TaskMessage[]>([]), chatEndRef = useRef<any>(null), [busy, setBusy] = useState(false)
 
   const fetchMessages = useCallback(async () => { try { const res: any = await apiGet(`/tasks/${task._id}/messages`); setMessages(res?.data?.messages ?? []) } catch { /* silent — messages are non-critical */ } }, [task._id])
@@ -444,7 +449,7 @@ function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, s
     const b = msg.trim(); if (!b || busy) return;
     setBusy(true); setMsg('');
     try { await apiPost(`/tasks/${task._id}/messages`, { body: b }); fetchMessages() } catch {
-      modalToast('Message failed to send — please try again.', 'error')
+      modalToast(t('tasksPage.toastMessageFailed'), 'error')
     }
     finally { setBusy(false) }
   }
@@ -461,57 +466,57 @@ function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, s
                   <Target size={32} className="text-primary-500" />
                </div>
                <div>
-                  <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-2">Task Protocol</h2>
+                  <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-2">{t('tasksPage.taskProtocol')}</h2>
                   <div className="flex items-center gap-3">
-                     <span className="text-[11px] font-black text-primary-500 uppercase tracking-widest bg-primary-500/10 px-3 py-1 rounded-xl border border-primary-500/20 shadow-inner">UID: {task._id.toUpperCase()}</span>
+                     <span className="text-[11px] font-black text-primary-500 uppercase tracking-widest bg-primary-500/10 px-3 py-1 rounded-xl border border-primary-500/20 shadow-inner">{t('tasksPage.uidLabel', { id: task._id.toUpperCase() })}</span>
                   </div>
                </div>
             </div>
-            <button type="button" onClick={onClose} aria-label="Close task modal" title="Close task modal" className="w-12 h-12 rounded-2xl bg-surface-page dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90"><X size={24} /></button>
+            <button type="button" onClick={onClose} aria-label={t('tasksPage.closeModal')} title={t('tasksPage.closeModal')} className="w-12 h-12 rounded-2xl bg-surface-page dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90"><X size={24} /></button>
          </header>
 
          <main className="space-y-12">
             <div className="space-y-4">
-               <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Operational Descriptor</label>
+               <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.operationalDescriptor')}</label>
                <input type="text" defaultValue={task.title} onBlur={e => e.target.value !== task.title && onUpdate({ title: e.target.value })}
-                 aria-label="Task title"
-                 title="Task title"
-                 placeholder="Task title"
+                 aria-label={t('tasksPage.taskTitle')}
+                 title={t('tasksPage.taskTitle')}
+                 placeholder={t('tasksPage.taskTitle')}
                  className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-5 text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                />
             </div>
 
             <div className="space-y-4">
-               <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Intelligence Brief</label>
-               <textarea defaultValue={task.description} onBlur={e => e.target.value !== task.description && onUpdate({ description: e.target.value })} rows={5} 
-                 className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-8 py-6 text-[15px] font-extrabold text-surface-600 dark:text-slate-300 focus:border-primary-500 outline-none transition-all shadow-inner custom-scrollbar italic uppercase tracking-tight backdrop-blur-xl" 
-                 placeholder="INITIALIZE_MISSION_PARAMETERS..." 
+               <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.intelligenceBrief')}</label>
+               <textarea defaultValue={task.description} onBlur={e => e.target.value !== task.description && onUpdate({ description: e.target.value })} rows={5}
+                 className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-8 py-6 text-[15px] font-extrabold text-surface-600 dark:text-slate-300 focus:border-primary-500 outline-none transition-all shadow-inner custom-scrollbar italic uppercase tracking-tight backdrop-blur-xl"
+                 placeholder={t('tasksPage.briefPlaceholder')}
                />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                <div className="space-y-4">
-                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">System Status</label>
+                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.systemStatus')}</label>
                   <div className="relative group">
                      <select value={task.status} onChange={e => onUpdate({ status: e.target.value })}
-                       aria-label="Task status"
-                       title="Task status"
+                       aria-label={t('tasksPage.taskStatus')}
+                       title={t('tasksPage.taskStatus')}
                        className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-4 text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-xl group-hover:bg-surface-card transition-all"
                      >
-                        {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s].toUpperCase()}</option>)}
+                        {STATUSES.map(s => <option key={s} value={s}>{t(`tasksPage.statusLabels.${s}`).toUpperCase()}</option>)}
                      </select>
                      <ChevronDown size={20} className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400 group-hover:text-primary-500 transition-colors" />
                   </div>
                </div>
                <div className="space-y-4">
-                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Operational Urgency</label>
+                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.operationalUrgency')}</label>
                   <div className="relative group">
                      <select value={task.priority} onChange={e => onUpdate({ priority: e.target.value })}
-                       aria-label="Task priority"
-                       title="Task priority"
+                       aria-label={t('tasksPage.taskPriority')}
+                       title={t('tasksPage.taskPriority')}
                        className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-4 text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-xl group-hover:bg-surface-card transition-all"
                      >
-                        {PRIORITIES.map(p => <option key={p} value={p}>{PRIORITY_LABELS[p].toUpperCase()}</option>)}
+                        {PRIORITIES.map(p => <option key={p} value={p}>{t(`tasksPage.priorityLabels.${p}`).toUpperCase()}</option>)}
                      </select>
                      <ChevronDown size={20} className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400 group-hover:text-primary-500 transition-colors" />
                   </div>
@@ -523,10 +528,10 @@ function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, s
                <div className="flex flex-col sm:flex-row items-center justify-between px-2 gap-4">
                   <div className="flex items-center gap-4">
                      <div className="w-12 h-12 rounded-2xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 flex items-center justify-center shadow-inner"><MessageSquare size={22} className="text-surface-400" /></div>
-                     <h3 className="text-sm font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">Team Uplink Matrix</h3>
+                     <h3 className="text-sm font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">{t('tasksPage.teamUplinkMatrix')}</h3>
                   </div>
                   <div className="flex items-center gap-3 text-[10px] font-black text-primary-500 uppercase tracking-[0.3em] bg-primary-500/10 px-4 py-2 rounded-full border border-primary-500/20 italic shadow-sm">
-                     <Radio size={14} className="animate-pulse" /> FORGE_SYNC_ACTIVE
+                     <Radio size={14} className="animate-pulse" /> {t('tasksPage.forgeSyncActive')}
                   </div>
                </div>
                
@@ -534,13 +539,13 @@ function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, s
                   {messages.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center opacity-10 gap-8">
                        <Ghost size={100} />
-                       <p className="text-xl font-black uppercase tracking-[1em] italic">Null Channel</p>
+                       <p className="text-xl font-black uppercase tracking-[1em] italic">{t('tasksPage.nullChannel')}</p>
                     </div>
                   )}
                   {messages.map((m, i) => (
                     <div key={i} className={`flex flex-col gap-2 ${m.userId === userId ? 'items-end' : 'items-start'}`}>
                        <div className="flex items-center gap-4 px-4">
-                          <span className={`text-[10px] font-black uppercase tracking-[0.4em] italic ${m.userId === userId ? 'text-primary-500' : 'text-surface-400'}`}>{m.userId === userId ? 'USER_PROXIMITY' : 'TEAM_UPLINK'}</span>
+                          <span className={`text-[10px] font-black uppercase tracking-[0.4em] italic ${m.userId === userId ? 'text-primary-500' : 'text-surface-400'}`}>{m.userId === userId ? t('tasksPage.userProximity') : t('tasksPage.teamUplink')}</span>
                           <span className="text-[9px] font-black text-surface-300 dark:text-slate-600 uppercase italic tabular-nums">{new Date(m.createdAt).toLocaleTimeString()}</span>
                        </div>
                        <div className={`max-w-[85%] p-6 rounded-[2.5rem] text-[15px] font-extrabold italic uppercase tracking-tight shadow-xl ${m.userId === userId ? 'bg-primary-600 text-white rounded-tr-none border border-primary-500' : 'bg-surface-card border-2 border-surface-200 dark:border-surface-800 text-surface-900 dark:text-white rounded-tl-none'}`}>
@@ -552,22 +557,22 @@ function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, s
                </div>
 
                <div className="flex gap-4 p-3 bg-surface-card border-2 border-surface-200 dark:border-surface-800 rounded-[2.5rem] focus-within:border-primary-500/50 shadow-2xl transition-all duration-500 group/chat">
-                  <input type="text" value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} 
-                    placeholder="Infect the channel with logic..." 
+                  <input type="text" value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                    placeholder={t('tasksPage.chatPlaceholder')}
                     className="flex-1 bg-transparent border-none focus:ring-0 px-6 text-[15px] font-black text-surface-900 dark:text-white uppercase italic tracking-tighter h-14" 
                   />
                   <button type="button" onClick={handleSendMessage} disabled={busy}
                     className="px-10 py-4 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[1.8rem] text-[11px] font-black uppercase tracking-[0.4em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-95 h-14 border-none"
                   >
-                    {busy ? 'Refreshing…' : 'TRANSMIT'}
+                    {busy ? t('tasksPage.transmitting') : t('tasksPage.transmit')}
                   </button>
                </div>
             </section>
 
             <footer className="flex flex-col sm:flex-row items-center justify-between gap-8 pt-16 border-t-2 border-surface-100 dark:border-surface-800 pb-4">
-               <button type="button" onClick={onDelete} className="text-xs font-black text-rose-500 hover:text-rose-600 uppercase tracking-[0.6em] italic transition-all hover:scale-110 active:scale-90 border-none bg-transparent">TERMINATE_PROTOCOL</button>
+               <button type="button" onClick={onDelete} className="text-xs font-black text-rose-500 hover:text-rose-600 uppercase tracking-[0.6em] italic transition-all hover:scale-110 active:scale-90 border-none bg-transparent">{t('tasksPage.terminateProtocol')}</button>
                <button type="button" onClick={onClose} className="px-16 py-6 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-xs font-black uppercase tracking-[0.8em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all duration-300 border-none">
-                  SECURE_&_LEAVE
+                  {t('tasksPage.secureAndLeave')}
                </button>
             </footer>
          </main>

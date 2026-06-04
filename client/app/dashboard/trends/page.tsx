@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 type TrendCategory = 'hooks' | 'sounds' | 'formats' | 'hashtags'
 
@@ -52,6 +53,7 @@ export default function TrendsPage() {
   const [selectedPlatform, setSelectedPlatform] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const filtered = useMemo(() => {
     return SAMPLE_TRENDS.filter(t => {
@@ -81,7 +83,7 @@ export default function TrendsPage() {
         <header className="mb-16">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-10 border-b border-white/5 relative z-50">
              <div className="flex items-center gap-6 w-full lg:w-auto min-w-0">
-                <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-sm active:scale-90 group">
+                <button type="button" onClick={() => router.push('/dashboard')} title={t('trendsPage.backToDashboard')} aria-label={t('trendsPage.backToDashboard')} className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-sm active:scale-90 group">
                   <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
                 <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -90,14 +92,14 @@ export default function TrendsPage() {
                 <div className="flex-1 min-w-0">
                    <div className="flex items-center gap-4 mb-2 flex-wrap">
                       <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-900/50 text-primary-400 uppercase tracking-[0.2em] border border-primary-800 italic leading-none">
-                        Live Intelligence
+                        {t('trendsPage.liveIntelligence')}
                       </span>
                       <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/10 text-[10px] font-black italic shadow-inner">
                           <ActivitySquare size={12} className="text-primary-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                          RADAR_SYNC_ACTIVE
+                          {t('trendsPage.radarSyncActive')}
                       </div>
                    </div>
-                   <h1 className="text-3xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Neural Radar</h1>
+                   <h1 className="text-3xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('trendsPage.title')}</h1>
                 </div>
              </div>
           </div>
@@ -105,22 +107,21 @@ export default function TrendsPage() {
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mt-12 relative z-10">
             <div className="max-w-2xl">
               <p className="text-lg text-slate-400 font-medium leading-relaxed italic uppercase tracking-tight">
-                Autonomous trend detection synthesized from 400M+ data points across the creator economy. 
-                Identify viral patterns before they peak.
+                {t('trendsPage.intro')}
               </p>
             </div>
             
             <div className="flex items-center gap-4 p-2 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-inner">
-              {['24H', '7D', '30D'].map((t) => (
+              {['24H', '7D', '30D'].map((range) => (
                 <button
-                  key={t}
-                  title={`View trends for ${t}`}
-                  aria-label={`View trends for ${t}`}
+                  key={range}
+                  title={t('trendsPage.viewTrendsForRange', { range })}
+                  aria-label={t('trendsPage.viewTrendsForRange', { range })}
                   className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${
-                    t === '24H' ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-500 hover:text-white'
+                    range === '24H' ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-500 hover:text-white'
                   }`}
                 >
-                  {t}
+                  {range}
                 </button>
               ))}
             </div>
@@ -135,9 +136,9 @@ export default function TrendsPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary-500 transition-colors" />
               <input
                 type="text"
-                title="Search trends"
-                aria-label="Search trends"
-                placeholder="Search trends..."
+                title={t('trendsPage.searchTrends')}
+                aria-label={t('trendsPage.searchTrends')}
+                placeholder={t('trendsPage.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium outline-none focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 transition-all placeholder:text-slate-600"
@@ -148,16 +149,16 @@ export default function TrendsPage() {
             <div className="relative group">
               <select 
                 value={selectedCategory}
-                title="Filter by Category"
-                aria-label="Filter by Category"
+                title={t('trendsPage.filterByCategory')}
+                aria-label={t('trendsPage.filterByCategory')}
                 onChange={(e) => setSelectedCategory(e.target.value as any)}
                 className="w-full appearance-none bg-black/40 border border-white/10 rounded-xl py-3.5 px-4 text-sm font-bold outline-none focus:border-primary-500/50 transition-all cursor-pointer"
               >
-                <option value="all">All Categories</option>
-                <option value="hooks">Hooks</option>
-                <option value="sounds">Sounds</option>
-                <option value="formats">Formats</option>
-                <option value="hashtags">Hashtags</option>
+                <option value="all">{t('trendsPage.allCategories')}</option>
+                <option value="hooks">{t('trendsPage.categoryHooks')}</option>
+                <option value="sounds">{t('trendsPage.categorySounds')}</option>
+                <option value="formats">{t('trendsPage.categoryFormats')}</option>
+                <option value="hashtags">{t('trendsPage.categoryHashtags')}</option>
               </select>
               <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none rotate-90" />
             </div>
@@ -166,12 +167,12 @@ export default function TrendsPage() {
             <div className="relative group">
               <select 
                 value={selectedNiche}
-                title="Filter by Niche"
-                aria-label="Filter by Niche"
+                title={t('trendsPage.filterByNiche')}
+                aria-label={t('trendsPage.filterByNiche')}
                 onChange={(e) => setSelectedNiche(e.target.value)}
                 className="w-full appearance-none bg-black/40 border border-white/10 rounded-xl py-3.5 px-4 text-sm font-bold outline-none focus:border-primary-500/50 transition-all cursor-pointer"
               >
-                {NICHES.map(n => <option key={n} value={n}>{n} Niche</option>)}
+                {NICHES.map(n => <option key={n} value={n}>{t('trendsPage.nicheOption', { niche: n })}</option>)}
               </select>
               <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none rotate-90" />
             </div>
@@ -180,8 +181,8 @@ export default function TrendsPage() {
             <div className="relative group">
               <select 
                 value={selectedPlatform}
-                title="Filter by Platform"
-                aria-label="Filter by Platform"
+                title={t('trendsPage.filterByPlatform')}
+                aria-label={t('trendsPage.filterByPlatform')}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
                 className="w-full appearance-none bg-black/40 border border-white/10 rounded-xl py-3.5 px-4 text-sm font-bold outline-none focus:border-primary-500/50 transition-all cursor-pointer"
               >
@@ -196,20 +197,21 @@ export default function TrendsPage() {
             {(['all', 'hooks', 'sounds', 'formats', 'hashtags'] as const).map((cat) => {
               const active = selectedCategory === cat
               const cfg = cat === 'all' ? null : CATEGORY_CFG[cat]
+              const catLabel = cat === 'all' ? t('trendsPage.everything') : t(`trendsPage.categoryLabels.${cat}`)
               return (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  title={`Filter by ${cat === 'all' ? 'Everything' : cfg?.label}`}
-                  aria-label={`Filter by ${cat === 'all' ? 'Everything' : cfg?.label}`}
+                  title={t('trendsPage.filterByLabel', { label: catLabel })}
+                  aria-label={t('trendsPage.filterByLabel', { label: catLabel })}
                   className={`px-5 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 ${
-                    active 
-                      ? 'bg-white text-black border-white shadow-xl shadow-white/5' 
+                    active
+                      ? 'bg-white text-black border-white shadow-xl shadow-white/5'
                       : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/30 hover:text-white'
                   }`}
                 >
                   {cfg && <cfg.icon className="w-3.5 h-3.5" />}
-                  {cat === 'all' ? 'Everything' : cfg?.label}
+                  {catLabel}
                 </button>
               )
             })}
@@ -242,7 +244,7 @@ export default function TrendsPage() {
                           <TrendingUp className="w-4 h-4" />
                           +{item.velocity}%
                         </div>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Velocity</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{t('trendsPage.velocity')}</span>
                       </div>
                     </div>
 
@@ -271,20 +273,20 @@ export default function TrendsPage() {
                     <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Score</span>
-                          <span className="text-lg font-black text-white">{item.score}/100</span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('trendsPage.score')}</span>
+                          <span className="text-lg font-black text-white">{t('trendsPage.scoreValue', { score: item.score })}</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Usage</span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('trendsPage.usage')}</span>
                           <span className="text-sm font-bold text-slate-300">{item.uses}</span>
                         </div>
                       </div>
                       
                       <button 
                         type="button"
-                        onClick={() => showToast('Strategy added to Forge buffer', 'success')}
-                        title="Add strategy to Forge buffer"
-                        aria-label="Add strategy to Forge buffer"
+                        onClick={() => showToast(t('trendsPage.strategyAdded'), 'success')}
+                        title={t('trendsPage.addStrategy')}
+                        aria-label={t('trendsPage.addStrategy')}
                         className="p-3 rounded-xl bg-white/5 hover:bg-primary-500 hover:text-white border border-white/10 hover:border-primary-500 transition-all group/btn"
                       >
                         <Zap className="w-5 h-5 group-hover/btn:fill-white" />
@@ -303,8 +305,8 @@ export default function TrendsPage() {
             <div className="inline-flex p-6 rounded-full bg-white/5 border border-white/10 mb-6">
               <Search className="w-8 h-8 text-slate-600" />
             </div>
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">No Signals Detected</h2>
-            <p className="text-slate-500 font-medium">Try broadening your parameters or checking different niches.</p>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">{t('trendsPage.noSignalsTitle')}</h2>
+            <p className="text-slate-500 font-medium">{t('trendsPage.noSignalsBody')}</p>
           </div>
         )}
 
@@ -313,11 +315,11 @@ export default function TrendsPage() {
           <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              System Online
+              {t('trendsPage.systemOnline')}
             </div>
             <div className="flex items-center gap-2">
               <Globe className="w-3 h-3" />
-              Global Sync Active
+              {t('trendsPage.globalSyncActive')}
             </div>
             <div>Ref: RADAR-TR-09</div>
           </div>

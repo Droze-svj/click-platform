@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '../../../contexts/ToastContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 
@@ -28,6 +29,7 @@ const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shad
 
 export default function SectorResonanceMatrixPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const { setNiche } = useWorkflow()
   const [loading, setLoading] = useState(true)
@@ -57,11 +59,11 @@ export default function SectorResonanceMatrixPage() {
       setIdentitySettings(u.brandSettings || identitySettings)
       setSectorPacks(packRes.data.data || packRes.data)
     } catch {
-      setError('UPLINK_ERR: SECTOR_ACCESS_DENIED')
+      setError(t('nichePage.errorSectorAccessDenied'))
     } finally {
       setLoading(false)
     }
-  }, [router, identitySettings, setNiche])
+  }, [router, identitySettings, setNiche, t])
 
   useEffect(() => {
     loadLattice()
@@ -73,10 +75,10 @@ export default function SectorResonanceMatrixPage() {
       await axios.put(`${API_URL}/niche/select`, { niche: sector }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       setUserSector(sector)
       setNiche(sector)
-      showToast('✓ SECTOR_UPLINK_SECURED', 'success')
-      setSuccess('NEURAL_SECTOR_DESIGNATED_READY')
+      showToast(t('nichePage.toastSectorUplinkSecured'), 'success')
+      setSuccess(t('nichePage.successSectorDesignated'))
     } catch {
-      setError('SECTOR_ERR: REDESIGNATION_FAILED')
+      setError(t('nichePage.errorRedesignationFailed'))
     } finally { setSaving(false) }
   }
 
@@ -84,17 +86,17 @@ export default function SectorResonanceMatrixPage() {
     setSaving(true); setError(''); setSuccess('')
     try {
       await axios.put(`${API_URL}/niche/brand`, identitySettings, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
-      showToast('✓ IDENTITY_SYNC_COMPLETE', 'success')
-      setSuccess('IDENTITY_HASH_INITIALIZED_SUCCESS')
+      showToast(t('nichePage.toastIdentitySyncComplete'), 'success')
+      setSuccess(t('nichePage.successIdentityInitialized'))
     } catch {
-      setError('IDENTITY_ERR: CONFIGURATION_SYNC_FAILED')
+      setError(t('nichePage.errorConfigurationSyncFailed'))
     } finally { setSaving(false) }
   }
 
   const currentPack = sectorPacks?.[userSector]
 
   if (loading) return (
-     <div className="min-h-screen bg-[var(--page-bg)] font-inter px-10 pt-16 max-w-[1700px] mx-auto" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen bg-[var(--page-bg)] font-inter px-10 pt-16 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('nichePage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -118,7 +120,7 @@ export default function SectorResonanceMatrixPage() {
         {/* Sector Header HUD */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
+              <button onClick={() => router.push('/dashboard')} title={t('nichePage.abort')}
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-amber-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
@@ -130,15 +132,15 @@ export default function SectorResonanceMatrixPage() {
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
                       <Fingerprint size={16} className="text-amber-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-amber-400 italic leading-none">Sector Intelligence v24.1.2</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-amber-400 italic leading-none">{t('nichePage.sectorIntelligenceVersion')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,1)]" />
-                       <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">SECTOR_LOCK_OPTIMAL</span>
+                       <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('nichePage.sectorLockOptimal')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Niche</h1>
-                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Pick or refine the niche Click optimizes for. Every AI output — captions, hooks, schedule, scripts — adapts to the niche playbook you set here.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">{t('nichePage.title')}</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">{t('nichePage.subtitle')}</p>
               </div>
            </div>
 
@@ -148,11 +150,11 @@ export default function SectorResonanceMatrixPage() {
                     <Activity size={32} className="text-amber-400 animate-pulse" />
                  </div>
                  <div>
-                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">MATRIX_SCAN_STATUS</span>
-                    <p className="text-2xl font-black text-amber-400 uppercase tracking-[0.4em] italic leading-none mt-2">ACTIVE_SCANNING</p>
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">{t('nichePage.matrixScanStatus')}</span>
+                    <p className="text-2xl font-black text-amber-400 uppercase tracking-[0.4em] italic leading-none mt-2">{t('nichePage.activeScanning')}</p>
                  </div>
               </div>
-              <button type="button" onClick={() => loadLattice()} title="Refresh data" aria-label="Refresh data" className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
+              <button type="button" onClick={() => loadLattice()} title={t('nichePage.refreshData')} aria-label={t('nichePage.refreshData')} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
                 <RefreshCw size={32} className={`text-slate-500 group-hover:text-amber-400 transition-colors duration-700 ${saving ? 'animate-spin' : ''}`} />
               </button>
            </div>
@@ -185,15 +187,15 @@ export default function SectorResonanceMatrixPage() {
               <div className="p-16 border-b-2 border-white/5 flex items-center justify-between mb-12 bg-white/[0.02] rounded-t-[6rem]">
                  <div className="flex items-center gap-8">
                     <div className="w-16 h-16 rounded-[1.8rem] bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-3xl"><Terminal size={28} className="text-amber-400" /></div>
-                    <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Lattice Matrix</h2>
+                    <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">{t('nichePage.latticeMatrix')}</h2>
                  </div>
-                 <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-amber-500 text-[10px] font-black uppercase tracking-[0.5em] italic">HEURISTIC_SECTOR_LOCK</div>
+                 <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-amber-500 text-[10px] font-black uppercase tracking-[0.5em] italic">{t('nichePage.heuristicSectorLock')}</div>
               </div>
               <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:rotate-45 transition-transform duration-[10s]"><Terminal size={600} className="text-amber-400" /></div>
               
               <div className="p-10 space-y-16 relative z-10 flex-1 flex flex-col">
                  <div className="space-y-8">
-                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-amber-500/20 pl-6">Sector Designations</label>
+                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-amber-500/20 pl-6">{t('nichePage.sectorDesignations')}</label>
                     <div className="grid grid-cols-2 gap-8">
                        {sectors.map((sector) => (
                          <motion.button
@@ -223,13 +225,13 @@ export default function SectorResonanceMatrixPage() {
                       <div className="flex items-center gap-10 mb-12 pb-12 border-b-2 border-white/5 relative z-10">
                          <div className="w-24 h-24 bg-amber-600 text-white rounded-[2.5rem] flex items-center justify-center shadow-3xl border-4 border-white/20 group-hover/pack:rotate-12 transition-transform duration-300"><Layers size={48} /></div>
                          <div>
-                            <p className="text-[12px] font-black text-amber-500 uppercase tracking-[1em] italic leading-none mb-3">SECTOR_INTEL_ARCHIVE</p>
+                            <p className="text-[12px] font-black text-amber-500 uppercase tracking-[1em] italic leading-none mb-3">{t('nichePage.sectorIntelArchive')}</p>
                             <h3 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none drop-shadow-2xl">{currentPack.name}</h3>
                          </div>
                       </div>
                       <p className="text-[20px] text-slate-700 font-black uppercase tracking-widest italic leading-relaxed mb-12 relative z-10 px-6 border-l-8 border-amber-500/20">{currentPack.description.toUpperCase()}</p>
                       <div className="space-y-8 relative z-10">
-                         <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none ml-6">Operational Schematics</p>
+                         <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none ml-6">{t('nichePage.operationalSchematics')}</p>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-4">
                             {(currentPack.templates || []).map((t: any, idx: number) => (
                                <div key={idx} className="flex items-center gap-6 px-10 py-6 bg-black/80 border-2 border-white/5 rounded-[3rem] text-[15px] font-black text-white uppercase italic tracking-[0.2em] hover:border-amber-500/40 hover:scale-105 transition-all cursor-default shadow-3xl">
@@ -251,42 +253,42 @@ export default function SectorResonanceMatrixPage() {
               <div className="p-16 border-b-2 border-white/5 flex items-center justify-between mb-12 bg-white/[0.02] rounded-t-[6rem]">
                  <div className="flex items-center gap-8">
                     <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl"><Palette size={28} className="text-indigo-400" /></div>
-                    <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Identity Hash</h2>
+                    <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">{t('nichePage.identityHash')}</h2>
                  </div>
-                 <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-indigo-500 text-[10px] font-black uppercase tracking-[0.5em] italic">VISUAL_SIGNATURE_SYNC</div>
+                 <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-indigo-500 text-[10px] font-black uppercase tracking-[0.5em] italic">{t('nichePage.visualSignatureSync')}</div>
               </div>
               <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none -rotate-12 translate-x-1/2 -translate-y-1/2"><Palette size={800} className="text-indigo-400" /></div>
               
               <div className="p-10 space-y-16 relative z-10 flex-1">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-8">
-                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Resonance Polarity</label>
+                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">{t('nichePage.resonancePolarity')}</label>
                        <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-indigo-500/40 transition-all">
                           <div className="w-24 h-24 rounded-[3rem] shadow-3xl relative overflow-hidden border-4 border-white/10 cursor-pointer active:scale-90 transition-transform">
-                             <input type="color" value={identitySettings.primaryColor} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} aria-label="Primary colour picker" title="Primary colour" className="absolute inset-0 scale-[5] cursor-pointer" />
+                             <input type="color" value={identitySettings.primaryColor} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} aria-label={t('nichePage.primaryColourPicker')} title={t('nichePage.primaryColour')} className="absolute inset-0 scale-[5] cursor-pointer" />
                           </div>
-                          <input type="text" value={identitySettings.primaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} aria-label="Primary colour hex value" title="Primary colour hex" placeholder="#6366F1" className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
+                          <input type="text" value={identitySettings.primaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} aria-label={t('nichePage.primaryColourHexValue')} title={t('nichePage.primaryColourHex')} placeholder="#6366F1" className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
                        </div>
                     </div>
                     <div className="space-y-8">
-                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Diffraction Baseline</label>
+                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">{t('nichePage.diffractionBaseline')}</label>
                        <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-indigo-500/40 transition-all">
                           <div className="w-24 h-24 rounded-[3rem] shadow-3xl relative overflow-hidden border-4 border-white/10 cursor-pointer active:scale-90 transition-transform">
-                             <input type="color" value={identitySettings.secondaryColor} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} aria-label="Secondary colour picker" title="Secondary colour" className="absolute inset-0 scale-[5] cursor-pointer" />
+                             <input type="color" value={identitySettings.secondaryColor} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} aria-label={t('nichePage.secondaryColourPicker')} title={t('nichePage.secondaryColour')} className="absolute inset-0 scale-[5] cursor-pointer" />
                           </div>
-                          <input type="text" value={identitySettings.secondaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} aria-label="Secondary colour hex value" title="Secondary colour hex" placeholder="#8B5CF6" className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
+                          <input type="text" value={identitySettings.secondaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} aria-label={t('nichePage.secondaryColourHexValue')} title={t('nichePage.secondaryColourHex')} placeholder="#8B5CF6" className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
                        </div>
                     </div>
                  </div>
 
                  <div className="space-y-8">
-                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Logic Topography</label>
+                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">{t('nichePage.logicTopography')}</label>
                     <div className="relative group/sel">
-                       <select value={identitySettings.font} onChange={e => setIdentitySettings({ ...identitySettings, font: e.target.value })} aria-label="Brand font selection" title="Select brand font" className="w-full appearance-none bg-black/60 border-4 border-white/10 rounded-[4rem] px-16 py-12 text-5xl font-black text-white italic uppercase focus:border-indigo-500/50 transition-all shadow-inner cursor-pointer hover:bg-black/80 hover:shadow-[inset_0_0_50px_rgba(255,255,255,0.02)]">
-                          <option value="Arial" className="bg-[#050505]">ARIAL_LOGIC</option>
-                          <option value="Helvetica" className="bg-[#050505]">HELVETICA_PROTOCOL</option>
-                          <option value="Verdana" className="bg-[#050505]">VERDANA_FLOW</option>
-                          <option value="Georgia" className="bg-[#050505]">GEORGIA_ARRAY</option>
+                       <select value={identitySettings.font} onChange={e => setIdentitySettings({ ...identitySettings, font: e.target.value })} aria-label={t('nichePage.brandFontSelection')} title={t('nichePage.selectBrandFont')} className="w-full appearance-none bg-black/60 border-4 border-white/10 rounded-[4rem] px-16 py-12 text-5xl font-black text-white italic uppercase focus:border-indigo-500/50 transition-all shadow-inner cursor-pointer hover:bg-black/80 hover:shadow-[inset_0_0_50px_rgba(255,255,255,0.02)]">
+                          <option value="Arial" className="bg-[#050505]">{t('nichePage.fontArial')}</option>
+                          <option value="Helvetica" className="bg-[#050505]">{t('nichePage.fontHelvetica')}</option>
+                          <option value="Verdana" className="bg-[#050505]">{t('nichePage.fontVerdana')}</option>
+                          <option value="Georgia" className="bg-[#050505]">{t('nichePage.fontGeorgia')}</option>
                        </select>
                        <div className="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-none text-white/20 group-hover/sel:text-indigo-400 transition-all bg-black/40 p-4 rounded-3xl border border-white/5 backdrop-blur-3xl shadow-3xl">
                           <ChevronRight size={48} className="rotate-90" />
@@ -295,22 +297,22 @@ export default function SectorResonanceMatrixPage() {
                  </div>
 
                  <div className="space-y-8">
-                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Visual Signature Uplink</label>
+                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">{t('nichePage.visualSignatureUplink')}</label>
                     <div className="flex items-center gap-8 bg-black/60 border-4 border-white/10 rounded-[4rem] px-16 py-6 shadow-inner group/url focus-within:border-indigo-500/60 transition-all hover:bg-black/80">
                        <Globe size={48} className="text-slate-500 group-focus-within/url:text-indigo-400 transition-all group-hover/url:rotate-12" />
-                       <input type="url" value={identitySettings.logo} onChange={e => setIdentitySettings({ ...identitySettings, logo: e.target.value })} className="flex-1 bg-transparent py-6 text-2xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" placeholder="HTTPS://IDENTITY_UPLINK..." />
+                       <input type="url" value={identitySettings.logo} onChange={e => setIdentitySettings({ ...identitySettings, logo: e.target.value })} className="flex-1 bg-transparent py-6 text-2xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" placeholder={t('nichePage.logoUrlPlaceholder')} />
                     </div>
                  </div>
 
                  <button onClick={handleIdentityUpdate} disabled={saving} className="w-full py-12 bg-white text-black hover:bg-indigo-600 hover:text-white rounded-[4.5rem] text-[20px] font-black uppercase tracking-[1em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:shadow-indigo-500/60 transition-all duration-300 italic disabled:opacity-20 flex items-center justify-center gap-10 active:scale-95 group/save relative overflow-hidden border-none outline-none">
                     <div className="absolute inset-x-0 bottom-0 h-2 bg-indigo-300 scale-x-0 group-hover/save:scale-x-100 transition-transform" />
-                    {saving ? <RefreshCw className="animate-spin" size={48} /> : <ShieldCheck size={48} className="group-hover/save:scale-125 transition-transform" />} INITIALIZE_IDENTITY_HASH
+                    {saving ? <RefreshCw className="animate-spin" size={48} /> : <ShieldCheck size={48} className="group-hover/save:scale-125 transition-transform" />} {t('nichePage.initializeIdentityHash')}
                  </button>
 
                  {/* Rendering Buffer Preview */}
                  <div className="space-y-8 pt-16 border-t-2 border-white/5 mt-12 bg-black/20 p-8 rounded-[5rem] shadow-inner">
                     <div className="flex justify-between items-center px-10 mb-6">
-                       <p className="text-[12px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none">Identity Render Buffer</p>
+                       <p className="text-[12px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none">{t('nichePage.identityRenderBuffer')}</p>
                        <Gauge size={24} className="text-indigo-500/30 animate-pulse" />
                     </div>
                     <div className="p-4 border-2 border-white/5 rounded-[6rem] shadow-3xl bg-black/40 relative overflow-hidden">
@@ -321,9 +323,9 @@ export default function SectorResonanceMatrixPage() {
                              <Box size={72} className="text-white drop-shadow-[0_0_40px_rgba(0,0,0,0.4)]" />
                           </div>
                           <div className="text-center relative z-10 px-8">
-                             <p className="text-6xl font-black text-white uppercase tracking-tighter italic leading-none drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] group-hover/preview:scale-110 transition-transform duration-300">Sovereign Axiom</p>
+                             <p className="text-6xl font-black text-white uppercase tracking-tighter italic leading-none drop-shadow-[0_0_40px_rgba(0,0,0,0.6)] group-hover/preview:scale-110 transition-transform duration-300">{t('nichePage.previewBrandName')}</p>
                              <div className="h-1.5 w-48 bg-white/40 mx-auto mt-8 rounded-full overflow-hidden shadow-inner"><div className="h-full bg-white w-[60%] animate-pulse" /></div>
-                             <p className="text-[14px] text-white/50 font-black uppercase tracking-[0.5em] italic mt-6 drop-shadow-2xl">Neural Wisdom Synthesis Node v2.0</p>
+                             <p className="text-[14px] text-white/50 font-black uppercase tracking-[0.5em] italic mt-6 drop-shadow-2xl">{t('nichePage.previewTagline')}</p>
                           </div>
                        </motion.div>
                     </div>
@@ -335,10 +337,10 @@ export default function SectorResonanceMatrixPage() {
         {/* Neural Lattice Navigation Swarm */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10 pt-24 border-t-2 border-white/5">
            {[
-             { label: 'Neural Forge', desc: 'Synthetic logic crafting.', icon: Sparkles, color: 'text-indigo-400', href: '/dashboard/content' },
-             { label: 'Temporal Hub', desc: 'Optimal node deployment.', icon: Calendar, color: 'text-amber-400', href: '/dashboard/scheduler' },
-             { label: 'Axiom Vault', desc: 'Wisdom fractal repository.', icon: Network, color: 'text-purple-400', href: '/dashboard/library' },
-             { label: 'Blueprint Array', desc: 'Operational prototypes.', icon: Layers, color: 'text-emerald-400', href: '/dashboard/templates' },
+             { label: t('nichePage.navNeuralForge'), desc: t('nichePage.navNeuralForgeDesc'), icon: Sparkles, color: 'text-indigo-400', href: '/dashboard/content' },
+             { label: t('nichePage.navTemporalHub'), desc: t('nichePage.navTemporalHubDesc'), icon: Calendar, color: 'text-amber-400', href: '/dashboard/scheduler' },
+             { label: t('nichePage.navAxiomVault'), desc: t('nichePage.navAxiomVaultDesc'), icon: Network, color: 'text-purple-400', href: '/dashboard/library' },
+             { label: t('nichePage.navBlueprintArray'), desc: t('nichePage.navBlueprintArrayDesc'), icon: Layers, color: 'text-emerald-400', href: '/dashboard/templates' },
            ].map((a, i) => (
              <motion.button 
                whileHover={{ y: -20, scale: 1.05, backgroundColor: 'rgba(255,255,255,0.08)' }} 

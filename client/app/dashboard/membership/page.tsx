@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
@@ -37,6 +38,7 @@ const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shad
 
 export default function IdentityDNARegistryPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
   const [packages, setPackages] = useState<MembershipPackage[]>([])
@@ -62,11 +64,11 @@ export default function IdentityDNARegistryPage() {
       setPackages(Array.isArray(pkgs) ? pkgs : [])
       setCurrentMembership(current)
     } catch {
-      showToast('Could not sync: ACCESS_DATA_OFFLINE', 'error')
+      showToast(t('membershipPage.toastAccessDataOffline'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     if (!user && !loading) {
@@ -87,11 +89,11 @@ export default function IdentityDNARegistryPage() {
       )
 
       if (response.data.success) {
-        showToast('✓ NEURAL_ASCENSION_COMPLETE', 'success')
+        showToast(t('membershipPage.toastAscensionComplete'), 'success')
         await loadAccessData()
       }
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'ASCENSION_FAILED: PROTOCOL_REJECTED', 'error')
+      showToast(error.response?.data?.error || t('membershipPage.toastAscensionFailed'), 'error')
     } finally {
       setUpgrading(null)
     }
@@ -100,7 +102,7 @@ export default function IdentityDNARegistryPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
         <Fingerprint size={64} className="text-indigo-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Access Protocols...</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">{t('membershipPage.synchronizing')}</span>
      </div>
   );
 
@@ -120,7 +122,7 @@ export default function IdentityDNARegistryPage() {
         {/* Identity Header HUD */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
+              <button onClick={() => router.push('/dashboard')} title={t('membershipPage.abort')}
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
@@ -132,15 +134,15 @@ export default function IdentityDNARegistryPage() {
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
                       <Lock size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Identity DNA v22.8.4</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">{t('membershipPage.identityDnaVersion')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
-                       <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">STRATUM_LOCK_SECURED</span>
+                       <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('membershipPage.stratumLockSecured')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Membership</h1>
-                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Manage your subscription, see what each plan unlocks, and upgrade when you outgrow your current tier. Cancel any time — no penalties, no rituals.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">{t('membershipPage.title')}</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">{t('membershipPage.subtitle')}</p>
               </div>
            </div>
 
@@ -150,11 +152,11 @@ export default function IdentityDNARegistryPage() {
                     <Activity size={32} className="text-indigo-400 animate-pulse" />
                  </div>
                  <div>
-                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">LATTICE_INTEGRITY</span>
-                    <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">PROTOCOLS_ACTIVE</p>
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">{t('membershipPage.latticeIntegrity')}</span>
+                    <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">{t('membershipPage.protocolsActive')}</p>
                  </div>
               </div>
-              <button type="button" onClick={() => loadAccessData()} title="Refresh membership data" aria-label="Refresh membership data" className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
+              <button type="button" onClick={() => loadAccessData()} title={t('membershipPage.refreshData')} aria-label={t('membershipPage.refreshData')} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
                 <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 group-hover:rotate-180 transition-all duration-700" />
               </button>
            </div>
@@ -170,19 +172,19 @@ export default function IdentityDNARegistryPage() {
                <div className="max-w-2xl text-center xl:text-left space-y-12">
                   <div className="flex flex-wrap items-center justify-center xl:justify-start gap-8">
                      <div className="px-10 py-4 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.6em] bg-indigo-500/10 border-2 border-indigo-500/30 text-indigo-400 shadow-3xl italic animate-pulse">
-                        ACTIVE_NODE_UPLINK
+                        {t('membershipPage.activeNodeUplink')}
                      </div>
                      <div className="flex items-center gap-6 text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none bg-black/80 px-10 py-4 rounded-[2rem] border-2 border-white/5 shadow-inner">
-                       <Database size={20} className="text-indigo-400" /> <span className="opacity-40">PROTOCOL_ID:</span> {currentMembership.subscription?.id?.slice(-16).toUpperCase() || 'ROOT_GENESIS'}
+                       <Database size={20} className="text-indigo-400" /> <span className="opacity-40">{t('membershipPage.protocolId')}</span> {currentMembership.subscription?.id?.slice(-16).toUpperCase() || t('membershipPage.rootGenesis')}
                      </div>
                   </div>
                   <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">
-                     {currentMembership.package?.name?.toUpperCase() || 'GENERIC_ACCESS'}
+                     {currentMembership.package?.name?.toUpperCase() || t('membershipPage.genericAccess')}
                   </h2>
                   <div className="flex items-center justify-center xl:justify-start gap-10 text-[18px] font-black uppercase tracking-[0.6em] italic leading-none">
-                     <span className="text-slate-400">Lifecycle Status:</span>
+                     <span className="text-slate-400">{t('membershipPage.lifecycleStatus')}</span>
                      <span className={currentMembership.subscription?.status === 'active' ? 'text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-amber-400 animate-pulse'}>
-                        {currentMembership.subscription?.status?.toUpperCase() || 'UNINITIALIZED'}
+                        {currentMembership.subscription?.status?.toUpperCase() || t('membershipPage.uninitialized')}
                      </span>
                   </div>
                   <div className="w-full h-[6px] bg-black/60 rounded-full mt-4 overflow-hidden border-2 border-white/5 relative">
@@ -191,8 +193,8 @@ export default function IdentityDNARegistryPage() {
                </div>
 
                <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-12 p-8 rounded-[5rem] bg-black/20 border-2 border-white/5 shadow-inner backdrop-blur-3xl">
-                  <SaturationCard icon={Target} label="Spectral Video Flux" value={currentMembership.usage?.videosProcessed || 0} limit={currentMembership.limits?.videosPerMonth} />
-                  <SaturationCard icon={Sparkles} label="Logic Synthesis Bandwidth" value={currentMembership.usage?.contentGenerated || 0} limit={currentMembership.limits?.contentPerMonth} />
+                  <SaturationCard icon={Target} label={t('membershipPage.spectralVideoFlux')} value={currentMembership.usage?.videosProcessed || 0} limit={currentMembership.limits?.videosPerMonth} />
+                  <SaturationCard icon={Sparkles} label={t('membershipPage.logicSynthesisBandwidth')} value={currentMembership.usage?.contentGenerated || 0} limit={currentMembership.limits?.contentPerMonth} />
                </div>
             </div>
           </motion.section>
@@ -210,14 +212,14 @@ export default function IdentityDNARegistryPage() {
               >
                 {isCurrent && (
                   <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[14px] font-black uppercase tracking-[1em] px-16 py-5 rounded-full shadow-[0_0_100px_rgba(99,102,241,0.8)] z-20 italic border-4 border-indigo-400/50">
-                     ACTIVE_NODE
+                     {t('membershipPage.activeNode')}
                   </div>
                 )}
 
                 <div className="text-center mb-16 px-8 pt-8">
                   <div className="flex items-center justify-center gap-8 mb-12">
                      <div className="w-20 h-[3px] bg-gradient-to-r from-transparent to-indigo-500/20 rounded-full" />
-                     <span className="text-[14px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none whitespace-nowrap opacity-60">Stratum Tier</span>
+                     <span className="text-[14px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none whitespace-nowrap opacity-60">{t('membershipPage.stratumTier')}</span>
                      <div className="w-20 h-[3px] bg-gradient-to-l from-transparent to-indigo-500/20 rounded-full" />
                   </div>
                   <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none drop-shadow-2xl">{pkg.name.toUpperCase()}</h3>
@@ -227,12 +229,12 @@ export default function IdentityDNARegistryPage() {
                     <div className="absolute inset-x-0 bottom-0 h-2 bg-indigo-500/20 animate-pulse" />
                     <div className="flex items-center justify-center gap-6 relative z-10">
                        <span className="text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">${pkg.price.monthly}</span>
-                       <span className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic mb-6">/cycle</span>
+                       <span className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic mb-6">{t('membershipPage.perCycle')}</span>
                     </div>
                     {pkg.price.yearly > 0 && (
                       <div className="mt-8 relative z-10">
                          <span className="px-8 py-2 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 text-indigo-400 text-[12px] font-black uppercase tracking-[0.8em] italic">
-                           ANNUAL_SYNC: ${pkg.price.yearly}/YR
+                           {t('membershipPage.annualSync', { price: pkg.price.yearly })}
                          </span>
                       </div>
                     )}
@@ -240,14 +242,14 @@ export default function IdentityDNARegistryPage() {
                 </div>
 
                 <div className="flex-1 space-y-10 mb-24 px-8">
-                  <FeatureBox icon={Activity} label="Spectral Video Flux" value={pkg.features.videoProcessing.maxVideosPerMonth === -1 ? 'Infinite Cognition' : `${pkg.features.videoProcessing.maxVideosPerMonth} NODES / CYCLE`} />
-                  <FeatureBox icon={Sparkles} label="Synthesis Bandwidth" value={pkg.features.contentGeneration.maxGenerationsPerMonth === -1 ? 'Infinite Neural Bursts' : `${pkg.features.contentGeneration.maxGenerationsPerMonth} BURSTS / CYCLE`} />
+                  <FeatureBox icon={Activity} label={t('membershipPage.spectralVideoFlux')} value={pkg.features.videoProcessing.maxVideosPerMonth === -1 ? t('membershipPage.infiniteCognition') : t('membershipPage.nodesPerCycle', { count: pkg.features.videoProcessing.maxVideosPerMonth })} />
+                  <FeatureBox icon={Sparkles} label={t('membershipPage.synthesisBandwidth')} value={pkg.features.contentGeneration.maxGenerationsPerMonth === -1 ? t('membershipPage.infiniteNeuralBursts') : t('membershipPage.burstsPerCycle', { count: pkg.features.contentGeneration.maxGenerationsPerMonth })} />
 
                   <div className="space-y-8 pt-12 border-t-2 border-white/5">
                      {[
-                       { check: pkg.features.analytics.advancedAnalytics, label: 'Deep Spectral Intel' },
-                       { check: pkg.features.analytics.apiAccess, label: 'Core Matrix Uplink' },
-                       { check: pkg.features.support.prioritySupport, label: 'Prime Command Uplink' }
+                       { check: pkg.features.analytics.advancedAnalytics, label: t('membershipPage.deepSpectralIntel') },
+                       { check: pkg.features.analytics.apiAccess, label: t('membershipPage.coreMatrixUplink') },
+                       { check: pkg.features.support.prioritySupport, label: t('membershipPage.primeCommandUplink') }
                      ].map((f, i) => f.check && (
                        <div key={i} className="flex items-center gap-8 text-[14px] font-black text-slate-400 uppercase italic tracking-[0.3em] group-hover:text-white transition-colors duration-700">
                          <div className="w-8 h-8 rounded-2xl border-2 border-indigo-500/30 flex items-center justify-center bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.3)] group-hover:scale-125 transition-transform">
@@ -267,7 +269,7 @@ export default function IdentityDNARegistryPage() {
                    >
                      <div className="absolute inset-0 bg-indigo-500 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                      <div className="relative z-10 flex items-center gap-10">
-                       {isCurrent ? 'ACTIVE_PROTOCOL' : isUpgrading ? 'ASCENDING...' : pkg.price.monthly === 0 ? 'GENESIS_UPLINK' : 'ESCALATE_PROTOCOL'}
+                       {isCurrent ? t('membershipPage.activeProtocol') : isUpgrading ? t('membershipPage.ascending') : pkg.price.monthly === 0 ? t('membershipPage.genesisUplink') : t('membershipPage.escalateProtocol')}
                        {!isCurrent && <ArrowUpRight size={36} className="group-hover/btn:translate-x-4 group-hover/btn:-translate-y-4 transition-transform duration-300" />}
                      </div>
                    </button>

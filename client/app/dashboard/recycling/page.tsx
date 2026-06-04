@@ -6,10 +6,12 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import SectionHeader from '../../../components/dashboard/SectionHeader'
 import { Recycle } from 'lucide-react'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 export default function ContentRemixPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (!user) router.push('/login')
@@ -23,9 +25,9 @@ export default function ContentRemixPage() {
         <SectionHeader
           tone="publish"
           icon={Recycle}
-          kicker="Publish · Content Remix"
-          title="Content Remix"
-          subtitle="Turn one piece of content into a dozen. Pick any past video and Click adapts it for new platforms, niches, or hooks — keeping the original intact."
+          kicker={t('recyclingPage.kicker')}
+          title={t('recyclingPage.title')}
+          subtitle={t('recyclingPage.subtitle')}
         />
         <EntropyReversalNode />
       </div>

@@ -5,6 +5,7 @@ import { Brain, ArrowLeft, Fingerprint, Shield } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const ResonanceCommandMatrix = dynamic(
   () => import('../../../../components/EngagementCommandCenter'),
@@ -18,6 +19,7 @@ const ResonanceCommandMatrix = dynamic(
 
 export default function ResonanceCommandMatrixPage() {
   const router = useRouter()
+  const { t } = useTranslation()
 
   return (
     <ErrorBoundary>
@@ -28,7 +30,7 @@ export default function ResonanceCommandMatrixPage() {
         <div className="sticky top-0 z-[100] backdrop-blur-3xl bg-black/40 border-b border-white/5 px-10 py-6 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
            <div className="flex items-center gap-8">
               <button type="button" onClick={() => router.push('/dashboard/analytics')} 
-                title="Back to Analytics" aria-label="Back to Analytics"
+                title={t('analyticsEngagementPage.backToAnalytics')} aria-label={t('analyticsEngagementPage.backToAnalytics')}
                 className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={24} />
               </button>
@@ -36,12 +38,12 @@ export default function ResonanceCommandMatrixPage() {
                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-inner">
                     <Fingerprint size={20} className="text-indigo-400" />
                  </div>
-                 <h1 className="text-2xl font-black italic text-white uppercase tracking-tighter">Resonance_Matrix</h1>
+                 <h1 className="text-2xl font-black italic text-white uppercase tracking-tighter">{t('analyticsEngagementPage.title')}</h1>
               </div>
            </div>
            <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-2xl">
               <Shield size={14} className="text-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-black text-emerald-400 tracking-[0.3em] uppercase italic">Sovereign_Shield_Active</span>
+              <span className="text-[10px] font-black text-emerald-400 tracking-[0.3em] uppercase italic">{t('analyticsEngagementPage.shieldActive')}</span>
            </div>
         </div>
 

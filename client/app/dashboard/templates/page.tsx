@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { API_URL } from '../../../lib/api'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 s
 export default function HeuristicBlueprintNodePage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedSector, setSelectedSector] = useState<string>('all')
@@ -65,11 +67,11 @@ export default function HeuristicBlueprintNodePage() {
       const templatesData: any = extractApiData<any[]>(response)
       setTemplates(Array.isArray(templatesData) ? templatesData : [])
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Could not sync: BLUEPRINT_OFFLINE', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('templatesPage.toastSyncFailed'), type: 'error' } }))
     } finally {
       setLoading(false)
     }
-  }, [selectedSector, selectedDomain])
+  }, [selectedSector, selectedDomain, t])
 
   useEffect(() => {
     if (!user) { router.push('/login'); return }
@@ -93,10 +95,10 @@ export default function HeuristicBlueprintNodePage() {
         } else {
           router.push(`/dashboard/content?template=${templateId}`)
         }
-        window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'LOGIC_INJECTION_COMPLETE', type: 'success' } }))
+        window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('templatesPage.toastInjectionComplete'), type: 'success' } }))
       }
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'INJECTION_FAIL', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('templatesPage.toastInjectionFailed'), type: 'error' } }))
     }
   }
 
@@ -108,8 +110,8 @@ export default function HeuristicBlueprintNodePage() {
             <Layers size={80} className="text-indigo-500 animate-spin relative z-10" />
           </div>
           <div className="space-y-4 text-center">
-            <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Deciphering Heuristic Blueprints...</p>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none">HIGH_BANDWIDTH_SYG_ACTIVE</p>
+            <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">{t('templatesPage.decipheringBlueprints')}</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none">{t('templatesPage.highBandwidthActive')}</p>
           </div>
        </div>
     )
@@ -128,8 +130,8 @@ export default function HeuristicBlueprintNodePage() {
       <div className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
         <div className="flex items-center gap-12">
           <button 
-            onClick={() => router.push('/dashboard')} 
-            title="Abort Blueprint Session"
+            onClick={() => router.push('/dashboard')}
+            title={t('templatesPage.abortSession')}
             className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl hover:border-rose-500/50">
             <ArrowLeft size={40} />
           </button>
@@ -140,22 +142,22 @@ export default function HeuristicBlueprintNodePage() {
           <div>
             <div className="flex items-center gap-6 mb-4">
               <Compass className="text-indigo-400 animate-pulse" size={16} />
-              <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Heuristic Scaffolding HUD v14.2</span>
+              <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('templatesPage.scaffoldingHud')}</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-4">Templates</h1>
-            <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Reusable post structures — captions, edit recipes, schedule patterns. Save what works once and apply it to every new project.</p>
+            <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-4">{t('templatesPage.title')}</h1>
+            <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">{t('templatesPage.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-8">
           <button
             onClick={() => setShowTerminal(!showTerminal)}
-            title={showTerminal ? 'Abort Terminal' : 'Blueprint Terminal'}
+            title={showTerminal ? t('templatesPage.abortTerminal') : t('templatesPage.blueprintTerminal')}
             className={`px-16 py-8 rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-3xl transition-all duration-300 flex items-center gap-8 italic group overflow-hidden relative ${showTerminal ? 'bg-indigo-500 text-white' : 'bg-white text-black'}`}
           >
             <div className={`absolute inset-0 bg-indigo-600 origin-left transition-transform duration-300 ${showTerminal ? 'scale-x-0' : 'scale-x-100 group-hover:scale-x-0'}`} />
             <div className="relative z-10 flex items-center gap-6">
-              <Globe size={32} className={showTerminal ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'} /> 
-              {showTerminal ? 'ABORT_TERMINAL' : 'BLUEPRINT_TERMINAL'}
+              <Globe size={32} className={showTerminal ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'} />
+              {showTerminal ? t('templatesPage.abortTerminalCta') : t('templatesPage.blueprintTerminalCta')}
             </div>
           </button>
         </div>
@@ -176,7 +178,7 @@ export default function HeuristicBlueprintNodePage() {
             <div className={`${glassStyle} p-12 rounded-[5rem] flex flex-col gap-16 border-white/5 shadow-[0_100px_300px_rgba(0,0,0,0.8)]`}>
                 <div className="space-y-10 px-4">
                   <div className="flex items-center justify-between px-6 pt-6">
-                     <h3 className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">Synthesis Modality</h3>
+                     <h3 className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">{t('templatesPage.synthesisModality')}</h3>
                      <Terminal size={18} className="text-slate-500" />
                   </div>
                   <div className="space-y-4">
@@ -184,10 +186,10 @@ export default function HeuristicBlueprintNodePage() {
                       <button
                         key={sector}
                         onClick={() => setSelectedSector(sector)}
-                        title={`Select ${sector} modality`}
+                        title={t('templatesPage.selectModality', { sector })}
                         className={`w-full text-left px-10 py-6 rounded-[3rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-300 italic flex items-center justify-between group/s overflow-hidden relative ${selectedSector === sector ? 'bg-white text-black shadow-3xl' : 'text-slate-500 hover:text-white hover:bg-white/[0.05]'}`}
                       >
-                        <span className="relative z-10">{sector === 'all' ? 'SYST_GLOBAL' : sector.toUpperCase()}</span>
+                        <span className="relative z-10">{sector === 'all' ? t('templatesPage.systGlobal') : sector.toUpperCase()}</span>
                         {selectedSector === sector ? (
                           <CheckCircle size={24} className="text-black relative z-10" />
                         ) : (
@@ -200,7 +202,7 @@ export default function HeuristicBlueprintNodePage() {
 
                 <div className="space-y-10 pt-12 border-t-2 border-white/5 px-4 pb-6">
                   <div className="flex items-center justify-between px-6">
-                     <h3 className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">Knowledge Domain</h3>
+                     <h3 className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">{t('templatesPage.knowledgeDomain')}</h3>
                      <Target size={18} className="text-slate-500" />
                   </div>
                   <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-6">
@@ -208,7 +210,7 @@ export default function HeuristicBlueprintNodePage() {
                       <button
                         key={domain}
                         onClick={() => setSelectedDomain(domain)}
-                        title={`Select ${domain} domain`}
+                        title={t('templatesPage.selectDomain', { domain })}
                         className={`w-full text-left px-10 py-6 rounded-[3rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-300 italic flex items-center justify-between group/d ${selectedDomain === domain ? 'bg-indigo-500/10 text-indigo-400 border-2 border-indigo-500/50 shadow-[0_0_80px_rgba(99,102,241,0.2)]' : 'text-slate-500 hover:text-white hover:bg-white/[0.05]'}`}
                       >
                         {domain.toUpperCase()}
@@ -224,9 +226,9 @@ export default function HeuristicBlueprintNodePage() {
                       <div className="relative z-10">
                         <div className="flex items-center gap-6 mb-6">
                            <Shield size={28} className="text-indigo-400 group-hover/status:scale-110 transition-transform duration-300" />
-                           <p className="text-[14px] font-black text-white uppercase tracking-[0.4em] italic">Protocol Status</p>
+                           <p className="text-[14px] font-black text-white uppercase tracking-[0.4em] italic">{t('templatesPage.protocolStatus')}</p>
                         </div>
-                        <p className="text-[12px] font-black text-slate-500 leading-tight italic uppercase tracking-widest opacity-60">All blueprints are cryptographically secured and ready for neural injection into operational clusters.</p>
+                        <p className="text-[12px] font-black text-slate-500 leading-tight italic uppercase tracking-widest opacity-60">{t('templatesPage.protocolStatusBody')}</p>
                       </div>
                    </div>
                 </div>
@@ -240,14 +242,14 @@ export default function HeuristicBlueprintNodePage() {
                  <div className="flex items-center gap-10">
                     <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-transform duration-300"><Terminal size={40} className="text-indigo-400" /></div>
                     <div>
-                       <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Blueprint Telemetry Matrix</h2>
-                       <p className="text-[14px] text-slate-500 font-black uppercase tracking-[0.6em] italic opacity-40">Surveillance of structural scaffolds and logic patterns</p>
+                       <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">{t('templatesPage.telemetryMatrix')}</h2>
+                       <p className="text-[14px] text-slate-500 font-black uppercase tracking-[0.6em] italic opacity-40">{t('templatesPage.telemetrySubtitle')}</p>
                     </div>
                  </div>
                  
                  <div className="flex items-center gap-8">
                     <div className="px-10 py-4 rounded-full bg-white/[0.02] border-2 border-white/10 text-[12px] font-black text-indigo-400 uppercase tracking-[0.4em] italic flex items-center gap-5 shadow-inner">
-                       <Radio size={16} className="text-indigo-500 animate-pulse" /> {templates.length} SCHEMATICS_ONLINE
+                       <Radio size={16} className="text-indigo-500 animate-pulse" /> {t('templatesPage.schematicsOnline', { count: templates.length })}
                     </div>
                  </div>
               </div>
@@ -258,8 +260,8 @@ export default function HeuristicBlueprintNodePage() {
                       <HardDrive size={80} className="text-white group-hover/void:rotate-12 transition-transform duration-300" />
                    </div>
                    <div className="space-y-6 mt-16">
-                      <p className="text-[28px] font-black text-white uppercase tracking-[0.6em] italic leading-tight">Schematic Void Occupied</p>
-                      <p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">No matching architectural patterns identified within current neural domain.</p>
+                      <p className="text-[28px] font-black text-white uppercase tracking-[0.6em] italic leading-tight">{t('templatesPage.voidTitle')}</p>
+                      <p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('templatesPage.voidBody')}</p>
                    </div>
                 </div>
               ) : (
@@ -285,19 +287,19 @@ export default function HeuristicBlueprintNodePage() {
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-[#020205] via-transparent to-transparent opacity-80" />
                           <div className="absolute bottom-8 left-8 px-6 py-2 bg-indigo-500 text-black rounded-2xl border border-white/20 text-[10px] font-black uppercase tracking-widest italic translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-3xl">
-                             PREVIEW_HUD_ACTIVE
+                             {t('templatesPage.previewHudActive')}
                           </div>
                         </div>
                       )}
 
                       <div className="flex justify-between items-start mb-8 relative z-10 px-4">
                         <div className="space-y-2">
-                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">Blueprint_ID: {template._id.slice(-8).toUpperCase()}</p>
+                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">{t('templatesPage.blueprintIdLabel', { id: template._id.slice(-8).toUpperCase() })}</p>
                           <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300 line-clamp-1">{template.name.toUpperCase()}</h3>
                         </div>
                         {template.isPublic && (
                           <span className="shrink-0 px-5 py-2 bg-indigo-500 text-black rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-[0_0_30px_rgba(99,102,241,0.4)] animate-pulse">
-                            SOVEREIGN
+                            {t('templatesPage.sovereign')}
                           </span>
                         )}
                       </div>
@@ -312,7 +314,7 @@ export default function HeuristicBlueprintNodePage() {
                           <div className="w-2 h-2 rounded-full bg-slate-500 opacity-20" />
                           <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl border-2 border-white/5 group-hover:border-indigo-500/20">{template.niche.toUpperCase()}</div>
                           <div className="w-2 h-2 rounded-full bg-slate-500 opacity-20" />
-                          <span className="text-indigo-500/60 font-black tabular-nums">{template.usageCount} SYNCED</span>
+                          <span className="text-indigo-500/60 font-black tabular-nums">{t('templatesPage.syncedCount', { count: template.usageCount })}</span>
                         </div>
 
                         {template.tags && template.tags.length > 0 && (
@@ -327,10 +329,10 @@ export default function HeuristicBlueprintNodePage() {
 
                         <button
                           onClick={() => handleInjectLogic(template._id)}
-                          title="Initialize Heuristic Logic"
+                          title={t('templatesPage.initializeLogicTitle')}
                           className="w-full bg-white text-black py-10 rounded-[3.5rem] text-[18px] font-black uppercase tracking-[0.5em] shadow-[0_50px_100px_rgba(255,255,255,0.05)] hover:bg-indigo-500 hover:text-white transition-all duration-300 italic flex items-center justify-center gap-8 group/btn active:scale-95 translate-y-0 group-hover:-translate-y-4"
                         >
-                          INITIALIZE_HEURISTIC_LOGIC <Zap size={32} className="group-hover/btn:animate-spin transition-all text-current" />
+                          {t('templatesPage.initializeLogicCta')} <Zap size={32} className="group-hover/btn:animate-spin transition-all text-current" />
                         </button>
                       </div>
                     </motion.div>

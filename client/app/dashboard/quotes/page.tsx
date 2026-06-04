@@ -7,6 +7,7 @@ import { apiPost } from '../../../lib/api'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useToast } from '../../../contexts/ToastContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 import {
   Sparkles, Download, RefreshCw, Quote, ArrowLeft,
   Target, Radio, Layers, Terminal, ArrowUpRight, Hexagon, Fingerprint, Boxes
@@ -41,6 +42,7 @@ export default function FiscalProposalMatrixPage() {
   const { user } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (!user) router.push('/login')
@@ -56,12 +58,12 @@ export default function FiscalProposalMatrixPage() {
   const handleWisdomSynthesis = async () => {
     const text = wisdomPayload.trim()
     if (!text) {
-      showToast('REQUIRED: ECONOMIC_DIRECTIVE_EMPTY', 'error')
+      showToast(t('quotesPage.toastDirectiveEmpty'), 'error')
       return
     }
 
     setLoading(true)
-    setSwarmHUDTask('Instantiating Fiscal Proposal Matrix')
+    setSwarmHUDTask(t('quotesPage.instantiatingMatrix'))
     setShowSwarmHUD(true)
     try {
       const res = await apiPost<{ quoteCards: AxiomaticFractal[] }>('/quote/generate', {
@@ -70,9 +72,9 @@ export default function FiscalProposalMatrixPage() {
       })
       const list = res?.quoteCards || []
       setFractals(list)
-      showToast(list.length ? `✓ PROPOSALS_COLLECTED: ${list.length}` : 'SIGNAL_LOST: SECTOR_EMPTY', list.length ? 'success' : 'info')
+      showToast(list.length ? t('quotesPage.toastProposalsCollected', { count: list.length }) : t('quotesPage.toastSignalLost'), list.length ? 'success' : 'info')
     } catch (err: any) {
-      showToast('Could not sync: FISCAL_OVERLOAD', 'error')
+      showToast(t('quotesPage.toastFiscalOverload'), 'error')
       setFractals([])
     } finally {
       setLoading(false)
@@ -89,7 +91,7 @@ export default function FiscalProposalMatrixPage() {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    showToast('✓ DOWNLOADING_FISCAL_MANIFEST', 'success')
+    showToast(t('quotesPage.toastDownloadingManifest'), 'success')
   }
 
   return (
@@ -113,7 +115,7 @@ export default function FiscalProposalMatrixPage() {
               <button
                 type="button"
                 onClick={() => router.push('/dashboard')} 
-                title="Abort Session"
+                title={t('quotesPage.abortSession')}
                 className="w-20 h-20 rounded-[2.5rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-lg hover:border-primary-500/50 backdrop-blur-3xl group"
               >
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
@@ -126,15 +128,15 @@ export default function FiscalProposalMatrixPage() {
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
                       <Fingerprint size={16} className="text-primary-500 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-primary-500 italic leading-none">Fiscal Engine v8.2.1</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-primary-500 italic leading-none">{t('quotesPage.fiscalEngineVersion')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-surface-card/60 border-2 border-surface-200 dark:border-white/5 shadow-inner">
                        <Radio size={14} className="text-primary-500 animate-pulse" />
-                       <span className="text-[10px] font-black text-surface-400 tracking-widest uppercase italic leading-none">MARKET_SYMPATHY_STABLE</span>
+                       <span className="text-[10px] font-black text-surface-400 tracking-widest uppercase italic leading-none">{t('quotesPage.marketSympathyStable')}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-surface-900 dark:text-white tracking-tight leading-[1.05] mb-3">Quotes</h1>
-                 <p className="text-surface-500 dark:text-surface-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Generate and send client quotes — line items, deliverables, totals — all niche-templated. Edit, re-send, or accept right from this page.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-surface-900 dark:text-white tracking-tight leading-[1.05] mb-3">{t('quotesPage.title')}</h1>
+                 <p className="text-surface-500 dark:text-surface-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">{t('quotesPage.subtitle')}</p>
               </div>
            </div>
         </header>
@@ -147,10 +149,10 @@ export default function FiscalProposalMatrixPage() {
                  <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-transparent opacity-30" />
                  <div className="flex items-center gap-8 relative z-10">
                     <div className="w-16 h-16 bg-primary-500/10 rounded-[2rem] flex items-center justify-center border-2 border-primary-500/20 shadow-xl group-hover:scale-110 transition-transform duration-300"><Terminal size={32} className="text-primary-500" /></div>
-                    <h2 className="font-black text-surface-900 dark:text-white italic uppercase tracking-tighter text-4xl sm:text-5xl leading-none">Economic Ingress</h2>
+                    <h2 className="font-black text-surface-900 dark:text-white italic uppercase tracking-tighter text-4xl sm:text-5xl leading-none">{t('quotesPage.economicIngress')}</h2>
                  </div>
                  <div className="flex items-center gap-5 relative z-10">
-                    <span className="text-[12px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">SYCHRONIZED_INPUT_STREAM</span>
+                    <span className="text-[12px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">{t('quotesPage.synchronizedInputStream')}</span>
                     <div className="w-3 h-3 rounded-full bg-primary-500 shadow-[0_0_20px_rgba(16,185,129,1)] animate-ping" />
                  </div>
               </div>
@@ -158,24 +160,24 @@ export default function FiscalProposalMatrixPage() {
               <div className="p-8 sm:p-20 space-y-20 relative z-10">
                  <div className="space-y-10">
                     <div className="flex items-center gap-6 border-l-8 border-primary-500 pl-8 py-2">
-                       <label htmlFor="wisdom-id" className="text-[14px] font-black text-surface-400 uppercase tracking-[0.8em] italic leading-none">Economic Directive Payload</label>
+                       <label htmlFor="wisdom-id" className="text-[14px] font-black text-surface-400 uppercase tracking-[0.8em] italic leading-none">{t('quotesPage.directivePayloadLabel')}</label>
                     </div>
                     <textarea
                       id="wisdom-id"
                       value={wisdomPayload}
                       onChange={(e) => setWisdomPayload(e.target.value)}
-                      placeholder="INPUT_MARKET_LOGIC_PARTICLE..."
+                      placeholder={t('quotesPage.directivePayloadPlaceholder')}
                       rows={6}
                       className="w-full bg-surface-page dark:bg-black/80 border-2 border-surface-200 dark:border-white/5 rounded-[4rem] px-8 sm:px-20 py-16 text-2xl sm:text-3xl font-black text-surface-900 dark:text-white uppercase tracking-widest italic focus:outline-none focus:border-primary-500/50 transition-all placeholder:text-surface-300 dark:placeholder:text-slate-600 leading-relaxed resize-none shadow-inner backdrop-blur-3xl"
                       disabled={loading}
-                      title="Directive Ingress"
+                      title={t('quotesPage.directiveIngress')}
                     />
                  </div>
 
                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-20">
                     <div className="space-y-12">
                        <div className="flex items-center gap-6 border-l-4 border-surface-200 dark:border-slate-900 pl-6 py-1">
-                          <label className="text-[14px] font-black text-surface-400 uppercase tracking-[0.6em] italic leading-none">Fiscal Resonance Bias</label>
+                          <label className="text-[14px] font-black text-surface-400 uppercase tracking-[0.6em] italic leading-none">{t('quotesPage.fiscalResonanceBias')}</label>
                        </div>
                        <div className="flex flex-wrap gap-6">
                           {FISCAL_POLARITY.map((s) => (
@@ -186,7 +188,7 @@ export default function FiscalProposalMatrixPage() {
                                disabled={loading}
                                className={`px-12 sm:px-16 py-6 sm:py-8 rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] border-2 transition-all duration-300 italic shadow-lg relative overflow-hidden group/pol ${spectralPolarity === s.value ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-transparent scale-105 shadow-primary-500/40' : 'bg-surface-page/40 dark:bg-white/[0.02] border-surface-200 dark:border-white/5 text-surface-400 hover:text-surface-900 dark:hover:text-white hover:border-primary-500/30'}`}
                              >
-                                 <span className="relative z-10">{s.label}</span>
+                                 <span className="relative z-10">{t(`quotesPage.polarity_${s.value}`)}</span>
                                  <div className={`absolute inset-0 bg-primary-500/10 opacity-0 group-hover/pol:opacity-100 transition-opacity duration-300 ${spectralPolarity === s.value ? 'hidden' : ''}`} />
                              </button>
                           ))}
@@ -201,7 +203,7 @@ export default function FiscalProposalMatrixPage() {
                          className="w-full h-24 flex items-center justify-center gap-10 bg-surface-900 dark:bg-white border-8 border-transparent hover:border-primary-500/30 text-white dark:text-black rounded-[4rem] font-black text-[18px] sm:text-[22px] shadow-xl hover:shadow-primary-500/50 transition-all duration-300 active:scale-95 italic uppercase tracking-[0.8em] group/forge disabled:opacity-20"
                        >
                          {loading ? <RefreshCw className="w-10 h-10 animate-spin" /> : <Sparkles size={40} className="group-hover:rotate-12 transition-transform duration-300 fill-current" />}
-                         {loading ? 'SYNTHESIZING...' : 'INSTANTIATE_PROPOSAL'}
+                         {loading ? t('quotesPage.synthesizing') : t('quotesPage.instantiateProposal')}
                        </button>
                     </div>
                  </div>
@@ -217,8 +219,8 @@ export default function FiscalProposalMatrixPage() {
                   <div className="flex items-center gap-10">
                      <div className="w-16 h-16 bg-primary-500/10 border-2 border-primary-500/20 rounded-[2rem] flex items-center justify-center shadow-lg"><Layers size={32} className="text-primary-500" /></div>
                      <div>
-                        <h2 className="text-4xl sm:text-6xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-2">Fiscal Manifests</h2>
-                        <p className="text-[12px] font-black text-surface-400 uppercase tracking-[0.6em] italic leading-none">Synthesized economic directives calibrated for high- resonance output.</p>
+                        <h2 className="text-4xl sm:text-6xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-2">{t('quotesPage.fiscalManifests')}</h2>
+                        <p className="text-[12px] font-black text-surface-400 uppercase tracking-[0.6em] italic leading-none">{t('quotesPage.fiscalManifestsSubtitle')}</p>
                      </div>
                   </div>
                   <button
@@ -226,7 +228,7 @@ export default function FiscalProposalMatrixPage() {
                     onClick={() => { setWisdomPayload(''); setFractals([]) }}
                     className="px-12 py-6 bg-surface-card border-2 border-surface-200 dark:border-white/10 rounded-[3rem] text-[13px] font-black uppercase tracking-[0.4em] text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-surface-page transition-all italic active:scale-95 shadow-lg group"
                   >
-                    <RefreshCw size={20} className="inline mr-4 group-hover:rotate-180 transition-transform duration-300" /> REBOOT_FISCAL_FORGE
+                    <RefreshCw size={20} className="inline mr-4 group-hover:rotate-180 transition-transform duration-300" /> {t('quotesPage.rebootFiscalForge')}
                   </button>
                </div>
 
@@ -260,12 +262,12 @@ export default function FiscalProposalMatrixPage() {
                          <div className="space-y-8">
                             <div className="flex items-center gap-5">
                                <div className="w-2 h-12 bg-primary-500 rounded-full shadow-[0_0_30px_rgba(16,185,129,1)]" />
-                               <p className="text-[13px] font-black text-primary-500 uppercase tracking-[0.8em] italic leading-none">ECON_DIRECTIVE_ALPHA</p>
+                               <p className="text-[13px] font-black text-primary-500 uppercase tracking-[0.8em] italic leading-none">{t('quotesPage.econDirectiveAlpha')}</p>
                             </div>
                             <p className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic leading-tight tracking-tighter uppercase group-hover:text-primary-500 transition-colors duration-300 line-clamp-4">
                              &ldquo;{fractal.quote.toUpperCase()}&rdquo;
                             </p>
-                            <p className="text-[14px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none border-t-2 border-surface-100 dark:border-white/5 pt-8">— AUTH_ID: {fractal.author.toUpperCase() || 'ANONYMOUS_AGENT'}</p>
+                            <p className="text-[14px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none border-t-2 border-surface-100 dark:border-white/5 pt-8">{t('quotesPage.authId', { author: fractal.author.toUpperCase() || t('quotesPage.anonymousAgent') })}</p>
                          </div>
                          
                          <div className="pt-12 flex gap-8">
@@ -274,12 +276,12 @@ export default function FiscalProposalMatrixPage() {
                               onClick={() => handleFractalExtraction(fractal)}
                               className="flex-1 flex items-center justify-center gap-6 py-6 sm:py-8 bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 hover:text-white rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic shadow-xl group/ext active:scale-95 border-none"
                             >
-                              <Download size={28} className="group-hover/ext:translate-y-2 transition-transform duration-700" /> EXTRACT_MANIFEST
+                              <Download size={28} className="group-hover/ext:translate-y-2 transition-transform duration-700" /> {t('quotesPage.extractManifest')}
                             </button>
                             <button
                                type="button"
                                className="w-20 sm:w-24 h-20 sm:h-24 bg-surface-page dark:bg-white/[0.03] border-2 border-surface-200 dark:border-white/10 text-surface-400 hover:text-surface-900 dark:hover:text-white rounded-[2.5rem] flex items-center justify-center transition-all duration-300 hover:rotate-12 hover:bg-surface-card active:scale-90 hover:border-primary-500/50 backdrop-blur-3xl group/res"
-                               title="Analyze"
+                               title={t('quotesPage.analyze')}
                             >
                                <ArrowUpRight size={40} className="group-hover/res:translate-x-1 group-hover/res:-translate-y-1 transition-transform" />
                             </button>
@@ -298,8 +300,8 @@ export default function FiscalProposalMatrixPage() {
                 <Boxes size={120} className="text-surface-900 dark:text-white animate-pulse" />
              </div>
              <div className="space-y-10">
-                <p className="text-5xl sm:text-7xl font-black text-surface-900 dark:text-white uppercase tracking-[1em] italic leading-none">Fiscal Void</p>
-                <p className="text-[16px] sm:text-[20px] font-black text-surface-400 uppercase tracking-[0.8em] italic leading-relaxed">No strategic manifests detected in current sector.<br/>Initiate synthesis to activate economic phantoms.</p>
+                <p className="text-5xl sm:text-7xl font-black text-surface-900 dark:text-white uppercase tracking-[1em] italic leading-none">{t('quotesPage.fiscalVoid')}</p>
+                <p className="text-[16px] sm:text-[20px] font-black text-surface-400 uppercase tracking-[0.8em] italic leading-relaxed">{t('quotesPage.fiscalVoidLine1')}<br/>{t('quotesPage.fiscalVoidLine2')}</p>
              </div>
           </motion.div>
         )}

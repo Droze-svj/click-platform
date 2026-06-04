@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
 import {
   Folder, Search,
@@ -30,9 +31,10 @@ interface FolderType {
 
 export default function LibraryPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
-  
+
   const [content, setContent] = useState<Content[]>([])
   const [folders, setFolders] = useState<FolderType[]>([])
   const [tags, setTags] = useState<string[]>([])
@@ -79,12 +81,12 @@ export default function LibraryPage() {
       if (foldersRes.data.success) setFolders(foldersRes.data.data || [])
       if (tagsRes.data.success) setTags(tagsRes.data.data || [])
       if (categoriesRes.data.success) setCategories(categoriesRes.data.data || [])
-    } catch (error) { 
-      showToast('Error syncing library data', 'error') 
-    } finally { 
-      setLoading(false) 
+    } catch (error) {
+      showToast(t('libraryPage.errorSyncing'), 'error')
+    } finally {
+      setLoading(false)
     }
-  }, [selectedFolder, selectedTag, selectedCategory, showFavorites, searchQuery, showToast])
+  }, [selectedFolder, selectedTag, selectedCategory, showFavorites, searchQuery, showToast, t])
 
   useEffect(() => {
     if (!user) { router.push('/login'); return }
@@ -97,9 +99,9 @@ export default function LibraryPage() {
     try {
       const token = localStorage.getItem('token')
       await axios.post(`${API_URL}/batch/tag`, { contentIds: tagModalIds, tags: [tagInput.trim()], action: 'add' }, { headers: { Authorization: `Bearer ${token}` } })
-      showToast('Tags applied successfully', 'success')
+      showToast(t('libraryPage.tagsApplied'), 'success')
       setTagModalIds(null); setTagInput(''); loadLibrary()
-    } catch { showToast('Error applying tags', 'error') }
+    } catch { showToast(t('libraryPage.errorApplyingTags'), 'error') }
     finally { setBusy(false) }
   }
 
@@ -110,9 +112,9 @@ export default function LibraryPage() {
       const token = localStorage.getItem('token')
       const folderId = moveFolderId === 'none' || !moveFolderId ? null : moveFolderId
       await axios.post(`${API_URL}/batch/update`, { contentIds: moveModalIds, updates: { folderId } }, { headers: { Authorization: `Bearer ${token}` } })
-      showToast('Assets moved successfully', 'success')
+      showToast(t('libraryPage.assetsMoved'), 'success')
       setMoveModalIds(null); setMoveFolderId(''); loadLibrary()
-    } catch { showToast('Error moving assets', 'error') }
+    } catch { showToast(t('libraryPage.errorMovingAssets'), 'error') }
     finally { setBusy(false) }
   }
 
@@ -126,9 +128,9 @@ export default function LibraryPage() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a'); a.href = url; a.download = `click-export-${Date.now()}.${exportFormat}`; a.click()
       window.URL.revokeObjectURL(url)
-      showToast('Export successful', 'success')
+      showToast(t('libraryPage.exportSuccessful'), 'success')
       setExportModalIds(null)
-    } catch { showToast('Export failed', 'error') }
+    } catch { showToast(t('libraryPage.exportFailed'), 'error') }
     finally { setBusy(false) }
   }
 
@@ -137,9 +139,9 @@ export default function LibraryPage() {
     try {
       const token = localStorage.getItem('token')
       await axios.post(`${API_URL}/library/folders`, { name: newFolderName }, { headers: { Authorization: `Bearer ${token}` } })
-      showToast('Folder created', 'success')
+      showToast(t('libraryPage.folderCreated'), 'success')
       setShowCreateFolder(false); setNewFolderName(''); await loadLibrary()
-    } catch { showToast('Error creating folder', 'error') }
+    } catch { showToast(t('libraryPage.errorCreatingFolder'), 'error') }
   }
 
   const handleToggleFavorite = async (contentId: string, currentValue: boolean) => {
@@ -147,12 +149,12 @@ export default function LibraryPage() {
       const token = localStorage.getItem('token')
       await axios.put(`${API_URL}/library/content/${contentId}/organize`, { isFavorite: !currentValue }, { headers: { Authorization: `Bearer ${token}` } })
       await loadLibrary()
-      showToast(!currentValue ? 'Added to favorites' : 'Removed from favorites', 'success')
-    } catch { showToast('Error updating favorite status', 'error') }
+      showToast(!currentValue ? t('libraryPage.addedToFavorites') : t('libraryPage.removedFromFavorites'), 'success')
+    } catch { showToast(t('libraryPage.errorUpdatingFavorite'), 'error') }
   }
 
   if (loading) return (
-     <div className="min-h-screen bg-surface-50 dark:bg-surface-950 transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-8" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen bg-surface-50 dark:bg-surface-950 transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-8" aria-busy="true" aria-label={t('libraryPage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -170,7 +172,7 @@ export default function LibraryPage() {
         {/* ── Header ── */}
         <header className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6 pb-6 border-b border-surface-200 dark:border-surface-800">
           <div className="flex items-center gap-5">
-            <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors shadow-sm">
+            <button type="button" onClick={() => router.push('/dashboard')} title={t('libraryPage.backToDashboard')} aria-label={t('libraryPage.backToDashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors shadow-sm">
               <ArrowLeft size={20} />
             </button>
             <div className="w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/40 border border-primary-200 dark:border-primary-800 flex items-center justify-center shadow-sm">
@@ -179,17 +181,17 @@ export default function LibraryPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                  Asset Library
+                  {t('libraryPage.assetLibraryBadge')}
                 </span>
                 <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-                  <Activity size={12} /> Sync Active
+                  <Activity size={12} /> {t('libraryPage.syncActive')}
                 </span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-none mt-2">
-                Content Hub
+                {t('libraryPage.title')}
               </h1>
               <p className="text-sm font-medium text-surface-500 dark:text-surface-400 mt-2 max-w-xl">
-                Every clip, asset, and template Click has processed for you. Search, filter, and drop items directly into the autonomous editor.
+                {t('libraryPage.subtitle')}
               </p>
             </div>
           </div>
@@ -200,11 +202,11 @@ export default function LibraryPage() {
                 selectMode ? 'bg-primary-600 text-white border-primary-500' : 'bg-white dark:bg-surface-900 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'
               }`}
             >
-              {selectMode ? 'Done Selecting' : 'Batch Select'}
+              {selectMode ? t('libraryPage.doneSelecting') : t('libraryPage.batchSelect')}
             </button>
             <button onClick={() => setShowCreateFolder(true)}
               className="px-6 py-3 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-800 dark:hover:bg-surface-100 transition-all flex items-center gap-2">
-              <Plus size={16} /> New Folder
+              <Plus size={16} /> {t('libraryPage.newFolder')}
             </button>
           </div>
         </header>
@@ -221,7 +223,7 @@ export default function LibraryPage() {
                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                       <Search size={18} className="text-surface-400" />
                    </div>
-                   <input type="text" placeholder="Search assets..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                   <input type="text" placeholder={t('libraryPage.searchAssetsPlaceholder')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                      className="w-full bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-xl pl-10 pr-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all" 
                    />
                 </div>
@@ -229,13 +231,13 @@ export default function LibraryPage() {
                 {/* Folders */}
                 <div className="space-y-3">
                    <h3 className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                      <Folder size={14} /> Folders
+                      <Folder size={14} /> {t('libraryPage.folders')}
                    </h3>
                    <div className="space-y-1">
                      <button onClick={() => setSelectedFolder(null)}
                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-between ${selectedFolder === null ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800'}`}
                      >
-                       All Assets
+                       {t('libraryPage.allAssets')}
                      </button>
                      {folders.map((folder) => (
                        <button key={folder._id} onClick={() => setSelectedFolder(folder._id)}
@@ -251,7 +253,7 @@ export default function LibraryPage() {
                 {/* Tags */}
                 <div className="space-y-3">
                    <h3 className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                      <Tag size={14} /> Tags
+                      <Tag size={14} /> {t('libraryPage.tags')}
                    </h3>
                    <div className="flex flex-wrap gap-2">
                      {tags.map((tag) => (
@@ -267,7 +269,7 @@ export default function LibraryPage() {
                 {/* Categories */}
                 <div className="space-y-3">
                    <h3 className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                      <Layers size={14} /> Categories
+                      <Layers size={14} /> {t('libraryPage.categories')}
                    </h3>
                    <div className="space-y-1">
                      {categories.map((category) => (
@@ -285,7 +287,7 @@ export default function LibraryPage() {
                   <button onClick={() => setShowFavorites(!showFavorites)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border ${showFavorites ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-200 dark:border-amber-800' : 'bg-surface-50 dark:bg-surface-950 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}
                   >
-                    <Star size={16} fill={showFavorites ? 'currentColor' : 'none'} /> Favorites
+                    <Star size={16} fill={showFavorites ? 'currentColor' : 'none'} /> {t('libraryPage.favorites')}
                   </button>
                 </div>
              </div>
@@ -297,8 +299,8 @@ export default function LibraryPage() {
                 
                 <header className="flex items-center justify-between mb-8 pb-6 border-b border-surface-200 dark:border-surface-800">
                    <div>
-                     <h2 className="text-2xl font-black text-surface-900 dark:text-surface-50">Assets</h2>
-                     <p className="text-sm font-medium text-surface-500 mt-1">{content.length} items found</p>
+                     <h2 className="text-2xl font-black text-surface-900 dark:text-surface-50">{t('libraryPage.assets')}</h2>
+                     <p className="text-sm font-medium text-surface-500 mt-1">{t('libraryPage.itemsFound', { count: content.length })}</p>
                    </div>
                 </header>
 
@@ -311,7 +313,7 @@ export default function LibraryPage() {
                         {selectMode && (
                           <div className="absolute top-4 left-4 z-20">
                             <input type="checkbox" checked={selectedItems.includes(item._id)} onChange={() => setSelectedItems(prev => prev.includes(item._id) ? prev.filter(x => x !== item._id) : [...prev, item._id])}
-                              aria-label={`Select ${item.title || 'item'}`}
+                              aria-label={t('libraryPage.selectItem', { title: item.title || t('libraryPage.itemFallback') })}
                               className="w-5 h-5 rounded border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                             />
                           </div>
@@ -320,15 +322,15 @@ export default function LibraryPage() {
                         <div className="flex-1 flex flex-col">
                           <header className="flex justify-between items-start mb-4">
                              <div className={`flex-1 min-w-0 pr-4 ${selectMode ? 'pl-8' : ''}`}>
-                                <h3 className="text-base font-bold text-surface-900 dark:text-white truncate" title={item.title}>{item.title || 'Untitled Asset'}</h3>
+                                <h3 className="text-base font-bold text-surface-900 dark:text-white truncate" title={item.title}>{item.title || t('libraryPage.untitledAsset')}</h3>
                                 <div className="flex items-center gap-2 mt-1">
                                   <Video size={12} className="text-primary-500" />
                                   <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">{item.type}</span>
                                 </div>
                              </div>
                              <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleFavorite(item._id, item.isFavorite) }}
-                               title={item.isFavorite ? 'Remove from favourites' : 'Add to favourites'}
-                               aria-label={item.isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+                               title={item.isFavorite ? t('libraryPage.removeFromFavourites') : t('libraryPage.addToFavourites')}
+                               aria-label={item.isFavorite ? t('libraryPage.removeFromFavourites') : t('libraryPage.addToFavourites')}
                                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${item.isFavorite ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>
                                <Star size={16} fill={item.isFavorite ? 'currentColor' : 'none'} />
                              </button>
@@ -353,10 +355,10 @@ export default function LibraryPage() {
 
                         <div className="flex gap-2 pt-4 mt-4 border-t border-surface-200 dark:border-surface-800">
                           <button type="button" onClick={() => router.push(`/dashboard/content/${item._id}`)}
-                            title="Open asset"
+                            title={t('libraryPage.openAsset')}
                             className="flex-1 bg-surface-900 dark:bg-white text-white dark:text-surface-900 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:bg-surface-800 dark:hover:bg-surface-100 flex items-center justify-center gap-2"
                           >
-                            Open <ChevronRight size={14} />
+                            {t('libraryPage.open')} <ChevronRight size={14} />
                           </button>
                         </div>
                       </motion.article>
@@ -369,8 +371,8 @@ export default function LibraryPage() {
                      <div className="w-20 h-20 bg-surface-100 dark:bg-surface-800 rounded-2xl flex items-center justify-center mb-6">
                         <Folder size={32} className="text-surface-400" />
                      </div>
-                     <h3 className="text-xl font-black text-surface-900 dark:text-white mb-2">No Assets Found</h3>
-                     <p className="text-sm font-medium text-surface-500 max-w-sm">No items match your current filters. Clear your search or create a new asset.</p>
+                     <h3 className="text-xl font-black text-surface-900 dark:text-white mb-2">{t('libraryPage.noAssetsFound')}</h3>
+                     <p className="text-sm font-medium text-surface-500 max-w-sm">{t('libraryPage.noAssetsFoundDesc')}</p>
                   </div>
                 )}
              </div>
@@ -386,40 +388,40 @@ export default function LibraryPage() {
                       <div className="w-10 h-10 bg-primary-600 text-white rounded-xl flex items-center justify-center font-black">
                          {selectedItems.length}
                       </div>
-                      <span className="text-sm font-bold text-white dark:text-surface-900 uppercase tracking-wider">Selected</span>
+                      <span className="text-sm font-bold text-white dark:text-surface-900 uppercase tracking-wider">{t('libraryPage.selected')}</span>
                    </div>
                    
                    <div className="flex items-center gap-2 px-4">
-                      <button type="button" onClick={() => setTagModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Add tags" aria-label="Add tags">
+                      <button type="button" onClick={() => setTagModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title={t('libraryPage.addTags')} aria-label={t('libraryPage.addTags')}>
                         <Tag size={20} />
                       </button>
-                      <button type="button" onClick={() => setMoveModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Move to folder" aria-label="Move to folder">
+                      <button type="button" onClick={() => setMoveModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title={t('libraryPage.moveToFolder')} aria-label={t('libraryPage.moveToFolder')}>
                         <Folder size={20} />
                       </button>
-                      <button type="button" onClick={() => setExportModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Export selected" aria-label="Export selected">
+                      <button type="button" onClick={() => setExportModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title={t('libraryPage.exportSelected')} aria-label={t('libraryPage.exportSelected')}>
                         <Download size={20} />
                       </button>
                       <div className="w-px h-6 bg-surface-800 dark:bg-surface-200 mx-2" />
                       <button type="button"
                          onClick={async () => {
-                            if (!confirm(`Delete ${selectedItems.length} items? This action cannot be undone.`)) return
+                            if (!confirm(t('libraryPage.confirmDelete', { count: selectedItems.length }))) return
                             setBusy(true)
                             try {
                               const token = localStorage.getItem('token')
                               await axios.post(`${API_URL}/batch/delete`, { contentIds: selectedItems }, { headers: { Authorization: `Bearer ${token}` } })
-                              showToast(`Deleted ${selectedItems.length} items`, 'success')
+                              showToast(t('libraryPage.deletedItems', { count: selectedItems.length }), 'success')
                               setSelectedItems([]); await loadLibrary()
-                            } catch { showToast('Error deleting items', 'error') }
+                            } catch { showToast(t('libraryPage.errorDeletingItems'), 'error') }
                             finally { setBusy(false) }
                          }}
                          disabled={busy}
                          className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-rose-500 transition-colors flex items-center gap-2"
                       >
                         {busy ? <RefreshCw className="animate-spin" size={16} /> : <Trash2 size={16} />}
-                        Delete
+                        {t('libraryPage.delete')}
                       </button>
                    </div>
-                   <button type="button" onClick={() => setSelectedItems([])} title="Clear selection" aria-label="Clear selection" className="p-2 text-surface-400 hover:text-white dark:hover:text-surface-900 mr-2"><X size={20}/></button>
+                   <button type="button" onClick={() => setSelectedItems([])} title={t('libraryPage.clearSelection')} aria-label={t('libraryPage.clearSelection')} className="p-2 text-surface-400 hover:text-white dark:hover:text-surface-900 mr-2"><X size={20}/></button>
                 </div>
              </motion.div>
            )}
@@ -436,21 +438,21 @@ export default function LibraryPage() {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">Add Tags</h3>
-                <button type="button" onClick={() => setTagModalIds(null)} title="Close" aria-label="Close tag modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">{t('libraryPage.addTags')}</h3>
+                <button type="button" onClick={() => setTagModalIds(null)} title={t('libraryPage.close')} aria-label={t('libraryPage.closeTagModal')} className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
               </div>
-              <p className="text-sm text-surface-500 mb-4">Adding tag to <strong>{tagModalIds.length}</strong> item{tagModalIds.length !== 1 ? 's' : ''}.</p>
+              <p className="text-sm text-surface-500 mb-4">{t('libraryPage.addingTagTo', { count: tagModalIds.length })}</p>
               <input
                 type="text" value={tagInput} onChange={e => setTagInput(e.target.value)}
-                placeholder="e.g. tutorial, brand, q4-campaign"
-                aria-label="Tag name" title="Tag name"
+                placeholder={t('libraryPage.tagInputPlaceholder')}
+                aria-label={t('libraryPage.tagName')} title={t('libraryPage.tagName')}
                 className="w-full border border-surface-200 dark:border-surface-700 rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-950 text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 mb-4"
                 onKeyDown={e => { if (e.key === 'Enter') handleTagInjection() }}
               />
               <div className="flex gap-3">
-                <button type="button" onClick={() => setTagModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setTagModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">{t('libraryPage.cancel')}</button>
                 <button type="button" onClick={handleTagInjection} disabled={busy || !tagInput.trim()} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
-                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Tag size={14} />} Apply Tag
+                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Tag size={14} />} {t('libraryPage.applyTag')}
                 </button>
               </div>
             </motion.div>
@@ -470,22 +472,22 @@ export default function LibraryPage() {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">Move to Folder</h3>
-                <button type="button" onClick={() => setMoveModalIds(null)} title="Close" aria-label="Close move modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">{t('libraryPage.moveToFolder')}</h3>
+                <button type="button" onClick={() => setMoveModalIds(null)} title={t('libraryPage.close')} aria-label={t('libraryPage.closeMoveModal')} className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
               </div>
-              <p className="text-sm text-surface-500 mb-4">Moving <strong>{moveModalIds.length}</strong> item{moveModalIds.length !== 1 ? 's' : ''}.</p>
+              <p className="text-sm text-surface-500 mb-4">{t('libraryPage.movingItems', { count: moveModalIds.length })}</p>
               <select
                 value={moveFolderId} onChange={e => setMoveFolderId(e.target.value)}
-                aria-label="Select destination folder" title="Select destination folder"
+                aria-label={t('libraryPage.selectDestinationFolder')} title={t('libraryPage.selectDestinationFolder')}
                 className="w-full border border-surface-200 dark:border-surface-700 rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-950 text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 mb-4"
               >
-                <option value="none">No folder (root)</option>
+                <option value="none">{t('libraryPage.noFolderRoot')}</option>
                 {folders.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
               </select>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setMoveModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setMoveModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">{t('libraryPage.cancel')}</button>
                 <button type="button" onClick={handleLatticeTransfer} disabled={busy} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
-                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Folder size={14} />} Move
+                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Folder size={14} />} {t('libraryPage.move')}
                 </button>
               </div>
             </motion.div>
@@ -505,10 +507,10 @@ export default function LibraryPage() {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">Export Assets</h3>
-                <button type="button" onClick={() => setExportModalIds(null)} title="Close" aria-label="Close export modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">{t('libraryPage.exportAssets')}</h3>
+                <button type="button" onClick={() => setExportModalIds(null)} title={t('libraryPage.close')} aria-label={t('libraryPage.closeExportModal')} className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
               </div>
-              <p className="text-sm text-surface-500 mb-4">Exporting <strong>{exportModalIds.length}</strong> item{exportModalIds.length !== 1 ? 's' : ''}.</p>
+              <p className="text-sm text-surface-500 mb-4">{t('libraryPage.exportingItems', { count: exportModalIds.length })}</p>
               <div className="grid grid-cols-2 gap-3 mb-6">
                 {(['json', 'csv'] as const).map(fmt => (
                   <button key={fmt} type="button" onClick={() => setExportFormat(fmt)}
@@ -517,9 +519,9 @@ export default function LibraryPage() {
                 ))}
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setExportModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
+                <button type="button" onClick={() => setExportModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">{t('libraryPage.cancel')}</button>
                 <button type="button" onClick={handleExtraction} disabled={busy} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
-                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />} Export
+                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />} {t('libraryPage.export')}
                 </button>
               </div>
             </motion.div>
@@ -540,20 +542,20 @@ export default function LibraryPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
-                  <FolderPlus size={20} className="text-primary-500" /> New Folder
+                  <FolderPlus size={20} className="text-primary-500" /> {t('libraryPage.newFolder')}
                 </h3>
-                <button type="button" onClick={() => setShowCreateFolder(false)} title="Close" aria-label="Close create folder modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+                <button type="button" onClick={() => setShowCreateFolder(false)} title={t('libraryPage.close')} aria-label={t('libraryPage.closeCreateFolderModal')} className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
               </div>
               <input
                 type="text" value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
-                placeholder="Folder name"
-                aria-label="Folder name" title="Folder name"
+                placeholder={t('libraryPage.folderNamePlaceholder')}
+                aria-label={t('libraryPage.folderName')} title={t('libraryPage.folderName')}
                 className="w-full border border-surface-200 dark:border-surface-700 rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-950 text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 mb-4"
                 onKeyDown={e => { if (e.key === 'Enter') handleInitCapsule() }}
               />
               <div className="flex gap-3">
-                <button type="button" onClick={() => setShowCreateFolder(false)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
-                <button type="button" onClick={handleInitCapsule} disabled={!newFolderName.trim()} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40">Create</button>
+                <button type="button" onClick={() => setShowCreateFolder(false)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">{t('libraryPage.cancel')}</button>
+                <button type="button" onClick={handleInitCapsule} disabled={!newFolderName.trim()} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40">{t('libraryPage.create')}</button>
               </div>
             </motion.div>
           </motion.div>

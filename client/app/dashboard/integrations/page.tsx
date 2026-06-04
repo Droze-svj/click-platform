@@ -10,6 +10,7 @@ import {
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { apiGet, apiPost, apiDelete } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
@@ -58,6 +59,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; dot: string; bg
 
 export default function IntegrationsPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
 
@@ -80,9 +82,9 @@ export default function IntegrationsPage() {
       setInstalled(Array.isArray(installedList) ? installedList : [])
       setMarketplace(Array.isArray(marketList) ? marketList : [])
     } catch {
-      showToast('Failed to load integrations', 'error')
+      showToast(t('integrationsPage.toastLoadFailed'), 'error')
     } finally { setLoading(false) }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     if (authLoading) return
@@ -96,10 +98,10 @@ export default function IntegrationsPage() {
     setInstallingId(id)
     try {
       await apiPost('/integrations/install', { marketplaceId: id, config: { provider: item.provider } })
-      showToast(`${item.name} connected successfully`, 'success')
+      showToast(t('integrationsPage.toastConnected', { name: item.name }), 'success')
       await loadAll()
     } catch (e: any) {
-      showToast(e?.response?.data?.error || 'Authentication required to connect', 'error')
+      showToast(e?.response?.data?.error || t('integrationsPage.toastAuthRequired'), 'error')
     } finally { setInstallingId(null) }
   }
 
@@ -107,10 +109,10 @@ export default function IntegrationsPage() {
     setSyncingId(id)
     try {
       await apiPost(`/integrations/${id}/sync`, {})
-      showToast('Synchronization started', 'success')
+      showToast(t('integrationsPage.toastSyncStarted'), 'success')
       await loadAll()
     } catch {
-      showToast('Synchronization failed', 'error')
+      showToast(t('integrationsPage.toastSyncFailed'), 'error')
     } finally { setSyncingId(null) }
   }
 
@@ -118,10 +120,10 @@ export default function IntegrationsPage() {
     setRemoving(true)
     try {
       await apiDelete(`/integrations/${id}`)
-      showToast('Integration disconnected', 'success')
+      showToast(t('integrationsPage.toastDisconnected'), 'success')
       await loadAll()
     } catch {
-      showToast('Failed to disconnect integration', 'error')
+      showToast(t('integrationsPage.toastDisconnectFailed'), 'error')
     } finally { setRemoving(false); setRemoveTargetId(null) }
   }
 
@@ -152,7 +154,7 @@ export default function IntegrationsPage() {
           {/* Header */}
           <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-surface-200 dark:border-surface-800 pb-8">
             <div className="flex items-center gap-6">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-12 h-12 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors shadow-sm">
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('integrationsPage.backToDashboard')} aria-label={t('integrationsPage.backToDashboard')} className="w-12 h-12 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors shadow-sm">
                 <ArrowLeft size={20} />
               </button>
               <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
@@ -161,26 +163,26 @@ export default function IntegrationsPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                    Ecosystem
+                    {t('integrationsPage.ecosystem')}
                   </span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Integrations</h1>
-                <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg">Manage your connected social platforms to automate publishing and track performance data.</p>
+                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">{t('integrationsPage.title')}</h1>
+                <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg">{t('integrationsPage.subtitle')}</p>
               </div>
             </div>
             <button type="button" onClick={() => setShowMarketplace(s => !s)} className={`px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm border-none ${showMarketplace ? 'bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-300 dark:hover:bg-surface-700' : 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white'}`}>
               {showMarketplace ? <X size={16} /> : <Plus size={16} />}
-              {showMarketplace ? 'Close Catalog' : 'Browse Platforms'}
+              {showMarketplace ? t('integrationsPage.closeCatalog') : t('integrationsPage.browsePlatforms')}
             </button>
           </header>
 
           {/* Stats Section */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { label: 'Connected', value: installed.length, icon: Link2 },
-              { label: 'Active Sync',  value: installed.filter(i => i.status === 'active').length, icon: Zap },
-              { label: 'Issues Found',   value: installed.filter(i => i.status === 'error').length, icon: AlertTriangle },
-              { label: 'Supported Apps',value: marketplace.length, icon: Globe },
+              { label: t('integrationsPage.statConnected'), value: installed.length, icon: Link2 },
+              { label: t('integrationsPage.statActiveSync'),  value: installed.filter(i => i.status === 'active').length, icon: Zap },
+              { label: t('integrationsPage.statIssuesFound'),   value: installed.filter(i => i.status === 'error').length, icon: AlertTriangle },
+              { label: t('integrationsPage.statSupportedApps'),value: marketplace.length, icon: Globe },
             ].map((s, i) => (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={i} className="bg-surface-card border border-surface-200 dark:border-surface-800 rounded-3xl p-6 flex items-center gap-4 shadow-sm">
                 <div className="w-12 h-12 rounded-xl bg-surface-page border border-surface-200 dark:border-surface-800 flex items-center justify-center">
@@ -205,20 +207,20 @@ export default function IntegrationsPage() {
                         <Globe size={24} className="text-primary-600 dark:text-primary-400" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">Integration Catalog</h2>
-                        <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">Browse available platforms</p>
+                        <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">{t('integrationsPage.catalogTitle')}</h2>
+                        <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">{t('integrationsPage.catalogSubtitle')}</p>
                       </div>
                     </div>
                     <div className="relative w-full md:w-80">
                       <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-                      <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search platforms..." className="w-full bg-surface-page border border-surface-200 dark:border-surface-800 rounded-xl pl-10 pr-4 py-3 text-sm font-medium text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow shadow-inner" />
+                      <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('integrationsPage.searchPlaceholder')} className="w-full bg-surface-page border border-surface-200 dark:border-surface-800 rounded-xl pl-10 pr-4 py-3 text-sm font-medium text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow shadow-inner" />
                     </div>
                   </div>
 
                   {visibleMarketplace.length === 0 ? (
                     <div className="py-20 text-center space-y-4">
                       <Search size={32} className="text-surface-300 dark:text-surface-700 mx-auto" />
-                      <p className="text-sm font-bold text-surface-500">No platforms match your search.</p>
+                      <p className="text-sm font-bold text-surface-500">{t('integrationsPage.noPlatformsMatch')}</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -234,15 +236,15 @@ export default function IntegrationsPage() {
                                 </div>
                                 <div className="min-w-0">
                                   <h4 className="text-base font-black text-surface-900 dark:text-white tracking-tight mb-1 truncate">{m.name}</h4>
-                                  <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">{m.category || 'Social'}</p>
+                                  <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">{m.category || t('integrationsPage.categorySocial')}</p>
                                 </div>
                               </div>
-                              {m.popular && <span className="px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[9px] font-bold uppercase tracking-wider shrink-0">POPULAR</span>}
+                              {m.popular && <span className="px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[9px] font-bold uppercase tracking-wider shrink-0">{t('integrationsPage.popular')}</span>}
                             </div>
                             <p className="text-sm text-surface-500 dark:text-surface-400 font-medium leading-relaxed line-clamp-2">{m.description}</p>
                             <button type="button" onClick={() => handleInstall(m)} disabled={isInstalling} className="mt-auto w-full py-3 bg-surface-card border border-surface-200 dark:border-surface-800 text-surface-900 dark:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm">
                               {isInstalling ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
-                              {isInstalling ? 'Authorizing...' : 'Connect'}
+                              {isInstalling ? t('integrationsPage.authorizing') : t('integrationsPage.connect')}
                             </button>
                           </div>
                         )
@@ -262,8 +264,8 @@ export default function IntegrationsPage() {
                   <Radio size={24} className="text-surface-600 dark:text-surface-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">Active Integrations</h2>
-                  <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">Manage connections</p>
+                  <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">{t('integrationsPage.activeIntegrations')}</h2>
+                  <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">{t('integrationsPage.manageConnections')}</p>
                 </div>
               </div>
             </div>
@@ -274,17 +276,18 @@ export default function IntegrationsPage() {
                   <Unlink size={32} className="text-surface-400" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-black text-surface-900 dark:text-white">No Platforms Connected</h3>
-                  <p className="text-surface-500 text-sm max-w-sm mx-auto">Connect your first platform to start distributing content.</p>
+                  <h3 className="text-xl font-black text-surface-900 dark:text-white">{t('integrationsPage.noPlatformsConnected')}</h3>
+                  <p className="text-surface-500 text-sm max-w-sm mx-auto">{t('integrationsPage.noPlatformsConnectedDesc')}</p>
                 </div>
                 <button type="button" onClick={() => setShowMarketplace(true)} className="px-6 py-3 bg-primary-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-primary-700 transition-colors shadow-lg flex items-center gap-2 border-none">
-                  <Plus size={16} /> Connect Platform
+                  <Plus size={16} /> {t('integrationsPage.connectPlatform')}
                 </button>
               </div>
             ) : (
               <div className="divide-y divide-surface-200 dark:divide-surface-800">
                 {installed.map(intg => {
-                  const cfg = STATUS_CFG[intg.status] || STATUS_CFG.inactive
+                  const statusKey = STATUS_CFG[intg.status] ? intg.status : 'inactive'
+                  const cfg = STATUS_CFG[statusKey]
                   const isSyncing = syncingId === intg._id
                   return (
                     <div key={intg._id} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 sm:p-8 hover:bg-surface-page dark:hover:bg-white/[0.02] transition-colors group">
@@ -297,7 +300,7 @@ export default function IntegrationsPage() {
                            <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
                              <span className="text-surface-700 dark:text-surface-300">{intg.provider || intg.type}</span>
                              <span>•</span>
-                             <span>Last Sync: {intg.lastSyncAt ? new Date(intg.lastSyncAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Never'}</span>
+                             <span>{t('integrationsPage.lastSync', { time: intg.lastSyncAt ? new Date(intg.lastSyncAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : t('integrationsPage.never') })}</span>
                            </div>
                          </div>
                       </div>
@@ -305,14 +308,14 @@ export default function IntegrationsPage() {
                       <div className="flex items-center gap-4 w-full md:w-auto">
                         <div className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${cfg.bg} ${cfg.color}`}>
                           <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                          {cfg.label}
+                          {t(`integrationsPage.status_${statusKey}`)}
                         </div>
                         
                         <div className="flex items-center gap-2 ml-auto md:ml-0">
-                          <button type="button" disabled={isSyncing} onClick={() => handleSync(intg._id)} title="Sync Platform" aria-label="Sync Platform" className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white flex items-center justify-center transition-colors shadow-sm">
+                          <button type="button" disabled={isSyncing} onClick={() => handleSync(intg._id)} title={t('integrationsPage.syncPlatform')} aria-label={t('integrationsPage.syncPlatform')} className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white flex items-center justify-center transition-colors shadow-sm">
                             <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
                           </button>
-                          <button type="button" onClick={() => setRemoveTargetId(intg._id)} title="Disconnect Platform" aria-label="Disconnect Platform" className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center transition-colors shadow-sm">
+                          <button type="button" onClick={() => setRemoveTargetId(intg._id)} title={t('integrationsPage.disconnectPlatform')} aria-label={t('integrationsPage.disconnectPlatform')} className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center transition-colors shadow-sm">
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -332,17 +335,17 @@ export default function IntegrationsPage() {
                   <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 flex items-center justify-center mb-6">
                     <Unlink size={24} className="text-rose-600 dark:text-rose-400" />
                   </div>
-                  <h3 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Disconnect {removeTarget.name}?</h3>
+                  <h3 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-2">{t('integrationsPage.disconnectModalTitle', { name: removeTarget.name })}</h3>
                   <p className="text-sm font-medium text-surface-500 dark:text-surface-400 mb-8 leading-relaxed">
-                    This will remove the connection to {removeTarget.name}. All scheduled posts for this platform will fail to publish until reconnected.
+                    {t('integrationsPage.disconnectModalBody', { name: removeTarget.name })}
                   </p>
                   <div className="flex items-center justify-end gap-3">
                     <button disabled={removing} onClick={() => setRemoveTargetId(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors border-none">
-                      Cancel
+                      {t('integrationsPage.cancel')}
                     </button>
                     <button disabled={removing} onClick={() => handleRemove(removeTarget._id)} className="px-5 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-rose-700 transition-colors shadow-lg flex items-center gap-2 border-none">
                       {removing ? <RefreshCw size={14} className="animate-spin" /> : <Unlink size={14} />}
-                      {removing ? 'Disconnecting...' : 'Disconnect'}
+                      {removing ? t('integrationsPage.disconnecting') : t('integrationsPage.disconnect')}
                     </button>
                   </div>
                 </motion.div>

@@ -5,10 +5,12 @@ import MarketingStrategistChat from '../../../components/MarketingStrategistChat
 import NicheStrategyPanel from '../../../components/NicheStrategyPanel'
 import HookVariantsCard from '../../../components/HookVariantsCard'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
+import { useTranslation } from '@/hooks/useTranslation'
 import { motion } from 'framer-motion'
 
 export default function StrategistPage() {
   const { state, setNiche } = useWorkflow()
+  const { t } = useTranslation()
   const niche = state.niche || 'general'
   const platform = state.platform || 'tiktok'
 
@@ -24,17 +26,17 @@ export default function StrategistPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-secondary-100 text-secondary-700 dark:bg-secondary-900/50 dark:text-secondary-400 uppercase tracking-wide border border-secondary-200 dark:border-secondary-800">
-                Click Intelligence
+                {t('strategistPage.clickIntelligence')}
               </span>
               <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-                <Activity size={12} /> Systems Online
+                <Activity size={12} /> {t('strategistPage.systemsOnline')}
               </span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-none mt-2">
-              Marketing Strategist
+              {t('strategistPage.title')}
             </h1>
             <p className="text-sm font-medium text-surface-500 dark:text-surface-400 mt-2 max-w-2xl">
-              Niche-aware playbooks, hook libraries, and an autonomous strategist actively analyzing your category.
+              {t('strategistPage.subtitle')}
             </p>
           </div>
         </div>
@@ -42,14 +44,14 @@ export default function StrategistPage() {
         {/* Dynamic Context Pill */}
         <div className="flex items-center gap-4 px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm text-xs w-full lg:w-auto">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-0.5">Active Niche</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-0.5">{t('strategistPage.activeNiche')}</span>
             <span className="font-bold text-primary-600 dark:text-primary-400 capitalize flex items-center gap-1.5">
               <Sparkles size={14} /> {niche}
             </span>
           </div>
           <div className="w-px h-8 bg-surface-200 dark:bg-surface-800 mx-2" />
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-0.5">Target Platform</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-0.5">{t('strategistPage.targetPlatform')}</span>
             <span className="font-bold text-secondary-600 dark:text-secondary-400 capitalize flex items-center gap-1.5">
               <Compass size={14} /> {platform}
             </span>
@@ -68,7 +70,7 @@ export default function StrategistPage() {
           <div className="bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900/50">
               <h2 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                <Sparkles size={16} className="text-primary-500" /> Niche Intelligence
+                <Sparkles size={16} className="text-primary-500" /> {t('strategistPage.nicheIntelligence')}
               </h2>
             </div>
             <div className="p-4">
@@ -83,7 +85,7 @@ export default function StrategistPage() {
         <div className="xl:col-span-8 min-h-[700px] bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900/50 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-              <BrainCircuit size={16} className="text-secondary-500" /> Autonomous Agent Chat
+              <BrainCircuit size={16} className="text-secondary-500" /> {t('strategistPage.autonomousAgentChat')}
             </h2>
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

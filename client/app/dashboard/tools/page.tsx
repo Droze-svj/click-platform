@@ -16,6 +16,7 @@ import {
   ArrowRight, Scissors, Music, Zap, Bot, Wand2,
   Subtitles, Type, Sparkles, FileText
 } from 'lucide-react'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface Tool {
   id: string
@@ -117,37 +118,36 @@ const TOOLS: Tool[] = [
 ]
 
 export default function ToolsHubPage() {
+  const { t } = useTranslation()
   return (
     <main className="min-h-screen px-8 md:px-16 py-12 max-w-[1500px] mx-auto">
       <header className="mb-12">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 dark:text-indigo-400 italic mb-3">AI Tools Hub</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 dark:text-indigo-400 italic mb-3">{t('toolsPage.eyebrow')}</p>
         <h1 className="text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight italic uppercase leading-none mb-4">
-          Every advanced tool, in the editor.
+          {t('toolsPage.heading')}
         </h1>
         <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl">
-          Silence cutting, filler removal, viral clip extraction, captions, music, background removal, cinematic
-          grading, blog-to-reel, and Descript-style text editing. Click ships them all — every card opens the
-          editor with that tool ready to run on the video you load.
+          {t('toolsPage.subheading')}
         </p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {TOOLS.map((t) => {
-          const Icon = t.icon
+        {TOOLS.map((tool) => {
+          const Icon = tool.icon
           return (
             <Link
-              key={t.id}
-              href={t.link}
+              key={tool.id}
+              href={tool.link}
               className="group relative overflow-hidden rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] backdrop-blur-xl p-7 h-full flex flex-col transition-all hover:border-slate-300 dark:hover:border-white/30 hover:-translate-y-1 hover:shadow-2xl"
             >
-              <div className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${t.accent} blur-2xl opacity-50 group-hover:opacity-80 transition-opacity`} />
-              <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${t.accent} border flex items-center justify-center mb-5 shadow-lg`}>
+              <div className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${tool.accent} blur-2xl opacity-50 group-hover:opacity-80 transition-opacity`} />
+              <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${tool.accent} border flex items-center justify-center mb-5 shadow-lg`}>
                 <Icon className="w-5 h-5" aria-hidden="true" />
               </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-2 leading-tight">{t.title}</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 flex-1">{t.blurb}</p>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-2 leading-tight">{t(`toolsPage.tools.${tool.id}.title`)}</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 flex-1">{t(`toolsPage.tools.${tool.id}.blurb`)}</p>
               <div className="flex items-center gap-2 text-sm font-bold text-indigo-600 dark:text-indigo-300 group-hover:text-indigo-500 dark:group-hover:text-indigo-200 transition-colors">
-                {t.cta}
+                {t(`toolsPage.tools.${tool.id}.cta`)}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>

@@ -16,6 +16,7 @@ import { extractApiError } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { apiGet, apiPost, apiDelete, api } from '../../../lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../components/ToastContainer'
@@ -51,6 +52,7 @@ export default function ScriptsPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { state: workflow, completeStage } = useWorkflow()
+  const { t } = useTranslation()
 
   const [scripts, setScripts] = useState<Script[]>([])
   const [loading, setLoading] = useState(true)
@@ -78,9 +80,9 @@ export default function ScriptsPage() {
       const data = res?.data ?? (Array.isArray(res) ? res : [])
       setScripts(data)
     } catch {
-      showToast('Could not load: SCRIPT_unavailable', 'error')
+      showToast(t('scriptsPage.toastLoadFailed'), 'error')
     } finally { setLoading(false) }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => { if (!user) router.push('/login'); else loadScripts() }, [user, router, loadScripts])
 
@@ -100,12 +102,12 @@ export default function ScriptsPage() {
       const res: any = await apiPost('/scripts/generate', { topic: seed.trim(), type: platform, options })
       const data = res?.data || res
       if (data?._id) {
-        showToast('✓ SYNTHESIS_COMPLETE: SCRIPT_GENERATED', 'success')
+        showToast(t('scriptsPage.toastSynthesisComplete'), 'success')
         setLatestScriptId(data._id); await loadScripts(); setShowTerminal(false); setSeed('')
         completeStage('script')
       }
     } catch {
-      showToast('SYNTHESIS_FAILURE: GENERATION_ABORTED', 'error')
+      showToast(t('scriptsPage.toastSynthesisFailed'), 'error')
     } finally { setSynthesizing(false) }
   }
 
@@ -115,8 +117,8 @@ export default function ScriptsPage() {
       const url = URL.createObjectURL(new Blob([res.data]))
       Object.assign(document.createElement('a'), { href: url, download: `script-${id}.txt` }).click()
       URL.revokeObjectURL(url)
-      showToast('✓ PAYLOAD_EXPORTED', 'success')
-    } catch { showToast('EXPORT_ERR: FAILED_TO_DOWNLOAD', 'error') }
+      showToast(t('scriptsPage.toastExported'), 'success')
+    } catch { showToast(t('scriptsPage.toastExportFailed'), 'error') }
   }
 
   const handleCopyScript = async (s: Script) => {
@@ -129,7 +131,7 @@ export default function ScriptsPage() {
     }
     if (text) {
       await navigator.clipboard.writeText(text)
-      setCopyId(s._id); showToast('✓ CLIPBOARD_SYNCED', 'success')
+      setCopyId(s._id); showToast(t('scriptsPage.toastClipboardSynced'), 'success')
       setTimeout(() => setCopyId(null), 2000)
     }
   }
@@ -138,10 +140,10 @@ export default function ScriptsPage() {
     setDeleting(true)
     try {
       await apiDelete(`/scripts/${id}`)
-      showToast('✓ NODE_DELETED', 'success')
+      showToast(t('scriptsPage.toastDeleted'), 'success')
       if (latestScriptId === id) setLatestScriptId(null)
       await loadScripts()
-    } catch { showToast('DELETE_ERR: FAILED_TO_REMOVE', 'error') }
+    } catch { showToast(t('scriptsPage.toastDeleteFailed'), 'error') }
     finally { setDeleting(false); setDeleteTargetId(null) }
   }
 
@@ -153,7 +155,7 @@ export default function ScriptsPage() {
   })
 
   if (loading) return (
-    <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1750px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label="Loading">
+    <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1750px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label={t('scriptsPage.loading')}>
        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
        </div>
@@ -172,7 +174,7 @@ export default function ScriptsPage() {
         <header className="flex flex-col md:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-100 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-8 w-full md:w-auto min-w-0">
               <button type="button" onClick={() => router.push('/dashboard')} 
-                title="Back to Dashboard" aria-label="Back to Dashboard"
+                title={t('scriptsPage.backToDashboard')} aria-label={t('scriptsPage.backToDashboard')}
                 className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90 group">
                 <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
               </button>
@@ -182,14 +184,14 @@ export default function ScriptsPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-500/10 text-primary-600 dark:text-primary-400 uppercase tracking-[0.2em] border-2 border-primary-500/20 italic leading-none">
-                      Scriptorium Core
+                      {t('scriptsPage.badgeScriptoriumCore')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                        {scripts.length} TOTAL_SCRIPTS
+                        {t('scriptsPage.totalScriptsCount', { count: scripts.length })}
                     </div>
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Scriptorium</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('scriptsPage.title')}</h1>
               </div>
            </div>
 
@@ -197,17 +199,17 @@ export default function ScriptsPage() {
              className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[1.8rem] text-[11px] font-black uppercase tracking-[0.5em] italic shadow-[0_30px_80px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center gap-5 active:scale-95 border-none"
            >
              {showTerminal ? <X size={24} /> : <Plus size={24} />}
-             {showTerminal ? 'ABORT_SESSION' : 'NEW_SYNTHESIS'}
+             {showTerminal ? t('scriptsPage.abortSession') : t('scriptsPage.newSynthesis')}
            </button>
         </header>
 
         {/* Stats Grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
-            { label: 'Total Scripts', value: scripts.length, icon: FileText, color: 'text-primary-500 bg-primary-500/10 border-primary-500/20' },
-            { label: 'YouTube Strands', value: scripts.filter(s => s.type === 'youtube').length, icon: Radio, color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
-            { label: 'Social Vectors', value: scripts.filter(s => s.type === 'social-media').length, icon: Globe, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
-            { label: 'Growth Cycles', value: scripts.filter(s => s.wordCount > 1000).length, icon: Sparkles, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+            { label: t('scriptsPage.statTotalScripts'), value: scripts.length, icon: FileText, color: 'text-primary-500 bg-primary-500/10 border-primary-500/20' },
+            { label: t('scriptsPage.statYoutubeStrands'), value: scripts.filter(s => s.type === 'youtube').length, icon: Radio, color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
+            { label: t('scriptsPage.statSocialVectors'), value: scripts.filter(s => s.type === 'social-media').length, icon: Globe, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+            { label: t('scriptsPage.statGrowthCycles'), value: scripts.filter(s => s.wordCount > 1000).length, icon: Sparkles, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
           ].map((stat, i) => (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={stat.label}
               className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-8 shadow-xl flex items-center gap-6 group hover:bg-surface-page transition-all duration-500 relative overflow-hidden"
@@ -235,14 +237,14 @@ export default function ScriptsPage() {
                   <Sparkles size={32} className="text-white animate-pulse" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">Neural Synthesis</h2>
-                  <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">Draft high-converting scripts via Swarm Consensus</p>
+                  <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">{t('scriptsPage.neuralSynthesis')}</h2>
+                  <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">{t('scriptsPage.neuralSynthesisSubtitle')}</p>
                 </div>
               </div>
 
               <form onSubmit={handleGenerateScript} className="p-10 lg:p-16 space-y-12">
                 <div className="space-y-6">
-                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Inspiration Vectors</label>
+                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('scriptsPage.inspirationVectors')}</label>
                   <div className="flex flex-wrap gap-4">
                     {SAMPLE_PROMPTS.map(p => (
                       <button type="button" key={p} onClick={() => setSeed(p)}
@@ -256,14 +258,14 @@ export default function ScriptsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                    <div className="space-y-6 lg:col-span-2">
-                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Core Thesis / Operational Hook</label>
-                      <input type="text" value={seed} onChange={e => setSeed(e.target.value)} required placeholder="INITIALIZE_MISSION_PARAMETERS..."
+                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('scriptsPage.coreThesis')}</label>
+                      <input type="text" value={seed} onChange={e => setSeed(e.target.value)} required placeholder={t('scriptsPage.coreThesisPlaceholder')}
                         className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-10 py-8 text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                       />
                    </div>
 
                    <div className="space-y-8">
-                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Output Strata (Platform)</label>
+                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('scriptsPage.outputStrata')}</label>
                       <div className="grid grid-cols-2 gap-6">
                          {Object.entries(DEPLOYMENT_PLATFORMS).map(([id, cfg]) => (
                             <button type="button" key={id} onClick={() => setPlatform(id)}
@@ -277,9 +279,9 @@ export default function ScriptsPage() {
 
                    <div className="grid grid-cols-2 gap-8">
                       <div className="space-y-6">
-                        <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Vocal Signature (Tone)</label>
+                        <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('scriptsPage.vocalSignature')}</label>
                         <div className="relative group/sel">
-                          <select value={tone} onChange={e => setTone(e.target.value)} aria-label="Vocal tone" title="Vocal tone" className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-5 text-[10px] font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-xl transition-all group-hover/sel:bg-surface-card">
+                          <select value={tone} onChange={e => setTone(e.target.value)} aria-label={t('scriptsPage.vocalTone')} title={t('scriptsPage.vocalTone')} className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-5 text-[10px] font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-xl transition-all group-hover/sel:bg-surface-card">
                              {TONE_OPTIONS.map(t => <option key={t} value={t} className="bg-surface-card">{t.toUpperCase()}</option>)}
                           </select>
                           <ChevronDown size={22} className="absolute right-6 top-1/2 -translate-y-1/2 text-surface-400 group-hover/sel:text-primary-500 pointer-events-none transition-colors" />
@@ -287,10 +289,10 @@ export default function ScriptsPage() {
                       </div>
                       {(platform === 'youtube' || platform === 'podcast') && (
                         <div className="space-y-6">
-                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Duration (Mins)</label>
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('scriptsPage.durationMins')}</label>
                           <input type="number" value={duration} onChange={e => setDuration(parseInt(e.target.value,10)||1)} min={1} max={60}
-                            aria-label="Duration in minutes"
-                            title="Duration in minutes"
+                            aria-label={t('scriptsPage.durationInMinutes')}
+                            title={t('scriptsPage.durationInMinutes')}
                             className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-5 text-sm font-black text-surface-900 dark:text-white italic focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                           />
                         </div>
@@ -303,7 +305,7 @@ export default function ScriptsPage() {
                      className="px-16 py-7 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-sm font-black uppercase tracking-[1em] italic shadow-[0_40px_100px_rgba(0,0,0,0.5)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all duration-300 border-none active:scale-95 flex items-center gap-8 group/forge"
                    >
                      {synthesizing ? <RefreshCw className="animate-spin" size={28} /> : <Sparkles size={28} className="group-hover/forge:rotate-12 transition-transform" />}
-                     {synthesizing ? 'INITIALIZING_SYNTHESIS...' : 'COMMENCE_SYNTHESIS'}
+                     {synthesizing ? t('scriptsPage.initializingSynthesis') : t('scriptsPage.commenceSynthesis')}
                    </button>
                 </div>
               </form>
@@ -317,7 +319,7 @@ export default function ScriptsPage() {
            <header className="p-10 border-b-2 border-surface-100 dark:border-surface-800 flex flex-col lg:flex-row items-center gap-10 bg-surface-page/30 relative z-10">
               <div className="relative flex-1 w-full group/search">
                  <Search size={24} className="absolute left-8 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within/search:text-primary-500 transition-colors" />
-                 <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="SEARCH_SCRIPTS_ARCHIVE..."
+                 <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('scriptsPage.searchArchivePlaceholder')}
                    className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.2rem] pl-20 pr-8 py-5 text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:outline-none focus:border-primary-500 transition-all shadow-inner backdrop-blur-xl"
                  />
               </div>
@@ -326,7 +328,7 @@ export default function ScriptsPage() {
                    <button key={id} onClick={() => setFilterPlatform(id)}
                      className={`px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest italic whitespace-nowrap transition-all border-2 ${filterPlatform === id ? 'bg-primary-600 text-white border-transparent shadow-xl scale-110 z-10' : 'bg-surface-page dark:bg-surface-900/50 text-surface-400 hover:text-primary-500 border-surface-100 dark:border-surface-800 shadow-inner'}`}
                    >
-                     {id === 'all' ? 'ALL_NODES' : DEPLOYMENT_PLATFORMS[id].label.toUpperCase()}
+                     {id === 'all' ? t('scriptsPage.allNodes') : DEPLOYMENT_PLATFORMS[id].label.toUpperCase()}
                    </button>
                  ))}
               </div>
@@ -336,7 +338,7 @@ export default function ScriptsPage() {
               {filteredScripts.length === 0 ? (
                 <div className="py-56 text-center opacity-10 flex flex-col items-center">
                    <FileText size={120} className="mb-10" />
-                   <p className="text-3xl font-black uppercase tracking-[1em] italic">NULL_ARCHIVE_MATCH</p>
+                   <p className="text-3xl font-black uppercase tracking-[1em] italic">{t('scriptsPage.nullArchiveMatch')}</p>
                 </div>
               ) : (
                 filteredScripts.map((s, idx) => {
@@ -349,27 +351,27 @@ export default function ScriptsPage() {
                        </div>
                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-6 mb-4">
-                             <h4 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter truncate italic uppercase group-hover/item:text-primary-500 transition-colors duration-500 leading-none">{s.topic || s.title || 'NULL_IDENTIFIER'}</h4>
+                             <h4 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter truncate italic uppercase group-hover/item:text-primary-500 transition-colors duration-500 leading-none">{s.topic || s.title || t('scriptsPage.nullIdentifier')}</h4>
                              <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-surface-page dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 text-surface-400 uppercase tracking-widest italic leading-none">{cfg.label.toUpperCase()}</span>
                           </div>
                           <div className="flex flex-wrap items-center gap-10 text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic leading-none">
-                             <span className="flex items-center gap-3 hover:text-primary-500 transition-colors"><Type size={18} className="text-primary-500" /> {s.wordCount} WORDS</span>
+                             <span className="flex items-center gap-3 hover:text-primary-500 transition-colors"><Type size={18} className="text-primary-500" /> {t('scriptsPage.wordsCount', { count: s.wordCount })}</span>
                              <div className="w-2 h-2 rounded-full bg-surface-100 dark:bg-surface-800" />
                              <span className="flex items-center gap-3 hover:text-primary-500 transition-colors"><Clock size={18} className="text-primary-500" /> {new Date(s.createdAt).toLocaleDateString().toUpperCase()}</span>
                           </div>
                        </div>
                        <div className="flex items-center gap-4 sm:opacity-0 group-hover/item:opacity-100 transition-all duration-500">
-                           <button type="button" onClick={() => handleCopyScript(s)} title="Copy Script" aria-label="Copy Script" className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-emerald-500 hover:border-emerald-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
+                           <button type="button" onClick={() => handleCopyScript(s)} title={t('scriptsPage.copyScript')} aria-label={t('scriptsPage.copyScript')} className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-emerald-500 hover:border-emerald-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
                              {copyId === s._id ? <Check size={28} className="text-emerald-500 animate-pulse" /> : <Copy size={28} className="group-hover/btn:scale-110 transition-transform" />}
                            </button>
-                           <button type="button" onClick={() => handleExportScript(s._id)} title="Export Script" aria-label="Export Script" className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-primary-500 hover:border-primary-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
+                           <button type="button" onClick={() => handleExportScript(s._id)} title={t('scriptsPage.exportScript')} aria-label={t('scriptsPage.exportScript')} className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-primary-500 hover:border-primary-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
                              <Download size={28} className="group-hover/btn:scale-110 transition-transform" />
                            </button>
-                           <button type="button" onClick={() => setDeleteTargetId(s._id)} title="Purge Script" aria-label="Purge Script" className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-rose-500 hover:border-rose-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
+                           <button type="button" onClick={() => setDeleteTargetId(s._id)} title={t('scriptsPage.purgeScript')} aria-label={t('scriptsPage.purgeScript')} className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-rose-500 hover:border-rose-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
                              <Trash2 size={28} className="group-hover/btn:scale-110 transition-transform" />
                            </button>
                           <Link href={`/dashboard/scripts/${s._id}`} className="px-12 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.8em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all ml-6 active:scale-95 text-center">
-                             OPEN_NODE
+                             {t('scriptsPage.openNode')}
                           </Link>
                        </div>
                     </motion.div>
@@ -387,12 +389,12 @@ export default function ScriptsPage() {
                    <div className="w-24 h-24 bg-rose-500/10 border-2 border-rose-500/20 rounded-[2rem] flex items-center justify-center mb-12 mx-auto shadow-2xl group-hover/modal:rotate-12 transition-transform">
                       <Trash2 size={48} className="text-rose-500" />
                    </div>
-                   <h3 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase mb-6 leading-none">Purge Node?</h3>
-                   <p className="text-sm font-bold text-surface-500 dark:text-slate-400 mb-16 italic uppercase tracking-tight leading-relaxed px-10">This will permanently de-index the script from the neural collective. This action is irreversible and final.</p>
+                   <h3 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase mb-6 leading-none">{t('scriptsPage.purgeNodeTitle')}</h3>
+                   <p className="text-sm font-bold text-surface-500 dark:text-slate-400 mb-16 italic uppercase tracking-tight leading-relaxed px-10">{t('scriptsPage.purgeNodeBody')}</p>
                    <div className="flex gap-8">
-                      <button onClick={() => setDeleteTargetId(null)} className="flex-1 py-6 rounded-[2rem] bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[12px] tracking-[0.6em] italic border-2 border-surface-100 dark:border-surface-800 active:scale-95 transition-all shadow-inner">ABORT_PURGE</button>
+                      <button onClick={() => setDeleteTargetId(null)} className="flex-1 py-6 rounded-[2rem] bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[12px] tracking-[0.6em] italic border-2 border-surface-100 dark:border-surface-800 active:scale-95 transition-all shadow-inner">{t('scriptsPage.abortPurge')}</button>
                       <button onClick={() => handleDeleteScript(deleteTargetId)} disabled={deleting} className="flex-1 py-6 rounded-[2rem] bg-rose-600 text-white font-black uppercase text-[12px] tracking-[1em] italic shadow-[0_20px_50px_rgba(244,63,94,0.4)] border-none active:scale-95 transition-all hover:bg-rose-500 flex items-center justify-center gap-4">
-                        {deleting ? <RefreshCw className="animate-spin" size={24} /> : 'COMMIT_PURGE'}
+                        {deleting ? <RefreshCw className="animate-spin" size={24} /> : t('scriptsPage.commitPurge')}
                       </button>
                    </div>
                 </motion.div>

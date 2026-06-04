@@ -16,10 +16,12 @@ import LoadingSkeleton from '../../../../components/LoadingSkeleton'
 import ToastContainer from '../../../../components/ToastContainer'
 import { useAuth } from '../../../../hooks/useAuth'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function IdentityMatrixInterfacePage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   // Coarser save-state for the pill in the header. Cycles:
@@ -183,12 +185,12 @@ export default function IdentityMatrixInterfacePage() {
           setProfile((p) => ({ ...p, profilePicture: null }))
         } catch (avatarErr: any) {
           window.dispatchEvent(new CustomEvent('toast', {
-            detail: { message: avatarErr?.response?.data?.error || "Couldn't upload avatar.", type: 'error' },
+            detail: { message: avatarErr?.response?.data?.error || t('profilePage.avatarUploadError'), type: 'error' },
           }))
         }
       }
 
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Profile saved.', type: 'success' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('profilePage.saveSuccess'), type: 'success' } }))
       // Re-baseline the drift detector with the values that actually
       // persisted (server may normalise) so the pill doesn't re-flip
       // to "Unsaved changes" immediately.
@@ -209,7 +211,7 @@ export default function IdentityMatrixInterfacePage() {
       // forward; otherwise we go to idle.
       window.setTimeout(() => setSaveState((s) => (s === 'saved' ? 'idle' : s)), 2000)
     } catch (error: any) {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: "Couldn't save profile.", type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('profilePage.saveError'), type: 'error' } }))
       setSaveState('dirty')
     } finally {
       setSaving(false)
@@ -219,7 +221,7 @@ export default function IdentityMatrixInterfacePage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
         <Fingerprint size={80} className="text-primary-500 animate-spin mb-12" />
-        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Loading…</p>
+        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">{t('profilePage.loading')}</p>
      </div>
   );
 
@@ -231,7 +233,7 @@ export default function IdentityMatrixInterfacePage() {
         {/* Matrix Header */}
         <header className="flex flex-col lg:flex-row justify-between items-center gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-6 w-full lg:w-auto min-w-0">
-               <button type="button" onClick={() => router.push('/dashboard/settings')} title="Back to Settings" aria-label="Back to Settings" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+               <button type="button" onClick={() => router.push('/dashboard/settings')} title={t('profilePage.backToSettings')} aria-label={t('profilePage.backToSettings')} className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
                  <ArrowLeft size={24} />
                </button>
               <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -240,7 +242,7 @@ export default function IdentityMatrixInterfacePage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
-                      Profile
+                      {t('profilePage.badge')}
                     </span>
                     {/* Live save indicator. Was hardcoded to "Saved" + a
                         green dot regardless of state, which let users
@@ -253,12 +255,12 @@ export default function IdentityMatrixInterfacePage() {
                           saveState === 'dirty' ? 'bg-amber-500' :
                           'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
                         }`} />
-                        {saveState === 'saving' ? 'Saving…'
-                          : saveState === 'dirty' ? 'Unsaved changes'
-                          : 'Saved'}
+                        {saveState === 'saving' ? t('profilePage.statusSaving')
+                          : saveState === 'dirty' ? t('profilePage.statusUnsaved')
+                          : t('profilePage.statusSaved')}
                     </div>
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Profile</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('profilePage.title')}</h1>
               </div>
            </div>
 
@@ -267,7 +269,7 @@ export default function IdentityMatrixInterfacePage() {
                 className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.6em] italic rounded-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-4 group border-none"
               >
                 {saving ? <RefreshCw className="animate-spin" size={22} /> : <Lock size={22} className="group-hover:scale-110 transition-transform duration-500" />}
-                {saving ? 'Saving…' : 'Save profile'}
+                {saving ? t('profilePage.statusSaving') : t('profilePage.saveButton')}
               </button>
            </div>
         </header>
@@ -284,14 +286,14 @@ export default function IdentityMatrixInterfacePage() {
                     <div className="w-60 h-60 rounded-[4rem] bg-surface-page dark:bg-surface-950 border-4 border-surface-100 dark:border-surface-800 p-2 shadow-inner overflow-hidden transition-all duration-700 group-hover/avatar:border-primary-500/30 group-hover/avatar:scale-105">
                        <div className="w-full h-full rounded-[3.4rem] overflow-hidden bg-surface-card dark:bg-surface-900 flex items-center justify-center relative">
                           {preview || (user as any)?.avatar ? (
-                            <img src={preview || (user as any)?.avatar} alt="Profile" className="w-full h-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-1000" />
+                            <img src={preview || (user as any)?.avatar} alt={t('profilePage.avatarAlt')} className="w-full h-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-1000" />
                           ) : (
                             <User className="w-24 h-24 text-surface-200 dark:text-slate-800 group-hover/avatar:text-primary-500 transition-all duration-500" />
                           )}
                           <div className="absolute inset-0 bg-primary-500/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
                        </div>
                     </div>
-                     <label title="Change photo" aria-label="Change photo" className="absolute -bottom-4 -right-4 w-18 h-18 bg-surface-900 dark:bg-white text-white dark:text-black border-4 border-surface-page dark:border-surface-card rounded-[1.8rem] flex items-center justify-center cursor-pointer hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-2xl active:scale-90 group-hover/avatar:rotate-12">
+                     <label title={t('profilePage.changePhoto')} aria-label={t('profilePage.changePhoto')} className="absolute -bottom-4 -right-4 w-18 h-18 bg-surface-900 dark:bg-white text-white dark:text-black border-4 border-surface-page dark:border-surface-card rounded-[1.8rem] flex items-center justify-center cursor-pointer hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-2xl active:scale-90 group-hover/avatar:rotate-12">
                         <Camera size={28} />
                         <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                      </label>
@@ -301,31 +303,31 @@ export default function IdentityMatrixInterfacePage() {
                     {/* Name autofit — was `text-4xl font-black italic uppercase tracking-tighter leading-none` which forced
                         "Dario Vuma" onto one too-wide line, getting clipped at the avatar column edge to "DARIO VUM".
                         Switched to a fluid size + wrapping so any first+last name renders cleanly. */}
-                    <h3 className="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-white leading-tight group-hover:text-primary-500 transition-colors duration-500 [overflow-wrap:anywhere]">{profile.name || 'Your name'}</h3>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-white leading-tight group-hover:text-primary-500 transition-colors duration-500 [overflow-wrap:anywhere]">{profile.name || t('profilePage.namePlaceholderDisplay')}</h3>
                     <div className="px-6 py-2 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 shadow-inner max-w-full">
                        {/* Email was uppercase + tracking-[0.4em] + truncated which clipped "dariovuma@gmail.com" to
                            "DARIOVUMA@G…". Plain case + break-all so the whole address always shows. */}
-                       <p className="text-[11px] sm:text-xs text-surface-500 dark:text-slate-400 font-semibold italic leading-snug break-all">{profile.email || 'Add your email'}</p>
+                       <p className="text-[11px] sm:text-xs text-surface-500 dark:text-slate-400 font-semibold italic leading-snug break-all">{profile.email || t('profilePage.emailPlaceholderDisplay')}</p>
                     </div>
                  </div>
 
                  <div className="w-full pt-10 border-t-2 border-surface-100 dark:border-surface-800 flex flex-col gap-6 relative z-10">
                      {preview && (
                         <button type="button" onClick={() => { setPreview(null); setProfile(prev => ({ ...prev, profilePicture: null })) }} 
-                          title="Remove photo" aria-label="Remove photo"
+                          title={t('profilePage.removePhoto')} aria-label={t('profilePage.removePhoto')}
                           className="text-[10px] font-black text-rose-500 uppercase tracking-[0.5em] hover:text-rose-600 transition-all p-5 italic bg-rose-500/5 rounded-2xl border-2 border-rose-500/10 shadow-inner group/purge"
                         >
                            <div className="flex items-center justify-center gap-4">
-                              <X size={18} className="group-hover:rotate-180 transition-transform duration-500" /> Remove photo
+                              <X size={18} className="group-hover:rotate-180 transition-transform duration-500" /> {t('profilePage.removePhoto')}
                            </div>
                         </button>
                      )}
                     <div className="p-8 rounded-[2.5rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-between group cursor-default shadow-inner hover:border-primary-500/30 transition-all duration-500">
                        <div className="flex items-center gap-5 text-surface-400 dark:text-slate-600 group-hover:text-primary-500 transition-colors duration-700">
                           <Activity size={20} className="animate-pulse" />
-                          <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">Plan</span>
+                          <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">{t('profilePage.plan')}</span>
                        </div>
-                       <span className="text-[10px] font-black text-white italic bg-primary-600 px-5 py-2 rounded-xl shadow-lg uppercase tracking-widest">Pro</span>
+                       <span className="text-[10px] font-black text-white italic bg-primary-600 px-5 py-2 rounded-xl shadow-lg uppercase tracking-widest">{t('profilePage.planPro')}</span>
                     </div>
                  </div>
               </motion.div>
@@ -335,14 +337,14 @@ export default function IdentityMatrixInterfacePage() {
               >
                  <div className="flex items-center gap-6 border-b-2 border-surface-100 dark:border-surface-800 pb-8">
                     <Network size={20} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors duration-700" />
-                    <h3 className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic leading-none">Social links</h3>
+                    <h3 className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic leading-none">{t('profilePage.socialLinks')}</h3>
                  </div>
                  <div className="space-y-8">
-                    <UplinkField icon={Twitter} label="X (Twitter)" value={profile.social_links.twitter || ''} placeholder="https://x.com/..." 
+                    <UplinkField icon={Twitter} label={t('profilePage.socialTwitter')} value={profile.social_links.twitter || ''} placeholder="https://x.com/..."
                       onChange={(v) => setProfile(prev => ({ ...prev, social_links: { ...prev.social_links, twitter: v } }))} />
-                    <UplinkField icon={Linkedin} label="LinkedIn" value={profile.social_links.linkedin || ''} placeholder="https://linkedin.com/..." 
+                    <UplinkField icon={Linkedin} label={t('profilePage.socialLinkedin')} value={profile.social_links.linkedin || ''} placeholder="https://linkedin.com/..."
                       onChange={(v) => setProfile(prev => ({ ...prev, social_links: { ...prev.social_links, linkedin: v } }))} />
-                    <UplinkField icon={Instagram} label="Instagram" value={profile.social_links.instagram || ''} placeholder="https://instagram.com/..." 
+                    <UplinkField icon={Instagram} label={t('profilePage.socialInstagram')} value={profile.social_links.instagram || ''} placeholder="https://instagram.com/..."
                       onChange={(v) => setProfile(prev => ({ ...prev, social_links: { ...prev.social_links, instagram: v } }))} />
                  </div>
               </motion.div>
@@ -358,16 +360,16 @@ export default function IdentityMatrixInterfacePage() {
                  <div className="flex items-center gap-8 mb-16 relative z-10">
                     <div className="w-18 h-18 rounded-[1.8rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500"><Target size={36} className="text-primary-600 dark:text-primary-400 animate-pulse" /></div>
                     <div>
-                       <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">Account details</h2>
-                       <p className="text-[11px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.5em] italic leading-none">Your name, contact, and where Click reaches you.</p>
+                       <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">{t('profilePage.accountDetails')}</h2>
+                       <p className="text-[11px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.5em] italic leading-none">{t('profilePage.accountDetailsSubtitle')}</p>
                     </div>
                  </div>
 
                  <div className="space-y-14 relative z-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                       <ConfigField icon={User} label="Full name" value={profile.name} placeholder="e.g. Jane Doe"
+                       <ConfigField icon={User} label={t('profilePage.fullName')} value={profile.name} placeholder={t('profilePage.fullNamePlaceholder')}
                          onChange={(v) => setProfile(prev => ({ ...prev, name: v }))} isLarge />
-                       <ConfigField icon={Mail} label="Email" value={profile.email} placeholder="you@example.com"
+                       <ConfigField icon={Mail} label={t('profilePage.email')} value={profile.email} placeholder={t('profilePage.emailFieldPlaceholder')}
                          onChange={(v) => setProfile(prev => ({ ...prev, email: v }))} isLocked />
                     </div>
 
@@ -375,29 +377,29 @@ export default function IdentityMatrixInterfacePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                        <ConfigField
                          icon={UserCheck}
-                         label="Display name"
+                         label={t('profilePage.displayName')}
                          value={profile.username}
-                         placeholder="Shown on your dashboard greeting"
+                         placeholder={t('profilePage.displayNamePlaceholder')}
                          onChange={(v) => setProfile(prev => ({ ...prev, username: v }))}
                          isLarge
                        />
                        <div className="flex items-end pb-2 px-2">
                          <p className="text-[11px] font-bold text-surface-400 dark:text-slate-500 italic uppercase tracking-[0.2em]">
-                           Optional. If empty, your first name is used. Max 40 chars.
+                           {t('profilePage.displayNameHint')}
                          </p>
                        </div>
                     </div>
 
                     <div className="space-y-6">
-                       <label className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic pl-6">Bio</label>
+                       <label className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic pl-6">{t('profilePage.bio')}</label>
                        <div className="group relative">
                           <textarea
                             value={profile.bio}
                             onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value.slice(0, 500) }))}
                             rows={8}
-                            placeholder="Tell people who you are and what you make."
+                            placeholder={t('profilePage.bioPlaceholder')}
                             className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] px-10 py-10 text-lg font-black text-surface-900 dark:text-white uppercase italic tracking-[0.05em] focus:outline-none focus:border-primary-500/40 transition-all placeholder:text-surface-200 dark:placeholder:text-slate-900 shadow-inner leading-relaxed min-h-[280px]"
-                            title="Bio"
+                            title={t('profilePage.bio')}
                           />
                           <div className="absolute top-10 right-10 pointer-events-none opacity-5 group-focus-within:opacity-20 transition-opacity duration-1000">
                              <Fingerprint size={120} className="text-primary-500" />
@@ -405,39 +407,39 @@ export default function IdentityMatrixInterfacePage() {
                        </div>
                        <div className="flex justify-between items-center px-8">
                           <div className="flex items-center gap-4 text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic">
-                             <ActivitySquare size={14} className="text-primary-500 animate-pulse" /> Bio length
+                             <ActivitySquare size={14} className="text-primary-500 animate-pulse" /> {t('profilePage.bioLength')}
                           </div>
                           <span className={`text-[11px] font-black italic tracking-widest ${profile.bio.length > 450 ? 'text-rose-500' : 'text-surface-300 dark:text-slate-800'}`}>
-                             {profile.bio.length} / 500 chars
+                             {t('profilePage.bioCharCount', { count: profile.bio.length })}
                           </span>
                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                       <ConfigField icon={Globe} label="Website" value={profile.website} placeholder="https://yoursite.com"
+                       <ConfigField icon={Globe} label={t('profilePage.website')} value={profile.website} placeholder="https://yoursite.com"
                          onChange={(v) => setProfile(prev => ({ ...prev, website: v }))} />
-                       <ConfigField icon={MapPin} label="Location" value={profile.location} placeholder="City, Country"
+                       <ConfigField icon={MapPin} label={t('profilePage.location')} value={profile.location} placeholder={t('profilePage.locationPlaceholder')}
                          onChange={(v) => setProfile(prev => ({ ...prev, location: v }))} />
                     </div>
 
                     <div className="space-y-6">
-                       <label className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic pl-6">Niche</label>
+                       <label className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic pl-6">{t('profilePage.niche')}</label>
                        <div className="relative group/select">
                           <select
                             value={profile.niche}
                             onChange={(e) => setProfile(prev => ({ ...prev, niche: e.target.value }))}
                             className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-10 py-7 text-sm font-black text-primary-600 dark:text-primary-400 uppercase italic tracking-[0.4em] focus:outline-none appearance-none cursor-pointer hover:bg-surface-page transition-all shadow-inner backdrop-blur-xl"
-                            title="Niche"
+                            title={t('profilePage.niche')}
                           >
-                             <option value="" className="bg-surface-card dark:bg-surface-900">Choose your niche</option>
-                             <option value="health" className="bg-surface-card dark:bg-surface-900">Health & wellness</option>
-                             <option value="finance" className="bg-surface-card dark:bg-surface-900">Finance</option>
-                             <option value="education" className="bg-surface-card dark:bg-surface-900">Education</option>
-                             <option value="technology" className="bg-surface-card dark:bg-surface-900">Technology</option>
-                             <option value="lifestyle" className="bg-surface-card dark:bg-surface-900">Lifestyle</option>
-                             <option value="business" className="bg-surface-card dark:bg-surface-900">Business</option>
-                             <option value="entertainment" className="bg-surface-card dark:bg-surface-900">Entertainment</option>
-                             <option value="other" className="bg-surface-card dark:bg-surface-900">Other</option>
+                             <option value="" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheChoose')}</option>
+                             <option value="health" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheHealth')}</option>
+                             <option value="finance" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheFinance')}</option>
+                             <option value="education" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheEducation')}</option>
+                             <option value="technology" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheTechnology')}</option>
+                             <option value="lifestyle" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheLifestyle')}</option>
+                             <option value="business" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheBusiness')}</option>
+                             <option value="entertainment" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheEntertainment')}</option>
+                             <option value="other" className="bg-surface-card dark:bg-surface-900">{t('profilePage.nicheOther')}</option>
                           </select>
                           <div className="absolute right-10 top-1/2 -translate-y-1/2 text-primary-500 rotate-90 pointer-events-none transition-transform group-hover/select:rotate-0"><ArrowRight size={24} /></div>
                        </div>
@@ -447,22 +449,22 @@ export default function IdentityMatrixInterfacePage() {
                  <div className="pt-14 mt-14 border-t-2 border-surface-100 dark:border-surface-800 flex flex-col sm:flex-row items-center justify-between gap-10 relative z-10">
                     <div className="flex items-center gap-6 text-surface-400 dark:text-slate-600">
                        <ShieldCheck size={28} className="text-primary-500/50" />
-                       <span className="text-[11px] font-black uppercase tracking-[0.4em] italic leading-none">Encrypted in transit and at rest.</span>
+                       <span className="text-[11px] font-black uppercase tracking-[0.4em] italic leading-none">{t('profilePage.encryptedNote')}</span>
                     </div>
                     <button type="button" onClick={saveProfile} disabled={saving}
                       className="w-full sm:w-auto px-16 py-7 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[12px] tracking-[0.8em] italic rounded-[2.5rem] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-[0_30px_80px_rgba(0,0,0,0.4)] active:scale-95 flex items-center justify-center gap-8 border-none group/lock"
                     >
                       {saving ? <RefreshCw className="animate-spin" size={28} /> : <Lock size={28} className="group-hover/lock:rotate-12 transition-transform duration-500" />}
-                      {saving ? 'Saving…' : 'Save profile'}
+                      {saving ? t('profilePage.statusSaving') : t('profilePage.saveButton')}
                     </button>
                  </div>
               </motion.div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                  {[
-                   { label: 'Uptime', val: '99.9%', icon: Activity, col: 'text-emerald-500' },
-                   { label: 'Account', val: 'Active', icon: UserCheck, col: 'text-primary-500' },
-                   { label: '2FA', val: 'On', icon: Shield, col: 'text-cyan-500' }
+                   { label: t('profilePage.statUptime'), val: '99.9%', icon: Activity, col: 'text-emerald-500' },
+                   { label: t('profilePage.statAccount'), val: t('profilePage.statAccountValue'), icon: UserCheck, col: 'text-primary-500' },
+                   { label: t('profilePage.stat2fa'), val: t('profilePage.stat2faValue'), icon: Shield, col: 'text-cyan-500' }
                  ].map((s, i) => (
                    <div key={i} className="bg-surface-card backdrop-blur-3xl p-8 rounded-[3rem] border border-surface-200 dark:border-surface-800 shadow-xl flex items-center gap-6 group hover:border-primary-500/30 transition-all duration-500">
                       <div className="w-14 h-14 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center shadow-inner group-hover:rotate-12 transition-transform duration-700">

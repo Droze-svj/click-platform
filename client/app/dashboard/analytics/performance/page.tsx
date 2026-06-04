@@ -14,6 +14,7 @@ import { useAuth } from '../../../../hooks/useAuth'
 import { StatsCardSkeleton, ContentSkeleton } from '../../../../components/LoadingSkeleton'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
 
@@ -35,6 +36,7 @@ interface PerformanceResponse {
 export default function FluxForecastingMatrixPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [pulseMode, setPulseMode] = useState(false)
@@ -80,7 +82,7 @@ export default function FluxForecastingMatrixPage() {
   }
 
   if (loading) return (
-     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label={t('analyticsPerformancePage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -103,7 +105,7 @@ export default function FluxForecastingMatrixPage() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
                <button type="button" onClick={() => router.push('/dashboard/analytics')} 
-                title="Back to Analytics" aria-label="Back to Analytics"
+                title={t('analyticsPerformancePage.backToAnalytics')} aria-label={t('analyticsPerformancePage.backToAnalytics')}
                 className="w-16 h-16 rounded-[1.8rem] bg-white/5 border-2 border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
                 <ArrowLeft size={32} />
               </button>
@@ -115,15 +117,15 @@ export default function FluxForecastingMatrixPage() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Gauge size={14} className="text-emerald-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-emerald-400 italic leading-none">Flux Matrix v9.4.0</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-emerald-400 italic leading-none">{t('analyticsPerformancePage.versionLabel')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Activity size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">TRAJECTORY_SYNCED</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('analyticsPerformancePage.trajectorySynced')}</span>
                    </div>
                  </div>
-                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Flux Matrix</h1>
-                  <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Tracking engagement kinetic and resonance growth across temporal segments.</p>
+                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{t('analyticsPerformancePage.title')}</h1>
+                  <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">{t('analyticsPerformancePage.subtitle')}</p>
               </div>
            </div>
 
@@ -132,12 +134,12 @@ export default function FluxForecastingMatrixPage() {
               <div className="flex flex-col items-end gap-2 mr-4">
                  <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${pulseMode ? 'bg-emerald-500 animate-ping' : 'bg-slate-800'}`} />
-                    <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic">Pulse_Mode</span>
+                    <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic">{t('analyticsPerformancePage.pulseMode')}</span>
                     <button
                       type="button"
                       onClick={() => setPulseMode(!pulseMode)}
-                      title={pulseMode ? "Disable Pulse Sync" : "Enable Pulse Sync"}
-                      aria-label="Toggle Spectral Pulse Mode"
+                      title={pulseMode ? t('analyticsPerformancePage.disablePulseSync') : t('analyticsPerformancePage.enablePulseSync')}
+                      aria-label={t('analyticsPerformancePage.togglePulseMode')}
                       className={`w-10 h-5 rounded-full p-1 transition-colors duration-500 ${pulseMode ? 'bg-emerald-500/20 border border-emerald-500/50' : 'bg-black/40 border border-white/5'}`}
                     >
                        <div className={`w-3 h-3 rounded-full transition-transform duration-500 ${pulseMode ? 'translate-x-5 bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'translate-x-0 bg-slate-700'}`} />
@@ -145,7 +147,7 @@ export default function FluxForecastingMatrixPage() {
                  </div>
                  {lastSynced && (
                     <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic opacity-50">
-                       Last_Sync: {lastSynced.toLocaleTimeString()}
+                       {t('analyticsPerformancePage.lastSync', { time: lastSynced.toLocaleTimeString() })}
                     </span>
                  )}
               </div>
@@ -153,12 +155,12 @@ export default function FluxForecastingMatrixPage() {
                <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border-2 border-white/5 shadow-inner">
                 {['7', '30', '90'].map(p => (
                   <button type="button" key={p} onClick={() => setPeriod(p)}
-                    title={`View ${p} Cycles`} aria-label={`View ${p} Cycles`}
+                    title={t('analyticsPerformancePage.viewCycles', { count: p })} aria-label={t('analyticsPerformancePage.viewCycles', { count: p })}
                     className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${
                       period === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    {p}_CYCLES
+                    {t('analyticsPerformancePage.cyclesLabel', { count: p })}
                   </button>
                 ))}
               </div>
@@ -169,17 +171,17 @@ export default function FluxForecastingMatrixPage() {
                 className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.4em] italic rounded-[3rem] hover:bg-emerald-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-6 group"
               >
                 <RefreshCw size={24} className={`${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
-                {refreshing ? 'INTERPRETING...' : 'FORCE_SYNC'}
+                {refreshing ? t('analyticsPerformancePage.interpreting') : t('analyticsPerformancePage.forceSync')}
               </button>
            </div>
         </div>
 
         {/* Summary Kinetic HUD */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-           <KineticCard label="Total Saturation" value={formatFmt(stats.views)} icon={Eye} color="text-emerald-400" trend="SPECTRAL_REACH" />
-           <KineticCard label="Total Resonance" value={formatFmt(stats.engage)} icon={Zap} color="text-amber-400" trend="SIGNAL_AFFINITY" />
-           <KineticCard label="Node Density" value={(stats.posts / parseInt(period)).toFixed(1)} icon={Boxes} color="text-indigo-400" trend="DAILY_PHANTOMS" />
-           <KineticCard label="Kinetic Rate" value={`${engageRate}%`} icon={Activity} color="text-rose-400" trend="MOMENTUM_HZ" />
+           <KineticCard label={t('analyticsPerformancePage.cardTotalSaturation')} value={formatFmt(stats.views)} icon={Eye} color="text-emerald-400" trend={t('analyticsPerformancePage.trendSpectralReach')} />
+           <KineticCard label={t('analyticsPerformancePage.cardTotalResonance')} value={formatFmt(stats.engage)} icon={Zap} color="text-amber-400" trend={t('analyticsPerformancePage.trendSignalAffinity')} />
+           <KineticCard label={t('analyticsPerformancePage.cardNodeDensity')} value={(stats.posts / parseInt(period)).toFixed(1)} icon={Boxes} color="text-indigo-400" trend={t('analyticsPerformancePage.trendDailyPhantoms')} />
+           <KineticCard label={t('analyticsPerformancePage.cardKineticRate')} value={`${engageRate}%`} icon={Activity} color="text-rose-400" trend={t('analyticsPerformancePage.trendMomentumHz')} />
         </div>
 
         {/* Temporal Velocity Matrix */}
@@ -188,8 +190,8 @@ export default function FluxForecastingMatrixPage() {
            <div className="flex items-center gap-8 mb-20 relative z-10">
               <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl"><ActivitySquare size={40} className="text-emerald-400" /></div>
                <div>
-                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
-                  <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
+                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{t('analyticsPerformancePage.temporalVelocity')}</h2>
+                  <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">{t('analyticsPerformancePage.temporalVelocitySubtitle')}</p>
                </div>
            </div>
 
@@ -231,8 +233,8 @@ export default function FluxForecastingMatrixPage() {
                ) : (
                 <div className="py-48 flex flex-col items-center justify-center text-center space-y-8 opacity-10">
                    <Target size={120} className="text-white animate-pulse" />
-                   <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">NULL_FLUX_SIGNATURE</h3>
-                   <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic">No resonance data manifested in this temporal segment.</p>
+                   <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">{t('analyticsPerformancePage.nullFluxSignature')}</h3>
+                   <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic">{t('analyticsPerformancePage.noResonanceData')}</p>
                 </div>
                )}
            </div>
@@ -243,10 +245,10 @@ export default function FluxForecastingMatrixPage() {
            <div className="px-8 sm:px-20 py-8 sm:py-12 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row items-center justify-between gap-6">
                <div className="flex items-center gap-6">
                   <div className="w-12 h-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-inner"><Monitor size={20} className="text-emerald-400" /></div>
-                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Resonance Ledger</h3>
+                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">{t('analyticsPerformancePage.resonanceLedger')}</h3>
                </div>
               <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
-                 LITERAL_SIGNAL_LOGS_V9
+                 {t('analyticsPerformancePage.signalLogsBadge')}
               </div>
            </div>
            
@@ -255,7 +257,7 @@ export default function FluxForecastingMatrixPage() {
                  <thead className="bg-black/60 border-b border-white/5">
                     <tr>
                        {['Temporal_Coord', 'Saturation', 'Affinities', 'Signal_Resonance', 'Active_Nodes', 'Kinetic_Flux'].map(h => (
-                         <th key={h} className="px-12 py-8 text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{h}</th>
+                         <th key={h} className="px-12 py-8 text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{t(`analyticsPerformancePage.tableHeader.${h}`)}</th>
                        ))}
                     </tr>
                  </thead>
@@ -272,10 +274,10 @@ export default function FluxForecastingMatrixPage() {
                             </td>
                             <td className="px-12 py-8 text-emerald-400 font-black italic tracking-tighter text-xl tabular-nums">{formatFmt(day.views)}</td>
                             <td className="px-12 py-8 text-amber-400 font-black italic tracking-widest text-[14px]">
-                               {formatFmt(day.likes)} L / {formatFmt(day.shares)} S
+                               {t('analyticsPerformancePage.likesShares', { likes: formatFmt(day.likes), shares: formatFmt(day.shares) })}
                             </td>
                             <td className="px-12 py-8 text-white font-black italic tracking-tighter text-xl tabular-nums">{formatFmt(engage)}</td>
-                            <td className="px-12 py-8 text-indigo-400 font-black italic tracking-widest text-[14px]">{day.posts_count} PHANTOMS</td>
+                            <td className="px-12 py-8 text-indigo-400 font-black italic tracking-widest text-[14px]">{t('analyticsPerformancePage.phantoms', { count: day.posts_count })}</td>
                             <td className="px-12 py-8">
                                <span className="px-6 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xl font-black italic tabular-nums tracking-tighter">
                                   {rate}%

@@ -16,6 +16,7 @@ import LoadingSpinner from '../../../components/LoadingSpinner'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Team {
   _id: string; name: string; description: string;
@@ -24,6 +25,7 @@ interface Team {
 }
 
 export default function SwarmCollectiveNodePage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
@@ -41,11 +43,11 @@ export default function SwarmCollectiveNodePage() {
       const data = extractApiData<Team[]>(res as any) ?? (res as any)?.data
       setTeams(Array.isArray(data) ? data : [])
     } catch {
-      showToast('Failed to load teams', 'error')
+      showToast(t('teamsPage.toastLoadFailed'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     if (authLoading) return
@@ -56,30 +58,30 @@ export default function SwarmCollectiveNodePage() {
     loadSwarmData()
   }, [user, authLoading, router, loadSwarmData])
 
-  const filteredTeams = teams.filter(t => {
+  const filteredTeams = teams.filter(team => {
     if (!search) return true
     const q = search.toLowerCase()
     return (
-      (t.name || '').toLowerCase().includes(q) ||
-      (t.description || '').toLowerCase().includes(q)
+      (team.name || '').toLowerCase().includes(q) ||
+      (team.description || '').toLowerCase().includes(q)
     )
   })
 
   const handleClusterGenesis = async () => {
     if (!name.trim()) {
-      showToast('Team name is required', 'error')
+      showToast(t('teamsPage.toastNameRequired'), 'error')
       return
     }
     setCreating(true)
     try {
       await apiPost('/teams', { name: name.trim(), description: description.trim() })
-      showToast('✓ Team created', 'success')
+      showToast(t('teamsPage.toastTeamCreated'), 'success')
       setShowCreateModal(false)
       setName('')
       setDescription('')
       await loadSwarmData()
     } catch (e: any) {
-      showToast(e?.response?.data?.error || 'Failed to create team', 'error')
+      showToast(e?.response?.data?.error || t('teamsPage.toastCreateFailed'), 'error')
     } finally {
       setCreating(false)
     }
@@ -92,7 +94,7 @@ export default function SwarmCollectiveNodePage() {
     return (
       <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
         <Network size={80} className="text-primary-500 animate-spin mb-12" />
-        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic">Synchronizing Collective Nodes...</p>
+        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic">{t('teamsPage.loading')}</p>
       </div>
     )
   }
@@ -104,7 +106,7 @@ export default function SwarmCollectiveNodePage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
         <div className="flex items-center gap-6 w-full md:w-auto min-w-0">
-          <button type="button" onClick={() => router.push('/dashboard')} aria-label="Back to dashboard" title="Back to dashboard" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+          <button type="button" onClick={() => router.push('/dashboard')} aria-label={t('teamsPage.backToDashboard')} title={t('teamsPage.backToDashboard')} className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
             <ArrowLeft size={24} />
           </button>
           <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -113,20 +115,20 @@ export default function SwarmCollectiveNodePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-4 mb-2 flex-wrap">
               <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
-                Collective Grid
+                {t('teamsPage.collectiveGrid')}
               </span>
               <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
                   <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                  {teams.length} active
+                  {t('teamsPage.activeCount', { count: teams.length })}
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Teams</h1>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('teamsPage.title')}</h1>
           </div>
         </div>
         <button type="button" onClick={() => setShowCreateModal(true)}
           className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[1.8rem] text-[11px] font-black uppercase tracking-[0.6em] italic shadow-[0_30px_80px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center gap-4 active:scale-95 border-none"
         >
-          <Plus size={22} /> New Collective
+          <Plus size={22} /> {t('teamsPage.newCollective')}
         </button>
       </header>
 
@@ -139,18 +141,18 @@ export default function SwarmCollectiveNodePage() {
                   <MessageSquare size={32} className="text-primary-600 dark:text-primary-400" />
                </div>
                <div>
-                  <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none">Collaboration Hub</h2>
-                  <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">MULTI_USER_ASSET_SYNCHRONIZATION</p>
+                  <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none">{t('teamsPage.collaborationHub')}</h2>
+                  <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{t('teamsPage.multiUserSync')}</p>
                </div>
             </div>
             <p className="text-lg font-bold text-surface-500 dark:text-slate-400 leading-relaxed italic uppercase tracking-tight max-w-3xl">
-              Each team protocol activates <strong className="text-primary-500">shared lattice assets</strong>, <strong className="text-primary-500">asynchronous feedback loops</strong>, and a unified <strong className="text-primary-500">production queue</strong>. Optimize collaborative output through localized node management.
+              {t('teamsPage.collaborationIntro1')} <strong className="text-primary-500">{t('teamsPage.collaborationHighlight1')}</strong>{t('teamsPage.collaborationIntro2')} <strong className="text-primary-500">{t('teamsPage.collaborationHighlight2')}</strong>{t('teamsPage.collaborationIntro3')} <strong className="text-primary-500">{t('teamsPage.collaborationHighlight3')}</strong>{t('teamsPage.collaborationIntro4')}
             </p>
             <button type="button" onClick={() => router.push('/dashboard/tasks')}
               className="px-8 py-4 rounded-2xl text-[11px] font-black text-white dark:text-black uppercase tracking-[0.4em] bg-surface-900 dark:bg-white hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center gap-4 active:scale-95 shadow-xl italic"
             >
               <Video size={20} />
-              OPEN_TASKS <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+              {t('teamsPage.openTasks')} <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
             </button>
          </div>
       </section>
@@ -159,20 +161,20 @@ export default function SwarmCollectiveNodePage() {
       <section className="bg-surface-card backdrop-blur-xl rounded-[2.5rem] p-4 flex flex-col sm:flex-row items-center gap-6 relative z-10 border-2 border-surface-100 dark:border-surface-800 shadow-xl transition-all duration-500 group/search">
          <div className="flex items-center gap-4 px-6 py-4 border-b sm:border-b-0 sm:border-r-2 border-surface-100 dark:border-surface-800 w-full sm:w-auto">
             <Target size={22} className="text-primary-500 group-hover/search:scale-125 transition-transform" />
-            <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">SCAN_NODES</span>
+            <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">{t('teamsPage.scanNodes')}</span>
          </div>
          <div className="relative flex-1 w-full">
             <input
                type="text"
                value={search}
                onChange={e => setSearch(e.target.value)}
-               placeholder="SEARCH_COLLECTIVES_BY_IDENTIFIER..."
+               placeholder={t('teamsPage.searchPlaceholder')}
                className="w-full bg-transparent text-sm font-black text-surface-900 dark:text-white focus:outline-none placeholder:text-surface-200 dark:placeholder:text-slate-800 px-4 italic uppercase tracking-widest"
             />
          </div>
          <div className="flex items-center gap-4 pr-4 w-full sm:w-auto justify-end">
             {search && (
-               <button type="button" onClick={() => setSearch('')} aria-label="Clear search" title="Clear search" className="w-10 h-10 rounded-xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/20 transition-all shadow-inner">
+               <button type="button" onClick={() => setSearch('')} aria-label={t('teamsPage.clearSearch')} title={t('teamsPage.clearSearch')} className="w-10 h-10 rounded-xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/20 transition-all shadow-inner">
                   <X size={18} />
                </button>
             )}
@@ -189,16 +191,16 @@ export default function SwarmCollectiveNodePage() {
           <div className="w-28 h-28 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center mb-10 relative shadow-xl">
              <Network size={56} className="text-primary-400 group-hover/empty:scale-125 group-hover/empty:rotate-12 transition-transform" />
           </div>
-          <h3 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter mb-4 uppercase italic leading-none">Zero Nodes Detected</h3>
+          <h3 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter mb-4 uppercase italic leading-none">{t('teamsPage.emptyTitle')}</h3>
           <p className="text-lg font-bold text-surface-400 dark:text-slate-600 max-w-lg mb-10 italic uppercase tracking-tight">
-            Initialize your first collective node to invite collaborators and activate shared mission protocols.
+            {t('teamsPage.emptyDescription')}
           </p>
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
             className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2rem] text-[12px] font-black uppercase tracking-[0.6em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-[0_20px_60px_rgba(0,0,0,0.5)] active:scale-95 flex items-center gap-4 border-none"
           >
-            <Plus size={18} /> INITIALIZE_COLLECTIVE
+            <Plus size={18} /> {t('teamsPage.initializeCollective')}
           </button>
         </motion.div>
       ) : (
@@ -206,10 +208,10 @@ export default function SwarmCollectiveNodePage() {
           {filteredTeams.length === 0 ? (
             <div className="bg-surface-card backdrop-blur-xl rounded-[3rem] p-20 flex flex-col items-center text-center gap-8 z-10 relative border-2 border-surface-100 dark:border-surface-800 shadow-2xl">
                <Target size={64} className="text-surface-200 dark:text-slate-800" />
-               <h3 className="text-3xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none">NO_NODES_MATCHED</h3>
-               <p className="text-sm font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-widest leading-relaxed">Adjust your search parameters or clear the scanner buffer.</p>
+               <h3 className="text-3xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none">{t('teamsPage.noNodesMatched')}</h3>
+               <p className="text-sm font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-widest leading-relaxed">{t('teamsPage.noNodesMatchedDesc')}</p>
                <button type="button" onClick={() => setSearch('')} className="px-8 py-3 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-400 dark:text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] italic hover:text-primary-500 hover:border-primary-500/30 transition-all shadow-inner">
-                  RESET_SCANNER
+                  {t('teamsPage.resetScanner')}
                </button>
             </div>
           ) : (
@@ -232,13 +234,13 @@ export default function SwarmCollectiveNodePage() {
                     </div>
                     {isPrimeOrchestrator(team) && (
                       <span className="px-4 py-1.5 bg-primary-600 text-white text-[9px] font-black uppercase tracking-[0.4em] rounded-xl shadow-lg flex items-center gap-2 italic">
-                        <Crown size={12} /> PRV_ORCHESTRATOR
+                        <Crown size={12} /> {t('teamsPage.primeOrchestrator')}
                       </span>
                     )}
                   </div>
 
                   <div className="flex-1 mb-8 relative z-10">
-                    <p className="text-[10px] font-black text-primary-500 uppercase tracking-[0.5em] mb-3 italic">NODE_SIG #{String(idx + 1).padStart(3, '0')}</p>
+                    <p className="text-[10px] font-black text-primary-500 uppercase tracking-[0.5em] mb-3 italic">{t('teamsPage.nodeSig', { sig: String(idx + 1).padStart(3, '0') })}</p>
                     <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter mb-4 group-hover:text-primary-500 transition-colors leading-tight italic uppercase line-clamp-2">{team.name}</h3>
                     {team.description && (
                       <div className="p-6 bg-surface-page/50 dark:bg-surface-950/40 rounded-[2rem] border-2 border-surface-100 dark:border-surface-800 shadow-inner mb-6 backdrop-blur-xl">
@@ -287,7 +289,7 @@ export default function SwarmCollectiveNodePage() {
                         )}
                      </div>
                      <div className="text-right flex flex-col items-end">
-                        <p className="text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] leading-none mb-2 italic">SYNERGY_NODES</p>
+                        <p className="text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] leading-none mb-2 italic">{t('teamsPage.synergyNodes')}</p>
                         <p className="text-3xl font-black text-primary-500 tabular-nums leading-none tracking-tighter italic">{team.members.length}</p>
                      </div>
                   </div>
@@ -295,7 +297,7 @@ export default function SwarmCollectiveNodePage() {
                   <button type="button" onClick={() => router.push(`/dashboard/teams/${team._id}`)}
                     className="w-full py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[1.8rem] text-[12px] font-black uppercase tracking-[0.6em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-xl active:scale-95 group/act flex items-center justify-center gap-4 border-none"
                   >
-                    SYNC_NODE <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+                    {t('teamsPage.syncNode')} <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
                   </button>
                 </motion.div>
               ))}
@@ -319,30 +321,30 @@ export default function SwarmCollectiveNodePage() {
                   <UserPlus size={40} className="text-primary-600" />
                 </div>
                 <div>
-                  <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-3">Initialize Collective</h2>
-                  <p className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic leading-none">LAUNCH_NEW_SYNERGY_NODE</p>
+                  <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-3">{t('teamsPage.modalTitle')}</h2>
+                  <p className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic leading-none">{t('teamsPage.modalSubtitle')}</p>
                 </div>
               </header>
 
               <div className="space-y-12 relative z-10">
                 <div className="space-y-4">
-                  <label htmlFor="nexus-designation" className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic pl-4 leading-none">NODE_DESIGNATION</label>
+                  <label htmlFor="nexus-designation" className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic pl-4 leading-none">{t('teamsPage.nodeDesignation')}</label>
                   <input
                     id="nexus-designation"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full px-10 py-6 bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] text-3xl font-black text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 transition-all placeholder:text-surface-200 dark:placeholder:text-slate-800 shadow-inner italic uppercase tracking-tighter"
-                    placeholder="ALPHA_STRATEGIC_GROUP..." autoFocus
+                    placeholder={t('teamsPage.namePlaceholder')} autoFocus
                   />
                 </div>
                 <div className="space-y-4">
-                  <label htmlFor="strategic-directives" className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic pl-4 leading-none">STRATEGIC_DIRECTIVES</label>
+                  <label htmlFor="strategic-directives" className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic pl-4 leading-none">{t('teamsPage.strategicDirectives')}</label>
                   <textarea
                     id="strategic-directives"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full px-10 py-8 bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] text-lg font-bold text-surface-600 dark:text-slate-400 focus:outline-none focus:border-primary-500 transition-all placeholder:text-surface-200 dark:placeholder:text-slate-800 shadow-inner min-h-[180px] resize-none italic uppercase tracking-tight"
-                    placeholder="DEFINE_COLLECTIVE_OBJECTIVES_AND_MISSION_PARAMETERS..."
+                    placeholder={t('teamsPage.descriptionPlaceholder')}
                   />
                 </div>
 
@@ -350,13 +352,13 @@ export default function SwarmCollectiveNodePage() {
                   <button type="button" onClick={() => { setShowCreateModal(false); setName(''); setDescription('') }}
                     className="text-sm font-black text-rose-500 hover:text-rose-600 uppercase tracking-[1em] italic transition-all hover:scale-110 active:scale-90 border-none bg-transparent ml-4"
                   >
-                    ABORT_GENESIS
+                    {t('teamsPage.abortGenesis')}
                   </button>
                   <button type="button" onClick={handleClusterGenesis} disabled={creating || !name.trim()}
                     className="px-16 py-6 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[3rem] text-[14px] font-black uppercase tracking-[1em] italic shadow-[0_30px_80px_rgba(0,0,0,0.5)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all active:scale-95 flex items-center gap-6 border-none disabled:opacity-10 group/init"
                   >
                     {creating ? <RefreshCw className="animate-spin" size={24} /> : (
-                      <>COMMIT_NODE <ArrowRight size={22} className="group-hover/init:translate-x-4 transition-transform" /></>
+                      <>{t('teamsPage.commitNode')} <ArrowRight size={22} className="group-hover/init:translate-x-4 transition-transform" /></>
                     )}
                   </button>
                 </footer>

@@ -20,6 +20,7 @@ import LoadingSpinner from '../../../components/LoadingSpinner'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -73,6 +74,7 @@ const statusLabel: Record<string, string> = {
 export default function ProjectsPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [projects, setProjects] = useState<PmProject[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState<PmProject | null>(null)
@@ -138,9 +140,9 @@ export default function ProjectsPage() {
     try {
       await apiPost('/pm/projects', { name: newName.trim(), description: newDescription.trim(), status: 'planning' })
       setShowCreate(false); setNewName(''); setNewDescription(''); await loadProjects()
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: '✓ MISSION_INITIALIZED: PROJECT_NODE_DEPLOYED', type: 'success' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastMissionInitialized'), type: 'success' } }))
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_CREATE', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastCreateFailed'), type: 'error' } }))
     } finally { setCreating(false) }
   }
 
@@ -149,7 +151,7 @@ export default function ProjectsPage() {
       await apiPost(`/pm/projects/${projectId}/milestones/${milestoneId}/complete`, {})
       loadProjectDashboard(projectId); await loadProjects()
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_COMPLETE_MILESTONE', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastCompleteMilestoneFailed'), type: 'error' } }))
     }
   }
 
@@ -162,7 +164,7 @@ export default function ProjectsPage() {
       })
       setShowAddMilestone(false); setNewMilestoneTitle(''); setNewMilestoneDays(1); loadProjectDashboard(selectedProject._id); await loadProjects()
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_ADD_MILESTONE', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastAddMilestoneFailed'), type: 'error' } }))
     } finally { setAddingMilestone(false) }
   }
 
@@ -174,7 +176,7 @@ export default function ProjectsPage() {
       })
       setEditingMilestone(null); loadProjectDashboard(dashboard._id); await loadProjects()
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_SAVE_MILESTONE', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastSaveMilestoneFailed'), type: 'error' } }))
     }
   }
 
@@ -183,25 +185,25 @@ export default function ProjectsPage() {
     setSavingProject(true)
     try {
       await apiPut(`/pm/projects/${dashboard._id}`, { status }); setProjectStatus(status); loadProjectDashboard(dashboard._id); await loadProjects()
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: '✓ LEDGER_UPDATED: STATUS_SYNCHRONIZED', type: 'success' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastStatusUpdated'), type: 'success' } }))
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: UPDATE_FAILURE', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastStatusUpdateFailed'), type: 'error' } }))
     } finally { setSavingProject(false) }
   }
 
   const runPredict = async () => {
     if (!selectedProject?._id) return
-    setPredicting(true); setSwarmHUDTask('Analyzing Project Trajectory'); setShowSwarmHUD(true)
+    setPredicting(true); setSwarmHUDTask(t('projectsPage.analyzingTrajectory')); setShowSwarmHUD(true)
     try {
       await apiPost(`/pm/projects/${selectedProject._id}/predict`, {})
       loadProjectDashboard(selectedProject._id)
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'PREDICT_ERR: AI_ANALYSIS_FAILED', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: t('projectsPage.toastPredictFailed'), type: 'error' } }))
     } finally { setPredicting(false) }
   }
 
   if (loading) return (
-     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1700px] mx-auto space-y-12" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1700px] mx-auto space-y-12" aria-busy="true" aria-label={t('projectsPage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -220,7 +222,7 @@ export default function ProjectsPage() {
         {/* Header */}
         <header className="flex flex-col md:flex-row items-center justify-between gap-8 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-6 w-full md:w-auto min-w-0">
-              <button type="button" onClick={() => router.push('/dashboard')} aria-label="Back to Dashboard" title="Back to Dashboard" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+              <button type="button" onClick={() => router.push('/dashboard')} aria-label={t('projectsPage.backToDashboard')} title={t('projectsPage.backToDashboard')} className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
                 <ArrowLeft size={24} />
               </button>
               <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -229,21 +231,21 @@ export default function ProjectsPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
-                      Campaign Hub
+                      {t('projectsPage.campaignHub')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                        {projects.length} active
+                        {t('projectsPage.activeCount', { count: projects.length })}
                     </div>
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Projects</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('projectsPage.title')}</h1>
               </div>
            </div>
 
            <button type="button" onClick={() => setShowCreate(true)}
              className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center gap-4 active:scale-95 border-none"
            >
-             <Plus size={22} /> Initialize Mission
+             <Plus size={22} /> {t('projectsPage.initializeMission')}
            </button>
         </header>
 
@@ -251,7 +253,7 @@ export default function ProjectsPage() {
            {/* Sidebar - Project List */}
            <aside className="lg:col-span-3 space-y-8">
               <div className="flex items-center justify-between px-6">
-                 <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Project Matrix</span>
+                 <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('projectsPage.projectMatrix')}</span>
                  <Activity size={18} className="text-primary-500 animate-pulse" />
               </div>
               <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
@@ -268,7 +270,7 @@ export default function ProjectsPage() {
                      <div className="flex justify-between items-start mb-6">
                         <span className="text-xl font-black tracking-tight truncate pr-4 text-surface-900 dark:text-white uppercase italic leading-none">{p.name}</span>
                         <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border italic leading-none ${statusColor[p.status]}`}>
-                           {statusLabel[p.status].toUpperCase()}
+                           {(t(`projectsPage.status_${p.status}`) || statusLabel[p.status]).toUpperCase()}
                         </div>
                      </div>
                      <div className="flex items-center justify-between">
@@ -283,7 +285,7 @@ export default function ProjectsPage() {
                  ))}
                  {projects.length === 0 && (
                    <div className="py-24 text-center border-2 border-dashed border-surface-100 dark:border-surface-800 rounded-[2.5rem] opacity-20">
-                      <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic">No missions logged</p>
+                      <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic">{t('projectsPage.noMissionsLogged')}</p>
                    </div>
                  )}
               </div>
@@ -297,13 +299,13 @@ export default function ProjectsPage() {
                        <div className="w-32 h-32 bg-surface-page dark:bg-surface-950 rounded-3xl flex items-center justify-center mb-10 shadow-inner border border-surface-100 dark:border-surface-800 transition-transform duration-700 group-hover:rotate-12">
                           <Terminal size={64} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors" />
                        </div>
-                       <h3 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-6">Awaiting Assignment</h3>
-                       <p className="text-surface-500 dark:text-slate-400 text-sm font-medium max-w-md italic uppercase tracking-tight leading-relaxed">Choose a project from the matrix to view its neural dashboard, milestones, and AI-predicted outcomes.</p>
+                       <h3 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-6">{t('projectsPage.awaitingAssignment')}</h3>
+                       <p className="text-surface-500 dark:text-slate-400 text-sm font-medium max-w-md italic uppercase tracking-tight leading-relaxed">{t('projectsPage.awaitingAssignmentDescription')}</p>
                     </motion.div>
                  ) : loadingDashboard ? (
                     <div className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] p-16 flex flex-col items-center justify-center gap-8 min-h-[750px] shadow-2xl">
                        <RefreshCw className="w-16 h-16 text-primary-500 animate-spin" />
-                       <span className="text-[11px] font-black text-surface-400 uppercase tracking-[0.6em] animate-pulse italic">Syncing Project Node...</span>
+                       <span className="text-[11px] font-black text-surface-400 uppercase tracking-[0.6em] animate-pulse italic">{t('projectsPage.syncingProjectNode')}</span>
                     </div>
                  ) : dashboard ? (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
@@ -313,29 +315,29 @@ export default function ProjectsPage() {
                              <div className="max-w-4xl space-y-8">
                                 <div className="flex items-center gap-4">
                                    <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm italic leading-none ${statusColor[dashboard.status]}`}>
-                                      {statusLabel[dashboard.status].toUpperCase()}
+                                      {(t(`projectsPage.status_${dashboard.status}`) || statusLabel[dashboard.status]).toUpperCase()}
                                    </div>
                                    <div className="flex items-center gap-3 text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-surface-page dark:bg-surface-950 px-4 py-1.5 rounded-xl border border-surface-100 dark:border-surface-800 italic shadow-inner">
-                                      ID: {dashboard._id.slice(-8).toUpperCase()}
+                                      {t('projectsPage.idLabel', { id: dashboard._id.slice(-8).toUpperCase() })}
                                    </div>
                                 </div>
                                 <h2 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none group-hover:text-primary-500 transition-colors duration-500">{dashboard.name}</h2>
-                                <p className="text-lg font-bold text-surface-500 dark:text-slate-400 leading-relaxed italic uppercase tracking-tight max-w-3xl">{dashboard.description || 'MISSION_PARAMETERS_UNDEFINED'}</p>
+                                <p className="text-lg font-bold text-surface-500 dark:text-slate-400 leading-relaxed italic uppercase tracking-tight max-w-3xl">{dashboard.description || t('projectsPage.missionParametersUndefined')}</p>
                              </div>
 
                              <div className="flex flex-col gap-4 w-full xl:w-80">
-                                <label className="text-[11px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic pl-2 leading-none">Operational Status</label>
+                                <label className="text-[11px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.operationalStatus')}</label>
                                 <div className="relative group/select">
-                                   <select aria-label="Operational Status"
+                                   <select aria-label={t('projectsPage.operationalStatus')}
                                      value={projectStatus || dashboard.status}
                                      onChange={(e) => updateProjectStatus(e.target.value)}
                                      disabled={savingProject}
                                      className="w-full px-8 py-5 bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none transition-all cursor-pointer appearance-none shadow-inner backdrop-blur-xl group-hover/select:bg-surface-card"
                                    >
-                                     <option value="planning">PLANNING</option>
-                                     <option value="active">ACTIVE_STATED</option>
-                                     <option value="on_hold">LATENCY_HOLD</option>
-                                     <option value="completed">MISSION_COMPLETE</option>
+                                     <option value="planning">{t('projectsPage.optionPlanning')}</option>
+                                     <option value="active">{t('projectsPage.optionActive')}</option>
+                                     <option value="on_hold">{t('projectsPage.optionOnHold')}</option>
+                                     <option value="completed">{t('projectsPage.optionCompleted')}</option>
                                    </select>
                                    <ChevronDown size={22} className="absolute right-8 top-1/2 -translate-y-1/2 text-surface-400 group-hover/select:text-primary-500 pointer-events-none transition-colors" />
                                 </div>
@@ -345,7 +347,7 @@ export default function ProjectsPage() {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
                              <div className="bg-surface-page/50 dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-8 space-y-6 shadow-inner backdrop-blur-xl">
                                 <div className="flex justify-between items-center">
-                                   <p className="text-[10px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] italic leading-none">Neural Progress</p>
+                                   <p className="text-[10px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] italic leading-none">{t('projectsPage.neuralProgress')}</p>
                                    <Activity size={20} className="text-primary-500" />
                                 </div>
                                 <div className="flex items-end gap-3">
@@ -358,17 +360,17 @@ export default function ProjectsPage() {
 
                              <div className="bg-surface-page/50 dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-8 space-y-6 shadow-inner backdrop-blur-xl">
                                 <div className="flex justify-between items-center">
-                                   <p className="text-[10px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] italic leading-none">AI Forecast</p>
+                                   <p className="text-[10px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] italic leading-none">{t('projectsPage.aiForecast')}</p>
                                    <RefreshCw size={20} className="text-emerald-500" />
                                 </div>
                                 {dashboard.aiPredictedCompletionDate ? (
                                   <div className="space-y-3">
                                      <span className="text-3xl font-black text-emerald-500 dark:text-emerald-400 uppercase italic tracking-tighter leading-none block">{new Date(dashboard.aiPredictedCompletionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
-                                     <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic leading-none">{Math.round((dashboard.aiPredictionConfidence ?? 0) * 100)}% CONFIDENCE_STABILITY</span>
+                                     <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic leading-none">{t('projectsPage.confidenceStability', { percent: Math.round((dashboard.aiPredictionConfidence ?? 0) * 100) })}</span>
                                   </div>
                                 ) : (
                                   <div className="py-4 text-center opacity-20">
-                                     <p className="text-[11px] font-black uppercase tracking-[0.4em] italic">NULL_PREDICTION</p>
+                                     <p className="text-[11px] font-black uppercase tracking-[0.4em] italic">{t('projectsPage.nullPrediction')}</p>
                                   </div>
                                 )}
                              </div>
@@ -379,7 +381,7 @@ export default function ProjectsPage() {
                                className="bg-primary-600 dark:bg-white text-white dark:text-black p-8 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:bg-primary-500 dark:hover:bg-primary-100 hover:text-white dark:hover:text-primary-600 active:scale-95 border-none group/predict"
                              >
                                 <Zap size={40} className={`transition-all duration-500 ${predicting ? 'animate-pulse' : 'group-hover:scale-125'}`} />
-                                <span className="text-[11px] font-black uppercase tracking-[0.5em] italic leading-none">{predicting ? 'CALIBRATING...' : 'RUN_FORECAST'}</span>
+                                <span className="text-[11px] font-black uppercase tracking-[0.5em] italic leading-none">{predicting ? t('projectsPage.calibrating') : t('projectsPage.runForecast')}</span>
                              </button>
                           </div>
                        </section>
@@ -392,16 +394,16 @@ export default function ProjectsPage() {
                                    <Target size={32} className="text-primary-600 dark:text-primary-400" />
                                 </div>
                                 <div>
-                                   <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">Objectives Matrix</h3>
-                                   <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Track key results and mission milestones.</p>
+                                   <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">{t('projectsPage.objectivesMatrix')}</h3>
+                                   <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('projectsPage.objectivesMatrixSubtitle')}</p>
                                 </div>
                              </div>
 
                              <div className="flex items-center p-2 bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[1.8rem] shadow-inner backdrop-blur-xl">
-                                <button type="button" onClick={() => setViewMode('list')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] italic transition-all duration-500 ${viewMode === 'list' ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-xl scale-110' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}>Matrix</button>
-                                <button type="button" onClick={() => setViewMode('gantt')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] italic transition-all duration-500 flex items-center gap-3 ${viewMode === 'gantt' ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-xl scale-110' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}>Chronology</button>
+                                <button type="button" onClick={() => setViewMode('list')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] italic transition-all duration-500 ${viewMode === 'list' ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-xl scale-110' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}>{t('projectsPage.viewMatrix')}</button>
+                                <button type="button" onClick={() => setViewMode('gantt')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] italic transition-all duration-500 flex items-center gap-3 ${viewMode === 'gantt' ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-xl scale-110' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}>{t('projectsPage.viewChronology')}</button>
                                 <div className="w-[2px] h-6 bg-surface-100 dark:bg-surface-800 mx-3 rounded-full" />
-                                <button type="button" onClick={() => setShowAddMilestone(true)} className="px-6 py-3 text-primary-500 hover:text-primary-600 text-[10px] font-black uppercase tracking-[0.3em] italic hover:scale-110 transition-all flex items-center gap-3 border-none bg-transparent active:scale-90"><Plus size={20} /> APPEND</button>
+                                <button type="button" onClick={() => setShowAddMilestone(true)} className="px-6 py-3 text-primary-500 hover:text-primary-600 text-[10px] font-black uppercase tracking-[0.3em] italic hover:scale-110 transition-all flex items-center gap-3 border-none bg-transparent active:scale-90"><Plus size={20} /> {t('projectsPage.append')}</button>
                              </div>
                           </header>
 
@@ -409,7 +411,7 @@ export default function ProjectsPage() {
                              {!dashboard.milestones?.length ? (
                                 <div className="py-32 text-center opacity-10">
                                    <Cpu size={80} className="mx-auto mb-8" />
-                                   <p className="text-xl font-black uppercase tracking-[0.8em] italic">NULL_OBJECTIVE_SET</p>
+                                   <p className="text-xl font-black uppercase tracking-[0.8em] italic">{t('projectsPage.nullObjectiveSet')}</p>
                                 </div>
                              ) : viewMode === 'gantt' ? (
                                 <div className="space-y-8 overflow-x-auto pb-8 custom-scrollbar pt-4">
@@ -432,7 +434,7 @@ export default function ProjectsPage() {
                                              style={{ left: `${startPct}%`, width: `${Math.min(widthPct, 100 - startPct)}%`, originX: 0 }}
                                            />
                                          </div>
-                                         <div className="w-24 text-right text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">{m.estimatedDays || 0}d_GAP</div>
+                                         <div className="w-24 text-right text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">{t('projectsPage.dayGap', { days: m.estimatedDays || 0 })}</div>
                                        </div>
                                      )
                                    })}
@@ -459,13 +461,13 @@ export default function ProjectsPage() {
                                            <div className="flex items-center gap-6 mb-3">
                                               <h4 className={`text-xl font-black italic uppercase tracking-tighter truncate ${m.completedAt ? 'text-surface-400 line-through' : 'text-surface-900 dark:text-white group-hover:text-primary-500 transition-colors duration-500'}`}>{m.title}</h4>
                                               {m.criticalPathInfo?.isOnCriticalPath && !m.completedAt && (
-                                                <div className="px-3 py-1 bg-primary-600 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-lg shadow-lg italic animate-pulse">Critical Path</div>
+                                                <div className="px-3 py-1 bg-primary-600 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-lg shadow-lg italic animate-pulse">{t('projectsPage.criticalPath')}</div>
                                               )}
                                            </div>
                                            <div className="flex items-center gap-8">
-                                              <div className="flex items-center gap-2.5 text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic"><Clock size={16} className="text-primary-500" /> {m.estimatedDays || 0} DAYS_TO_TARGET</div>
+                                              <div className="flex items-center gap-2.5 text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic"><Clock size={16} className="text-primary-500" /> {t('projectsPage.daysToTarget', { days: m.estimatedDays || 0 })}</div>
                                               {m.linkedTaskId && (
-                                                <button type="button" onClick={() => router.push(`/dashboard/tasks?open=${m.linkedTaskId}`)} className="text-[10px] font-black text-primary-500 hover:text-primary-600 uppercase tracking-widest flex items-center gap-2 transition-all border-none bg-transparent italic hover:scale-110"><Link2 size={16} /> VIEW_TASK_NODE</button>
+                                                <button type="button" onClick={() => router.push(`/dashboard/tasks?open=${m.linkedTaskId}`)} className="text-[10px] font-black text-primary-500 hover:text-primary-600 uppercase tracking-widest flex items-center gap-2 transition-all border-none bg-transparent italic hover:scale-110"><Link2 size={16} /> {t('projectsPage.viewTaskNode')}</button>
                                               )}
                                            </div>
                                         </div>
@@ -473,7 +475,7 @@ export default function ProjectsPage() {
                                         <div className="flex items-center gap-4 shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-500">
                                            <button type="button" 
                                              onClick={() => { setEditTitle(m.title); setEditDueDate(m.dueDate ? new Date(m.dueDate).toISOString().slice(0,10) : ''); setEditEstimatedDays(m.estimatedDays || 1); setEditingMilestone(m); }} 
-                                             title={`Edit objective: ${m.title}`} aria-label={`Edit objective: ${m.title}`}
+                                             title={t('projectsPage.editObjective', { title: m.title })} aria-label={t('projectsPage.editObjective', { title: m.title })}
                                              className="w-12 h-12 bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500 transition-all shadow-lg active:scale-90"
                                            >
                                               <Pencil size={20} />
@@ -505,28 +507,28 @@ export default function ProjectsPage() {
                              <Plus size={40} className="text-primary-600" />
                           </div>
                           <div>
-                             <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">Initialize Mission</h2>
-                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">Spawn a new operational project node</p>
+                             <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">{t('projectsPage.initializeMission')}</h2>
+                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">{t('projectsPage.createModalSubtitle')}</p>
                           </div>
                        </div>
-                       <button type="button" onClick={() => setShowCreate(false)} title="Close Modal" aria-label="Close Modal" className="w-14 h-14 bg-surface-page dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-2xl flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90"><X size={28} /></button>
+                       <button type="button" onClick={() => setShowCreate(false)} title={t('projectsPage.closeModal')} aria-label={t('projectsPage.closeModal')} className="w-14 h-14 bg-surface-page dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-2xl flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90"><X size={28} /></button>
                     </header>
                     
                     <div className="space-y-12">
                        <div className="space-y-4">
-                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Mission Identifier</label>
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.missionIdentifier')}</label>
                           <input
                             type="text"
-                            placeholder="PROJECT_ALPHA_STRIKE..."
+                            placeholder={t('projectsPage.missionIdentifierPlaceholder')}
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-6 text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                           />
                        </div>
                        <div className="space-y-4">
-                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Operational Brief</label>
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.operationalBrief')}</label>
                           <textarea
-                            placeholder="DEFINE_MISSION_OBJECTIVES..."
+                            placeholder={t('projectsPage.operationalBriefPlaceholder')}
                             rows={4}
                             value={newDescription}
                             onChange={(e) => setNewDescription(e.target.value)}
@@ -535,10 +537,10 @@ export default function ProjectsPage() {
                        </div>
 
                        <footer className="flex flex-col sm:flex-row gap-6 pt-10 border-t-2 border-surface-100 dark:border-surface-800">
-                          <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-6 rounded-[2rem] bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[11px] tracking-[0.6em] italic border-none active:scale-95 transition-all">ABORT_MISSION</button>
+                          <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-6 rounded-[2rem] bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[11px] tracking-[0.6em] italic border-none active:scale-95 transition-all">{t('projectsPage.abortMission')}</button>
                           <button type="button" onClick={handleCreate} disabled={creating || !newName.trim()} className="flex-1 py-6 rounded-[2rem] bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.8em] italic shadow-[0_20px_60px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all duration-300 border-none active:scale-95 flex items-center justify-center gap-6">
                              {creating ? <RefreshCw className="animate-spin" size={24} /> : <CheckCircle2 size={24} />}
-                             {creating ? 'SYNCHRONIZING...' : 'COMMIT_MISSION'}
+                             {creating ? t('projectsPage.synchronizing') : t('projectsPage.commitMission')}
                           </button>
                        </footer>
                     </div>
@@ -559,20 +561,20 @@ export default function ProjectsPage() {
                              <Target size={32} className="text-primary-600" />
                           </div>
                           <div>
-                             <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-1">Append Objective</h2>
-                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Inject a new target node</p>
+                             <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-1">{t('projectsPage.appendObjective')}</h2>
+                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('projectsPage.appendObjectiveSubtitle')}</p>
                           </div>
                        </div>
-                       <button type="button" onClick={() => setShowAddMilestone(false)} title="Close Modal" aria-label="Close Modal" className="w-12 h-12 bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all shadow-inner active:scale-90"><X size={24} /></button>
+                       <button type="button" onClick={() => setShowAddMilestone(false)} title={t('projectsPage.closeModal')} aria-label={t('projectsPage.closeModal')} className="w-12 h-12 bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all shadow-inner active:scale-90"><X size={24} /></button>
                     </header>
 
                     <div className="space-y-10">
                        <div className="space-y-4">
-                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Objective Identifier</label>
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.objectiveIdentifier')}</label>
                           <input
                              type="text"
-                             title="Node Identifier"
-                             aria-label="Node Identifier"
+                             title={t('projectsPage.nodeIdentifier')}
+                             aria-label={t('projectsPage.nodeIdentifier')}
                              value={editTitle}
                              onChange={(e) => setEditTitle(e.target.value)}
                              className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
@@ -580,12 +582,12 @@ export default function ProjectsPage() {
                        </div>
 
                        <div className="space-y-4">
-                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Temporal Gap (Estimated Days)</label>
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.temporalGap')}</label>
                           <input
                              type="number"
                              min={1}
-                             title="Estimated Days"
-                             aria-label="Estimated Days"
+                             title={t('projectsPage.estimatedDays')}
+                             aria-label={t('projectsPage.estimatedDays')}
                              value={newMilestoneDays}
                              onChange={(e) => setNewMilestoneDays(Number(e.target.value) || 1)}
                              className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-lg font-black text-surface-900 dark:text-white italic focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
@@ -593,10 +595,10 @@ export default function ProjectsPage() {
                        </div>
 
                        <footer className="flex gap-6 pt-8 border-t border-surface-100 dark:border-surface-800">
-                          <button type="button" onClick={() => setShowAddMilestone(false)} className="flex-1 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[10px] tracking-[0.6em] italic border-none active:scale-95 transition-all">ABORT</button>
+                          <button type="button" onClick={() => setShowAddMilestone(false)} className="flex-1 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[10px] tracking-[0.6em] italic border-none active:scale-95 transition-all">{t('projectsPage.abort')}</button>
                           <button type="button" onClick={addMilestone} disabled={addingMilestone || !newMilestoneTitle.trim()} className="flex-1 py-5 rounded-2xl bg-primary-600 text-white font-black uppercase text-[10px] tracking-[0.8em] italic shadow-[0_15px_40px_rgba(99,102,241,0.4)] hover:bg-primary-500 hover:-translate-y-1 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 border-none">
                              {addingMilestone ? <RefreshCw className="animate-spin" size={20} /> : <Target size={20} />}
-                             {addingMilestone ? 'INJECTING...' : 'COMMIT_TARGET'}
+                             {addingMilestone ? t('projectsPage.injecting') : t('projectsPage.commitTarget')}
                           </button>
                        </footer>
                     </div>
@@ -617,57 +619,57 @@ export default function ProjectsPage() {
                              <Pencil size={32} className="text-primary-600" />
                           </div>
                           <div>
-                             <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-1">Calibrate Target</h2>
-                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Modify objective node parameters</p>
+                             <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-1">{t('projectsPage.calibrateTarget')}</h2>
+                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('projectsPage.calibrateTargetSubtitle')}</p>
                           </div>
                        </div>
-                       <button type="button" onClick={() => setEditingMilestone(null)} title="Close Modal" aria-label="Close Modal" className="w-12 h-12 bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all shadow-inner active:scale-90"><X size={24} /></button>
+                       <button type="button" onClick={() => setEditingMilestone(null)} title={t('projectsPage.closeModal')} aria-label={t('projectsPage.closeModal')} className="w-12 h-12 bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all shadow-inner active:scale-90"><X size={24} /></button>
                     </header>
 
                     <div className="space-y-10">
                        <div className="space-y-4">
-                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Node Identifier</label>
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.nodeIdentifier')}</label>
                           <input
                             type="text"
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
-                            aria-label="Project title"
-                            title="Project title"
-                            placeholder="Project title"
+                            aria-label={t('projectsPage.projectTitle')}
+                            title={t('projectsPage.projectTitle')}
+                            placeholder={t('projectsPage.projectTitle')}
                             className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                           />
                        </div>
 
                        <div className="grid grid-cols-2 gap-6">
                           <div className="space-y-4">
-                             <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Target Date</label>
+                             <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.targetDate')}</label>
                              <input
                                type="date"
-                               title="Target Date"
-                               aria-label="Target Date"
+                               title={t('projectsPage.targetDate')}
+                               aria-label={t('projectsPage.targetDate')}
                                value={editDueDate}
                                onChange={(e) => setEditDueDate(e.target.value)}
                                className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-[10px] font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none transition-all shadow-inner [color-scheme:dark]"
                              />
                           </div>
                           <div className="space-y-4">
-                             <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Gap (Days)</label>
+                             <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('projectsPage.gapDays')}</label>
                              <input
                                type="number"
                                value={editEstimatedDays}
                                onChange={(e) => setEditEstimatedDays(Number(e.target.value) || 1)}
-                               aria-label="Estimated days"
-                               title="Estimated days"
-                               placeholder="Days"
+                               aria-label={t('projectsPage.estimatedDaysLower')}
+                               title={t('projectsPage.estimatedDaysLower')}
+                               placeholder={t('projectsPage.daysPlaceholder')}
                                className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-lg font-black text-surface-900 dark:text-white italic focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                              />
                           </div>
                        </div>
 
                        <footer className="flex gap-6 pt-8 border-t border-surface-100 dark:border-surface-800">
-                          <button type="button" onClick={() => setEditingMilestone(null)} className="flex-1 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[10px] tracking-[0.6em] italic border-none active:scale-95 transition-all">ABORT</button>
+                          <button type="button" onClick={() => setEditingMilestone(null)} className="flex-1 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[10px] tracking-[0.6em] italic border-none active:scale-95 transition-all">{t('projectsPage.abort')}</button>
                           <button type="button" onClick={saveMilestone} className="flex-1 py-5 rounded-2xl bg-primary-600 text-white font-black uppercase text-[10px] tracking-[0.8em] italic shadow-[0_15px_40px_rgba(99,102,241,0.4)] hover:bg-primary-500 hover:-translate-y-1 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 border-none">
-                             <CheckCircle2 size={20} /> COMMIT_CHANGES
+                             <CheckCircle2 size={20} /> {t('projectsPage.commitChanges')}
                           </button>
                        </footer>
                     </div>

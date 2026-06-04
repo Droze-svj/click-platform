@@ -18,6 +18,7 @@ import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkel
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Workflow {
   _id: string
@@ -56,6 +57,7 @@ const ACTION_ROUTES: Record<string, string> = {
 }
 
 export default function WorkflowsPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -90,11 +92,11 @@ export default function WorkflowsPage() {
       setSuggestions(Array.isArray(sug) ? sug : [])
       setTeams(Array.isArray(t) ? t : [])
     } catch {
-      showToast('Could not load: WORKFLOW_unavailable', 'error')
+      showToast(t('workflowsPage.toastLoadFailed'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     if (!user) return
@@ -116,7 +118,7 @@ export default function WorkflowsPage() {
 
       const res = await apiPost<{ data?: { workflow?: Workflow } }>(`/workflows/${workflowId}/execute`, { data: {} })
       const updatedWorkflow = (res as any)?.data?.workflow
-      showToast('✓ SEQUENCE_DEPLOYED: EXECUTION_STABLE', 'success')
+      showToast(t('workflowsPage.toastExecuteSuccess'), 'success')
       
       if (updatedWorkflow?.steps?.length) {
         const route = ACTION_ROUTES[updatedWorkflow.steps[0].action]
@@ -127,7 +129,7 @@ export default function WorkflowsPage() {
       }
       loadData()
     } catch {
-      showToast('SEQUENCE_ABORTED: EXECUTION_FAILURE', 'error')
+      showToast(t('workflowsPage.toastExecuteFailed'), 'error')
     } finally {
       setExecutingId(null)
       setExecutionStep(0)
@@ -137,7 +139,7 @@ export default function WorkflowsPage() {
   const handleSave = async () => {
     const validSteps = form.steps.filter(s => s.action)
     if (!form.name.trim() || validSteps.length === 0) {
-      showToast('PARAM_ERR: NAME_&_STEPS_REQUIRED', 'error')
+      showToast(t('workflowsPage.toastNameStepsRequired'), 'error')
       return
     }
 
@@ -147,32 +149,32 @@ export default function WorkflowsPage() {
       teamId: form.teamId || undefined,
       steps: validSteps.map(s => ({ action: s.action, config: s.config })),
       isTemplate: form.isTemplate,
-      tags: form.tags.split(/[\s,]+/).map(t => t.trim()).filter(Boolean),
+      tags: form.tags.split(/[\s,]+/).map(tag => tag.trim()).filter(Boolean),
     }
 
     try {
       if (editingWorkflow) await apiPut(`/workflows/${editingWorkflow._id}`, payload)
       else await apiPost('/workflows', payload)
-      showToast('✓ LEDGER_UPDATED: WORKFLOW_SAVED', 'success')
+      showToast(t('workflowsPage.toastSaved'), 'success')
       setEditingWorkflow(null); setShowCreateModal(false); loadData()
     } catch {
-      showToast('WRITE_ERR: FAILED_TO_SAVE', 'error')
+      showToast(t('workflowsPage.toastSaveFailed'), 'error')
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to purge this sequence DNA?')) return
+    if (!confirm(t('workflowsPage.confirmDelete'))) return
     try {
       await apiDelete(`/workflows/${id}`)
-      showToast('✓ SEQUENCE_PURGED', 'success')
+      showToast(t('workflowsPage.toastDeleted'), 'success')
       loadData()
     } catch {
-      showToast('DELETE_ERR: FAILED_TO_REMOVE', 'error')
+      showToast(t('workflowsPage.toastDeleteFailed'), 'error')
     }
   }
 
   if (loading) return (
-     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-10 lg:px-12 pt-10 max-w-[1900px] mx-auto space-y-16" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-10 lg:px-12 pt-10 max-w-[1900px] mx-auto space-y-16" aria-busy="true" aria-label={t('workflowsPage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -191,7 +193,7 @@ export default function WorkflowsPage() {
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-12 border-b border-surface-100 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-8 w-full lg:w-auto">
               <button type="button" onClick={() => router.push('/dashboard')} 
-                title="Back to Dashboard" aria-label="Back to Dashboard"
+                title={t('workflowsPage.backToDashboard')} aria-label={t('workflowsPage.backToDashboard')}
                 className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90 group">
                 <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
               </button>
@@ -201,21 +203,21 @@ export default function WorkflowsPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-500/10 text-primary-600 dark:text-primary-400 uppercase tracking-[0.2em] border-2 border-primary-500/20 italic leading-none">
-                      Automation Hub
+                      {t('workflowsPage.automationHub')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                        {workflows.length} ACTIVE_SEQUENCES
+                        {t('workflowsPage.activeSequences', { count: workflows.length })}
                     </div>
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Workflows</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('workflowsPage.title')}</h1>
               </div>
            </div>
 
            <button type="button" onClick={() => { setEditingWorkflow(null); setForm({ name: '', description: '', teamId: '', steps: [{ action: '', config: {} }], isTemplate: false, tags: '' }); setShowCreateModal(true) }}
              className="px-12 py-6 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2rem] text-[12px] font-black uppercase tracking-[0.6em] italic shadow-[0_30px_80px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center gap-6 active:scale-95 border-none"
            >
-             <Plus size={24} /> Initialize Sequence
+             <Plus size={24} /> {t('workflowsPage.initializeSequence')}
            </button>
         </header>
 
@@ -231,8 +233,8 @@ export default function WorkflowsPage() {
                       <Cpu size={40} className="text-primary-500" />
                    </div>
                    <div className="text-center sm:text-left">
-                      <h2 className="text-4xl sm:text-5xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-4">Neural Recommendations</h2>
-                      <p className="text-[12px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.6em] italic leading-none">AI-DRIVEN_AUTOMATION_LATTICE</p>
+                      <h2 className="text-4xl sm:text-5xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-4">{t('workflowsPage.neuralRecommendations')}</h2>
+                      <p className="text-[12px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.6em] italic leading-none">{t('workflowsPage.aiDrivenLattice')}</p>
                    </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
@@ -247,7 +249,7 @@ export default function WorkflowsPage() {
                            <button type="button" onClick={() => handleExecute(s.workflowId)} disabled={!!executingId} 
                              className="flex items-center gap-6 text-[12px] font-black text-primary-500 dark:text-primary-400 uppercase tracking-[0.6em] hover:text-primary-700 dark:hover:text-primary-300 transition-all border-none bg-transparent italic group-hover/card:translate-x-4"
                            >
-                                INITIALIZE_STRAND <ChevronRight size={20} />
+                                {t('workflowsPage.initializeStrand')} <ChevronRight size={20} />
                            </button>
                          )}
                       </div>
@@ -268,15 +270,15 @@ export default function WorkflowsPage() {
                 <div className="flex justify-between items-start mb-14 relative z-10">
                    <div className="space-y-4 flex-1 pr-10">
                       <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter group-hover:text-primary-500 transition-colors duration-500 italic uppercase leading-none">{w.name}</h3>
-                      <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 leading-relaxed italic uppercase tracking-tight line-clamp-2">{w.description || "NO_MISSION_DESCRIPTION_FOUND"}</p>
+                      <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 leading-relaxed italic uppercase tracking-tight line-clamp-2">{w.description || t('workflowsPage.noDescription')}</p>
                    </div>
-                   {w.isTemplate && <span className="px-5 py-2 rounded-2xl bg-primary-500/10 text-primary-600 dark:text-primary-400 text-[9px] font-black uppercase tracking-[0.4em] border-2 border-primary-500/20 italic leading-none shadow-xl">TEMPLATE_DNA</span>}
+                   {w.isTemplate && <span className="px-5 py-2 rounded-2xl bg-primary-500/10 text-primary-600 dark:text-primary-400 text-[9px] font-black uppercase tracking-[0.4em] border-2 border-primary-500/20 italic leading-none shadow-xl">{t('workflowsPage.templateDna')}</span>}
                 </div>
 
                 <div className="space-y-4 mb-14 relative z-10">
                    <div className="flex items-center gap-6 mb-8">
                       <div className="h-1 bg-surface-page dark:bg-surface-800 flex-1 rounded-full shadow-inner" />
-                      <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-[0.8em] italic leading-none">PROTOCOL_CHAIN</span>
+                      <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-[0.8em] italic leading-none">{t('workflowsPage.protocolChain')}</span>
                       <div className="h-1 bg-surface-page dark:bg-surface-800 flex-1 rounded-full shadow-inner" />
                    </div>
                    <div className="space-y-4">
@@ -291,18 +293,18 @@ export default function WorkflowsPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-4 mb-14 relative z-10">
-                   {w.tags?.map(t => <span key={t} className="px-5 py-2.5 rounded-2xl bg-surface-page dark:bg-surface-900/50 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-[0.4em] italic shadow-inner">#{t.toUpperCase()}</span>)}
+                   {w.tags?.map(tag => <span key={tag} className="px-5 py-2.5 rounded-2xl bg-surface-page dark:bg-surface-900/50 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-[0.4em] italic shadow-inner">#{tag.toUpperCase()}</span>)}
                 </div>
 
                 <div className="mt-auto pt-12 border-t-2 border-surface-100 dark:border-surface-800 flex items-center justify-between mb-12 relative z-10">
                    <div className="flex items-center gap-14">
                       <div className="group/stat">
-                         <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic mb-4 leading-none group-hover/stat:text-primary-500 transition-colors duration-500">YIELD_CYCLES</p>
+                         <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic mb-4 leading-none group-hover/stat:text-primary-500 transition-colors duration-500">{t('workflowsPage.yieldCycles')}</p>
                          <p className="text-4xl font-black text-surface-900 dark:text-white tabular-nums leading-none italic group-hover/stat:scale-110 transition-transform duration-700">{w.frequency}</p>
                       </div>
                       {w.lastUsed && (
                         <div className="group/stat">
-                           <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic mb-4 leading-none group-hover/stat:text-primary-500 transition-colors duration-500">LAST_UPLINK</p>
+                           <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic mb-4 leading-none group-hover/stat:text-primary-500 transition-colors duration-500">{t('workflowsPage.lastUplink')}</p>
                            <p className="text-4xl font-black text-surface-900 dark:text-white leading-none italic uppercase tracking-tighter group-hover/stat:scale-110 transition-transform duration-700">{new Date(w.lastUsed).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase()}</p>
                         </div>
                       )}
@@ -313,17 +315,17 @@ export default function WorkflowsPage() {
                    <button type="button" onClick={() => handleExecute(w._id)} disabled={!!executingId} 
                      className="flex-1 py-7 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-[14px] font-black uppercase tracking-[1em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white disabled:opacity-10 transition-all duration-700 flex items-center justify-center gap-6 shadow-[0_40px_100px_rgba(0,0,0,0.5)] group/btn border-none active:scale-95 hover:-translate-y-2"
                    >
-                      {executingId === w._id ? <RefreshCw className="animate-spin" size={28} /> : <Play size={28} className="group-hover/btn:scale-125 group-hover/btn:rotate-12 transition-all duration-700" />} INITIALIZE
+                      {executingId === w._id ? <RefreshCw className="animate-spin" size={28} /> : <Play size={28} className="group-hover/btn:scale-125 group-hover/btn:rotate-12 transition-all duration-700" />} {t('workflowsPage.initialize')}
                    </button>
                    <div className="flex flex-col gap-4">
                       <button type="button" onClick={() => { setEditingWorkflow(w); setForm({ name: w.name, description: w.description || '', teamId: (w as any).teamId || '', steps: w.steps.map(s => ({ action: s.action, config: s.config || {} })), isTemplate: w.isTemplate, tags: w.tags.join(', ') }); setShowCreateModal(true) }} 
-                        title="Edit Sequence" aria-label="Edit Sequence"
+                        title={t('workflowsPage.editSequence')} aria-label={t('workflowsPage.editSequence')}
                         className="w-16 h-16 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500/30 transition-all shadow-xl active:scale-95 group/edit border-none"
                       >
                         <Pencil size={28} className="group-hover/edit:rotate-12 transition-transform duration-700" />
                       </button>
                       <button type="button" onClick={() => handleDelete(w._id)} 
-                        title="Purge Sequence" aria-label="Purge Sequence"
+                        title={t('workflowsPage.purgeSequence')} aria-label={t('workflowsPage.purgeSequence')}
                         className="w-16 h-16 rounded-2xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-xl active:scale-95 group/del border-none"
                       >
                         <Trash2 size={28} className="group-hover/del:scale-110 transition-transform duration-700" />
@@ -344,8 +346,8 @@ export default function WorkflowsPage() {
                     <Zap size={80} className="text-primary-500 animate-pulse relative z-10" />
                  </div>
                  <div className="space-y-8">
-                   <h2 className="text-6xl sm:text-8xl font-black text-white tracking-tighter italic uppercase leading-none">Protocol Active</h2>
-                   <p className="text-[16px] font-black text-primary-400 uppercase tracking-[1.5em] animate-pulse italic leading-none ml-4">SEQUENTIAL_ENGINE_SYNC</p>
+                   <h2 className="text-6xl sm:text-8xl font-black text-white tracking-tighter italic uppercase leading-none">{t('workflowsPage.protocolActive')}</h2>
+                   <p className="text-[16px] font-black text-primary-400 uppercase tracking-[1.5em] animate-pulse italic leading-none ml-4">{t('workflowsPage.sequentialEngineSync')}</p>
                  </div>
                  <div className="space-y-6 max-h-[400px] overflow-y-auto custom-scrollbar px-6">
                    {workflows.find(w => w._id === executingId)?.steps.map((step, i) => (
@@ -379,50 +381,50 @@ export default function WorkflowsPage() {
                             <WorkflowIcon size={64} className="text-primary-500" />
                          </div>
                          <div>
-                            <h2 className="text-5xl sm:text-6xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-4">{editingWorkflow ? 'Update Protocol' : 'Sequence Origin'}</h2>
-                            <p className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[1em] italic leading-none">MODULAR_PROTOCOL_ENGINE_V12.0</p>
+                            <h2 className="text-5xl sm:text-6xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-4">{editingWorkflow ? t('workflowsPage.modalTitleEdit') : t('workflowsPage.modalTitleCreate')}</h2>
+                            <p className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[1em] italic leading-none">{t('workflowsPage.modalSubtitle')}</p>
                          </div>
                       </div>
-                      <button type="button" onClick={() => setShowCreateModal(false)} title="Close Modal" aria-label="Close Modal" className="w-20 h-20 rounded-[2.2rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90 border-none"><X size={40} /></button>
+                      <button type="button" onClick={() => setShowCreateModal(false)} title={t('workflowsPage.closeModal')} aria-label={t('workflowsPage.closeModal')} className="w-20 h-20 rounded-[2.2rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90 border-none"><X size={40} /></button>
                    </header>
 
                    <div className="space-y-20">
                       <div className="space-y-8">
-                         <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">PROTOCOL_IDENTIFIER</label>
-                        <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
-                          className="w-full bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-white/5 rounded-[3.5rem] px-16 py-10 text-4xl sm:text-5xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-3xl" 
-                          placeholder="MISSION_OBJECTIVE_ALPHA..." 
+                         <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">{t('workflowsPage.protocolIdentifier')}</label>
+                        <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                          className="w-full bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-white/5 rounded-[3.5rem] px-16 py-10 text-4xl sm:text-5xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-3xl"
+                          placeholder={t('workflowsPage.namePlaceholder')}
                         />
                       </div>
                       
                       <div className="space-y-8">
-                         <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">MISSION_INTELLIGENCE</label>
-                        <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} 
-                          className="w-full bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-white/5 rounded-[4rem] px-16 py-12 text-2xl font-bold text-surface-600 dark:text-slate-400 focus:border-primary-500 outline-none transition-all shadow-inner resize-none italic uppercase tracking-tight backdrop-blur-3xl custom-scrollbar" 
-                          placeholder="CORE_OBJECTIVES_MAPPING_DATA..." 
+                         <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">{t('workflowsPage.missionIntelligence')}</label>
+                        <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3}
+                          className="w-full bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-white/5 rounded-[4rem] px-16 py-12 text-2xl font-bold text-surface-600 dark:text-slate-400 focus:border-primary-500 outline-none transition-all shadow-inner resize-none italic uppercase tracking-tight backdrop-blur-3xl custom-scrollbar"
+                          placeholder={t('workflowsPage.descriptionPlaceholder')}
                         />
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
                          <div className="space-y-8">
-                            <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">NODE_ANCHOR (TEAM)</label>
+                            <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">{t('workflowsPage.nodeAnchor')}</label>
                             <div className="relative group/sel">
                               <select value={form.teamId} onChange={e => setForm(f => ({ ...f, teamId: e.target.value }))}
-                                aria-label="Team anchor"
-                                title="Team anchor"
+                                aria-label={t('workflowsPage.teamAnchor')}
+                                title={t('workflowsPage.teamAnchor')}
                                 className="w-full bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-white/5 rounded-[3rem] px-16 py-10 text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-[0.4em] focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-3xl group-hover/sel:bg-surface-card transition-all duration-500"
                               >
-                                <option value="" className="bg-surface-card">PERSONAL_CORTEX</option>
-                                {teams.map(t => <option key={t._id} value={t._id} className="bg-surface-card">{t.name.toUpperCase()}</option>)}
+                                <option value="" className="bg-surface-card">{t('workflowsPage.personalCortex')}</option>
+                                {teams.map(team => <option key={team._id} value={team._id} className="bg-surface-card">{team.name.toUpperCase()}</option>)}
                               </select>
                               <ChevronDown size={36} className="absolute right-12 top-1/2 -translate-y-1/2 text-surface-200 dark:text-slate-900 group-hover/sel:text-primary-500 rotate-90 pointer-events-none transition-all duration-700" />
                             </div>
                          </div>
                          <div className="space-y-8">
-                            <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">CLASSIFICATION_VECTORS</label>
-                            <input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} 
-                              className="w-full bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-white/5 rounded-[3rem] px-16 py-10 text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-[0.4em] focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-3xl" 
-                              placeholder="VIRAL_MATRIX, AI_SYNTHESIS..." 
+                            <label className="text-[14px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic pl-8 leading-none">{t('workflowsPage.classificationVectors')}</label>
+                            <input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
+                              className="w-full bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-white/5 rounded-[3rem] px-16 py-10 text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-[0.4em] focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-3xl"
+                              placeholder={t('workflowsPage.tagsPlaceholder')}
                             />
                          </div>
                       </div>
@@ -430,7 +432,7 @@ export default function WorkflowsPage() {
                        <div className="space-y-12 pt-24 border-t-2 border-surface-100 dark:border-surface-800">
                           <div className="flex items-center justify-center gap-10">
                              <div className="h-1 bg-surface-page dark:bg-surface-800 flex-1 rounded-full shadow-inner" />
-                             <label className="text-[14px] font-black text-surface-400 dark:text-slate-800 uppercase tracking-[1.5em] italic leading-none mx-8">SEQUENCE_ARCHITECTURE</label>
+                             <label className="text-[14px] font-black text-surface-400 dark:text-slate-800 uppercase tracking-[1.5em] italic leading-none mx-8">{t('workflowsPage.sequenceArchitecture')}</label>
                              <div className="h-1 bg-surface-page dark:bg-surface-800 flex-1 rounded-full shadow-inner" />
                           </div>
                           <div className="space-y-10">
@@ -440,17 +442,17 @@ export default function WorkflowsPage() {
                                     <div className="flex-1 relative group/act">
                                        <select value={step.action}
                                           onChange={e => { const up = [...form.steps]; up[i].action = e.target.value; setForm(f => ({ ...f, steps: up })) }}
-                                          aria-label={`Step ${i + 1} action`}
-                                          title={`Step ${i + 1} action`}
+                                          aria-label={t('workflowsPage.stepAction', { num: i + 1 })}
+                                          title={t('workflowsPage.stepAction', { num: i + 1 })}
                                           className="w-full bg-transparent text-3xl font-black text-surface-900 dark:text-white uppercase tracking-tighter focus:outline-none appearance-none cursor-pointer group-hover/step:text-primary-500 transition-colors duration-700 italic"
                                        >
-                                          <option value="" className="bg-surface-card">SELECT_MODULE_ACTION...</option>
-                                          {ACTIONS.map(a => <option key={a.value} value={a.value} className="bg-surface-card">{a.label.toUpperCase()}</option>)}
+                                          <option value="" className="bg-surface-card">{t('workflowsPage.selectModuleAction')}</option>
+                                          {ACTIONS.map(a => <option key={a.value} value={a.value} className="bg-surface-card">{t(`workflowsPage.action_${a.value}`)}</option>)}
                                        </select>
                                        <ChevronDown size={36} className="absolute right-0 top-1/2 -translate-y-1/2 text-surface-100 dark:text-slate-900 group-hover/act:text-primary-500 rotate-90 pointer-events-none transition-all duration-700" />
                                     </div>
                                    <button type="button" onClick={() => { const up = form.steps.filter((_, j) => j !== i); setForm(f => ({ ...f, steps: up.length ? up : [{ action: '', config: {} }] })) }} 
-                                     title="Remove Step" aria-label="Remove Step"
+                                     title={t('workflowsPage.removeStep')} aria-label={t('workflowsPage.removeStep')}
                                      className="w-16 h-16 rounded-2xl border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-2xl flex items-center justify-center active:scale-90 border-none"
                                    >
                                      <X size={36} />
@@ -460,14 +462,14 @@ export default function WorkflowsPage() {
                               <button type="button" onClick={() => setForm(f => ({ ...f, steps: [...f.steps, { action: '', config: {} }] }))} 
                                 className="w-full py-14 border-4 border-dashed border-surface-100 dark:border-white/5 rounded-[5rem] text-[16px] font-black text-surface-200 dark:text-slate-900 uppercase tracking-[1.5em] hover:border-primary-500/40 hover:text-primary-500 transition-all duration-700 bg-surface-page/30 dark:bg-white/[0.01] italic shadow-inner active:scale-[0.99] group/add"
                               >
-                                <span className="group-hover/add:scale-110 inline-block transition-transform duration-700">+ INJECT_MODULAR_STRATUM</span>
+                                <span className="group-hover/add:scale-110 inline-block transition-transform duration-700">{t('workflowsPage.injectStratum')}</span>
                               </button>
                           </div>
                        </div>
 
                        <footer className="flex flex-col sm:flex-row items-center justify-between gap-16 pt-24 border-t-2 border-surface-100 dark:border-surface-800">
-                          <button type="button" onClick={() => setShowCreateModal(false)} className="text-[14px] font-black text-rose-500 hover:text-rose-600 uppercase tracking-[1.2em] italic transition-all hover:scale-110 active:scale-90 border-none bg-transparent ml-8">ABORT_MISSION</button>
-                          <button type="button" onClick={handleSave} className="px-32 py-10 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[5rem] text-[18px] font-black uppercase tracking-[1.5em] italic shadow-[0_50px_120px_rgba(0,0,0,0.8)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-6 transition-all duration-700 border-none active:scale-95">COMMIT_PROTOCOL_DNA</button>
+                          <button type="button" onClick={() => setShowCreateModal(false)} className="text-[14px] font-black text-rose-500 hover:text-rose-600 uppercase tracking-[1.2em] italic transition-all hover:scale-110 active:scale-90 border-none bg-transparent ml-8">{t('workflowsPage.abortMission')}</button>
+                          <button type="button" onClick={handleSave} className="px-32 py-10 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[5rem] text-[18px] font-black uppercase tracking-[1.5em] italic shadow-[0_50px_120px_rgba(0,0,0,0.8)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-6 transition-all duration-700 border-none active:scale-95">{t('workflowsPage.commitProtocol')}</button>
                        </footer>
                    </div>
                 </motion.div>

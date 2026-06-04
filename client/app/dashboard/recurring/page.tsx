@@ -6,6 +6,7 @@ import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api'
 import { ArrowLeft, Calendar, Plus, Pause, Play, Trash2, Repeat } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useToast } from '../../../contexts/ToastContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 import ToastContainer from '../../../components/ToastContainer'
 
 type PlatformId = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'linkedin' | 'facebook'
@@ -43,6 +44,7 @@ const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function RecurringPostsPage() {
   const router = useRouter()
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [templates, setTemplates] = useState<RecurringTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -64,11 +66,11 @@ export default function RecurringPostsPage() {
       const res = await apiGet<{ templates: RecurringTemplate[] }>('/recurring')
       setTemplates(res?.templates || [])
     } catch {
-      showToast("Could not load recurring schedules. Retry in a moment.", 'error')
+      showToast(t('recurringPage.toastLoadFailed'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => { loadTemplates() }, [loadTemplates])
 
@@ -84,11 +86,11 @@ export default function RecurringPostsPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (form.daysOfWeek.length === 0) {
-      showToast('Pick at least one day of the week.', 'error')
+      showToast(t('recurringPage.toastPickDay'), 'error')
       return
     }
     if (!form.text.trim() && !form.mediaUrl.trim()) {
-      showToast('Add a caption or a media URL.', 'error')
+      showToast(t('recurringPage.toastAddContent'), 'error')
       return
     }
     setCreating(true)
@@ -106,7 +108,7 @@ export default function RecurringPostsPage() {
           timezone: form.timezone,
         },
       })
-      showToast('Recurring schedule created.', 'success')
+      showToast(t('recurringPage.toastCreated'), 'success')
       setForm({
         platform: form.platform,
         text: '',
@@ -118,7 +120,7 @@ export default function RecurringPostsPage() {
       })
       loadTemplates()
     } catch {
-      showToast("Couldn't create the schedule. Try again.", 'error')
+      showToast(t('recurringPage.toastCreateFailed'), 'error')
     } finally {
       setCreating(false)
     }
@@ -128,21 +130,21 @@ export default function RecurringPostsPage() {
     try {
       const path = tpl.active ? `/recurring/${tpl._id}/pause` : `/recurring/${tpl._id}/resume`
       await apiPost(path, {})
-      showToast(tpl.active ? 'Paused.' : 'Resumed.', 'success')
+      showToast(tpl.active ? t('recurringPage.toastPaused') : t('recurringPage.toastResumed'), 'success')
       loadTemplates()
     } catch {
-      showToast("Couldn't update the schedule.", 'error')
+      showToast(t('recurringPage.toastUpdateFailed'), 'error')
     }
   }
 
   const remove = async (tpl: RecurringTemplate) => {
-    if (!window.confirm('Delete this recurring schedule? Posts already scheduled will still go out.')) return
+    if (!window.confirm(t('recurringPage.confirmDelete'))) return
     try {
       await apiDelete(`/recurring/${tpl._id}`)
-      showToast('Schedule deleted.', 'success')
+      showToast(t('recurringPage.toastDeleted'), 'success')
       loadTemplates()
     } catch {
-      showToast("Couldn't delete the schedule.", 'error')
+      showToast(t('recurringPage.toastDeleteFailed'), 'error')
     }
   }
 
@@ -162,7 +164,7 @@ export default function RecurringPostsPage() {
         <header className="flex items-center justify-between gap-6 pb-8 border-b border-surface-100 dark:border-surface-800">
           <div className="flex items-center gap-6">
             <button type="button" onClick={() => router.push('/dashboard')}
-              title="Back to Dashboard" aria-label="Back to Dashboard"
+              title={t('recurringPage.backToDashboard')} aria-label={t('recurringPage.backToDashboard')}
               className="w-14 h-14 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all">
               <ArrowLeft size={24} />
             </button>
@@ -170,17 +172,17 @@ export default function RecurringPostsPage() {
               <Repeat size={28} className="text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight">Recurring posts</h1>
-              <p className="text-sm text-surface-500 mt-1">Post on a cadence — set it once, the schedule fires automatically.</p>
+              <h1 className="text-3xl font-black tracking-tight">{t('recurringPage.title')}</h1>
+              <p className="text-sm text-surface-500 mt-1">{t('recurringPage.subtitle')}</p>
             </div>
           </div>
         </header>
 
         <section className="bg-surface-card border-2 border-surface-100 dark:border-surface-800 rounded-3xl p-8 shadow-xl">
-          <h2 className="text-xl font-bold mb-6">Create a new recurring schedule</h2>
+          <h2 className="text-xl font-bold mb-6">{t('recurringPage.createHeading')}</h2>
           <form onSubmit={submit} className="space-y-6">
             <div>
-              <label className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Platform</label>
+              <label className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">{t('recurringPage.platform')}</label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                 {PLATFORMS.map((p) => (
                   <button key={p.id} type="button"
@@ -195,72 +197,72 @@ export default function RecurringPostsPage() {
             </div>
 
             <div>
-              <label htmlFor="rec-caption" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Caption</label>
+              <label htmlFor="rec-caption" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">{t('recurringPage.caption')}</label>
               <textarea id="rec-caption" value={form.text}
                 onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
-                placeholder="Write the caption that will be posted each time…"
+                placeholder={t('recurringPage.captionPlaceholder')}
                 className="w-full h-32 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl p-4 text-base focus:outline-none focus:border-primary-500 transition-colors" />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="rec-media" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Media URL (optional)</label>
+                <label htmlFor="rec-media" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">{t('recurringPage.mediaUrl')}</label>
                 <input id="rec-media" type="url" value={form.mediaUrl}
                   onChange={(e) => setForm((f) => ({ ...f, mediaUrl: e.target.value }))}
-                  placeholder="https://…"
+                  placeholder={t('recurringPage.mediaUrlPlaceholder')}
                   className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary-500 transition-colors" />
               </div>
               <div>
-                <label htmlFor="rec-tags" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Hashtags</label>
+                <label htmlFor="rec-tags" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">{t('recurringPage.hashtags')}</label>
                 <input id="rec-tags" type="text" value={form.hashtags}
                   onChange={(e) => setForm((f) => ({ ...f, hashtags: e.target.value }))}
-                  placeholder="viral, growth, tips"
+                  placeholder={t('recurringPage.hashtagsPlaceholder')}
                   className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary-500 transition-colors" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Days of the week</label>
+              <label className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">{t('recurringPage.daysOfWeek')}</label>
               <div className="flex flex-wrap gap-2">
                 {DAY_LABELS.map((label, i) => (
                   <button key={i} type="button" onClick={() => toggleDay(i)}
                     className={`px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${form.daysOfWeek.includes(i) ? 'bg-primary-500 text-white border-primary-500' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-500 hover:border-primary-500/40'}`}
-                  >{label}</button>
+                  >{t(`recurringPage.day_${i}`) || label}</button>
                 ))}
               </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="rec-time" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Time of day</label>
+                <label htmlFor="rec-time" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">{t('recurringPage.timeOfDay')}</label>
                 <input id="rec-time" type="time" value={form.timeOfDay}
                   onChange={(e) => setForm((f) => ({ ...f, timeOfDay: e.target.value }))}
                   className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary-500 transition-colors" />
               </div>
               <div>
-                <label htmlFor="rec-tz" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Timezone</label>
+                <label htmlFor="rec-tz" className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">{t('recurringPage.timezone')}</label>
                 <input id="rec-tz" type="text" value={form.timezone}
                   onChange={(e) => setForm((f) => ({ ...f, timezone: e.target.value }))}
                   className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary-500 transition-colors" />
-                <p className="text-[10px] text-surface-400 mt-2">Detected from your browser. Edit if you want posts in a different region.</p>
+                <p className="text-[10px] text-surface-400 mt-2">{t('recurringPage.timezoneHint')}</p>
               </div>
             </div>
 
             <button type="submit" disabled={creating}
               className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-primary-500 text-white font-bold hover:bg-primary-600 transition-colors disabled:opacity-50">
               <Plus size={18} />
-              {creating ? 'Creating…' : 'Create recurring schedule'}
+              {creating ? t('recurringPage.creating') : t('recurringPage.createButton')}
             </button>
           </form>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold mb-6">Your schedules</h2>
+          <h2 className="text-xl font-bold mb-6">{t('recurringPage.yourSchedules')}</h2>
           {loading ? (
-            <div className="text-sm text-surface-400">Loading…</div>
+            <div className="text-sm text-surface-400">{t('recurringPage.loading')}</div>
           ) : templates.length === 0 ? (
             <div className="bg-surface-card border-2 border-dashed border-surface-200 dark:border-surface-800 rounded-3xl p-12 text-center text-surface-500">
-              No recurring schedules yet. Create one above and it&apos;ll fire automatically on the days you pick.
+              {t('recurringPage.emptyState')}
             </div>
           ) : (
             <div className="space-y-4">
@@ -269,21 +271,21 @@ export default function RecurringPostsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <span className="px-2 py-0.5 rounded bg-primary-500/10 text-primary-600 dark:text-primary-400 text-[10px] font-bold uppercase tracking-wider">{platformLabel(tpl.platform)}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${tpl.active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-surface-200 dark:bg-surface-800 text-surface-500'}`}>{tpl.active ? 'Active' : 'Paused'}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${tpl.active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-surface-200 dark:bg-surface-800 text-surface-500'}`}>{tpl.active ? t('recurringPage.active') : t('recurringPage.paused')}</span>
                     </div>
-                    <p className="text-sm truncate font-medium">{tpl.content.text || tpl.content.mediaUrl || '(no content)'}</p>
+                    <p className="text-sm truncate font-medium">{tpl.content.text || tpl.content.mediaUrl || t('recurringPage.noContent')}</p>
                     <div className="flex items-center gap-4 text-xs text-surface-400 mt-2 flex-wrap">
-                      <span className="flex items-center gap-1"><Calendar size={12} />{tpl.cadence.daysOfWeek.map((d) => DAY_LABELS[d]).join('/')} at {tpl.cadence.timeOfDay} ({tpl.cadence.timezone})</span>
-                      <span>Next: {formatNext(tpl.nextFireAt)}</span>
-                      <span>Fired {tpl.fireCount}× so far</span>
+                      <span className="flex items-center gap-1"><Calendar size={12} />{t('recurringPage.cadenceSummary', { days: tpl.cadence.daysOfWeek.map((d) => t(`recurringPage.day_${d}`) || DAY_LABELS[d]).join('/'), time: tpl.cadence.timeOfDay, timezone: tpl.cadence.timezone })}</span>
+                      <span>{t('recurringPage.next', { value: formatNext(tpl.nextFireAt) })}</span>
+                      <span>{t('recurringPage.firedCount', { count: tpl.fireCount })}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => togglePause(tpl)} title={tpl.active ? 'Pause' : 'Resume'}
+                    <button type="button" onClick={() => togglePause(tpl)} title={tpl.active ? t('recurringPage.pause') : t('recurringPage.resume')}
                       className="w-10 h-10 rounded-xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center hover:border-primary-500 transition-colors">
                       {tpl.active ? <Pause size={16} /> : <Play size={16} />}
                     </button>
-                    <button type="button" onClick={() => remove(tpl)} title="Delete"
+                    <button type="button" onClick={() => remove(tpl)} title={t('recurringPage.delete')}
                       className="w-10 h-10 rounded-xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center hover:border-rose-500 hover:text-rose-500 transition-colors">
                       <Trash2 size={16} />
                     </button>

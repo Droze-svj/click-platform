@@ -15,6 +15,7 @@ import { useOAuth } from '../../../hooks/useOAuth'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 import { useToast } from '../../../contexts/ToastContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface PlatformAccount {
   id?: string
@@ -116,6 +117,7 @@ export default function SocialPage() {
   const searchParams = useSearchParams()
   const { user } = useAuth() as any
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const { connect, disconnect, getConnections, loading: oauthLoading } = useOAuth()
   
   const [loading, setLoading] = useState(true)
@@ -137,7 +139,7 @@ export default function SocialPage() {
       const connections = await getConnections()
       setAccounts(connections as ConnectedAccounts)
     } catch {
-      showToast('VAULT_Could not sync: CONNECTION_LATTICE_OFFLINE', 'error')
+      showToast(t('socialPage.toastSyncFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -152,9 +154,9 @@ export default function SocialPage() {
     const platformParam = searchParams.get('platform')
 
     if (successParam === 'true' && platformParam) {
-      showToast(`✓ UPLINK_ESTABLISHED: ${platformParam.toUpperCase()}`, 'success')
+      showToast(t('socialPage.toastUplinkEstablished', { platform: platformParam.toUpperCase() }), 'success')
     } else if (errorParam) {
-      showToast(`UPLINK_FAILURE: ${errorParam}`, 'error')
+      showToast(t('socialPage.toastUplinkFailure', { error: errorParam }), 'error')
     }
     // Intentionally omit `loadAccounts` (stable via ref) and `showToast`
     // (not memoised by useToast) from the dep array — including them
@@ -168,7 +170,7 @@ export default function SocialPage() {
       setConnecting(platform)
       await connect(platform)
     } catch (err: any) {
-      showToast(err.message || `UPLINK_ERR: ${platform.toUpperCase()}_LINK_FAILURE`, 'error')
+      showToast(err.message || t('socialPage.toastUplinkErr', { platform: platform.toUpperCase() }), 'error')
       setConnecting(null)
     }
   }
@@ -180,15 +182,17 @@ export default function SocialPage() {
    * is removed; remaining accounts stay connected.
    */
   const disconnectAccount = async (platform: string, accountId?: string) => {
-    const label = accountId ? `the selected ${platform.toUpperCase()} account` : `every ${platform.toUpperCase()} account`
-    if (!confirm(`SEVER_LINK: Terminate ${label}?`)) return
+    const label = accountId
+      ? t('socialPage.severLabelSelected', { platform: platform.toUpperCase() })
+      : t('socialPage.severLabelEvery', { platform: platform.toUpperCase() })
+    if (!confirm(t('socialPage.severConfirm', { label }))) return
     try {
       setDisconnecting(`${platform}:${accountId || 'all'}`)
       await disconnect(platform, accountId)
-      showToast(`✓ LINK_SEVERED: ${platform.toUpperCase()}`, 'success')
+      showToast(t('socialPage.toastLinkSevered', { platform: platform.toUpperCase() }), 'success')
       await loadAccounts()
     } catch (err: any) {
-      showToast(err.message || `DECOUPLING_ERR: ${platform.toUpperCase()}_FAILURE`, 'error')
+      showToast(err.message || t('socialPage.toastDecouplingErr', { platform: platform.toUpperCase() }), 'error')
     } finally {
       setDisconnecting(null)
     }
@@ -203,10 +207,10 @@ export default function SocialPage() {
     try {
       const { apiPost } = await import('../../../lib/api')
       await apiPost(`/oauth/${platform}/active`, { accountId })
-      showToast(`✓ Active ${platform.toUpperCase()} account switched`, 'success')
+      showToast(t('socialPage.toastActiveSwitched', { platform: platform.toUpperCase() }), 'success')
       await loadAccounts()
     } catch (err: any) {
-      showToast(err.message || `Failed to switch ${platform} active account`, 'error')
+      showToast(err.message || t('socialPage.toastActiveSwitchFailed', { platform }), 'error')
     }
   }
 
@@ -214,7 +218,7 @@ export default function SocialPage() {
     return (
       <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
         <Radio size={80} className="text-primary-500 animate-spin mb-12" />
-        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Scanning Social Nodes...</p>
+        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">{t('socialPage.scanningNodes')}</p>
       </div>
     )
   }
@@ -227,7 +231,7 @@ export default function SocialPage() {
         {/* Header HUD */}
         <header className="flex flex-col md:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-6 w-full md:w-auto min-w-0">
-              <button type="button" onClick={() => router.push('/dashboard')} aria-label="Back to dashboard" title="Back to dashboard" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+              <button type="button" onClick={() => router.push('/dashboard')} aria-label={t('socialPage.backToDashboard')} title={t('socialPage.backToDashboard')} className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
                 <ArrowLeft size={24} />
               </button>
               <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -236,22 +240,22 @@ export default function SocialPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
-                      Social Lattice
+                      {t('socialPage.badgeSocialLattice')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                        SYNC_NOMINAL
+                        {t('socialPage.syncNominal')}
                     </div>
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Social Vault</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('socialPage.title')}</h1>
               </div>
            </div>
 
            <div className="flex flex-wrap items-center gap-6 justify-end w-full md:w-auto">
               <div className="flex items-center gap-4 px-8 py-4 bg-surface-card border-2 border-surface-100 dark:border-surface-800 rounded-2xl text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic shadow-inner">
-                 <Activity size={16} className="text-primary-500" /> active: {accounts ? Object.values(accounts).filter(Boolean).length : 0}
+                 <Activity size={16} className="text-primary-500" /> {t('socialPage.activeCount', { count: accounts ? Object.values(accounts).filter(Boolean).length : 0 })}
               </div>
-              <button type="button" onClick={loadAccounts} aria-label="Refresh connected accounts" title="Refresh connected accounts" className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90">
+              <button type="button" onClick={loadAccounts} aria-label={t('socialPage.refreshAccounts')} title={t('socialPage.refreshAccounts')} className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90">
                  <RefreshCw size={28} />
               </button>
            </div>
@@ -266,18 +270,18 @@ export default function SocialPage() {
                     <Fingerprint size={32} className="text-primary-600 dark:text-primary-400" />
                  </div>
                  <div>
-                    <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none">Authentication Matrix</h2>
-                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">GLOBAL_OAUTH_SYNC_PROTOCOL</p>
+                    <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none">{t('socialPage.authMatrix')}</h2>
+                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{t('socialPage.oauthSyncProtocol')}</p>
                  </div>
               </div>
               <p className="text-lg font-bold text-surface-500 dark:text-slate-400 leading-relaxed italic uppercase tracking-tight max-w-3xl">
-                Establish high-fidelity neural links with global dissemination platforms. Each uplink enables <strong className="text-primary-500">automated payload distribution</strong>, <strong className="text-primary-500">kinetic engagement tracking</strong>, and <strong className="text-primary-500">synthetic audience analysis</strong>.
+                {t('socialPage.heroIntro')} <strong className="text-primary-500">{t('socialPage.heroFeature1')}</strong>, <strong className="text-primary-500">{t('socialPage.heroFeature2')}</strong>, {t('socialPage.heroAnd')} <strong className="text-primary-500">{t('socialPage.heroFeature3')}</strong>.
               </p>
               <div className="flex flex-wrap gap-6 pt-4">
                  {[
-                   { label: 'Neural Encryption', val: '256-BIT', icon: Shield },
-                   { label: 'Uplink Latency', val: '12ms AVG', icon: Activity },
-                   { label: 'Matrix Stability', val: '99.9%', icon: Zap }
+                   { label: t('socialPage.statNeuralEncryption'), val: '256-BIT', icon: Shield },
+                   { label: t('socialPage.statUplinkLatency'), val: '12ms AVG', icon: Activity },
+                   { label: t('socialPage.statMatrixStability'), val: '99.9%', icon: Zap }
                  ].map((s, i) => (
                    <div key={i} className="flex items-center gap-4 px-6 py-3 rounded-2xl bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 shadow-inner backdrop-blur-xl">
                       <s.icon size={18} className="text-primary-500" />
@@ -327,16 +331,16 @@ export default function SocialPage() {
                   </div>
                   <div className={`px-6 py-2.5 rounded-2xl border-2 text-[10px] font-black uppercase tracking-[0.4em] italic flex items-center gap-3 shadow-lg ${isActive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : isTikTok ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' : 'bg-surface-page dark:bg-surface-950/50 text-surface-300 dark:text-slate-800 border-surface-100 dark:border-surface-800'}`}>
                     <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse' : isTikTok ? 'bg-amber-500 animate-pulse' : 'bg-surface-200 dark:bg-slate-900'}`} />
-                    {isActive ? 'UPLINKED' : isTikTok ? 'COMING_SOON' : 'OFFLINE'}
+                    {isActive ? t('socialPage.statusUplinked') : isTikTok ? t('socialPage.statusComingSoon') : t('socialPage.statusOffline')}
                   </div>
                 </div>
 
                 <div className="relative z-10 flex-1">
-                  <p className={`text-[10px] font-black uppercase tracking-[0.5em] mb-4 italic ${cfg.color} opacity-80 group-hover:opacity-100 transition-opacity`}>NODE_MANIFEST_V4.2</p>
+                  <p className={`text-[10px] font-black uppercase tracking-[0.5em] mb-4 italic ${cfg.color} opacity-80 group-hover:opacity-100 transition-opacity`}>{t('socialPage.nodeManifest')}</p>
                   <h3 className="text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter mb-4 group-hover:text-primary-500 transition-colors leading-tight">{cfg.name}</h3>
                   <div className="p-6 bg-surface-page/50 dark:bg-surface-950/40 rounded-[2rem] border-2 border-surface-100 dark:border-surface-800 shadow-inner backdrop-blur-xl">
                     <p className="text-sm text-surface-500 dark:text-slate-400 font-bold leading-relaxed italic uppercase tracking-tight opacity-60 group-hover:opacity-100 transition-opacity">
-                      {cfg.desc}
+                      {t(`socialPage.platformDesc.${id}`)}
                     </p>
                   </div>
                 </div>
@@ -369,26 +373,26 @@ export default function SocialPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className="text-base font-black text-surface-900 dark:text-white truncate uppercase italic tracking-tighter leading-tight">{acct.display_name || acct.username || acct.platform_user_id}</p>
-                              {acct.isPrimary && <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-primary-500/10 text-primary-500 border border-primary-500/20">PRIMARY</span>}
-                              {acct.isActive && !acct.isPrimary && <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">ACTIVE</span>}
+                              {acct.isPrimary && <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-primary-500/10 text-primary-500 border border-primary-500/20">{t('socialPage.badgePrimary')}</span>}
+                              {acct.isActive && !acct.isPrimary && <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">{t('socialPage.badgeActive')}</span>}
                             </div>
-                            <p className="text-[9px] font-black text-surface-400 dark:text-slate-600 truncate uppercase tracking-widest italic leading-none mt-1">ID: {String(acct.platform_user_id).slice(0, 14).toUpperCase()}</p>
+                            <p className="text-[9px] font-black text-surface-400 dark:text-slate-600 truncate uppercase tracking-widest italic leading-none mt-1">{t('socialPage.accountIdLabel', { id: String(acct.platform_user_id).slice(0, 14).toUpperCase() })}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             {!acct.isActive && (
                               <button
                                 type="button"
                                 onClick={() => setActive(id, aid)}
-                                title="Make this the active account"
+                                title={t('socialPage.makeActiveTitle')}
                                 className="px-3 py-2 rounded-xl bg-primary-500/5 border-2 border-primary-500/20 text-primary-500 text-[9px] font-black uppercase tracking-widest hover:bg-primary-500 hover:text-white transition-all"
-                              >USE</button>
+                              >{t('socialPage.useButton')}</button>
                             )}
                             <button
                               type="button"
                               onClick={() => disconnectAccount(id, aid)}
                               disabled={rowBusy}
-                              title={`Disconnect ${acct.username || aid}`}
-                              aria-label={`Disconnect ${acct.username || aid}`}
+                              title={t('socialPage.disconnectAccount', { account: acct.username || aid })}
+                              aria-label={t('socialPage.disconnectAccount', { account: acct.username || aid })}
                               className="w-10 h-10 rounded-xl bg-rose-500/5 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all active:scale-95 disabled:opacity-40 flex items-center justify-center"
                             >
                               {rowBusy ? <RefreshCw size={14} className="animate-spin" /> : <Unlink size={14} />}
@@ -409,7 +413,7 @@ export default function SocialPage() {
                       className="w-full py-4 rounded-[1.5rem] bg-surface-page dark:bg-surface-950 border-2 border-dashed border-surface-200 dark:border-surface-800 hover:border-primary-500/40 text-[10px] font-black uppercase tracking-widest italic text-surface-400 hover:text-primary-500 transition-all flex items-center justify-center gap-3 disabled:opacity-40"
                     >
                       {isConnecting ? <RefreshCw size={14} className="animate-spin" /> : <Link2 size={14} />}
-                      {isConnecting ? 'NEGOTIATING…' : `ADD ANOTHER ${id.toUpperCase()} ACCOUNT`}
+                      {isConnecting ? t('socialPage.negotiatingShort') : t('socialPage.addAnotherAccount', { platform: id.toUpperCase() })}
                     </button>
                   </div>
                 ) : (
@@ -417,9 +421,9 @@ export default function SocialPage() {
                     {isTikTok ? (
                       <div className="space-y-6">
                         <div className="p-6 rounded-[2rem] bg-amber-500/5 border-2 border-amber-500/20">
-                          <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] italic mb-3">PENDING_API_APPROVAL</p>
+                          <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] italic mb-3">{t('socialPage.pendingApiApproval')}</p>
                           <p className="text-sm font-bold text-surface-500 dark:text-slate-400 italic leading-relaxed">
-                            TikTok publishing is awaiting Content Posting API review. Connect your account now — you&apos;ll be able to post the moment approval is granted.
+                            {t('socialPage.tiktokPendingBody')}
                           </p>
                         </div>
                         <button
@@ -428,7 +432,7 @@ export default function SocialPage() {
                           disabled={isConnecting}
                           className="w-full py-6 rounded-[2.5rem] bg-amber-500 text-black font-black uppercase text-[12px] tracking-[0.6em] italic hover:bg-amber-400 transition-all active:scale-95 shadow-[0_20px_60px_rgba(245,158,11,0.3)] flex items-center justify-center gap-6 disabled:opacity-40 group/btn border-none"
                         >
-                          {isConnecting ? <><RefreshCw size={24} className="animate-spin" /> NEGOTIATING...</> : <><Link2 size={24} className="group-hover/btn:rotate-45 transition-transform duration-500" /> PRE_CONNECT_ACCOUNT</>}
+                          {isConnecting ? <><RefreshCw size={24} className="animate-spin" /> {t('socialPage.negotiating')}</> : <><Link2 size={24} className="group-hover/btn:rotate-45 transition-transform duration-500" /> {t('socialPage.preConnectAccount')}</>}
                         </button>
                       </div>
                     ) : (
@@ -438,7 +442,7 @@ export default function SocialPage() {
                         disabled={isConnecting}
                         className="w-full py-6 rounded-[2.5rem] bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[12px] tracking-[0.8em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex items-center justify-center gap-6 disabled:opacity-40 group/btn border-none"
                       >
-                        {isConnecting ? <><RefreshCw size={24} className="animate-spin" /> NEGOTIATING...</> : <><Link2 size={24} className="group-hover/btn:rotate-45 transition-transform duration-500" /> ESTABLISH_UPLINK</>}
+                        {isConnecting ? <><RefreshCw size={24} className="animate-spin" /> {t('socialPage.negotiating')}</> : <><Link2 size={24} className="group-hover/btn:rotate-45 transition-transform duration-500" /> {t('socialPage.establishUplink')}</>}
                       </button>
                     )}
                   </div>
@@ -455,19 +459,19 @@ export default function SocialPage() {
                  <Database size={28} />
               </div>
               <div>
-                 <h4 className="text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none mb-1">Global Registry Matrix</h4>
-                 <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic">Secure OAuth connection</p>
+                 <h4 className="text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none mb-1">{t('socialPage.globalRegistryMatrix')}</h4>
+                 <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic">{t('socialPage.secureOauthConnection')}</p>
               </div>
            </div>
            <div className="flex items-center gap-10">
               <div className="text-right">
-                 <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mb-2">LAST_GLOBAL_SYNC</p>
+                 <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mb-2">{t('socialPage.lastGlobalSync')}</p>
                  <p className="text-sm font-black text-surface-900 dark:text-white uppercase italic tabular-nums">{new Date().toLocaleTimeString().toUpperCase()}</p>
               </div>
               <div className="h-12 w-[2px] bg-surface-100 dark:bg-surface-800 rounded-full" />
               <div className="flex items-center gap-4 px-6 py-3 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-2xl">
                  <Shield size={18} className="text-emerald-500" />
-                 <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest italic">ENCRYPTED_256</span>
+                 <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest italic">{t('socialPage.encrypted256')}</span>
               </div>
            </div>
         </section>

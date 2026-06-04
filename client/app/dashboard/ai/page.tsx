@@ -4,6 +4,7 @@ import { useState, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../hooks/useAuth';
+import { useTranslation } from '../../../hooks/useTranslation';
 import AIMultiModelSelector from '../../../components/AIMultiModelSelector';
 import AIRecommendations from '../../../components/AIRecommendations';
 import PredictiveAnalytics from '../../../components/PredictiveAnalytics';
@@ -22,6 +23,7 @@ import ToastContainer from '../../../components/ToastContainer';
 
 export default function CognitiveLogicMatrixPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [isClient, setIsClient] = useState(false);
@@ -37,7 +39,7 @@ export default function CognitiveLogicMatrixPage() {
     return (
        <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
           <Brain size={80} className="text-primary-500 animate-spin mb-12" />
-          <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic">Synchronizing Neural Lattice...</p>
+          <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic">{t('aiPage.loading')}</p>
        </div>
     );
   }
@@ -50,7 +52,7 @@ export default function CognitiveLogicMatrixPage() {
         {/* Header */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-6 w-full lg:w-auto min-w-0">
-              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+              <button type="button" onClick={() => router.push('/dashboard')} title={t('aiPage.backToDashboard')} aria-label={t('aiPage.backToDashboard')} className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
                 <ArrowLeft size={24} />
               </button>
               <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -59,24 +61,24 @@ export default function CognitiveLogicMatrixPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
-                      Neural Engine
+                      {t('aiPage.neuralEngineBadge')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                        PARADIGM_STABLE
+                        {t('aiPage.paradigmStable')}
                     </div>
                  </div>
-                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Cognitive</h1>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{t('aiPage.title')}</h1>
               </div>
            </div>
 
            <div className="flex flex-wrap items-center gap-6 justify-end w-full lg:w-auto">
               <div className="flex items-center gap-2 p-2 rounded-[2rem] bg-surface-card border-2 border-surface-100 dark:border-surface-800 shadow-2xl relative z-10 backdrop-blur-3xl overflow-x-auto max-w-full custom-scrollbar">
                  {[
-                   { id: 'overview', label: 'OVERVIEW', icon: Activity },
-                   { id: 'models', label: 'MODELS', icon: Cpu },
-                   { id: 'recommendations', label: 'SYNTHESIS', icon: Sparkles },
-                   { id: 'analytics', label: 'FORECASTS', icon: TrendingUp }
+                   { id: 'overview', label: t('aiPage.tabOverview'), icon: Activity },
+                   { id: 'models', label: t('aiPage.tabModels'), icon: Cpu },
+                   { id: 'recommendations', label: t('aiPage.tabSynthesis'), icon: Sparkles },
+                   { id: 'analytics', label: t('aiPage.tabForecasts'), icon: TrendingUp }
                  ].map(tab => (
                    <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id)}
                      className={`flex items-center gap-4 px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.4em] transition-all duration-500 italic active:scale-95 whitespace-nowrap ${
@@ -90,7 +92,7 @@ export default function CognitiveLogicMatrixPage() {
                    </button>
                  ))}
               </div>
-              <button type="button" onClick={() => window.location.reload()} title="Reload Paradigms" aria-label="Reload Paradigms" className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90">
+              <button type="button" onClick={() => window.location.reload()} title={t('aiPage.reloadParadigms')} aria-label={t('aiPage.reloadParadigms')} className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90">
                  <RefreshCw size={28} />
               </button>
            </div>
@@ -102,27 +104,27 @@ export default function CognitiveLogicMatrixPage() {
               {activeTab === 'overview' && (
                 <motion.div key="overview" initial={{ opacity: 0, scale: 0.98, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 1.02, y: -50 }} transition={{ duration: 0.8 }} className="space-y-12">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                    <ParadigmCard 
-                      icon={Cpu} 
-                      title="Logic Paradigms" 
-                      desc="Deploy and calibrate multiple neural logic providers for distributed inference tasks."
-                      buttonText="DEPLOY_MODEL"
+                    <ParadigmCard
+                      icon={Cpu}
+                      title={t('aiPage.cardLogicTitle')}
+                      desc={t('aiPage.cardLogicDesc')}
+                      buttonText={t('aiPage.cardLogicButton')}
                       onClick={() => setActiveTab('models')}
                       color="violet"
                     />
-                    <ParadigmCard 
-                      icon={Sparkle} 
-                      title="Heuristic Synthesis" 
-                      desc="Personalized recursive content ideation based on historical node resonance mapping."
-                      buttonText="INIT_IDEATION"
+                    <ParadigmCard
+                      icon={Sparkle}
+                      title={t('aiPage.cardSynthesisTitle')}
+                      desc={t('aiPage.cardSynthesisDesc')}
+                      buttonText={t('aiPage.cardSynthesisButton')}
                       onClick={() => setActiveTab('recommendations')}
                       color="emerald"
                     />
-                    <ParadigmCard 
-                      icon={BarChart3} 
-                      title="Temporal Forecasts" 
-                      desc="Simulate and predict content trajectory efficiency before global mission deployment."
-                      buttonText="RUN_SIMULATION"
+                    <ParadigmCard
+                      icon={BarChart3}
+                      title={t('aiPage.cardForecastsTitle')}
+                      desc={t('aiPage.cardForecastsDesc')}
+                      buttonText={t('aiPage.cardForecastsButton')}
                       onClick={() => setActiveTab('analytics')}
                       color="indigo"
                     />
@@ -137,17 +139,17 @@ export default function CognitiveLogicMatrixPage() {
                               <Radio size={40} className="text-primary-500 animate-pulse" />
                            </div>
                            <div>
-                              <h3 className="text-4xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">Neural Surveillance</h3>
-                              <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic leading-none">REAL_TIME_INFERENCE_TELEMETRY</p>
+                              <h3 className="text-4xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">{t('aiPage.surveillanceTitle')}</h3>
+                              <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic leading-none">{t('aiPage.surveillanceSubtitle')}</p>
                            </div>
                         </div>
                         <div className="flex items-center gap-8">
                            <div className="px-10 py-5 rounded-[2rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 shadow-inner">
-                              <span className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic leading-none">SWARM_LATENCY:</span>
+                              <span className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic leading-none">{t('aiPage.swarmLatency')}</span>
                               <span className="text-xl font-black text-primary-500 italic tabular-nums ml-4 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)] leading-none">32μs</span>
                            </div>
                            <button className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.6em] italic rounded-[2rem] hover:bg-primary-500 hover:text-white transition-all duration-500 shadow-2xl active:scale-95 border-none">
-                              FORCE_CALIBRATION
+                              {t('aiPage.forceCalibration')}
                            </button>
                         </div>
                      </div>
@@ -157,7 +159,7 @@ export default function CognitiveLogicMatrixPage() {
                           <div key={i} className="p-10 rounded-[3rem] bg-surface-page/50 dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 transition-all duration-500 group/monitor shadow-inner flex flex-col items-center gap-8 backdrop-blur-xl">
                              <div className="w-16 h-16 rounded-[1.8rem] bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-primary-500 group-hover/monitor:rotate-12 transition-all duration-500 shadow-lg"><Orbit size={32} className="animate-spin-slow" /></div>
                              <div className="text-center">
-                                <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase italic leading-none mb-3">SECTOR_0{i+1}_LOAD</p>
+                                <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase italic leading-none mb-3">{t('aiPage.sectorLoad', { n: i + 1 })}</p>
                                 <p className="text-4xl font-black italic text-surface-900 dark:text-white tabular-nums leading-none tracking-tighter">{(80 + Math.random() * 15).toFixed(1)}%</p>
                              </div>
                              <div className="w-full h-3 bg-surface-card dark:bg-surface-900 rounded-full overflow-hidden border-2 border-surface-100 dark:border-surface-800 p-0.5">

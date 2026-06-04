@@ -30,6 +30,7 @@ import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TeamMember {
   userId: { _id: string; name: string; email: string }
@@ -61,6 +62,7 @@ const ROLES = [
 ]
 
 export default function TeamDetailsPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const params = useParams()
   const { user } = useAuth()
@@ -81,12 +83,12 @@ export default function TeamDetailsPage() {
       const data = extractApiData<Team>(res as any) ?? (res as any)?.data
       setTeam(data || null)
     } catch {
-      showToast('Could not load: TEAM_unavailable', 'error')
+      showToast(t('teamDetailPage.toastLoadFailed'), 'error')
       router.push('/dashboard/teams')
     } finally {
       setLoading(false)
     }
-  }, [teamId, router, showToast])
+  }, [teamId, router, showToast, t])
 
   useEffect(() => {
     if (teamId) loadTeam()
@@ -103,18 +105,18 @@ export default function TeamDetailsPage() {
   const handleInviteByEmail = async () => {
     const email = inviteEmail.trim()
     if (!email) {
-      showToast('PARAM_ERR: EMAIL_REQUIRED', 'warning')
+      showToast(t('teamDetailPage.toastEmailRequired'), 'warning')
       return
     }
     setInviting(true)
     try {
       await apiPost(`/teams/${teamId}/invite-by-email`, { email, role: inviteRole })
-      showToast('✓ PAYLOAD_SENT: INDUCTION_PENDING', 'success')
+      showToast(t('teamDetailPage.toastInviteSent'), 'success')
       setInviteEmail('')
       await loadTeam()
     } catch (e: any) {
       const err = extractApiError(e)
-      showToast(err?.message || 'WRITE_ERR: INDUCTION_FAILURE', 'error')
+      showToast(err?.message || t('teamDetailPage.toastInviteFailed'), 'error')
     } finally {
       setInviting(false)
     }
@@ -124,26 +126,26 @@ export default function TeamDetailsPage() {
     setUpdatingRole(memberId)
     try {
       await apiPut(`/teams/${teamId}/members/${memberId}/role`, { role })
-      showToast('✓ ROLE_CALIBRATED', 'success')
+      showToast(t('teamDetailPage.toastRoleUpdated'), 'success')
       await loadTeam()
     } catch (e: any) {
       const err = extractApiError(e)
-      showToast(err?.message || 'WRITE_ERR: ROLE_SYNC_FAILURE', 'error')
+      showToast(err?.message || t('teamDetailPage.toastRoleFailed'), 'error')
     } finally {
       setUpdatingRole(null)
     }
   }
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('TERMINATE_CONNECTION: Are you sure?')) return
+    if (!confirm(t('teamDetailPage.confirmRemoveMember'))) return
     setRemoving(memberId)
     try {
       await apiDelete(`/teams/${teamId}/members/${memberId}`)
-      showToast('✓ NODE_DECOUPLED', 'success')
+      showToast(t('teamDetailPage.toastMemberRemoved'), 'success')
       await loadTeam()
     } catch (e: any) {
       const err = extractApiError(e)
-      showToast(err?.message || 'DELETE_ERR: REMOVAL_FAILURE', 'error')
+      showToast(err?.message || t('teamDetailPage.toastRemoveFailed'), 'error')
     } finally {
       setRemoving(null)
     }
@@ -153,7 +155,7 @@ export default function TeamDetailsPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page transition-colors duration-500">
         <RefreshCw size={80} className="text-primary-500 animate-spin mb-12" />
-        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic">Synchronizing Swarm Node...</p>
+        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic">{t('teamDetailPage.loading')}</p>
       </div>
     )
   }
@@ -164,9 +166,9 @@ export default function TeamDetailsPage() {
         <div className="w-48 h-48 rounded-[3.5rem] bg-surface-card border-4 border-dashed border-surface-200 dark:border-surface-800 flex items-center justify-center mb-12 shadow-2xl">
            <Users size={80} className="text-surface-200 dark:text-slate-800" />
         </div>
-        <h2 className="text-5xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter mb-6">SWARM_NODE_ABSENT</h2>
-        <p className="text-surface-500 dark:text-slate-600 text-sm font-black uppercase tracking-[0.5em] mb-12 italic leading-relaxed max-w-md">The requested swarm node is not registered in the active collective lattice.</p>
-        <button type="button" onClick={() => router.push('/dashboard/teams')} className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2rem] text-[11px] font-black uppercase tracking-[0.6em] hover:bg-primary-500 hover:text-white transition-all shadow-2xl italic active:scale-95 border-none">REVERT_TO_COLLECTIVE</button>
+        <h2 className="text-5xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter mb-6">{t('teamDetailPage.notFoundTitle')}</h2>
+        <p className="text-surface-500 dark:text-slate-600 text-sm font-black uppercase tracking-[0.5em] mb-12 italic leading-relaxed max-w-md">{t('teamDetailPage.notFoundDescription')}</p>
+        <button type="button" onClick={() => router.push('/dashboard/teams')} className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2rem] text-[11px] font-black uppercase tracking-[0.6em] hover:bg-primary-500 hover:text-white transition-all shadow-2xl italic active:scale-95 border-none">{t('teamDetailPage.revertToCollective')}</button>
       </div>
     )
   }
@@ -179,7 +181,7 @@ export default function TeamDetailsPage() {
         {/* Header */}
         <header className="flex flex-col md:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
            <div className="flex items-center gap-6 w-full md:w-auto min-w-0">
-              <button type="button" onClick={() => router.push('/dashboard/teams')} aria-label="Back to teams" title="Back to teams" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+              <button type="button" onClick={() => router.push('/dashboard/teams')} aria-label={t('teamDetailPage.backToTeams')} title={t('teamDetailPage.backToTeams')} className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
                 <ArrowLeft size={24} />
               </button>
               <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
@@ -188,11 +190,11 @@ export default function TeamDetailsPage() {
               <div className="flex-1 min-w-0">
                  <div className="flex items-center gap-4 mb-2 flex-wrap">
                     <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
-                      Collective Node
+                      {t('teamDetailPage.collectiveNode')}
                     </span>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
                         <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                        SYNCED_ONLINE
+                        {t('teamDetailPage.syncedOnline')}
                     </div>
                  </div>
                  <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{team.name}</h1>
@@ -201,9 +203,9 @@ export default function TeamDetailsPage() {
 
            <div className="flex flex-wrap items-center gap-6 justify-end w-full md:w-auto">
               <div className="flex items-center gap-3 px-6 py-3 bg-surface-card border-2 border-surface-100 dark:border-surface-800 rounded-2xl text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic shadow-inner">
-                 <Activity size={16} className="text-primary-500" /> UPTIME: {new Date(team.createdAt).toLocaleDateString().toUpperCase()}
+                 <Activity size={16} className="text-primary-500" /> {t('teamDetailPage.uptimeLabel', { date: new Date(team.createdAt).toLocaleDateString().toUpperCase() })}
               </div>
-              <button type="button" onClick={() => loadTeam()} aria-label="Refresh team data" title="Refresh team data" className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90">
+              <button type="button" onClick={() => loadTeam()} aria-label={t('teamDetailPage.refreshTeamData')} title={t('teamDetailPage.refreshTeamData')} className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90">
                  <RefreshCw size={28} />
               </button>
            </div>
@@ -219,12 +221,12 @@ export default function TeamDetailsPage() {
                           <Fingerprint size={28} />
                        </div>
                        <div>
-                          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-1">Members Matrix</h2>
-                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">NEURAL_UNIT_REGISTRY</p>
+                          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-1">{t('teamDetailPage.membersMatrix')}</h2>
+                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">{t('teamDetailPage.neuralUnitRegistry')}</p>
                        </div>
                     </div>
                     <div className="px-5 py-2 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-xl text-[11px] font-black text-primary-500 uppercase tracking-widest tabular-nums italic shadow-inner">
-                       {team.members.length} UNITS_SYNCED
+                       {t('teamDetailPage.unitsSynced', { count: team.members.length })}
                     </div>
                  </div>
 
@@ -239,9 +241,9 @@ export default function TeamDetailsPage() {
                               <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-tight mb-2 group-hover/member:text-primary-500 transition-colors">{m.userId?.name}</p>
                               <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.3em] italic mb-3 leading-none">{m.userId?.email}</p>
                               <div className="flex items-center gap-3">
-                                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic border-r-2 border-surface-100 dark:border-surface-800 pr-3 leading-none">INITIALIZED: {new Date(m.joinedAt).toLocaleDateString().toUpperCase()}</span>
+                                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic border-r-2 border-surface-100 dark:border-surface-800 pr-3 leading-none">{t('teamDetailPage.initializedLabel', { date: new Date(m.joinedAt).toLocaleDateString().toUpperCase() })}</span>
                                  <div className="flex items-center gap-2 text-[9px] font-black text-primary-500 uppercase tracking-widest italic leading-none">
-                                    <Activity size={10} className="group-hover/member:animate-pulse" /> SYNCED_READY
+                                    <Activity size={10} className="group-hover/member:animate-pulse" /> {t('teamDetailPage.syncedReady')}
                                  </div>
                               </div>
                            </div>
@@ -250,7 +252,7 @@ export default function TeamDetailsPage() {
                         <div className="flex items-center gap-6">
                            {isOwner(m) ? (
                              <div className="px-6 py-3 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-[0.4em] italic flex items-center gap-4 shadow-sm">
-                                <Shield className="w-4 h-4" /> CORE_OWNER
+                                <Shield className="w-4 h-4" /> {t('teamDetailPage.coreOwner')}
                              </div>
                            ) : canManage ? (
                              <div className="flex items-center gap-4">
@@ -259,13 +261,13 @@ export default function TeamDetailsPage() {
                                      value={m.role}
                                      onChange={(e) => handleUpdateRole((m.userId as any)._id, e.target.value)}
                                      disabled={!!updatingRole}
-                                     aria-label={`Role for ${m.userId?.name || 'member'}`}
-                                     title={`Role for ${m.userId?.name || 'member'}`}
+                                     aria-label={t('teamDetailPage.roleForMember', { name: m.userId?.name || t('teamDetailPage.memberFallback') })}
+                                     title={t('teamDetailPage.roleForMember', { name: m.userId?.name || t('teamDetailPage.memberFallback') })}
                                      className="px-8 py-3 bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl text-[11px] font-black text-surface-600 dark:text-slate-400 uppercase tracking-widest italic focus:border-primary-500/50 focus:text-primary-500 outline-none appearance-none cursor-pointer transition-all shadow-inner group-hover/sel:bg-surface-card"
                                    >
                                      {ROLES.map((r) => (
                                        <option key={r.value} value={r.value} className="bg-surface-card">
-                                         {r.label.toUpperCase()}
+                                         {t(`teamDetailPage.role_${r.value}`)}
                                        </option>
                                      ))}
                                    </select>
@@ -299,15 +301,15 @@ export default function TeamDetailsPage() {
                           <Share2 size={28} />
                        </div>
                        <div>
-                          <h3 className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">Lattice Integration</h3>
-                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">NODE_CROSS_LINKING</p>
+                          <h3 className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">{t('teamDetailPage.latticeIntegration')}</h3>
+                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('teamDetailPage.nodeCrossLinking')}</p>
                        </div>
                     </div>
-                    <p className="text-sm font-bold text-surface-500 dark:text-slate-600 uppercase tracking-tight italic leading-relaxed">Cross-link modular components with this node to synchronize narrative and kinetic assets across the swarm.</p>
+                    <p className="text-sm font-bold text-surface-500 dark:text-slate-600 uppercase tracking-tight italic leading-relaxed">{t('teamDetailPage.latticeIntegrationDesc')}</p>
                     <button type="button" onClick={() => router.push('/dashboard/content')}
                       className="w-full py-5 bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.6em] transition-all italic active:scale-95 shadow-xl border-none"
                     >
-                      SYNCHRONIZE_ASSETS
+                      {t('teamDetailPage.synchronizeAssets')}
                     </button>
                  </section>
 
@@ -317,18 +319,18 @@ export default function TeamDetailsPage() {
                           <Zap size={28} />
                        </div>
                        <div>
-                          <h3 className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">Swarm Telemetry</h3>
-                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">REAL_TIME_NODE_STATUS</p>
+                          <h3 className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">{t('teamDetailPage.swarmTelemetry')}</h3>
+                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('teamDetailPage.realTimeNodeStatus')}</p>
                        </div>
                     </div>
                     <div className="space-y-4">
                        <div className="flex items-center justify-between px-8 py-5 rounded-[1.8rem] bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 shadow-inner group-hover:bg-surface-card transition-all">
-                          <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic">ID_DNA_REGISTRY</span>
-                          <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic flex items-center gap-2"><CheckCircle size={14} /> VERIFIED</span>
+                          <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic">{t('teamDetailPage.idDnaRegistry')}</span>
+                          <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic flex items-center gap-2"><CheckCircle size={14} /> {t('teamDetailPage.verified')}</span>
                        </div>
                        <div className="flex items-center justify-between px-8 py-5 rounded-[1.8rem] bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 shadow-inner group-hover:bg-surface-card transition-all">
-                          <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic">NEURAL_SYNC_RATE</span>
-                          <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic">99.8%_OPTIMAL</span>
+                          <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic">{t('teamDetailPage.neuralSyncRate')}</span>
+                          <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic">{t('teamDetailPage.syncRateOptimal')}</span>
                        </div>
                     </div>
                  </section>
@@ -347,13 +349,13 @@ export default function TeamDetailsPage() {
                          <UserPlus size={32} />
                       </div>
                       <div>
-                         <h2 className="text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none mb-1">Node Induction</h2>
-                         <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">INJECT_NEW_UNIT</p>
+                         <h2 className="text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none mb-1">{t('teamDetailPage.nodeInduction')}</h2>
+                         <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">{t('teamDetailPage.injectNewUnit')}</p>
                       </div>
                    </div>
 
                    <p className="text-sm font-bold text-surface-500 dark:text-slate-600 uppercase tracking-tight italic leading-relaxed relative z-10">
-                      Inject a new neural unit into the cluster by specifying their global coordinate lattice (email).
+                      {t('teamDetailPage.nodeInductionDesc')}
                    </p>
 
                    <div className="space-y-6 relative z-10">
@@ -363,7 +365,7 @@ export default function TeamDetailsPage() {
                           type="email"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
-                          placeholder="NEURAL_COORDINATE (EMAIL)"
+                          placeholder={t('teamDetailPage.emailPlaceholder')}
                           className="w-full pl-16 pr-8 py-6 bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] text-sm font-black text-surface-900 dark:text-white uppercase tracking-widest italic placeholder:text-surface-200 dark:placeholder:text-slate-800 focus:border-primary-500 outline-none transition-all shadow-inner"
                         />
                       </div>
@@ -371,13 +373,13 @@ export default function TeamDetailsPage() {
                         <select
                           value={inviteRole}
                           onChange={(e) => setInviteRole(e.target.value)}
-                          aria-label="Invite role"
-                          title="Invite role"
+                          aria-label={t('teamDetailPage.inviteRole')}
+                          title={t('teamDetailPage.inviteRole')}
                           className="w-full px-8 py-6 bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] text-[11px] font-black text-surface-600 dark:text-slate-400 uppercase tracking-[0.3em] italic focus:border-primary-500 outline-none appearance-none cursor-pointer transition-all shadow-inner"
                         >
                           {ROLES.map((r) => (
                             <option key={r.value} value={r.value} className="bg-surface-card">
-                              {r.label.toUpperCase()}_PROTOCOL
+                              {t(`teamDetailPage.roleProtocol_${r.value}`)}
                             </option>
                           ))}
                         </select>
@@ -389,7 +391,7 @@ export default function TeamDetailsPage() {
                         disabled={inviting}
                         className="w-full py-7 bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.8em] transition-all italic active:scale-95 shadow-[0_30px_70px_rgba(0,0,0,0.5)] disabled:opacity-10 border-none group/submit"
                       >
-                        {inviting ? <RefreshCw className="animate-spin" size={24} /> : 'INDUCT_UNIT'}
+                        {inviting ? <RefreshCw className="animate-spin" size={24} /> : t('teamDetailPage.inductUnit')}
                       </button>
                    </div>
                 </section>
@@ -400,15 +402,15 @@ export default function TeamDetailsPage() {
                  <div className="px-10 py-10 border-b-2 border-surface-100 dark:border-surface-800 flex items-center justify-between">
                     <div className="flex items-center gap-6">
                        <Shield size={24} className="text-primary-500 group-hover:rotate-12 transition-transform" />
-                       <h2 className="text-[16px] font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic leading-none">Cluster Integrity</h2>
+                       <h2 className="text-[16px] font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic leading-none">{t('teamDetailPage.clusterIntegrity')}</h2>
                     </div>
                     <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
                  </div>
                  <div className="p-10 space-y-8">
                    <div className="flex items-center justify-between p-8 rounded-[2.5rem] bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/toggle hover:border-primary-500/20 transition-all">
                      <div className="flex-1">
-                       <p className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic mb-1">UNIT_AUTONOMY</p>
-                       <p className="text-[9px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic opacity-60">AUTO_INDUCTION_PERMIT</p>
+                       <p className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic mb-1">{t('teamDetailPage.unitAutonomy')}</p>
+                       <p className="text-[9px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic opacity-60">{t('teamDetailPage.autoInductionPermit')}</p>
                      </div>
                      <div className={`w-16 h-9 rounded-full p-1.5 transition-all duration-500 shadow-lg ${team.settings?.allowMemberInvites ? 'bg-primary-500' : 'bg-surface-200 dark:bg-surface-900'}`}>
                         <div className={`w-6 h-6 rounded-full bg-white transition-transform duration-500 shadow-md ${team.settings?.allowMemberInvites ? 'translate-x-7' : 'translate-x-0'}`} />
@@ -416,8 +418,8 @@ export default function TeamDetailsPage() {
                    </div>
                    <div className="flex items-center justify-between p-8 rounded-[2.5rem] bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/toggle hover:border-primary-500/20 transition-all">
                      <div className="flex-1">
-                       <p className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic mb-1">CONSENSUS_PROTOCOL</p>
-                       <p className="text-[9px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic opacity-60">MANDATORY_VALIDATION</p>
+                       <p className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic mb-1">{t('teamDetailPage.consensusProtocol')}</p>
+                       <p className="text-[9px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic opacity-60">{t('teamDetailPage.mandatoryValidation')}</p>
                      </div>
                      <div className={`w-16 h-9 rounded-full p-1.5 transition-all duration-500 shadow-lg ${team.settings?.requireApproval ? 'bg-primary-500' : 'bg-surface-200 dark:bg-surface-900'}`}>
                         <div className={`w-6 h-6 rounded-full bg-white transition-transform duration-500 shadow-md ${team.settings?.requireApproval ? 'translate-x-7' : 'translate-x-0'}`} />
@@ -425,7 +427,7 @@ export default function TeamDetailsPage() {
                    </div>
                  </div>
                  <div className="px-10 py-8 bg-surface-page dark:bg-surface-950/50 text-center">
-                    <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic">GLOBAL_SECURITY_V9_ENABLED</p>
+                    <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic">{t('teamDetailPage.globalSecurityEnabled')}</p>
                  </div>
               </section>
 
@@ -434,17 +436,17 @@ export default function TeamDetailsPage() {
                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                        <Database className="text-primary-500" size={20} />
-                       <span className="text-[11px] font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic">Lattice Metadata</span>
+                       <span className="text-[11px] font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic">{t('teamDetailPage.latticeMetadata')}</span>
                     </div>
                     <MoreVertical size={16} className="text-surface-300 dark:text-slate-800" />
                  </div>
                  <div className="space-y-6">
                     <div className="flex justify-between items-center text-[10px] font-black italic">
-                       <span className="text-surface-400 dark:text-slate-600 uppercase tracking-widest">CLUSTER_ID</span>
+                       <span className="text-surface-400 dark:text-slate-600 uppercase tracking-widest">{t('teamDetailPage.clusterId')}</span>
                        <span className="text-surface-900 dark:text-white tabular-nums tracking-tighter truncate max-w-[150px]">{team._id.toUpperCase()}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] font-black italic">
-                       <span className="text-surface-400 dark:text-slate-600 uppercase tracking-widest">OWNER_HASH</span>
+                       <span className="text-surface-400 dark:text-slate-600 uppercase tracking-widest">{t('teamDetailPage.ownerHash')}</span>
                        <span className="text-surface-900 dark:text-white truncate max-w-[150px]">{team.ownerId?.email?.toUpperCase()}</span>
                     </div>
                  </div>

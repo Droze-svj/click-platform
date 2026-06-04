@@ -56,9 +56,11 @@ const scoreBg = (s: number) => s >= 85 ? 'bg-emerald-500/10' : s >= 65 ? 'bg-amb
 
 import { apiGet, apiPost } from '../../../../lib/api'
 import { StatsCardSkeleton, ContentSkeleton } from '../../../../components/LoadingSkeleton'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function HeuristicMatrixPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [videos, setVideos] = useState<VideoStat[]>([])
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'views' | 'viralScore' | 'completionRate' | 'engagementRate'>('views')
@@ -169,14 +171,14 @@ export default function HeuristicMatrixPage() {
     const worstVideo = [...videos].sort((a, b) => a.hookDropOff - b.hookDropOff).reverse()[0]
     const bestVideo = [...videos].sort((a, b) => b.viralScore - a.viralScore)[0]
     return {
-      headline: `Your ${bestVideo?.hookType.replace(/-/g, '_').toUpperCase()} nodes are refracting 2.3× more signal resonance than benchmark.`,
-      action: `Terminate hook diffraction on "${worstVideo?.title.substring(0, 35)}…" — ${worstVideo?.hookDropOff}% signal loss detected in first 3s.`,
-      opportunity: `Deploy 2 additional "${bestEditStyle.toUpperCase()}" nodes to pulse +${Math.round(totals.views * 0.18 / 1000)}K spectral views within next cycle.`,
+      headline: t('analyticsCreatorPage.aiHeadline', { hookType: bestVideo?.hookType.replace(/-/g, '_').toUpperCase() }),
+      action: t('analyticsCreatorPage.aiAction', { title: worstVideo?.title.substring(0, 35), dropOff: worstVideo?.hookDropOff }),
+      opportunity: t('analyticsCreatorPage.aiOpportunity', { style: bestEditStyle.toUpperCase(), views: Math.round(totals.views * 0.18 / 1000) }),
     }
-  }, [videos, bestEditStyle, totals.views])
+  }, [videos, bestEditStyle, totals.views, t])
 
   if (loading) return (
-     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading">
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label={t('analyticsCreatorPage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
@@ -196,7 +198,7 @@ export default function HeuristicMatrixPage() {
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button type="button" onClick={() => router.push('/dashboard/analytics')} 
-                title="Back to Analytics Matrix" aria-label="Back to Analytics Matrix"
+                title={t('analyticsCreatorPage.backToMatrix')} aria-label={t('analyticsCreatorPage.backToMatrix')}
                 className="w-16 h-16 rounded-2xl bg-black/40 border-2 border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-2xl active:scale-95 group flex-shrink-0">
                 <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
               </button>
@@ -208,15 +210,15 @@ export default function HeuristicMatrixPage() {
                  <div className="flex items-center gap-6 mb-3">
                     <div className="flex items-center gap-3">
                        <Shield size={16} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Heuristic Logic v10.4.0</span>
+                       <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('analyticsCreatorPage.versionLabel')}</span>
                     </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 shadow-inner">
                        <ActivitySquare size={12} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">NODE_DIAGNOSTIC_READY</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('analyticsCreatorPage.diagnosticReady')}</span>
                    </div>
                  </div>
-                   <h1 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Heuristic Matrix</h1>
-                  <p className="text-slate-400 text-[11px] sm:text-[14px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">Autonomous content DNA analysis and temporal resonance forecasting.</p>
+                   <h1 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{t('analyticsCreatorPage.title')}</h1>
+                  <p className="text-slate-400 text-[11px] sm:text-[14px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">{t('analyticsCreatorPage.subtitle')}</p>
                </div>
             </div>
 
@@ -224,13 +226,13 @@ export default function HeuristicMatrixPage() {
                <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border-2 border-white/5 shadow-inner">
                  {['all', 'tiktok', 'instagram', 'youtube'].map(p => (
                    <button key={p} onClick={() => setSelectedPlatform(p)}
-                     title={`Filter by ${p === 'all' ? 'Cluster' : p.toUpperCase()}`}
-                     aria-label={`Filter by ${p === 'all' ? 'Cluster' : p.toUpperCase()}`}
+                     title={t('analyticsCreatorPage.filterBy', { platform: p === 'all' ? t('analyticsCreatorPage.cluster') : p.toUpperCase() })}
+                     aria-label={t('analyticsCreatorPage.filterBy', { platform: p === 'all' ? t('analyticsCreatorPage.cluster') : p.toUpperCase() })}
                      className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${
                        selectedPlatform === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
                      }`}
                    >
-                    {p === 'all' ? 'CLUSTER' : p.toUpperCase()}
+                    {p === 'all' ? t('analyticsCreatorPage.clusterUpper') : p.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -238,8 +240,8 @@ export default function HeuristicMatrixPage() {
                 type="button"
                 onClick={fetchStats}
                 disabled={refreshing}
-                title="Refresh Operational Nodes"
-                aria-label="Refresh Matrix Stats"
+                title={t('analyticsCreatorPage.refreshNodes')}
+                aria-label={t('analyticsCreatorPage.refreshMatrixStats')}
                 className="p-6 rounded-[2.5rem] bg-white text-black hover:bg-indigo-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center"
               >
                 <RefreshCw size={24} className={refreshing ? 'animate-spin' : ''} />
@@ -259,10 +261,10 @@ export default function HeuristicMatrixPage() {
               <div className={`w-56 h-56 rounded-full border-[12px] ${scoreBorder(totals.avgViralScore)} flex flex-col items-center justify-center bg-black/40 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] relative group`}>
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <span className={`text-6xl font-black italic tracking-tighter ${scoreColor(totals.avgViralScore)} tabular-nums leading-none`}>{totals.avgViralScore}</span>
-                <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] mt-2">POTENCY</span>
+                <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] mt-2">{t('analyticsCreatorPage.potency')}</span>
               </div>
               <div className="px-6 py-2 rounded-full bg-black/40 border border-white/5">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">Neural Affinity Master</span>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">{t('analyticsCreatorPage.neuralAffinityMaster')}</span>
               </div>
             </div>
 
@@ -270,7 +272,7 @@ export default function HeuristicMatrixPage() {
             <div className="space-y-12">
               <div className="flex items-center gap-6">
                 <Sparkles className="text-indigo-400 animate-pulse" size={24} />
-                <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">Automatic Engine Synthesis</span>
+                <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">{t('analyticsCreatorPage.engineSynthesis')}</span>
               </div>
                <h2 className="text-3xl sm:text-6xl font-black italic text-white leading-[1.1] uppercase tracking-tighter max-w-3xl">
                 &ldquo;{aiSummary.headline}&rdquo;
@@ -281,7 +283,7 @@ export default function HeuristicMatrixPage() {
                     <AlertTriangle size={32} className="text-rose-400" />
                   </div>
                   <div className="space-y-2">
-                    <div className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">PROTOCOL_TERMINATION:</div>
+                    <div className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">{t('analyticsCreatorPage.protocolTermination')}</div>
                     <p className="text-[16px] text-white font-black leading-relaxed uppercase tracking-tight italic opacity-80 group-hover:opacity-100 transition-opacity">{aiSummary.action}</p>
                   </div>
                 </div>
@@ -290,7 +292,7 @@ export default function HeuristicMatrixPage() {
                     <Lightbulb size={32} className="text-emerald-400" />
                   </div>
                   <div className="space-y-2">
-                    <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">HEURISTIC_EXPANSION:</div>
+                    <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">{t('analyticsCreatorPage.heuristicExpansion')}</div>
                     <p className="text-[16px] text-white font-black leading-relaxed uppercase tracking-tight italic opacity-80 group-hover:opacity-100 transition-opacity">{aiSummary.opportunity}</p>
                   </div>
                 </div>
@@ -300,10 +302,10 @@ export default function HeuristicMatrixPage() {
             {/* Logic Snapshots */}
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-6 min-w-[240px]">
               {[
-                { label: 'Spectral Sync', value: `${totals.avgCompletion}%`, color: 'text-amber-400', icon: ActivitySquare },
-                { label: 'Signal Gain', value: `${totals.avgEngagement}%`, color: 'text-rose-400', icon: Zap },
-                { label: 'Peak Logic', value: 'PATTERN_INT', color: 'text-indigo-400', icon: Target },
-                { label: 'Best Topology', value: bestEditStyle.split(' ')[0], color: 'text-emerald-400', icon: Cpu },
+                { label: t('analyticsCreatorPage.snapSpectralSync'), value: `${totals.avgCompletion}%`, color: 'text-amber-400', icon: ActivitySquare },
+                { label: t('analyticsCreatorPage.snapSignalGain'), value: `${totals.avgEngagement}%`, color: 'text-rose-400', icon: Zap },
+                { label: t('analyticsCreatorPage.snapPeakLogic'), value: t('analyticsCreatorPage.snapPeakLogicValue'), color: 'text-indigo-400', icon: Target },
+                { label: t('analyticsCreatorPage.snapBestTopology'), value: bestEditStyle.split(' ')[0], color: 'text-emerald-400', icon: Cpu },
               ].map(k => (
                 <div key={k.label} className="bg-black/40 rounded-[2.5rem] p-6 border border-white/5 flex items-center justify-between group hover:bg-white/5 transition-all shadow-inner border-l-4 border-l-white/10 hover:border-l-indigo-500">
                   <k.icon size={24} className={`${k.color} opacity-60 group-hover:scale-110 transition-transform`} />
@@ -320,11 +322,11 @@ export default function HeuristicMatrixPage() {
         {/* Global Resonance Strip */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-10">
           {[
-            { label: 'Spectral Views', value: fmt(totals.views), icon: Eye, color: 'text-indigo-400' },
-            { label: 'Affinity Likes', value: fmt(totals.likes), icon: Heart, color: 'text-rose-400' },
-            { label: 'Signal Shares', value: fmt(totals.shares), icon: Share2, color: 'text-emerald-400' },
-            { label: 'Resonance Comms', value: fmt(totals.comments), icon: MessageSquare, color: 'text-amber-400' },
-            { label: 'Logic Sync', value: `${totals.avgCompletion}%`, icon: Play, color: 'text-violet-400' },
+            { label: t('analyticsCreatorPage.stripSpectralViews'), value: fmt(totals.views), icon: Eye, color: 'text-indigo-400' },
+            { label: t('analyticsCreatorPage.stripAffinityLikes'), value: fmt(totals.likes), icon: Heart, color: 'text-rose-400' },
+            { label: t('analyticsCreatorPage.stripSignalShares'), value: fmt(totals.shares), icon: Share2, color: 'text-emerald-400' },
+            { label: t('analyticsCreatorPage.stripResonanceComms'), value: fmt(totals.comments), icon: MessageSquare, color: 'text-amber-400' },
+            { label: t('analyticsCreatorPage.stripLogicSync'), value: `${totals.avgCompletion}%`, icon: Play, color: 'text-violet-400' },
           ].map(({ label, value, icon: Icon, color }, i) => (
             <motion.div key={label} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}
               whileHover={{ y: -10, backgroundColor: 'rgba(255,255,255,0.06)' }}
@@ -350,8 +352,8 @@ export default function HeuristicMatrixPage() {
                 <div className="flex items-center gap-8 text-white">
                    <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20"><Boxes size={32} className="text-indigo-400" /></div>
                    <div>
-                      <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Operational Nodes</h3>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Cluster repository of manifested content nodes.</p>
+                      <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">{t('analyticsCreatorPage.operationalNodes')}</h3>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{t('analyticsCreatorPage.operationalNodesSubtitle')}</p>
                    </div>
                 </div>
                 <div className="flex gap-3 bg-black/60 p-2 rounded-[2.5rem] border border-white/5">
@@ -359,7 +361,7 @@ export default function HeuristicMatrixPage() {
                     <button key={s} onClick={() => setSortBy(s)}
                       className={`px-6 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${sortBy === s ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'}`}
                     >
-                      {s === 'views' ? 'VE' : s === 'viralScore' ? 'POTENCY' : s === 'completionRate' ? 'SYNC' : 'SIGNAL'}
+                      {s === 'views' ? t('analyticsCreatorPage.sortViews') : s === 'viralScore' ? t('analyticsCreatorPage.sortPotency') : s === 'completionRate' ? t('analyticsCreatorPage.sortSync') : t('analyticsCreatorPage.sortSignal')}
                     </button>
                   ))}
                 </div>
@@ -369,8 +371,8 @@ export default function HeuristicMatrixPage() {
                {filtered.map((video, idx) => (
                  <motion.div key={video.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                    onClick={() => setSelectedVideo(video === selectedVideo ? null : video)}
-                   title={`View diagnostic for ${video.title}`}
-                   aria-label={`View diagnostic for ${video.title}`}
+                   title={t('analyticsCreatorPage.viewDiagnosticFor', { title: video.title })}
+                   aria-label={t('analyticsCreatorPage.viewDiagnosticFor', { title: video.title })}
                    role="button"
                    tabIndex={0}
                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedVideo(video === selectedVideo ? null : video); }}
@@ -385,16 +387,16 @@ export default function HeuristicMatrixPage() {
                    <div className="flex-1 min-w-0">
                      <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-700">{video.title}</p>
                      <div className="flex items-center gap-6 mt-3 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none">
-                        <div className="flex items-center gap-2"><Cpu size={14} /> <span>{video.editStyle} SUBSTRATE</span></div>
+                        <div className="flex items-center gap-2"><Cpu size={14} /> <span>{t('analyticsCreatorPage.nodeSubstrate', { value: video.editStyle })}</span></div>
                         <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                        <div className="flex items-center gap-2"><Target size={14} /> <span>{video.hookType.replace(/-/g, '_')} SIGNAL</span></div>
+                        <div className="flex items-center gap-2"><Target size={14} /> <span>{t('analyticsCreatorPage.nodeSignal', { value: video.hookType.replace(/-/g, '_') })}</span></div>
                      </div>
                    </div>
 
                    <div className="flex items-center gap-12 shrink-0">
                      <div className="text-right hidden sm:block">
                        <div className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{fmt(video.views)}</div>
-                       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">VE_SATURATION</div>
+                       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">{t('analyticsCreatorPage.veSaturation')}</div>
                      </div>
                      <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-2xl font-black border-2 shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${scoreBorder(video.viralScore)} ${scoreColor(video.viralScore)} ${scoreBg(video.viralScore)}`}>
                        {video.viralScore}
@@ -408,7 +410,7 @@ export default function HeuristicMatrixPage() {
 
                    {video.hookDropOff > 30 && (
                      <div className="px-6 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest rounded-full ml-6 shrink-0 shadow-[0_0_30px_rgba(225,29,72,0.2)] animate-pulse">
-                       ⚠ DIFFRACTION
+                       {t('analyticsCreatorPage.diffraction')}
                      </div>
                    )}
                  </motion.div>
@@ -419,13 +421,13 @@ export default function HeuristicMatrixPage() {
           {/* Right Pillar: Matrix Auditors */}
           <div className="space-y-12">
             <div className="flex gap-3 p-2 rounded-[3rem] bg-black/40 border border-white/10 shadow-inner">
-              {(['ai', 'hooks', 'forecast'] as const).map(t => (
-                <button key={t} onClick={() => setInsightTab(t)}
-                  title={`View ${t === 'ai' ? 'Neural' : t === 'hooks' ? 'Pulse' : 'Cycle'} Diagnostics`}
-                  aria-label={`View ${t === 'ai' ? 'Neural' : t === 'hooks' ? 'Pulse' : 'Cycle'} Diagnostics`}
-                  className={`flex-1 py-5 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] italic transition-all duration-300 ${insightTab === t ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'}`}
+              {(['ai', 'hooks', 'forecast'] as const).map(tab => (
+                <button key={tab} onClick={() => setInsightTab(tab)}
+                  title={t('analyticsCreatorPage.viewDiagnostics', { kind: tab === 'ai' ? t('analyticsCreatorPage.kindNeural') : tab === 'hooks' ? t('analyticsCreatorPage.kindPulse') : t('analyticsCreatorPage.kindCycle') })}
+                  aria-label={t('analyticsCreatorPage.viewDiagnostics', { kind: tab === 'ai' ? t('analyticsCreatorPage.kindNeural') : tab === 'hooks' ? t('analyticsCreatorPage.kindPulse') : t('analyticsCreatorPage.kindCycle') })}
+                  className={`flex-1 py-5 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] italic transition-all duration-300 ${insightTab === tab ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'}`}
                 >
-                  {t === 'ai' ? 'NEURAL' : t === 'hooks' ? 'PULSE' : 'CYCLE'}
+                  {tab === 'ai' ? t('analyticsCreatorPage.tabNeural') : tab === 'hooks' ? t('analyticsCreatorPage.tabPulse') : t('analyticsCreatorPage.tabCycle')}
                 </button>
               ))}
             </div>
@@ -438,14 +440,14 @@ export default function HeuristicMatrixPage() {
                   <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none border-none"><Terminal size={300} /></div>
                   <div className="flex items-center gap-6 relative z-10">
                     <Brain className="text-indigo-400" size={32} />
-                     <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">Genetic Content DNA</h4>
+                     <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">{t('analyticsCreatorPage.geneticContentDna')}</h4>
                   </div>
                   <div className="space-y-10 relative z-10">
                     {CONTENT_DNA.map(({ trait, score }, i) => (
                       <div key={trait}>
                         <div className="flex items-center justify-between mb-3 border-l-2 border-indigo-500/20 pl-4">
-                          <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{trait}</span>
-                          <span className={`text-[16px] font-black italic tabular-nums ${scoreColor(score)}`}>{score}_POTENCY</span>
+                          <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{t(`analyticsCreatorPage.dnaTrait.${trait.replace(/\s+/g, '')}`)}</span>
+                          <span className={`text-[16px] font-black italic tabular-nums ${scoreColor(score)}`}>{t('analyticsCreatorPage.potencySuffix', { score })}</span>
                         </div>
                         <div className="h-3 bg-black/40 rounded-full overflow-hidden shadow-inner border border-white/5">
                           <motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ delay: i * 0.1, duration: 1 }}
@@ -459,7 +461,7 @@ export default function HeuristicMatrixPage() {
                   <div className="pt-12 border-t border-white/5 space-y-8 relative z-10">
                     <div className="flex items-center gap-4">
                        <Target className="text-indigo-400" size={24} />
-                       <span className="text-[12px] font-black uppercase text-slate-400 italic tracking-[0.4em]">Substrate Sync Velocity</span>
+                       <span className="text-[12px] font-black uppercase text-slate-400 italic tracking-[0.4em]">{t('analyticsCreatorPage.substrateSyncVelocity')}</span>
                     </div>
                     {styleAttribution.map(({ style, avg }, i) => (
                       <div key={style} className="flex items-center gap-6 group">
@@ -483,21 +485,21 @@ export default function HeuristicMatrixPage() {
                   <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none"><Fingerprint size={300} /></div>
                   <div className="flex items-center gap-6 relative z-10">
                     <Flame className="text-rose-400 animate-pulse" size={32} />
-                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">Signal Pulse Auditor</h4>
+                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">{t('analyticsCreatorPage.signalPulseAuditor')}</h4>
                   </div>
                   <div className="space-y-6 relative z-10">
                     {[
-                      { type: 'pattern_interrupt', score: 97, label: 'Optimal Resonance', emoji: '🎯' },
-                      { type: 'question',          score: 84, label: 'High Induction',       emoji: '❓' },
-                      { type: 'curiosity_gap',     score: 81, label: 'Signal Trap',           emoji: '🧲' },
-                      { type: 'stat',              score: 72, label: 'Logical Anchor',        emoji: '📊' },
-                      { type: 'story',             score: 58, label: 'Slow Induction',     emoji: '📖' },
+                      { type: 'pattern_interrupt', score: 97, label: t('analyticsCreatorPage.hookLabelOptimalResonance'), emoji: '🎯' },
+                      { type: 'question',          score: 84, label: t('analyticsCreatorPage.hookLabelHighInduction'),       emoji: '❓' },
+                      { type: 'curiosity_gap',     score: 81, label: t('analyticsCreatorPage.hookLabelSignalTrap'),           emoji: '🧲' },
+                      { type: 'stat',              score: 72, label: t('analyticsCreatorPage.hookLabelLogicalAnchor'),        emoji: '📊' },
+                      { type: 'story',             score: 58, label: t('analyticsCreatorPage.hookLabelSlowInduction'),     emoji: '📖' },
                     ].map(({ type, score, label, emoji }) => (
                       <div key={type} className={`flex items-center justify-between p-8 rounded-[3rem] border shadow-2xl transition-all duration-700 hover:scale-105 ${scoreBg(score)} ${scoreBorder(score)} bg-gradient-to-br from-white/[0.05] to-transparent`}>
                         <div className="flex items-center gap-6">
                           <span className="text-4xl opacity-40 grayscale">{emoji}</span>
                           <div>
-                            <div className="text-[16px] font-black text-white uppercase tracking-tighter italic">{type}</div>
+                            <div className="text-[16px] font-black text-white uppercase tracking-tighter italic">{t(`analyticsCreatorPage.hookType.${type}`)}</div>
                             <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1 italic">{label}</div>
                           </div>
                         </div>
@@ -507,7 +509,7 @@ export default function HeuristicMatrixPage() {
                   </div>
                   <div className="p-10 rounded-[3rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl relative z-10 pointer-events-none">
                     <p className="text-[14px] text-indigo-300 font-black leading-relaxed uppercase italic tracking-tight">
-                       &ldquo;Pattern-interrupt nodes drive 2.3× more sync velocity. Prioritize kinetic visual cues in frame-nodes 0-2 of any operational payload.&rdquo;
+                       &ldquo;{t('analyticsCreatorPage.pulseQuote')}&rdquo;
                     </p>
                   </div>
                 </motion.div>
@@ -520,7 +522,7 @@ export default function HeuristicMatrixPage() {
                   <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none"><Globe size={300} /></div>
                   <div className="flex items-center gap-6 relative z-10">
                     <Calendar className="text-emerald-400" size={32} />
-                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">Temporal Matrix Projections</h4>
+                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">{t('analyticsCreatorPage.temporalProjections')}</h4>
                   </div>
                   <div className="space-y-6 relative z-10">
                     {FORECAST_SLOTS.map(slot => (
@@ -533,7 +535,7 @@ export default function HeuristicMatrixPage() {
                         <div className="flex-1">
                           <div className="text-[18px] font-black text-white italic uppercase tracking-tighter leading-none mb-1">{slot.day} · {slot.time}</div>
                           <div className={`text-[11px] font-black uppercase tracking-[0.4em] italic text-slate-400`}>
-                             NODE_{slot.platform.toUpperCase()}_SLOT
+                             {t('analyticsCreatorPage.nodeSlot', { platform: slot.platform.toUpperCase() })}
                           </div>
                         </div>
                         <div className={`text-5xl font-black italic tracking-tighter tabular-nums ${scoreColor(slot.score)} drop-shadow-2xl`}>{slot.score}</div>
@@ -541,7 +543,7 @@ export default function HeuristicMatrixPage() {
                     ))}
                   </div>
                   <button className="w-full py-8 rounded-[3.5rem] bg-white text-black text-[14px] font-black uppercase tracking-[0.4em] italic hover:bg-emerald-500 hover:text-white transition-all duration-300 border-none shadow-[0_50px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center justify-center gap-6 group">
-                    Sync Temporal Nodes <ArrowRight size={24} className="group-hover:translate-x-4 transition-transform duration-700" />
+                    {t('analyticsCreatorPage.syncTemporalNodes')} <ArrowRight size={24} className="group-hover:translate-x-4 transition-transform duration-700" />
                   </button>
                 </motion.div>
               )}
@@ -556,16 +558,16 @@ export default function HeuristicMatrixPage() {
                   <div className="absolute top-0 right-0 p-16 opacity-[0.05] pointer-events-none"><Lock size={200} /></div>
                   <div className="flex items-center gap-6 mb-12">
                     <Target className="text-indigo-400" size={32} />
-                    <span className="text-[14px] font-black uppercase tracking-[0.6em] text-indigo-400 italic">Node Spectrum Detail</span>
+                    <span className="text-[14px] font-black uppercase tracking-[0.6em] text-indigo-400 italic">{t('analyticsCreatorPage.nodeSpectrumDetail')}</span>
                   </div>
                   <h4 className="text-4xl font-black text-white mb-12 leading-none uppercase italic tracking-tighter drop-shadow-2xl">{selectedVideo.title}</h4>
 
                   <div className="grid grid-cols-2 gap-8 mb-12">
                     {[
-                      { label: 'Signal Loss', value: `${selectedVideo.hookDropOff}%`, bad: selectedVideo.hookDropOff > 20, icon: TrendingDown },
-                      { label: 'Sync Rate',    value: `${selectedVideo.completionRate}%`, good: selectedVideo.completionRate > 65, icon: Radio },
-                      { label: 'Signal Affinity', value: `${selectedVideo.engagementRate}%`, good: selectedVideo.engagementRate > 8, icon: Network },
-                      { label: 'Neural Potency',  value: `${selectedVideo.viralScore}`, good: selectedVideo.viralScore >= 75, icon: Fingerprint },
+                      { label: t('analyticsCreatorPage.metricSignalLoss'), value: `${selectedVideo.hookDropOff}%`, bad: selectedVideo.hookDropOff > 20, icon: TrendingDown },
+                      { label: t('analyticsCreatorPage.metricSyncRate'),    value: `${selectedVideo.completionRate}%`, good: selectedVideo.completionRate > 65, icon: Radio },
+                      { label: t('analyticsCreatorPage.metricSignalAffinity'), value: `${selectedVideo.engagementRate}%`, good: selectedVideo.engagementRate > 8, icon: Network },
+                      { label: t('analyticsCreatorPage.metricNeuralPotency'),  value: `${selectedVideo.viralScore}`, good: selectedVideo.viralScore >= 75, icon: Fingerprint },
                     ].map(m => (
                       <div key={m.label} className={`rounded-[2rem] sm:rounded-[3.5rem] p-6 sm:p-8 border-2 flex flex-col justify-between min-h-[140px] sm:min-h-[160px] transition-all duration-700 shadow-2xl ${m.good ? 'bg-emerald-500/10 border-emerald-500/20' : m.bad ? 'bg-rose-500/10 border-rose-500/20' : 'bg-white/5 border-white/10'}`}>
                         <div className="flex items-center justify-between">
@@ -579,17 +581,17 @@ export default function HeuristicMatrixPage() {
 
                   <div className="p-10 rounded-[3rem] bg-black/60 border border-white/5 shadow-inner mb-12 border-l-8 border-l-indigo-500/40">
                      <p className="text-[14px] text-slate-400 font-black leading-relaxed uppercase italic tracking-wide">
-                        Audit Result: Manifest kinetic visual spikes in frames 0-4 to counteract {selectedVideo.hookDropOff}% diffraction pulse. Logic injection recommended.
+                        {t('analyticsCreatorPage.auditResult', { dropOff: selectedVideo.hookDropOff })}
                      </p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setSelectedVideo(null)}
-                    title="Dismiss Diagnostic" aria-label="Dismiss Diagnostic"
+                    title={t('analyticsCreatorPage.dismissDiagnostic')} aria-label={t('analyticsCreatorPage.dismissDiagnostic')}
                     className="w-full py-8 rounded-[3.5rem] bg-indigo-600 text-white text-[15px] font-black uppercase tracking-[0.4em] italic hover:bg-rose-600 transition-all duration-300 flex items-center justify-center gap-6 shadow-[0_40px_80px_rgba(79,70,229,0.3)] border-none active:scale-95"
                   >
-                    DISMISS_DIAGNOSTIC <X size={24} aria-hidden="true" />
+                    {t('analyticsCreatorPage.dismissDiagnosticLabel')} <X size={24} aria-hidden="true" />
                   </button>
                 </motion.div>
               )}

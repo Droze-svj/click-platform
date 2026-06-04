@@ -16,6 +16,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface OnboardingStep {
   id: string
@@ -67,6 +68,7 @@ export default function OnboardingPage() {
   const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
   const { state: workflow, setNiche } = useWorkflow()
+  const { t } = useTranslation()
 
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,10 +107,10 @@ export default function OnboardingPage() {
     setCompleting(id)
     try {
       await apiPost('/onboarding/complete-step', { stepId: id })
-      showToast('✓ STEP_LOGGED', 'success')
+      showToast(t('onboardingPage.toastStepLogged'), 'success')
       setSteps(prev => prev.map(s => s.id === id ? { ...s, completed: true } : s))
     } catch {
-      showToast('LOG_FAILED: STATE_NOT_PERSISTED', 'error')
+      showToast(t('onboardingPage.toastLogFailed'), 'error')
     } finally { setCompleting(null) }
   }
 
@@ -119,13 +121,13 @@ export default function OnboardingPage() {
   const handlePickNiche = async (value: string) => {
     setNiche(value)
     setEditingNiche(false)
-    showToast(`✓ NICHE_LOCKED: ${value.toUpperCase()}`, 'success')
+    showToast(t('onboardingPage.toastNicheLocked', { niche: value.toUpperCase() }), 'success')
     // Persist niche to server User model so AI services (strategist, Gemini
     // playbooks, marketing intelligence) can read it without a client context.
     try {
       await apiPut('/niche/select', { niche: value })
     } catch {
-      showToast('NICHE_Could not sync: Saved locally — will retry on next session.', 'error')
+      showToast(t('onboardingPage.toastNicheSyncFailed'), 'error')
     }
     const profileStep = steps.find(s => s.id === 'profile')
     if (profileStep && !profileStep.completed) {
@@ -140,15 +142,15 @@ export default function OnboardingPage() {
     setSkipping(true)
     try {
       await apiPost('/onboarding/skip', {})
-      showToast('✓ SEQUENCE_SKIPPED', 'success')
+      showToast(t('onboardingPage.toastSequenceSkipped'), 'success')
       setSteps(prev => prev.map(s => ({ ...s, completed: true })))
     } catch {
-      showToast('SKIP_FAILED', 'error')
+      showToast(t('onboardingPage.toastSkipFailed'), 'error')
     } finally { setSkipping(false) }
   }
 
   if (loading) return (
-    <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1400px] mx-auto space-y-16 bg-[var(--page-bg)]" aria-busy="true" aria-label="Loading">
+    <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1400px] mx-auto space-y-16 bg-[var(--page-bg)]" aria-busy="true" aria-label={t('onboardingPage.loading')}>
       <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, i) => <ListItemSkeleton key={i} />)}
       </div>
@@ -163,7 +165,7 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
+            <button type="button" onClick={() => router.push('/dashboard')} title={t('onboardingPage.backToDashboard')} aria-label={t('onboardingPage.backToDashboard')} className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
             <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
@@ -172,15 +174,15 @@ export default function OnboardingPage() {
             <div>
               <div className="flex items-center gap-4 mb-3">
                 <Activity size={14} className="text-emerald-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400 italic leading-none">Activation Sequence</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400 italic leading-none">{t('onboardingPage.activationSequence')}</span>
               </div>
-              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Get Started</h1>
-              <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Stepwise initialization of your sovereign Click instance.</p>
+              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{t('onboardingPage.getStarted')}</h1>
+              <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">{t('onboardingPage.subtitle')}</p>
             </div>
           </div>
           {!isComplete && (
             <button type="button" disabled={skipping} onClick={handleSkipAll} className="px-8 py-4 bg-white/5 border-2 border-white/10 text-slate-400 rounded-full text-[11px] font-black uppercase tracking-[0.5em] hover:text-white italic flex items-center gap-3 transition-colors disabled:opacity-40">
-              <SkipForward size={14} /> SKIP_SEQUENCE
+              <SkipForward size={14} /> {t('onboardingPage.skipSequence')}
             </button>
           )}
         </div>
@@ -196,14 +198,14 @@ export default function OnboardingPage() {
                   <Target size={26} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">STEP_0 · NICHE_CALIBRATION</p>
-                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-none">Pick your category</h3>
-                  <p className="text-[11px] text-slate-400 mt-2 max-w-xl">The AI tunes hooks, captions, and posting times to your niche. Pick once — change anytime.</p>
+                  <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">{t('onboardingPage.nicheCalibrationKicker')}</p>
+                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-none">{t('onboardingPage.pickYourCategory')}</h3>
+                  <p className="text-[11px] text-slate-400 mt-2 max-w-xl">{t('onboardingPage.nicheCalibrationDescription')}</p>
                 </div>
               </div>
               {workflow.niche && (
                 <button type="button" onClick={() => setEditingNiche(false)} className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
-                  Cancel
+                  {t('onboardingPage.cancel')}
                 </button>
               )}
             </div>
@@ -214,7 +216,7 @@ export default function OnboardingPage() {
                   <button type="button"
                     key={opt.value}
                     onClick={() => handlePickNiche(opt.value)}
-                    aria-label={selected ? `${opt.value} niche — selected` : `Select ${opt.value} niche`}
+                    aria-label={selected ? t('onboardingPage.nicheSelectedAria', { niche: opt.value }) : t('onboardingPage.nicheSelectAria', { niche: opt.value })}
                     className={`group p-5 rounded-2xl border transition-all text-left flex flex-col gap-2 ${
                       selected
                         ? `bg-[var(--tint-${opt.accent}-bg)] border-[var(--tint-${opt.accent}-edge)] text-[var(--tint-${opt.accent}-fg)] shadow-lg`
@@ -222,7 +224,7 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <span className="text-2xl leading-none">{opt.icon}</span>
-                    <span className="text-[11px] font-black uppercase tracking-widest leading-tight">{opt.label}</span>
+                    <span className="text-[11px] font-black uppercase tracking-widest leading-tight">{t(`onboardingPage.niche_${opt.value}`)}</span>
                   </button>
                 )
               })}
@@ -235,12 +237,12 @@ export default function OnboardingPage() {
                 <CheckCircle size={18} />
               </div>
               <div>
-                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.4em] italic mb-1 leading-none">NICHE_LOCKED</p>
+                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.4em] italic mb-1 leading-none">{t('onboardingPage.nicheLockedLabel')}</p>
                 <p className="text-lg font-black text-white capitalize leading-none">{workflow.niche}</p>
               </div>
             </div>
-            <button type="button" onClick={() => setEditingNiche(true)} title="Change Niche" aria-label="Change Niche" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
-              Change
+            <button type="button" onClick={() => setEditingNiche(true)} title={t('onboardingPage.changeNiche')} aria-label={t('onboardingPage.changeNiche')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
+              {t('onboardingPage.change')}
             </button>
           </div>
         )}
@@ -253,8 +255,8 @@ export default function OnboardingPage() {
                 {isComplete ? <CheckCircle size={26} /> : <Zap size={26} />}
               </div>
               <div>
-                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{isComplete ? 'SEQUENCE_COMPLETE' : 'PROGRESS'}</p>
-                <p className="text-3xl font-black text-white italic uppercase tracking-tight leading-none">{completedCount} / {totalCount} STEPS</p>
+                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{isComplete ? t('onboardingPage.sequenceComplete') : t('onboardingPage.progress')}</p>
+                <p className="text-3xl font-black text-white italic uppercase tracking-tight leading-none">{t('onboardingPage.stepsCount', { completed: completedCount, total: totalCount })}</p>
               </div>
             </div>
             <p className="text-6xl font-black text-white italic tabular-nums tracking-tighter leading-none">{pct}<span className="text-2xl text-slate-500">%</span></p>
@@ -288,7 +290,7 @@ export default function OnboardingPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h3 className={`text-2xl font-black italic uppercase tracking-tight leading-tight ${step.completed ? 'text-emerald-400 line-through decoration-emerald-500/40' : 'text-white'}`}>{step.title}</h3>
-                      {step.completed && <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-[0.3em] italic">DONE</span>}
+                      {step.completed && <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-[0.3em] italic">{t('onboardingPage.done')}</span>}
                     </div>
                     {step.description && <p className="text-[12px] text-slate-400 leading-relaxed font-medium">{step.description}</p>}
                   </div>
@@ -296,11 +298,11 @@ export default function OnboardingPage() {
                 <div className="flex items-center gap-3 w-full lg:w-auto">
                   {step.href && !step.completed && (
                     <Link href={step.href} className="flex-1 lg:flex-none px-7 py-3.5 bg-white text-black rounded-full text-[11px] font-black uppercase tracking-[0.4em] italic hover:bg-indigo-500 hover:text-white transition-colors flex items-center justify-center gap-3 whitespace-nowrap">
-                      {step.cta || 'OPEN'} <ArrowRight size={14} />
+                      {step.cta || t('onboardingPage.open')} <ArrowRight size={14} />
                     </Link>
                   )}
                   {!step.completed && (
-                    <button type="button" disabled={isCompleting} onClick={() => handleComplete(step.id)} title={`Mark "${step.title}" as complete`} aria-label={`Mark "${step.title}" as complete`} className="w-12 h-12 rounded-full bg-white/5 border-2 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0">
+                    <button type="button" disabled={isCompleting} onClick={() => handleComplete(step.id)} title={t('onboardingPage.markComplete', { title: step.title || '' })} aria-label={t('onboardingPage.markComplete', { title: step.title || '' })} className="w-12 h-12 rounded-full bg-white/5 border-2 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0">
                       {isCompleting ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                     </button>
                   )}
@@ -317,12 +319,12 @@ export default function OnboardingPage() {
               <Sparkles size={40} />
             </div>
             <div>
-              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-3 leading-none">SOVEREIGN_INSTANCE_ACTIVATED</p>
-              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-tight mb-3">You&apos;re fully wired in.</h2>
-              <p className="text-[12px] text-slate-400 uppercase font-black tracking-[0.4em] italic">Click is now operating at full capacity for your account.</p>
+              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-3 leading-none">{t('onboardingPage.instanceActivated')}</p>
+              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-tight mb-3">{t('onboardingPage.fullyWiredIn')}</h2>
+              <p className="text-[12px] text-slate-400 uppercase font-black tracking-[0.4em] italic">{t('onboardingPage.fullCapacity')}</p>
             </div>
             <Link href="/dashboard" className="px-10 py-4 bg-white text-black rounded-full text-[12px] font-black uppercase tracking-[0.5em] italic hover:bg-emerald-500 hover:text-white transition-colors flex items-center gap-3">
-              ENTER_DASHBOARD <ArrowRight size={16} />
+              {t('onboardingPage.enterDashboard')} <ArrowRight size={16} />
             </Link>
           </motion.div>
         )}
