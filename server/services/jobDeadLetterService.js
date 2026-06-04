@@ -52,14 +52,21 @@ async function moveToDeadLetter(queueName, jobId, reason) {
 /**
  * Get dead letter jobs
  */
-async function getDeadLetterJobs(queueName = null, limit = 100) {
+async function getDeadLetterJobs(queueName = null, limit = 100, opts = {}) {
   try {
     const DeadLetterJob = require('../models/DeadLetterJob');
-    const query = queueName ? { originalQueueName: queueName } : {};
+    const query = {};
+    if (queueName) query.originalQueueName = queueName;
+    // Optional date-range filter on when the job was moved to the DLQ.
+    if (opts.since || opts.until) {
+      query.movedAt = {};
+      if (opts.since) query.movedAt.$gte = new Date(opts.since);
+      if (opts.until) query.movedAt.$lte = new Date(opts.until);
+    }
 
     const jobs = await DeadLetterJob.find(query)
       .sort({ movedAt: -1 })
-      .limit(limit);
+      .limit(Math.min(limit, 500));
 
     return jobs;
   } catch (error) {
