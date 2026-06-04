@@ -744,6 +744,23 @@ app.use(
   require('./routes/webhooks/whop')
 );
 
+// Resumable (tus) uploads MUST mount BEFORE express.json() so tus receives the
+// raw chunk stream, and via app.all (not a sub-router) so req.url keeps its full
+// path for tus's upload-id parsing. Auth runs first to populate req.user.
+try {
+  const { tusServer } = require('./routes/upload-tus');
+  const tusAuth = require('./middleware/auth');
+  const tusHandler = (req, res) => {
+    res.setHeader('Access-Control-Expose-Headers', 'Location, Upload-Offset, Upload-Length, Tus-Resumable, X-Content-Id');
+    return tusServer.handle(req, res);
+  };
+  app.all('/api/upload/tus', tusAuth, tusHandler);
+  app.all('/api/upload/tus/*', tusAuth, tusHandler);
+  logger.info('🧩 Resumable (tus) upload endpoint mounted at /api/upload/tus');
+} catch (err) {
+  logger.warn('tus upload endpoint not mounted', { error: err.message });
+}
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

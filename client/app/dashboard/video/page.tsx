@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import FileUpload from '../../../components/FileUpload'
+import * as tus from 'tus-js-client'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { extractApiError } from '../../../utils/apiResponse'
 import { useSocket } from '../../../hooks/useSocket'
@@ -119,39 +120,78 @@ export default function VideoStudioPage() {
     router.push(editLink(contentId))
   }, [loadVideos, router, editLink, tr])
 
+  // Classic multipart upload — used as the fallback when resumable (tus) fails.
+  const xhrUpload = useCallback((file: File, token: string | null) => {
+    const fd = new FormData()
+    fd.append('video', file)
+    fd.append('title', file.name.replace(/\.[^.]+$/, ''))
+    const xhr = new XMLHttpRequest()
+    return new Promise<any>((resolve, reject) => {
+      xhr.open('POST', '/api/video/upload')
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) setPageDropProgress(Math.round((e.loaded / e.total) * 100))
+      }
+      xhr.onload = () => {
+        try {
+          const json = JSON.parse(xhr.responseText)
+          if (xhr.status >= 200 && xhr.status < 300 && json.success !== false) resolve(json)
+          else reject(new Error(json.error || json.message || `HTTP ${xhr.status}`))
+        } catch (e) { reject(e) }
+      }
+      xhr.onerror = () => reject(new Error('Network error during upload'))
+      xhr.send(fd)
+    })
+  }, [])
+
+  // Resumable upload via tus — survives connection drops on large files.
+  const tusUpload = useCallback((file: File, token: string | null) => {
+    return new Promise<any>((resolve, reject) => {
+      let contentId: string | null = null
+      const upload = new tus.Upload(file, {
+        endpoint: '/api/upload/tus',
+        chunkSize: 8 * 1024 * 1024, // 8MB chunks → real resume points
+        retryDelays: [0, 1000, 3000, 5000, 10000],
+        removeFingerprintOnSuccess: true,
+        metadata: { filename: file.name, filetype: file.type, title: file.name.replace(/\.[^.]+$/, '') },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        onError: (err) => reject(err),
+        onProgress: (sent, total) => { if (total) setPageDropProgress(Math.round((sent / total) * 100)) },
+        onAfterResponse: (_req, res) => {
+          try { const id = res.getHeader('X-Content-Id'); if (id) contentId = id } catch { /* header optional */ }
+        },
+        onSuccess: () => resolve({ data: { contentId } }),
+      })
+      upload.start()
+    })
+  }, [])
+
   const uploadFromPageDrop = useCallback(async (file: File) => {
     if (!/^video\//.test(file.type)) { setError(tr('studio.invalidVideo', 'MIME_ERR: INVALID_VIDEO_FORMAT')); return }
     setError('')
     setPageDropProgress(0)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     try {
-      const fd = new FormData()
-      fd.append('video', file)
-      fd.append('title', file.name.replace(/\.[^.]+$/, ''))
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      const xhr = new XMLHttpRequest()
-      const result: any = await new Promise((resolve, reject) => {
-        xhr.open('POST', '/api/video/upload')
-        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setPageDropProgress(Math.round((e.loaded / e.total) * 100))
-        }
-        xhr.onload = () => {
-          try {
-            const json = JSON.parse(xhr.responseText)
-            if (xhr.status >= 200 && xhr.status < 300 && json.success !== false) resolve(json)
-            else reject(new Error(json.error || json.message || `HTTP ${xhr.status}`))
-          } catch (e) { reject(e) }
-        }
-        xhr.onerror = () => reject(new Error('Network error during upload'))
-        xhr.send(fd)
-      })
-      await handleUploadResponse(file, result)
+      let result: any
+      try {
+        result = await tusUpload(file, token)
+      } catch (tusErr) {
+        // Resumable path failed (endpoint/network) — fall back to classic upload.
+        result = await xhrUpload(file, token)
+      }
+      if (result?.data?.contentId || result?.contentId) {
+        await handleUploadResponse(file, result)
+      } else {
+        // Upload succeeded but no contentId surfaced (tus header missing); refresh list.
+        setSuccess(tr('studio.uploadStable', '✓ UPLOAD_STABLE: ANALYZING_VECTORS...'))
+        await loadVideos()
+      }
     } catch (e: any) {
       setError(e?.message || 'Upload failed')
     } finally {
       setPageDropProgress(null)
     }
-  }, [handleUploadResponse, tr])
+  }, [handleUploadResponse, xhrUpload, tusUpload, loadVideos, tr])
 
   useEffect(() => {
     let dragDepth = 0
