@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Filter, Loader2, FolderOpen, Search, CheckSquare, 
 import { apiGet, apiDelete } from '../../../../../lib/api'
 import ClipCard, { type Clip } from '../../../../../components/clips/ClipCard'
 import ClipLightbox from '../../../../../components/clips/ClipLightbox'
+import { CardSkeleton } from '../../../../../components/LoadingSkeleton'
 
 type SortKey = 'viralScore' | 'rating' | 'newest' | 'duration'
 
@@ -281,8 +282,8 @@ export default function ClipHubByContentPage() {
         </header>
 
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-slate-500">
-            <Loader2 className="w-6 h-6 animate-spin" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5" aria-busy="true" aria-label="Loading">
+            {Array.from({ length: 10 }).map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : error ? (
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 text-rose-300 text-sm">

@@ -15,7 +15,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useUserSocket } from '../../../hooks/useUserSocket'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
-import ClickLoadingState from '@/components/click/ClickLoadingState'
+import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
 
 interface ScheduledPost {
   _id: string
@@ -269,8 +269,13 @@ export default function SchedulerPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
-       <ClickLoadingState intent="loading" />
+    <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-8 lg:px-12 pt-8 max-w-[1800px] mx-auto" aria-busy="true" aria-label="Loading">
+       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+       </div>
+       <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)}
+       </div>
     </div>
   )
 

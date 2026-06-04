@@ -17,6 +17,7 @@ import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 
 import { API_URL } from '../../../lib/api'
+import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
 
 const sectors = [
   'health', 'finance', 'education', 'technology',
@@ -93,9 +94,13 @@ export default function SectorResonanceMatrixPage() {
   const currentPack = sectorPacks?.[userSector]
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
-        <Target size={64} className="text-amber-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Calibrating Sector Intelligence...</span>
+     <div className="min-h-screen bg-[var(--page-bg)] font-inter px-10 pt-16 max-w-[1700px] mx-auto" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <div className="space-y-3">
+           {Array.from({ length: 5 }).map((_, i) => <ListItemSkeleton key={i} />)}
+        </div>
      </div>
   )
 

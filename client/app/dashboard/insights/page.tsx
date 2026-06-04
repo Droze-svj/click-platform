@@ -8,7 +8,7 @@ import {
   Link2, Calendar, Zap, MessageSquare, Heart, Share2, 
   ChevronRight, Cpu, Activity, Shield, Globe, Radio, 
   Layers, Terminal, X, ArrowUpRight, Hexagon, PieChart,
-  ArrowLeft, Network, Gauge, Fingerprint, Brain, Monitor,
+  ArrowLeft, Network, Gauge, Fingerprint, Monitor,
   ActivitySquare, Lock, AlertCircle, Boxes, ArrowRight, ChevronDown
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,6 +16,7 @@ import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { StatsCardSkeleton, ContentSkeleton } from '../../../components/LoadingSkeleton'
 
 interface AudienceOverview {
   totalEngagement?: number
@@ -137,9 +138,11 @@ export default function CognitiveForecasterPage() {
   const connectedCount = accounts ? Object.values(accounts).filter(Boolean).length : 0
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
-        <Brain size={80} className="text-primary-500 animate-spin mb-12" />
-        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Loading insights…</p>
+     <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <ContentSkeleton />
      </div>
   );
 

@@ -15,9 +15,10 @@ import {
   Fingerprint, Compass, Boxes, Layout, Layers, Timer, Monitor,
   Accessibility, Box, Workflow, Share2, Scan, Link2, ZapOff, Anchor,
   Wind, Ghost, ShieldCheck, ShieldAlert, ActivitySquare, Binary,
-  Orbit, GitBranch, CpuIcon, Lock, Search
+  Orbit, GitBranch, Lock, Search
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTheme } from '../../../components/ThemeProvider'
 import { useToast } from '../../../contexts/ToastContext'
@@ -120,9 +121,13 @@ export default function TasksPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
-        <CpuIcon size={80} className="text-primary-500 animate-spin mb-12" />
-        <span className="text-sm font-bold text-surface-500 uppercase tracking-widest animate-pulse">Syncing Tasks...</span>
+     <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <div className="space-y-3">
+           {Array.from({ length: 6 }).map((_, i) => <ListItemSkeleton key={i} />)}
+        </div>
      </div>
   )
 

@@ -9,11 +9,12 @@ import {
   Database, Video, FileText, Calendar, Clock, RefreshCw, Download
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
 import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
-import ClickLoadingState from '@/components/click/ClickLoadingState'
 import { PLANS, buildCheckoutTarget, type BillingPeriod, type Plan as CanonicalPlan } from '../../../lib/plans'
 
 interface UsageRecord {
@@ -53,6 +54,7 @@ function fmtCurrency(n?: number, cur = 'USD') { if (n == null) return '—'; ret
 export default function BillingPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
+  const { t } = useTranslation()
   const { showToast } = useToast()
 
   const [usage, setUsage] = useState<UsageRecord>({})
@@ -75,9 +77,9 @@ export default function BillingPage() {
       const hist = Array.isArray(histBody) ? histBody : (histBody?.invoices ?? histBody?.history ?? [])
       setHistory(Array.isArray(hist) ? hist : [])
     } catch {
-      showToast('Could not load: BILLING_unavailable', 'error')
+      showToast(t('billingPage.loadFailed'), 'error')
     } finally { setLoading(false) }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     if (authLoading) return
@@ -97,25 +99,30 @@ export default function BillingPage() {
       const res: any = await apiPost('/billing/upgrade', { planId: plan.id })
       const url = res?.data?.checkoutUrl || res?.checkoutUrl
       if (url) { window.location.href = url; return }
-      showToast(`✓ PLAN_UPGRADE_INITIATED: ${plan.id.toUpperCase()}`, 'success')
+      showToast(t('billingPage.upgradeInitiated', { plan: plan.id.toUpperCase() }), 'success')
       await loadAll()
     } catch (e: any) {
-      showToast(e?.response?.data?.error || 'UPGRADE_REJECTED: PAYMENT_GATEWAY_OFFLINE', 'error')
+      showToast(e?.response?.data?.error || t('billingPage.upgradeRejected'), 'error')
     } finally { setUpgradingId(null) }
   }
 
   const meters = [
-    { label: 'Videos Processed',  used: usage.videosProcessed,  cap: limits.videosProcessed,  icon: Video,    color: 'text-rose-600 dark:text-rose-400',    bar: 'bg-rose-500' },
-    { label: 'AI Generations',    used: usage.contentGenerated, cap: limits.contentGenerated, icon: Sparkles, color: 'text-primary-600 dark:text-primary-400',  bar: 'bg-primary-500' },
-    { label: 'Posts Scheduled',   used: usage.postsScheduled,   cap: limits.postsScheduled,   icon: Calendar, color: 'text-amber-600 dark:text-amber-400',   bar: 'bg-amber-500' },
-    { label: 'Quote Cards',       used: usage.quotesCreated,    cap: limits.quotesCreated,    icon: FileText, color: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500' },
-    { label: 'Storage (MB)',      used: usage.storageUsedMb,    cap: limits.storageUsedMb,    icon: Database, color: 'text-violet-600 dark:text-violet-400',  bar: 'bg-violet-500' },
-    { label: 'AI Credits',        used: usage.aiCreditsUsed,    cap: limits.aiCreditsUsed,    icon: Zap,      color: 'text-cyan-600 dark:text-cyan-400',    bar: 'bg-cyan-500' },
+    { label: t('billingPage.meterVideosProcessed'),  used: usage.videosProcessed,  cap: limits.videosProcessed,  icon: Video,    color: 'text-rose-600 dark:text-rose-400',    bar: 'bg-rose-500' },
+    { label: t('billingPage.meterAiGenerations'),    used: usage.contentGenerated, cap: limits.contentGenerated, icon: Sparkles, color: 'text-primary-600 dark:text-primary-400',  bar: 'bg-primary-500' },
+    { label: t('billingPage.meterPostsScheduled'),   used: usage.postsScheduled,   cap: limits.postsScheduled,   icon: Calendar, color: 'text-amber-600 dark:text-amber-400',   bar: 'bg-amber-500' },
+    { label: t('billingPage.meterQuoteCards'),       used: usage.quotesCreated,    cap: limits.quotesCreated,    icon: FileText, color: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500' },
+    { label: t('billingPage.meterStorage'),      used: usage.storageUsedMb,    cap: limits.storageUsedMb,    icon: Database, color: 'text-violet-600 dark:text-violet-400',  bar: 'bg-violet-500' },
+    { label: t('billingPage.meterAiCredits'),        used: usage.aiCreditsUsed,    cap: limits.aiCreditsUsed,    icon: Zap,      color: 'text-cyan-600 dark:text-cyan-400',    bar: 'bg-cyan-500' },
   ]
 
   if (loading) return (
-    <div className="flex items-center justify-center py-24 bg-surface-page min-h-screen transition-colors duration-500">
-      <ClickLoadingState intent="loading" />
+    <div className="min-h-screen relative z-10 pb-32 px-4 sm:px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label={t('billingPage.loading')}>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
+      </div>
     </div>
   )
 
@@ -127,7 +134,7 @@ export default function BillingPage() {
         {/* Header */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 border-b border-surface-200 dark:border-surface-800 pb-12">
           <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-surface-card border border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm">
+            <button type="button" onClick={() => router.push('/dashboard')} title={t('billingPage.back')} className="w-16 h-16 rounded-[1.8rem] bg-surface-card border border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm">
               <ArrowLeft size={28} />
             </button>
             <div className="w-20 h-20 bg-amber-500/10 border-2 border-amber-500/20 rounded-[2.5rem] flex items-center justify-center shadow-lg">
@@ -136,16 +143,16 @@ export default function BillingPage() {
             <div>
               <div className="flex items-center gap-4 mb-3">
                 <Activity size={14} className="text-amber-500 dark:text-amber-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-amber-500 dark:text-amber-400 italic leading-none">Sovereign Ledger</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-amber-500 dark:text-amber-400 italic leading-none">{t('billingPage.sovereignLedger')}</span>
               </div>
-              <h1 className="text-4xl sm:text-6xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">Billing & Usage</h1>
-              <p className="text-surface-500 dark:text-slate-400 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Plan tier · consumption meters · ledger history.</p>
+              <h1 className="text-4xl sm:text-6xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">{t('billingPage.title')}</h1>
+              <p className="text-surface-500 dark:text-slate-400 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">{t('billingPage.subtitle')}</p>
             </div>
           </div>
           <div className="bg-surface-card backdrop-blur-3xl px-8 py-5 rounded-[2.5rem] flex items-center gap-5 border border-surface-200 dark:border-amber-500/20 shadow-xl">
             <div className={`w-3 h-3 rounded-full ${subStatus === 'active' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : subStatus === 'trial' ? 'bg-amber-500 animate-pulse' : 'bg-surface-300 dark:bg-slate-500'}`} />
             <div>
-              <p className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none mb-1">CURRENT_TIER</p>
+              <p className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none mb-1">{t('billingPage.currentTier')}</p>
               <p className="text-xl font-black text-surface-900 dark:text-white italic uppercase tracking-tight leading-none">{currentPlan} · <span className={subStatus === 'active' ? 'text-emerald-600 dark:text-emerald-400' : subStatus === 'trial' ? 'text-amber-600 dark:text-amber-400' : 'text-surface-400 dark:text-slate-500'}>{subStatus.toUpperCase()}</span></p>
             </div>
           </div>
@@ -158,8 +165,8 @@ export default function BillingPage() {
               <TrendingUp size={26} className="text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Consumption Meters</h2>
-              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">CURRENT_BILLING_CYCLE</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">{t('billingPage.consumptionMeters')}</h2>
+              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{t('billingPage.currentBillingCycle')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-10">
@@ -175,7 +182,7 @@ export default function BillingPage() {
                       </div>
                       <p className="text-[10px] font-black text-surface-500 dark:text-slate-400 uppercase tracking-[0.4em] italic leading-none">{m.label}</p>
                     </div>
-                    {overage && <span className="text-[8px] font-black text-rose-500 dark:text-rose-400 uppercase tracking-[0.3em] italic flex items-center gap-1"><AlertTriangle size={10} /> OVER</span>}
+                    {overage && <span className="text-[8px] font-black text-rose-500 dark:text-rose-400 uppercase tracking-[0.3em] italic flex items-center gap-1"><AlertTriangle size={10} /> {t('billingPage.over')}</span>}
                   </div>
                   <div className="flex items-end gap-3">
                     <p className={`text-4xl font-black italic tabular-nums tracking-tighter leading-none ${m.color}`}>{fmtNumber(m.used)}</p>
@@ -199,8 +206,8 @@ export default function BillingPage() {
               <Crown size={26} className="text-amber-500 dark:text-amber-400" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Tier Selector</h2>
-              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">UPGRADE · DOWNGRADE · COMMIT</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">{t('billingPage.tierSelector')}</h2>
+              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{t('billingPage.tierSelectorSubtitle')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 p-10">
@@ -211,8 +218,8 @@ export default function BillingPage() {
               const PlanIcon = plan.icon
               return (
                 <div key={plan.id} className={`bg-surface-page dark:bg-white/[0.02] border border-surface-200 dark:border-white/10 rounded-[2.5rem] p-8 flex flex-col gap-6 relative transition-all duration-500 hover:bg-surface-card hover:shadow-2xl ${plan.featured ? 'ring-2 ring-primary-500/40 shadow-xl' : ''} ${isCurrent ? 'ring-2 ring-emerald-500/40' : ''}`}>
-                  {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic shadow-lg">RECOMMENDED</span>}
-                  {isCurrent && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic">CURRENT_TIER</span>}
+                  {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic shadow-lg">{t('billingPage.recommended')}</span>}
+                  {isCurrent && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic">{t('billingPage.currentTier')}</span>}
                   <div className="flex items-center gap-4">
                     <div className={`w-14 h-14 rounded-[1.4rem] bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-lg border border-black/10`}>
                       <PlanIcon size={26} className="text-white" />
@@ -224,7 +231,7 @@ export default function BillingPage() {
                   </div>
                   <div className="flex items-end gap-2">
                     <p className="text-5xl font-black text-surface-900 dark:text-white italic tabular-nums tracking-tighter leading-none">${plan.priceMonthly}</p>
-                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic mb-2 leading-none">/ mo</p>
+                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic mb-2 leading-none">{t('billingPage.perMonth')}</p>
                   </div>
                   <ul className="space-y-3 flex-1">
                     {includedFeatures.map(f => (
@@ -235,7 +242,7 @@ export default function BillingPage() {
                     ))}
                   </ul>
                   <button type="button" disabled={isCurrent || isUpgrading} onClick={() => handleUpgrade(plan)} className={`mt-auto py-4 rounded-full text-[11px] font-black uppercase tracking-[0.4em] italic transition-all flex items-center justify-center gap-3 active:scale-95 border-none ${isCurrent ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 cursor-default' : plan.featured ? 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white shadow-lg' : 'bg-surface-100 dark:bg-white/5 border border-surface-200 dark:border-white/10 text-surface-500 dark:text-slate-300 hover:bg-surface-200 dark:hover:bg-white/10 shadow-sm'} disabled:opacity-60`}>
-                    {isCurrent ? 'ACTIVE_TIER' : isUpgrading ? <><RefreshCw size={14} className="animate-spin" /> ROUTING...</> : <>{plan.cta.label.toUpperCase().replace(/ /g, '_')} <ArrowRight size={14} /></>}
+                    {isCurrent ? t('billingPage.activeTier') : isUpgrading ? <><RefreshCw size={14} className="animate-spin" /> {t('billingPage.routing')}</> : <>{plan.cta.label.toUpperCase().replace(/ /g, '_')} <ArrowRight size={14} /></>}
                   </button>
                 </div>
               )
@@ -250,16 +257,16 @@ export default function BillingPage() {
               <Receipt size={26} className="text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Ledger History</h2>
-              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{history.length} INVOICES_LOGGED</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">{t('billingPage.ledgerHistory')}</h2>
+              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{t('billingPage.invoicesLogged', { count: history.length })}</p>
             </div>
           </div>
           {history.length === 0 ? (
             <div className="py-24 flex flex-col items-center text-center gap-6 opacity-20">
               <Clock size={64} className="text-surface-900 dark:text-white" />
               <div className="space-y-2">
-                 <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tight">Ledger Empty</p>
-                 <p className="text-[11px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic">No invoices recorded yet.</p>
+                 <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tight">{t('billingPage.ledgerEmpty')}</p>
+                 <p className="text-[11px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic">{t('billingPage.noInvoices')}</p>
               </div>
             </div>
           ) : (
@@ -270,14 +277,14 @@ export default function BillingPage() {
                     <CreditCard size={20} className="text-surface-400 dark:text-slate-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-black text-surface-900 dark:text-white italic uppercase tracking-tight leading-none mb-1.5 truncate">{inv.description || 'Subscription Renewal'}</p>
+                    <p className="text-base font-black text-surface-900 dark:text-white italic uppercase tracking-tight leading-none mb-1.5 truncate">{inv.description || t('billingPage.subscriptionRenewal')}</p>
                     <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic leading-none">{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—'}</p>
                   </div>
                   <p className="text-2xl font-black text-surface-900 dark:text-white italic tabular-nums tracking-tight">{fmtCurrency(inv.amount, inv.currency || 'USD')}</p>
                   <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] italic border shadow-inner ${inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30' : inv.status === 'failed' ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'}`}>
                     {(inv.status || 'PENDING').toUpperCase()}
                   </span>
-                  <button type="button" title="Download invoice" className="w-10 h-10 rounded-[1rem] bg-surface-card dark:bg-white/[0.03] border border-surface-200 dark:border-white/10 text-surface-400 hover:text-surface-900 dark:hover:text-white flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-sm">
+                  <button type="button" title={t('billingPage.downloadInvoice')} className="w-10 h-10 rounded-[1rem] bg-surface-card dark:bg-white/[0.03] border border-surface-200 dark:border-white/10 text-surface-400 hover:text-surface-900 dark:hover:text-white flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-sm">
                     <Download size={16} />
                   </button>
                 </div>

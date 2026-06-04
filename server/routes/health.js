@@ -234,6 +234,7 @@ router.get('/', async (req, res) => {
         },
       },
       queues: await checkQueues().catch((err) => ({ status: 'error', message: err.message })),
+      c2pa: await require('../services/c2paService').verifyC2paTools().catch((err) => ({ available: false, error: err.message })),
       system: {
         ioLatency: `${Date.now() - startTime}ms`,
         platform: process.platform,
@@ -244,6 +245,23 @@ router.get('/', async (req, res) => {
   };
 
   res.status(httpCode).json(health);
+});
+
+/**
+ * GET /api/health/c2pa
+ *
+ * Reports which C2PA signer (c2pa-node / c2patool) is available, if any.
+ * 200 when a signer is present, 503 when provenance signing is unavailable
+ * (non-fatal for the app — renders just go unsigned).
+ */
+router.get('/c2pa', async (req, res) => {
+  try {
+    const { verifyC2paTools } = require('../services/c2paService');
+    const result = await verifyC2paTools({ useCache: false });
+    res.status(result.available ? 200 : 503).json(result);
+  } catch (err) {
+    res.status(503).json({ available: false, signer: null, error: err.message });
+  }
 });
 
 /**

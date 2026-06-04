@@ -592,11 +592,11 @@ export default function VideoEditPage({ params }: PageProps) {
   // is gated. Hidden on md+ so desktop is unaffected.
   const mobileGate = (
     <div className="md:hidden bg-amber-500/10 border-b border-amber-500/30 text-amber-200 px-5 py-4 text-sm">
-      <p className="font-bold">Click&apos;s editor works best on desktop</p>
+      <p className="font-bold">Editing on mobile</p>
       <p className="text-amber-200/80 mt-1 text-xs leading-relaxed">
-        The timeline, multi-clip preview, and drag controls need more screen
-        than a phone gives. Switch to a laptop or tablet (≥ 768px) for the
-        full experience. You can still preview clips below.
+        The full editor works on your phone, but the timeline and multi-clip
+        controls have more room on a tablet or laptop (≥ 768px). Rotate to
+        landscape or use a larger screen for the most comfortable experience.
       </p>
     </div>
   )

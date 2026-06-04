@@ -744,6 +744,23 @@ app.use(
   require('./routes/webhooks/whop')
 );
 
+// Resumable (tus) uploads MUST mount BEFORE express.json() so tus receives the
+// raw chunk stream, and via app.all (not a sub-router) so req.url keeps its full
+// path for tus's upload-id parsing. Auth runs first to populate req.user.
+try {
+  const { tusServer } = require('./routes/upload-tus');
+  const tusAuth = require('./middleware/auth');
+  const tusHandler = (req, res) => {
+    res.setHeader('Access-Control-Expose-Headers', 'Location, Upload-Offset, Upload-Length, Tus-Resumable, X-Content-Id');
+    return tusServer.handle(req, res);
+  };
+  app.all('/api/upload/tus', tusAuth, tusHandler);
+  app.all('/api/upload/tus/*', tusAuth, tusHandler);
+  logger.info('🧩 Resumable (tus) upload endpoint mounted at /api/upload/tus');
+} catch (err) {
+  logger.warn('tus upload endpoint not mounted', { error: err.message });
+}
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -2428,6 +2445,19 @@ if (process.env.JEST_WORKER_ID) {
         if (!process.env.JEST_WORKER_ID) {
           initializeSocket(server);
           logger.info('🔌 Socket.io initialized for real-time updates');
+        }
+
+        // C2PA provenance signer check (non-fatal — renders go unsigned if absent)
+        if (process.env.NODE_ENV !== 'test') {
+          require('./services/c2paService').verifyC2paTools()
+            .then((c2pa) => {
+              if (c2pa.available) {
+                logger.info(`🔏 C2PA provenance signer ready: ${c2pa.signer} ${c2pa.version || ''}`.trim());
+              } else {
+                logger.warn('🔏 C2PA signer unavailable — renders will be unsigned', { reason: c2pa.error });
+              }
+            })
+            .catch((err) => logger.warn('C2PA verification check failed', { error: err.message }));
         }
 
         // Schedule background tasks

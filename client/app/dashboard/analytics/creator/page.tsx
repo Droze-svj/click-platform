@@ -55,7 +55,7 @@ const scoreBorder = (s: number) => s >= 85 ? 'border-emerald-500/30' : s >= 65 ?
 const scoreBg = (s: number) => s >= 85 ? 'bg-emerald-500/10' : s >= 65 ? 'bg-amber-500/10' : 'bg-rose-500/10'
 
 import { apiGet, apiPost } from '../../../../lib/api'
-import SpectralLoader from '../../../../components/SpectralLoader'
+import { StatsCardSkeleton, ContentSkeleton } from '../../../../components/LoadingSkeleton'
 
 export default function HeuristicMatrixPage() {
   const router = useRouter()
@@ -175,7 +175,14 @@ export default function HeuristicMatrixPage() {
     }
   }, [videos, bestEditStyle, totals.views])
 
-  if (loading) return <SpectralLoader message="Syncing Diagnostic Matrix..." />
+  if (loading) return (
+     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <ContentSkeleton />
+     </div>
+  )
 
   return (
     <ErrorBoundary>

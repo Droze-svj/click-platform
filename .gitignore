@@ -69,3 +69,14 @@ ffmpeg-*.log
 ffmpeg_logs/
 backups/
 
+
+# iCloud Drive conflict copies ("filename 2.ext", " 3", " 4") — this repo lives
+# in iCloud, which creates these on sync conflicts. Never commit them.
+* 2.*
+* 3.*
+* 4.*
+* 2
+* 3
+* 4
+# Legacy restored backup tree (removed from the repo)
+Sovereign-Internal-Restored/

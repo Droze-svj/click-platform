@@ -1947,7 +1947,10 @@ const ModernVideoEditor: React.FC<{
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden font-['Outfit'] selection:bg-indigo-500/30 editor-auto">
+    // Mobile: use 100dvh (avoids the iOS/Android 100vh chrome-overlap bug) and
+    // w-full + overflow-x-hidden to prevent horizontal scroll. Desktop unchanged
+    // via md: (the heavy row layout below stays as-is on >=768px).
+    <div className="h-[100dvh] w-full md:h-screen md:w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden overflow-x-hidden font-['Outfit'] selection:bg-indigo-500/30 editor-auto">
 
       {/* Background nebula */}
       <motion.div

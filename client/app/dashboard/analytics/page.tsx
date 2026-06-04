@@ -13,6 +13,7 @@ import { apiGet } from '@/lib/api'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import ToastContainer from '@/components/ToastContainer'
 import SpectralLoader from '@/components/SpectralLoader'
+import { StatsCardSkeleton, ContentSkeleton } from '@/components/LoadingSkeleton'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -86,9 +87,11 @@ export default function SovereignAnalyticsMatrix() {
   })
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-surface-page dark:bg-black min-h-screen transition-colors duration-500">
-        <ActivitySquare size={80} className="text-primary-500 animate-spin mb-12" />
-        <p className="text-sm font-black text-surface-500 dark:text-slate-500 uppercase tracking-widest animate-pulse italic leading-none">Syncing Diagnostics...</p>
+     <div className="min-h-screen bg-surface-page dark:bg-black transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <ContentSkeleton />
      </div>
   )
 

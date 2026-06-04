@@ -998,12 +998,15 @@ function createWorker(queueName, processor, options = {}) {
         }
       }
 
-      // Process job dependencies even on failure (optional)
+      // Process job dependencies even on failure (optional). Non-fatal, but
+      // log it — silently swallowing means a broken dependency chain is invisible.
       try {
         const { processJobDependencies } = require('./jobDependencyService');
         await processJobDependencies(job.id, queueName);
       } catch (error) {
-        // Ignore dependency processing errors
+        logger.warn('Dependency processing failed for failed job', {
+          jobId: job?.id, queue: queueName, error: error.message,
+        });
       }
     });
 

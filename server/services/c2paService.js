@@ -209,10 +209,17 @@ async function signRender({ inputPath, tree, jobId, userId }) {
       };
     }
   } catch (err) {
-    logger.warn(
-      '[c2pa] c2patool not available; render is unsigned. Install c2patool or c2pa-node to enable provenance.',
-      { error: err.message }
-    );
+    if (err.code === 'ENOENT') {
+      logger.warn(
+        '[c2pa] c2patool binary not found on PATH; render is unsigned. Install it (`cargo install c2patool` or the prebuilt release) or add c2pa-node to enable provenance.',
+        { error: err.message }
+      );
+    } else {
+      logger.warn(
+        '[c2pa] c2patool present but signing failed; render is unsigned.',
+        { error: err.message, stderr: err.stderr }
+      );
+    }
   }
 
   return {
@@ -353,9 +360,53 @@ async function verifyRender(filePath) {
   };
 }
 
+/**
+ * Verify which C2PA signer (if any) is available in this environment. Used at
+ * startup and by the /api/health/c2pa probe so a missing signer is visible to
+ * ops up front instead of being discovered on the first render.
+ *
+ * Returns: { available, signer, version, error }
+ *   - signer: 'c2pa-node' | 'c2patool' | null
+ */
+let c2paToolsCache = { at: 0, result: null };
+async function verifyC2paTools({ useCache = true } = {}) {
+  const now = Date.now();
+  if (useCache && c2paToolsCache.result && now - c2paToolsCache.at < 60_000) {
+    return { ...c2paToolsCache.result, cached: true };
+  }
+
+  let result;
+  // 1. In-process c2pa-node (preferred)
+  const c2paNode = tryRequireC2paNode();
+  if (c2paNode) {
+    let version = null;
+    try {
+      version = require('c2pa-node/package.json').version;
+    } catch { /* version optional */ }
+    result = { available: true, signer: 'c2pa-node', version, error: null };
+  } else {
+    // 2. c2patool CLI on PATH
+    try {
+      const { stdout } = await execFileP('c2patool', ['--version'], { timeout: 10_000 });
+      result = { available: true, signer: 'c2patool', version: (stdout || '').trim() || 'unknown', error: null };
+    } catch (err) {
+      result = {
+        available: false,
+        signer: null,
+        version: null,
+        error: err.code === 'ENOENT' ? 'c2patool not found on PATH and c2pa-node not installed' : err.message,
+      };
+    }
+  }
+
+  c2paToolsCache = { at: now, result };
+  return result;
+}
+
 module.exports = {
   signRender,
   persistAuthenticity,
   buildManifest,
   verifyRender,
+  verifyC2paTools,
 };

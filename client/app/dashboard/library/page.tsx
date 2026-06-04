@@ -16,7 +16,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../components/ToastContainer'
 import { API_URL } from '../../../lib/api'
-import ClickLoadingState from '@/components/click/ClickLoadingState'
+import { StatsCardSkeleton, CardSkeleton } from '@/components/LoadingSkeleton'
 
 interface Content {
   _id: string; title: string; type: string; status: string;
@@ -152,8 +152,13 @@ export default function LibraryPage() {
   }
 
   if (loading) return (
-     <div className="flex items-center justify-center py-48 bg-surface-50 dark:bg-surface-950 min-h-screen">
-        <ClickLoadingState intent="loading" />
+     <div className="min-h-screen bg-surface-50 dark:bg-surface-950 transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-8" aria-busy="true" aria-label="Loading">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+           {Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
      </div>
   )
 
