@@ -2809,6 +2809,17 @@ select:focus {
   }
 }
 
+/* Editor touch ergonomics: make controls feel native on touch by removing the
+   ~300ms tap delay and the double-tap-to-zoom gesture. Scoped to .editor-auto
+   and limited to interactive elements so scroll/pan containers (timeline tracks,
+   panels) keep their native panning + pinch-zoom. */
+.editor-auto button,
+.editor-auto a,
+.editor-auto [role="button"],
+.editor-auto input[type="range"] {
+  touch-action: manipulation;
+}
+
 /* Dark mode support */
 .dark {
   color-scheme: dark;

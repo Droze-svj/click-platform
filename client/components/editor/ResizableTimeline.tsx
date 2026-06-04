@@ -911,6 +911,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     if (e.touches.length < 2) touchStartRef.current = null
   }, [])
 
+  // Single-finger scrub on the ruler. The ruler sets touch-action:none so the
+  // browser doesn't steal the gesture for native scroll; seekTo auto-recentres
+  // the viewport on the playhead when zoomed in, so dragging still navigates.
+  const handleRulerTouch = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return
+    seekTo(e.touches[0].clientX)
+  }, [seekTo])
+
   const handleTrackDrop = useCallback((e: React.DragEvent, trackIndex: number) => {
     e.preventDefault()
     try {
@@ -1102,14 +1110,16 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
               </div>
            </div>
 
-           {/* Timeline Header (High Precision Ruler) */}
-           <div className="shrink-0 h-10 border-b border-white/5 relative bg-white/[0.01] z-30">
+           {/* Timeline Header (High Precision Ruler) — taller on touch for easier scrubbing */}
+           <div className="shrink-0 h-12 md:h-10 border-b border-white/5 relative bg-white/[0.01] z-30">
               <div
                 ref={scrollRef}
-                className="h-full overflow-x-auto overflow-y-hidden select-none scrollbar-hide"
+                className="h-full overflow-x-auto overflow-y-hidden select-none scrollbar-hide touch-none cursor-pointer"
                 onMouseMove={handleRulerHover}
                 onMouseLeave={() => setRulerHoverTime(null)}
                 onClick={(e) => seekTo(e.clientX)}
+                onTouchStart={handleRulerTouch}
+                onTouchMove={handleRulerTouch}
               >
                 <div className="h-full relative min-w-full" style={{ '--content-width': `${zoom * 100}%`, width: 'var(--content-width)' } as any}>
                    {/* Rule Ticks (Ultra Precision) */}
