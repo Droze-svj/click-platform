@@ -195,7 +195,7 @@ const { initErrorHandlers } = require('./middleware/enhancedErrorHandler');
 const { apiLimiter } = require('./middleware/enhancedRateLimiter');
 const requestLogger = require('./middleware/requestLogger');
 const { requestTimeoutRouteAware, getTimeoutForRoute } = require('./middleware/requestTimeout');
-const { cleanupOldFiles } = require('./utils/fileCleanup');
+const { cleanupOldFiles, cleanupTempFiles } = require('./utils/fileCleanup');
 // logger is already imported above (needed for error handlers)
 const { initializeSocket } = require('./services/socketService');
 // const { trackResponseTime } = require('./utils/performance');
@@ -2441,6 +2441,24 @@ if (process.env.JEST_WORKER_ID) {
             await cleanupOldFiles(path.join(uploadsDir, 'thumbnails'), 14);
             await cleanupOldFiles(path.join(uploadsDir, 'quotes'), 30);
             logger.info('✅ File cleanup completed');
+          });
+
+          // Temp-file sweep (every 6 hours). Safety net for ffmpeg/processing
+          // leftovers that should be cleaned at process completion but may be
+          // orphaned on crash/error — prevents unbounded temp-disk growth.
+          cron.schedule('0 */6 * * *', async () => {
+            try {
+              const root = path.join(__dirname, '..');
+              let removed = 0;
+              removed += await cleanupTempFiles(path.join(root, 'uploads', 'temp'), 6);
+              removed += await cleanupTempFiles(path.join(root, 'tmp'), 6);
+              removed += await cleanupTempFiles(path.join(root, 'tmp', 'uploads'), 6);
+              // Stale ffmpeg logs (CLAUDE.md routes them to logs/) older than 7 days.
+              await cleanupOldFiles(path.join(root, 'logs'), 7);
+              if (removed > 0) logger.info(`🧹 Temp sweep removed ${removed} orphaned entries`);
+            } catch (err) {
+              logger.error('❌ Temp sweep error', { error: err.message });
+            }
           });
 
           // Subscription checks (daily at 3 AM)

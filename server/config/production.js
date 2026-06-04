@@ -67,9 +67,11 @@ function getProductionConfig() {
     },
 
     // Security
+    // NOTE: session token lifetimes are owned by server/utils/jwtTokens.js
+    // (access 1h + 90d refresh). This field is informational only.
     jwt: {
       secret: process.env.JWT_SECRET,
-      expiresIn: process.env.JWT_EXPIRES_IN || '30d'
+      expiresIn: process.env.JWT_EXPIRES_IN || '1h'
     },
 
     // Storage
