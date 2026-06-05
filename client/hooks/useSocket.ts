@@ -25,6 +25,10 @@ export function useSocket(userId?: string | null): UseSocketReturn {
     if (typeof window !== 'undefined') {
       const host = window.location.hostname
       if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:5001'
+      // Deployed (single-origin): the API + socket.io live on this same origin.
+      // Default to it so socket.io connects via wss://<this-host> — NOT localhost,
+      // which is what broke realtime in production.
+      return process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || window.location.origin
     }
     return process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001'
   }, [])
