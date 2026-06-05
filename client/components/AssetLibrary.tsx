@@ -180,40 +180,12 @@ export default function AssetLibrary({
         }
       }
 
+      // Image / B-roll / Hook libraries have no backend source wired yet.
+      // We do NOT inject fabricated stock (picsum / BigBuckBunny) — only real
+      // assets are shown. Until a real endpoint exists, these categories drop
+      // any prior stub entries so the component renders its honest empty-state.
       if (selectedType === 'all' || selectedType === 'image' || selectedType === 'broll' || selectedType === 'hook') {
-        const mockAssets: Asset[] = []
-        if (selectedType === 'all' || selectedType === 'image') {
-          for (let i = 1; i <= 12; i++) {
-            mockAssets.push({
-              id: `image-${i}`,
-              type: 'image',
-              url: `https://picsum.photos/400/300?random=${i}`,
-              title: `Neural Visualization ${i}`,
-              tags: ['neural', 'cosmic', 'asset'],
-              thumbnail: `https://picsum.photos/200/150?random=${i}`
-            })
-          }
-        }
-        if (selectedType === 'all' || selectedType === 'broll' || selectedType === 'hook') {
-          for (let i = 1; i <= 8; i++) {
-            mockAssets.push({
-              id: `broll-${i}`,
-              type: i % 2 === 0 ? 'broll' : 'hook',
-              url: `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`,
-              title: `${i % 2 === 0 ? 'B-Roll' : 'Hook-Node'} ${i}`,
-              duration: 10 + Math.random() * 20,
-              tags: [i % 2 === 0 ? 'broll' : 'hook', 'video'],
-              thumbnail: `https://picsum.photos/400/300?random=${i + 20}`
-            })
-          }
-        }
-        setAssets(prev => {
-          const existing = prev.filter(a =>
-            (selectedType === 'all' || selectedType === 'image') && a.type === 'image' ||
-            (selectedType === 'all' || selectedType === 'broll' || selectedType === 'hook') && (a.type === 'broll' || a.type === 'hook')
-          )
-          return [...existing, ...mockAssets]
-        })
+        setAssets(prev => prev.filter(a => a.type === 'music'))
       }
     } catch (error) {
       console.error('Failed to load assets:', error)

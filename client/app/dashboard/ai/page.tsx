@@ -146,7 +146,7 @@ export default function CognitiveLogicMatrixPage() {
                         <div className="flex items-center gap-8">
                            <div className="px-10 py-5 rounded-[2rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 shadow-inner">
                               <span className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic leading-none">{t('aiPage.swarmLatency')}</span>
-                              <span className="text-xl font-black text-primary-500 italic tabular-nums ml-4 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)] leading-none">32μs</span>
+                              <span className="text-xl font-black text-primary-500 italic tabular-nums ml-4 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)] leading-none">—</span>
                            </div>
                            <button className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.6em] italic rounded-[2rem] hover:bg-primary-500 hover:text-white transition-all duration-500 shadow-2xl active:scale-95 border-none">
                               {t('aiPage.forceCalibration')}
@@ -160,10 +160,10 @@ export default function CognitiveLogicMatrixPage() {
                              <div className="w-16 h-16 rounded-[1.8rem] bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-primary-500 group-hover/monitor:rotate-12 transition-all duration-500 shadow-lg"><Orbit size={32} className="animate-spin-slow" /></div>
                              <div className="text-center">
                                 <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase italic leading-none mb-3">{t('aiPage.sectorLoad', { n: i + 1 })}</p>
-                                <p className="text-4xl font-black italic text-surface-900 dark:text-white tabular-nums leading-none tracking-tighter">{(80 + Math.random() * 15).toFixed(1)}%</p>
+                                <p className="text-4xl font-black italic text-surface-900 dark:text-white tabular-nums leading-none tracking-tighter">—</p>
                              </div>
                              <div className="w-full h-3 bg-surface-card dark:bg-surface-900 rounded-full overflow-hidden border-2 border-surface-100 dark:border-surface-800 p-0.5">
-                                <motion.div animate={{ width: [`${70 + Math.random() * 10}%`, `${85 + Math.random() * 10}%`, `${75 + Math.random() * 10}%`] }} transition={{ repeat: Infinity, duration: 3 + Math.random() }} className="h-full bg-primary-500 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.6)]" />
+                                <div className="h-full w-0 bg-primary-500 rounded-full" />
                              </div>
                           </div>
                         ))}

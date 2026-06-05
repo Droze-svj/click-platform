@@ -13,9 +13,12 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { apiGet } from '../../../lib/api'
 
 type TrendCategory = 'hooks' | 'sounds' | 'formats' | 'hashtags'
 
+// Typed shape only — NEVER rendered as fabricated data. Real items are mapped
+// from the live /marketing-intelligence/trend-report response below.
 interface TrendItem {
   id: string
   category: TrendCategory
@@ -23,21 +26,64 @@ interface TrendItem {
   detail: string
   niche: string
   platform: string
-  score: number
-  velocity: number
-  uses: string
 }
 
 const NICHES = ['All', 'Fitness', 'Finance', 'Tech', 'Lifestyle', 'Education', 'Comedy', 'Beauty']
 const PLATFORMS = ['All', 'TikTok', 'Instagram', 'YouTube Shorts', 'X']
 
-const SAMPLE_TRENDS: TrendItem[] = [
-  { id: 'h1', category: 'hooks', title: 'POV: nobody told you that…', detail: 'Open with the secret nobody warned the viewer about.', niche: 'Lifestyle',  platform: 'TikTok',           score: 94, velocity: 22, uses: '184K creators' },
-  { id: 'h2', category: 'hooks', title: 'Stop doing [X] if you want [Y]', detail: 'Negative hook targeting a common pain point.', niche: 'Fitness',    platform: 'Instagram',        score: 88, velocity: 15, uses: '92K creators' },
-  { id: 's1', category: 'sounds', title: 'Cyber-Phonk Pulse (Aggressive)', detail: 'High-energy rhythmic beat for fast-cut edits.', niche: 'All',        platform: 'TikTok',           score: 91, velocity: 34, uses: '2.4M videos' },
-  { id: 'f1', category: 'formats', title: 'Split-Screen Comparison', detail: 'Side-by-side "Old Way" vs "New Way" visual layout.', niche: 'Education', platform: 'YouTube Shorts',    score: 85, velocity: 12, uses: '45K creators' },
-  { id: 't1', category: 'hashtags', title: '#NeuralAesthetics', detail: 'Emerging tech-focused visual design trend.', niche: 'Tech',       platform: 'X',                score: 79, velocity: 41, uses: '12K posts' },
-]
+// Maps the live trend-report payload (hooks / sounds / formats / hashtags)
+// into the flat TrendItem[] the card grid renders. Only fields the backend
+// actually returns are surfaced — no scores/velocity/usage are invented.
+function mapReportToTrends(report: any): TrendItem[] {
+  if (!report || typeof report !== 'object') return []
+  const niche = report.niche ? String(report.niche) : '—'
+  const platform = report.platform ? String(report.platform) : '—'
+  const items: TrendItem[] = []
+
+  for (const h of (report.hooks || [])) {
+    items.push({
+      id: `hook-${h.id}`,
+      category: 'hooks',
+      title: String(h.label || h.framework || 'Hook'),
+      detail: String(h.example || ''),
+      niche,
+      platform,
+    })
+  }
+  for (const s of (report.sounds || [])) {
+    items.push({
+      id: `sound-${s.id}`,
+      category: 'sounds',
+      title: String(s.label || 'Sound'),
+      detail: String(s.useCase || s.energy || ''),
+      niche,
+      platform,
+    })
+  }
+  for (const f of (report.formats || [])) {
+    items.push({
+      id: `format-${f.id}`,
+      category: 'formats',
+      title: String(f.label || 'Format'),
+      detail: String(f.structure || f.length || ''),
+      niche,
+      platform,
+    })
+  }
+  const tags = report.hashtags || {}
+  const allTags: string[] = [...(tags.primary || []), ...(tags.niche || []), ...(tags.trending || [])]
+  for (const tag of Array.from(new Set(allTags))) {
+    items.push({
+      id: `hashtag-${tag}`,
+      category: 'hashtags',
+      title: String(tag),
+      detail: '',
+      niche,
+      platform,
+    })
+  }
+  return items
+}
 
 const CATEGORY_CFG: Record<TrendCategory, { label: string; icon: any; color: string; bg: string }> = {
   hooks:    { label: 'Hooks',    icon: Sparkles,    color: 'text-amber-500',    bg: 'bg-amber-500/10 border-amber-500/20' },
@@ -55,17 +101,34 @@ export default function TrendsPage() {
   const { showToast } = useToast()
   const { t } = useTranslation()
 
+  const [trends, setTrends] = useState<TrendItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Pull the REAL trend report. Re-fetches when niche/platform filters change
+  // so the cards always reflect live backend data — never seeded samples.
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (selectedNiche !== 'All') params.append('niche', selectedNiche.toLowerCase())
+    if (selectedPlatform !== 'All') params.append('platform', selectedPlatform.toLowerCase())
+    const qs = params.toString()
+    apiGet<{ data: any }>(`/marketing-intelligence/trend-report${qs ? `?${qs}` : ''}`)
+      .then((res: any) => { if (!cancelled) setTrends(mapReportToTrends(res?.data)) })
+      .catch(() => { if (!cancelled) setTrends([]) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [selectedNiche, selectedPlatform])
+
   const filtered = useMemo(() => {
-    return SAMPLE_TRENDS.filter(t => {
-      const catMatch = selectedCategory === 'all' || t.category === selectedCategory
-      const nicheMatch = selectedNiche === 'All' || t.niche === selectedNiche
-      const platMatch = selectedPlatform === 'All' || t.platform === selectedPlatform
-      const searchMatch = !searchQuery || 
-        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.detail.toLowerCase().includes(searchQuery.toLowerCase())
-      return catMatch && nicheMatch && platMatch && searchMatch
+    return trends.filter(item => {
+      const catMatch = selectedCategory === 'all' || item.category === selectedCategory
+      const searchMatch = !searchQuery ||
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.detail.toLowerCase().includes(searchQuery.toLowerCase())
+      return catMatch && searchMatch
     })
-  }, [selectedCategory, selectedNiche, selectedPlatform, searchQuery])
+  }, [trends, selectedCategory, searchQuery])
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-inter selection:bg-primary-500/30">
@@ -218,7 +281,17 @@ export default function TrendsPage() {
           </div>
         </div>
 
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-64 rounded-[2rem] bg-white/[0.03] border border-white/10 animate-pulse" />
+            ))}
+          </div>
+        )}
+
         {/* Trends Grid */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filtered.map((item, idx) => {
@@ -239,13 +312,9 @@ export default function TrendsPage() {
                       <div className={`p-3 rounded-2xl ${cfg.bg} border`}>
                         <cfg.icon className={`w-6 h-6 ${cfg.color}`} />
                       </div>
-                      <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-1.5 text-emerald-500 font-black text-sm">
-                          <TrendingUp className="w-4 h-4" />
-                          +{item.velocity}%
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{t('trendsPage.velocity')}</span>
-                      </div>
+                      <span className={`text-[10px] font-black uppercase tracking-widest mt-1 ${cfg.color}`}>
+                        {CATEGORY_CFG[item.category].label}
+                      </span>
                     </div>
 
                     {/* Content */}
@@ -269,20 +338,9 @@ export default function TrendsPage() {
                       </div>
                     </div>
 
-                    {/* Stats Footer */}
-                    <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('trendsPage.score')}</span>
-                          <span className="text-lg font-black text-white">{t('trendsPage.scoreValue', { score: item.score })}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('trendsPage.usage')}</span>
-                          <span className="text-sm font-bold text-slate-300">{item.uses}</span>
-                        </div>
-                      </div>
-                      
-                      <button 
+                    {/* Footer */}
+                    <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-end">
+                      <button
                         type="button"
                         onClick={() => showToast(t('trendsPage.strategyAdded'), 'success')}
                         title={t('trendsPage.addStrategy')}
@@ -298,9 +356,10 @@ export default function TrendsPage() {
             })}
           </AnimatePresence>
         </div>
+        )}
 
         {/* Empty State */}
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="py-32 text-center">
             <div className="inline-flex p-6 rounded-full bg-white/5 border border-white/10 mb-6">
               <Search className="w-8 h-8 text-slate-600" />

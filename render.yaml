@@ -15,7 +15,11 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     region: oregon
-    healthCheckPath: /api/health
+    # Liveness probe only — /api/health is a DEEP readiness check that returns
+    # 503 if Mongo/Redis/Supabase has any transient blip, which would make Render
+    # kill a healthy instance. /api/health/light always returns 200 if the
+    # process is up. Use /api/health for monitoring, not for the platform probe.
+    healthCheckPath: /api/health/light
     envVars:
       - key: SENTRY_DSN
         value: https://a400da46f531219b7ce6f78a9d5cb6ff@o4510623214731264.ingest.de.sentry.io/4510629716033616
@@ -25,8 +29,30 @@ services:
         value: "1"
       - key: FRONTEND_URL
         value: https://sovereign-platform.onrender.com
+      - key: APP_URL
+        value: https://sovereign-platform.onrender.com
       - key: PORT
         value: "5001"
+      # Beta: auto-verify new accounts so a missing email provider can't lock
+      # testers out of the dashboard. Set to "false"/unset for public launch.
+      - key: AUTO_VERIFY_EMAIL
+        value: "true"
+      # Gemini key — the code reads GOOGLE_AI_API_KEY (GEMINI_API_KEY below is
+      # legacy/unused). Without this, AI features fall back to heuristics.
+      - key: GOOGLE_AI_API_KEY
+        sync: false
+      # Encrypts stored OAuth tokens. MUST be set — defaults to a known insecure
+      # constant otherwise. Use a random 32+ char string.
+      - key: OAUTH_ENCRYPTION_KEY
+        sync: false
+      # Cloudinary media storage — without these, uploads/exports go to Render's
+      # ephemeral disk and vanish on every restart/redeploy.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
