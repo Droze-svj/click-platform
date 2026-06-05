@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Mic, MicOff, Square, Loader2 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface VoiceContentInputProps {
   onTranscript: (text: string) => void
@@ -14,6 +15,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
   const [isProcessing, setIsProcessing] = useState(false)
   const [transcript, setTranscript] = useState('')
   const recognitionRef = useRef<any>(null)
+  const { t } = useTranslation()
 
   useEffect(() => {
     // Initialize speech recognition
@@ -46,7 +48,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
           console.error('Speech recognition error:', event.error)
           setIsRecording(false)
           if (onError) {
-            onError(`Speech recognition error: ${event.error}`)
+            onError(t('voiceContentInput.recognitionError', { error: event.error }))
           }
         }
 
@@ -74,7 +76,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
       } catch (error: any) {
         console.error('Failed to start recording:', error)
         if (onError) {
-          onError('Failed to start voice recording. Please check your microphone permissions.')
+          onError(t('voiceContentInput.startFailed'))
         }
       }
     }
@@ -112,7 +114,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
           onClick={startRecording}
           disabled={disabled || isProcessing}
           className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          title="Start voice input"
+          title={t('voiceContentInput.startTitle')}
         >
           {isProcessing ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -125,7 +127,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
           type="button"
           onClick={stopRecording}
           className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 animate-pulse transition-all"
-          title="Stop recording"
+          title={t('voiceContentInput.stopTitle')}
         >
           <Square className="w-5 h-5" />
         </button>
@@ -134,7 +136,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
       {isRecording && (
         <div className="flex items-center gap-2 text-sm text-red-600">
           <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
-          <span>Recording...</span>
+          <span>{t('voiceContentInput.recording')}</span>
         </div>
       )}
       

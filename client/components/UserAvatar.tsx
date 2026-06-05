@@ -3,6 +3,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface UserAvatarProps {
   src?: string | null
@@ -17,8 +18,9 @@ export default function UserAvatar({
   name, 
   size = 40, 
   className = '', 
-  status = 'none' 
+  status = 'none'
 }: UserAvatarProps) {
+  const { t } = useTranslation()
   const initials = name?.charAt(0)?.toUpperCase() || 'U'
   
   // Deterministic unique color shift based on name
@@ -45,7 +47,7 @@ export default function UserAvatar({
     <div 
       className={`relative group ${className} w-[var(--avatar-size)] h-[var(--avatar-size)]`} 
       style={{ '--avatar-size': `${size}px`, filter: `hue-rotate(${hueShift}deg)` } as any}
-      title={name || 'User Avatar'}
+      title={name || t('userAvatar.userAvatar')}
     >
       {/* Outer Glow Ring */}
       <motion.div
@@ -65,7 +67,7 @@ export default function UserAvatar({
           {src ? (
             <Image
               src={src}
-              alt={name || 'User'}
+              alt={name || t('userAvatar.user')}
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-1000"
             />

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight, Home } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface BreadcrumbItem {
   label: string
@@ -11,6 +12,7 @@ interface BreadcrumbItem {
 }
 
 export default function Breadcrumb() {
+  const { t } = useTranslation()
   const pathname = usePathname()
 
   // Generate breadcrumb items based on current path
@@ -19,7 +21,7 @@ export default function Breadcrumb() {
 
     const breadcrumbs: BreadcrumbItem[] = [
       {
-        label: 'Dashboard',
+        label: t('breadcrumb.dashboard'),
         href: '/dashboard',
         icon: <Home className="w-4 h-4" />
       }
@@ -29,28 +31,28 @@ export default function Breadcrumb() {
 
     // Map of path segments to readable names
     const pathLabels: Record<string, string> = {
-      'video': 'Videos',
-      'content': 'Content',
-      'scripts': 'Scripts',
-      'quotes': 'Quotes',
-      'scheduler': 'Scheduler',
-      'calendar': 'Calendar',
-      'social': 'Social',
-      'analytics': 'Analytics',
-      'achievements': 'Achievements',
-      'membership': 'Membership',
-      'notifications': 'Notifications',
-      'settings': 'Settings',
-      'infrastructure': 'Infrastructure',
-      'workflows': 'Workflows',
-      'jobs': 'Jobs',
-      'teams': 'Teams',
-      'approvals': 'Approvals',
-      'library': 'Library',
-      'ai': 'AI Features',
-      'niche': 'Niche Packs',
-      'edit': 'Edit',
-      'new': 'New'
+      'video': t('breadcrumb.videos'),
+      'content': t('breadcrumb.content'),
+      'scripts': t('breadcrumb.scripts'),
+      'quotes': t('breadcrumb.quotes'),
+      'scheduler': t('breadcrumb.scheduler'),
+      'calendar': t('breadcrumb.calendar'),
+      'social': t('breadcrumb.social'),
+      'analytics': t('breadcrumb.analytics'),
+      'achievements': t('breadcrumb.achievements'),
+      'membership': t('breadcrumb.membership'),
+      'notifications': t('breadcrumb.notifications'),
+      'settings': t('breadcrumb.settings'),
+      'infrastructure': t('breadcrumb.infrastructure'),
+      'workflows': t('breadcrumb.workflows'),
+      'jobs': t('breadcrumb.jobs'),
+      'teams': t('breadcrumb.teams'),
+      'approvals': t('breadcrumb.approvals'),
+      'library': t('breadcrumb.library'),
+      'ai': t('breadcrumb.aiFeatures'),
+      'niche': t('breadcrumb.nichePacks'),
+      'edit': t('breadcrumb.edit'),
+      'new': t('breadcrumb.new')
     }
 
     for (let i = 1; i < pathSegments.length; i++) {
@@ -80,7 +82,7 @@ export default function Breadcrumb() {
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-6 animate-fade-in-blur">
+    <nav aria-label={t('breadcrumb.ariaLabel')} className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-6 animate-fade-in-blur">
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.href} className="flex items-center">
           {index > 0 && (

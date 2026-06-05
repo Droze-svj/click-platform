@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { AlertCircle, Clock } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface RateLimitIndicatorProps {
   response?: Response
 }
 
 export default function RateLimitIndicator({ response }: RateLimitIndicatorProps) {
+  const { t } = useTranslation()
   const [rateLimitInfo, setRateLimitInfo] = useState<{
     remaining: number
     reset: number
@@ -39,11 +41,11 @@ export default function RateLimitIndicator({ response }: RateLimitIndicatorProps
         <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-1">
-            Rate Limit Warning
+            {t('rateLimitIndicator.rateLimitWarning')}
           </p>
           <div className="mb-2">
             <div className="flex items-center justify-between text-xs text-yellow-700 dark:text-yellow-400 mb-1">
-              <span>{rateLimitInfo.remaining} / {rateLimitInfo.limit} requests remaining</span>
+              <span>{t('rateLimitIndicator.requestsRemaining', { remaining: rateLimitInfo.remaining, limit: rateLimitInfo.limit })}</span>
               <span>{Math.round(percentage)}%</span>
             </div>
             <div className="w-full bg-yellow-200 dark:bg-yellow-800 rounded-full h-1.5">
@@ -58,7 +60,7 @@ export default function RateLimitIndicator({ response }: RateLimitIndicatorProps
           {resetDate && (
             <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400">
               <Clock className="w-3 h-3" />
-              <span>Resets at {resetDate.toLocaleTimeString()}</span>
+              <span>{t('rateLimitIndicator.resetsAt', { time: resetDate.toLocaleTimeString() })}</span>
             </div>
           )}
         </div>

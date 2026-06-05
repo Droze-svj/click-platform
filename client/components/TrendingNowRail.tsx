@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { TrendingUp, Hash, Music, Loader2, RefreshCw } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type Kind = 'sound' | 'hashtag' | 'topic'
 
@@ -48,6 +49,7 @@ export function TrendingNowRail({
   onPick,
   className = '',
 }: TrendingNowRailProps) {
+  const { t } = useTranslation()
   const [platform, setPlatform] = useState<typeof PLATFORMS[number]>(defaultPlatform)
   const [items, setItems] = useState<TrendItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -92,24 +94,24 @@ export function TrendingNowRail({
           </div>
           <div className="min-w-0">
             <h3 className="text-base font-black text-surface-900 dark:text-white tracking-tight truncate">
-              Trending now
+              {t('trendingNowRail.trendingNow')}
             </h3>
             <p
               className="text-[10px] font-bold text-surface-500 uppercase tracking-wider truncate"
               title={capturedAt ? new Date(capturedAt).toLocaleString() : ''}
             >
               {source === 'snapshot' && capturedAt
-                ? `Updated ${new Date(capturedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                ? t('trendingNowRail.updatedAt', { time: new Date(capturedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
                 : source === 'live'
-                ? 'Live'
-                : 'Loading…'}
+                ? t('trendingNowRail.live')
+                : t('trendingNowRail.loading')}
             </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => load(platform)}
-          aria-label="Refresh trends"
+          aria-label={t('trendingNowRail.refreshTrends')}
           className="w-8 h-8 rounded-lg border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-500 hover:text-surface-900 dark:hover:text-white transition-colors shrink-0"
         >
           {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
@@ -137,7 +139,7 @@ export function TrendingNowRail({
       <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1 custom-scrollbar">
         {items.length === 0 && !loading && (
           <div className="text-center py-10 text-xs text-surface-500">
-            No trends yet. The ingest job runs every 15 minutes.
+            {t('trendingNowRail.noTrends')}
           </div>
         )}
         {items.map((it, idx) => (

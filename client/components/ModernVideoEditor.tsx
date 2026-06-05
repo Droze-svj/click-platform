@@ -101,6 +101,7 @@ import CommandK from './CommandK'
 import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { useBrandKit } from './BrandKit'
 import {
   VideoFilter,
@@ -228,6 +229,7 @@ const ModernVideoEditor: React.FC<{
    */
   initialAiTool?: 'silence' | 'fillers' | 'edit-by-text' | null;
 }> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool }) => {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const brandKit = useBrandKit()
   const actualVideoUrl = getAssetUrl(videoUrl || videoPath || '')
@@ -258,7 +260,7 @@ const ModernVideoEditor: React.FC<{
   }, [])
   const activeCategory = activeCategoryState; // Renamed to avoid conflict with the new state variable
 
-  const [projectName, setProjectName] = useState('Untitled Kinetic Sequence')
+  const [projectName, setProjectName] = useState(t('modernVideoEditor.untitledProject'))
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false)
@@ -432,18 +434,18 @@ const ModernVideoEditor: React.FC<{
   // pushes them straight into the AI tab's apply pile via the dispatcher
   // we already own. Single button = full edit recipe.
   const handleMakeItViral = useCallback(async () => {
-    if (!videoId) { showToast('No video loaded', 'error'); return }
+    if (!videoId) { showToast(t('modernVideoEditor.noVideoLoaded'), 'error'); return }
     if (isMakingViral) return
     setIsMakingViral(true)
     try {
-      showToast(`Composing your viral edit recipe in ${targetLanguage}…`, 'info')
+      showToast(t('modernVideoEditor.composingViralRecipe', { language: targetLanguage }), 'info')
       const res = await apiPost<{ data: { suggestions: AIDirectorSuggestion[]; stages: any[] } }>(
         '/video/viral/one-click',
         { contentId: videoId, niche: contentNiche, platform: 'tiktok', targetLanguage },
       )
       const suggestions = (res as any)?.data?.suggestions || (res as any)?.suggestions || []
       if (!Array.isArray(suggestions) || suggestions.length === 0) {
-        showToast('No suggestions returned — your video may already be tight', 'info')
+        showToast(t('modernVideoEditor.noSuggestionsReturned'), 'info')
         return
       }
       // Replace director suggestions with the fresh batch and route the
@@ -452,13 +454,13 @@ const ModernVideoEditor: React.FC<{
       // to be reset — old applied marks naturally don't overlap.
       setAiDirectorSuggestions(suggestions)
       setActiveCategory('ai-analysis' as any)
-      showToast(`${suggestions.length} suggestions ready — Apply All to ship it`, 'success')
+      showToast(t('modernVideoEditor.suggestionsReadyApplyAll', { count: suggestions.length }), 'success')
     } catch (err: any) {
-      showToast(err?.message || 'Make It Viral failed', 'error')
+      showToast(err?.message || t('modernVideoEditor.makeItViralFailed'), 'error')
     } finally {
       setIsMakingViral(false)
     }
-  }, [videoId, isMakingViral, contentNiche, showToast, setActiveCategory, targetLanguage])
+  }, [videoId, isMakingViral, contentNiche, showToast, setActiveCategory, targetLanguage, t])
 
   // Wired ahead of declaration so the dispatcher passes the freshest
   // segments/overlays into applySuggestion. Defined right after
@@ -564,7 +566,7 @@ const ModernVideoEditor: React.FC<{
         const brolls = (videoRes?.data ?? videoRes)?.map((v: any) => ({
           id: v._id,
           url: getAssetUrl(v.originalFile?.url || ''),
-          title: v.title || 'Uploaded B-Roll',
+          title: v.title || t('modernVideoEditor.uploadedBroll'),
           type: 'broll',
           source: 'upload',
           autoTags: v.metadata?.tags || []
@@ -573,7 +575,7 @@ const ModernVideoEditor: React.FC<{
         const music = (musicRes?.data?.tracks ?? musicRes?.tracks ?? [])?.map((m: any) => ({
           id: m._id,
           url: getAssetUrl(m.file?.url || ''),
-          title: m.title || 'Uploaded Music',
+          title: m.title || t('modernVideoEditor.uploadedMusic'),
           type: 'music',
           source: 'upload',
           autoTags: m.metadata?.tags || []
@@ -598,7 +600,7 @@ const ModernVideoEditor: React.FC<{
       endTime: startTime + duration,
       duration: duration,
       type: 'audio',
-      name: `AI Voiceover (${selectedVoice})`,
+      name: t('modernVideoEditor.aiVoiceoverName', { voice: selectedVoice }),
       color: '#f97316', // Orange
       track: 7, // Dialogue track A2
       sourceUrl: url,
@@ -679,39 +681,39 @@ const ModernVideoEditor: React.FC<{
       })
 
       setTextOverlays(prev => [...prev, ...newCaptions])
-      showToast('Intelligent Captions & Voiceover Synced', 'success')
+      showToast(t('modernVideoEditor.intelligentCaptionsSynced'), 'success')
     } else {
-      showToast('Voiceover added to timeline', 'success')
+      showToast(t('modernVideoEditor.voiceoverAddedToTimeline'), 'success')
     }
-  }, [videoState.currentTime, selectedVoice, voiceoverText, setTimelineSegments, setTextOverlays, showToast])
+  }, [videoState.currentTime, selectedVoice, voiceoverText, setTimelineSegments, setTextOverlays, showToast, t])
 
   // Split the segment under the playhead at the current time. Mirrors the
   // logic in ResizableTimeline.splitSegmentAt so the BasicEditorView Trim tab
   // can drive the same operation.
   const handleSplitAtPlayhead = useCallback(() => {
-    const t = videoState.currentTime
-    const seg = timelineSegments.find((s: TimelineSegment) => t > s.startTime && t < s.endTime)
+    const time = videoState.currentTime
+    const seg = timelineSegments.find((s: TimelineSegment) => time > s.startTime && time < s.endTime)
     if (!seg) {
-      showToast('Move the playhead inside a clip to split it', 'info')
+      showToast(t('modernVideoEditor.movePlayheadToSplit'), 'info')
       return
     }
-    const durLeft = t - seg.startTime
-    const durRight = seg.endTime - t
+    const durLeft = time - seg.startTime
+    const durRight = seg.endTime - time
     if (durLeft < 0.25 || durRight < 0.25) {
-      showToast('Cannot split: too close to the clip edge (min 0.25s on each side)', 'info')
+      showToast(t('modernVideoEditor.cannotSplitTooClose'), 'info')
       return
     }
     const newId = typeof crypto !== 'undefined' && (crypto as any).randomUUID
       ? (crypto as any).randomUUID()
       : `seg-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const right: TimelineSegment = { ...seg, id: newId, startTime: t, endTime: seg.endTime, duration: durRight }
+    const right: TimelineSegment = { ...seg, id: newId, startTime: time, endTime: seg.endTime, duration: durRight }
     setTimelineSegments((prev: TimelineSegment[]) => prev.flatMap((s: TimelineSegment) => {
       if (s.id !== seg.id) return [s]
-      const left: TimelineSegment = { ...seg, endTime: t, duration: durLeft }
+      const left: TimelineSegment = { ...seg, endTime: time, duration: durLeft }
       return [left, right]
     }))
-    showToast(`Split clip at ${t.toFixed(2)}s`, 'success')
-  }, [videoState.currentTime, timelineSegments, setTimelineSegments, showToast])
+    showToast(t('modernVideoEditor.splitClipAt', { time: time.toFixed(2) }), 'success')
+  }, [videoState.currentTime, timelineSegments, setTimelineSegments, showToast, t])
 
   // Toggle the `reversed` flag on the currently selected segment. Wired to the
   // segment-aware renderer's reverse,areverse path. Operates on the first
@@ -720,31 +722,31 @@ const ModernVideoEditor: React.FC<{
     const targetId = selectedSegmentId
       || timelineSegments.find((s: TimelineSegment) => videoState.currentTime > s.startTime && videoState.currentTime < s.endTime)?.id
     if (!targetId) {
-      showToast('Select a clip (or move the playhead inside one) to reverse', 'info')
+      showToast(t('modernVideoEditor.selectClipToReverse'), 'info')
       return
     }
     setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) =>
       s.id === targetId ? { ...s, reversed: !s.reversed } : s
     ))
     const seg = timelineSegments.find((s: TimelineSegment) => s.id === targetId)
-    showToast(seg?.reversed ? 'Reverse removed from clip' : 'Reverse applied — visible after export', 'success')
-  }, [selectedSegmentId, timelineSegments, setTimelineSegments, videoState.currentTime, showToast])
+    showToast(seg?.reversed ? t('modernVideoEditor.reverseRemoved') : t('modernVideoEditor.reverseApplied'), 'success')
+  }, [selectedSegmentId, timelineSegments, setTimelineSegments, videoState.currentTime, showToast, t])
 
   // Insert a freeze-frame segment at the playhead. The host segment is split
   // around the playhead, and a freeze segment of `freezeDurationSec` is
   // inserted between the two halves. The renderer turns this into a tpad
   // clone with silent audio.
   const handleFreezeAtPlayhead = useCallback((freezeDurationSec: number = 1.0) => {
-    const t = videoState.currentTime
-    const host = timelineSegments.find((s: TimelineSegment) => t > s.startTime && t < s.endTime)
+    const time = videoState.currentTime
+    const host = timelineSegments.find((s: TimelineSegment) => time > s.startTime && time < s.endTime)
     if (!host) {
-      showToast('Move the playhead inside a clip to insert a freeze frame', 'info')
+      showToast(t('modernVideoEditor.movePlayheadToFreeze'), 'info')
       return
     }
-    const durLeft = t - host.startTime
-    const durRight = host.endTime - t
+    const durLeft = time - host.startTime
+    const durRight = host.endTime - time
     if (durLeft < 0.05 || durRight < 0.05) {
-      showToast('Cannot freeze: too close to the clip edge', 'info')
+      showToast(t('modernVideoEditor.cannotFreezeTooClose'), 'info')
       return
     }
     const freezeId = typeof crypto !== 'undefined' && (crypto as any).randomUUID
@@ -758,7 +760,7 @@ const ModernVideoEditor: React.FC<{
 
     const left: TimelineSegment = {
       ...host,
-      endTime: t,
+      endTime: time,
       duration: durLeft,
       sourceStartTime: sourceStartLeft,
       sourceEndTime: sourceCutPoint,
@@ -766,8 +768,8 @@ const ModernVideoEditor: React.FC<{
     const freeze: TimelineSegment = {
       ...host,
       id: freezeId,
-      startTime: t,
-      endTime: t + freezeDurationSec,
+      startTime: time,
+      endTime: time + freezeDurationSec,
       duration: freezeDurationSec,
       sourceStartTime: sourceCutPoint,
       sourceEndTime: sourceCutPoint + 0.05,
@@ -779,7 +781,7 @@ const ModernVideoEditor: React.FC<{
     const right: TimelineSegment = {
       ...host,
       id: rightId,
-      startTime: t + freezeDurationSec,
+      startTime: time + freezeDurationSec,
       endTime: host.endTime + freezeDurationSec,
       duration: durRight,
       sourceStartTime: sourceCutPoint,
@@ -795,19 +797,19 @@ const ModernVideoEditor: React.FC<{
       }
       return [left, freeze, right]
     }))
-    showToast(`Freeze frame inserted (${freezeDurationSec.toFixed(1)}s)`, 'success')
-  }, [videoState.currentTime, timelineSegments, setTimelineSegments, showToast])
+    showToast(t('modernVideoEditor.freezeFrameInserted', { duration: freezeDurationSec.toFixed(1) }), 'success')
+  }, [videoState.currentTime, timelineSegments, setTimelineSegments, showToast, t])
 
   // Trim the selected segment's source range to [inTime, outTime] (timeline
   // coordinates). Adjusts both the timeline range and the source range so the
   // segment-aware renderer plays only the requested slice.
   const handleTrimSelectedToRange = useCallback((inTime: number, outTime: number) => {
     if (!selectedSegmentId) {
-      showToast('Select a clip first to trim it', 'info')
+      showToast(t('modernVideoEditor.selectClipToTrim'), 'info')
       return
     }
     if (!(outTime > inTime)) {
-      showToast('Out point must be after the in point', 'error')
+      showToast(t('modernVideoEditor.outPointAfterInPoint'), 'error')
       return
     }
     const seg = timelineSegments.find((s: TimelineSegment) => s.id === selectedSegmentId)
@@ -815,7 +817,7 @@ const ModernVideoEditor: React.FC<{
     const segIn = Math.max(seg.startTime, inTime)
     const segOut = Math.min(seg.endTime, outTime)
     if (!(segOut - segIn >= 0.1)) {
-      showToast('Trim range must overlap the selected clip by at least 0.1s', 'error')
+      showToast(t('modernVideoEditor.trimRangeMustOverlap'), 'error')
       return
     }
     const sourceStart = seg.sourceStartTime ?? seg.startTime
@@ -835,15 +837,15 @@ const ModernVideoEditor: React.FC<{
             sourceEndTime: newSourceEnd,
           }
     ))
-    showToast(`Trimmed clip to ${newDuration.toFixed(2)}s`, 'success')
-  }, [selectedSegmentId, timelineSegments, setTimelineSegments, showToast])
+    showToast(t('modernVideoEditor.trimmedClipTo', { duration: newDuration.toFixed(2) }), 'success')
+  }, [selectedSegmentId, timelineSegments, setTimelineSegments, showToast, t])
 
   // J-Cut on the selected segment: audio leads video by N seconds. Toggles
   // between off and 0.5s for v1 — the renderer uses adelay to slide the
   // segment's audio earlier on the final timeline.
   const handleJCutSelected = useCallback((leadSec: number = 0.5) => {
     if (!selectedSegmentId) {
-      showToast('Select a clip first to apply a J-cut', 'info')
+      showToast(t('modernVideoEditor.selectClipForJCut'), 'info')
       return
     }
     setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) => {
@@ -851,14 +853,14 @@ const ModernVideoEditor: React.FC<{
       const next = s.audioLeadInSec && s.audioLeadInSec > 0 ? 0 : leadSec
       return { ...s, audioLeadInSec: next }
     }))
-    showToast('J-cut toggled — audio leads video by 0.5s', 'success')
-  }, [selectedSegmentId, setTimelineSegments, showToast])
+    showToast(t('modernVideoEditor.jCutToggled'), 'success')
+  }, [selectedSegmentId, setTimelineSegments, showToast, t])
 
   // L-Cut on the selected segment: audio tail extends past the visual cut
   // by N seconds (audioTailOutSec). Renderer uses an extended atrim range.
   const handleLCutSelected = useCallback((tailSec: number = 0.5) => {
     if (!selectedSegmentId) {
-      showToast('Select a clip first to apply an L-cut', 'info')
+      showToast(t('modernVideoEditor.selectClipForLCut'), 'info')
       return
     }
     setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) => {
@@ -866,8 +868,8 @@ const ModernVideoEditor: React.FC<{
       const next = s.audioTailOutSec && s.audioTailOutSec > 0 ? 0 : tailSec
       return { ...s, audioTailOutSec: next }
     }))
-    showToast('L-cut toggled — audio continues 0.5s after cut', 'success')
-  }, [selectedSegmentId, setTimelineSegments, showToast])
+    showToast(t('modernVideoEditor.lCutToggled'), 'success')
+  }, [selectedSegmentId, setTimelineSegments, showToast, t])
 
   // ── Pro keyboard shortcuts (J/K/L, [, ], S, X, arrows, Cmd+/-/0) ──
   // Wires the keyboard hook to the editor's existing actions. JKL transport
@@ -878,13 +880,13 @@ const ModernVideoEditor: React.FC<{
     if (selectedSegmentIds.length === 0) return
     setTimelineSegments((prev: TimelineSegment[]) => rippleDeleteOp(prev, selectedSegmentIds))
     setSelectedSegmentIds([])
-    showToast(`Ripple deleted ${selectedSegmentIds.length} clip(s)`, 'success')
-  }, [selectedSegmentIds, setTimelineSegments, showToast])
+    showToast(t('modernVideoEditor.rippleDeleted', { count: selectedSegmentIds.length }), 'success')
+  }, [selectedSegmentIds, setTimelineSegments, showToast, t])
 
   useEditorShortcuts({
     getCurrentTime: () => videoState.currentTime,
     getDuration:    () => videoState.duration,
-    seek:           (t) => setVideoState(prev => ({ ...prev, currentTime: t })),
+    seek:           (time) => setVideoState(prev => ({ ...prev, currentTime: time })),
     togglePlay:     () => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying })),
     setPlaybackRate: () => { /* preview owns the <video> ref — no-op for now */ },
     splitAtPlayhead: handleSplitAtPlayhead,
@@ -953,7 +955,7 @@ const ModernVideoEditor: React.FC<{
       if (stateToLoad.captionStyle) setCaptionStyle(stateToLoad.captionStyle)
       if (stateToLoad.templateLayout) setTemplateLayout(stateToLoad.templateLayout)
       if (stateToLoad.projectName) setProjectName(stateToLoad.projectName)
-      showToast('Neural State Restored', 'success')
+      showToast(t('modernVideoEditor.neuralStateRestored'), 'success')
       return
     }
 
@@ -967,7 +969,7 @@ const ModernVideoEditor: React.FC<{
           endTime: videoState.duration > 0 ? videoState.duration : 60, // Fallback to 60s
           duration: videoState.duration > 0 ? videoState.duration : 60,
           type: 'video',
-          name: 'Master Video Source',
+          name: t('modernVideoEditor.masterVideoSource'),
           color: '#6366F1',
           track: 0,
           sourceUrl: actualVideoUrl
@@ -979,7 +981,7 @@ const ModernVideoEditor: React.FC<{
         })
       }
       hasIntegratedInitialVideoRef.current = true
-      showToast('Video Integrated to Timeline', 'success')
+      showToast(t('modernVideoEditor.videoIntegratedToTimeline'), 'success')
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actualVideoUrl, loadSavedState, showToast, videoState.duration, setTimelineSegments]) // Runs on mount or when URL changes
@@ -1015,7 +1017,7 @@ const ModernVideoEditor: React.FC<{
   // Active, Loop-Safe Undo/Redo Engine
   const handleUndo = useCallback(() => {
     if (historyIndex <= 0) {
-      showToast('Nothing to undo', 'info')
+      showToast(t('modernVideoEditor.nothingToUndo'), 'info')
       return
     }
     const prevIndex = historyIndex - 1
@@ -1030,15 +1032,15 @@ const ModernVideoEditor: React.FC<{
     if (prevState.imageOverlays) setImageOverlays(prevState.imageOverlays)
     if (prevState.videoFilters) setVideoFilters(prevState.videoFilters)
     
-    showToast('Undo successful', 'success')
+    showToast(t('modernVideoEditor.undoSuccessful'), 'success')
     setTimeout(() => {
       isHistoryActionRef.current = false
     }, 80)
-  }, [history, historyIndex, setTimelineSegments, setTextOverlays, setShapeOverlays, setImageOverlays, setVideoFilters, showToast])
+  }, [history, historyIndex, setTimelineSegments, setTextOverlays, setShapeOverlays, setImageOverlays, setVideoFilters, showToast, t])
 
   const handleRedo = useCallback(() => {
     if (historyIndex >= history.length - 1) {
-      showToast('Nothing to redo', 'info')
+      showToast(t('modernVideoEditor.nothingToRedo'), 'info')
       return
     }
     const nextIndex = historyIndex + 1
@@ -1053,17 +1055,17 @@ const ModernVideoEditor: React.FC<{
     if (nextState.imageOverlays) setImageOverlays(nextState.imageOverlays)
     if (nextState.videoFilters) setVideoFilters(nextState.videoFilters)
 
-    showToast('Redo successful', 'success')
+    showToast(t('modernVideoEditor.redoSuccessful'), 'success')
     setTimeout(() => {
       isHistoryActionRef.current = false
     }, 80)
-  }, [history, historyIndex, setTimelineSegments, setTextOverlays, setShapeOverlays, setImageOverlays, setVideoFilters, showToast])
+  }, [history, historyIndex, setTimelineSegments, setTextOverlays, setShapeOverlays, setImageOverlays, setVideoFilters, showToast, t])
 
   // ── Callbacks ──
   const handleManualOverride = useCallback((instruction: string) => {
     if (!instruction.trim()) return
 
-    showToast(`Neural Override active: "${instruction}"`, 'info')
+    showToast(t('modernVideoEditor.neuralOverrideActive', { instruction }), 'info')
 
     const textLower = instruction.toLowerCase()
     
@@ -1092,30 +1094,30 @@ const ModernVideoEditor: React.FC<{
           layer: 20
         }
         setTextOverlays(prev => [...prev, newOverlay])
-        showToast(`AI placed text graphic: "${textToInsert}" at ${playhead.toFixed(1)}s`, 'success')
+        showToast(t('modernVideoEditor.aiPlacedTextGraphic', { text: textToInsert, time: playhead.toFixed(1) }), 'success')
         return
       }
 
       // 2. Simplify/pacing instruction
       if (textLower.includes('simplify') || textLower.includes('readability')) {
-        setTextOverlays(prev => prev.map(t => ({
-          ...t,
-          text: t.text.length > 25 ? t.text.slice(0, 20) + '...' : t.text,
-          fontSize: Math.min(t.fontSize + 4, 48),
+        setTextOverlays(prev => prev.map(o => ({
+          ...o,
+          text: o.text.length > 25 ? o.text.slice(0, 20) + '...' : o.text,
+          fontSize: Math.min(o.fontSize + 4, 48),
           style: 'minimal'
         })))
-        showToast('AI Readability: simplified caption layers and increased font size', 'success')
+        showToast(t('modernVideoEditor.aiReadability'), 'success')
         return
       }
 
       // 3. Hook optimization
       if (textLower.includes('hook') || textLower.includes('kinetic')) {
         setTimelineSegments((prev: TimelineSegment[]) => prev.map((s, idx) => 
-          idx === 0 ? { ...s, transitionOut: 'zoom', transitionDuration: 0.5, name: '💥 KINETIC HOOK' } : s
+          idx === 0 ? { ...s, transitionOut: 'zoom', transitionDuration: 0.5, name: t('modernVideoEditor.kineticHookName') } : s
         ))
         const hookOverlay: TextOverlay = {
           id: `hook-overlay-${Date.now()}`,
-          text: 'WAIT FOR IT... 👀',
+          text: t('modernVideoEditor.waitForItText'),
           x: 50,
           y: 35,
           fontSize: 38,
@@ -1130,10 +1132,10 @@ const ModernVideoEditor: React.FC<{
           layer: 25
         }
         setTextOverlays(prev => {
-          const filtered = prev.filter(t => !t.id.startsWith('hook-overlay'))
+          const filtered = prev.filter(o => !o.id.startsWith('hook-overlay'))
           return [...filtered, hookOverlay]
         })
-        showToast('AI Hook: injected kinetic Zoom transition and pattern interrupt overlay', 'success')
+        showToast(t('modernVideoEditor.aiHook'), 'success')
         return
       }
 
@@ -1153,7 +1155,7 @@ const ModernVideoEditor: React.FC<{
             return updated
           })
         })
-        showToast('AI Pacing: removed filler spaces and compressed dialogue segments by 10%', 'success')
+        showToast(t('modernVideoEditor.aiPacing'), 'success')
         return
       }
 
@@ -1169,18 +1171,18 @@ const ModernVideoEditor: React.FC<{
           vibrance: 120,
           clarity: 10
         }))
-        showToast('AI Trends: aligned scene splits to rhythm and boosted aesthetic saturation', 'success')
+        showToast(t('modernVideoEditor.aiTrends'), 'success')
         return
       }
 
-      showToast(`Neural override applied: optimized timeline structures`, 'success')
+      showToast(t('modernVideoEditor.neuralOverrideApplied'), 'success')
     }, 800)
-  }, [showToast, videoState.currentTime, videoState.duration, setTimelineSegments, setTextOverlays, setVideoFilters])
+  }, [showToast, videoState.currentTime, videoState.duration, setTimelineSegments, setTextOverlays, setVideoFilters, t])
 
   const handleScheduleUpload = useCallback(() => {
-    showToast('Directing to Neural Scheduler...', 'success')
+    showToast(t('modernVideoEditor.directingToScheduler'), 'success')
     setActiveCategory('scheduling')
-  }, [showToast, setActiveCategory])
+  }, [showToast, setActiveCategory, t])
 
   const handleExportMode = () => {
     setActiveCategory('export')
@@ -1231,8 +1233,8 @@ const ModernVideoEditor: React.FC<{
     }
 
     setTelemetryHistory(prev => [telemetryEntry, ...prev].slice(0, 10))
-    showToast('Shadow Telemetry Synchronized', 'success')
-  }, [aiProposalSnapshot, timelineSegments, textOverlays, shapeOverlays, styleDNA, showToast])
+    showToast(t('modernVideoEditor.shadowTelemetrySynchronized'), 'success')
+  }, [aiProposalSnapshot, timelineSegments, textOverlays, shapeOverlays, styleDNA, showToast, t])
 
   // Mock taking a snapshot when AI touches the timeline (simulated by non-empty segments)
   useEffect(() => {
@@ -1248,22 +1250,22 @@ const ModernVideoEditor: React.FC<{
   const handleStyleNormalize = useCallback(() => {
     if (!styleDNA) return
     
-    showToast(`Aligning to ${styleDNA.theme || 'Vlog'} DNA...`, 'info')
-    
+    showToast(t('modernVideoEditor.aligningToDna', { theme: styleDNA.theme || 'Vlog' }), 'info')
+
     // 1. Normalize Pacing (if CPM is high, suggest/apply split points)
     if (styleDNA.cpm > 10 && timelineSegments.length < 5) {
-       showToast('Pacing optimization: Incremental cuts applied', 'success')
+       showToast(t('modernVideoEditor.pacingOptimization'), 'success')
     }
 
     // 2. Normalize Typography & Brand Colors
     if (styleDNA.preferredFonts.length > 0 || styleDNA.preferredTransitions.length > 0) {
       const brandFont = styleDNA.preferredFonts[0] || 'Inter, sans-serif'
       setTextOverlays(prev => prev.map(o => ({ ...o, fontFamily: brandFont })))
-      showToast('Stylistic drift corrected: Brand fonts applied', 'success')
+      showToast(t('modernVideoEditor.stylisticDriftCorrected'), 'success')
     }
 
     captureShadowTelemetry()
-  }, [styleDNA, timelineSegments.length, setTextOverlays, captureShadowTelemetry, showToast])
+  }, [styleDNA, timelineSegments.length, setTextOverlays, captureShadowTelemetry, showToast, t])
 
   // Real-time collaborators come from the socket presence system (future feature).
   const mockCollaborators: Array<{ id: string; name: string; role: string; avatar: string; color: string; status: string }> = []
@@ -1329,11 +1331,11 @@ const ModernVideoEditor: React.FC<{
       (window as any).setMedianClipLength(neuralPacing)
     }
 
-    showToast(`Applied ${profile.name} (pacing: ${neuralPacing.toFixed(1)}s)`, 'success')
+    showToast(t('modernVideoEditor.appliedProfilePacing', { name: profile.name, pacing: neuralPacing.toFixed(1) }), 'success')
     // brandKit.logoUrl is read inside the watermark branch — listed in
     // the dep array so the callback regenerates if the user updates
     // their brand kit logo without leaving the editor.
-  }, [showToast, setCaptionStyle, setVideoFilters, setTextOverlays, videoState.duration, setImageOverlays, brandKit.logoUrl])
+  }, [showToast, setCaptionStyle, setVideoFilters, setTextOverlays, videoState.duration, setImageOverlays, brandKit.logoUrl, t])
 
   /**
    * One-shot "Apply my learned style" — fed by QuickActionsBar after it
@@ -1361,33 +1363,33 @@ const ModernVideoEditor: React.FC<{
     const applied: string[] = []
     if (grade && COLOR_GRADES[grade]) {
       setVideoFilters((prev) => ({ ...prev, ...COLOR_GRADES[grade] }))
-      applied.push(`${grade} grade`)
+      applied.push(t('modernVideoEditor.gradeLabel', { grade }))
     }
     const cs = (top.captionStyle || '').toString()
     if (cs) {
       setCaptionStyle((prev) => prev ? { ...prev, style: cs as any } : { enabled: true, style: cs as any, font: 'Inter', size: 32, color: '#FFFFFF', position: 'bottom-center' } as any)
-      applied.push(`${cs} captions`)
+      applied.push(t('modernVideoEditor.captionsLabel', { style: cs }))
     }
     showToast(
       applied.length > 0
-        ? `Applied your style — ${applied.join(' · ')}`
-        : 'Your style is not specific enough yet — publish more clips.',
+        ? t('modernVideoEditor.appliedYourStyle', { items: applied.join(' · ') })
+        : t('modernVideoEditor.styleNotSpecificEnough'),
       applied.length > 0 ? 'success' : 'info'
     )
-  }, [setVideoFilters, setCaptionStyle, showToast])
+  }, [setVideoFilters, setCaptionStyle, showToast, t])
 
 
 
   const handleGenerateClips = useCallback(async () => {
     if (!transcript) {
-      showToast('Neural transcript required for synthesis', 'error')
+      showToast(t('modernVideoEditor.neuralTranscriptRequired'), 'error')
       return
     }
     if (!videoId) {
-      showToast('No video loaded — upload a video first', 'error')
+      showToast(t('modernVideoEditor.noVideoLoadedUploadFirst'), 'error')
       return
     }
-    showToast('Synthesizing AI variations...', 'info')
+    showToast(t('modernVideoEditor.synthesizingVariations'), 'info')
     try {
       const res: any = await apiPost('/video/ai-editing/auto-edit', {
         videoId: videoId,
@@ -1399,28 +1401,33 @@ const ModernVideoEditor: React.FC<{
       })
       const serverClips: AutoEditClip[] = (res?.data?.clips || res?.clips || []).map((c: any, i: number) => ({
         id: c.id || `clip-${Date.now()}-${i}`,
-        name: c.name || `Variation ${i + 1}`,
+        name: c.name || t('modernVideoEditor.variationName', { number: i + 1 }),
         segments: c.segments || [],
         engagementScore: c.engagementScore || { overall: c.viralScore || 80, viralPotential: 80, hookStrength: 80, sentimentDensity: 80, trendAlignment: 80, retentionHeatmap: [] },
         metadata: c.metadata || { titles: { curiosityGap: c.caption || '', seoWinner: '', minimalist: '' }, description: { summary: '', timestamps: [], hashtags: c.hashtags || [] }, abTestSuggestions: [] },
       }))
       if (serverClips.length > 0) {
         setAutoEditClips(serverClips)
-        showToast(`${serverClips.length} AI variation${serverClips.length === 1 ? '' : 's'} ready`, 'success')
+        showToast(
+          serverClips.length === 1
+            ? t('modernVideoEditor.variationReadyOne', { count: serverClips.length })
+            : t('modernVideoEditor.variationReadyOther', { count: serverClips.length }),
+          'success'
+        )
       } else {
-        showToast('No clips generated — try with a longer video or different settings', 'info')
+        showToast(t('modernVideoEditor.noClipsGenerated'), 'info')
       }
     } catch {
-      showToast('Clip generation failed — check that the backend is running', 'error')
+      showToast(t('modernVideoEditor.clipGenerationFailed'), 'error')
     }
-  }, [transcript, videoId, showToast])
+  }, [transcript, videoId, showToast, t])
 
   const handleForgeMaster = useCallback(async (persona: string) => {
-    showToast(`Neural Forge Initiated: Persona ${persona.toUpperCase()}`, 'info')
+    showToast(t('modernVideoEditor.neuralForgeInitiated', { persona: persona.toUpperCase() }), 'info')
 
     // Step 1: Sequential Extraction (Simulation)
     await new Promise(r => setTimeout(r, 1500))
-    showToast('Forge: Viral Extraction Syncing...', 'info')
+    showToast(t('modernVideoEditor.forgeViralExtraction'), 'info')
 
     // Step 2: Apply Style Profile from DNA Vault
     if (styleProfiles.length > 0) {
@@ -1432,11 +1439,11 @@ const ModernVideoEditor: React.FC<{
     handleGenerateClips()
 
     await new Promise(r => setTimeout(r, 2000))
-    showToast('✦ Agentic Forge Complete: Master Revision Deployed', 'success')
-  }, [showToast, styleProfiles, handleApplyStyleProfile, handleGenerateClips])
+    showToast(t('modernVideoEditor.agenticForgeComplete'), 'success')
+  }, [showToast, styleProfiles, handleApplyStyleProfile, handleGenerateClips, t])
 
   const handleApplyClip = useCallback((clip: AutoEditClip) => {
-    showToast(`Applying Neural Pattern: ${clip.name}`, 'success')
+    showToast(t('modernVideoEditor.applyingNeuralPattern', { name: clip.name }), 'success')
 
     // Update timeline segments if the clip has them
     if (clip.segments && clip.segments.length > 0) {
@@ -1449,12 +1456,12 @@ const ModernVideoEditor: React.FC<{
 
     // Automatically switch to timeline view to see changes
     setActiveCategory('timeline')
-  }, [showToast, setTimelineSegments, setGeneratedMetadata, setEngagementScore, setActiveCategory])
+  }, [showToast, setTimelineSegments, setGeneratedMetadata, setEngagementScore, setActiveCategory, t])
 
   const processNeuralCommand = useCallback((instruction: string) => {
     if (!instruction.trim()) return
 
-    showToast('Neural Command Received', 'info')
+    showToast(t('modernVideoEditor.neuralCommandReceived'), 'info')
     const lower = String(instruction || '').toLowerCase()
 
     setTimeout(() => {
@@ -1463,19 +1470,19 @@ const ModernVideoEditor: React.FC<{
           ...prev,
           titles: {
             ...prev.titles,
-            seoWinner: `AI Optimized: ${prev.titles.seoWinner}`
+            seoWinner: t('modernVideoEditor.aiOptimizedPrefix', { title: prev.titles.seoWinner })
           }
         }) : null)
-        showToast('Metadata Recalibrated', 'success')
+        showToast(t('modernVideoEditor.metadataRecalibrated'), 'success')
       } else if (lower.includes('split') || lower.includes('cut')) {
-        showToast('Analyzing optimal cut points...', 'info')
+        showToast(t('modernVideoEditor.analyzingCutPoints'), 'info')
         // Mock split action
       } else if (lower.includes('caption') || lower.includes('overlay')) {
         setTextOverlays(prev => [
           ...prev,
           {
             id: `ai-overlay-${Date.now()}`,
-            text: 'NEURAL INSIGHT',
+            text: t('modernVideoEditor.neuralInsightText'),
             x: 50, y: 50, fontSize: 40, color: '#ffffff',
             fontFamily: 'Inter, sans-serif',
             startTime: videoState.currentTime,
@@ -1483,20 +1490,20 @@ const ModernVideoEditor: React.FC<{
             style: 'shadow'
           }
         ])
-        showToast('Dynamic Overlay Integrated', 'success')
+        showToast(t('modernVideoEditor.dynamicOverlayIntegrated'), 'success')
       } else {
-        showToast('Neural logic synthesized', 'success')
+        showToast(t('modernVideoEditor.neuralLogicSynthesized'), 'success')
       }
     }, 1000)
-  }, [showToast, videoState.currentTime])
+  }, [showToast, videoState.currentTime, t])
 
   const handleBeatSync = useCallback(() => {
     if (timelineSegments.length === 0) {
-      showToast('No segments to sync', 'error')
+      showToast(t('modernVideoEditor.noSegmentsToSync'), 'error')
       return
     }
 
-    showToast('Neural Beat-Sync: Analyzing Audio Transients...', 'info')
+    showToast(t('modernVideoEditor.beatSyncAnalyzing'), 'info')
 
     // Simulation of Transients/Beats (every 2.1s)
     const beats = [0.1, 2.2, 4.3, 6.4, 8.5, 10.6, 12.7, 14.8, 16.9]
@@ -1516,8 +1523,8 @@ const ModernVideoEditor: React.FC<{
       })
     })
 
-    showToast('✦ Neural Beat-Sync: Segments Aligned to Peaks', 'success')
-  }, [timelineSegments, showToast, setTimelineSegments])
+    showToast(t('modernVideoEditor.beatSyncAligned'), 'success')
+  }, [timelineSegments, showToast, setTimelineSegments, t])
 
   const handleUpdateOverlay = useCallback((type: string, id: string, updates: any) => {
     if (type === 'text') {
@@ -1534,7 +1541,7 @@ const ModernVideoEditor: React.FC<{
   }, [])
 
   const handleSegmentSelect = useCallback((id: string | null, addToSelection?: boolean) => {
-    const isTextOverlay = textOverlays.some(t => t.id === id)
+    const isTextOverlay = textOverlays.some(o => o.id === id)
     if (isTextOverlay) {
       setSelectedOverlayId(id)
       setSelectedSegmentIds([])
@@ -1548,10 +1555,10 @@ const ModernVideoEditor: React.FC<{
     }
   }, [textOverlays])
 
-  const handleTimeUpdate = useCallback((t: number) => {
+  const handleTimeUpdate = useCallback((time: number) => {
     const snapped = snapToKeyframes
-      ? getSnappedTime(t, selectedSegmentId, selectedEffectId, timelineSegments, timelineEffects)
-      : t
+      ? getSnappedTime(time, selectedSegmentId, selectedEffectId, timelineSegments, timelineEffects)
+      : time
     timeUpdatePendingRef.current = snapped
     const now = Date.now()
     const elapsed = now - timeUpdateLastApplyRef.current
@@ -1745,14 +1752,14 @@ const ModernVideoEditor: React.FC<{
       endTime: time + duration,
       duration,
       type: isAudio ? 'audio' : asset.type === 'broll' ? 'video' : 'image',
-      name: asset.title || asset.name || 'Asset',
+      name: asset.title || asset.name || t('modernVideoEditor.assetFallbackName'),
       color: asset.type === 'music' ? '#10B981' : asset.type === 'sfx' ? '#F97316' : '#F59E0B',
       track: trackIndex,
       sourceUrl: asset.url,
     }
     setTimelineSegments((prev: TimelineSegment[]) => [...prev, segment] as any)
-    showToast('Asset dropped to timeline', 'success')
-  }, [setTimelineSegments, showToast])
+    showToast(t('modernVideoEditor.assetDroppedToTimeline'), 'success')
+  }, [setTimelineSegments, showToast, t])
 
   const getCategoryContent = () => {
     switch (activeCategory) {
@@ -1766,7 +1773,7 @@ const ModernVideoEditor: React.FC<{
           endTime: b.endTime,
           duration: b.endTime - b.startTime,
           type: 'video' as const,
-          name: 'Magic B-Roll',
+          name: t('modernVideoEditor.magicBroll'),
           color: '#8b5cf6',
           track: 2,
           sourceUrl: b.url
@@ -1817,7 +1824,7 @@ const ModernVideoEditor: React.FC<{
       case 'timeline': return <AdvancedTimelineView useProfessionalTimeline={useProfessionalTimeline} setUseProfessionalTimeline={setUseProfessionalTimeline} videoState={videoState} setVideoState={setVideoState} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} selectedSegmentId={selectedSegmentId} onSegmentSelect={(id) => setSelectedSegmentIds(id ? [id] : [])} videoUrl={actualVideoUrl || ''} aiSuggestions={aiSuggestions} showAiPreviews={true} showToast={showToast} setActiveCategory={setActiveCategory} />
       case 'assets': return <AssetLibraryView currentTime={videoState.currentTime} videoDuration={videoState.duration} setTimelineSegments={setTimelineSegments} showToast={showToast} myBroll={userAssets.filter(a => a.type === 'broll')} myMusic={userAssets.filter(a => a.type === 'music')} />
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
-      case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} selectedSegmentId={selectedSegmentId} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} onSeek={(t) => setVideoState(prev => ({ ...prev, currentTime: t }))} />
+      case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} selectedSegmentId={selectedSegmentId} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))} />
       case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} timelineSegments={timelineSegments} videoFilters={videoFilters} videoDuration={videoState.duration} showToast={showToast} setActiveCategory={setActiveCategory} projectName={projectName} />
       case 'ai-analysis': return <AIAssistView
         videoId={videoId || ''}
@@ -1850,7 +1857,7 @@ const ModernVideoEditor: React.FC<{
               style: 'shadow',
             }
           ])
-          showToast('✦ Hook inserted to timeline at 0:00', 'success')
+          showToast(t('modernVideoEditor.hookInsertedToTimeline'), 'success')
           setActiveCategory('timeline')
         }}
       />
@@ -1860,9 +1867,9 @@ const ModernVideoEditor: React.FC<{
         showToast={showToast}
         onApplyHook={(start, end) => {
           setVideoState(prev => ({ ...prev, currentTime: start }))
-          showToast(`✓ Hook locked: ${start.toFixed(1)}s → ${end.toFixed(1)}s`, 'success')
+          showToast(t('modernVideoEditor.hookLocked', { start: start.toFixed(1), end: end.toFixed(1) }), 'success')
         }}
-        onApplyBeatCuts={(bpm) => showToast(`✓ Beat cuts queued at ${bpm} BPM`, 'success')}
+        onApplyBeatCuts={(bpm) => showToast(t('modernVideoEditor.beatCutsQueued', { bpm }), 'success')}
         onApplyOverlay={() => setActiveCategory('effects')}
         onApplyTrendingSound={() => setActiveCategory('assets')}
       />
@@ -1877,7 +1884,7 @@ const ModernVideoEditor: React.FC<{
         onApplyPack={(pack) => {
           // Forward-compatible: when the editor pipeline supports preset bundles, this
           // is where music + transitions + caption style + color grade get queued.
-          showToast(`✓ ${pack.name} ready — captions, music, color, transitions queued.`, 'success')
+          showToast(t('modernVideoEditor.packReady', { name: pack.name }), 'success')
         }}
       />
       case 'text-motion': return <TextMotionStudioView
@@ -1931,7 +1938,7 @@ const ModernVideoEditor: React.FC<{
                 : [...prev, updated]
               )
               setStyleVaultView('dashboard')
-              showToast('DNA Node Committed', 'success')
+              showToast(t('modernVideoEditor.dnaNodeCommitted'), 'success')
             }}
             onApply={handleApplyStyleProfile}
           />
@@ -1941,7 +1948,7 @@ const ModernVideoEditor: React.FC<{
           onTrainNew={() => {
             setTuningProfile({
               id: `style-${Date.now()}`,
-              name: 'New Neural DNA',
+              name: t('modernVideoEditor.newNeuralDna'),
               lastTrained: Date.now(),
               pacing: { medianClipLength: 5, jCutFrequency: 'medium', lCutFrequency: 'medium', cutOnSentence: true },
               visuals: { punchInFrequency: 10, punchInAmount: 12, defaultTransition: 'none' },
@@ -1994,7 +2001,7 @@ const ModernVideoEditor: React.FC<{
             const group = EDITOR_GROUPS.find(g => g.id === groupId)
             items.push({
               id: cat.id,
-              label: `Open ${cat.label}`,
+              label: t('modernVideoEditor.openCategory', { label: cat.label }),
               icon: cat.icon as LucideIcon,
               category: group?.label.toUpperCase() || 'EDITOR',
             })
@@ -2002,18 +2009,18 @@ const ModernVideoEditor: React.FC<{
           // Selection-aware actions
           if (selectedSegmentId) {
             items.unshift(
-              { id: '__split-at-playhead', label: 'Split clip at playhead', icon: Scissors, category: 'Action', shortcut: 'S' },
-              { id: '__ripple-delete', label: 'Ripple-delete selected clip(s)', icon: Trash2, category: 'Action', shortcut: 'X' },
-              { id: '__lock-segment', label: 'Toggle lock on selected clip', icon: Lock, category: 'Action' },
+              { id: '__split-at-playhead', label: t('modernVideoEditor.cmdSplitAtPlayhead'), icon: Scissors, category: t('modernVideoEditor.cmdCategoryAction'), shortcut: 'S' },
+              { id: '__ripple-delete', label: t('modernVideoEditor.cmdRippleDelete'), icon: Trash2, category: t('modernVideoEditor.cmdCategoryAction'), shortcut: 'X' },
+              { id: '__lock-segment', label: t('modernVideoEditor.cmdToggleLock'), icon: Lock, category: t('modernVideoEditor.cmdCategoryAction') },
             )
           }
           // Always-available editor actions
           items.unshift(
-            { id: '__layout-balanced', label: 'Layout: balanced', icon: Layers, category: 'View' },
-            { id: '__layout-preview',  label: 'Layout: focus preview', icon: Film, category: 'View' },
-            { id: '__layout-timeline', label: 'Layout: focus timeline', icon: Layers, category: 'View' },
-            { id: 'style-vault',       label: 'Open Style DNA Vault', icon: LayersIcon, category: 'Vault' },
-            { id: 'apply-style',       label: 'Apply Neural Style Template', icon: Sparkles, category: 'Vault' },
+            { id: '__layout-balanced', label: t('modernVideoEditor.cmdLayoutBalanced'), icon: Layers, category: t('modernVideoEditor.cmdCategoryView') },
+            { id: '__layout-preview',  label: t('modernVideoEditor.cmdLayoutPreview'), icon: Film, category: t('modernVideoEditor.cmdCategoryView') },
+            { id: '__layout-timeline', label: t('modernVideoEditor.cmdLayoutTimeline'), icon: Layers, category: t('modernVideoEditor.cmdCategoryView') },
+            { id: 'style-vault',       label: t('modernVideoEditor.cmdOpenStyleVault'), icon: LayersIcon, category: t('modernVideoEditor.cmdCategoryVault') },
+            { id: 'apply-style',       label: t('modernVideoEditor.cmdApplyStyleTemplate'), icon: Sparkles, category: t('modernVideoEditor.cmdCategoryVault') },
           )
           return items
         })()}
@@ -2040,9 +2047,9 @@ const ModernVideoEditor: React.FC<{
           if (id === 'apply-style') {
             if (styleProfiles.length > 0) {
               setTuningProfile(styleProfiles[0])
-              showToast('Applying Neural Template: ' + styleProfiles[0].name, 'success')
+              showToast(t('modernVideoEditor.applyingNeuralTemplate', { name: styleProfiles[0].name }), 'success')
             } else {
-              showToast('No trained DNA discovered yet', 'info')
+              showToast(t('modernVideoEditor.noTrainedDna'), 'info')
               setActiveCategory('style-vault')
               setStyleVaultView('train')
             }
@@ -2062,7 +2069,7 @@ const ModernVideoEditor: React.FC<{
         onNormalizeStyle={handleStyleNormalize}
         videoId={videoId ?? undefined}
         onSplitAtPlayhead={handleSplitAtPlayhead}
-        onSeek={(t) => setVideoState(prev => ({ ...prev, currentTime: t }))}
+        onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))}
       />
 
       {/* ── Horizontal chrome: sidebar + main ── */}
@@ -2156,7 +2163,7 @@ const ModernVideoEditor: React.FC<{
               <button
                 type="button"
                 onClick={() => setContentPanelCollapsed(p => !p)}
-                title={contentPanelCollapsed ? 'Show tool panel' : 'Hide tool panel'}
+                title={contentPanelCollapsed ? t('modernVideoEditor.showToolPanel') : t('modernVideoEditor.hideToolPanel')}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   contentPanelCollapsed
                     ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
@@ -2164,7 +2171,7 @@ const ModernVideoEditor: React.FC<{
                 }`}
               >
                 <Layers className="w-3 h-3" />
-                <span className="hidden sm:block">{contentPanelCollapsed ? 'Show Panel' : 'Hide Panel'}</span>
+                <span className="hidden sm:block">{contentPanelCollapsed ? t('modernVideoEditor.showPanel') : t('modernVideoEditor.hidePanel')}</span>
               </button>
 
               <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.05]">
@@ -2173,7 +2180,7 @@ const ModernVideoEditor: React.FC<{
                    type="button"
                     key={mode}
                     onClick={() => updateLayout({ focusMode: mode })}
-                    title={`${mode} layout`}
+                    title={t('modernVideoEditor.focusModeLayoutTitle', { mode: t(`modernVideoEditor.focusMode_${mode}`) })}
                     className={`px-2.5 h-5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${
                       layoutPrefs.focusMode === mode
                         ? 'bg-white text-black'
@@ -2181,7 +2188,7 @@ const ModernVideoEditor: React.FC<{
                     }`}
                   >
                     {mode === 'balanced' ? '⚖' : mode === 'preview' ? '🎬' : '🎵'}
-                    <span className="hidden lg:inline ml-1">{mode}</span>
+                    <span className="hidden lg:inline ml-1">{t(`modernVideoEditor.focusMode_${mode}`)}</span>
                   </button>
                 ))}
               </div>
@@ -2192,7 +2199,7 @@ const ModernVideoEditor: React.FC<{
                    type="button"
                     key={d}
                     onClick={() => updateLayout({ timelineDensity: d })}
-                    title={`${d} timeline density`}
+                    title={t('modernVideoEditor.densityTitle', { density: t(`modernVideoEditor.density_${d}`) })}
                     className={`px-2 h-5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${
                       layoutPrefs.timelineDensity === d
                         ? 'bg-white text-black'
@@ -2200,7 +2207,7 @@ const ModernVideoEditor: React.FC<{
                     }`}
                   >
                     {d === 'compact' ? '═' : d === 'comfortable' ? '≡' : '☰'}
-                    <span className="hidden xl:inline ml-1">{d.slice(0, 4)}</span>
+                    <span className="hidden xl:inline ml-1">{t(`modernVideoEditor.densityShort_${d}`)}</span>
                   </button>
                 ))}
               </div>
@@ -2213,13 +2220,13 @@ const ModernVideoEditor: React.FC<{
                   creatorPipeline.run({ videoId, withAutoEdit: false })
                     .then(r => {
                       if (r.suggestions?.suggestions?.length) {
-                        showToast?.(`Click composed ${r.suggestions.suggestions.length} next moves — see the AI panel.`, 'success')
+                        showToast?.(t('modernVideoEditor.clickComposedMoves', { count: r.suggestions.suggestions.length }), 'success')
                         setAssistantOpen(true)
                       }
                     })
-                    .catch((e: any) => showToast?.(`Pipeline failed: ${e?.message || 'unknown'}`, 'error'))
+                    .catch((e: any) => showToast?.(t('modernVideoEditor.pipelineFailed', { error: e?.message || 'unknown' }), 'error'))
                 }}
-                title="Run the niche-aware analysis → suggestions → posting-time pipeline"
+                title={t('modernVideoEditor.runPipelineTitle')}
                 className={`flex items-center gap-1.5 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   creatorPipeline.running
                     ? 'bg-violet-500/30 border-violet-500/50 text-violet-200 animate-pulse'
@@ -2227,7 +2234,7 @@ const ModernVideoEditor: React.FC<{
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Sparkles className="w-3 h-3" />
-                <span className="hidden sm:block">{creatorPipeline.running ? 'Working…' : 'Make it great'}</span>
+                <span className="hidden sm:block">{creatorPipeline.running ? t('modernVideoEditor.working') : t('modernVideoEditor.makeItGreat')}</span>
               </button>
 
               {creatorPipeline.running && creatorPipeline.stages.length > 0 && (
@@ -2254,7 +2261,7 @@ const ModernVideoEditor: React.FC<{
               <button
                 type="button"
                 onClick={() => setVideoState(prev => ({ ...prev, currentTime: Math.max(0, prev.currentTime - 5) }))}
-                title="Back 5s"
+                title={t('modernVideoEditor.back5s')}
                 className="w-7 h-7 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all text-[9px] font-black"
               >
                 ‹5
@@ -2262,7 +2269,7 @@ const ModernVideoEditor: React.FC<{
               <button
                 type="button"
                 onClick={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
-                title={videoState.isPlaying ? 'Pause' : 'Play'}
+                title={videoState.isPlaying ? t('modernVideoEditor.pause') : t('modernVideoEditor.play')}
                 className="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transition-all"
               >
                 {videoState.isPlaying
@@ -2272,7 +2279,7 @@ const ModernVideoEditor: React.FC<{
               <button
                 type="button"
                 onClick={() => setVideoState(prev => ({ ...prev, currentTime: Math.min(prev.duration, prev.currentTime + 5) }))}
-                title="Forward 5s"
+                title={t('modernVideoEditor.forward5s')}
                 className="w-7 h-7 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all text-[9px] font-black"
               >
                 5›
@@ -2283,48 +2290,48 @@ const ModernVideoEditor: React.FC<{
               <button
                 type="button"
                 onClick={() => setPropertiesPanelOpen(p => !p)}
-                title={propertiesPanelOpen ? 'Hide Properties' : 'Show Properties'}
+                title={propertiesPanelOpen ? t('modernVideoEditor.hideProperties') : t('modernVideoEditor.showProperties')}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   propertiesPanelOpen
                     ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
                     : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
                 }`}
               >
-                <span className="hidden sm:block">{propertiesPanelOpen ? 'Hide Props' : 'Show Props'}</span>
+                <span className="hidden sm:block">{propertiesPanelOpen ? t('modernVideoEditor.hideProps') : t('modernVideoEditor.showProps')}</span>
                 <Layers className="w-3 h-3 rotate-90" />
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowPerformanceRail(p => !p)}
-                title={showPerformanceRail ? 'Hide Insights' : 'Show Insights'}
+                title={showPerformanceRail ? t('modernVideoEditor.hideInsights') : t('modernVideoEditor.showInsights')}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   showPerformanceRail
                     ? 'bg-fuchsia-600/20 border-fuchsia-500/30 text-fuchsia-400 hover:bg-fuchsia-600/40'
                     : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
                 }`}
               >
-                <span className="hidden sm:block">{showPerformanceRail ? 'Hide Insights' : 'Show Insights'}</span>
+                <span className="hidden sm:block">{showPerformanceRail ? t('modernVideoEditor.hideInsights') : t('modernVideoEditor.showInsights')}</span>
                 <TrendingUp className="w-3 h-3" />
               </button>
 
               <button
                 type="button"
                 onClick={() => setInsightsSidebarCollapsed(p => !p)}
-                title={insightsSidebarCollapsed ? 'Show Expert' : 'Hide Expert'}
+                title={insightsSidebarCollapsed ? t('modernVideoEditor.showExpert') : t('modernVideoEditor.hideExpert')}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   !insightsSidebarCollapsed
                     ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
                     : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
                 }`}
               >
-                <span className="hidden sm:block">{insightsSidebarCollapsed ? 'Show Expert' : 'Hide Expert'}</span>
+                <span className="hidden sm:block">{insightsSidebarCollapsed ? t('modernVideoEditor.showExpert') : t('modernVideoEditor.hideExpert')}</span>
                 <BrainCircuit className="w-3 h-3 text-indigo-400" />
               </button>
 
               <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Uplink: Live</span>
+              <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">{t('modernVideoEditor.uplinkLive')}</span>
             </div>
           </div>
         </div>
@@ -2353,7 +2360,7 @@ const ModernVideoEditor: React.FC<{
                 <div
                   role="button"
                   tabIndex={0}
-                  aria-label="Close panel"
+                  aria-label={t('modernVideoEditor.closePanel')}
                   className="w-full h-11 flex items-center justify-center cursor-pointer shrink-0 touch-none active:bg-white/[0.03]"
                   onClick={() => setContentPanelCollapsed(true)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setContentPanelCollapsed(true) } }}
@@ -2374,7 +2381,7 @@ const ModernVideoEditor: React.FC<{
                               onClick={() => setActiveCategory('edit')}
                               className={`px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${!isAiCategory ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                             >
-                              Manual Edit
+                              {t('modernVideoEditor.manualEdit')}
                             </button>
                             <button
                               type="button"
@@ -2382,7 +2389,7 @@ const ModernVideoEditor: React.FC<{
                               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${isAiCategory ? 'bg-fuchsia-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                             >
                               <Sparkles className="w-3 h-3" />
-                              Neural Engine
+                              {t('modernVideoEditor.neuralEngine')}
                             </button>
                           </>
                         )
@@ -2444,7 +2451,7 @@ const ModernVideoEditor: React.FC<{
                   editingWords={editingWords}
                   captionStyle={captionStyle}
                   templateLayout={templateLayout}
-                  onTimeUpdate={(t: number) => setVideoState(prev => ({ ...prev, currentTime: t }))}
+                  onTimeUpdate={(time: number) => setVideoState(prev => ({ ...prev, currentTime: time }))}
                   onDurationChange={(d: number) => setVideoState(prev => ({ ...prev, duration: d }))}
                   onPlayPause={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
                   showBeforeAfter={showBeforeAfter}
@@ -2474,7 +2481,7 @@ const ModernVideoEditor: React.FC<{
                   <button
                     type="button"
                     onClick={() => setVideoState(prev => ({ ...prev, isMuted: !prev.isMuted }))}
-                    title={videoState.isMuted ? 'Unmute' : 'Mute'}
+                    title={videoState.isMuted ? t('modernVideoEditor.unmute') : t('modernVideoEditor.mute')}
                     className="text-slate-400 hover:text-white transition-colors text-[11px]"
                   >
                     {videoState.isMuted ? '🔇' : '🔊'}
@@ -2485,7 +2492,7 @@ const ModernVideoEditor: React.FC<{
                     value={videoState.isMuted ? 0 : videoState.volume}
                     onChange={e => setVideoState(prev => ({ ...prev, volume: parseFloat(e.target.value), isMuted: false }))}
                     className="w-16 h-1 accent-indigo-500 cursor-pointer"
-                    title="Volume"
+                    title={t('modernVideoEditor.volume')}
                   />
                   <div className="w-px h-4 bg-white/10" />
                   {/* Playback speed */}
@@ -2522,7 +2529,7 @@ const ModernVideoEditor: React.FC<{
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">Neural Engine</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">{t('modernVideoEditor.neuralEngine')}</span>
                   </div>
                   <div className="h-4 w-px bg-white/10 mx-2" />
                   <span className="text-xl font-black font-mono text-indigo-400 tabular-nums tracking-tighter">
@@ -2533,11 +2540,11 @@ const ModernVideoEditor: React.FC<{
                   <button
                     type="button"
                     onClick={() => setSnapToKeyframes((prev) => !prev)}
-                    title="Toggle neural snapping to keyframes"
+                    title={t('modernVideoEditor.toggleNeuralSnapping')}
                     className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${snapToKeyframes ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 border border-white/5 text-slate-500 hover:text-white'}`}
                   >
                     <Magnet className="w-3.5 h-3.5" />
-                    Neural Snap
+                    {t('modernVideoEditor.neuralSnap')}
                   </button>
                   <div className="flex gap-1.5 p-1 bg-white/[0.03] rounded-2xl border border-white/5">
                     {[0.5, 1, 2].map((s) => (
@@ -2545,7 +2552,7 @@ const ModernVideoEditor: React.FC<{
                         type="button"
                         key={s}
                         onClick={() => setPlaybackSpeed(s)}
-                        title={`Set playback speed to ${s}x`}
+                        title={t('modernVideoEditor.setPlaybackSpeed', { speed: s })}
                         className={`px-4 py-1.5 rounded-xl text-[10px] font-black transition-all ${playbackSpeed === s ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}
                       >
                         {s}X
@@ -2572,14 +2579,14 @@ const ModernVideoEditor: React.FC<{
                       selectedSegmentId={selectedSegmentId}
                       selectedSegmentIds={selectedSegmentIds}
                       onSegmentSelect={handleSegmentSelect}
-                      onSegmentDeleted={() => showToast('Segment purged', 'info')}
+                      onSegmentDeleted={() => showToast(t('modernVideoEditor.segmentPurged'), 'info')}
                       trackVisibility={trackVisibility}
                       onTrackVisibilityChange={(trackIndex, visible) => setTrackVisibility((prev) => ({ ...prev, [trackIndex]: visible }))}
                       effects={timelineEffects}
                       onEffectsChange={setTimelineEffects}
                       selectedEffectId={selectedEffectId}
                       onEffectSelect={setSelectedEffectId}
-                      onEffectDeleted={() => showToast('Effect purged', 'info')}
+                      onEffectDeleted={() => showToast(t('modernVideoEditor.effectPurged'), 'info')}
                       textOverlays={textOverlays}
                       onTextOverlaysChange={setTextOverlays}
                       imageOverlays={imageOverlays}
@@ -2594,7 +2601,7 @@ const ModernVideoEditor: React.FC<{
                 {assistantOpen && (
                   <AiTimelineChat 
                     onApplyLUT={(name) => setVideoFilters(prev => ({...prev, contrast: 120, saturation: 110, temperature: 95, vignette: 20}))}
-                    onChangeAspectRatio={() => showToast('Aspect ratio updated to 9:16 vertical', 'success')}
+                    onChangeAspectRatio={() => showToast(t('modernVideoEditor.aspectRatioUpdated'), 'success')}
                     onAddText={(text) => setTextOverlays(prev => [...prev, {
                       id: `ai-text-${Date.now()}`,
                       text, x: 50, y: 50, fontSize: 64, color: '#ffffff', fontFamily: 'Inter, sans-serif', startTime: videoState.currentTime, endTime: videoState.currentTime + 3, style: 'bold-kinetic', shadowColor: 'rgba(0,0,0,0.5)', animationIn: 'pop', animationOut: 'fade', animationInDuration: 0.15, animationOutDuration: 0.2, layer: 10
@@ -2638,7 +2645,7 @@ const ModernVideoEditor: React.FC<{
             videoTransformKeyframes={videoTransformKeyframes}
             setVideoTransformKeyframes={setVideoTransformKeyframes}
             currentTime={videoState.currentTime}
-            onTimeUpdate={(t: number) => setVideoState(prev => ({ ...prev, currentTime: t }))}
+            onTimeUpdate={(time: number) => setVideoState(prev => ({ ...prev, currentTime: time }))}
             timelineSegments={timelineSegments}
             setTimelineSegments={setTimelineSegments}
             selectedSegmentId={selectedSegmentId}
@@ -2681,17 +2688,17 @@ const ModernVideoEditor: React.FC<{
                 )}
               onUpdateText={(id, updates) =>
                 setTextOverlays(prev =>
-                  prev.map(t => (t.id === id ? { ...t, ...updates } : t))
+                  prev.map(o => (o.id === id ? { ...o, ...updates } : o))
                 )}
               onDeleteSegment={(id) => {
                 setTimelineSegments((prev: TimelineSegment[]) => prev.filter((s: TimelineSegment) => s.id !== id))
                 setSelectedSegmentIds([])
-                showToast('Clip removed', 'info')
+                showToast(t('modernVideoEditor.clipRemoved'), 'info')
               }}
               onDeleteText={(id) => {
-                setTextOverlays(prev => prev.filter(t => t.id !== id))
+                setTextOverlays(prev => prev.filter(o => o.id !== id))
                 setSelectedOverlayId(null)
-                showToast('Text removed', 'info')
+                showToast(t('modernVideoEditor.textRemoved'), 'info')
               }}
               onClose={() => { setSelectedSegmentIds([]); setSelectedOverlayId(null) }}
             />
@@ -2704,24 +2711,24 @@ const ModernVideoEditor: React.FC<{
               <PerformanceRail
                 onApplyFont={(fontKey) => {
                   if (textOverlays.length === 0) return
-                  setTextOverlays(prev => prev.map((t, i) =>
-                    i === prev.length - 1 ? { ...t, fontFamily: fontKey } : t
+                  setTextOverlays(prev => prev.map((o, i) =>
+                    i === prev.length - 1 ? { ...o, fontFamily: fontKey } : o
                   ))
-                  showToast?.(`Applied top-performing font`, 'success')
+                  showToast?.(t('modernVideoEditor.appliedTopPerformingFont'), 'success')
                 }}
                 onApplyCaptionStyle={(styleKey) => {
                   if (textOverlays.length === 0) return
-                  setTextOverlays(prev => prev.map((t, i) =>
-                    i === prev.length - 1 ? { ...t, style: styleKey as any } : t
+                  setTextOverlays(prev => prev.map((o, i) =>
+                    i === prev.length - 1 ? { ...o, style: styleKey as any } : o
                   ))
-                  showToast?.(`Applied top-performing caption style`, 'success')
+                  showToast?.(t('modernVideoEditor.appliedTopPerformingCaptionStyle'), 'success')
                 }}
                 onApplyMotion={(motionKey) => {
                   if (textOverlays.length === 0) return
-                  setTextOverlays(prev => prev.map((t, i) =>
-                    i === prev.length - 1 ? { ...t, motionGraphic: motionKey as any } : t
+                  setTextOverlays(prev => prev.map((o, i) =>
+                    i === prev.length - 1 ? { ...o, motionGraphic: motionKey as any } : o
                   ))
-                  showToast?.(`Applied top-performing motion`, 'success')
+                  showToast?.(t('modernVideoEditor.appliedTopPerformingMotion'), 'success')
                 }}
               />
             </div>

@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslation } from '@/hooks/useTranslation'
+
 interface KeyboardShortcut {
   key: string
   ctrl?: boolean
@@ -178,6 +180,7 @@ export default function KeyboardShortcuts({ shortcuts = [], enabled = true }: Ke
 }
 
 export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardShortcutsHelpProps) {
+  const { t } = useTranslation()
   if (!isOpen) return null
 
   // Group shortcuts by category
@@ -205,11 +208,12 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">
-              Keyboard Shortcuts
+              {t('keyboardShortcuts.title')}
             </h2>
             <button
               type="button"
               onClick={onClose}
+              aria-label={t('keyboardShortcuts.close')}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,7 +222,7 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
             </button>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Master your workflow with these keyboard shortcuts
+            {t('keyboardShortcuts.subtitle')}
           </p>
         </div>
 
@@ -250,8 +254,8 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>Tip: Shortcuts work when not typing in text fields</span>
-            <span>Press <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">?</kbd> to show this dialog</span>
+            <span>{t('keyboardShortcuts.tip')}</span>
+            <span>{t('keyboardShortcuts.pressTo')} <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">?</kbd> {t('keyboardShortcuts.toShowDialog')}</span>
           </div>
         </div>
       </div>

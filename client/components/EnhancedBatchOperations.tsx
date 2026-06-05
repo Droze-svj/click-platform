@@ -4,6 +4,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import ExportImportModal from './ExportImportModal'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -27,6 +28,7 @@ export default function EnhancedBatchOperations({
   onSelectionChange,
   folders = []
 }: EnhancedBatchOperationsProps) {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const [operation, setOperation] = useState<'delete' | 'export' | 'import' | 'tag' | 'folder' | null>(null)
   const [loading, setLoading] = useState(false)
@@ -41,7 +43,7 @@ export default function EnhancedBatchOperations({
   }
 
   const handleBatchDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedItems.length} items? This action cannot be undone.`)) {
+    if (!confirm(t('enhancedBatchOperations.confirmDelete', { count: selectedItems.length }))) {
       return
     }
 
@@ -63,11 +65,11 @@ export default function EnhancedBatchOperations({
       await axios.post(endpoint, body, {
       })
 
-      showToast(`Deleted ${selectedItems.length} items successfully`, 'success')
+      showToast(t('enhancedBatchOperations.deletedSuccess', { count: selectedItems.length }), 'success')
       onSelectionChange?.([])
       onComplete()
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to delete items', 'error')
+      showToast(error.response?.data?.error || t('enhancedBatchOperations.failedDelete'), 'error')
     } finally {
       setLoading(false)
       setOperation(null)
@@ -76,7 +78,7 @@ export default function EnhancedBatchOperations({
 
   const handleBatchTag = async () => {
     if (!newTag.trim()) {
-      showToast('Please enter a tag', 'error')
+      showToast(t('enhancedBatchOperations.pleaseEnterTag'), 'error')
       return
     }
 
@@ -89,12 +91,12 @@ export default function EnhancedBatchOperations({
         { contentIds: selectedItems, tags: [newTag.trim()], action: 'add' },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      showToast(`Added tag "${newTag}" to ${selectedItems.length} items`, 'success')
+      showToast(t('enhancedBatchOperations.tagAdded', { tag: newTag, count: selectedItems.length }), 'success')
       setNewTag('')
       setShowTagModal(false)
       onComplete()
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to add tags', 'error')
+      showToast(error.response?.data?.error || t('enhancedBatchOperations.failedAddTags'), 'error')
     } finally {
       setLoading(false)
     }
@@ -102,7 +104,7 @@ export default function EnhancedBatchOperations({
 
   const handleBatchFolder = async () => {
     if (!selectedFolder) {
-      showToast('Please select a folder', 'error')
+      showToast(t('enhancedBatchOperations.pleaseSelectFolder'), 'error')
       return
     }
 
@@ -118,12 +120,12 @@ export default function EnhancedBatchOperations({
         },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      showToast(`Moved ${selectedItems.length} items to folder`, 'success')
+      showToast(t('enhancedBatchOperations.movedToFolder', { count: selectedItems.length }), 'success')
       setSelectedFolder('')
       setShowFolderModal(false)
       onComplete()
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to move items', 'error')
+      showToast(error.response?.data?.error || t('enhancedBatchOperations.failedMove'), 'error')
     } finally {
       setLoading(false)
     }
@@ -135,14 +137,16 @@ export default function EnhancedBatchOperations({
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''} selected
+              {selectedItems.length === 1
+                ? t('enhancedBatchOperations.itemsSelected', { count: selectedItems.length })
+                : t('enhancedBatchOperations.itemsSelectedPlural', { count: selectedItems.length })}
             </span>
             <button
               type="button"
               onClick={() => onSelectionChange?.([])}
               className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
             >
-              Clear
+              {t('enhancedBatchOperations.clear')}
             </button>
           </div>
 
@@ -152,21 +156,21 @@ export default function EnhancedBatchOperations({
               onClick={() => setShowExportImport(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
             >
-              📤 Export
+              📤 {t('enhancedBatchOperations.export')}
             </button>
             <button
               type="button"
               onClick={() => setShowTagModal(true)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
             >
-              🏷️ Add Tag
+              🏷️ {t('enhancedBatchOperations.addTag')}
             </button>
             <button
               type="button"
               onClick={() => { setShowFolderModal(true); setSelectedFolder('none') }}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
             >
-              📁 Move to Folder
+              📁 {t('enhancedBatchOperations.moveToFolder')}
             </button>
             <button
               type="button"
@@ -174,7 +178,7 @@ export default function EnhancedBatchOperations({
               disabled={loading}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm disabled:opacity-50"
             >
-              🗑️ Delete
+              🗑️ {t('enhancedBatchOperations.delete')}
             </button>
           </div>
         </div>
@@ -194,12 +198,12 @@ export default function EnhancedBatchOperations({
       {showTagModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-xl font-semibold mb-4">Add Tag</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('enhancedBatchOperations.addTag')}</h3>
             <input
               type="text"
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              placeholder="Enter tag name"
+              placeholder={t('enhancedBatchOperations.enterTagName')}
               className="w-full px-4 py-2 border rounded-lg mb-4"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -216,7 +220,7 @@ export default function EnhancedBatchOperations({
                 }}
                 className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                Cancel
+                {t('enhancedBatchOperations.cancel')}
               </button>
               <button
                 type="button"
@@ -224,7 +228,7 @@ export default function EnhancedBatchOperations({
                 disabled={loading || !newTag.trim()}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                Add Tag
+                {t('enhancedBatchOperations.addTag')}
               </button>
             </div>
           </div>
@@ -235,13 +239,13 @@ export default function EnhancedBatchOperations({
       {showFolderModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-xl font-semibold mb-4">Move to Folder</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('enhancedBatchOperations.moveToFolder')}</h3>
             <select
               value={selectedFolder}
               onChange={(e) => setSelectedFolder(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg mb-4"
             >
-              <option value="none">No Folder</option>
+              <option value="none">{t('enhancedBatchOperations.noFolder')}</option>
               {folders.map((f) => (
                 <option key={f._id} value={f._id}>{f.name}</option>
               ))}
@@ -255,7 +259,7 @@ export default function EnhancedBatchOperations({
                 }}
                 className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                Cancel
+                {t('enhancedBatchOperations.cancel')}
               </button>
               <button
                 type="button"
@@ -263,7 +267,7 @@ export default function EnhancedBatchOperations({
                 disabled={loading}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
               >
-                Move
+                {t('enhancedBatchOperations.move')}
               </button>
             </div>
           </div>

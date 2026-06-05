@@ -1,6 +1,7 @@
 'use client'
 
 import { Inbox, Plus, Sparkles, ArrowRight } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface EmptyStateProps {
   title: string
@@ -21,6 +22,7 @@ export default function EmptyState({
   suggestions = [],
   illustration
 }: EmptyStateProps) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       {/* Illustration or Icon */}
@@ -55,7 +57,7 @@ export default function EmptyState({
       {suggestions.length > 0 && (
         <div className="w-full max-w-md mb-6">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3 text-center">
-            Quick suggestions:
+            {t('emptyState.quickSuggestions')}
           </p>
           <div className="space-y-2">
             {suggestions.map((suggestion, index) => (

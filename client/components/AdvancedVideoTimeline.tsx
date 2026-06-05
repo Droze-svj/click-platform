@@ -22,6 +22,7 @@ import {
   Save,
   Download
 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TimelineSegment {
   id: string
@@ -78,6 +79,7 @@ export default function AdvancedVideoTimeline({
   onKeyframeDelete,
   className = ''
 }: AdvancedVideoTimelineProps) {
+  const { t } = useTranslation()
   const timelineRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
   const [scrollLeft, setScrollLeft] = useState(0)
@@ -246,7 +248,7 @@ export default function AdvancedVideoTimeline({
       {/* Timeline Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">Advanced Timeline</h3>
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">{t('advancedVideoTimeline.advancedTimeline')}</h3>
           <div className="flex items-center gap-2">
             <button type="button" onClick={handleZoomOut} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
               <ZoomOut className="w-4 h-4" />
@@ -266,16 +268,16 @@ export default function AdvancedVideoTimeline({
         {/* Add Segment Controls */}
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Track:</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('advancedVideoTimeline.trackLabel')}</span>
             <select
               value={selectedTrack}
               onChange={(e) => setSelectedTrack(parseInt(e.target.value))}
               className="px-2 py-1 border rounded text-sm bg-white dark:bg-gray-900"
             >
               {visibleTracks.map(track => (
-                <option key={track} value={track}>Track {track + 1}</option>
+                <option key={track} value={track}>{t('advancedVideoTimeline.trackNumber', { number: track + 1 })}</option>
               ))}
-              <option value={visibleTracks.length}>New Track</option>
+              <option value={visibleTracks.length}>{t('advancedVideoTimeline.newTrack')}</option>
             </select>
           </div>
           <div className="flex gap-1">
@@ -284,28 +286,28 @@ export default function AdvancedVideoTimeline({
               onClick={() => addSegment('video')}
               className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
             >
-              + Video
+              {t('advancedVideoTimeline.addVideo')}
             </button>
             <button
               type="button"
               onClick={() => addSegment('audio')}
               className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
             >
-              + Audio
+              {t('advancedVideoTimeline.addAudio')}
             </button>
             <button
               type="button"
               onClick={() => addSegment('text')}
               className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
             >
-              + Text
+              {t('advancedVideoTimeline.addText')}
             </button>
             <button
               type="button"
               onClick={() => addSegment('transition')}
               className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-700"
             >
-              + Transition
+              {t('advancedVideoTimeline.addTransition')}
             </button>
           </div>
         </div>
@@ -361,7 +363,7 @@ export default function AdvancedVideoTimeline({
             {/* Track Header */}
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 flex items-center justify-between px-2">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Track {track + 1}
+                {t('advancedVideoTimeline.trackNumber', { number: track + 1 })}
               </span>
               <button
                 type="button"
@@ -437,16 +439,16 @@ export default function AdvancedVideoTimeline({
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Duration: {formatTime(duration)} | Segments: {segments.length} | Tracks: {visibleTracks.length}
+            {t('advancedVideoTimeline.footerSummary', { duration: formatTime(duration), segments: segments.length, tracks: visibleTracks.length })}
           </div>
           <div className="flex gap-2">
             <button className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
               <Save className="w-4 h-4 inline mr-1" />
-              Save Project
+              {t('advancedVideoTimeline.saveProject')}
             </button>
             <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
               <Download className="w-4 h-4 inline mr-1" />
-              Export
+              {t('advancedVideoTimeline.export')}
             </button>
           </div>
         </div>

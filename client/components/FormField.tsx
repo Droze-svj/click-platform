@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { AlertCircle, CheckCircle, Eye, EyeOff, Hash, Lock, Mail, Type } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface FormFieldProps {
   label: string
@@ -45,6 +46,7 @@ export default function FormField({
   showPasswordToggle = false,
   rows = 4
 }: FormFieldProps) {
+  const { t } = useTranslation()
   const [touched, setTouched] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -66,11 +68,11 @@ export default function FormField({
 
       return () => clearTimeout(timer)
     } else if (touched && !value && required) {
-      setValidationError('This field is required')
+      setValidationError(t('formField.fieldRequired'))
     } else {
       setValidationError(null)
     }
-  }, [value, touched, validate, required])
+  }, [value, touched, validate, required, t])
 
   const displayError = error || validationError
   const hasError = touched && displayError
@@ -157,7 +159,7 @@ export default function FormField({
            type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-6 top-1/2 -translate-y-1/2 text-surface-300 dark:text-slate-800 hover:text-primary-500 transition-colors border-none bg-transparent"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? t('formField.hidePassword') : t('formField.showPassword')}
           >
             {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
           </button>
@@ -178,7 +180,7 @@ export default function FormField({
       {/* Character counter */}
       {maxLength && (
         <div className="mt-2 text-[9px] font-black text-surface-300 dark:text-slate-800 text-right uppercase tracking-widest italic">
-          {value.length} / {maxLength} BITS_DATA
+          {value.length} / {maxLength} {t('formField.bitsData')}
         </div>
       )}
 

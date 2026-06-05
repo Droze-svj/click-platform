@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useDebounce } from '../hooks/useDebounce'
+import { useTranslation } from '@/hooks/useTranslation'
 import axios from 'axios'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
@@ -12,7 +13,8 @@ interface SearchBarProps {
   type?: 'content' | 'scripts'
 }
 
-export default function SearchBar({ onSearch, placeholder = 'Search...', type = 'content' }: SearchBarProps) {
+export default function SearchBar({ onSearch, placeholder, type = 'content' }: SearchBarProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState<Array<{ id: string; text: string }>>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -79,7 +81,7 @@ export default function SearchBar({ onSearch, placeholder = 'Search...', type = 
               setShowSuggestions(true)
             }
           }}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('searchBar.placeholder')}
           className="w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
         <svg
@@ -97,6 +99,7 @@ export default function SearchBar({ onSearch, placeholder = 'Search...', type = 
               setQuery('')
               onSearch('')
             }}
+            aria-label={t('searchBar.clear')}
             className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
           >
             ✕

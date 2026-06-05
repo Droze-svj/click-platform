@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, Command, Zap, Cpu, Palette, Sliders, Type, Download, Film, Layers as LayersIcon, Sparkles, type LucideIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export interface CommandKItem {
   id: string
@@ -24,21 +25,22 @@ interface CommandKProps {
   commands?: CommandKItem[]
 }
 
-const DEFAULT_COMMANDS: CommandKItem[] = [
-  { id: 'ai-edit', label: 'Start AI Semantic Edit', icon: Cpu, category: 'AI', shortcut: 'A' },
-  { id: 'short-clips', label: 'Short Clips (Reels, Shorts, TikTok)', icon: Film, category: 'Production', shortcut: 'S' },
-  { id: 'transcribe', label: 'Analyze Audio & transcribe', icon: Zap, category: 'AI', shortcut: 'T' },
-  { id: 'color', label: 'Apply Cinema Grade', icon: Palette, category: 'Visuals', shortcut: 'C' },
-  { id: 'text', label: 'Add Motion Title', icon: Type, category: 'Visuals', shortcut: 'M' },
-  { id: 'style-vault', label: 'Open Style DNA Vault', icon: LayersIcon, category: 'Vault', shortcut: 'V' },
-  { id: 'apply-style', label: 'Apply Neural Style Template', icon: Sparkles, category: 'Vault', shortcut: 'S' },
-  { id: 'export', label: 'Initialize 4K Render', icon: Download, category: 'Production', shortcut: 'E' },
-]
-
 const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, commands }) => {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const DEFAULT_COMMANDS: CommandKItem[] = [
+    { id: 'ai-edit', label: t('commandK.cmdAiEdit'), icon: Cpu, category: t('commandK.categoryAi'), shortcut: 'A' },
+    { id: 'short-clips', label: t('commandK.cmdShortClips'), icon: Film, category: t('commandK.categoryProduction'), shortcut: 'S' },
+    { id: 'transcribe', label: t('commandK.cmdTranscribe'), icon: Zap, category: t('commandK.categoryAi'), shortcut: 'T' },
+    { id: 'color', label: t('commandK.cmdColor'), icon: Palette, category: t('commandK.categoryVisuals'), shortcut: 'C' },
+    { id: 'text', label: t('commandK.cmdText'), icon: Type, category: t('commandK.categoryVisuals'), shortcut: 'M' },
+    { id: 'style-vault', label: t('commandK.cmdStyleVault'), icon: LayersIcon, category: t('commandK.categoryVault'), shortcut: 'V' },
+    { id: 'apply-style', label: t('commandK.cmdApplyStyle'), icon: Sparkles, category: t('commandK.categoryVault'), shortcut: 'S' },
+    { id: 'export', label: t('commandK.cmdExport'), icon: Download, category: t('commandK.categoryProduction'), shortcut: 'E' },
+  ]
 
   useEffect(() => {
     if (isOpen) {
@@ -94,7 +96,7 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, command
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Type a command or search..."
+                placeholder={t('commandK.searchPlaceholder')}
                 className="flex-1 bg-transparent border-none text-theme-primary text-lg focus:ring-0 placeholder:text-theme-muted font-medium"
                 value={query}
                 onChange={(e) => {
@@ -135,17 +137,17 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, command
                 </div>
               ) : (
                 <div className="p-12 text-center">
-                  <p className="text-theme-muted text-sm font-medium italic">No commands found for &quot;{query}&quot;</p>
+                  <p className="text-theme-muted text-sm font-medium italic">{t('commandK.noResults', { query })}</p>
                 </div>
               )}
             </div>
 
             <div className="p-3 bg-black/40 border-t border-white/5 flex items-center justify-between text-[10px] font-black uppercase tracking-[2px] text-gray-500">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5"><Sliders className="w-3 h-3" /> Select</div>
-                <div className="flex items-center gap-1.5"><Command className="w-3 h-3" /> Execute</div>
+                <div className="flex items-center gap-1.5"><Sliders className="w-3 h-3" /> {t('commandK.select')}</div>
+                <div className="flex items-center gap-1.5"><Command className="w-3 h-3" /> {t('commandK.execute')}</div>
               </div>
-              <div className="opacity-40">Click V3 Neural Interface</div>
+              <div className="opacity-40">{t('commandK.footerLabel')}</div>
             </div>
           </motion.div>
         </div>

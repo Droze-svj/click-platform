@@ -16,6 +16,7 @@ import {
   Eye,
 } from 'lucide-react'
 import { extractApiData } from '../utils/apiResponse'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface PerformancePrediction {
   estimatedViews: {
@@ -81,6 +82,7 @@ export default function PredictiveAnalyticsDashboard({
   timelineSegments,
   videoDuration = 60,
 }: PredictiveAnalyticsDashboardProps) {
+  const { t } = useTranslation()
   const [prediction, setPrediction] = useState<PerformancePrediction | null>(null)
   const [audienceGrowth, setAudienceGrowth] = useState<AudienceGrowthPrediction | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -127,10 +129,10 @@ export default function PredictiveAnalyticsDashboard({
         }
       } else {
         const errorData = await response.json()
-        setError(errorData.message || 'Failed to load predictions')
+        setError(errorData.message || t('predictiveAnalyticsDashboard.failedToLoadPredictions'))
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load predictions')
+      setError(err.message || t('predictiveAnalyticsDashboard.failedToLoadPredictions'))
     } finally {
       setIsLoading(false)
     }
@@ -220,7 +222,7 @@ export default function PredictiveAnalyticsDashboard({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8">
         <div className="flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-gray-600 dark:text-gray-400">Loading predictions...</span>
+          <span className="ml-3 text-gray-600 dark:text-gray-400">{t('predictiveAnalyticsDashboard.loadingPredictions')}</span>
         </div>
       </div>
     )
@@ -242,7 +244,7 @@ export default function PredictiveAnalyticsDashboard({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
         <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600 dark:text-gray-400">
-          Select content to view performance predictions
+          {t('predictiveAnalyticsDashboard.selectContentToView')}
         </p>
       </div>
     )
@@ -258,16 +260,16 @@ export default function PredictiveAnalyticsDashboard({
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-                  Performance Prediction
+                  {t('predictiveAnalyticsDashboard.performancePrediction')}
                 </h3>
               </div>
               <div className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreBg(prediction.performanceScore)} ${getScoreColor(prediction.performanceScore)}`}>
-                Score: {prediction.performanceScore}/100
+                {t('predictiveAnalyticsDashboard.scoreOutOf', { score: prediction.performanceScore })}
               </div>
             </div>
             <div className="mt-2">
               <span className={`text-sm ${getConfidenceColor(prediction.confidence)}`}>
-                Confidence: {prediction.confidence.charAt(0).toUpperCase() + prediction.confidence.slice(1)}
+                {t('predictiveAnalyticsDashboard.confidenceLabel', { confidence: prediction.confidence.charAt(0).toUpperCase() + prediction.confidence.slice(1) })}
               </span>
             </div>
           </div>
@@ -279,14 +281,14 @@ export default function PredictiveAnalyticsDashboard({
                 <div className="flex items-center gap-2 mb-2">
                   <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Estimated Views
+                    {t('predictiveAnalyticsDashboard.estimatedViews')}
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {prediction.estimatedViews.expected.toLocaleString()}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Range: {prediction.estimatedViews.min.toLocaleString()} - {prediction.estimatedViews.max.toLocaleString()}
+                  {t('predictiveAnalyticsDashboard.range', { min: prediction.estimatedViews.min.toLocaleString(), max: prediction.estimatedViews.max.toLocaleString() })}
                 </div>
               </div>
 
@@ -295,14 +297,14 @@ export default function PredictiveAnalyticsDashboard({
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Estimated Engagement
+                    {t('predictiveAnalyticsDashboard.estimatedEngagement')}
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {prediction.estimatedEngagement.expected.toLocaleString()}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Rate: {(prediction.estimatedEngagement.rate * 100).toFixed(1)}%
+                  {t('predictiveAnalyticsDashboard.rate', { rate: (prediction.estimatedEngagement.rate * 100).toFixed(1) })}
                 </div>
               </div>
 
@@ -311,14 +313,14 @@ export default function PredictiveAnalyticsDashboard({
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Estimated Reach
+                    {t('predictiveAnalyticsDashboard.estimatedReach')}
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {prediction.estimatedReach.expected.toLocaleString()}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Range: {prediction.estimatedReach.min.toLocaleString()} - {prediction.estimatedReach.max.toLocaleString()}
+                  {t('predictiveAnalyticsDashboard.range', { min: prediction.estimatedReach.min.toLocaleString(), max: prediction.estimatedReach.max.toLocaleString() })}
                 </div>
               </div>
             </div>
@@ -328,14 +330,14 @@ export default function PredictiveAnalyticsDashboard({
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Optimal Posting Time
+                  {t('predictiveAnalyticsDashboard.optimalPostingTime')}
                 </span>
               </div>
               <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
                 {formatTime(prediction.optimalPostingTime.hour, prediction.optimalPostingTime.minute)}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Confidence: {prediction.optimalPostingTime.confidence}
+                {t('predictiveAnalyticsDashboard.confidenceLabel', { confidence: prediction.optimalPostingTime.confidence })}
               </div>
             </div>
 
@@ -343,7 +345,7 @@ export default function PredictiveAnalyticsDashboard({
             {prediction.recommendations && prediction.recommendations.length > 0 && (
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3">
-                  Recommendations
+                  {t('predictiveAnalyticsDashboard.recommendations')}
                 </h4>
                 <div className="space-y-2">
                   {prediction.recommendations.map((rec, index) => (
@@ -388,7 +390,7 @@ export default function PredictiveAnalyticsDashboard({
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-                Audience Growth Forecast
+                {t('predictiveAnalyticsDashboard.audienceGrowthForecast')}
               </h3>
             </div>
           </div>
@@ -403,7 +405,7 @@ export default function PredictiveAnalyticsDashboard({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Current Reach
+                      {t('predictiveAnalyticsDashboard.currentReach')}
                     </div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
                       {audienceGrowth.current.toLocaleString()}
@@ -411,7 +413,7 @@ export default function PredictiveAnalyticsDashboard({
                   </div>
                   <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Predicted (30 days)
+                      {t('predictiveAnalyticsDashboard.predicted30Days')}
                     </div>
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {audienceGrowth.predicted.toLocaleString()}
@@ -421,7 +423,7 @@ export default function PredictiveAnalyticsDashboard({
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Growth Rate
+                      {t('predictiveAnalyticsDashboard.growthRate')}
                     </span>
                     <span className={`text-lg font-bold ${
                       audienceGrowth.growthRate > 0
@@ -434,12 +436,12 @@ export default function PredictiveAnalyticsDashboard({
                   </div>
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Confidence: {audienceGrowth.confidence}
+                  {t('predictiveAnalyticsDashboard.confidenceLabel', { confidence: audienceGrowth.confidence })}
                 </div>
               </div>
             ) : (
               <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                No growth data available
+                {t('predictiveAnalyticsDashboard.noGrowthData')}
               </div>
             )}
           </div>
@@ -454,7 +456,7 @@ export default function PredictiveAnalyticsDashboard({
               <div className="flex items-center gap-2">
                 <Flame className="w-5 h-5 text-orange-500" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-                  Pre-Export Retention Heatmap
+                  {t('predictiveAnalyticsDashboard.preExportRetentionHeatmap')}
                 </h3>
               </div>
               {heatmapSummary && (
@@ -464,13 +466,13 @@ export default function PredictiveAnalyticsDashboard({
                     heatmapSummary.avgScore >= 55 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
                     'bg-red-100 dark:bg-red-900/30 text-red-600'
                   }`}>
-                    Avg {heatmapSummary.avgScore}%
+                    {t('predictiveAnalyticsDashboard.avgScore', { score: heatmapSummary.avgScore })}
                   </div>
                 </div>
               )}
             </div>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              AI scores each timeline window for predicted viewer drop-off before you export.
+              {t('predictiveAnalyticsDashboard.heatmapSubtitle')}
             </p>
           </div>
 
@@ -478,7 +480,7 @@ export default function PredictiveAnalyticsDashboard({
             {heatmapLoading ? (
               <div className="flex items-center gap-3 py-8 justify-center">
                 <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
-                <span className="text-sm text-gray-500">Analyzing retention…</span>
+                <span className="text-sm text-gray-500">{t('predictiveAnalyticsDashboard.analyzingRetention')}</span>
               </div>
             ) : retentionHeatmap.length > 0 ? (
               <div className="space-y-4">
@@ -498,7 +500,7 @@ export default function PredictiveAnalyticsDashboard({
                           fill={fill}
                           opacity={zone.level === 'low' ? 0.85 : 0.55}
                         >
-                          <title>{zone.timeStart}s–{zone.timeEnd}s: {zone.score}% retention</title>
+                          <title>{t('predictiveAnalyticsDashboard.zoneRetention', { start: zone.timeStart, end: zone.timeEnd, score: zone.score })}</title>
                         </rect>
                       )
                     })}
@@ -523,9 +525,9 @@ export default function PredictiveAnalyticsDashboard({
 
                 {/* Legend */}
                 <div className="flex items-center gap-4 text-[10px] text-gray-500">
-                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-emerald-400 inline-block" />High retention</div>
-                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />Medium</div>
-                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-400 inline-block" />Drop zone</div>
+                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-emerald-400 inline-block" />{t('predictiveAnalyticsDashboard.highRetention')}</div>
+                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />{t('predictiveAnalyticsDashboard.medium')}</div>
+                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-400 inline-block" />{t('predictiveAnalyticsDashboard.dropZone')}</div>
                 </div>
 
                 {/* Warnings */}
@@ -534,7 +536,7 @@ export default function PredictiveAnalyticsDashboard({
                     <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                        ⚠ {zone.timeStart}s–{zone.timeEnd}s ({zone.score}% retention)
+                        {t('predictiveAnalyticsDashboard.zoneWarning', { start: zone.timeStart, end: zone.timeEnd, score: zone.score })}
                       </span>
                       {zone.warnings.map((w, wi) => (
                         <p key={wi} className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">{w}</p>
@@ -546,7 +548,7 @@ export default function PredictiveAnalyticsDashboard({
             ) : (
               <div className="text-center py-8 text-gray-400">
                 <Eye className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Add timeline segments to see the heatmap</p>
+                <p className="text-sm">{t('predictiveAnalyticsDashboard.addTimelineSegments')}</p>
               </div>
             )}
           </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { FolderPlus, Folder, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Collection {
   _id: string
@@ -28,6 +29,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
   const [newCollectionDesc, setNewCollectionDesc] = useState('')
   const router = useRouter()
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   useEffect(() => {
     fetchCollections()
@@ -52,7 +54,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
 
   const handleCreateCollection = async () => {
     if (!newCollectionName.trim()) {
-      showToast('Collection name is required', 'error')
+      showToast(t('contentCollections.nameRequired'), 'error')
       return
     }
 
@@ -76,13 +78,13 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
         setShowCreateModal(false)
         setNewCollectionName('')
         setNewCollectionDesc('')
-        showToast('Collection created!', 'success')
+        showToast(t('contentCollections.collectionCreated'), 'success')
         
         if (contentId && onCollectionSelect) {
           onCollectionSelect(data.data._id)
         }
       } else {
-        showToast('Failed to create collection', 'error')
+        showToast(t('contentCollections.failedToCreate'), 'error')
       }
     } catch (error) {
       showToast('Failed to create collection', 'error')
@@ -104,13 +106,13 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
       })
 
       if (response.ok) {
-        showToast('Added to collection!', 'success')
+        showToast(t('contentCollections.addedToCollection'), 'success')
         fetchCollections()
         if (onCollectionSelect) {
           onCollectionSelect(collectionId)
         }
       } else {
-        showToast('Failed to add to collection', 'error')
+        showToast(t('contentCollections.failedToAdd'), 'error')
       }
     } catch (error) {
       showToast('Failed to add to collection', 'error')
@@ -134,7 +136,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
         <div className="flex items-center gap-2">
           <Folder className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-            Collections
+            {t('contentCollections.title')}
           </h3>
         </div>
         <button
@@ -143,7 +145,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
           className="flex items-center gap-1 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          <span>New</span>
+          <span>{t('contentCollections.new')}</span>
         </button>
       </div>
 
@@ -151,14 +153,14 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
         <div className="text-center py-8">
           <FolderPlus className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            No collections yet. Create one to organize your content!
+            {t('contentCollections.emptyState')}
           </p>
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Create Collection
+            {t('contentCollections.createCollection')}
           </button>
         </div>
       ) : (
@@ -182,7 +184,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
                     {collection.name}
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {collection.contentCount} item{collection.contentCount !== 1 ? 's' : ''}
+                    {t('contentCollections.itemCount', { count: collection.contentCount })}
                   </p>
                 </div>
               </div>
@@ -192,7 +194,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
                   onClick={() => handleAddToCollection(collection._id)}
                   className="px-3 py-1.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors opacity-0 group-hover:opacity-100"
                 >
-                  Add
+                  {t('contentCollections.add')}
                 </button>
               )}
             </div>
@@ -205,19 +207,19 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
-              Create Collection
+              {t('contentCollections.createCollection')}
             </h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Name *
+                  {t('contentCollections.nameLabel')}
                 </label>
                 <input
                   type="text"
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
-                  placeholder="My Collection"
+                  placeholder={t('contentCollections.namePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   autoFocus
                 />
@@ -225,12 +227,12 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Description
+                  {t('contentCollections.descriptionLabel')}
                 </label>
                 <textarea
                   value={newCollectionDesc}
                   onChange={(e) => setNewCollectionDesc(e.target.value)}
-                  placeholder="Optional description..."
+                  placeholder={t('contentCollections.descriptionPlaceholder')}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
@@ -247,7 +249,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
                 }}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
-                Cancel
+                {t('contentCollections.cancel')}
               </button>
               <button
                 type="button"
@@ -255,7 +257,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
                 disabled={isCreating || !newCollectionName.trim()}
                 className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCreating ? 'Creating...' : 'Create'}
+                {isCreating ? t('contentCollections.creating') : t('contentCollections.create')}
               </button>
             </div>
           </div>

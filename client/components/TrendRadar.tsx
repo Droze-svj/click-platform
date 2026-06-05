@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Radio, Zap, Activity, Target, ChevronDown, ChevronUp, Sparkles, TrendingUp, Layers } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TrendAlert {
   id: string
@@ -47,6 +48,7 @@ const itemVariants = {
 }
 
 export default function TrendRadar({ niche = 'general', platforms = ['tiktok', 'instagram_reels'], onCreateContent, className = '' }: TrendRadarProps) {
+  const { t } = useTranslation()
   const [alerts, setAlerts] = useState<TrendAlert[]>([])
   const [formats, setFormats] = useState<TrendingFormat[]>([])
   const [activePlatform, setActivePlatform] = useState(platforms[0])
@@ -88,15 +90,15 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
             <Radio className="w-8 h-8 text-indigo-400 animate-pulse" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">TREND RADAR <span className="text-indigo-500">2.0</span></h2>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic pl-1">Neural Niche Surveillance: {niche}</p>
+            <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{t('trendRadar.trendRadar')} <span className="text-indigo-500">2.0</span></h2>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic pl-1">{t('trendRadar.neuralNicheSurveillance', { niche })}</p>
           </div>
         </div>
 
         {alerts.some(a => a.urgency === 'high') && (
           <div className="flex items-center gap-4 px-6 py-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl shadow-xl shadow-rose-600/5 animate-pulse">
             <Zap className="w-4 h-4 text-rose-500" />
-            <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{alerts.filter(a => a.urgency === 'high').length} CRITICAL ANOMALIES DETECTED</span>
+            <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{t('trendRadar.criticalAnomaliesDetected', { count: alerts.filter(a => a.urgency === 'high').length })}</span>
           </div>
         )}
       </div>
@@ -122,7 +124,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
       {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-50">
              <Activity className="w-10 h-10 text-indigo-500 animate-spin" />
-             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Scanning Neural Pathways...</span>
+             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('trendRadar.scanningNeuralPathways')}</span>
           </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -130,7 +132,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
               <Target className="w-4 h-4 text-indigo-400" />
-              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-[0.3em]">Viral Signal Matrix</h3>
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-[0.3em]">{t('trendRadar.viralSignalMatrix')}</h3>
             </div>
             
             <div className="space-y-4">
@@ -156,7 +158,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                            }`} />
                            <div className="space-y-1">
                               <h4 className="text-sm font-black text-[var(--text-main)] uppercase italic tracking-tight">{alert.topic}</h4>
-                              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{alert.platform.replace('_', ' ')} · {alert.urgency} URGENCY</p>
+                              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{t('trendRadar.platformUrgency', { platform: alert.platform.replace('_', ' '), urgency: alert.urgency })}</p>
                            </div>
                         </div>
                         {expandedAlert === alert.id ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
@@ -187,7 +189,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                                  onClick={(e) => { e.stopPropagation(); onCreateContent(alert.topic); }}
                                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all active:scale-95"
                                >
-                                 ⚡ INITIALIZE CONTENT SEQUENCE
+                                 {t('trendRadar.initializeContentSequence')}
                                </button>
                              )}
                           </motion.div>
@@ -202,7 +204,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
               <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-[0.3em]">Engagement Architecture</h3>
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-[0.3em]">{t('trendRadar.engagementArchitecture')}</h3>
             </div>
 
             <div className="space-y-4">
@@ -221,7 +223,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                   </div>
                   <div className="text-right space-y-1">
                     <div className="text-sm font-black text-emerald-400 italic">+{Math.round((fmt.engagement_multiplier - 1) * 100)}%</div>
-                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">{fmt.longevity} ROI</div>
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">{t('trendRadar.longevityRoi', { longevity: fmt.longevity })}</div>
                   </div>
                 </motion.div>
               ))}
@@ -233,10 +235,10 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                <div className="relative space-y-4">
                   <div className="flex items-center gap-3">
                      <Cpu className="w-5 h-5 text-indigo-400" />
-                     <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Neural Projection</span>
+                     <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{t('trendRadar.neuralProjection')}</span>
                   </div>
                   <p className="text-xs text-white/60 font-medium leading-relaxed italic">
-                    Based on current velocity, {activePlatform.replace('_', ' ')} is trending towards long-form educational hybrids. Recommendation: Deploy authentic storytelling nodes within next 48h.
+                    {t('trendRadar.neuralProjectionBody', { platform: activePlatform.replace('_', ' ') })}
                   </p>
                </div>
             </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle, Clock, AlertCircle, Send } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -13,8 +14,9 @@ interface ContentApprovalButtonProps {
 
 export default function ContentApprovalButton({ 
   contentId, 
-  onApprovalStarted 
+  onApprovalStarted
 }: ContentApprovalButtonProps) {
+  const { t } = useTranslation()
   const [workflows, setWorkflows] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
@@ -46,7 +48,7 @@ export default function ContentApprovalButton({
 
   const startApproval = async () => {
     if (!selectedWorkflow) {
-      alert('Please select a workflow')
+      alert(t('contentApprovalButton.selectWorkflowAlert'))
       return
     }
 
@@ -60,12 +62,12 @@ export default function ContentApprovalButton({
       )
 
       if (response.data.success) {
-        alert('Approval process started!')
+        alert(t('contentApprovalButton.approvalStarted'))
         setShowModal(false)
         onApprovalStarted?.()
       }
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error starting approval')
+      alert(error.response?.data?.error || t('contentApprovalButton.errorStarting'))
     } finally {
       setLoading(false)
     }
@@ -75,12 +77,12 @@ export default function ContentApprovalButton({
     return (
       <button
         type="button"
-        onClick={() => alert('No approval workflows available. Please create one first.')}
+        onClick={() => alert(t('contentApprovalButton.noWorkflowsAlert'))}
         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 flex items-center gap-2"
         disabled
       >
         <Clock className="w-4 h-4" />
-        No Workflows Available
+        {t('contentApprovalButton.noWorkflowsAvailable')}
       </button>
     )
   }
@@ -93,7 +95,7 @@ export default function ContentApprovalButton({
         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
       >
         <Send className="w-4 h-4" />
-        Request Approval
+        {t('contentApprovalButton.requestApproval')}
       </button>
 
       {showModal && (
@@ -102,7 +104,7 @@ export default function ContentApprovalButton({
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-                  Start Approval Process
+                  {t('contentApprovalButton.startApprovalProcess')}
                 </h3>
                 <button
                   type="button"
@@ -115,17 +117,17 @@ export default function ContentApprovalButton({
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Workflow
+                  {t('contentApprovalButton.selectWorkflow')}
                 </label>
                 <select
                   value={selectedWorkflow}
                   onChange={(e) => setSelectedWorkflow(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select a workflow...</option>
+                  <option value="">{t('contentApprovalButton.selectWorkflowPlaceholder')}</option>
                   {workflows.map((workflow) => (
                     <option key={workflow._id} value={workflow._id}>
-                      {workflow.name} {workflow.isDefault && '(Default)'}
+                      {workflow.name} {workflow.isDefault && t('contentApprovalButton.defaultSuffix')}
                     </option>
                   ))}
                 </select>
@@ -134,10 +136,10 @@ export default function ContentApprovalButton({
               {selectedWorkflow && (
                 <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {workflows.find(w => w._id === selectedWorkflow)?.description || 'No description'}
+                    {workflows.find(w => w._id === selectedWorkflow)?.description || t('contentApprovalButton.noDescription')}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    {workflows.find(w => w._id === selectedWorkflow)?.stages?.length || 0} stage(s)
+                    {t('contentApprovalButton.stageCount', { count: workflows.find(w => w._id === selectedWorkflow)?.stages?.length || 0 })}
                   </p>
                 </div>
               )}
@@ -148,7 +150,7 @@ export default function ContentApprovalButton({
                   onClick={() => setShowModal(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  Cancel
+                  {t('contentApprovalButton.cancel')}
                 </button>
                 <button
                   type="button"
@@ -159,12 +161,12 @@ export default function ContentApprovalButton({
                   {loading ? (
                     <>
                       <Clock className="w-4 h-4 animate-spin" />
-                      Starting...
+                      {t('contentApprovalButton.starting')}
                     </>
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4" />
-                      Start Approval
+                      {t('contentApprovalButton.startApproval')}
                     </>
                   )}
                 </button>

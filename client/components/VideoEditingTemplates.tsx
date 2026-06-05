@@ -39,6 +39,7 @@ import {
 } from './icons/VideoIcons'
 import { useToast } from '../contexts/ToastContext'
 import { logTemplateError } from '../utils/errorHandler'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface VideoTemplate {
   id: string
@@ -777,6 +778,7 @@ export default function VideoEditingTemplates({
   customTemplates = []
 }: VideoEditingTemplatesProps) {
 
+  const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [showTemplateDetails, setShowTemplateDetails] = useState<string | null>(null)
@@ -784,15 +786,15 @@ export default function VideoEditingTemplates({
   const { showToast } = useToast()
 
   const categories = [
-    { id: 'all', name: 'All Templates', icon: Sparkles },
-    { id: 'Cinematic', name: 'Cinematic', icon: MovieClapperIcon },
-    { id: 'Social Media', name: 'Social Media', icon: TrendingUp },
-    { id: 'Business', name: 'Business', icon: Briefcase },
-    { id: 'Vlog', name: 'Vlog', icon: DSLRIcon },
-    { id: 'Gaming', name: 'Gaming', icon: Gamepad2 },
-    { id: 'Wedding', name: 'Wedding', icon: Heart },
-    { id: 'Educational', name: 'Educational', icon: BookOpen },
-    { id: 'Vintage', name: 'Vintage', icon: Coffee }
+    { id: 'all', name: t('videoEditingTemplates.categoryAll'), icon: Sparkles },
+    { id: 'Cinematic', name: t('videoEditingTemplates.categoryCinematic'), icon: MovieClapperIcon },
+    { id: 'Social Media', name: t('videoEditingTemplates.categorySocialMedia'), icon: TrendingUp },
+    { id: 'Business', name: t('videoEditingTemplates.categoryBusiness'), icon: Briefcase },
+    { id: 'Vlog', name: t('videoEditingTemplates.categoryVlog'), icon: DSLRIcon },
+    { id: 'Gaming', name: t('videoEditingTemplates.categoryGaming'), icon: Gamepad2 },
+    { id: 'Wedding', name: t('videoEditingTemplates.categoryWedding'), icon: Heart },
+    { id: 'Educational', name: t('videoEditingTemplates.categoryEducational'), icon: BookOpen },
+    { id: 'Vintage', name: t('videoEditingTemplates.categoryVintage'), icon: Coffee }
   ]
 
   const allTemplates = [...predefinedTemplates, ...customTemplates]
@@ -809,12 +811,12 @@ export default function VideoEditingTemplates({
     try {
 
       onApplyTemplate(template)
-      showToast(`Applied "${template.name}" template`, 'success')
+      showToast(t('videoEditingTemplates.appliedTemplate', { name: template.name }), 'success')
     } catch (error) {
       logTemplateError(template.id, 'apply', error)
-      showToast('Failed to apply template. Please try again.', 'error')
+      showToast(t('videoEditingTemplates.applyFailed'), 'error')
     }
-  }, [onApplyTemplate, showToast])
+  }, [onApplyTemplate, showToast, t])
 
   const handleDuplicateTemplate = useCallback((template: VideoTemplate) => {
     const duplicatedTemplate = {
@@ -824,13 +826,13 @@ export default function VideoEditingTemplates({
       category: 'Custom'
     }
     onSaveCustomTemplate?.(duplicatedTemplate)
-    showToast('Template duplicated', 'success')
-  }, [onSaveCustomTemplate, showToast])
+    showToast(t('videoEditingTemplates.templateDuplicated'), 'success')
+  }, [onSaveCustomTemplate, showToast, t])
 
   const handleDeleteTemplate = useCallback((templateId: string) => {
     // This would typically call an API to delete the template
-    showToast('Template deleted', 'success')
-  }, [showToast])
+    showToast(t('videoEditingTemplates.templateDeleted'), 'success')
+  }, [showToast, t])
 
   const TemplateCard = ({ template, isCustom = false }: { template: VideoTemplate, isCustom?: boolean }) => {
     const Icon = template.icon
@@ -850,7 +852,7 @@ export default function VideoEditingTemplates({
               type="button"
               onClick={() => setShowTemplateDetails(template.id)}
               className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
-              title="View details"
+              title={t('videoEditingTemplates.viewDetails')}
             >
               <Eye className="w-4 h-4" />
             </button>
@@ -858,7 +860,7 @@ export default function VideoEditingTemplates({
               type="button"
               onClick={() => handleDuplicateTemplate(template)}
               className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
-              title="Duplicate template"
+              title={t('videoEditingTemplates.duplicateTemplate')}
             >
               <Copy className="w-4 h-4" />
             </button>
@@ -867,7 +869,7 @@ export default function VideoEditingTemplates({
                 type="button"
                 onClick={() => handleDeleteTemplate(template.id)}
                 className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-full text-white transition-colors"
-                title="Delete template"
+                title={t('videoEditingTemplates.deleteTemplate')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -882,7 +884,7 @@ export default function VideoEditingTemplates({
             <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{template.name}</h3>
             {isCustom && (
               <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
-                Custom
+                {t('videoEditingTemplates.custom')}
               </span>
             )}
           </div>
@@ -898,7 +900,7 @@ export default function VideoEditingTemplates({
               onClick={() => handleApplyTemplate(template)}
               className={`px-4 py-2 bg-gradient-to-r ${template.color} text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-md`}
             >
-              Apply
+              {t('videoEditingTemplates.apply')}
             </button>
           </div>
         </div>
@@ -919,10 +921,10 @@ export default function VideoEditingTemplates({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Video Editing Templates
+            {t('videoEditingTemplates.title')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Choose from professional templates or create your own custom styles
+            {t('videoEditingTemplates.subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -936,7 +938,7 @@ export default function VideoEditingTemplates({
             }`}
           >
             <Settings className="w-4 h-4 inline mr-2" />
-            My Templates
+            {t('videoEditingTemplates.myTemplates')}
           </button>
           <button
             type="button"
@@ -998,7 +1000,7 @@ export default function VideoEditingTemplates({
             className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-md"
           >
             <Save className="w-4 h-4 inline mr-2" />
-            Create Custom
+            {t('videoEditingTemplates.createCustom')}
           </button>
         </div>
       </div>
@@ -1007,7 +1009,7 @@ export default function VideoEditingTemplates({
       <div className="flex gap-4">
         <input
           type="text"
-          placeholder="Search templates..."
+          placeholder={t('videoEditingTemplates.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1049,10 +1051,10 @@ export default function VideoEditingTemplates({
         <div className="text-center py-12">
           <Sparkles className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
-            No templates found
+            {t('videoEditingTemplates.noTemplatesFound')}
           </h3>
           <p className="text-gray-600 dark:text-gray-400">
-            Try adjusting your search or create a custom template
+            {t('videoEditingTemplates.noTemplatesHint')}
           </p>
         </div>
       )}
@@ -1062,7 +1064,7 @@ export default function VideoEditingTemplates({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             {(() => {
-              const template = allTemplates.find(t => t.id === showTemplateDetails)
+              const template = allTemplates.find(tpl => tpl.id === showTemplateDetails)
               if (!template) return null
 
               const Icon = template.icon
@@ -1085,7 +1087,7 @@ export default function VideoEditingTemplates({
                         type="button"
                         onClick={() => setShowTemplateDetails(null)}
                         className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors"
-                        title="Close details"
+                        title={t('videoEditingTemplates.closeDetails')}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1100,27 +1102,27 @@ export default function VideoEditingTemplates({
                       {/* Settings Overview */}
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-                          Template Settings
+                          {t('videoEditingTemplates.templateSettings')}
                         </h3>
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Aspect Ratio:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('videoEditingTemplates.aspectRatio')}</span>
                             <span className="font-medium">{template.settings.aspectRatio}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Resolution:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('videoEditingTemplates.resolution')}</span>
                             <span className="font-medium">{template.settings.resolution}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Frame Rate:</span>
-                            <span className="font-medium">{template.settings.frameRate}fps</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('videoEditingTemplates.frameRate')}</span>
+                            <span className="font-medium">{t('videoEditingTemplates.fps', { value: template.settings.frameRate })}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Color Style:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('videoEditingTemplates.colorStyle')}</span>
                             <span className="font-medium">{template.settings.typography.textStyle}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Transition:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('videoEditingTemplates.transition')}</span>
                             <span className="font-medium capitalize">{template.settings.layout.transitionStyle}</span>
                           </div>
                         </div>
@@ -1129,7 +1131,7 @@ export default function VideoEditingTemplates({
                       {/* Text Overlays Preview */}
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-                          Text Overlays
+                          {t('videoEditingTemplates.textOverlays')}
                         </h3>
                         <div className="space-y-3">
                           {template.textOverlays.map(overlay => (
@@ -1142,7 +1144,7 @@ export default function VideoEditingTemplates({
                           ))}
                           {template.textOverlays.length === 0 && (
                             <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                              No text overlays in this template
+                              {t('videoEditingTemplates.noTextOverlays')}
                             </div>
                           )}
                         </div>
@@ -1159,7 +1161,7 @@ export default function VideoEditingTemplates({
                         className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                       >
                         <Copy className="w-4 h-4 inline mr-2" />
-                        Duplicate
+                        {t('videoEditingTemplates.duplicate')}
                       </button>
                       <button
                         type="button"
@@ -1169,7 +1171,7 @@ export default function VideoEditingTemplates({
                         }}
                         className={`px-6 py-2 bg-gradient-to-r ${template.color} text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
                       >
-                        Apply Template
+                        {t('videoEditingTemplates.applyTemplate')}
                       </button>
                     </div>
                   </div>

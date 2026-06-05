@@ -5,6 +5,7 @@ import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../hooks/useAuth'
 import LoadingSpinner from './LoadingSpinner'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Workflow {
   id: string
@@ -28,6 +29,7 @@ interface WorkflowSuggestion {
 }
 
 export default function EnhancedWorkflowBuilder() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
   const [workflows, setWorkflows] = useState<Workflow[]>([])
@@ -50,7 +52,7 @@ export default function EnhancedWorkflowBuilder() {
         setWorkflows(response.data || [])
       }
     } catch (error) {
-      showToast('Failed to load workflows', 'error')
+      showToast(t('enhancedWorkflowBuilder.failedToLoadWorkflows'), 'error')
     } finally {
       setLoading(false)
     }
@@ -77,13 +79,13 @@ export default function EnhancedWorkflowBuilder() {
 
   const handleCreateWorkflow = async () => {
     if (!newWorkflow.name) {
-      showToast('Please enter a workflow name', 'error')
+      showToast(t('enhancedWorkflowBuilder.pleaseEnterName'), 'error')
       return
     }
 
     try {
       await apiPost('/workflows/enhanced', newWorkflow)
-      showToast('Workflow created successfully!', 'success')
+      showToast(t('enhancedWorkflowBuilder.workflowCreated'), 'success')
       setShowCreateModal(false)
       setNewWorkflow({
         name: '',
@@ -95,7 +97,7 @@ export default function EnhancedWorkflowBuilder() {
       })
       loadWorkflows()
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to create workflow', 'error')
+      showToast(error.response?.data?.error || t('enhancedWorkflowBuilder.failedToCreate'), 'error')
     }
   }
 
@@ -115,34 +117,34 @@ export default function EnhancedWorkflowBuilder() {
   const handleExecuteWorkflow = async (workflowId: string) => {
     try {
       await apiPost(`/workflows/enhanced/${workflowId}/execute`, {})
-      showToast('Workflow executed successfully!', 'success')
+      showToast(t('enhancedWorkflowBuilder.workflowExecuted'), 'success')
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to execute workflow', 'error')
+      showToast(error.response?.data?.error || t('enhancedWorkflowBuilder.failedToExecute'), 'error')
     }
   }
 
   if (loading) {
-    return <LoadingSpinner size="lg" text="Loading workflows..." />
+    return <LoadingSpinner size="lg" text={t('enhancedWorkflowBuilder.loadingWorkflows')} />
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Workflow Automation</h1>
+          <h1 className="text-3xl font-bold">{t('enhancedWorkflowBuilder.workflowAutomation')}</h1>
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
           >
-            + Create Workflow
+            {t('enhancedWorkflowBuilder.createWorkflowButton')}
           </button>
         </div>
 
         {/* Suggestions */}
         {suggestions.length > 0 && (
           <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">💡 Suggested Workflows</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('enhancedWorkflowBuilder.suggestedWorkflows')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {suggestions.map((suggestion, index) => (
                 <div
@@ -158,7 +160,7 @@ export default function EnhancedWorkflowBuilder() {
                     onClick={() => handleUseSuggestion(suggestion)}
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    Use This Workflow →
+                    {t('enhancedWorkflowBuilder.useThisWorkflow')}
                   </button>
                 </div>
               ))}
@@ -187,20 +189,20 @@ export default function EnhancedWorkflowBuilder() {
                       : 'bg-gray-100 text-gray-800'
                   }`}
                 >
-                  {workflow.enabled ? 'Active' : 'Disabled'}
+                  {workflow.enabled ? t('enhancedWorkflowBuilder.statusActive') : t('enhancedWorkflowBuilder.statusDisabled')}
                 </span>
               </div>
 
               <div className="mb-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Trigger: <span className="font-semibold capitalize">{workflow.trigger}</span>
+                  {t('enhancedWorkflowBuilder.triggerLabel')} <span className="font-semibold capitalize">{t(`enhancedWorkflowBuilder.trigger_${workflow.trigger}`)}</span>
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Actions: <span className="font-semibold">{workflow.actions.length}</span>
+                  {t('enhancedWorkflowBuilder.actionsLabel')} <span className="font-semibold">{workflow.actions.length}</span>
                 </p>
                 {workflow.conditions.length > 0 && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Conditions: <span className="font-semibold">{workflow.conditions.length}</span>
+                    {t('enhancedWorkflowBuilder.conditionsLabel')} <span className="font-semibold">{workflow.conditions.length}</span>
                   </p>
                 )}
               </div>
@@ -211,10 +213,10 @@ export default function EnhancedWorkflowBuilder() {
                   onClick={() => handleExecuteWorkflow(workflow.id)}
                   className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
                 >
-                  Execute
+                  {t('enhancedWorkflowBuilder.execute')}
                 </button>
                 <button className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm">
-                  Edit
+                  {t('enhancedWorkflowBuilder.edit')}
                 </button>
               </div>
             </div>
@@ -223,7 +225,7 @@ export default function EnhancedWorkflowBuilder() {
 
         {workflows.length === 0 && (
           <div className="text-center py-12 text-gray-500">
-            <p>No workflows yet. Create one or use a suggestion above!</p>
+            <p>{t('enhancedWorkflowBuilder.noWorkflows')}</p>
           </div>
         )}
 
@@ -231,41 +233,41 @@ export default function EnhancedWorkflowBuilder() {
         {showCreateModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-              <h2 className="text-2xl font-bold mb-4">Create Workflow</h2>
+              <h2 className="text-2xl font-bold mb-4">{t('enhancedWorkflowBuilder.createWorkflowTitle')}</h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Workflow Name</label>
+                  <label className="block text-sm font-medium mb-2">{t('enhancedWorkflowBuilder.workflowName')}</label>
                   <input
                     type="text"
                     value={newWorkflow.name}
                     onChange={(e) => setNewWorkflow({ ...newWorkflow, name: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="e.g., Auto-create Weekly Content"
+                    placeholder={t('enhancedWorkflowBuilder.workflowNamePlaceholder')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <label className="block text-sm font-medium mb-2">{t('enhancedWorkflowBuilder.description')}</label>
                   <textarea
                     value={newWorkflow.description}
                     onChange={(e) => setNewWorkflow({ ...newWorkflow, description: e.target.value })}
                     rows={3}
                     className="w-full px-4 py-2 border rounded-lg"
-                    placeholder="Describe what this workflow does..."
+                    placeholder={t('enhancedWorkflowBuilder.descriptionPlaceholder')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Trigger</label>
+                  <label className="block text-sm font-medium mb-2">{t('enhancedWorkflowBuilder.trigger')}</label>
                   <select
                     value={newWorkflow.trigger}
                     onChange={(e) => setNewWorkflow({ ...newWorkflow, trigger: e.target.value as any })}
                     className="w-full px-4 py-2 border rounded-lg"
                   >
-                    <option value="manual">Manual</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="event">Event-based</option>
+                    <option value="manual">{t('enhancedWorkflowBuilder.trigger_manual')}</option>
+                    <option value="scheduled">{t('enhancedWorkflowBuilder.trigger_scheduled')}</option>
+                    <option value="event">{t('enhancedWorkflowBuilder.triggerEventBased')}</option>
                   </select>
                 </div>
 
@@ -276,7 +278,7 @@ export default function EnhancedWorkflowBuilder() {
                     onChange={(e) => setNewWorkflow({ ...newWorkflow, enabled: e.target.checked })}
                     className="w-4 h-4"
                   />
-                  <label className="text-sm">Enable workflow</label>
+                  <label className="text-sm">{t('enhancedWorkflowBuilder.enableWorkflow')}</label>
                 </div>
               </div>
 
@@ -296,14 +298,14 @@ export default function EnhancedWorkflowBuilder() {
                   }}
                   className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  Cancel
+                  {t('enhancedWorkflowBuilder.cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={handleCreateWorkflow}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >
-                  Create Workflow
+                  {t('enhancedWorkflowBuilder.createWorkflowTitle')}
                 </button>
               </div>
             </div>

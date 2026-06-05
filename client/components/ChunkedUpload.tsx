@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Upload, CheckCircle2, XCircle, Pause, Play } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ChunkedUploadProps {
   file: File
@@ -26,6 +27,7 @@ export default function ChunkedUpload({
   const [totalChunks, setTotalChunks] = useState(0)
   const abortControllerRef = useRef<AbortController | null>(null)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const totalChunksCount = Math.ceil(file.size / chunkSize)
 
@@ -55,7 +57,7 @@ export default function ChunkedUpload({
         throw new Error('Failed to initialize upload')
       }
     } catch (error: any) {
-      showToast('Failed to initialize upload', 'error')
+      showToast(t('chunkedUpload.failedToInitialize'), 'error')
       if (onError) onError(error.message)
       return null
     }
@@ -130,13 +132,13 @@ export default function ChunkedUpload({
       if (uploadedChunks === totalChunksCount) {
         const filePath = await assembleChunks(id)
         setStatus('completed')
-        showToast('Upload completed', 'success')
+        showToast(t('chunkedUpload.uploadCompleted'), 'success')
         if (onComplete) onComplete(filePath)
       }
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         setStatus('failed')
-        showToast('Upload failed', 'error')
+        showToast(t('chunkedUpload.uploadFailed'), 'error')
         if (onError) onError(error.message)
       }
     }
@@ -169,7 +171,7 @@ export default function ChunkedUpload({
           <div>
             <p className="font-medium text-gray-900 dark:text-white">{file.name}</p>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              {formatBytes(file.size)} • {totalChunksCount} chunks
+              {t('chunkedUpload.sizeAndChunks', { size: formatBytes(file.size), count: totalChunksCount })}
             </p>
           </div>
         </div>
@@ -180,7 +182,7 @@ export default function ChunkedUpload({
               onClick={startUpload}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-              Start Upload
+              {t('chunkedUpload.startUpload')}
             </button>
           )}
           {status === 'uploading' && (
@@ -190,7 +192,7 @@ export default function ChunkedUpload({
               className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors flex items-center gap-2"
             >
               <Pause className="w-4 h-4" />
-              Pause
+              {t('chunkedUpload.pause')}
             </button>
           )}
           {status === 'paused' && (
@@ -200,7 +202,7 @@ export default function ChunkedUpload({
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
             >
               <Play className="w-4 h-4" />
-              Resume
+              {t('chunkedUpload.resume')}
             </button>
           )}
         </div>
@@ -222,7 +224,7 @@ export default function ChunkedUpload({
           </div>
           <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
             <span>
-              Chunk {uploadedChunks} of {totalChunksCount}
+              {t('chunkedUpload.chunkProgress', { current: uploadedChunks, total: totalChunksCount })}
             </span>
             <span>{progress}%</span>
           </div>

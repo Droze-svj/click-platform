@@ -11,6 +11,7 @@ import {
   CheckSquare, ThumbsUp, Mic, Image as ImageIcon, Globe, Zap, ArrowLeft
 } from 'lucide-react'
 import ClickLogo from './ClickLogo'
+import { useTranslation } from '@/hooks/useTranslation'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type CommandKind = 'page' | 'action' | 'create'
@@ -18,9 +19,9 @@ type CommandKind = 'page' | 'action' | 'create'
 interface Command {
   id: string
   kind: CommandKind
-  label: string
-  hint?: string             // shown right of label
-  group: string             // section header
+  labelKey: string          // i18n key for label, resolved via t() at render
+  hintKey?: string          // i18n key for hint, shown right of label
+  group: string             // section header (logic literal, used for ordering/grouping)
   href?: string             // nav target
   run?: (router: ReturnType<typeof useRouter>) => void
   icon: any
@@ -31,57 +32,69 @@ interface Command {
 // ── Command catalog ─────────────────────────────────────────────────────────
 const COMMANDS: Command[] = [
   // === Studio ===
-  { id: 'p-home',          kind: 'page', group: 'Studio',  label: 'Dashboard',      hint: 'Home',                   icon: Activity,    href: '/dashboard',                shortcut: 'G H', keywords: ['overview','start','main'] },
-  { id: 'p-onboarding',    kind: 'page', group: 'Studio',  label: 'Get Started',    hint: 'Activation checklist',   icon: Compass,     href: '/dashboard/onboarding',     keywords: ['onboarding','setup','tour','first time'] },
-  { id: 'p-forge',         kind: 'page', group: 'Studio',  label: 'One-Click Forge',hint: 'Generate a content pack',icon: Hammer,      href: '/dashboard/forge',          shortcut: 'G F', keywords: ['ai','generate','create','pack','viral'] },
-  { id: 'p-video',         kind: 'page', group: 'Studio',  label: 'Video Library',  hint: 'Upload + manage videos', icon: Video,       href: '/dashboard/video',          shortcut: 'G V', keywords: ['videos','upload','clips','library'] },
-  { id: 'p-content',       kind: 'page', group: 'Studio',  label: 'Content AI',     hint: 'Long-form drafts',       icon: Sparkles,    href: '/dashboard/content',        keywords: ['ai','draft','article','blog'] },
-  { id: 'p-scripts',       kind: 'page', group: 'Studio',  label: 'Scripts',        hint: 'AI script generator',    icon: FileText,    href: '/dashboard/scripts',        shortcut: 'G S', keywords: ['ai','write','script','hook'] },
-  { id: 'p-quotes',        kind: 'page', group: 'Studio',  label: 'Quote Cards',    hint: 'Image quotes',           icon: Quote,       href: '/dashboard/quotes',         keywords: ['image','card','social','quote'] },
-  { id: 'p-library',       kind: 'page', group: 'Studio',  label: 'Asset Library',  hint: 'Your uploads',           icon: BookOpen,    href: '/dashboard/library',        keywords: ['files','my assets','uploads'] },
-  { id: 'p-templates',     kind: 'page', group: 'Studio',  label: 'Templates',      hint: 'Reusable templates',     icon: Wand2,       href: '/dashboard/templates',      keywords: ['preset','reuse','template'] },
-  { id: 'p-brand',         kind: 'page', group: 'Studio',  label: 'Brand Kit',      hint: 'Colors, fonts, logo',    icon: Palette,     href: '/dashboard/brand-kit',      keywords: ['brand','colors','fonts','logo','identity'] },
+  { id: 'p-home',          kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdHomeLabel',          hintKey: 'globalCommandPalette.cmdHomeHint',          icon: Activity,    href: '/dashboard',                shortcut: 'G H', keywords: ['overview','start','main'] },
+  { id: 'p-onboarding',    kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdOnboardingLabel',    hintKey: 'globalCommandPalette.cmdOnboardingHint',    icon: Compass,     href: '/dashboard/onboarding',     keywords: ['onboarding','setup','tour','first time'] },
+  { id: 'p-forge',         kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdForgeLabel',         hintKey: 'globalCommandPalette.cmdForgeHint',         icon: Hammer,      href: '/dashboard/forge',          shortcut: 'G F', keywords: ['ai','generate','create','pack','viral'] },
+  { id: 'p-video',         kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdVideoLabel',         hintKey: 'globalCommandPalette.cmdVideoHint',         icon: Video,       href: '/dashboard/video',          shortcut: 'G V', keywords: ['videos','upload','clips','library'] },
+  { id: 'p-content',       kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdContentLabel',       hintKey: 'globalCommandPalette.cmdContentHint',       icon: Sparkles,    href: '/dashboard/content',        keywords: ['ai','draft','article','blog'] },
+  { id: 'p-scripts',       kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdScriptsLabel',       hintKey: 'globalCommandPalette.cmdScriptsHint',       icon: FileText,    href: '/dashboard/scripts',        shortcut: 'G S', keywords: ['ai','write','script','hook'] },
+  { id: 'p-quotes',        kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdQuotesLabel',        hintKey: 'globalCommandPalette.cmdQuotesHint',        icon: Quote,       href: '/dashboard/quotes',         keywords: ['image','card','social','quote'] },
+  { id: 'p-library',       kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdLibraryLabel',       hintKey: 'globalCommandPalette.cmdLibraryHint',       icon: BookOpen,    href: '/dashboard/library',        keywords: ['files','my assets','uploads'] },
+  { id: 'p-templates',     kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdTemplatesLabel',     hintKey: 'globalCommandPalette.cmdTemplatesHint',     icon: Wand2,       href: '/dashboard/templates',      keywords: ['preset','reuse','template'] },
+  { id: 'p-brand',         kind: 'page', group: 'Studio',  labelKey: 'globalCommandPalette.cmdBrandLabel',         hintKey: 'globalCommandPalette.cmdBrandHint',         icon: Palette,     href: '/dashboard/brand-kit',      keywords: ['brand','colors','fonts','logo','identity'] },
 
   // === Publish ===
-  { id: 'p-scheduler',     kind: 'page', group: 'Publish', label: 'Scheduler',      hint: 'Plan posts',             icon: Send,        href: '/dashboard/scheduler',      shortcut: 'G P', keywords: ['schedule','plan','queue'] },
-  { id: 'p-calendar',      kind: 'page', group: 'Publish', label: 'Calendar',       hint: 'Calendar view',          icon: Calendar,    href: '/dashboard/calendar',       keywords: ['calendar','dates','schedule'] },
-  { id: 'p-integrations',  kind: 'page', group: 'Publish', label: 'Integrations',   hint: 'Connect accounts',       icon: Plug,        href: '/dashboard/integrations',   keywords: ['connect','tiktok','instagram','youtube','x','linkedin','oauth'] },
-  { id: 'p-workflows',     kind: 'page', group: 'Publish', label: 'Automations',    hint: 'Workflows',              icon: RefreshCw,   href: '/dashboard/workflows',      keywords: ['workflow','automate','rules'] },
-  { id: 'p-recycling',     kind: 'page', group: 'Publish', label: 'Content Remix',  hint: 'Repurpose old posts',    icon: RefreshCw,   href: '/dashboard/recycling',      keywords: ['remix','repurpose','recycle'] },
+  { id: 'p-scheduler',     kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdSchedulerLabel',     hintKey: 'globalCommandPalette.cmdSchedulerHint',     icon: Send,        href: '/dashboard/scheduler',      shortcut: 'G P', keywords: ['schedule','plan','queue'] },
+  { id: 'p-calendar',      kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdCalendarLabel',      hintKey: 'globalCommandPalette.cmdCalendarHint',      icon: Calendar,    href: '/dashboard/calendar',       keywords: ['calendar','dates','schedule'] },
+  { id: 'p-integrations',  kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdIntegrationsLabel',  hintKey: 'globalCommandPalette.cmdIntegrationsHint',  icon: Plug,        href: '/dashboard/integrations',   keywords: ['connect','tiktok','instagram','youtube','x','linkedin','oauth'] },
+  { id: 'p-workflows',     kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdWorkflowsLabel',     hintKey: 'globalCommandPalette.cmdWorkflowsHint',     icon: RefreshCw,   href: '/dashboard/workflows',      keywords: ['workflow','automate','rules'] },
+  { id: 'p-recycling',     kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdRecyclingLabel',     hintKey: 'globalCommandPalette.cmdRecyclingHint',     icon: RefreshCw,   href: '/dashboard/recycling',      keywords: ['remix','repurpose','recycle'] },
 
   // === Grow ===
-  { id: 'p-analytics',     kind: 'page', group: 'Grow',    label: 'Analytics',      hint: 'Engagement & reach',     icon: BarChart3,   href: '/dashboard/analytics',      shortcut: 'G A', keywords: ['stats','metrics','insights'] },
-  { id: 'p-trends',        kind: 'page', group: 'Grow',    label: 'Discover',       hint: 'Trending hooks & sounds',icon: Flame,       href: '/dashboard/trends',         keywords: ['trends','viral','hooks','sounds','formats'] },
-  { id: 'p-insights',      kind: 'page', group: 'Grow',    label: 'AI Insights',    hint: 'Smart recommendations',  icon: Brain,       href: '/dashboard/insights',       keywords: ['ai','smart','recommend'] },
-  { id: 'p-marketing',     kind: 'page', group: 'Grow',    label: 'Marketing Oracle',hint: 'Marketing AI',          icon: Megaphone,   href: '/dashboard/marketing-ai',   keywords: ['marketing','copy','strategy'] },
-  { id: 'p-niche',         kind: 'page', group: 'Grow',    label: 'Niche Intel',    hint: 'Niche research',         icon: BookOpen,    href: '/dashboard/niche',          keywords: ['niche','research','audience'] },
-  { id: 'p-social',        kind: 'page', group: 'Grow',    label: 'Social Sync',    hint: 'Social analytics',       icon: Globe,       href: '/dashboard/social',         keywords: ['social','sync'] },
+  { id: 'p-analytics',     kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdAnalyticsLabel',     hintKey: 'globalCommandPalette.cmdAnalyticsHint',     icon: BarChart3,   href: '/dashboard/analytics',      shortcut: 'G A', keywords: ['stats','metrics','insights'] },
+  { id: 'p-trends',        kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdTrendsLabel',        hintKey: 'globalCommandPalette.cmdTrendsHint',        icon: Flame,       href: '/dashboard/trends',         keywords: ['trends','viral','hooks','sounds','formats'] },
+  { id: 'p-insights',      kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdInsightsLabel',      hintKey: 'globalCommandPalette.cmdInsightsHint',      icon: Brain,       href: '/dashboard/insights',       keywords: ['ai','smart','recommend'] },
+  { id: 'p-marketing',     kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdMarketingLabel',     hintKey: 'globalCommandPalette.cmdMarketingHint',     icon: Megaphone,   href: '/dashboard/marketing-ai',   keywords: ['marketing','copy','strategy'] },
+  { id: 'p-niche',         kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdNicheLabel',         hintKey: 'globalCommandPalette.cmdNicheHint',         icon: BookOpen,    href: '/dashboard/niche',          keywords: ['niche','research','audience'] },
+  { id: 'p-social',        kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdSocialLabel',        hintKey: 'globalCommandPalette.cmdSocialHint',        icon: Globe,       href: '/dashboard/social',         keywords: ['social','sync'] },
 
   // === Manage ===
-  { id: 'p-workspaces',    kind: 'page', group: 'Manage',  label: 'Workspaces',     hint: 'Switch brand',           icon: Boxes,       href: '/dashboard/workspaces',     keywords: ['brand','workspace','switch'] },
-  { id: 'p-posts',         kind: 'page', group: 'Manage',  label: 'Posts',          hint: 'Draft & published',      icon: BookOpen,    href: '/dashboard/posts',          keywords: ['posts','draft'] },
-  { id: 'p-projects',      kind: 'page', group: 'Manage',  label: 'Projects',       hint: 'Project boards',         icon: FolderKanban,href: '/dashboard/projects',       keywords: ['projects','kanban'] },
-  { id: 'p-teams',         kind: 'page', group: 'Manage',  label: 'Team',           hint: 'Members & roles',        icon: Users,       href: '/dashboard/teams',          shortcut: 'G T', keywords: ['team','members','collaborators'] },
-  { id: 'p-tasks',         kind: 'page', group: 'Manage',  label: 'Tasks',          hint: 'Task list',              icon: CheckSquare, href: '/dashboard/tasks',          keywords: ['todo','task','checklist'] },
-  { id: 'p-approvals',     kind: 'page', group: 'Manage',  label: 'Approvals',      hint: 'Review queue',           icon: ThumbsUp,    href: '/dashboard/approvals',      keywords: ['review','approve','queue'] },
-  { id: 'p-achievements',  kind: 'page', group: 'Manage',  label: 'Achievements',   hint: 'Milestones',             icon: Trophy,      href: '/dashboard/achievements',   keywords: ['badges','milestones','rewards'] },
-  { id: 'p-billing',       kind: 'page', group: 'Manage',  label: 'Billing',        hint: 'Plan & usage',           icon: Gem,         href: '/dashboard/billing',        keywords: ['billing','plan','upgrade','invoice','usage'] },
+  { id: 'p-workspaces',    kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdWorkspacesLabel',    hintKey: 'globalCommandPalette.cmdWorkspacesHint',    icon: Boxes,       href: '/dashboard/workspaces',     keywords: ['brand','workspace','switch'] },
+  { id: 'p-posts',         kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdPostsLabel',         hintKey: 'globalCommandPalette.cmdPostsHint',         icon: BookOpen,    href: '/dashboard/posts',          keywords: ['posts','draft'] },
+  { id: 'p-projects',      kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdProjectsLabel',      hintKey: 'globalCommandPalette.cmdProjectsHint',      icon: FolderKanban,href: '/dashboard/projects',       keywords: ['projects','kanban'] },
+  { id: 'p-teams',         kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdTeamsLabel',         hintKey: 'globalCommandPalette.cmdTeamsHint',         icon: Users,       href: '/dashboard/teams',          shortcut: 'G T', keywords: ['team','members','collaborators'] },
+  { id: 'p-tasks',         kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdTasksLabel',         hintKey: 'globalCommandPalette.cmdTasksHint',         icon: CheckSquare, href: '/dashboard/tasks',          keywords: ['todo','task','checklist'] },
+  { id: 'p-approvals',     kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdApprovalsLabel',     hintKey: 'globalCommandPalette.cmdApprovalsHint',     icon: ThumbsUp,    href: '/dashboard/approvals',      keywords: ['review','approve','queue'] },
+  { id: 'p-achievements',  kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdAchievementsLabel',  hintKey: 'globalCommandPalette.cmdAchievementsHint',  icon: Trophy,      href: '/dashboard/achievements',   keywords: ['badges','milestones','rewards'] },
+  { id: 'p-billing',       kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdBillingLabel',       hintKey: 'globalCommandPalette.cmdBillingHint',       icon: Gem,         href: '/dashboard/billing',        keywords: ['billing','plan','upgrade','invoice','usage'] },
 
   // === Utility ===
-  { id: 'p-settings',      kind: 'page', group: 'Utility', label: 'Settings',       hint: 'Account preferences',    icon: Settings,    href: '/dashboard/settings',       shortcut: ',', keywords: ['preferences','config','profile'] },
-  { id: 'p-notifications', kind: 'page', group: 'Utility', label: 'Notifications',  hint: 'Alerts & activity',      icon: Bell,        href: '/dashboard/notifications',  keywords: ['alerts','inbox'] },
-  { id: 'p-search',        kind: 'page', group: 'Utility', label: 'Search',         hint: 'Global search',          icon: Search,      href: '/dashboard/search',         keywords: ['search','find'] },
-  { id: 'p-help',          kind: 'page', group: 'Utility', label: 'AI Help',        hint: 'Get assistance',         icon: HelpCircle,  href: '/dashboard/ai',             keywords: ['help','support','assist'] },
+  { id: 'p-settings',      kind: 'page', group: 'Utility', labelKey: 'globalCommandPalette.cmdSettingsLabel',      hintKey: 'globalCommandPalette.cmdSettingsHint',      icon: Settings,    href: '/dashboard/settings',       shortcut: ',', keywords: ['preferences','config','profile'] },
+  { id: 'p-notifications', kind: 'page', group: 'Utility', labelKey: 'globalCommandPalette.cmdNotificationsLabel', hintKey: 'globalCommandPalette.cmdNotificationsHint', icon: Bell,        href: '/dashboard/notifications',  keywords: ['alerts','inbox'] },
+  { id: 'p-search',        kind: 'page', group: 'Utility', labelKey: 'globalCommandPalette.cmdSearchLabel',        hintKey: 'globalCommandPalette.cmdSearchHint',        icon: Search,      href: '/dashboard/search',         keywords: ['search','find'] },
+  { id: 'p-help',          kind: 'page', group: 'Utility', labelKey: 'globalCommandPalette.cmdHelpLabel',          hintKey: 'globalCommandPalette.cmdHelpHint',          icon: HelpCircle,  href: '/dashboard/ai',             keywords: ['help','support','assist'] },
 
   // === Create actions ===
-  { id: 'a-new-script',    kind: 'create', group: 'Create',label: 'New Script',     hint: 'Open script generator',  icon: Plus,        href: '/dashboard/scripts',        keywords: ['new','create','write'] },
-  { id: 'a-new-video',     kind: 'create', group: 'Create',label: 'Upload Video',   hint: 'Drop a video',           icon: Plus,        href: '/dashboard/video',          keywords: ['upload','new video','clip'] },
-  { id: 'a-new-quote',     kind: 'create', group: 'Create',label: 'New Quote Card', hint: 'Create image quote',     icon: Plus,        href: '/dashboard/quotes',         keywords: ['new','quote','image'] },
-  { id: 'a-new-team',      kind: 'create', group: 'Create',label: 'New Team',       hint: 'Invite collaborators',   icon: Plus,        href: '/dashboard/teams',          keywords: ['team','invite'] },
-  { id: 'a-new-pack',      kind: 'create', group: 'Create',label: 'Browse Creative Packs', hint: 'One-click style', icon: Wand2,       href: '/dashboard/video',          keywords: ['style','pack','bundle'] },
-  { id: 'a-stock',         kind: 'create', group: 'Create',label: 'Browse Stock Library', hint: 'B-roll + music',  icon: Library,     href: '/dashboard/video',          keywords: ['stock','broll','music','gif','sfx'] },
-  { id: 'a-connect',       kind: 'create', group: 'Create',label: 'Connect Account', hint: 'Link a social',         icon: Plug,        href: '/dashboard/integrations',   keywords: ['connect','tiktok','instagram','linkedin','x','oauth'] },
+  { id: 'a-new-script',    kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdNewScriptLabel',    hintKey: 'globalCommandPalette.cmdNewScriptHint',     icon: Plus,        href: '/dashboard/scripts',        keywords: ['new','create','write'] },
+  { id: 'a-new-video',     kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdNewVideoLabel',     hintKey: 'globalCommandPalette.cmdNewVideoHint',      icon: Plus,        href: '/dashboard/video',          keywords: ['upload','new video','clip'] },
+  { id: 'a-new-quote',     kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdNewQuoteLabel',     hintKey: 'globalCommandPalette.cmdNewQuoteHint',      icon: Plus,        href: '/dashboard/quotes',         keywords: ['new','quote','image'] },
+  { id: 'a-new-team',      kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdNewTeamLabel',      hintKey: 'globalCommandPalette.cmdNewTeamHint',       icon: Plus,        href: '/dashboard/teams',          keywords: ['team','invite'] },
+  { id: 'a-new-pack',      kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdNewPackLabel',      hintKey: 'globalCommandPalette.cmdNewPackHint',       icon: Wand2,       href: '/dashboard/video',          keywords: ['style','pack','bundle'] },
+  { id: 'a-stock',         kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdStockLabel',        hintKey: 'globalCommandPalette.cmdStockHint',         icon: Library,     href: '/dashboard/video',          keywords: ['stock','broll','music','gif','sfx'] },
+  { id: 'a-connect',       kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdConnectLabel',      hintKey: 'globalCommandPalette.cmdConnectHint',       icon: Plug,        href: '/dashboard/integrations',   keywords: ['connect','tiktok','instagram','linkedin','x','oauth'] },
 ]
+
+// Display labels for group section headers. Group ids stay as logic literals
+// (used for ordering/grouping); these are resolved to translated strings at render.
+const GROUP_LABEL_KEYS: Record<string, string> = {
+  Recent: 'globalCommandPalette.groupRecent',
+  Studio: 'globalCommandPalette.groupStudio',
+  Publish: 'globalCommandPalette.groupPublish',
+  Grow: 'globalCommandPalette.groupGrow',
+  Manage: 'globalCommandPalette.groupManage',
+  Create: 'globalCommandPalette.groupCreate',
+  Utility: 'globalCommandPalette.groupUtility',
+}
 
 const RECENT_KEY = 'click-cmdk-recent'
 const RECENT_MAX = 5
@@ -113,6 +126,7 @@ function saveRecent(ids: string[]) {
 
 // ── Component ────────────────────────────────────────────────────────────────
 const GlobalCommandPalette: React.FC = () => {
+  const { t } = useTranslation()
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
@@ -178,7 +192,7 @@ const GlobalCommandPalette: React.FC = () => {
 
     const scored = COMMANDS
       .map(c => {
-        const text = [c.label, c.hint || '', c.group, ...(c.keywords || [])].join(' ')
+        const text = [t(c.labelKey), c.hintKey ? t(c.hintKey) : '', c.group, ...(c.keywords || [])].join(' ')
         return { c, score: fuzzy(query, text) }
       })
       .filter(({ score }) => score > 0)
@@ -189,7 +203,7 @@ const GlobalCommandPalette: React.FC = () => {
     for (const c of scored) (byGroup[c.group] ??= []).push(c)
     const order = ['Recent', 'Studio', 'Publish', 'Grow', 'Manage', 'Create', 'Utility']
     return order.filter(g => byGroup[g]?.length).map(g => ({ group: g, items: byGroup[g] }))
-  }, [query, open, recentIds])
+  }, [query, open, recentIds, t])
 
   // Flatten for keyboard nav
   const flat = useMemo(() => groups.flatMap(g => g.items), [groups])
@@ -255,13 +269,13 @@ const GlobalCommandPalette: React.FC = () => {
                 ref={inputRef}
                 value={query}
                 onChange={e => { setQuery(e.target.value); setActiveIdx(0) }}
-                placeholder="Search pages, actions…"
+                placeholder={t('globalCommandPalette.searchPlaceholder')}
                 className="flex-1 bg-transparent outline-none text-[15px] text-white placeholder:text-slate-500"
                 autoComplete="off"
                 spellCheck={false}
               />
               {query && (
-                <button type="button" onClick={() => setQuery('')} title="Clear" className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white">
+                <button type="button" onClick={() => setQuery('')} title={t('globalCommandPalette.clear')} className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -273,13 +287,13 @@ const GlobalCommandPalette: React.FC = () => {
               {groups.length === 0 ? (
                 <div className="py-12 text-center">
                   <Search className="w-8 h-8 text-slate-500 mx-auto mb-3" />
-                  <p className="text-sm font-bold text-white">No matches</p>
-                  <p className="text-[12px] text-slate-400 mt-1">Try a different word — or browse the sidebar.</p>
+                  <p className="text-sm font-bold text-white">{t('globalCommandPalette.noMatches')}</p>
+                  <p className="text-[12px] text-slate-400 mt-1">{t('globalCommandPalette.noMatchesHint')}</p>
                 </div>
               ) : (
                 groups.map(({ group, items }) => (
                   <div key={group} className="px-2">
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{group}</div>
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{GROUP_LABEL_KEYS[group] ? t(GROUP_LABEL_KEYS[group]) : group}</div>
                     {items.map(cmd => {
                       const idx = flat.indexOf(cmd)
                       const Icon = cmd.icon
@@ -301,12 +315,12 @@ const GlobalCommandPalette: React.FC = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-[13px] font-semibold truncate">{cmd.label}</span>
+                              <span className="text-[13px] font-semibold truncate">{t(cmd.labelKey)}</span>
                               {cmd.kind === 'create' && (
-                                <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">Create</span>
+                                <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">{t('globalCommandPalette.createBadge')}</span>
                               )}
                             </div>
-                            {cmd.hint && <div className="text-[11px] text-slate-500 truncate">{cmd.hint}</div>}
+                            {cmd.hintKey && <div className="text-[11px] text-slate-500 truncate">{t(cmd.hintKey)}</div>}
                           </div>
                           {cmd.shortcut && (
                             <kbd className="text-[9px] font-mono text-slate-500 px-1.5 py-0.5 rounded bg-white/5 border border-white/10 flex-shrink-0">{cmd.shortcut}</kbd>
@@ -323,14 +337,14 @@ const GlobalCommandPalette: React.FC = () => {
             {/* Footer hints */}
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/10 bg-black/40 text-[10px] text-slate-500">
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5"><kbd className="font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10">↑↓</kbd> navigate</span>
-                <span className="flex items-center gap-1.5"><kbd className="font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10">↵</kbd> select</span>
-                <span className="flex items-center gap-1.5"><kbd className="font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10">esc</kbd> close</span>
+                <span className="flex items-center gap-1.5"><kbd className="font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10">↑↓</kbd> {t('globalCommandPalette.navigate')}</span>
+                <span className="flex items-center gap-1.5"><kbd className="font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10">↵</kbd> {t('globalCommandPalette.select')}</span>
+                <span className="flex items-center gap-1.5"><kbd className="font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10">esc</kbd> {t('globalCommandPalette.close')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-mono">{flat.length} results</span>
+                <span className="font-mono">{t('globalCommandPalette.resultsCount', { count: flat.length })}</span>
                 <span className="opacity-50">·</span>
-                <span>Click ⌘K anywhere</span>
+                <span>{t('globalCommandPalette.clickHint')}</span>
               </div>
             </div>
           </motion.div>

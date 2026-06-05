@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Image, { ImageProps } from 'next/image'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface OptimizedImageProps extends Omit<ImageProps, 'src'> {
   src: string
@@ -28,6 +29,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   className,
   ...props
 }) => {
+  const { t } = useTranslation()
   const [currentSrc, setCurrentSrc] = useState<string>(src)
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -131,7 +133,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           aspectRatio: props.width && props.height ? `${props.width}/${props.height}` : undefined
         }}
         role="img"
-        aria-label={`Loading ${alt}`}
+        aria-label={t('optimizedImage.loadingAlt', { alt })}
       />
     )
   }
@@ -147,7 +149,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           minHeight: '48px'
         }}
         role="img"
-        aria-label={`Failed to load ${alt}`}
+        aria-label={t('optimizedImage.failedAlt', { alt })}
       >
         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />

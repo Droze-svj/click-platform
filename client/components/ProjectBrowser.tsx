@@ -14,6 +14,7 @@ import {
     Layout
 } from 'lucide-react'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Project {
     _id: string
@@ -25,6 +26,7 @@ interface Project {
 }
 
 export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (projectId: string) => void }) {
+    const { t } = useTranslation()
     const [projects, setProjects] = useState<Project[]>([])
     const [loading, setLoading] = useState(true)
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -56,9 +58,9 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-3">
                         <Layout className="w-6 h-6 text-blue-500" />
-                        Project Dashboard
+                        {t('projectBrowser.projectDashboard')}
                     </h2>
-                    <p className="text-sm text-gray-500">Manage and organize your video creations</p>
+                    <p className="text-sm text-gray-500">{t('projectBrowser.manageAndOrganize')}</p>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -66,7 +68,7 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search projects..."
+                            placeholder={t('projectBrowser.searchProjects')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
@@ -101,7 +103,7 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
                 ) : filteredProjects.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-500 italic bg-white dark:bg-gray-900/30 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
                         <Folder className="w-12 h-12 mb-4 opacity-20" />
-                        <p>No projects found. Create your first video to see it here!</p>
+                        <p>{t('projectBrowser.noProjectsFound')}</p>
                     </div>
                 ) : (
                     <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6" : "space-y-3"}>
@@ -137,7 +139,7 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
                                     </div>
                                     {viewMode === 'grid' && (
                                         <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-50 dark:border-gray-800/50">
-                                            <span className="text-[10px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded cursor-default uppercase tracking-widest">Project</span>
+                                            <span className="text-[10px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded cursor-default uppercase tracking-widest">{t('projectBrowser.project')}</span>
                                             <MoreVertical className="w-4 h-4 text-gray-400 hover:text-gray-900 dark:hover:text-white" />
                                         </div>
                                     )}

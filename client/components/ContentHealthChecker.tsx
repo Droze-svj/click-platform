@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { CheckCircle2, AlertCircle, XCircle, Sparkles, RefreshCw } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ContentHealthCheckerProps {
   content: {
@@ -24,6 +25,7 @@ interface HealthIssue {
 export default function ContentHealthChecker({ content, onFix }: ContentHealthCheckerProps) {
   const [issues, setIssues] = useState<HealthIssue[]>([])
   const [isChecking, setIsChecking] = useState(false)
+  const { t } = useTranslation()
 
   const checkHealth = () => {
     setIsChecking(true)
@@ -33,8 +35,8 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.title || content.title.trim().length < 5) {
       foundIssues.push({
         type: 'warning',
-        message: 'Title is too short',
-        suggestion: 'Add a descriptive title (at least 5 characters)',
+        message: t('contentHealthChecker.titleTooShort'),
+        suggestion: t('contentHealthChecker.titleTooShortSuggestion'),
         fixable: true,
       })
     }
@@ -43,8 +45,8 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.text || content.text.trim().length < 50) {
       foundIssues.push({
         type: 'error',
-        message: 'Content is too short',
-        suggestion: 'Add more content (at least 50 characters)',
+        message: t('contentHealthChecker.contentTooShort'),
+        suggestion: t('contentHealthChecker.contentTooShortSuggestion'),
         fixable: true,
       })
     }
@@ -53,15 +55,15 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.tags || content.tags.length === 0) {
       foundIssues.push({
         type: 'warning',
-        message: 'No tags added',
-        suggestion: 'Add relevant tags to improve discoverability',
+        message: t('contentHealthChecker.noTags'),
+        suggestion: t('contentHealthChecker.noTagsSuggestion'),
         fixable: true,
       })
     } else if (content.tags.length < 3) {
       foundIssues.push({
         type: 'info',
-        message: 'Few tags added',
-        suggestion: 'Add 3-5 relevant tags for better reach',
+        message: t('contentHealthChecker.fewTags'),
+        suggestion: t('contentHealthChecker.fewTagsSuggestion'),
         fixable: true,
       })
     }
@@ -70,8 +72,8 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.description || content.description.trim().length < 20) {
       foundIssues.push({
         type: 'info',
-        message: 'Missing description',
-        suggestion: 'Add a description (at least 20 characters)',
+        message: t('contentHealthChecker.missingDescription'),
+        suggestion: t('contentHealthChecker.missingDescriptionSuggestion'),
         fixable: true,
       })
     }
@@ -82,8 +84,8 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
       if (length > 280) {
         foundIssues.push({
           type: 'warning',
-          message: 'Content too long for Twitter',
-          suggestion: 'Consider shortening for Twitter compatibility',
+          message: t('contentHealthChecker.tooLongForTwitter'),
+          suggestion: t('contentHealthChecker.tooLongForTwitterSuggestion'),
           fixable: false,
         })
       }
@@ -125,7 +127,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-            Content Health Check
+            {t('contentHealthChecker.title')}
           </h3>
         </div>
         <button
@@ -135,7 +137,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
           className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
-          <span>{isChecking ? 'Checking...' : 'Check'}</span>
+          <span>{isChecking ? t('contentHealthChecker.checking') : t('contentHealthChecker.check')}</span>
         </button>
       </div>
 
@@ -143,10 +145,10 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
         <div className="text-center py-8">
           <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-            All Good! 🎉
+            {t('contentHealthChecker.allGood')}
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            Your content looks healthy and ready to publish
+            {t('contentHealthChecker.allGoodDescription')}
           </p>
         </div>
       ) : (
@@ -155,7 +157,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Health Score
+                {t('contentHealthChecker.healthScore')}
               </span>
               <span className={`text-lg font-bold ${
                 healthScore >= 80 ? 'text-green-600 dark:text-green-400' :
@@ -199,7 +201,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
                         onClick={() => onFix(issue.message, issue.suggestion)}
                         className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
                       >
-                        Fix this →
+                        {t('contentHealthChecker.fixThis')}
                       </button>
                     )}
                   </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type Props = {
   attributed?: boolean
@@ -10,14 +11,15 @@ type Props = {
 }
 
 export default function AIServiceBanner({ attributed, provider, className, message }: Props) {
+  const { t } = useTranslation()
   if (attributed === undefined) return null
   if (attributed) return null
 
   const text =
     message ||
     (provider === 'none'
-      ? 'AI temporarily offline — showing rule-based fallback results. Refresh later for full AI insights.'
-      : 'AI not configured — showing rule-based fallback results.')
+      ? t('aIServiceBanner.offlineFallback')
+      : t('aIServiceBanner.notConfiguredFallback'))
 
   return (
     <div

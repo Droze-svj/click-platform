@@ -5,6 +5,7 @@ import { Player, PlayerRef } from '@remotion/player'
 import { AbsoluteFill, Video as RemotionVideo, useCurrentFrame, useVideoConfig } from 'remotion'
 import { getVideoMetadata } from '@remotion/media-utils'
 import { AlertCircle } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 // --- Interface Definitions ---
 
@@ -78,32 +79,33 @@ const CompositionComponent: React.FC<{
   svgOverlays?: any[]
   gradientOverlays?: any[]
 }> = ({ videoUrl, textOverlays, videoFilters, bRollOverlays = [], shapeOverlays = [], imageOverlays = [], svgOverlays = [], gradientOverlays = [] }) => {
+  const { t } = useTranslation()
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()
-  const t = frame / fps
+  const currentTimeSec = frame / fps
 
   const visibleOverlays = textOverlays.filter(
-    (overlay) => t >= overlay.startTime && t <= overlay.endTime
+    (overlay) => currentTimeSec >= overlay.startTime && currentTimeSec <= overlay.endTime
   )
 
   const visibleBRoll = bRollOverlays.filter(
-    (roll) => t >= roll.startTime && t <= roll.endTime
+    (roll) => currentTimeSec >= roll.startTime && currentTimeSec <= roll.endTime
   )
 
   const visibleShapes = shapeOverlays.filter(
-    (shape) => t >= shape.startTime && t <= shape.endTime
+    (shape) => currentTimeSec >= shape.startTime && currentTimeSec <= shape.endTime
   )
 
   const visibleImages = imageOverlays.filter(
-    (img) => t >= img.startTime && t <= img.endTime
+    (img) => currentTimeSec >= img.startTime && currentTimeSec <= img.endTime
   )
 
   const visibleGradients = gradientOverlays.filter(
-    (grad) => t >= grad.startTime && t <= grad.endTime
+    (grad) => currentTimeSec >= grad.startTime && currentTimeSec <= grad.endTime
   )
 
   const visibleSvgs = svgOverlays.filter(
-    (svg) => t >= svg.startTime && t <= svg.endTime
+    (svg) => currentTimeSec >= svg.startTime && currentTimeSec <= svg.endTime
   )
 
   const filterString = useMemo(() => {
@@ -179,7 +181,7 @@ const CompositionComponent: React.FC<{
         <img
           key={`img-${idx}`}
           src={img.url}
-          alt="Overlay"
+          alt={t('realTimeVideoPreview.overlayAlt')}
           style={{
             position: 'absolute',
             left: `${img.x || 0}%`,
@@ -253,6 +255,7 @@ export default function RealTimeVideoPreview({
   svgOverlays = [],
   gradientOverlays = [],
 }: RealTimeVideoPreviewProps) {
+  const { t } = useTranslation()
   const [metadata, setMetadata] = useState<{ durationInSeconds: number, fps: number, width: number, height: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const playerRef = useRef<PlayerRef>(null)
@@ -276,7 +279,7 @@ export default function RealTimeVideoPreview({
       .catch((err) => {
         if (!mounted) return
         console.error('Failed to get video metadata:', err)
-        setError('Failed to load video metadata. Check CORS or URL validity.')
+        setError(t('realTimeVideoPreview.metadataError'))
       })
     return () => { mounted = false }
   }, [videoUrl, onVideoLoad])
@@ -340,7 +343,7 @@ export default function RealTimeVideoPreview({
             <div className="w-12 h-12 border border-indigo-500 border-t-white/80 rounded-full animate-spin shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
           </div>
           <span className="text-xs font-black text-indigo-400/80 uppercase tracking-[0.3em] font-mono blur-[0.2px]">
-            Booting Render Engine...
+            {t('realTimeVideoPreview.bootingRenderEngine')}
           </span>
         </div>
       </div>

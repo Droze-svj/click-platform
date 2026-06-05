@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation'
 import { Wifi, WifiOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function RealtimeConnection() {
+  const { t } = useTranslation()
   const pathname = usePathname()
   const [isConnected, setIsConnected] = useState(false)
   const [reconnectAttempts, setReconnectAttempts] = useState(0)
@@ -71,10 +73,10 @@ export default function RealtimeConnection() {
             <WifiOff className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
             <div>
               <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                Reconnecting...
+                {t('realtimeConnection.reconnecting')}
               </p>
               <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                Attempt {reconnectAttempts}
+                {t('realtimeConnection.attempt', { count: reconnectAttempts })}
               </p>
             </div>
           </>
@@ -82,7 +84,7 @@ export default function RealtimeConnection() {
           <>
             <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
             <p className="text-sm text-yellow-800 dark:text-yellow-300">
-              Real-time connection lost
+              {t('realtimeConnection.connectionLost')}
             </p>
           </>
         )}

@@ -7,6 +7,7 @@ import { apiGet, apiPost } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TeamMember {
   userId: { _id: string; name: string; email: string }
@@ -18,6 +19,7 @@ export default function TeamPresence() {
   const { user } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const [members, setMembers] = useState<TeamMember[]>([])
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
@@ -66,7 +68,7 @@ export default function TeamPresence() {
       const res = await apiGet('/teams')
       const teams = (res as any)?.data || []
       if (teams.length === 0) {
-        showToast('Please create a team first', 'error')
+        showToast(t('teamPresence.createTeamFirst'), 'error')
         return
       }
 
@@ -75,12 +77,12 @@ export default function TeamPresence() {
         role: 'editor'
       })
 
-      showToast('Invitation sent successfully', 'success')
+      showToast(t('teamPresence.invitationSent'), 'success')
       setInviteEmail('')
       setShowInviteModal(false)
       loadTeamMembers()
     } catch (err: any) {
-      showToast(err?.response?.data?.error || 'Failed to send invite', 'error')
+      showToast(err?.response?.data?.error || t('teamPresence.failedToSendInvite'), 'error')
     } finally {
       setInviting(false)
     }
@@ -131,15 +133,15 @@ export default function TeamPresence() {
         className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-all text-slate-400 hover:text-white"
       >
         <UserPlus className="w-4 h-4" />
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] italic">Invite</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] italic">{t('teamPresence.invite')}</span>
       </motion.button>
 
       {/* Collective Strategy Signal (Phase 10) */}
       <div className="hidden lg:flex px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 items-center gap-3 shadow-lg shadow-indigo-500/5">
          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
          <div className="flex flex-col">
-            <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest italic leading-none">Collective Strategy</span>
-            <span className="text-[9px] font-bold text-white uppercase italic mt-0.5">Focus: AI Productivity (High velocity)</span>
+            <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest italic leading-none">{t('teamPresence.collectiveStrategy')}</span>
+            <span className="text-[9px] font-bold text-white uppercase italic mt-0.5">{t('teamPresence.collectiveStrategyFocus')}</span>
          </div>
       </div>
 
@@ -170,8 +172,8 @@ export default function TeamPresence() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Collaborate</h3>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Scale your content ecosystem</p>
+                  <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">{t('teamPresence.collaborate')}</h3>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{t('teamPresence.scaleEcosystem')}</p>
                 </div>
 
                 <div className="space-y-4">
@@ -181,7 +183,7 @@ export default function TeamPresence() {
                       type="email"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="teammate@click.ai"
+                      placeholder={t('teamPresence.emailPlaceholder')}
                       className="w-full bg-white/[0.02] border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-sm focus:outline-none focus:border-indigo-500 transition-all text-white placeholder:text-slate-700"
                     />
                   </div>
@@ -192,12 +194,12 @@ export default function TeamPresence() {
                     disabled={inviting || !inviteEmail}
                     className="w-full bg-white text-black py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-200 transition-all disabled:opacity-50"
                   >
-                    {inviting ? 'Encrypting Invite...' : 'Send Logic Access'}
+                    {inviting ? t('teamPresence.encryptingInvite') : t('teamPresence.sendLogicAccess')}
                   </button>
                 </div>
 
                 <p className="text-[10px] text-center text-slate-600 uppercase font-bold tracking-widest">
-                  External members will receive a secure portal link
+                  {t('teamPresence.securePortalNote')}
                 </p>
               </div>
             </motion.div>

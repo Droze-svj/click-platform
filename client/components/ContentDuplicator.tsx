@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Copy, Check, Loader2 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ContentDuplicatorProps {
   contentId: string
@@ -14,6 +15,7 @@ export default function ContentDuplicator({ contentId, onDuplicate, className = 
   const [isDuplicating, setIsDuplicating] = useState(false)
   const [isDuplicated, setIsDuplicated] = useState(false)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const handleDuplicate = async () => {
     setIsDuplicating(true)
@@ -32,7 +34,7 @@ export default function ContentDuplicator({ contentId, onDuplicate, className = 
 
       const data = await response.json()
       setIsDuplicated(true)
-      showToast('Content duplicated successfully!', 'success')
+      showToast(t('contentDuplicator.duplicateSuccess'), 'success')
       
       if (onDuplicate) {
         onDuplicate(data.data._id)
@@ -43,7 +45,7 @@ export default function ContentDuplicator({ contentId, onDuplicate, className = 
         setIsDuplicated(false)
       }, 2000)
     } catch (error) {
-      showToast('Failed to duplicate content', 'error')
+      showToast(t('contentDuplicator.duplicateError'), 'error')
     } finally {
       setIsDuplicating(false)
     }
@@ -59,22 +61,22 @@ export default function ContentDuplicator({ contentId, onDuplicate, className = 
           ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
           : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
       } ${className}`}
-      title="Duplicate this content"
+      title={t('contentDuplicator.duplicateTitle')}
     >
       {isDuplicating ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-sm">Duplicating...</span>
+          <span className="text-sm">{t('contentDuplicator.duplicating')}</span>
         </>
       ) : isDuplicated ? (
         <>
           <Check className="w-4 h-4" />
-          <span className="text-sm">Duplicated!</span>
+          <span className="text-sm">{t('contentDuplicator.duplicated')}</span>
         </>
       ) : (
         <>
           <Copy className="w-4 h-4" />
-          <span className="text-sm">Duplicate</span>
+          <span className="text-sm">{t('contentDuplicator.duplicate')}</span>
         </>
       )}
     </button>

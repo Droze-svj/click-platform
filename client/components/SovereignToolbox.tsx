@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-3xl transition-all duration-700'
 
@@ -55,6 +56,7 @@ const VIDEO_DEPENDENT_TOOLS = new Set([
 ])
 
 export default function SovereignToolbox({ videoId }: { videoId?: string } = {}) {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const [tools, setTools] = useState<Tool[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,11 +72,11 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
       }
     } catch (err) {
       console.error('Failed to fetch tools:', err)
-      showToast('Neural link failed during tool indexing.', 'error')
+      showToast(t('sovereignToolbox.indexingFailed'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     fetchTools()
@@ -83,13 +85,13 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
   const executeTool = async (toolId: string) => {
     // Video-dependent tools cannot run without a real source video.
     if (VIDEO_DEPENDENT_TOOLS.has(toolId) && !videoId) {
-      showToast('Select or upload a video before running this tool.', 'error')
+      showToast(t('sovereignToolbox.selectVideoFirst'), 'error')
       return
     }
 
     try {
       setExecutingToolId(toolId)
-      showToast(`Initializing ${toolId} Sovereign Upgrade...`, 'info')
+      showToast(t('sovereignToolbox.initializing', { tool: toolId }), 'info')
 
       const res = await apiPost('/toolbox/execute', {
         toolId,
@@ -101,12 +103,12 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
       })
 
       if (res.success) {
-        showToast(`✦ ${toolId} Synthesis Complete`, 'success')
+        showToast(t('sovereignToolbox.synthesisComplete', { tool: toolId }), 'success')
       } else {
         throw new Error(res.error || 'Execution diffraction')
       }
     } catch (err: any) {
-      showToast(`Tool execution failed: ${err.message}`, 'error')
+      showToast(t('sovereignToolbox.executionFailed', { error: err.message }), 'error')
     } finally {
       setExecutingToolId(null)
     }
@@ -148,7 +150,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
     return (
       <div className="flex flex-col items-center justify-center py-48 space-y-12 bg-transparent min-h-[600px]">
         <Loader2 size={80} className="text-primary-500 animate-spin" />
-        <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic animate-pulse">Syncing_Elite_Modules...</p>
+        <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic animate-pulse">{t('sovereignToolbox.syncingModules')}</p>
       </div>
     )
   }
@@ -165,14 +167,14 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
           <div className="text-center sm:text-left">
             <div className="flex items-center gap-3 mb-2 justify-center sm:justify-start">
                <Cpu size={14} className="text-primary-400 animate-pulse" />
-               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic">Forge_Matrix_v12.0</span>
+               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic">{t('sovereignToolbox.forgeMatrix')}</span>
             </div>
-            <h2 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none">Sovereign Forge</h2>
+            <h2 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none">{t('sovereignToolbox.sovereignForge')}</h2>
           </div>
         </div>
         <div className="flex items-center gap-4 px-8 py-4 rounded-full bg-emerald-500/5 border-2 border-emerald-500/20 shadow-inner group hover:bg-emerald-500/10 transition-colors">
            <Shield size={16} className="text-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-           <span className="text-[11px] font-black text-emerald-400 tracking-[0.3em] uppercase italic leading-none">QUANTUM_SECURE_ENABLED</span>
+           <span className="text-[11px] font-black text-emerald-400 tracking-[0.3em] uppercase italic leading-none">{t('sovereignToolbox.quantumSecure')}</span>
         </div>
       </div>
 
@@ -200,7 +202,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                 </div>
                 <div className="px-4 py-2 rounded-2xl bg-black/40 border-2 border-white/5 flex items-center gap-2 shadow-inner">
                    <div className={`w-2 h-2 rounded-full bg-emerald-500 ${isExecuting ? 'animate-ping shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'shadow-[0_0_4px_rgba(16,185,129,0.5)]'}`} />
-                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">Status: Ready</span>
+                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">{t('sovereignToolbox.statusReady')}</span>
                 </div>
               </div>
 
@@ -208,7 +210,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                 <h3 className="text-2xl sm:text-3xl font-black text-white italic uppercase tracking-tighter leading-none flex items-center gap-4 truncate">
                   {tool.name}
                   {tool.id === 'ai-avatar' && (
-                    <span className="text-[9px] font-black bg-primary-500/20 text-primary-400 px-3 py-1 rounded-full border border-primary-500/20 animate-pulse">ELITE</span>
+                    <span className="text-[9px] font-black bg-primary-500/20 text-primary-400 px-3 py-1 rounded-full border border-primary-500/20 animate-pulse">{t('sovereignToolbox.elite')}</span>
                   )}
                 </h3>
                 <p className="text-[12px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed line-clamp-2 h-10 italic">
@@ -219,12 +221,12 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                   {typeof tool.roi === 'number' && (
                     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 shadow-sm">
                       <Zap size={14} className="text-emerald-400" />
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">+{tool.roi.toFixed(1)}% ROI</span>
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{t('sovereignToolbox.roi', { value: tool.roi.toFixed(1) })}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary-500/5 border border-primary-500/10 shadow-sm">
                     <Cpu size={14} className="text-primary-400" />
-                    <span className="text-[10px] font-black text-primary-400 uppercase tracking-widest italic">ULTRA_SYNC</span>
+                    <span className="text-[10px] font-black text-primary-400 uppercase tracking-widest italic">{t('sovereignToolbox.ultraSync')}</span>
                   </div>
                 </div>
               </div>
@@ -233,7 +235,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
               <div className="mt-8 pt-8 border-t-2 border-white/5 relative z-10 group/upgrade">
                  <div className="flex items-center gap-3 mb-4">
                     <Sparkles size={14} className="text-primary-400 group-hover/upgrade:rotate-180 transition-transform duration-1000" />
-                    <span className="text-[10px] font-black text-primary-400 uppercase tracking-[0.4em] italic">SOVEREIGN_SYNTHESIS</span>
+                    <span className="text-[10px] font-black text-primary-400 uppercase tracking-[0.4em] italic">{t('sovereignToolbox.sovereignSynthesis')}</span>
                  </div>
                  <p className="text-[11px] font-black text-slate-400 italic leading-relaxed uppercase opacity-80 group-hover:text-white group-hover:opacity-100 transition-all duration-500">
                     {tool.upgrade}
@@ -244,7 +246,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                 <div className="absolute inset-0 bg-primary-900/40 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-500">
                    <div className="flex flex-col items-center gap-6">
                       <Loader2 size={48} className="text-primary-400 animate-spin" />
-                      <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic animate-pulse">SYNTHESIZING...</span>
+                      <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic animate-pulse">{t('sovereignToolbox.synthesizing')}</span>
                    </div>
                 </div>
               )}
@@ -272,7 +274,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
               <div className="absolute -top-60 -right-60 w-[800px] h-[800px] bg-primary-600/5 blur-[200px] rounded-full pointer-events-none" />
 
               {(() => {
-                const tool = tools.find(t => t.id === selectedToolId)
+                const tool = tools.find(item => item.id === selectedToolId)
                 if (!tool) return null
                 const Icon = getIcon(tool.id)
                 const colorClass = getColor(tool.id)
@@ -284,7 +286,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                           <Icon size={56} className={`${colorClass} sm:w-16 sm:h-16`} />
                        </div>
                        <div className="text-center md:text-left">
-                          <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic mb-4">MODULE_SIG: {tool.id.toUpperCase()}</p>
+                          <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic mb-4">{t('sovereignToolbox.moduleSig', { id: tool.id.toUpperCase() })}</p>
                           <h2 className="text-5xl sm:text-7xl font-black text-white italic uppercase tracking-tighter leading-none">{tool.name}</h2>
                        </div>
                     </div>
@@ -293,7 +295,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                        <div className="p-8 sm:p-10 rounded-[3rem] sm:rounded-[3.5rem] bg-white/[0.02] border-2 border-white/5 space-y-6 shadow-inner">
                           <div className="flex items-center gap-4">
                              <Info size={16} className="text-slate-500" />
-                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">Diagnostic_Trace</span>
+                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('sovereignToolbox.diagnosticTrace')}</span>
                           </div>
                           <p className="text-2xl sm:text-3xl font-black text-slate-300 leading-tight uppercase tracking-tighter italic">
                              {tool.description}
@@ -303,7 +305,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                        <div className="p-8 sm:p-10 rounded-[3rem] sm:rounded-[3.5rem] bg-primary-500/5 border-2 border-primary-500/20 space-y-6 shadow-[0_40px_100px_rgba(99,102,241,0.2)]">
                           <div className="flex items-center gap-4">
                              <Sparkles size={16} className="text-primary-400" />
-                             <span className="text-[10px] font-black text-primary-400 uppercase tracking-[0.4em] italic leading-none">Sovereign_Logic_v12</span>
+                             <span className="text-[10px] font-black text-primary-400 uppercase tracking-[0.4em] italic leading-none">{t('sovereignToolbox.sovereignLogic')}</span>
                           </div>
                           <p className="text-3xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tighter italic">
                              {tool.upgrade}
@@ -318,13 +320,13 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                          className="flex-[2] py-8 sm:py-10 rounded-[2.5rem] sm:rounded-[3rem] bg-primary-600 text-white font-black text-lg sm:text-xl uppercase tracking-[0.6em] italic shadow-[0_40px_100px_rgba(99,102,241,0.4)] hover:bg-primary-500 active:scale-95 transition-all flex items-center justify-center gap-6 sm:gap-10 border-none group"
                        >
                           {executingToolId === tool.id ? <Loader2 size={32} className="animate-spin" /> : <Zap size={32} className="group-hover:scale-125 transition-transform" />}
-                          INITIALISE_SYNTHESIS
+                          {t('sovereignToolbox.initialiseSynthesis')}
                        </button>
                        <button
                          onClick={() => setSelectedToolId(null)}
                          className="flex-1 px-8 sm:px-12 py-8 sm:py-10 rounded-[2.5rem] sm:rounded-[3rem] bg-white/5 border-2 border-white/10 text-slate-500 font-black text-lg sm:text-xl uppercase tracking-[0.4em] italic hover:text-white hover:bg-white/10 transition-all active:scale-95"
                        >
-                          Close_Link
+                          {t('sovereignToolbox.closeLink')}
                        </button>
                     </div>
                   </div>

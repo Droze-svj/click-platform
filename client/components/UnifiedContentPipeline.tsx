@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Video,
   FileText,
@@ -80,6 +81,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
   const [activeThought, setActiveThought] = useState('')
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const platformThemes: Record<string, { accent: string, glow: string, bg: string, accentHex: string }> = {
     twitter: { accent: 'indigo-500', glow: 'rgba(99,102,241,0.4)', bg: 'from-indigo-600/10', accentHex: '#6366f1' },
@@ -95,11 +97,11 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
     : platformThemes.twitter
 
   const aiThoughts = [
-    "Optimizing narrative nodes for cross-platform resonance...",
-    "Extracting high-engagement clusters from source material...",
-    "Neural thread processing: Multi-network synthesis active...",
-    "Calibrating engagement velocity across 6 dimensions...",
-    "Synchronizing autonomous repository with tactical roadmap..."
+    t('unifiedContentPipeline.thoughtOptimizing'),
+    t('unifiedContentPipeline.thoughtExtracting'),
+    t('unifiedContentPipeline.thoughtNeuralThread'),
+    t('unifiedContentPipeline.thoughtCalibrating'),
+    t('unifiedContentPipeline.thoughtSynchronizing')
   ]
 
   useEffect(() => {
@@ -149,13 +151,13 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
     try {
       setStatus('processing')
       setProcessingLog([])
-      addLog("Initializing Neural Engine...")
+      addLog(t('unifiedContentPipeline.logInitializing'))
 
       const token = localStorage.getItem('token')
 
-      setTimeout(() => addLog("Analyzing Source Integrity..."), 800)
-      setTimeout(() => addLog("Extracting Narrative Clusters..."), 1600)
-      setTimeout(() => addLog("Neural Synthesis: Multi-Node Active..."), 2400)
+      setTimeout(() => addLog(t('unifiedContentPipeline.logAnalyzing')), 800)
+      setTimeout(() => addLog(t('unifiedContentPipeline.logExtracting')), 1600)
+      setTimeout(() => addLog(t('unifiedContentPipeline.logSynthesis')), 2400)
 
       const response = await axios.post(
         `${API_URL}/pipeline/process`,
@@ -173,14 +175,14 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
       if (response.data.success) {
         setPipeline(response.data.data)
         setStatus('completed')
-        showToast('Pipeline Synchronized Successfully', 'success')
+        showToast(t('unifiedContentPipeline.toastSyncSuccess'), 'success')
         if (onComplete) {
           onComplete(response.data.data)
         }
       }
     } catch (error: any) {
       setStatus('error')
-      showToast(error.response?.data?.message || 'Neural synchronization failed', 'error')
+      showToast(error.response?.data?.message || t('unifiedContentPipeline.toastSyncFailed'), 'error')
     }
   }
 
@@ -197,10 +199,10 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
       )
 
       if (response.data.success) {
-        showToast('Successfully broadcasted to ecosystem', 'success')
+        showToast(t('unifiedContentPipeline.toastBroadcastSuccess'), 'success')
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Broadcast failed', 'error')
+      showToast(error.response?.data?.message || t('unifiedContentPipeline.toastBroadcastFailed'), 'error')
     }
   }
 
@@ -244,14 +246,14 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
           <div className="space-y-8 flex-1">
             <div className={`inline-flex items-center gap-4 px-6 py-2.5 rounded-full bg-${currentTheme.accent}/10 border border-${currentTheme.accent}/20 text-${currentTheme.accent} text-[11px] font-black uppercase tracking-[0.5em] italic shadow-lg`}>
               <Radio className="w-4 h-4 animate-pulse" />
-              Intelligence Pipeline Alpha
+              {t('unifiedContentPipeline.intelligencePipelineAlpha')}
             </div>
             <div className="space-y-4">
               <h1 className="text-[8rem] md:text-[12rem] font-black tracking-tighter bg-gradient-to-b from-white via-white to-white/10 bg-clip-text text-transparent italic leading-[0.75]">
-                NEURAL<br />FLOW
+                {t('unifiedContentPipeline.neural')}<br />{t('unifiedContentPipeline.flow')}
               </h1>
               <p className="text-slate-500 text-3xl font-medium tracking-tight mt-10 max-w-4xl">
-                Synthesizing <span className="text-white font-black italic underline underline-offset-8 decoration-4 decoration-white/10">{contentType}</span> into a multi-network <span className={`text-${currentTheme.accent} font-black italic`}>Autonomous Ecosystem</span>.
+                {t('unifiedContentPipeline.synthesizingPrefix')} <span className="text-white font-black italic underline underline-offset-8 decoration-4 decoration-white/10">{contentType}</span> {t('unifiedContentPipeline.synthesizingMid')} <span className={`text-${currentTheme.accent} font-black italic`}>{t('unifiedContentPipeline.autonomousEcosystem')}</span>.
               </p>
             </div>
           </div>
@@ -297,8 +299,8 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
               <div className="flex-1 space-y-6">
                 <div className="flex justify-between items-end">
                   <div className="space-y-2">
-                    <span className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-600 block italic">Neural Transformation Velocity</span>
-                    <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{status === 'completed' ? 'Synchronization Complete' : status === 'processing' ? 'Synthesis Active' : 'Idle State'}</h3>
+                    <span className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-600 block italic">{t('unifiedContentPipeline.neuralTransformationVelocity')}</span>
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{status === 'completed' ? t('unifiedContentPipeline.synchronizationComplete') : status === 'processing' ? t('unifiedContentPipeline.synthesisActive') : t('unifiedContentPipeline.idleState')}</h3>
                   </div>
                   <div className={`text-6xl font-black italic tracking-tighter tabular-nums ${status === 'completed' ? 'text-emerald-400' : `text-${currentTheme.accent}`}`}>
                     {status === 'completed' ? '100' : status === 'processing' ? '65' : '0'}<span className="text-xl not-italic ml-2 opacity-40">%</span>
@@ -358,9 +360,9 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                     <div className="flex items-center justify-between px-4">
                       <div className="flex items-center gap-6">
                         <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.8)]" />
-                        <h3 className="text-[12px] font-black uppercase tracking-[0.5em] text-slate-500 italic">Target Cluster Repositories</h3>
+                        <h3 className="text-[12px] font-black uppercase tracking-[0.5em] text-slate-500 italic">{t('unifiedContentPipeline.targetClusterRepositories')}</h3>
                       </div>
-                      <div className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.4em] italic bg-indigo-500/5 px-6 py-2 rounded-full border border-indigo-500/20">{selectedPlatforms.length} Ecosystems Active</div>
+                      <div className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.4em] italic bg-indigo-500/5 px-6 py-2 rounded-full border border-indigo-500/20">{t('unifiedContentPipeline.ecosystemsActive', { count: selectedPlatforms.length })}</div>
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-6 gap-8">
@@ -411,8 +413,8 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           <Clock className={`w-10 h-10 ${autoSchedule ? 'animate-pulse' : ''}`} />
                         </div>
                         <div className="flex-1 space-y-2">
-                          <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase leading-none">Neural Scheduling</h4>
-                          <p className="text-sm text-slate-500 font-medium tracking-tight">Deploy predictive broadcast timing for peak engagement velocity.</p>
+                          <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase leading-none">{t('unifiedContentPipeline.neuralScheduling')}</h4>
+                          <p className="text-sm text-slate-500 font-medium tracking-tight">{t('unifiedContentPipeline.neuralSchedulingDesc')}</p>
                         </div>
                         <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-700 ${autoSchedule ? 'bg-emerald-500' : 'bg-white/5'} flex items-center border border-white/5 shadow-inner`}>
                           <motion.div animate={{ x: autoSchedule ? 32 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-2xl" />
@@ -430,8 +432,8 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           <RefreshCw className={`w-10 h-10 ${enableRecycling ? 'animate-spin' : ''}`} />
                         </div>
                         <div className="flex-1 space-y-2">
-                          <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase leading-none">Evergreen Synthesis</h4>
-                          <p className="text-sm text-slate-500 font-medium tracking-tight">Activate self-healing content recycling for infinite repository ROI.</p>
+                          <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase leading-none">{t('unifiedContentPipeline.evergreenSynthesis')}</h4>
+                          <p className="text-sm text-slate-500 font-medium tracking-tight">{t('unifiedContentPipeline.evergreenSynthesisDesc')}</p>
                         </div>
                         <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-700 ${enableRecycling ? `bg-${currentTheme.accent}` : 'bg-white/5'} flex items-center border border-white/5 shadow-inner`}>
                           <motion.div animate={{ x: enableRecycling ? 32 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-2xl" />
@@ -452,8 +454,8 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                       <div className="flex items-center gap-8 relative z-10">
                         <FingerprintIcon className="w-12 h-12" />
                         <div className="text-left">
-                          <div className="text-[11px] font-black uppercase tracking-[0.5em] opacity-60 mb-1 italic">Initiate Sequence</div>
-                          <div className="text-4xl font-black uppercase tracking-tighter italic leading-none">Neural Processing</div>
+                          <div className="text-[11px] font-black uppercase tracking-[0.5em] opacity-60 mb-1 italic">{t('unifiedContentPipeline.initiateSequence')}</div>
+                          <div className="text-4xl font-black uppercase tracking-tighter italic leading-none">{t('unifiedContentPipeline.neuralProcessing')}</div>
                         </div>
                       </div>
                       <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-white/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 rotate-45 pointer-events-none" />
@@ -480,9 +482,9 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                     </div>
 
                     <div className="space-y-6">
-                      <h3 className="text-7xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Synthesis Active</h3>
+                      <h3 className="text-7xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">{t('unifiedContentPipeline.synthesisActive')}</h3>
                       <div className="flex items-center justify-center gap-6">
-                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic">Ecosystem Calibration in progress</span>
+                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic">{t('unifiedContentPipeline.ecosystemCalibration')}</span>
                         <div className="flex items-center gap-2">
                           {[1, 2, 3].map(i => (
                             <motion.div
@@ -500,7 +502,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                       <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
                       <div className="flex items-center gap-6 mb-10 pb-6 border-b border-white/5">
                         <Activity className={`w-7 h-7 text-${currentTheme.accent}`} />
-                        <span className="text-[11px] font-black text-slate-600 uppercase tracking-[0.4em] italic leading-none">Neural Feed // Processing Log</span>
+                        <span className="text-[11px] font-black text-slate-600 uppercase tracking-[0.4em] italic leading-none">{t('unifiedContentPipeline.neuralFeedProcessingLog')}</span>
                       </div>
                       <div className="space-y-6 relative z-10 transition-all duration-500">
                         {processingLog.map((log, i) => (
@@ -516,7 +518,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           </motion.div>
                         ))}
                       </div>
-                      <div className="absolute bottom-6 right-10 text-[10px] text-slate-700 font-black uppercase tracking-[0.5em] animate-pulse italic">Cortex Channel // Alpha Active</div>
+                      <div className="absolute bottom-6 right-10 text-[10px] text-slate-700 font-black uppercase tracking-[0.5em] animate-pulse italic">{t('unifiedContentPipeline.cortexChannelAlphaActive')}</div>
                     </div>
                   </div>
                 </motion.div>
@@ -535,21 +537,21 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                         <CheckCircle2 className="w-16 h-16 text-white" />
                       </div>
                       <div className="space-y-6">
-                        <h3 className="text-8xl font-black text-[var(--text-main)] italic tracking-tighter leading-[0.8]">SYNCHRONIZATION<br />VERIFIED</h3>
-                        <p className="text-slate-500 text-2xl font-medium tracking-tight mt-8 uppercase italic">Ecosystem broadast nodes are <span className="text-white font-black">primed</span> for deployment.</p>
+                        <h3 className="text-8xl font-black text-[var(--text-main)] italic tracking-tighter leading-[0.8]">{t('unifiedContentPipeline.synchronization')}<br />{t('unifiedContentPipeline.verified')}</h3>
+                        <p className="text-slate-500 text-2xl font-medium tracking-tight mt-8 uppercase italic">{t('unifiedContentPipeline.nodesPrimedPrefix')} <span className="text-white font-black">{t('unifiedContentPipeline.primed')}</span> {t('unifiedContentPipeline.nodesPrimedSuffix')}</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-10">
                         <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 shadow-2xl">
-                          <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">Estimated Yield</div>
+                          <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">{t('unifiedContentPipeline.estimatedYield')}</div>
                           <div className="text-6xl font-black text-emerald-400 tracking-tighter italic tabular-nums">+42<span className="text-2xl ml-1 opacity-40">%</span></div>
                         </div>
                         <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 shadow-2xl">
-                          <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">Neural Integrity</div>
+                          <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">{t('unifiedContentPipeline.neuralIntegrity')}</div>
                           <div className="text-6xl font-black text-white tracking-tighter italic tabular-nums">98.4<span className="text-2xl ml-1 opacity-40">%</span></div>
                         </div>
                         <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 shadow-2xl">
-                          <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">Nodes Active</div>
+                          <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">{t('unifiedContentPipeline.nodesActive')}</div>
                           <div className="text-6xl font-black text-white tracking-tighter italic tabular-nums">{selectedPlatforms.length}</div>
                         </div>
                       </div>
@@ -561,7 +563,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           onClick={() => setStatus('idle')}
                           className="px-12 py-7 rounded-[2.5rem] bg-white text-black font-black text-sm uppercase tracking-[0.4em] italic shadow-3xl"
                         >
-                          Reconfigure Flow
+                          {t('unifiedContentPipeline.reconfigureFlow')}
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.05, y: -4 }}
@@ -570,7 +572,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           className={`px-16 py-7 rounded-[2.5rem] bg-emerald-500 text-white font-black text-sm uppercase tracking-[0.4em] italic shadow-[0_30px_80px_rgba(16,185,129,0.5)] border border-white/20 flex items-center gap-6`}
                         >
                           <Send className="w-5 h-5 fill-white" />
-                          Broadcast to Ecosystem
+                          {t('unifiedContentPipeline.broadcastToEcosystem')}
                         </motion.button>
                       </div>
                     </div>

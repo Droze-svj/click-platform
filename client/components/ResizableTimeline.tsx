@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { GripVertical, Maximize2, Minimize2 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ResizableTimelineProps {
   children: React.ReactNode
@@ -18,6 +19,7 @@ export default function ResizableTimeline({
   defaultHeight = 300,
   onHeightChange
 }: ResizableTimelineProps) {
+  const { t } = useTranslation()
   const [height, setHeight] = useState(() => {
     // Try to restore from localStorage
     if (typeof window !== 'undefined') {
@@ -112,7 +114,7 @@ export default function ResizableTimeline({
               toggleMaximize()
             }}
             className="p-1 hover:bg-gray-600 rounded transition-colors"
-            title={isMaximized ? 'Restore timeline size' : 'Maximize timeline'}
+            title={isMaximized ? t('resizableTimeline.restore') : t('resizableTimeline.maximize')}
           >
             {isMaximized ? (
               <Minimize2 className="w-3 h-3 text-gray-300" />

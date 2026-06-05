@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Target, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -20,6 +21,7 @@ interface Gap {
 export default function ContentGapAnalysis() {
   const [gaps, setGaps] = useState<Gap[]>([])
   const [loading, setLoading] = useState(true)
+  const { t } = useTranslation()
 
   useEffect(() => {
     loadGapAnalysis()
@@ -86,13 +88,13 @@ export default function ContentGapAnalysis() {
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-6 h-6 text-blue-600" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Content Gap Analysis
+            {t('contentGapAnalysis.title')}
           </h3>
         </div>
         <div className="text-center py-12">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">
-            No significant gaps found. Your content strategy looks good!
+            {t('contentGapAnalysis.noGaps')}
           </p>
         </div>
       </div>
@@ -104,7 +106,7 @@ export default function ContentGapAnalysis() {
       <div className="flex items-center gap-2 mb-6">
         <Target className="w-6 h-6 text-blue-600" />
         <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-          Content Gap Analysis
+          {t('contentGapAnalysis.title')}
         </h3>
       </div>
 
@@ -128,7 +130,7 @@ export default function ContentGapAnalysis() {
                       ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                       : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                   }`}>
-                    {gap.impact.toUpperCase()} IMPACT
+                    {t('contentGapAnalysis.impactLabel', { impact: t(`contentGapAnalysis.impact_${gap.impact}`) })}
                   </span>
                 </div>
                 <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
@@ -137,19 +139,19 @@ export default function ContentGapAnalysis() {
                 
                 <div className="grid grid-cols-3 gap-4 mb-3">
                   <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Current</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('contentGapAnalysis.current')}</p>
                     <p className="text-lg font-semibold text-gray-900 dark:text-white">
                       {gap.current}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Recommended</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('contentGapAnalysis.recommended')}</p>
                     <p className="text-lg font-semibold text-green-600">
                       {gap.recommended}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Potential</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('contentGapAnalysis.potential')}</p>
                     <p className="text-lg font-semibold text-blue-600">
                       {gap.potential}
                     </p>
@@ -158,7 +160,7 @@ export default function ContentGapAnalysis() {
 
                 <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                    Opportunity:
+                    {t('contentGapAnalysis.opportunity')}
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     {gap.opportunity}

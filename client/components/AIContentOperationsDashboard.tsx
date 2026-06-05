@@ -41,6 +41,7 @@ import {
 import TeamPresence from './TeamPresence'
 import RealTimeActivityTicker from './RealTimeActivityTicker'
 import CollaborativeComments from './CollaborativeComments'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const calculateGrade = (score: number) => {
   if (score >= 90) return 'A'
@@ -123,6 +124,7 @@ export default function AIContentOperationsDashboard() {
   const { showToast } = useToast()
   const { socket, connected, on, off } = useSocket()
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   const platformThemes: Record<string, { accent: string, glow: string, bg: string, accentHex: string }> = {
     twitter: { accent: 'indigo-500', glow: 'rgba(99,102,241,0.4)', bg: 'from-indigo-600/10', accentHex: '#6366f1' },
@@ -136,13 +138,13 @@ export default function AIContentOperationsDashboard() {
   const currentTheme = platformThemes[selectedPlatform] || platformThemes.twitter
 
   const aiThoughts = [
-    "Neural latency optimized. Signal clear.",
-    "Cross-platform parity verified at 98.4%.",
-    "Viral coefficient projecting 4.2x surge.",
-    "Ecosystem entropy reduced. Integrity stable.",
-    "Autonomous loop: Executing high-yield protocols.",
-    "B-roll clusters synced with audience pulse.",
-    "Strategic telemetry ingested. Re-routing vectors."
+    t('aiContentOperationsDashboard.thoughtNeuralLatency'),
+    t('aiContentOperationsDashboard.thoughtCrossPlatform'),
+    t('aiContentOperationsDashboard.thoughtViralCoefficient'),
+    t('aiContentOperationsDashboard.thoughtEcosystemEntropy'),
+    t('aiContentOperationsDashboard.thoughtAutonomousLoop'),
+    t('aiContentOperationsDashboard.thoughtBrollClusters'),
+    t('aiContentOperationsDashboard.thoughtStrategicTelemetry')
   ]
 
   useEffect(() => {
@@ -271,11 +273,11 @@ export default function AIContentOperationsDashboard() {
       if (competitorRaw?.data) setCompetitors(competitorRaw.data)
       if (refreshRaw?.data) setRefreshRecs(Array.isArray(refreshRaw.data) ? refreshRaw.data : [])
 
-      setActiveThought("Intelligence Synchronization Complete.")
-      showToast('Ecosystem Intelligence Updated', 'success')
+      setActiveThought(t('aiContentOperationsDashboard.thoughtSyncComplete'))
+      showToast(t('aiContentOperationsDashboard.toastIntelligenceUpdated'), 'success')
     } catch (error: any) {
       console.error('Sync error:', error)
-      showToast('Neural Sync Interrupted', 'error')
+      showToast(t('aiContentOperationsDashboard.toastSyncInterrupted'), 'error')
     } finally {
       setLoading(false)
     }
@@ -291,36 +293,36 @@ export default function AIContentOperationsDashboard() {
     const headers = { Authorization: `Bearer ${token}` }
 
     try {
-      setRepairLogs(prev => [...prev, 'Initializing Neural Repository Probe...'])
+      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logInitProbe')])
       await import('../lib/api').then(m => m.apiPost('/content-operations/health/monitor', { autoOptimize: true })).catch(() => {})
       setScanProgress(20)
 
-      setRepairLogs(prev => [...prev, 'Scanning Engagement Patterns for ' + selectedPlatform + '...'])
+      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logScanningPatterns', { platform: selectedPlatform })])
       await new Promise(r => setTimeout(r, 800))
       setScanProgress(40)
 
-      setRepairLogs(prev => [...prev, 'Predicting Future Content Gaps...'])
+      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logPredictingGaps')])
       const gapRes: any = await import('../lib/api').then(m => m.apiGet('/content-operations/gaps/predict')).catch(() => null)
       if (gapRes?.data) setPredictedGaps(gapRes.data)
       setScanProgress(70)
 
-      setRepairLogs(prev => [...prev, 'Optimizing Meta-Signals for Peak ROI...'])
+      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logOptimizingSignals')])
       await new Promise(r => setTimeout(r, 800))
       setScanProgress(90)
 
-      setRepairLogs(prev => [...prev, 'Ecosystem Healed & Optimized for Performance.'])
+      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logEcosystemHealed')])
       setScanProgress(100)
 
       setTimeout(() => {
         setIsScanning(false)
         setShowRepairLogs(true)
-        showToast('Ecosystem Neural Integrity Restored', 'success')
+        showToast(t('aiContentOperationsDashboard.toastIntegrityRestored'), 'success')
         loadDashboard()
       }, 1000)
     } catch (error) {
-      setRepairLogs(prev => [...prev, 'CRITICAL: Neural Probe Aborted due to sync error.'])
+      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logProbeAborted')])
       setIsScanning(false)
-      showToast('Deep Scan Failed', 'error')
+      showToast(t('aiContentOperationsDashboard.toastDeepScanFailed'), 'error')
     }
   }
 
@@ -328,10 +330,10 @@ export default function AIContentOperationsDashboard() {
     setLoading(true)
     try {
       await import('../lib/api').then(m => m.apiPost('/content-operations/health/auto-optimize', {}))
-      showToast('Ecosystem Optimization Applied', 'success')
+      showToast(t('aiContentOperationsDashboard.toastOptimizationApplied'), 'success')
       loadDashboard()
     } catch (error) {
-      showToast('Optimization Failed', 'error')
+      showToast(t('aiContentOperationsDashboard.toastOptimizationFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -396,8 +398,8 @@ export default function AIContentOperationsDashboard() {
                 </div>
               </div>
               <div className="space-y-6">
-                <h3 className="text-6xl font-black text-[var(--text-main)] uppercase tracking-tighter italic leading-none">Neural Probe <span style={{ color: currentTheme.accentHex }}>Alpha</span></h3>
-                <p className="text-slate-500 text-xl font-medium tracking-tight uppercase">Re-calibrating Neural Clusters for <span style={{ color: currentTheme.accentHex }} className="font-black italic">{selectedPlatform}</span> repository...</p>
+                <h3 className="text-6xl font-black text-[var(--text-main)] uppercase tracking-tighter italic leading-none">{t('aiContentOperationsDashboard.neuralProbe')} <span style={{ color: currentTheme.accentHex }}>{t('aiContentOperationsDashboard.alpha')}</span></h3>
+                <p className="text-slate-500 text-xl font-medium tracking-tight uppercase">{t('aiContentOperationsDashboard.recalibratingPrefix')} <span style={{ color: currentTheme.accentHex }} className="font-black italic">{selectedPlatform}</span> {t('aiContentOperationsDashboard.recalibratingSuffix')}</p>
               </div>
               <div className="space-y-6">
                 <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
@@ -456,10 +458,10 @@ export default function AIContentOperationsDashboard() {
           </div>
           <div className="flex items-center gap-4 pr-4">
             <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={loadDashboard} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all font-black text-[11px] uppercase tracking-[0.4em] italic">
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Sync Logic
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> {t('aiContentOperationsDashboard.syncLogic')}
             </motion.button>
             <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={startDeepScan} style={{ backgroundColor: currentTheme.accentHex, boxShadow: `0 20px 40px ${currentTheme.glow}` }} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] text-white font-black text-[11px] uppercase tracking-[0.4em] border border-white/20 italic">
-              <Fingerprint className="w-4 h-4" /> Deep Scan
+              <Fingerprint className="w-4 h-4" /> {t('aiContentOperationsDashboard.deepScan')}
             </motion.button>
           </div>
         </motion.div>
@@ -469,9 +471,9 @@ export default function AIContentOperationsDashboard() {
           <div className="absolute top-0 right-0 w-[600px] h-[600px] blur-[150px] rounded-full pointer-events-none" style={{ backgroundColor: `${currentTheme.accentHex}10` }} />
           <div className="space-y-12 flex-1 text-center lg:text-left">
             <div className="space-y-6">
-              <h1 className="text-[8rem] md:text-[12rem] font-black tracking-tighter italic leading-[0.7] bg-gradient-to-b from-white via-white to-white/10 bg-clip-text text-transparent">NEURAL<br />CENTER</h1>
+              <h1 className="text-[8rem] md:text-[12rem] font-black tracking-tighter italic leading-[0.7] bg-gradient-to-b from-white via-white to-white/10 bg-clip-text text-transparent">{t('aiContentOperationsDashboard.neuralLine1')}<br />{t('aiContentOperationsDashboard.neuralLine2')}</h1>
               <p className="text-slate-400 text-3xl font-medium tracking-tight max-w-4xl mt-10 leading-relaxed">
-                Autonomous system <span style={{ color: currentTheme.accentHex }} className="font-black italic underline underline-offset-[12px] decoration-4">dominating</span> the <span className="text-white font-black">{selectedPlatform}</span> repository cluster.
+                {t('aiContentOperationsDashboard.autonomousPrefix')} <span style={{ color: currentTheme.accentHex }} className="font-black italic underline underline-offset-[12px] decoration-4">{t('aiContentOperationsDashboard.dominating')}</span> {t('aiContentOperationsDashboard.autonomousMid')} <span className="text-white font-black">{selectedPlatform}</span> {t('aiContentOperationsDashboard.autonomousSuffix')}
               </p>
             </div>
             <div className="flex items-center justify-center lg:justify-start gap-10">
@@ -499,7 +501,7 @@ export default function AIContentOperationsDashboard() {
             </div>
             <motion.button whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAutoLoopActive(!isAutoLoopActive)} style={{ backgroundColor: isAutoLoopActive ? currentTheme.accentHex : '#0f172a', boxShadow: isAutoLoopActive ? `0 20px 50px ${currentTheme.glow}` : 'none' }} className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-12 py-5 rounded-[2.2rem] border border-white/10 text-white`}>
               <Zap className={`w-5 h-5 ${isAutoLoopActive ? 'fill-white' : ''}`} />
-              <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">{isAutoLoopActive ? 'Neural Active' : 'Suspended'}</span>
+              <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">{isAutoLoopActive ? t('aiContentOperationsDashboard.neuralActive') : t('aiContentOperationsDashboard.suspended')}</span>
             </motion.button>
           </div>
         </motion.div>
@@ -531,7 +533,7 @@ export default function AIContentOperationsDashboard() {
               <div className="flex-1 space-y-12">
                 <div className="flex items-center gap-6">
                   <TrendingUp className="w-8 h-8 text-emerald-400" />
-                  <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase">Apex Flow</h2>
+                  <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase">{t('aiContentOperationsDashboard.apexFlow')}</h2>
                 </div>
                 <div className="text-8xl font-black text-white italic tabular-nums leading-none">
                   {nextWeek ? `+${nextWeek.gap}%` : '+38.2%'}
@@ -554,7 +556,7 @@ export default function AIContentOperationsDashboard() {
         {/* Footer Intelligence */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">Decay Alert</h3>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.decayAlert')}</h3>
             <div className="space-y-4">
               {refreshRecs.slice(0, 3).map((rec, i) => (
                 <div key={i} className="text-sm text-slate-400 italic">[{rec.action}] {rec.title}</div>
@@ -562,13 +564,13 @@ export default function AIContentOperationsDashboard() {
             </div>
           </div>
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">Neural Audit</h3>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.neuralAudit')}</h3>
             <div className="text-6xl font-black text-white italic tabular-nums">99.9%</div>
-            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">Compliance Score</div>
+            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">{t('aiContentOperationsDashboard.complianceScore')}</div>
           </div>
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">Auto Loop</h3>
-            <p className="text-slate-400 text-sm italic mb-6">System is self-optimizing the repository cluster.</p>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.autoLoop')}</h3>
+            <p className="text-slate-400 text-sm italic mb-6">{t('aiContentOperationsDashboard.autoLoopDescription')}</p>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="h-full w-1/3 bg-white/20" />
             </div>
@@ -576,7 +578,7 @@ export default function AIContentOperationsDashboard() {
         </motion.div>
 
         {teamId && (
-          <CollaborativeComments teamId={teamId} entityId={`health-${selectedPlatform}`} title={`${selectedPlatform} Health Operations`} />
+          <CollaborativeComments teamId={teamId} entityId={`health-${selectedPlatform}`} title={t('aiContentOperationsDashboard.healthOperationsTitle', { platform: selectedPlatform })} />
         )}
       </motion.div>
     </div>

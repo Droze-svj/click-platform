@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface WorkflowStep {
   id: string
@@ -49,8 +50,8 @@ const workflowSteps: WorkflowStep[] = [
   // Basic Editing Flow
   {
     id: 'upload_video',
-    title: 'Upload Your Video',
-    description: 'Start by uploading or selecting a video to edit',
+    title: 'flowOptimizer.stepUploadVideoTitle',
+    description: 'flowOptimizer.stepUploadVideoDesc',
     category: 'setup',
     estimatedTime: 30,
     difficulty: 'beginner',
@@ -58,8 +59,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'apply_template',
-    title: 'Apply a Style Template',
-    description: 'Choose from professional templates to instantly style your video',
+    title: 'flowOptimizer.stepApplyTemplateTitle',
+    description: 'flowOptimizer.stepApplyTemplateDesc',
     category: 'edit',
     estimatedTime: 60,
     difficulty: 'beginner',
@@ -68,8 +69,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'color_grade',
-    title: 'Color Correction',
-    description: 'Adjust brightness, contrast, and color balance',
+    title: 'flowOptimizer.stepColorGradeTitle',
+    description: 'flowOptimizer.stepColorGradeDesc',
     category: 'color',
     estimatedTime: 120,
     difficulty: 'intermediate',
@@ -78,8 +79,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'add_text',
-    title: 'Add Text & Titles',
-    description: 'Include captions, titles, and call-to-action text',
+    title: 'flowOptimizer.stepAddTextTitle',
+    description: 'flowOptimizer.stepAddTextDesc',
     category: 'effects',
     estimatedTime: 90,
     difficulty: 'beginner',
@@ -87,8 +88,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'add_effects',
-    title: 'Apply Visual Effects',
-    description: 'Add particles, lens flares, and cinematic effects',
+    title: 'flowOptimizer.stepAddEffectsTitle',
+    description: 'flowOptimizer.stepAddEffectsDesc',
     category: 'visual-fx',
     estimatedTime: 180,
     difficulty: 'intermediate',
@@ -97,8 +98,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'chroma_key',
-    title: 'Green Screen Editing',
-    description: 'Remove backgrounds and composite elements',
+    title: 'flowOptimizer.stepChromaKeyTitle',
+    description: 'flowOptimizer.stepChromaKeyDesc',
     category: 'chromakey',
     estimatedTime: 150,
     difficulty: 'intermediate',
@@ -106,8 +107,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'ai_analysis',
-    title: 'AI Scene Analysis',
-    description: 'Let AI analyze and suggest improvements',
+    title: 'flowOptimizer.stepAiAnalysisTitle',
+    description: 'flowOptimizer.stepAiAnalysisDesc',
     category: 'ai-analysis',
     estimatedTime: 45,
     difficulty: 'beginner',
@@ -115,8 +116,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'timeline_edit',
-    title: 'Advanced Timeline Editing',
-    description: 'Fine-tune timing, add transitions, and layer effects',
+    title: 'flowOptimizer.stepTimelineEditTitle',
+    description: 'flowOptimizer.stepTimelineEditDesc',
     category: 'timeline',
     estimatedTime: 300,
     difficulty: 'advanced',
@@ -125,8 +126,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'collaborate',
-    title: 'Team Collaboration',
-    description: 'Share project and collaborate with team members',
+    title: 'flowOptimizer.stepCollaborateTitle',
+    description: 'flowOptimizer.stepCollaborateDesc',
     category: 'collaborate',
     estimatedTime: 60,
     difficulty: 'intermediate',
@@ -134,8 +135,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     id: 'export',
-    title: 'Export Final Video',
-    description: 'Choose format, quality, and export settings',
+    title: 'flowOptimizer.stepExportTitle',
+    description: 'flowOptimizer.stepExportDesc',
     category: 'export',
     estimatedTime: 120,
     difficulty: 'beginner',
@@ -173,6 +174,7 @@ export default function FlowOptimizer({
   const [showSuggestion, setShowSuggestion] = useState<WorkflowStep | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   // Analyze user behavior and suggest next steps
   const analyzeFlow = useCallback(() => {
@@ -252,14 +254,14 @@ export default function FlowOptimizer({
             timeSpent: prev.timeSpent,
             preferences: prev.preferences
           })
-          showToast('🎉 Workflow complete! Your video is ready to export.', 'success')
+          showToast(t('flowOptimizer.workflowCompleteToast'), 'success')
         }, 0)
       }
 
       return prev
     })
 
-  }, [userActions, activeCategory, onWorkflowSuggestion, onFlowComplete, showToast])
+  }, [userActions, activeCategory, onWorkflowSuggestion, onFlowComplete, showToast, t])
 
   // Use ref to track if we're already analyzing to prevent infinite loops
   const analyzingRef = useRef(false)
@@ -320,6 +322,15 @@ export default function FlowOptimizer({
     }
   }
 
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case 'beginner': return t('flowOptimizer.difficultyBeginner')
+      case 'intermediate': return t('flowOptimizer.difficultyIntermediate')
+      case 'advanced': return t('flowOptimizer.difficultyAdvanced')
+      default: return difficulty
+    }
+  }
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -334,7 +345,7 @@ export default function FlowOptimizer({
       <div className="fixed top-4 right-4 z-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
         <div className="flex items-center gap-2 text-sm">
           <Target className="w-4 h-4 text-blue-500" />
-          <span className="font-medium">Workflow Progress</span>
+          <span className="font-medium">{t('flowOptimizer.workflowProgress')}</span>
           <span className="text-gray-500">
             {userFlow.completedSteps.length}/{userFlow.suggestedWorkflow.length}
           </span>
@@ -354,10 +365,10 @@ export default function FlowOptimizer({
         {showSuggestion && (
           <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
             <div className="text-xs font-medium text-blue-900 dark:text-blue-100">
-              Next: {showSuggestion.title}
+              {t('flowOptimizer.next', { title: t(showSuggestion.title) })}
             </div>
             <div className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-              {showSuggestion.description}
+              {t(showSuggestion.description)}
             </div>
             <button
               type="button"
@@ -371,7 +382,7 @@ export default function FlowOptimizer({
               }}
               className="mt-2 text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
             >
-              Go There <ArrowRight className="w-3 h-3 inline ml-1" />
+              {t('flowOptimizer.goThere')} <ArrowRight className="w-3 h-3 inline ml-1" />
             </button>
           </div>
         )}
@@ -389,10 +400,10 @@ export default function FlowOptimizer({
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">
-                      Welcome to Click Video Editor!
+                      {t('flowOptimizer.welcomeTitle')}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Let&apos;s get you started with a quick tour
+                      {t('flowOptimizer.welcomeSubtitle')}
                     </p>
                   </div>
                 </div>
@@ -422,13 +433,13 @@ export default function FlowOptimizer({
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{step.title}</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{t(step.title)}</h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {step.description}
+                          {t(step.description)}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(step.difficulty)}`}>
-                            {step.difficulty}
+                            {getDifficultyLabel(step.difficulty)}
                           </span>
                           <span className="text-xs text-gray-500">
                             ~{formatTime(step.estimatedTime)}
@@ -444,9 +455,9 @@ export default function FlowOptimizer({
                 <div className="flex items-center gap-3">
                   <Star className="w-5 h-5 text-green-600" />
                   <div>
-                    <h4 className="font-medium text-green-900 dark:text-green-100">Pro Tip</h4>
+                    <h4 className="font-medium text-green-900 dark:text-green-100">{t('flowOptimizer.proTipTitle')}</h4>
                     <p className="text-sm text-green-700 dark:text-green-300">
-                      Start with a template from the Edit section, then refine with colors and effects. Use AI Analysis for smart suggestions!
+                      {t('flowOptimizer.proTipBody')}
                     </p>
                   </div>
                 </div>
@@ -456,7 +467,7 @@ export default function FlowOptimizer({
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
               <div className="flex justify-between items-center">
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Press <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">?</kbd> anytime for keyboard shortcuts
+                  {t('flowOptimizer.pressKeyPrefix')} <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">?</kbd> {t('flowOptimizer.pressKeySuffix')}
                 </div>
                 <div className="flex gap-3">
                   <button
@@ -467,14 +478,14 @@ export default function FlowOptimizer({
                     }))}
                     className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
                   >
-                    Skip Tour
+                    {t('flowOptimizer.skipTour')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowOnboarding(false)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    Get Started
+                    {t('flowOptimizer.getStarted')}
                   </button>
                 </div>
               </div>
@@ -488,7 +499,7 @@ export default function FlowOptimizer({
         <div className="fixed bottom-4 left-4 z-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
           <div className="flex items-center gap-2 text-sm">
             <Zap className="w-4 h-4 text-yellow-500" />
-            <span className="font-medium">Quick Actions</span>
+            <span className="font-medium">{t('flowOptimizer.quickActions')}</span>
           </div>
 
           <div className="mt-2 space-y-1">
@@ -524,7 +535,7 @@ export default function FlowOptimizer({
                     ) : (
                       <ArrowRight className="w-3 h-3" />
                     )}
-                    <span className="truncate">{step.title}</span>
+                    <span className="truncate">{t(step.title)}</span>
                   </div>
                 </button>
               )
@@ -542,10 +553,10 @@ export default function FlowOptimizer({
                 <CheckCircle className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)] mb-2">
-                Workflow Complete! 🎉
+                {t('flowOptimizer.completeTitle')}
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                You&apos;ve successfully completed your video editing workflow in {formatTime(Math.floor(sessionDuration / 1000))}
+                {t('flowOptimizer.completeBody', { time: formatTime(Math.floor(sessionDuration / 1000)) })}
               </p>
             </div>
 
@@ -560,14 +571,14 @@ export default function FlowOptimizer({
                 }}
                 className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 font-medium"
               >
-                Export Your Video
+                {t('flowOptimizer.exportYourVideo')}
               </button>
               <button
                 type="button"
                 onClick={() => window.location.reload()}
                 className="w-full px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                Start New Project
+                {t('flowOptimizer.startNewProject')}
               </button>
             </div>
           </div>

@@ -2480,9 +2480,20 @@ if (process.env.JEST_WORKER_ID) {
             try {
               const root = path.join(__dirname, '..');
               let removed = 0;
-              removed += await cleanupTempFiles(path.join(root, 'uploads', 'temp'), 6);
+              // Skip the tus resumable-upload store — it manages its own
+              // per-upload expiration below. A blind mtime sweep here would
+              // delete in-progress/paused uploads and defeat resume.
+              removed += await cleanupTempFiles(path.join(root, 'uploads', 'temp'), 6, { exclude: ['tus'] });
               removed += await cleanupTempFiles(path.join(root, 'tmp'), 6);
               removed += await cleanupTempFiles(path.join(root, 'tmp', 'uploads'), 6);
+              // Abandoned resumable (tus) uploads — removed by per-upload age,
+              // so active/recent uploads inside the resume window are preserved.
+              try {
+                const { cleanupExpiredTusUploads } = require('./routes/upload-tus');
+                removed += await cleanupExpiredTusUploads();
+              } catch (tusErr) {
+                logger.warn('tus expiry sweep skipped', { error: tusErr.message });
+              }
               // Stale ffmpeg logs (CLAUDE.md routes them to logs/) older than 7 days.
               await cleanupOldFiles(path.join(root, 'logs'), 7);
               if (removed > 0) logger.info(`🧹 Temp sweep removed ${removed} orphaned entries`);

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Sparkles, TrendingUp, Lightbulb, Zap, Target } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Suggestion {
   id: string
@@ -17,6 +18,7 @@ interface Suggestion {
 }
 
 export default function SmartSuggestions() {
+  const { t } = useTranslation()
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
@@ -68,7 +70,7 @@ export default function SmartSuggestions() {
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
         <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-          Smart Suggestions
+          {t('smartSuggestions.title')}
         </h3>
       </div>
 
@@ -114,7 +116,7 @@ export default function SmartSuggestions() {
           onClick={() => router.push('/dashboard/suggestions')}
           className="mt-4 w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
         >
-          View all {suggestions.length} suggestions →
+          {t('smartSuggestions.viewAll', { count: suggestions.length })}
         </button>
       )}
     </div>

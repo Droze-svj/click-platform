@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { BarChart3, TrendingUp, Users, Calendar, Download } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface BusinessMetrics {
   period: number
@@ -29,6 +30,7 @@ export default function BusinessIntelligenceDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [period, setPeriod] = useState(30)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const loadMetrics = useCallback(async () => {
     setIsLoading(true)
@@ -44,7 +46,7 @@ export default function BusinessIntelligenceDashboard() {
       }
     } catch (error) {
       console.error('Failed to load metrics:', error)
-      showToast('Failed to load metrics', 'error')
+      showToast(t('businessIntelligenceDashboard.failedToLoadMetrics'), 'error')
     } finally {
       setIsLoading(false)
     }
@@ -99,11 +101,11 @@ export default function BusinessIntelligenceDashboard() {
           a.click()
           window.URL.revokeObjectURL(url)
         }
-        showToast('Data exported successfully', 'success')
+        showToast(t('businessIntelligenceDashboard.dataExportedSuccessfully'), 'success')
       }
     } catch (error) {
       console.error('Export error:', error)
-      showToast('Failed to export data', 'error')
+      showToast(t('businessIntelligenceDashboard.failedToExportData'), 'error')
     }
   }
 
@@ -125,10 +127,10 @@ export default function BusinessIntelligenceDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Business Intelligence
+            {t('businessIntelligenceDashboard.title')}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Comprehensive analytics and insights
+            {t('businessIntelligenceDashboard.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -137,10 +139,10 @@ export default function BusinessIntelligenceDashboard() {
             onChange={(e) => setPeriod(parseInt(e.target.value))}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
-            <option value={7}>Last 7 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 90 days</option>
-            <option value={365}>Last year</option>
+            <option value={7}>{t('businessIntelligenceDashboard.last7Days')}</option>
+            <option value={30}>{t('businessIntelligenceDashboard.last30Days')}</option>
+            <option value={90}>{t('businessIntelligenceDashboard.last90Days')}</option>
+            <option value={365}>{t('businessIntelligenceDashboard.lastYear')}</option>
           </select>
           <button
             type="button"
@@ -148,7 +150,7 @@ export default function BusinessIntelligenceDashboard() {
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
-            Export JSON
+            {t('businessIntelligenceDashboard.exportJson')}
           </button>
           <button
             type="button"
@@ -156,7 +158,7 @@ export default function BusinessIntelligenceDashboard() {
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
-            Export CSV
+            {t('businessIntelligenceDashboard.exportCsv')}
           </button>
         </div>
       </div>
@@ -167,7 +169,7 @@ export default function BusinessIntelligenceDashboard() {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Content</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('businessIntelligenceDashboard.totalContent')}</p>
           </div>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             {metrics.content.total.count}
@@ -175,7 +177,7 @@ export default function BusinessIntelligenceDashboard() {
           {metrics.content.total.growth !== 0 && (
             <p className={`text-sm mt-1 ${metrics.content.total.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {metrics.content.total.growth >= 0 ? '+' : ''}
-              {metrics.content.total.growth.toFixed(1)}% from previous period
+              {t('businessIntelligenceDashboard.percentFromPreviousPeriod', { percent: metrics.content.total.growth.toFixed(1) })}
             </p>
           )}
         </div>
@@ -184,13 +186,13 @@ export default function BusinessIntelligenceDashboard() {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">Scheduled</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('businessIntelligenceDashboard.scheduled')}</p>
           </div>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             {metrics.scheduling.total}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {metrics.scheduling.upcoming} upcoming
+            {t('businessIntelligenceDashboard.upcomingCount', { count: metrics.scheduling.upcoming })}
           </p>
         </div>
 
@@ -198,13 +200,13 @@ export default function BusinessIntelligenceDashboard() {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">Active Users</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('businessIntelligenceDashboard.activeUsers')}</p>
           </div>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             {metrics.users.active}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {metrics.users.activePercentage}% of total
+            {t('businessIntelligenceDashboard.percentOfTotal', { percent: metrics.users.activePercentage })}
           </p>
         </div>
 
@@ -212,14 +214,14 @@ export default function BusinessIntelligenceDashboard() {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">Growth</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('businessIntelligenceDashboard.growth')}</p>
           </div>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             {metrics.content.total.growth >= 0 ? '+' : ''}
             {metrics.content.total.growth.toFixed(1)}%
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Content growth
+            {t('businessIntelligenceDashboard.contentGrowth')}
           </p>
         </div>
       </div>
@@ -229,7 +231,7 @@ export default function BusinessIntelligenceDashboard() {
         {/* By Type */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
-            Content by Type
+            {t('businessIntelligenceDashboard.contentByType')}
           </h3>
           <div className="space-y-2">
             {metrics.content.byType.map((item) => (
@@ -248,7 +250,7 @@ export default function BusinessIntelligenceDashboard() {
         {/* By Platform */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
-            Scheduled by Platform
+            {t('businessIntelligenceDashboard.scheduledByPlatform')}
           </h3>
           <div className="space-y-2">
             {metrics.scheduling.byPlatform.map((item) => (

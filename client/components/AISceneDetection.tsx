@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { NeuralNetworkIcon } from './icons/VideoIcons'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SceneData {
   id: string
@@ -69,6 +70,7 @@ export default function AISceneDetection({
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   // Mock AI analysis function (in real implementation, this would call actual AI APIs)
   const analyzeVideo = useCallback(async () => {
@@ -210,21 +212,21 @@ export default function AISceneDetection({
 
       setScenes(mockScenes)
       onScenesDetected(mockScenes)
-      showToast('AI analysis complete! Scenes detected and suggestions generated.', 'success')
+      showToast(t('aiSceneDetection.analysisComplete'), 'success')
 
     } catch (error) {
       console.error('AI analysis failed:', error)
-      showToast('AI analysis failed. Please try again.', 'error')
+      showToast(t('aiSceneDetection.analysisFailed'), 'error')
     } finally {
       setIsAnalyzing(false)
       setAnalysisProgress(0)
     }
-  }, [onScenesDetected, showToast])
+  }, [onScenesDetected, showToast, t])
 
   const applySuggestedEdit = useCallback((edit: SuggestedEdit) => {
     onSuggestedEdit(edit)
-    showToast(`Applied: ${edit.suggestion}`, 'success')
-  }, [onSuggestedEdit, showToast])
+    showToast(t('aiSceneDetection.appliedEdit', { suggestion: edit.suggestion }), 'success')
+  }, [onSuggestedEdit, showToast, t])
 
   const autoApplyAllEdits = useCallback(() => {
     const autoApplyEdits = scenes.flatMap(scene =>
@@ -233,11 +235,11 @@ export default function AISceneDetection({
 
     if (autoApplyEdits.length > 0) {
       onAutoApplyEdits?.(autoApplyEdits)
-      showToast(`Auto-applied ${autoApplyEdits.length} suggested edits`, 'success')
+      showToast(t('aiSceneDetection.autoAppliedCount', { count: autoApplyEdits.length }), 'success')
     } else {
-      showToast('No auto-apply edits available', 'info')
+      showToast(t('aiSceneDetection.noAutoApplyEdits'), 'info')
     }
-  }, [scenes, onAutoApplyEdits, showToast])
+  }, [scenes, onAutoApplyEdits, showToast, t])
 
   const jumpToScene = useCallback((sceneIndex: number) => {
     setCurrentSceneIndex(sceneIndex)
@@ -284,10 +286,10 @@ export default function AISceneDetection({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <NeuralNetworkIcon className="w-5 h-5" />
-              AI Scene Detection & Auto-Editing
+              {t('aiSceneDetection.title')}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Intelligent video analysis and automated editing suggestions
+              {t('aiSceneDetection.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -298,7 +300,7 @@ export default function AISceneDetection({
                 onChange={(e) => setAutoApplyEnabled(e.target.checked)}
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
               />
-              Auto-apply
+              {t('aiSceneDetection.autoApply')}
             </label>
             <button
               type="button"
@@ -309,12 +311,12 @@ export default function AISceneDetection({
               {isAnalyzing ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Analyzing...
+                  {t('aiSceneDetection.analyzing')}
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <NeuralNetworkIcon className="w-4 h-4" />
-                  Analyze Video
+                  {t('aiSceneDetection.analyzeVideo')}
                 </div>
               )}
             </button>
@@ -331,7 +333,7 @@ export default function AISceneDetection({
               ></div>
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              {Math.round(analysisProgress)}% complete
+              {t('aiSceneDetection.percentComplete', { percent: Math.round(analysisProgress) })}
             </div>
           </div>
         )}
@@ -342,26 +344,26 @@ export default function AISceneDetection({
           <div className="text-center py-12">
               <NeuralNetworkIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
-              AI-Powered Video Analysis
+              {t('aiSceneDetection.emptyTitle')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-              Upload a video and let AI analyze scenes, detect emotions, and suggest intelligent edits automatically.
+              {t('aiSceneDetection.emptyDescription')}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <Eye className="w-8 h-8 text-blue-500 mb-2" />
-                <h4 className="font-medium text-blue-900 dark:text-blue-100">Scene Detection</h4>
-                <p className="text-blue-700 dark:text-blue-300">Automatically identify scene changes</p>
+                <h4 className="font-medium text-blue-900 dark:text-blue-100">{t('aiSceneDetection.featureSceneDetectionTitle')}</h4>
+                <p className="text-blue-700 dark:text-blue-300">{t('aiSceneDetection.featureSceneDetectionDesc')}</p>
               </div>
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                 <Target className="w-8 h-8 text-purple-500 mb-2" />
-                <h4 className="font-medium text-purple-900 dark:text-purple-100">Smart Suggestions</h4>
-                <p className="text-purple-700 dark:text-purple-300">AI-powered editing recommendations</p>
+                <h4 className="font-medium text-purple-900 dark:text-purple-100">{t('aiSceneDetection.featureSmartSuggestionsTitle')}</h4>
+                <p className="text-purple-700 dark:text-purple-300">{t('aiSceneDetection.featureSmartSuggestionsDesc')}</p>
               </div>
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <Zap className="w-8 h-8 text-green-500 mb-2" />
-                <h4 className="font-medium text-green-900 dark:text-green-100">Auto-Editing</h4>
-                <p className="text-green-700 dark:text-green-300">Apply intelligent edits automatically</p>
+                <h4 className="font-medium text-green-900 dark:text-green-100">{t('aiSceneDetection.featureAutoEditingTitle')}</h4>
+                <p className="text-green-700 dark:text-green-300">{t('aiSceneDetection.featureAutoEditingDesc')}</p>
               </div>
             </div>
           </div>
@@ -374,10 +376,10 @@ export default function AISceneDetection({
                   <div>
                     <h4 className="font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
-                      Auto-Apply Available
+                      {t('aiSceneDetection.autoApplyAvailable')}
                     </h4>
                     <p className="text-sm text-green-700 dark:text-green-300">
-                      {scenes.flatMap(s => s.suggestedEdits.filter(e => e.autoApply)).length} AI suggestions ready to apply
+                      {t('aiSceneDetection.suggestionsReady', { count: scenes.flatMap(s => s.suggestedEdits.filter(e => e.autoApply)).length })}
                     </p>
                   </div>
                   <button
@@ -385,7 +387,7 @@ export default function AISceneDetection({
                     onClick={autoApplyAllEdits}
                     className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                   >
-                    Apply All
+                    {t('aiSceneDetection.applyAll')}
                   </button>
                 </div>
               </div>
@@ -393,7 +395,7 @@ export default function AISceneDetection({
 
             {/* Scene Timeline */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Detected Scenes</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('aiSceneDetection.detectedScenes')}</h4>
               <div className="space-y-3">
                 {scenes.map((scene, index) => (
                   <div
@@ -417,7 +419,7 @@ export default function AISceneDetection({
                           {formatTime(scene.startTime)} - {formatTime(scene.endTime)}
                         </span>
                         <span className="text-xs bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
-                          {Math.round(scene.confidence * 100)}% confidence
+                          {t('aiSceneDetection.confidencePercent', { percent: Math.round(scene.confidence * 100) })}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -443,13 +445,13 @@ export default function AISceneDetection({
                     {/* Emotion Timeline */}
                     {scene.emotions.length > 0 && (
                       <div className="mb-3">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Emotions detected:</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('aiSceneDetection.emotionsDetected')}</div>
                         <div className="flex gap-1">
                           {scene.emotions.map((emotion, emotionIndex) => (
                             <div
                               key={emotionIndex}
                               className={`w-2 h-6 rounded ${getEmotionColor(emotion.emotion)}`}
-                              title={`${emotion.emotion} (${Math.round(emotion.confidence * 100)}%)`}
+                              title={t('aiSceneDetection.emotionTooltip', { emotion: emotion.emotion, percent: Math.round(emotion.confidence * 100) })}
                             ></div>
                           ))}
                         </div>
@@ -459,7 +461,7 @@ export default function AISceneDetection({
                     {/* Audio Waveform */}
                     {scene.audioPeaks.length > 0 && (
                       <div className="mb-3">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Audio levels:</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('aiSceneDetection.audioLevels')}</div>
                         <div className="flex items-end gap-px h-8">
                           {scene.audioPeaks.map((peak, peakIndex) => (
                             <div
@@ -475,7 +477,7 @@ export default function AISceneDetection({
                     {/* Suggested Edits */}
                     {scene.suggestedEdits.length > 0 && (
                       <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">AI Suggestions:</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('aiSceneDetection.aiSuggestions')}</div>
                         <div className="space-y-2">
                           {scene.suggestedEdits.map((edit, editIndex) => (
                             <div
@@ -487,9 +489,9 @@ export default function AISceneDetection({
                               }`}
                             >
                               <div className="flex-1">
-                                <span className="font-medium capitalize">{edit.type}:</span> {edit.suggestion}
+                                <span className="font-medium capitalize">{t('aiSceneDetection.editTypeLabel', { type: edit.type })}</span> {edit.suggestion}
                                 <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                  ({Math.round(edit.confidence * 100)}% confidence)
+                                  {t('aiSceneDetection.confidenceParenthetical', { percent: Math.round(edit.confidence * 100) })}
                                 </span>
                               </div>
                               <button
@@ -504,7 +506,7 @@ export default function AISceneDetection({
                                     : 'bg-blue-500 text-white hover:bg-blue-600'
                                 }`}
                               >
-                                Apply
+                                {t('aiSceneDetection.apply')}
                               </button>
                             </div>
                           ))}
@@ -528,7 +530,7 @@ export default function AISceneDetection({
               </button>
 
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Scene {currentSceneIndex + 1} of {scenes.length}
+                {t('aiSceneDetection.sceneOfTotal', { current: currentSceneIndex + 1, total: scenes.length })}
               </span>
 
               <button

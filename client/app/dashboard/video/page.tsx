@@ -144,7 +144,10 @@ export default function VideoStudioPage() {
     })
   }, [])
 
-  // Resumable upload via tus — survives connection drops on large files.
+  // Resumable upload via tus — survives connection drops on large files AND
+  // full page reloads / tab closes: tus-js-client persists the upload URL by
+  // file fingerprint, so we look for a previous upload of the same file and
+  // resume from its last acknowledged offset instead of restarting at zero.
   const tusUpload = useCallback((file: File, token: string | null) => {
     return new Promise<any>((resolve, reject) => {
       let contentId: string | null = null
@@ -162,7 +165,15 @@ export default function VideoStudioPage() {
         },
         onSuccess: () => resolve({ data: { contentId } }),
       })
-      upload.start()
+      // Resume a prior interrupted upload of this exact file if one exists,
+      // otherwise start fresh. findPreviousUploads can reject if storage is
+      // unavailable (private mode) — fall back to a clean start in that case.
+      upload.findPreviousUploads()
+        .then((prev: any[]) => {
+          if (prev && prev.length > 0) upload.resumeFromPreviousUpload(prev[0])
+          upload.start()
+        })
+        .catch(() => upload.start())
     })
   }, [])
 

@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useAuth } from '../hooks/useAuth'
 import { sendDebugLog } from '../utils/debugLog'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface FileUploadProps {
   onUpload: (file: File, uploadResponse?: any) => void | Promise<void>
@@ -22,6 +23,7 @@ export default function FileUpload({
   uploadUrl,
   onProgress
 }: FileUploadProps) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -99,16 +101,16 @@ export default function FileUpload({
             const errBody = JSON.parse(xhr.responseText)
             // Detect disk-full (507) specifically
             if (xhr.status === 507 || errBody.code === 'DISK_FULL') {
-              reject(new Error('💾 The server has no storage space left. Please clear old uploads or contact support.'))
+              reject(new Error(t('fileUpload.errorDiskFull')))
             } else if (xhr.status === 413) {
-              reject(new Error('📦 File is too large. Maximum size is 1GB.'))
+              reject(new Error(t('fileUpload.errorTooLarge')))
             } else if (xhr.status === 415) {
-              reject(new Error('🎬 Only video files are supported (MP4, MOV, AVI, MKV, WEBM).'))
+              reject(new Error(t('fileUpload.errorUnsupportedType')))
             } else {
-              reject(new Error(errBody.error || errBody.message || 'Upload failed'))
+              reject(new Error(errBody.error || errBody.message || t('fileUpload.errorUploadFailed')))
             }
           } catch (e) {
-            reject(new Error(`Upload failed with status ${xhr.status}`))
+            reject(new Error(t('fileUpload.errorUploadFailedStatus', { status: xhr.status })))
           }
         }
         xhrRef.current = null
@@ -116,12 +118,12 @@ export default function FileUpload({
 
       // Handle errors
       xhr.addEventListener('error', () => {
-        reject(new Error('Upload failed'))
+        reject(new Error(t('fileUpload.errorUploadFailed')))
         xhrRef.current = null
       })
 
       xhr.addEventListener('abort', () => {
-        reject(new Error('Upload cancelled'))
+        reject(new Error(t('fileUpload.errorUploadCancelled')))
         xhrRef.current = null
       })
 
@@ -132,7 +134,7 @@ export default function FileUpload({
       }
       xhr.send(formData)
     })
-  }, [onProgress, user])
+  }, [onProgress, user, t])
 
   // Cancel upload function
   const cancelUpload = useCallback(() => {
@@ -177,12 +179,12 @@ export default function FileUpload({
     } catch (error: any) {
       console.error('Upload error:', error)
       setProgress(0)
-      setUploadError(error?.message || 'Upload failed. Please try again.')
+      setUploadError(error?.message || t('fileUpload.errorUploadFailedRetry'))
     } finally {
       setUploading(false)
       setTimeout(() => setProgress(0), 2000)
     }
-  }, [onUpload, uploadUrl, uploadWithProgress])
+  }, [onUpload, uploadUrl, uploadWithProgress, t])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -201,7 +203,7 @@ export default function FileUpload({
           : 'border-gray-300 hover:border-purple-400'
           } ${disabled || uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
         role="button"
-        aria-label={disabled || uploading ? 'File upload area, disabled' : 'File upload area, drop or click to select'}
+        aria-label={disabled || uploading ? t('fileUpload.uploadAreaDisabled') : t('fileUpload.uploadAreaActive')}
         tabIndex={disabled || uploading ? -1 : 0}
         onKeyDown={(e) => {
           if ((e.key === 'Enter' || e.key === ' ') && !disabled && !uploading) {
@@ -215,7 +217,7 @@ export default function FileUpload({
           <div className="text-4xl">📁</div>
           {uploading ? (
             <>
-              <p className="text-lg font-semibold">Uploading...</p>
+              <p className="text-lg font-semibold">{t('fileUpload.uploading')}</p>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
                   className="bg-purple-600 h-2.5 rounded-full transition-all duration-300"
@@ -227,10 +229,10 @@ export default function FileUpload({
           ) : (
             <>
               <p className="text-lg font-semibold">
-                {isDragActive ? 'Drop the file here' : 'Drag & drop a file here, or click to select'}
+                {isDragActive ? t('fileUpload.dropHere') : t('fileUpload.dragDropPrompt')}
               </p>
               <p className="text-sm text-gray-500">
-                {accept ? Object.values(accept).flat().join(', ') : 'Any file'} (max {Math.round(maxSize / 1024 / 1024)}MB)
+                {accept ? Object.values(accept).flat().join(', ') : t('fileUpload.anyFile')} {t('fileUpload.maxSize', { size: Math.round(maxSize / 1024 / 1024) })}
               </p>
             </>
           )}
@@ -242,14 +244,14 @@ export default function FileUpload({
         <div className="mt-3 flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
           <span className="shrink-0 text-base">⚠️</span>
           <div>
-            <p className="font-semibold">Upload Failed</p>
+            <p className="font-semibold">{t('fileUpload.uploadFailedTitle')}</p>
             <p className="text-red-300 text-xs mt-0.5">{uploadError}</p>
             <button
               type="button"
               onClick={() => setUploadError(null)}
               className="text-xs text-red-400 underline mt-1 hover:text-red-300"
             >
-              Dismiss
+              {t('fileUpload.dismiss')}
             </button>
           </div>
         </div>

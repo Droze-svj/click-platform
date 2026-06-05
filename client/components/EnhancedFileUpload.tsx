@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Upload, X, CheckCircle, AlertCircle, FileVideo, Loader2 } from 'lucide-react'
 import ProgressBar from './ProgressBar'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface EnhancedFileUploadProps {
   onUpload: (file: File) => Promise<void>
@@ -26,6 +27,7 @@ export default function EnhancedFileUpload({
   onError,
   onSuccess
 }: EnhancedFileUploadProps) {
+  const { t } = useTranslation()
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ file: File; status: 'uploading' | 'success' | 'error'; progress: number }>>([])
@@ -43,7 +45,7 @@ export default function EnhancedFileUpload({
   const handleUpload = useCallback(async (file: File) => {
     // Validate file size
     if (file.size > maxSize) {
-      const errorMsg = `File size exceeds maximum allowed size of ${formatFileSize(maxSize)}`
+      const errorMsg = t('enhancedFileUpload.fileSizeExceeds', { size: formatFileSize(maxSize) })
       setError(errorMsg)
       if (onError) onError(new Error(errorMsg))
       return
@@ -91,7 +93,7 @@ export default function EnhancedFileUpload({
       }, 3000)
     } catch (err: any) {
       if (progressInterval) clearInterval(progressInterval)
-      const errorMsg = err.message || 'Upload failed'
+      const errorMsg = err.message || t('enhancedFileUpload.uploadFailed')
       setError(errorMsg)
       setUploadedFiles(prev => 
         prev.map(f => f.file === file ? { ...f, status: 'error', progress: 0 } : f)
@@ -107,11 +109,11 @@ export default function EnhancedFileUpload({
     if (rejectedFiles.length > 0) {
       const rejection = rejectedFiles[0]
       if (rejection.errors[0]?.code === 'file-too-large') {
-        setError(`File is too large. Maximum size is ${formatFileSize(maxSize)}`)
+        setError(t('enhancedFileUpload.fileTooLarge', { size: formatFileSize(maxSize) }))
       } else if (rejection.errors[0]?.code === 'file-invalid-type') {
-        setError('File type not supported')
+        setError(t('enhancedFileUpload.fileTypeNotSupported'))
       } else {
-        setError(rejection.errors[0]?.message || 'File rejected')
+        setError(rejection.errors[0]?.message || t('enhancedFileUpload.fileRejected'))
       }
       return
     }
@@ -173,7 +175,7 @@ export default function EnhancedFileUpload({
           {uploading ? (
             <div className="space-y-2">
               <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                Uploading...
+                {t('enhancedFileUpload.uploading')}
               </p>
               <ProgressBar 
                 progress={progress} 
@@ -186,18 +188,18 @@ export default function EnhancedFileUpload({
             <>
               <div>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                  {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
+                  {isDragActive ? t('enhancedFileUpload.dropFilesHere') : t('enhancedFileUpload.dragAndDropFiles')}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  or <span className="text-purple-600 dark:text-purple-400 font-medium">browse</span> to choose files
+                  {t('enhancedFileUpload.orBrowsePrefix')} <span className="text-purple-600 dark:text-purple-400 font-medium">{t('enhancedFileUpload.browse')}</span> {t('enhancedFileUpload.orBrowseSuffix')}
                 </p>
               </div>
               <div className="text-xs text-gray-400 dark:text-gray-500 space-y-1">
                 {accept && (
-                  <p>Accepted: {Object.values(accept).flat().join(', ')}</p>
+                  <p>{t('enhancedFileUpload.accepted', { types: Object.values(accept).flat().join(', ') })}</p>
                 )}
-                <p>Max size: {formatFileSize(maxSize)}</p>
-                {multiple && <p>Multiple files allowed</p>}
+                <p>{t('enhancedFileUpload.maxSize', { size: formatFileSize(maxSize) })}</p>
+                {multiple && <p>{t('enhancedFileUpload.multipleAllowed')}</p>}
               </div>
             </>
           )}
@@ -268,14 +270,14 @@ export default function EnhancedFileUpload({
                     onClick={() => retryUpload(fileEntry.file)}
                     className="text-xs text-purple-600 hover:text-purple-700 font-medium"
                   >
-                    Retry
+                    {t('enhancedFileUpload.retry')}
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => removeFile(fileEntry.file)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  aria-label="Remove file"
+                  aria-label={t('enhancedFileUpload.removeFile')}
                 >
                   <X size={16} />
                 </button>

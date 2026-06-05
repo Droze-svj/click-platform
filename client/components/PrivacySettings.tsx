@@ -7,6 +7,7 @@ import { Switch } from './ui/switch';
 import { Shield, Download, Trash2, AlertTriangle } from 'lucide-react';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import ErrorDisplay from './ErrorDisplay';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PrivacySettings {
   dataSharing: boolean;
@@ -16,6 +17,7 @@ interface PrivacySettings {
 }
 
 export default function PrivacySettings() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<PrivacySettings>({
     dataSharing: false,
@@ -99,11 +101,11 @@ export default function PrivacySettings() {
   };
 
   const handleAnonymize = async () => {
-    if (!confirm('Are you sure you want to anonymize your data? This action cannot be undone.')) {
+    if (!confirm(t('privacySettings.confirmAnonymize'))) {
       return;
     }
 
-    if (prompt('Type "ANONYMIZE" to confirm:') !== 'ANONYMIZE') {
+    if (prompt(t('privacySettings.promptAnonymize')) !== 'ANONYMIZE') {
       return;
     }
 
@@ -117,7 +119,7 @@ export default function PrivacySettings() {
       });
       const data = await response.json();
       if (data.success) {
-        alert('Your data has been anonymized.');
+        alert(t('privacySettings.dataAnonymized'));
         window.location.href = '/login';
       }
     } catch (err) {
@@ -126,11 +128,11 @@ export default function PrivacySettings() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete all your data? This action cannot be undone.')) {
+    if (!confirm(t('privacySettings.confirmDelete'))) {
       return;
     }
 
-    if (prompt('Type "DELETE" to confirm:') !== 'DELETE') {
+    if (prompt(t('privacySettings.promptDelete')) !== 'DELETE') {
       return;
     }
 
@@ -144,7 +146,7 @@ export default function PrivacySettings() {
       });
       const data = await response.json();
       if (data.success) {
-        alert('Your data has been deleted.');
+        alert(t('privacySettings.dataDeleted'));
         window.location.href = '/';
       }
     } catch (err) {
@@ -158,7 +160,7 @@ export default function PrivacySettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Privacy Settings
+            {t('privacySettings.privacySettings')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -167,8 +169,8 @@ export default function PrivacySettings() {
           {/* Data Sharing */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium">Data Sharing</h3>
-              <p className="text-sm text-gray-500">Allow sharing of anonymized data for research</p>
+              <h3 className="font-medium">{t('privacySettings.dataSharing')}</h3>
+              <p className="text-sm text-gray-500">{t('privacySettings.dataSharingDesc')}</p>
             </div>
             <Switch
               checked={settings.dataSharing}
@@ -179,8 +181,8 @@ export default function PrivacySettings() {
           {/* Analytics */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium">Analytics</h3>
-              <p className="text-sm text-gray-500">Help us improve by sharing usage analytics</p>
+              <h3 className="font-medium">{t('privacySettings.analytics')}</h3>
+              <p className="text-sm text-gray-500">{t('privacySettings.analyticsDesc')}</p>
             </div>
             <Switch
               checked={settings.analytics}
@@ -191,8 +193,8 @@ export default function PrivacySettings() {
           {/* Marketing */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium">Marketing Communications</h3>
-              <p className="text-sm text-gray-500">Receive marketing emails and updates</p>
+              <h3 className="font-medium">{t('privacySettings.marketingCommunications')}</h3>
+              <p className="text-sm text-gray-500">{t('privacySettings.marketingDesc')}</p>
             </div>
             <Switch
               checked={settings.marketing}
@@ -202,17 +204,17 @@ export default function PrivacySettings() {
 
           {/* Cookies */}
           <div>
-            <h3 className="font-medium mb-2">Cookie Preferences</h3>
+            <h3 className="font-medium mb-2">{t('privacySettings.cookiePreferences')}</h3>
             <select
               value={settings.cookies}
               onChange={(e) => updateSettings({ cookies: e.target.value as any })}
-              title="Select Cookie Preferences"
-              aria-label="Select Cookie Preferences"
+              title={t('privacySettings.selectCookiePreferences')}
+              aria-label={t('privacySettings.selectCookiePreferences')}
               className="w-full p-2 border rounded"
             >
-              <option value="essential">Essential Only</option>
-              <option value="all">All Cookies</option>
-              <option value="none">No Cookies</option>
+              <option value="essential">{t('privacySettings.essentialOnly')}</option>
+              <option value="all">{t('privacySettings.allCookies')}</option>
+              <option value="none">{t('privacySettings.noCookies')}</option>
             </select>
           </div>
         </CardContent>
@@ -221,43 +223,43 @@ export default function PrivacySettings() {
       {/* GDPR Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>GDPR Rights</CardTitle>
+          <CardTitle>{t('privacySettings.gdprRights')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="font-medium mb-2">Data Portability</h3>
+            <h3 className="font-medium mb-2">{t('privacySettings.dataPortability')}</h3>
             <p className="text-sm text-gray-500 mb-2">
-              Download all your data in JSON format
+              {t('privacySettings.dataPortabilityDesc')}
             </p>
             <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
               <Download className="h-4 w-4" />
-              Export My Data
+              {t('privacySettings.exportMyData')}
             </Button>
           </div>
 
           <div className="border-t pt-4">
             <h3 className="font-medium mb-2 flex items-center gap-2 text-yellow-600">
               <AlertTriangle className="h-4 w-4" />
-              Anonymize Data
+              {t('privacySettings.anonymizeData')}
             </h3>
             <p className="text-sm text-gray-500 mb-2">
-              Anonymize your personal data while keeping your account
+              {t('privacySettings.anonymizeDataDesc')}
             </p>
             <Button onClick={handleAnonymize} variant="outline" className="text-yellow-600">
-              Anonymize My Data
+              {t('privacySettings.anonymizeMyData')}
             </Button>
           </div>
 
           <div className="border-t pt-4">
             <h3 className="font-medium mb-2 flex items-center gap-2 text-red-600">
               <Trash2 className="h-4 w-4" />
-              Delete Account
+              {t('privacySettings.deleteAccount')}
             </h3>
             <p className="text-sm text-gray-500 mb-2">
-              Permanently delete all your data and account (Right to be forgotten)
+              {t('privacySettings.deleteAccountDesc')}
             </p>
             <Button onClick={handleDelete} variant="outline" className="text-red-600">
-              Delete My Account
+              {t('privacySettings.deleteMyAccount')}
             </Button>
           </div>
         </CardContent>

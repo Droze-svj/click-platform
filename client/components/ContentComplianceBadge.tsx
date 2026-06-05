@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Info,
 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ComplianceIssue {
   type: string
@@ -77,21 +78,23 @@ export default function ContentComplianceBadge({
   showPopover = true,
   size = 'md',
 }: ContentComplianceBadgeProps) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
   const status = complianceCheck?.status ?? 'pending'
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   const Icon = config.icon
   const sizeClasses = SIZE_CLASSES[size]
+  const statusLabel = t(`contentComplianceBadge.status_${status}`)
 
   if (!complianceCheck) {
     return (
       <span
         className={`inline-flex items-center rounded-full font-medium ${sizeClasses.badge} bg-gray-100 dark:bg-gray-800 text-gray-400 border border-gray-300/30`}
-        title="No compliance check performed"
+        title={t('contentComplianceBadge.noCheckPerformed')}
       >
         <AlertTriangle className={`${sizeClasses.icon} text-gray-400`} />
-        Not checked
+        {t('contentComplianceBadge.notChecked')}
       </span>
     )
   }
@@ -106,10 +109,12 @@ export default function ContentComplianceBadge({
       id="compliance-badge-toggle"
       onClick={() => showPopover && setIsOpen(!isOpen)}
       className={`inline-flex items-center rounded-full font-medium transition-all ${sizeClasses.badge} ${config.badgeClass} ${showPopover ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
-      title={`Compliance: ${config.label}${complianceCheck.score != null ? ` (${complianceCheck.score}/100)` : ''}`}
+      title={complianceCheck.score != null
+        ? t('contentComplianceBadge.badgeTitleWithScore', { label: statusLabel, score: complianceCheck.score })
+        : t('contentComplianceBadge.badgeTitle', { label: statusLabel })}
     >
       <Icon className={`${sizeClasses.icon} ${config.iconClass} flex-shrink-0`} />
-      <span>{config.label}</span>
+      <span>{statusLabel}</span>
       {showScore && complianceCheck.score != null && (
         <span className="opacity-70 ml-1">· {complianceCheck.score}</span>
       )}
@@ -129,22 +134,22 @@ export default function ContentComplianceBadge({
         <div
           className={`absolute z-50 mt-2 left-0 ${sizeClasses.popover} bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-3`}
           role="dialog"
-          aria-label="Compliance issues"
+          aria-label={t('contentComplianceBadge.complianceIssues')}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <Icon className={`w-4 h-4 ${config.iconClass}`} />
               <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                {errorCount > 0 && `${errorCount} error${errorCount !== 1 ? 's' : ''}`}
+                {errorCount > 0 && t('contentComplianceBadge.errorCount', { count: errorCount })}
                 {errorCount > 0 && warnCount > 0 && ', '}
-                {warnCount > 0 && `${warnCount} warning${warnCount !== 1 ? 's' : ''}`}
-                {errorCount === 0 && warnCount === 0 && 'Issues'}
+                {warnCount > 0 && t('contentComplianceBadge.warningCount', { count: warnCount })}
+                {errorCount === 0 && warnCount === 0 && t('contentComplianceBadge.issues')}
               </span>
             </div>
             {complianceCheck.score != null && (
               <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                Score: {complianceCheck.score}/100
+                {t('contentComplianceBadge.scoreValue', { score: complianceCheck.score })}
               </span>
             )}
           </div>
@@ -161,7 +166,7 @@ export default function ContentComplianceBadge({
             ))}
             {issues.length > 8 && (
               <li className="text-xs text-gray-400 dark:text-gray-500 pl-5">
-                +{issues.length - 8} more issue(s)…
+                {t('contentComplianceBadge.moreIssues', { count: issues.length - 8 })}
               </li>
             )}
           </ul>
@@ -170,7 +175,7 @@ export default function ContentComplianceBadge({
           {complianceCheck.platforms && complianceCheck.platforms.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
               <p className="text-xs text-gray-400 dark:text-gray-500">
-                Checked for: {complianceCheck.platforms.join(', ')}
+                {t('contentComplianceBadge.checkedFor', { platforms: complianceCheck.platforms.join(', ') })}
               </p>
             </div>
           )}

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { toast } from 'react-hot-toast'
 import { Download, RefreshCw, X, CheckCircle, Zap, Shield, Wifi, Smartphone, Github as Google } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface PWAState {
   isOnline: boolean
@@ -26,6 +27,7 @@ interface PWAContextType {
 const PWAContext = createContext<PWAContextType | undefined>(undefined)
 
 export function PWAManager({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
   const [state, setState] = useState<PWAState>({
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     canInstall: false,
@@ -180,8 +182,8 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:animate-shimmer" />
               </div>
               <div className="flex-1">
-                <h4 className="text-sm font-black text-[var(--text-main)] italic uppercase tracking-tighter">Click Evolved</h4>
-                <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest">New intelligence active.</p>
+                <h4 className="text-sm font-black text-[var(--text-main)] italic uppercase tracking-tighter">{t('pwaManager.clickEvolved')}</h4>
+                <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest">{t('pwaManager.newIntelligenceActive')}</p>
               </div>
               <button
                 type="button"
@@ -189,7 +191,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 disabled={state.isUpdating}
                 className="px-6 py-3 bg-white text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
               >
-                {state.isUpdating ? 'Syncing...' : 'Restart'}
+                {state.isUpdating ? t('pwaManager.syncing') : t('pwaManager.restart')}
               </button>
             </div>
           </motion.div>
@@ -212,7 +214,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 type="button"
                 onClick={dismissPrompt}
                 className="absolute top-6 right-6 p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/5 transition-all"
-                aria-label="Dismiss install prompt"
+                aria-label={t('pwaManager.dismissInstallPrompt')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -229,7 +231,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
-                  Ascend to a faster, offline-capable workspace. Built for elite content operations.
+                  {t('pwaManager.installDescription')}
                 </p>
 
                 <div className="flex items-center gap-4">
@@ -242,7 +244,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                     {state.isInstalling ? (
                       <RefreshCw className="w-4 h-4 animate-spin text-black" />
                     ) : (
-                      <>Initialize Installation</>
+                      <>{t('pwaManager.initializeInstallation')}</>
                     )}
                   </button>
                 </div>
@@ -252,15 +254,15 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
               <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-indigo-500/30 transition-colors">
                   <Zap className="w-3 h-3 text-amber-500" />
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Instant</span>
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('pwaManager.tagInstant')}</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-emerald-500/30 transition-colors">
                   <Wifi className="w-3 h-3 text-emerald-500" />
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Edge</span>
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('pwaManager.tagEdge')}</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-blue-500/30 transition-colors">
                   <Smartphone className="w-3 h-3 text-blue-500" />
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Nexus</span>
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('pwaManager.tagNexus')}</span>
                 </div>
               </div>
             </div>
@@ -280,15 +282,15 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
             >
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_red]" />
               <div className="text-sm">
-                <span className="font-bold text-white mr-2">You&apos;re Offline</span>
-                <span className="text-zinc-400">Some features may be limited.</span>
+                <span className="font-bold text-white mr-2">{t('pwaManager.youreOffline')}</span>
+                <span className="text-zinc-400">{t('pwaManager.featuresLimited')}</span>
               </div>
               <button
                 type="button"
                 onClick={() => window.location.reload()}
                 className="text-xs font-bold text-zinc-500 hover:text-white underline underline-offset-4 ml-2"
               >
-                Retry Connection
+                {t('pwaManager.retryConnection')}
               </button>
             </motion.div>
           </motion.div>

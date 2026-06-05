@@ -3,16 +3,20 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Brain, Fingerprint, Shield, Zap, ActivitySquare } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SpectralLoaderProps {
   message?: string
   subMessage?: string
 }
 
-export default function SpectralLoader({ 
-  message = "Decoding Resonance Matrix...", 
-  subMessage = "HEURISTIC_SYNC_IN_PROGRESS" 
+export default function SpectralLoader({
+  message,
+  subMessage
 }: SpectralLoaderProps) {
+  const { t } = useTranslation()
+  const resolvedMessage = message ?? t('spectralLoader.message')
+  const resolvedSubMessage = subMessage ?? t('spectralLoader.subMessage')
   return (
     <div className="min-h-screen bg-[var(--page-bg)] flex flex-col items-center justify-center relative overflow-hidden">
       {/* Background Ambience */}
@@ -42,12 +46,12 @@ export default function SpectralLoader({
            className="flex flex-col items-center gap-4"
         >
            <span className="text-[12px] font-black text-white uppercase tracking-[0.6em] animate-pulse italic leading-none">
-             {message}
+             {resolvedMessage}
            </span>
            <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                <Shield size={10} className="text-indigo-400 animate-pulse" />
                <span className="text-[8px] font-black text-slate-800 tracking-widest uppercase italic leading-none">
-                 {subMessage}
+                 {resolvedSubMessage}
                </span>
            </div>
         </motion.div>

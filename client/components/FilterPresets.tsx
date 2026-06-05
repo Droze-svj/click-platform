@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Film, Moon, Sun, Sparkles, Zap, Heart, Camera, Palette, Star, Flame, Snowflake, Leaf } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface VideoFilter {
   brightness: number
@@ -38,6 +39,7 @@ interface FilterPresetsProps {
 }
 
 export default function FilterPresets({ onApplyPreset, currentFilters }: FilterPresetsProps) {
+  const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [hoveredPreset, setHoveredPreset] = useState<string | null>(null)
 
@@ -45,8 +47,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     // Cinematic
     {
       id: 'cinematic-movie',
-      name: 'Cinematic',
-      description: 'Hollywood-style dramatic look',
+      name: t('filterPresets.presetCinematicMovieName'),
+      description: t('filterPresets.presetCinematicMovieDesc'),
       icon: <Film className="w-5 h-5" />,
       category: 'cinematic',
       filters: {
@@ -62,8 +64,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'dramatic-noir',
-      name: 'Film Noir',
-      description: 'High contrast black & white drama',
+      name: t('filterPresets.presetDramaticNoirName'),
+      description: t('filterPresets.presetDramaticNoirDesc'),
       icon: <Moon className="w-5 h-5" />,
       category: 'cinematic',
       filters: {
@@ -80,8 +82,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     // Creative
     {
       id: 'vibrant-pop',
-      name: 'Vibrant Pop',
-      description: 'Bold, saturated colors',
+      name: t('filterPresets.presetVibrantPopName'),
+      description: t('filterPresets.presetVibrantPopDesc'),
       icon: <Sparkles className="w-5 h-5" />,
       category: 'creative',
       filters: {
@@ -94,8 +96,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'soft-dreamy',
-      name: 'Soft Dreamy',
-      description: 'Ethereal, gentle look',
+      name: t('filterPresets.presetSoftDreamyName'),
+      description: t('filterPresets.presetSoftDreamyDesc'),
       icon: <Heart className="w-5 h-5" />,
       category: 'creative',
       filters: {
@@ -110,8 +112,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'electric-vibe',
-      name: 'Electric',
-      description: 'High-energy vibrant look',
+      name: t('filterPresets.presetElectricVibeName'),
+      description: t('filterPresets.presetElectricVibeDesc'),
       icon: <Zap className="w-5 h-5" />,
       category: 'creative',
       filters: {
@@ -127,8 +129,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     // Vintage
     {
       id: 'retro-vintage',
-      name: 'Retro Vintage',
-      description: 'Classic film nostalgia',
+      name: t('filterPresets.presetRetroVintageName'),
+      description: t('filterPresets.presetRetroVintageDesc'),
       icon: <Camera className="w-5 h-5" />,
       category: 'vintage',
       filters: {
@@ -143,8 +145,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'faded-film',
-      name: 'Faded Film',
-      description: 'Soft, washed-out vintage',
+      name: t('filterPresets.presetFadedFilmName'),
+      description: t('filterPresets.presetFadedFilmDesc'),
       icon: <Sun className="w-5 h-5" />,
       category: 'vintage',
       filters: {
@@ -161,8 +163,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     // Dramatic
     {
       id: 'high-drama',
-      name: 'High Drama',
-      description: 'Intense, moody atmosphere',
+      name: t('filterPresets.presetHighDramaName'),
+      description: t('filterPresets.presetHighDramaDesc'),
       icon: <Flame className="w-5 h-5" />,
       category: 'dramatic',
       filters: {
@@ -177,8 +179,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'moody-dark',
-      name: 'Moody Dark',
-      description: 'Deep shadows, cinematic mood',
+      name: t('filterPresets.presetMoodyDarkName'),
+      description: t('filterPresets.presetMoodyDarkDesc'),
       icon: <Moon className="w-5 h-5" />,
       category: 'dramatic',
       filters: {
@@ -196,8 +198,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     // Colorful
     {
       id: 'sunset-warm',
-      name: 'Sunset Warm',
-      description: 'Golden hour warmth',
+      name: t('filterPresets.presetSunsetWarmName'),
+      description: t('filterPresets.presetSunsetWarmDesc'),
       icon: <Sun className="w-5 h-5" />,
       category: 'colorful',
       filters: {
@@ -211,8 +213,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'cool-blue',
-      name: 'Cool Blue',
-      description: 'Calming blue tones',
+      name: t('filterPresets.presetCoolBlueName'),
+      description: t('filterPresets.presetCoolBlueDesc'),
       icon: <Snowflake className="w-5 h-5" />,
       category: 'colorful',
       filters: {
@@ -225,8 +227,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'nature-vibrant',
-      name: 'Nature Vibrant',
-      description: 'Lush, natural colors',
+      name: t('filterPresets.presetNatureVibrantName'),
+      description: t('filterPresets.presetNatureVibrantDesc'),
       icon: <Leaf className="w-5 h-5" />,
       category: 'colorful',
       filters: {
@@ -243,8 +245,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     // Moody
     {
       id: 'cinematic-teal',
-      name: 'Cinematic Teal',
-      description: 'Orange & teal cinematic look',
+      name: t('filterPresets.presetCinematicTealName'),
+      description: t('filterPresets.presetCinematicTealDesc'),
       icon: <Palette className="w-5 h-5" />,
       category: 'moody',
       filters: {
@@ -259,8 +261,8 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
     },
     {
       id: 'muted-pastel',
-      name: 'Muted Pastel',
-      description: 'Soft, desaturated pastels',
+      name: t('filterPresets.presetMutedPastelName'),
+      description: t('filterPresets.presetMutedPastelDesc'),
       icon: <Heart className="w-5 h-5" />,
       category: 'moody',
       filters: {
@@ -276,14 +278,23 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
   ]
 
   const categories = [
-    { id: 'all', label: 'All Presets', icon: Star },
-    { id: 'cinematic', label: 'Cinematic', icon: Film },
-    { id: 'creative', label: 'Creative', icon: Sparkles },
-    { id: 'vintage', label: 'Vintage', icon: Camera },
-    { id: 'dramatic', label: 'Dramatic', icon: Flame },
-    { id: 'colorful', label: 'Colorful', icon: Palette },
-    { id: 'moody', label: 'Moody', icon: Moon }
+    { id: 'all', label: t('filterPresets.categoryAll'), icon: Star },
+    { id: 'cinematic', label: t('filterPresets.categoryCinematic'), icon: Film },
+    { id: 'creative', label: t('filterPresets.categoryCreative'), icon: Sparkles },
+    { id: 'vintage', label: t('filterPresets.categoryVintage'), icon: Camera },
+    { id: 'dramatic', label: t('filterPresets.categoryDramatic'), icon: Flame },
+    { id: 'colorful', label: t('filterPresets.categoryColorful'), icon: Palette },
+    { id: 'moody', label: t('filterPresets.categoryMoody'), icon: Moon }
   ]
+
+  const categoryLabels: Record<string, string> = {
+    cinematic: t('filterPresets.categoryCinematic'),
+    creative: t('filterPresets.categoryCreative'),
+    vintage: t('filterPresets.categoryVintage'),
+    dramatic: t('filterPresets.categoryDramatic'),
+    colorful: t('filterPresets.categoryColorful'),
+    moody: t('filterPresets.categoryMoody'),
+  }
 
   const filteredPresets = selectedCategory === 'all'
     ? presets
@@ -364,7 +375,7 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
               <div className="absolute inset-0 bg-blue-500/10 rounded-xl flex items-center justify-center">
                 <div className="text-blue-600 dark:text-blue-400 font-semibold text-sm flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Apply Preset
+                  {t('filterPresets.applyPreset')}
                 </div>
               </div>
             )}
@@ -372,7 +383,7 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
             {/* Category Badge */}
             <div className="absolute top-2 right-2">
               <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full capitalize">
-                {preset.category}
+                {categoryLabels[preset.category] ?? preset.category}
               </span>
             </div>
           </button>
@@ -384,7 +395,7 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
         <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-blue-500" />
           <span>
-            Click any preset to apply instantly. Adjust filters manually for fine-tuning.
+            {t('filterPresets.quickApplyHint')}
           </span>
         </p>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, Award, Target, BarChart3, Sparkles, AlertCircle, CheckCircle } from 'lucide-react'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface BenchmarkData {
   contentId: string
@@ -60,6 +61,7 @@ interface PredictionData {
 }
 
 export default function ContentBenchmarking({ contentId }: { contentId: string }) {
+  const { t } = useTranslation()
   const [benchmark, setBenchmark] = useState<BenchmarkData | null>(null)
   const [comparison, setComparison] = useState<ComparisonData | null>(null)
   const [prediction, setPrediction] = useState<PredictionData | null>(null)
@@ -142,7 +144,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
           <div className="flex items-center gap-2">
             <Target className="w-6 h-6 text-purple-600" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-              Performance Benchmarking
+              {t('contentBenchmarking.title')}
             </h2>
           </div>
         </div>
@@ -160,7 +162,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {t(`contentBenchmarking.tab_${tab}`)}
             </button>
           ))}
         </div>
@@ -171,7 +173,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
             {!benchmark.hasData ? (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>{(benchmark as any).message || 'No data available'}</p>
+                <p>{(benchmark as any).message || t('contentBenchmarking.noDataAvailable')}</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -179,13 +181,13 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Overall Performance</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('contentBenchmarking.overallPerformance')}</p>
                       <div className="flex items-center gap-3">
                         <span className={`text-4xl font-bold ${getPercentileColor(benchmark.overallScore.score)}`}>
                           {benchmark.overallScore.score}
                         </span>
-                        <span className="text-2xl text-gray-600 dark:text-gray-400">th</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">percentile</span>
+                        <span className="text-2xl text-gray-600 dark:text-gray-400">{t('contentBenchmarking.ordinalTh')}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{t('contentBenchmarking.percentile')}</span>
                         <span className={`px-4 py-2 rounded-lg font-bold text-lg ${getGradeColor(benchmark.overallScore.grade)}`}>
                           {benchmark.overallScore.grade}
                         </span>
@@ -199,7 +201,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                 {Object.keys(benchmark.benchmarks).length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-                      Platform Performance
+                      {t('contentBenchmarking.platformPerformance')}
                     </h3>
                     <div className="space-y-4">
                       {Object.entries(benchmark.benchmarks).map(([platform, data]) => (
@@ -220,7 +222,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
 
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Engagement</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('contentBenchmarking.engagement')}</p>
                               <p className="text-lg font-semibold text-gray-900 dark:text-white">
                                 {formatNumber(data.metrics.avgEngagement)}
                               </p>
@@ -234,12 +236,12 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                                   {data.comparison.engagement.percentage > 0 ? '+' : ''}
                                   {data.comparison.engagement.percentage.toFixed(1)}%
                                 </span>
-                                <span className="text-xs text-gray-500">vs industry</span>
+                                <span className="text-xs text-gray-500">{t('contentBenchmarking.vsIndustry')}</span>
                               </div>
                             </div>
 
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Engagement Rate</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('contentBenchmarking.engagementRate')}</p>
                               <p className="text-lg font-semibold text-gray-900 dark:text-white">
                                 {data.metrics.avgEngagementRate.toFixed(2)}%
                               </p>
@@ -253,14 +255,14 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                                   {data.comparison.engagementRate.percentage > 0 ? '+' : ''}
                                   {data.comparison.engagementRate.percentage.toFixed(1)}%
                                 </span>
-                                <span className="text-xs text-gray-500">vs industry</span>
+                                <span className="text-xs text-gray-500">{t('contentBenchmarking.vsIndustry')}</span>
                               </div>
                             </div>
 
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Percentile</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{t('contentBenchmarking.percentileLabel')}</p>
                               <p className={`text-lg font-semibold ${getPercentileColor(data.percentiles.engagementRate.percentile)}`}>
-                                {data.percentiles.engagementRate.percentile}th
+                                {t('contentBenchmarking.percentileValue', { value: data.percentiles.engagementRate.percentile })}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
                                 {data.percentiles.engagementRate.label}
@@ -280,7 +282,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                       <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                         <h4 className="font-semibold text-green-900 dark:text-green-200 mb-2 flex items-center gap-2">
                           <CheckCircle className="w-4 h-4" />
-                          Strengths
+                          {t('contentBenchmarking.strengths')}
                         </h4>
                         <ul className="space-y-1">
                           {benchmark.summary.strengths.map((strength, idx) => (
@@ -296,7 +298,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                       <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
                         <h4 className="font-semibold text-red-900 dark:text-red-200 mb-2 flex items-center gap-2">
                           <AlertCircle className="w-4 h-4" />
-                          Areas for Improvement
+                          {t('contentBenchmarking.areasForImprovement')}
                         </h4>
                         <ul className="space-y-1">
                           {benchmark.summary.weaknesses.map((weakness, idx) => (
@@ -315,7 +317,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
-                      Recommendations
+                      {t('contentBenchmarking.recommendations')}
                     </h4>
                     <ul className="space-y-1">
                       {benchmark.summary.recommendations.map((rec, idx) => (
@@ -337,22 +339,22 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
             {!comparison.hasComparison ? (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>{(comparison as any).message || 'No comparison data available'}</p>
+                <p>{(comparison as any).message || t('contentBenchmarking.noComparisonData')}</p>
               </div>
             ) : (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-                  vs Similar Content
+                  {t('contentBenchmarking.vsSimilarContent')}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Engagement</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('contentBenchmarking.engagement')}</p>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatNumber(comparison.currentMetrics.avgEngagement)}
                       </p>
-                      <span className="text-sm text-gray-500">vs {formatNumber(comparison.similarMetrics.avgEngagement)}</span>
+                      <span className="text-sm text-gray-500">{t('contentBenchmarking.vsValue', { value: formatNumber(comparison.similarMetrics.avgEngagement) })}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       {comparison.comparison.engagement.percentage > 0 ? (
@@ -368,12 +370,12 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                   </div>
 
                   <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Engagement Rate</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('contentBenchmarking.engagementRate')}</p>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {comparison.currentMetrics.avgEngagementRate.toFixed(2)}%
                       </p>
-                      <span className="text-sm text-gray-500">vs {comparison.similarMetrics.avgEngagementRate.toFixed(2)}%</span>
+                      <span className="text-sm text-gray-500">{t('contentBenchmarking.vsValue', { value: `${comparison.similarMetrics.avgEngagementRate.toFixed(2)}%` })}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       {comparison.comparison.engagementRate.percentage > 0 ? (
@@ -389,12 +391,12 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                   </div>
 
                   <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Impressions</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('contentBenchmarking.impressions')}</p>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatNumber(comparison.currentMetrics.avgImpressions)}
                       </p>
-                      <span className="text-sm text-gray-500">vs {formatNumber(comparison.similarMetrics.avgImpressions)}</span>
+                      <span className="text-sm text-gray-500">{t('contentBenchmarking.vsValue', { value: formatNumber(comparison.similarMetrics.avgImpressions) })}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       {((comparison.comparison as any).impressions?.percentage || 0) > 0 ? (
@@ -412,7 +414,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
 
                 {comparison.insights.length > 0 && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">Insights</h4>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('contentBenchmarking.insights')}</h4>
                     <ul className="space-y-1">
                       {comparison.insights.map((insight, idx) => (
                         <li key={idx} className="text-sm text-blue-800 dark:text-blue-300">
@@ -433,23 +435,23 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
             {!prediction.hasPrediction ? (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>{(prediction as any).message || 'Insufficient data for prediction'}</p>
+                <p>{(prediction as any).message || t('contentBenchmarking.insufficientData')}</p>
               </div>
             ) : (
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-                    Performance Prediction
+                    {t('contentBenchmarking.performancePrediction')}
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Average</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('contentBenchmarking.currentAverage')}</p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatNumber(prediction.currentAvg)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Predicted Engagement</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('contentBenchmarking.predictedEngagement')}</p>
                       <p className="text-2xl font-bold text-purple-600">
                         {formatNumber(prediction.predictedEngagement)}
                       </p>
@@ -462,16 +464,16 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                       <TrendingDown className="w-5 h-5 text-red-600" />
                     )}
                     <span className={`font-medium ${prediction.trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {prediction.trend > 0 ? '+' : ''}{prediction.trend}% trend
+                      {t('contentBenchmarking.trendValue', { value: `${prediction.trend > 0 ? '+' : ''}${prediction.trend}` })}
                     </span>
-                    <span className="text-sm text-gray-500">({prediction.confidence} confidence)</span>
+                    <span className="text-sm text-gray-500">{t('contentBenchmarking.confidenceValue', { confidence: prediction.confidence })}</span>
                   </div>
                 </div>
 
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">Predicted Percentile</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">{t('contentBenchmarking.predictedPercentile')}</h4>
                   <p className={`text-2xl font-bold ${getPercentileColor(prediction.predictedPercentile.percentile)}`}>
-                    {prediction.predictedPercentile.percentile}th percentile
+                    {t('contentBenchmarking.percentileWithLabel', { value: prediction.predictedPercentile.percentile })}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {prediction.predictedPercentile.label}
@@ -479,7 +481,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">Recommendation</h4>
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('contentBenchmarking.recommendation')}</h4>
                   <p className="text-sm text-blue-800 dark:text-blue-300">
                     {prediction.recommendation}
                   </p>

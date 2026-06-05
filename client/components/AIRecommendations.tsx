@@ -12,6 +12,7 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 import ErrorDisplay from './ErrorDisplay';
 import { parseApiError } from '../utils/errorHandler';
 import { apiGet } from '../lib/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Recommendation {
   title: string;
@@ -42,14 +43,15 @@ export default function AIRecommendations() {
   const [platform, setPlatform] = useState<string>('');
   const [error, setError] = useState<Error | null>(null);
   const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
 
   const normalizeRecommendations = (raw: any): RecommendationsData => {
     // Ensure recommendations array and each recommendation has required fields
     const recommendations = Array.isArray(raw?.recommendations) 
       ? raw.recommendations.map((rec: any) => ({
-          title: rec?.title || 'Untitled Recommendation',
+          title: rec?.title || t('aiRecommendations.untitledRecommendation'),
           description: rec?.description || '',
-          platform: rec?.platform || 'Unknown',
+          platform: rec?.platform || t('aiRecommendations.unknownPlatform'),
           reasoning: rec?.reasoning || '',
           keyPoints: Array.isArray(rec?.keyPoints) ? rec.keyPoints : [],
         }))
@@ -135,7 +137,7 @@ export default function AIRecommendations() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-yellow-500" />
-            AI-Powered Recommendations
+            {t('aiRecommendations.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -149,7 +151,7 @@ export default function AIRecommendations() {
         {recommendations && (
           <div className="mb-4 p-4 bg-muted rounded">
             <p className="text-sm text-muted-foreground mb-2">
-              Based on {recommendations.basedOn?.contentAnalyzed ?? 0} pieces of content
+              {t('aiRecommendations.basedOnContent', { count: recommendations.basedOn?.contentAnalyzed ?? 0 })}
             </p>
             <div className="flex flex-wrap gap-2">
               {(recommendations.basedOn?.topCategories || []).map((cat) => (
@@ -167,12 +169,12 @@ export default function AIRecommendations() {
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Loading...
+              {t('aiRecommendations.loading')}
             </>
           ) : (
             <>
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Recommendations
+              {t('aiRecommendations.refreshRecommendations')}
             </>
           )}
         </Button>
@@ -198,14 +200,14 @@ export default function AIRecommendations() {
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold">{rec?.title || 'Untitled Recommendation'}</h3>
-                  <Badge>{rec?.platform || 'Unknown'}</Badge>
+                  <h3 className="font-semibold">{rec?.title || t('aiRecommendations.untitledRecommendation')}</h3>
+                  <Badge>{rec?.platform || t('aiRecommendations.unknownPlatform')}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">{rec?.description || ''}</p>
                 <p className="text-sm mb-3">{rec?.reasoning || ''}</p>
                 {Array.isArray(rec?.keyPoints) && rec.keyPoints.length > 0 && (
                   <div className="space-y-1">
-                    <p className="text-xs font-medium">Key Points:</p>
+                    <p className="text-xs font-medium">{t('aiRecommendations.keyPoints')}</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       {rec.keyPoints.map((point, i) => (
                         <li key={i}>{point}</li>
@@ -220,8 +222,8 @@ export default function AIRecommendations() {
         
         {recommendations && (!Array.isArray(recommendations.recommendations) || recommendations.recommendations.length === 0) && (
           <div className="text-center py-8 text-muted-foreground">
-            <p>No recommendations available at this time.</p>
-            <p className="text-sm mt-2">Try refreshing or check back later.</p>
+            <p>{t('aiRecommendations.noRecommendations')}</p>
+            <p className="text-sm mt-2">{t('aiRecommendations.tryRefreshing')}</p>
           </div>
         )}
       </CardContent>

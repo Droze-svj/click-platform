@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Sparkles, TrendingUp, Clock, RefreshCw, Eye } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -13,6 +14,7 @@ interface Recommendation {
 }
 
 export default function ContentDiscovery({ onContentSelect }: { onContentSelect?: (content: any) => void }) {
+  const { t } = useTranslation()
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [basedOn, setBasedOn] = useState<'performance' | 'similarity' | 'trending' | 'recent'>('performance')
@@ -65,7 +67,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
         <div className="flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-purple-600" />
           <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Content Discovery
+            {t('contentDiscovery.title')}
           </h2>
         </div>
         <button
@@ -90,7 +92,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
-            {type.charAt(0).toUpperCase() + type.slice(1)}
+            {t(`contentDiscovery.basedOn_${type}`)}
           </button>
         ))}
       </div>
@@ -106,7 +108,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
       ) : recommendations.length === 0 ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p>No recommendations available</p>
+          <p>{t('contentDiscovery.noRecommendations')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -119,7 +121,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-1">
-                    {rec.content.title || 'Untitled'}
+                    {rec.content.title || t('contentDiscovery.untitled')}
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     {getReasonIcon(rec.reason)}
@@ -127,7 +129,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
                     {rec.score > 0 && (
                       <>
                         <span>•</span>
-                        <span>Score: {rec.score}</span>
+                        <span>{t('contentDiscovery.scoreValue', { score: rec.score })}</span>
                       </>
                     )}
                   </div>

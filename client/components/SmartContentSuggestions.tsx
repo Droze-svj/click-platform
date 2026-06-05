@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Lightbulb, TrendingUp, Clock, Hash, Sparkles } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -16,6 +17,7 @@ interface Suggestion {
 }
 
 export default function SmartContentSuggestions() {
+  const { t } = useTranslation()
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -88,11 +90,11 @@ export default function SmartContentSuggestions() {
         <div className="flex items-center gap-2 mb-4">
           <Lightbulb className="w-6 h-6 text-yellow-500" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Smart Content Suggestions
+            {t('smartContentSuggestions.title')}
           </h3>
         </div>
         <p className="text-gray-600 dark:text-gray-400">
-          Start creating content to get personalized suggestions based on your performance!
+          {t('smartContentSuggestions.emptyState')}
         </p>
       </div>
     )
@@ -104,7 +106,7 @@ export default function SmartContentSuggestions() {
         <div className="flex items-center gap-2">
           <Lightbulb className="w-6 h-6 text-yellow-500" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Smart Content Suggestions
+            {t('smartContentSuggestions.title')}
           </h3>
         </div>
         <button
@@ -112,7 +114,7 @@ export default function SmartContentSuggestions() {
           onClick={loadSuggestions}
           className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
         >
-          Refresh
+          {t('smartContentSuggestions.refresh')}
         </button>
       </div>
 
@@ -138,7 +140,7 @@ export default function SmartContentSuggestions() {
                       ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                       : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                   }`}>
-                    {suggestion.priority.toUpperCase()}
+                    {t(`smartContentSuggestions.priority.${suggestion.priority}`)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
@@ -156,7 +158,7 @@ export default function SmartContentSuggestions() {
                     ))}
                   </div>
                 )}
-                <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                <button type="button" className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
                   {suggestion.action} →
                 </button>
               </div>

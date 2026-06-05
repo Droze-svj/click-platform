@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
 import { apiGet, apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface EnhancedSuggestion {
   type: string
@@ -32,6 +33,7 @@ interface ViralPrediction {
 }
 
 export default function EnhancedContentSuggestions() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { showToast } = useToast()
   const [suggestions, setSuggestions] = useState<EnhancedSuggestion[]>([])
@@ -55,7 +57,7 @@ export default function EnhancedContentSuggestions() {
         setSuggestions(response.data || [])
       }
     } catch (error) {
-      showToast('Failed to load suggestions', 'error')
+      showToast(t('enhancedContentSuggestions.failedToLoadSuggestions'), 'error')
     } finally {
       setLoading(false)
     }
@@ -100,7 +102,7 @@ export default function EnhancedContentSuggestions() {
 
   const handlePredictViral = async () => {
     if (!predictionContent.trim()) {
-      showToast('Please enter content to predict', 'error')
+      showToast(t('enhancedContentSuggestions.pleaseEnterContent'), 'error')
       return
     }
 
@@ -108,10 +110,10 @@ export default function EnhancedContentSuggestions() {
       const response = await apiPost<any>('/suggestions/enhanced/viral-prediction', { contentData: { text: predictionContent } })
       if (response?.success) {
         setViralPrediction(response.data)
-        showToast('Viral prediction generated', 'success')
+        showToast(t('enhancedContentSuggestions.viralPredictionGenerated'), 'success')
       }
     } catch (error) {
-      showToast('Failed to predict viral potential', 'error')
+      showToast(t('enhancedContentSuggestions.failedToPredict'), 'error')
     }
   }
 
@@ -122,7 +124,7 @@ export default function EnhancedContentSuggestions() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">💡 Enhanced Content Suggestions</h2>
+        <h2 className="text-xl font-semibold">{t('enhancedContentSuggestions.title')}</h2>
         <button
           type="button"
           onClick={() => {
@@ -132,7 +134,7 @@ export default function EnhancedContentSuggestions() {
           }}
           className="text-sm text-purple-600 hover:text-purple-800"
         >
-          Refresh
+          {t('enhancedContentSuggestions.refresh')}
         </button>
       </div>
 
@@ -146,7 +148,7 @@ export default function EnhancedContentSuggestions() {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          Suggestions
+          {t('enhancedContentSuggestions.tabSuggestions')}
         </button>
         <button
           type="button"
@@ -157,7 +159,7 @@ export default function EnhancedContentSuggestions() {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          Content Gaps
+          {t('enhancedContentSuggestions.tabContentGaps')}
         </button>
         <button
           type="button"
@@ -168,7 +170,7 @@ export default function EnhancedContentSuggestions() {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          Trending
+          {t('enhancedContentSuggestions.tabTrending')}
         </button>
         <button
           type="button"
@@ -179,12 +181,12 @@ export default function EnhancedContentSuggestions() {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          Viral Predictor
+          {t('enhancedContentSuggestions.tabViralPredictor')}
         </button>
       </div>
 
       {loading && activeTab === 'suggestions' ? (
-        <LoadingSpinner size="sm" text="Loading suggestions..." />
+        <LoadingSpinner size="sm" text={t('enhancedContentSuggestions.loadingSuggestions')} />
       ) : (
         <>
           {activeTab === 'suggestions' && (
@@ -224,13 +226,13 @@ export default function EnhancedContentSuggestions() {
                       onClick={() => handleUseSuggestion(suggestion)}
                       className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 ml-2"
                     >
-                      Use
+                      {t('enhancedContentSuggestions.use')}
                     </button>
                   </div>
                 </div>
               ))}
               {suggestions.length === 0 && (
-                <div className="text-center py-8 text-gray-500">No suggestions available</div>
+                <div className="text-center py-8 text-gray-500">{t('enhancedContentSuggestions.noSuggestions')}</div>
               )}
             </div>
           )}
@@ -252,13 +254,13 @@ export default function EnhancedContentSuggestions() {
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  Great! No content gaps detected.
+                  {t('enhancedContentSuggestions.noContentGaps')}
                 </div>
               )}
 
               {gaps.missingPlatforms.length > 0 && (
                 <div className="mt-4">
-                  <h3 className="font-semibold mb-2">Missing Platforms</h3>
+                  <h3 className="font-semibold mb-2">{t('enhancedContentSuggestions.missingPlatforms')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {gaps.missingPlatforms.map((platform) => (
                       <span key={platform} className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm capitalize">
@@ -281,12 +283,12 @@ export default function EnhancedContentSuggestions() {
                 >
                   <div className="flex items-center justify-between">
                     <p className="font-medium">{topic}</p>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Trending</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{t('enhancedContentSuggestions.trendingBadge')}</span>
                   </div>
                 </div>
               ))}
               {trending.length === 0 && (
-                <div className="text-center py-8 text-gray-500">No trending topics available</div>
+                <div className="text-center py-8 text-gray-500">{t('enhancedContentSuggestions.noTrendingTopics')}</div>
               )}
             </div>
           )}
@@ -294,11 +296,11 @@ export default function EnhancedContentSuggestions() {
           {activeTab === 'viral' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Enter Content to Predict</label>
+                <label className="block text-sm font-medium mb-2">{t('enhancedContentSuggestions.enterContentToPredict')}</label>
                 <textarea
                   value={predictionContent}
                   onChange={(e) => setPredictionContent(e.target.value)}
-                  placeholder="Paste your content here..."
+                  placeholder={t('enhancedContentSuggestions.pasteContentPlaceholder')}
                   rows={4}
                   className="w-full px-4 py-2 border rounded-lg"
                 />
@@ -308,22 +310,22 @@ export default function EnhancedContentSuggestions() {
                   disabled={!predictionContent.trim()}
                   className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
                 >
-                  Predict Viral Potential
+                  {t('enhancedContentSuggestions.predictViralPotential')}
                 </button>
               </div>
 
               {viralPrediction && (
                 <div className="border rounded-lg p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Viral Prediction</h3>
+                    <h3 className="font-semibold">{t('enhancedContentSuggestions.viralPrediction')}</h3>
                     <div className="text-right">
                       <div className="text-3xl font-bold text-purple-600">{viralPrediction.viralScore}</div>
-                      <div className="text-sm text-gray-600">Score</div>
+                      <div className="text-sm text-gray-600">{t('enhancedContentSuggestions.score')}</div>
                     </div>
                   </div>
                   <div className="mb-4">
                     <p className="text-sm mb-2">
-                      Potential: <strong className="capitalize">{viralPrediction.potential}</strong>
+                      {t('enhancedContentSuggestions.potential')} <strong className="capitalize">{viralPrediction.potential}</strong>
                     </p>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
@@ -334,7 +336,7 @@ export default function EnhancedContentSuggestions() {
                   </div>
                   {viralPrediction.factors.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="font-semibold text-sm mb-2">Factors:</h4>
+                      <h4 className="font-semibold text-sm mb-2">{t('enhancedContentSuggestions.factors')}</h4>
                       <ul className="list-disc list-inside text-sm space-y-1">
                         {viralPrediction.factors.map((factor, index) => (
                           <li key={index}>{factor}</li>
@@ -344,7 +346,7 @@ export default function EnhancedContentSuggestions() {
                   )}
                   {viralPrediction.recommendations.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-sm mb-2">Recommendations:</h4>
+                      <h4 className="font-semibold text-sm mb-2">{t('enhancedContentSuggestions.recommendations')}</h4>
                       <ul className="list-disc list-inside text-sm space-y-1">
                         {viralPrediction.recommendations.map((rec, index) => (
                           <li key={index}>{rec}</li>

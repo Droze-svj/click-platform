@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, X, GripVertical, Image as ImageIcon, Video, FileText, Music } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ContentBlock {
   id: string
@@ -19,6 +20,7 @@ export default function DragDropContentBuilder({
   onContentChange, 
   initialBlocks = [] 
 }: DragDropContentBuilderProps) {
+  const { t } = useTranslation()
   const [blocks, setBlocks] = useState<ContentBlock[]>(initialBlocks)
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null)
 
@@ -97,7 +99,7 @@ export default function DragDropContentBuilder({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-          Content Builder
+          {t('dragDropContentBuilder.title')}
         </h3>
         <div className="flex gap-2">
           <button
@@ -106,7 +108,7 @@ export default function DragDropContentBuilder({
             className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
-            Text
+            {t('dragDropContentBuilder.text')}
           </button>
           <button
             type="button"
@@ -114,7 +116,7 @@ export default function DragDropContentBuilder({
             className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
-            Image
+            {t('dragDropContentBuilder.image')}
           </button>
           <button
             type="button"
@@ -122,7 +124,7 @@ export default function DragDropContentBuilder({
             className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
-            Hashtags
+            {t('dragDropContentBuilder.hashtags')}
           </button>
         </div>
       </div>
@@ -130,8 +132,8 @@ export default function DragDropContentBuilder({
       <div className="space-y-3">
         {blocks.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            <p>Click the buttons above to add content blocks</p>
-            <p className="text-sm mt-2">Drag blocks to reorder them</p>
+            <p>{t('dragDropContentBuilder.emptyHint')}</p>
+            <p className="text-sm mt-2">{t('dragDropContentBuilder.dragHint')}</p>
           </div>
         ) : (
           blocks.map((block, index) => (
@@ -151,11 +153,12 @@ export default function DragDropContentBuilder({
                 <div className="flex items-center gap-2 mb-2">
                   {getBlockIcon(block.type)}
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                    {block.type}
+                    {t(`dragDropContentBuilder.blockType_${block.type}`)}
                   </span>
                   <button
                     type="button"
                     onClick={() => removeBlock(block.id)}
+                    aria-label={t('dragDropContentBuilder.removeBlock')}
                     className="ml-auto p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                   >
                     <X className="w-4 h-4" />
@@ -166,7 +169,7 @@ export default function DragDropContentBuilder({
                   <textarea
                     value={block.content}
                     onChange={(e) => updateBlock(block.id, e.target.value)}
-                    placeholder={`Enter ${block.type}...`}
+                    placeholder={t('dragDropContentBuilder.enterPlaceholder', { type: t(`dragDropContentBuilder.blockType_${block.type}`) })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
                     rows={block.type === 'quote' ? 3 : 4}
                   />
@@ -175,7 +178,7 @@ export default function DragDropContentBuilder({
                     type="text"
                     value={block.content}
                     onChange={(e) => updateBlock(block.id, e.target.value)}
-                    placeholder="Enter hashtags (e.g., #marketing #socialmedia)"
+                    placeholder={t('dragDropContentBuilder.hashtagsPlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                 ) : (
@@ -202,7 +205,7 @@ export default function DragDropContentBuilder({
                         <Video className="w-8 h-8 text-gray-400" />
                       )}
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Click to upload {block.type}
+                        {t('dragDropContentBuilder.clickToUpload', { type: t(`dragDropContentBuilder.blockType_${block.type}`) })}
                       </span>
                     </label>
                   </div>

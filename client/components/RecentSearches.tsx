@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Clock, X, Search } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface RecentSearchesProps {
   onSearch: (query: string) => void
@@ -9,6 +10,7 @@ interface RecentSearchesProps {
 }
 
 export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearchesProps) {
+  const { t } = useTranslation()
   const [searches, setSearches] = useState<string[]>([])
 
   const loadRecentSearches = useCallback(() => {
@@ -60,7 +62,7 @@ export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearche
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           <h4 className="text-sm font-medium text-gray-900 dark:text-[var(--text-main)]">
-            Recent Searches
+            {t('recentSearches.title')}
           </h4>
         </div>
         {searches.length > 0 && (
@@ -69,7 +71,7 @@ export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearche
             onClick={clearAll}
             className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
-            Clear
+            {t('recentSearches.clear')}
           </button>
         )}
       </div>

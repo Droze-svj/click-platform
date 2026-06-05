@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Search, Sparkles, Loader2 } from 'lucide-react'
 import { useDebounce } from '../hooks/useDebounce'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Article {
   _id: string
@@ -13,6 +14,7 @@ interface Article {
 }
 
 export default function AIHelpSearch() {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Article[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -55,7 +57,7 @@ export default function AIHelpSearch() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask a question or search help articles..."
+          placeholder={t('aiHelpSearch.searchPlaceholder')}
           className="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
         {isLoading && (
@@ -85,7 +87,7 @@ export default function AIHelpSearch() {
                 </div>
                 {article.relevanceScore && (
                   <span className="text-xs text-purple-600 dark:text-purple-400 ml-2">
-                    {Math.round(article.relevanceScore * 10) / 10}% match
+                    {t('aiHelpSearch.matchPercent', { percent: Math.round(article.relevanceScore * 10) / 10 })}
                   </span>
                 )}
               </div>

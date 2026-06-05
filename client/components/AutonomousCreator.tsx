@@ -44,13 +44,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { apiPost } from '../lib/api'
 import { useHardenedRequest } from '../hooks/useHardenedRequest'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const STAGES = [
-  { id: 'intelligence', label: 'Researching', icon: Brain },
-  { id: 'script',       label: 'Writing the script',     icon: Terminal },
-  { id: 'refinery',     label: 'AI consensus',       icon: Orbit },
-  { id: 'anatomy',      label: 'Planning the cuts',         icon: Layers },
-  { id: 'blueprint',    label: 'Building the timeline',    icon: Command },
+  { id: 'intelligence', labelKey: 'autonomousCreator.stageResearching', icon: Brain },
+  { id: 'script',       labelKey: 'autonomousCreator.stageWritingScript',     icon: Terminal },
+  { id: 'refinery',     labelKey: 'autonomousCreator.stageAiConsensus',       icon: Orbit },
+  { id: 'anatomy',      labelKey: 'autonomousCreator.stagePlanningCuts',         icon: Layers },
+  { id: 'blueprint',    labelKey: 'autonomousCreator.stageBuildingTimeline',    icon: Command },
 ]
 
 const TONES = [
@@ -62,6 +63,7 @@ const TONES = [
 
 export default function AutonomousCreator() {
   const router = useRouter()
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const { execute: executeHardened, rateLimitCountdown } = useHardenedRequest()
   
@@ -95,7 +97,7 @@ export default function AutonomousCreator() {
     if (!result) return
 
     try {
-      showToast('Saving…', 'info')
+      showToast(t('autonomousCreator.savingToast'), 'info')
       const res = await apiPost('/intelligence/factory/save', {
         manifest: result.data || result,
         topic: prompt,
@@ -104,18 +106,18 @@ export default function AutonomousCreator() {
       })
 
       if (res.success) {
-        showToast('Saved.', 'success')
+        showToast(t('autonomousCreator.savedToast'), 'success')
       } else {
-        showToast('Could not save. Try again.', 'error')
+        showToast(t('autonomousCreator.couldNotSave'), 'error')
       }
     } catch (err: any) {
-      showToast('Could not save. Try again.', 'error')
+      showToast(t('autonomousCreator.couldNotSave'), 'error')
     }
   }
 
   const runFactory = async (pivot?: string) => {
     if (!prompt.trim()) {
-      showToast('Describe your video first.', 'warning')
+      showToast(t('autonomousCreator.describeVideoFirst'), 'warning')
       return
     }
 
@@ -155,15 +157,15 @@ export default function AutonomousCreator() {
         setVariants(prev => [newVariant, ...prev].slice(0, 3))
         setResult(newVariant)
         setActiveVariantIndex(0)
-        showToast('Done — your video is ready.', 'success')
+        showToast(t('autonomousCreator.videoReady'), 'success')
       } else if (res) {
-        setError(res.error || 'Something went wrong on our side.')
+        setError(res.error || t('autonomousCreator.somethingWentWrong'))
       } else {
-        setError('Could not connect. Try again in a moment.')
+        setError(t('autonomousCreator.couldNotConnect'))
       }
     } catch (err: any) {
-      setError(err.message || 'Connection lost.')
-      showToast('Could not generate. Try again.', 'error')
+      setError(err.message || t('autonomousCreator.connectionLost'))
+      showToast(t('autonomousCreator.couldNotGenerate'), 'error')
     } finally {
       setLoading(false)
       setCurrentStage(null)
@@ -183,15 +185,15 @@ export default function AutonomousCreator() {
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mb-5">
               <div className="flex items-center gap-3">
                  <Binary size={14} className="text-primary-500 animate-pulse shrink-0" />
-                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] text-primary-600 dark:text-primary-400 italic leading-none truncate">AI engine</span>
+                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] text-primary-600 dark:text-primary-400 italic leading-none truncate">{t('autonomousCreator.aiEngine')}</span>
               </div>
               <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
                   <Activity size={12} className="text-emerald-500 animate-pulse shrink-0" />
-                  <span className="text-[8px] md:text-[9px] font-black text-emerald-500 tracking-widest uppercase italic leading-none whitespace-nowrap">AI ready</span>
+                  <span className="text-[8px] md:text-[9px] font-black text-emerald-500 tracking-widest uppercase italic leading-none whitespace-nowrap">{t('autonomousCreator.aiReady')}</span>
               </div>
             </div>
-            <h2 className="text-[clamp(2rem,6vw,4.5rem)] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.95] mb-4 [overflow-wrap:anywhere]">Click forge</h2>
-            <p className="text-surface-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.25em] italic leading-tight">Generate scripts, captions, and edits in one place</p>
+            <h2 className="text-[clamp(2rem,6vw,4.5rem)] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.95] mb-4 [overflow-wrap:anywhere]">{t('autonomousCreator.clickForge')}</h2>
+            <p className="text-surface-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.25em] italic leading-tight">{t('autonomousCreator.headerSubtitle')}</p>
           </div>
         </div>
       </div>
@@ -207,14 +209,14 @@ export default function AutonomousCreator() {
               <div className="space-y-8 relative z-10">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4">
                   <label className="text-[10px] md:text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.3em] md:tracking-[0.6em] italic flex items-center gap-4">
-                    <Terminal size={16} className="text-primary-500 shrink-0" /> Your idea
+                    <Terminal size={16} className="text-primary-500 shrink-0" /> {t('autonomousCreator.yourIdea')}
                   </label>
                   {loading && (
                     <div className="flex items-center gap-4 w-full sm:w-auto">
                        {(rateLimitCountdown ?? 0) > 0 ? (
-                         <span className="text-[9px] font-black text-rose-500 uppercase italic tracking-widest animate-pulse">COOLING: {rateLimitCountdown}S</span>
+                         <span className="text-[9px] font-black text-rose-500 uppercase italic tracking-widest animate-pulse">{t('autonomousCreator.cooling', { seconds: rateLimitCountdown ?? 0 })}</span>
                        ) : (
-                         <span className="text-[9px] font-black text-primary-500 uppercase italic tracking-widest">Working… {Math.round(cognitiveLoad)}%</span>
+                         <span className="text-[9px] font-black text-primary-500 uppercase italic tracking-widest">{t('autonomousCreator.workingPercent', { percent: Math.round(cognitiveLoad) })}</span>
                        )}
                        <div className="flex-1 sm:w-32 h-2 bg-surface-page dark:bg-surface-900 rounded-full overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner">
                           <motion.div 
@@ -232,21 +234,21 @@ export default function AutonomousCreator() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   disabled={loading}
-                  placeholder="Describe your video — Click handles the script, b-roll, and edits."
+                  placeholder={t('autonomousCreator.promptPlaceholder')}
                   className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] p-10 text-[1.5rem] font-black italic text-surface-900 dark:text-white placeholder:text-surface-200 dark:placeholder:text-slate-900 focus:outline-none focus:border-primary-500/40 transition-all resize-none h-48 shadow-inner leading-[1.2] uppercase tracking-tighter"
                 />
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 px-4">
                     <Database size={14} className="text-primary-500" />
-                    <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4rem] italic">Keywords (optional)</span>
+                    <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4rem] italic">{t('autonomousCreator.keywordsOptional')}</span>
                   </div>
                   <input
                     type="text"
                     value={keywords}
                     onChange={(e) => setKeywords(e.target.value)}
                     disabled={loading}
-                    placeholder="e.g. AI, finance, productivity"
+                    placeholder={t('autonomousCreator.keywordsPlaceholder')}
                     className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-full px-8 py-5 text-[12px] font-black italic text-surface-900 dark:text-white placeholder:text-surface-200 dark:placeholder:text-slate-900 focus:outline-none focus:border-primary-500/40 transition-all uppercase tracking-widest shadow-inner"
                   />
                 </div>
@@ -258,7 +260,7 @@ export default function AutonomousCreator() {
                 <div className="md:col-span-12 lg:col-span-8 space-y-8">
                    <div className="flex items-center gap-6 px-4">
                       <Globe size={14} className="text-primary-500 shrink-0" />
-                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">Platform</span>
+                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">{t('autonomousCreator.platform')}</span>
                    </div>
                    <div className="flex flex-wrap gap-4 px-4 pb-4">
                      {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin', 'twitter'].map(p => (
@@ -283,28 +285,28 @@ export default function AutonomousCreator() {
                 <div className="md:col-span-12 space-y-8">
                    <div className="flex items-center gap-6 px-4">
                       <Mic2 size={14} className="text-primary-500 shrink-0" />
-                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">Tone</span>
+                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">{t('autonomousCreator.tone')}</span>
                    </div>
                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 px-4">
                      {[
-                       { id: 'educational', label: 'Authoritative', icon: Shield },
-                       { id: 'motivational', label: 'Elevated', icon: Zap },
-                       { id: 'storytelling', label: 'Narrative', icon: Film },
-                       { id: 'controversial', label: 'Disruptive', icon: AlertCircle },
-                     ].map(t => (
+                       { id: 'educational', labelKey: 'autonomousCreator.toneAuthoritative', icon: Shield },
+                       { id: 'motivational', labelKey: 'autonomousCreator.toneElevated', icon: Zap },
+                       { id: 'storytelling', labelKey: 'autonomousCreator.toneNarrative', icon: Film },
+                       { id: 'controversial', labelKey: 'autonomousCreator.toneDisruptive', icon: AlertCircle },
+                     ].map(toneOption => (
                        <button
                          type="button"
-                         key={t.id}
-                         onClick={() => setTone(t.id)}
+                         key={toneOption.id}
+                         onClick={() => setTone(toneOption.id)}
                          disabled={loading}
                          className={`flex items-center justify-between gap-2 px-4 py-3.5 sm:px-6 sm:py-4 rounded-[1.5rem] sm:rounded-[2rem] text-[8px] sm:text-[9px] font-black uppercase tracking-[0.08em] sm:tracking-[0.18em] transition-all border-2 italic shadow-md ${
-                           tone === t.id 
-                           ? 'bg-primary-600 text-white border-transparent shadow-2xl scale-105' 
+                           tone === toneOption.id
+                           ? 'bg-primary-600 text-white border-transparent shadow-2xl scale-105'
                            : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-surface-900 dark:hover:text-white'
                          }`}
                        >
-                         <span className="truncate whitespace-nowrap pr-1">{t.label}</span>
-                         <t.icon size={14} className={`shrink-0 ${tone === t.id ? 'text-white' : 'text-surface-400 dark:text-slate-700'}`} />
+                         <span className="truncate whitespace-nowrap pr-1">{t(toneOption.labelKey)}</span>
+                         <toneOption.icon size={14} className={`shrink-0 ${tone === toneOption.id ? 'text-white' : 'text-surface-400 dark:text-slate-700'}`} />
                        </button>
                      ))}
                    </div>
@@ -326,12 +328,12 @@ export default function AutonomousCreator() {
                   {loading ? (
                     <>
                       <Loader2 size={32} className="animate-spin text-primary-400" />
-                      Generating…
+                      {t('autonomousCreator.generating')}
                     </>
                   ) : (
                     <>
                       <Zap size={32} className="group-hover:scale-125 transition-transform duration-[1.5s]" />
-                      Generate
+                      {t('autonomousCreator.generate')}
                     </>
                   )}
                 </button>
@@ -347,18 +349,18 @@ export default function AutonomousCreator() {
               <div className="flex items-center gap-4 sm:gap-6 relative z-10">
                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg shrink-0"><Brain size={24} className="text-primary-600 dark:text-primary-400" /></div>
                  <div className="min-w-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">Strategy Cluster</h3>
-                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">AI-recommended angles</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">{t('autonomousCreator.strategyCluster')}</h3>
+                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">{t('autonomousCreator.aiRecommendedAngles')}</p>
                  </div>
               </div>
               <div className="space-y-4 relative z-10">
                   {[
-                    { label: 'Hook strength', value: 'High' },
-                    { label: 'Niche fit', value: '98%' },
-                    { label: 'Retention model', value: 'Active' },
+                    { labelKey: 'autonomousCreator.hookStrength', value: t('autonomousCreator.hookStrengthValue') },
+                    { labelKey: 'autonomousCreator.nicheFit', value: '98%' },
+                    { labelKey: 'autonomousCreator.retentionModel', value: t('autonomousCreator.retentionModelValue') },
                   ].map((s, i) => (
                      <div key={i} className="flex justify-between items-center p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/stat hover:border-primary-500/30 transition-all duration-500 min-w-0">
-                        <span className="text-[8px] sm:text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.1em] sm:tracking-[0.2em] italic group-hover/stat:text-primary-500 transition-colors truncate pr-2">{s.label}</span>
+                        <span className="text-[8px] sm:text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.1em] sm:tracking-[0.2em] italic group-hover/stat:text-primary-500 transition-colors truncate pr-2">{t(s.labelKey)}</span>
                         <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter shrink-0">{s.value}</span>
                      </div>
                   ))}
@@ -371,8 +373,8 @@ export default function AutonomousCreator() {
               <div className="flex items-center gap-4 sm:gap-6 relative z-10">
                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-lg shrink-0"><Zap size={24} className="text-amber-600 dark:text-amber-400" /></div>
                  <div className="min-w-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">Style Pivots</h3>
-                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">Pick a visual direction</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">{t('autonomousCreator.stylePivots')}</h3>
+                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">{t('autonomousCreator.pickVisualDirection')}</p>
                  </div>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 relative z-10">
@@ -402,12 +404,12 @@ export default function AutonomousCreator() {
                  >
                    <span className="flex items-center gap-2 truncate pr-1">
                      <span className={`w-1.5 h-1.5 rounded-full bg-current shrink-0 ${stylePivot === 'UGC_RAW' ? 'animate-pulse' : ''}`} />
-                     <span className="truncate whitespace-nowrap">UGC / raw / authentic</span>
+                     <span className="truncate whitespace-nowrap">{t('autonomousCreator.ugcRawAuthentic')}</span>
                    </span>
                    <span className={`text-[7px] sm:text-[8px] font-black tracking-wider sm:tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${
                      stylePivot === 'UGC_RAW' ? 'text-white border-white/30 bg-white/10' : 'text-surface-300 dark:text-slate-800 border-surface-200 dark:border-surface-700'
                    }`}>
-                     HUMANIZE
+                     {t('autonomousCreator.humanize')}
                    </span>
                  </button>
               </div>
@@ -418,8 +420,8 @@ export default function AutonomousCreator() {
                   className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-orange-500/5 border-2 border-orange-500/10 mt-6 relative z-10 backdrop-blur-xl shadow-inner"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest italic">Authenticity boost on</p>
-                    <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white tabular-nums italic">~85% real-feel</span>
+                    <p className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest italic">{t('autonomousCreator.authenticityBoostOn')}</p>
+                    <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white tabular-nums italic">{t('autonomousCreator.realFeel')}</span>
                   </div>
                   <div className="h-2.5 rounded-full bg-surface-page dark:bg-surface-950 overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner">
                     <motion.div
@@ -430,7 +432,7 @@ export default function AutonomousCreator() {
                     />
                   </div>
                   <p className="text-[8px] sm:text-[9px] text-surface-400 dark:text-slate-600 font-bold uppercase tracking-widest mt-4 italic">
-                    Adding: natural pauses, handheld shake, phone-camera color, varied pacing
+                    {t('autonomousCreator.ugcAddingDescription')}
                   </p>
                 </motion.div>
               )}
@@ -443,8 +445,8 @@ export default function AutonomousCreator() {
                  <div className="flex items-center gap-4 sm:gap-6 mb-8 sm:mb-12 border-b-2 border-surface-100 dark:border-surface-800 pb-6 sm:pb-8">
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-lg shrink-0"><Waves size={24} className="text-emerald-600 dark:text-emerald-400 animate-pulse" /></div>
                     <div className="min-w-0">
-                       <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">Live progress</h3>
-                       <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">AI generation steps</p>
+                       <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">{t('autonomousCreator.liveProgress')}</h3>
+                       <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">{t('autonomousCreator.aiGenerationSteps')}</p>
                     </div>
                  </div>
                  <div className="flex-1 space-y-8 sm:space-y-10 custom-scrollbar overflow-y-auto pr-4">
@@ -456,8 +458,8 @@ export default function AutonomousCreator() {
                              {completedStages.includes(s.id) ? <CheckCircle2 size={16} /> : (i + 1)}
                           </div>
                           <div className="flex-1 min-w-0">
-                             <p className={`text-[11px] sm:text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors truncate ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : currentStage === s.id ? 'text-primary-500' : 'text-surface-300 dark:text-slate-800'}`}>{s.label}</p>
-                             {currentStage === s.id && <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-[8px] sm:text-[9px] font-black text-primary-500 uppercase italic mt-2 tracking-[0.2em] animate-pulse">Working…</motion.div>}
+                             <p className={`text-[11px] sm:text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors truncate ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : currentStage === s.id ? 'text-primary-500' : 'text-surface-300 dark:text-slate-800'}`}>{t(s.labelKey)}</p>
+                             {currentStage === s.id && <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-[8px] sm:text-[9px] font-black text-primary-500 uppercase italic mt-2 tracking-[0.2em] animate-pulse">{t('autonomousCreator.working')}</motion.div>}
                           </div>
                           {i < STAGES.length - 1 && <div className={`absolute top-8 sm:top-10 left-4 sm:left-5 w-0.5 h-6 sm:h-8 transition-colors ${completedStages.includes(s.id) ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-surface-100 dark:bg-surface-800'}`} />}
                        </div>
@@ -489,11 +491,11 @@ export default function AutonomousCreator() {
                   <CheckCircle2 size={48} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
                  <div>
-                    <h3 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.85] mb-4">Ready</h3>
+                    <h3 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.85] mb-4">{t('autonomousCreator.ready')}</h3>
                   <div className="flex flex-wrap gap-4">
-                     <div className="px-5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">Saved</div>
-                     <div className="px-5 py-2 rounded-xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase italic tracking-[0.2em] shadow-inner leading-none">Variant {activeVariantIndex + 1}</div>
-                     <div className="px-5 py-2 rounded-xl bg-primary-500/10 border border-primary-500/20 text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">Style: {result.pivot || 'Balanced'}</div>
+                     <div className="px-5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.savedBadge')}</div>
+                     <div className="px-5 py-2 rounded-xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.variantNumber', { number: activeVariantIndex + 1 })}</div>
+                     <div className="px-5 py-2 rounded-xl bg-primary-500/10 border border-primary-500/20 text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.styleLabel', { style: result.pivot || t('autonomousCreator.balanced') })}</div>
                   </div>
                 </div>
               </div>
@@ -525,10 +527,10 @@ export default function AutonomousCreator() {
                       type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(result.script || '')
-                        showToast('Script Copied to Clipboard', 'success')
+                        showToast(t('autonomousCreator.scriptCopied'), 'success')
                       }}
                       className="p-3 hover:bg-surface-100 dark:hover:bg-surface-900 rounded-xl transition-all text-surface-400 dark:text-slate-600 hover:text-primary-500"
-                      title="Copy Script"
+                      title={t('autonomousCreator.copyScript')}
                     >
                       <Terminal size={18} />
                     </button>
@@ -537,10 +539,10 @@ export default function AutonomousCreator() {
                       onClick={() => {
                         setPrompt(`Refine this manifest to make it more ${tone === 'educational' ? 'authoritative' : 'engaging'}: ${result.script?.slice(0, 500)}...`)
                         window.scrollTo({ top: 0, behavior: 'smooth' })
-                        showToast('Context Loaded. Modify prompt and Regenerate.', 'info')
+                        showToast(t('autonomousCreator.contextLoaded'), 'info')
                       }}
                       className="p-3 hover:bg-surface-100 dark:hover:bg-surface-900 rounded-xl transition-all text-surface-400 dark:text-slate-600 hover:text-primary-500"
-                      title="Refine with AI"
+                      title={t('autonomousCreator.refineWithAi')}
                     >
                       <Sparkles size={18} />
                     </button>
@@ -551,7 +553,7 @@ export default function AutonomousCreator() {
                   disabled={loading}
                   className="px-8 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-900 dark:text-white font-black text-[11px] uppercase tracking-widest hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:border-transparent transition-all italic active:scale-95 flex items-center gap-4 shadow-inner"
                  >
-                    {loading ? <RefreshCw className="animate-spin w-5 h-5" /> : <RefreshCw className="w-5 h-5" />} Regenerate
+                    {loading ? <RefreshCw className="animate-spin w-5 h-5" /> : <RefreshCw className="w-5 h-5" />} {t('autonomousCreator.regenerate')}
                  </button>
                  <button
                   type="button"
@@ -559,14 +561,14 @@ export default function AutonomousCreator() {
                   disabled={loading || !result}
                   className="px-8 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-900 dark:text-white font-black text-[11px] uppercase tracking-widest hover:bg-emerald-600 hover:text-white hover:border-transparent transition-all italic active:scale-95 flex items-center gap-4 shadow-inner"
                  >
-                    <Database className="w-5 h-5" /> Save to library
+                    <Database className="w-5 h-5" /> {t('autonomousCreator.saveToLibrary')}
                  </button>
                  <button
                   type="button"
                   onClick={() => router.push(`/dashboard/video`)}
                   className="px-12 py-7 rounded-[2rem] bg-emerald-600 text-white font-black text-xs uppercase tracking-[0.6em] shadow-[0_30px_80px_rgba(16,185,129,0.5)] hover:bg-emerald-500 transition-all flex items-center gap-6 italic active:scale-95 border-none"
                  >
-                    <Film size={24} /> Open in editor
+                    <Film size={24} /> {t('autonomousCreator.openInEditor')}
                  </button>
               </div>
             </div>
@@ -576,29 +578,29 @@ export default function AutonomousCreator() {
                <div className="space-y-12">
                   <div className="space-y-6">
                      <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic flex items-center gap-5">
-                        <Fingerprint size={16} className="text-emerald-500 animate-pulse" /> Title
+                        <Fingerprint size={16} className="text-emerald-500 animate-pulse" /> {t('autonomousCreator.title')}
                      </p>
                      <div className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.9] drop-shadow-2xl">
-                       {result.stages?.script?.title || 'Sequence Alpha'}
+                       {result.stages?.script?.title || t('autonomousCreator.sequenceAlpha')}
                      </div>
                   </div>
                   <div className="space-y-6">
                      <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic flex items-center gap-5">
-                        <Command size={16} className="text-primary-500" /> Hook
+                        <Command size={16} className="text-primary-500" /> {t('autonomousCreator.hook')}
                      </p>
                      <p className="text-2xl md:text-3xl text-surface-500 dark:text-slate-400 leading-tight italic border-l-[8px] border-emerald-500/30 pl-10 font-bold uppercase tracking-tight group-hover/result:text-surface-900 dark:group-hover/result:text-white transition-colors duration-1000">
-                        &quot;{result.stages?.script?.hook || result.stages?.script?.rawScript?.hook || 'Predictive retention model applied to high-velocity vectors.'}&quot;
+                        &quot;{result.stages?.script?.hook || result.stages?.script?.rawScript?.hook || t('autonomousCreator.hookFallback')}&quot;
                      </p>
                   </div>
                   <div className="grid grid-cols-2 gap-8 pt-8">
                     <div className="p-8 rounded-[3rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-4 shadow-inner group/data hover:border-emerald-500/30 transition-all">
-                       <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic group-hover/data:text-emerald-500 transition-colors">Duration</p>
+                       <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic group-hover/data:text-emerald-500 transition-colors">{t('autonomousCreator.duration')}</p>
                        <p className="text-4xl font-black text-surface-900 dark:text-white italic tabular-nums leading-none tracking-tighter">
-                         {result.stages?.blueprint?.totalDuration || result.stages?.anatomy?.totalDuration || '0'} <span className="text-xl text-surface-200 dark:text-slate-900 border-none">sec</span>
+                         {result.stages?.blueprint?.totalDuration || result.stages?.anatomy?.totalDuration || '0'} <span className="text-xl text-surface-200 dark:text-slate-900 border-none">{t('autonomousCreator.sec')}</span>
                        </p>
                     </div>
                     <div className="p-8 rounded-[3rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-4 shadow-inner group/data hover:border-emerald-500/30 transition-all">
-                       <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic group-hover/data:text-emerald-500 transition-colors">Platform</p>
+                       <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic group-hover/data:text-emerald-500 transition-colors">{t('autonomousCreator.platform')}</p>
                        <p className="text-4xl font-black text-surface-900 dark:text-white italic uppercase leading-none tracking-tighter">{platform.replace('reels', 'RLS').toUpperCase()}</p>
                     </div>
                   </div>
@@ -612,25 +614,25 @@ export default function AutonomousCreator() {
                      </div>
                      <div className="flex items-center justify-between relative z-10">
                         <p className="text-[11px] font-black text-primary-500 uppercase tracking-[0.6em] italic flex items-center gap-5">
-                           <Sparkle size={18} className="animate-pulse" /> AI recommendation
+                           <Sparkle size={18} className="animate-pulse" /> {t('autonomousCreator.aiRecommendation')}
                         </p>
                         <div className="px-4 py-1.5 rounded-lg bg-primary-500/10 border border-primary-500/20 text-[9px] font-black text-primary-500 italic">v2026.4</div>
                      </div>
                      <div className="space-y-6 relative z-10">
                         <p className="text-xl md:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-tight group-hover/advice:scale-[1.02] transition-transform duration-700">
-                           &quot;{result.summary?.strategicAdvice || result.summary?.advice || 'Optimizing for high-velocity retention vectors. Deploy pattern-interrupt sequences at the 0:03 mark.'}&quot;
+                           &quot;{result.summary?.strategicAdvice || result.summary?.advice || t('autonomousCreator.adviceFallback')}&quot;
                         </p>
                         <div className="flex flex-wrap gap-8 pt-4">
                            <div className="flex flex-col gap-2">
-                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">Confidence</span>
+                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">{t('autonomousCreator.confidence')}</span>
                               <span className="text-3xl font-black text-emerald-500 italic tabular-nums leading-none shadow-emerald-500/20 drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">{result.summary?.globalConsensus || '98.4%'}</span>
                            </div>
                            <div className="flex flex-col gap-2 border-l-2 border-surface-100 dark:border-surface-800 pl-8">
-                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">Trend</span>
-                              <span className="text-3xl font-black text-surface-900 dark:text-white italic leading-none tracking-tighter">Rising</span>
+                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">{t('autonomousCreator.trend')}</span>
+                              <span className="text-3xl font-black text-surface-900 dark:text-white italic leading-none tracking-tighter">{t('autonomousCreator.rising')}</span>
                            </div>
                            <div className="flex flex-col gap-2 border-l-2 border-surface-100 dark:border-surface-800 pl-8">
-                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">Style</span>
+                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">{t('autonomousCreator.style')}</span>
                               <span className="text-2xl font-black text-primary-500 italic leading-none uppercase tracking-widest">{stylePivot}</span>
                            </div>
                         </div>
@@ -644,15 +646,15 @@ export default function AutonomousCreator() {
                         <Film size={36} className="text-primary-600 dark:text-primary-400" />
                      </div>
                      <div className="flex-1 space-y-2">
-                        <p className="text-2xl font-black text-surface-900 dark:text-white uppercase tracking-tight italic leading-none">Script ready</p>
-                        <p className="text-[10px] font-black text-primary-400 dark:text-primary-600 uppercase tracking-[0.4em] italic leading-relaxed opacity-60">Continue in the editor to record, cut, and publish.</p>
+                        <p className="text-2xl font-black text-surface-900 dark:text-white uppercase tracking-tight italic leading-none">{t('autonomousCreator.scriptReady')}</p>
+                        <p className="text-[10px] font-black text-primary-400 dark:text-primary-600 uppercase tracking-[0.4em] italic leading-relaxed opacity-60">{t('autonomousCreator.continueInEditor')}</p>
                      </div>
                      <button
                         type="button"
                         onClick={() => router.push('/dashboard/video')}
                         className="px-10 py-6 rounded-[2rem] bg-surface-900 dark:bg-white text-white dark:text-black font-black text-xs uppercase tracking-[0.5em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center justify-center gap-4 border-none active:scale-95 shrink-0"
                      >
-                        Deploy <ArrowRight size={20} />
+                        {t('autonomousCreator.deploy')} <ArrowRight size={20} />
                      </button>
                   </div>
                </div>
@@ -673,7 +675,7 @@ export default function AutonomousCreator() {
              <AlertCircle size={40} className="text-rose-500 animate-pulse" />
           </div>
           <div className="flex-1 relative z-10">
-            <p className="text-[11px] font-black text-rose-500 uppercase tracking-[0.8em] italic mb-3">Something went wrong</p>
+            <p className="text-[11px] font-black text-rose-500 uppercase tracking-[0.8em] italic mb-3">{t('autonomousCreator.errorHeading')}</p>
             <p className="text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-tight drop-shadow-2xl">{error}</p>
           </div>
           <button
@@ -681,7 +683,7 @@ export default function AutonomousCreator() {
             onClick={() => setError(null)}
             className="px-12 py-6 rounded-[2.5rem] bg-rose-600 text-white font-black text-xs uppercase tracking-[0.4em] italic shadow-xl hover:bg-rose-500 transition-all active:scale-95 border-none relative z-10"
           >
-            Dismiss
+            {t('autonomousCreator.dismiss')}
           </button>
         </motion.div>
       )}
@@ -689,16 +691,16 @@ export default function AutonomousCreator() {
       {/* Heuristic Wisdom Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 relative opacity-40 hover:opacity-100 transition-opacity duration-1000 pt-16">
         {[
-          { icon: Brain,  title: 'Consensus Logic',   desc: 'AI Swarm cross-validates hooks with real-time saturation heatmaps.' },
-          { icon: Target, title: 'Engagement Aim',   desc: 'Mapping script vectors against niche-specific retention peaks per region.' },
-          { icon: Sparkle, title: 'Identity DNA',    desc: 'Each sequence is filtered through your sovereign brand essence and voice.' },
+          { icon: Brain,  titleKey: 'autonomousCreator.tipConsensusTitle',   descKey: 'autonomousCreator.tipConsensusDesc' },
+          { icon: Target, titleKey: 'autonomousCreator.tipEngagementTitle',   descKey: 'autonomousCreator.tipEngagementDesc' },
+          { icon: Sparkle, titleKey: 'autonomousCreator.tipIdentityTitle',    descKey: 'autonomousCreator.tipIdentityDesc' },
         ].map(tip => (
-          <div key={tip.title} className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 rounded-[3.5rem] group hover:bg-surface-page transition-all cursor-crosshair shadow-xl">
+          <div key={tip.titleKey} className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 rounded-[3.5rem] group hover:bg-surface-page transition-all cursor-crosshair shadow-xl">
              <div className="w-16 h-16 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center mb-8 shadow-inner group-hover:rotate-12 group-hover:scale-110 transition-all duration-1000">
                 <tip.icon size={32} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors" />
              </div>
-             <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter mb-4 group-hover:text-primary-500 transition-colors leading-none">{tip.title}</p>
-             <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.3em] leading-relaxed italic opacity-60 group-hover:opacity-100 transition-opacity duration-1000">{tip.desc}</p>
+             <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter mb-4 group-hover:text-primary-500 transition-colors leading-none">{t(tip.titleKey)}</p>
+             <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.3em] leading-relaxed italic opacity-60 group-hover:opacity-100 transition-opacity duration-1000">{t(tip.descKey)}</p>
           </div>
         ))}
       </div>

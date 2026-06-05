@@ -9,6 +9,7 @@ import {
   RefreshCw, TrendingUp, Search, Layers, Boxes
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const glassStyle = 'backdrop-blur-2xl bg-white/[0.02] border border-white/10 shadow-2xl transition-all duration-500';
 
@@ -31,6 +32,7 @@ interface BatchJob {
 }
 
 export default function ScalingHub() {
+  const { t } = useTranslation();
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
   const [batchJobs, setBatchJobs] = useState<BatchJob[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,10 +77,10 @@ export default function ScalingHub() {
       {/* Real-time Telemetry Pulse */}
       <section className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {[
-          { label: 'Neural Throughput', val: telemetry?.metrics.totalRequests || 0, unit: 'reqs', icon: Activity, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-          { label: 'Synapse Latency', val: telemetry?.metrics.avgLatency?.toFixed(1) || '0', unit: 'ms', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'Substrate Errors', val: telemetry?.metrics.totalErrors || 0, unit: 'errs', icon: ZapOff, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-          { label: 'Retry Resilience', val: telemetry?.metrics.totalRetries || 0, unit: 'tries', icon: RefreshCw, color: 'text-amber-400', bg: 'bg-amber-500/10' }
+          { label: t('scalingHub.neuralThroughput'), val: telemetry?.metrics.totalRequests || 0, unit: t('scalingHub.unitReqs'), icon: Activity, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+          { label: t('scalingHub.synapseLatency'), val: telemetry?.metrics.avgLatency?.toFixed(1) || '0', unit: t('scalingHub.unitMs'), icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: t('scalingHub.substrateErrors'), val: telemetry?.metrics.totalErrors || 0, unit: t('scalingHub.unitErrs'), icon: ZapOff, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+          { label: t('scalingHub.retryResilience'), val: telemetry?.metrics.totalRetries || 0, unit: t('scalingHub.unitTries'), icon: RefreshCw, color: 'text-amber-400', bg: 'bg-amber-500/10' }
         ].map((stat, i) => (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -109,19 +111,19 @@ export default function ScalingHub() {
           <div className="flex items-center justify-between px-6">
              <div className="flex items-center gap-4">
                 <Boxes className="text-indigo-400" />
-                <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Scaling Hub Matrix</h3>
+                <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{t('scalingHub.scalingHubMatrix')}</h3>
              </div>
              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Pipeline Active</span>
+                <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">{t('scalingHub.pipelineActive')}</span>
              </div>
           </div>
 
           <div className={cn(glassStyle, "rounded-[4rem] overflow-hidden")}>
              <div className="p-8 border-b border-white/5 bg-white/[0.01] grid grid-cols-12 text-[10px] font-black uppercase tracking-widest text-[var(--text-dim)] italic">
-                <div className="col-span-6 pl-4">Substrate Entity</div>
-                <div className="col-span-3">Entity Type</div>
-                <div className="col-span-3">Lattice Status</div>
+                <div className="col-span-6 pl-4">{t('scalingHub.substrateEntity')}</div>
+                <div className="col-span-3">{t('scalingHub.entityType')}</div>
+                <div className="col-span-3">{t('scalingHub.latticeStatus')}</div>
              </div>
              <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
                 <AnimatePresence mode="popLayout">
@@ -141,7 +143,7 @@ export default function ScalingHub() {
                          </div>
                          <div>
                             <p className="text-[14px] font-bold text-white group-hover:text-indigo-300 transition-colors">{job.title}</p>
-                            <p className="text-[10px] text-[var(--text-dim)] opacity-60 font-mono">ID: {job._id.substring(job._id.length - 8)}</p>
+                            <p className="text-[10px] text-[var(--text-dim)] opacity-60 font-mono">{t('scalingHub.idLabel')} {job._id.substring(job._id.length - 8)}</p>
                          </div>
                       </div>
                       <div className="col-span-3">
@@ -161,7 +163,7 @@ export default function ScalingHub() {
                   )) : (
                     <div className="py-32 flex flex-col items-center justify-center text-[var(--text-dim)]">
                        <ZapOff className="w-16 h-16 mb-6 opacity-20" />
-                       <p className="text-[11px] font-black uppercase tracking-[0.6em] italic">No active scaling jobs detected</p>
+                       <p className="text-[11px] font-black uppercase tracking-[0.6em] italic">{t('scalingHub.noActiveJobs')}</p>
                     </div>
                   )}
                 </AnimatePresence>
@@ -172,7 +174,7 @@ export default function ScalingHub() {
         <div className="space-y-8">
            <div className="flex items-center gap-4 px-6">
               <Signal className="text-amber-400" />
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Integrity Logs</h3>
+              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{t('scalingHub.integrityLogs')}</h3>
            </div>
            
            <div className={cn(glassStyle, "rounded-[4rem] p-8 h-[585px] relative overflow-hidden")}>
@@ -197,7 +199,7 @@ export default function ScalingHub() {
                        </p>
                        {log.status && (
                           <div className="flex items-center gap-2">
-                             <span className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest opacity-40 italic">Result:</span>
+                             <span className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest opacity-40 italic">{t('scalingHub.resultLabel')}</span>
                              <span className={cn("text-[9px] font-bold", log.status < 400 ? 'text-emerald-400' : 'text-rose-400')}>{log.status}</span>
                           </div>
                        )}
@@ -206,7 +208,7 @@ export default function ScalingHub() {
                  {!telemetry?.logs?.length && (
                     <div className="h-full flex flex-col items-center justify-center py-32 opacity-20">
                        <Search className="w-16 h-16 mb-4" />
-                       <p className="text-[10px] font-black uppercase tracking-widest italic">Monitoring synaptic flux...</p>
+                       <p className="text-[10px] font-black uppercase tracking-widest italic">{t('scalingHub.monitoringFlux')}</p>
                     </div>
                  )}
               </div>

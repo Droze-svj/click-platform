@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Sparkles, Zap, FileText, Video, Mic, Copy, TrendingUp, ShieldCheck, RefreshCcw } from 'lucide-react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -25,6 +26,7 @@ interface QuickTemplate {
 }
 
 export default function QuickContentCreator({ onContentCreated }: QuickContentCreatorProps) {
+  const { t } = useTranslation()
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [quickText, setQuickText] = useState('')
@@ -42,9 +44,9 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
   const quickTemplates: QuickTemplate[] = [
     {
       id: 'quote',
-      name: 'Quote Card',
+      name: t('quickContentCreator.quoteCardName'),
       icon: <FileText className="w-5 h-5" />,
-      description: 'Create an inspiring quote card',
+      description: t('quickContentCreator.quoteCardDescription'),
       platforms: ['instagram', 'twitter', 'linkedin'],
       preset: {
         type: 'article',
@@ -54,9 +56,9 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
     },
     {
       id: 'tip',
-      name: 'Quick Tip',
+      name: t('quickContentCreator.quickTipName'),
       icon: <Zap className="w-5 h-5" />,
-      description: 'Share a quick tip or hack',
+      description: t('quickContentCreator.quickTipDescription'),
       platforms: ['twitter', 'linkedin', 'facebook'],
       preset: {
         type: 'article',
@@ -66,9 +68,9 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
     },
     {
       id: 'video',
-      name: 'Video Post',
+      name: t('quickContentCreator.videoPostName'),
       icon: <Video className="w-5 h-5" />,
-      description: 'Upload and repurpose a video',
+      description: t('quickContentCreator.videoPostDescription'),
       platforms: ['youtube', 'tiktok', 'instagram'],
       preset: {
         type: 'video',
@@ -78,9 +80,9 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
     },
     {
       id: 'thread',
-      name: 'Twitter Thread',
+      name: t('quickContentCreator.twitterThreadName'),
       icon: <Copy className="w-5 h-5" />,
-      description: 'Create a Twitter thread',
+      description: t('quickContentCreator.twitterThreadDescription'),
       platforms: ['twitter'],
       preset: {
         type: 'article',
@@ -90,9 +92,9 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
     },
     {
       id: 'ai-idea',
-      name: 'AI Idea',
+      name: t('quickContentCreator.aiIdeaName'),
       icon: <Sparkles className="w-5 h-5" />,
-      description: 'Get AI-generated content ideas',
+      description: t('quickContentCreator.aiIdeaDescription'),
       platforms: ['twitter', 'linkedin', 'instagram'],
       preset: {
         type: 'article',
@@ -183,7 +185,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
         className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 font-semibold"
       >
         <Sparkles className="w-5 h-5" />
-        Quick Create
+        {t('quickContentCreator.quickCreate')}
       </button>
 
       <AnimatePresence>
@@ -199,16 +201,16 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
                     <h2 className="text-3xl font-black text-gray-900 dark:text-[var(--text-main)] italic tracking-tighter uppercase">
-                      Quick Content
+                      {t('quickContentCreator.quickContent')}
                     </h2>
                     <div className="flex items-center gap-2">
                        <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full border border-emerald-500/20 italic">
-                        STRATEGIC MODE ACTIVE
+                        {t('quickContentCreator.strategicModeActive')}
                       </span>
                       {marketHealth && (
                         <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full border border-blue-500/20 flex items-center gap-1 italic">
                           <TrendingUp className="w-3 h-3" />
-                          VELOCITY: {marketHealth.velocity}%
+                          {t('quickContentCreator.velocity', { velocity: marketHealth.velocity })}
                         </span>
                       )}
                     </div>
@@ -227,18 +229,22 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Generative Variance</span>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{t('quickContentCreator.generativeVariance')}</span>
                     <div className="flex items-center gap-4">
-                      {['Subtle', 'Dynamic', 'Radical'].map((v) => (
+                      {[
+                        { value: 'subtle', label: t('quickContentCreator.varianceSubtle') },
+                        { value: 'dynamic', label: t('quickContentCreator.varianceDynamic') },
+                        { value: 'radical', label: t('quickContentCreator.varianceRadical') },
+                      ].map((v) => (
                         <button
                           type="button"
-                          key={v}
-                          onClick={() => setVariance(v.toLowerCase() as any)}
+                          key={v.value}
+                          onClick={() => setVariance(v.value as any)}
                           className={`text-[9px] font-black uppercase tracking-tighter transition-all ${
-                            variance === v.toLowerCase() ? 'text-indigo-500' : 'text-slate-400 hover:text-white'
+                            variance === v.value ? 'text-indigo-500' : 'text-slate-400 hover:text-white'
                           }`}
                         >
-                          {v}
+                          {v.label}
                         </button>
                       ))}
                     </div>
@@ -247,7 +253,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                   <textarea
                     value={quickText}
                     onChange={(e) => setQuickText(e.target.value)}
-                    placeholder="Paste raw content... We'll apply Tone Modulation and Platform Forcing."
+                    placeholder={t('quickContentCreator.rawContentPlaceholder')}
                     className="w-full h-40 px-6 py-4 border border-gray-200 dark:border-white/10 rounded-3xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-black/40 dark:text-white resize-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 font-medium"
                   />
                   
@@ -261,9 +267,9 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                       >
                         <div className="flex items-center gap-3">
                           <ShieldCheck className="w-4 h-4 text-indigo-400 animate-pulse" />
-                          <span className="text-[10px] font-bold text-indigo-300 uppercase italic">Sovereignty Integrity Check...</span>
+                          <span className="text-[10px] font-bold text-indigo-300 uppercase italic">{t('quickContentCreator.sovereigntyIntegrityCheck')}</span>
                         </div>
-                        <div className="text-[10px] font-black text-indigo-400">92% ORIGINAL</div>
+                        <div className="text-[10px] font-black text-indigo-400">{t('quickContentCreator.percentOriginal', { percent: 92 })}</div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -276,12 +282,12 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                       className="flex-[2] bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest italic hover:shadow-xl hover:shadow-blue-500/20 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
                     >
                       {loading ? <Zap className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                      {loading ? 'SYNTHESIZING...' : 'STRATEGIC ADAPTATION'}
+                      {loading ? t('quickContentCreator.synthesizing') : t('quickContentCreator.strategicAdaptation')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setVariance('radical')}
-                      title="Neural Refresh: Maximum Variance"
+                      title={t('quickContentCreator.neuralRefreshTitle')}
                       className="flex-1 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-indigo-400 hover:bg-white/10 transition-all group"
                     >
                       <RefreshCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
@@ -291,7 +297,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100 dark:border-white/5" /></div>
-                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest"><span className="bg-white dark:bg-gray-900 px-4 text-gray-400 italic">Directive Templates</span></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest"><span className="bg-white dark:bg-gray-900 px-4 text-gray-400 italic">{t('quickContentCreator.directiveTemplates')}</span></div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -320,10 +326,10 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
 
                 {marketHealth && (
                    <div className="pt-4 border-t border-gray-100 dark:border-white/5">
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">LIVE-WIRE TREND SIGNALS</p>
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('quickContentCreator.liveWireTrendSignals')}</p>
                       <div className="flex flex-wrap gap-2">
-                         {marketHealth.trending.map(t => (
-                           <span key={t} className="px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[9px] font-bold text-slate-400 italic">#{t.toUpperCase()}</span>
+                         {marketHealth.trending.map(trend => (
+                           <span key={trend} className="px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[9px] font-bold text-slate-400 italic">#{trend.toUpperCase()}</span>
                          ))}
                       </div>
                    </div>

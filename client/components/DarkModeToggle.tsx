@@ -9,6 +9,7 @@ import { useTheme } from './ThemeProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type Size = 'sm' | 'md' | 'lg'
 
@@ -27,13 +28,14 @@ const SIZE_MAP = {
 
 export default function ThemeToggle({ size = 'md', showLabel = false, showSystem = true, className = '' }: ThemeToggleProps) {
   const { resolvedTheme, theme, setTheme, toggle, isDark } = useTheme()
+  const { t } = useTranslation()
   const [showMenu, setShowMenu] = useState(false)
   const s = SIZE_MAP[size]
 
   const MODES = [
-    { id: 'dark'   as const, label: 'Dark',   icon: Moon    },
-    { id: 'light'  as const, label: 'Light',  icon: Sun     },
-    { id: 'system' as const, label: 'System', icon: Monitor },
+    { id: 'dark'   as const, label: t('darkModeToggle.dark'),   icon: Moon    },
+    { id: 'light'  as const, label: t('darkModeToggle.light'),  icon: Sun     },
+    { id: 'system' as const, label: t('darkModeToggle.system'), icon: Monitor },
   ]
 
   return (
@@ -44,7 +46,7 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
         whileHover={{ scale: 1.05 }}
         onClick={() => { if (showSystem) setShowMenu(m => !m); else toggle() }}
         onBlur={() => setTimeout(() => setShowMenu(false), 150)}
-        aria-label={`Theme: ${resolvedTheme}. Click to change.`}
+        aria-label={t('darkModeToggle.toggleAriaLabel', { theme: t(`darkModeToggle.${resolvedTheme}`) })}
         className={`${s.btn} rounded-2xl flex items-center justify-center relative overflow-hidden transition-all duration-300 ${
           isDark
             ? 'bg-white/[0.07] border border-white/[0.12] text-slate-300 hover:bg-white/[0.12] hover:text-white'
@@ -77,7 +79,7 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
 
       {showLabel && (
         <span className={`text-[9px] font-black uppercase tracking-widest mt-1 block text-center ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-          {resolvedTheme}
+          {t(`darkModeToggle.${resolvedTheme}`)}
         </span>
       )}
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, Users, Heart, Eye, ArrowUp, ArrowDown, Target, Zap, Activity, Boxes } from 'lucide-react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 const glass = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
@@ -24,6 +25,7 @@ interface GrowthInsight {
 }
 
 export default function EngagementGrowthDashboard() {
+  const { t } = useTranslation()
   const [metrics, setMetrics] = useState<GrowthMetrics | null>(null)
   const [insights, setInsights] = useState<GrowthInsight[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,9 +84,9 @@ export default function EngagementGrowthDashboard() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-8">
         <div>
            <h2 className="text-5xl font-black italic text-white uppercase tracking-tighter leading-none mb-3">
-             Resonance Growth
+             {t('engagementGrowthDashboard.resonanceGrowth')}
            </h2>
-           <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Mapping engagement kinetic and node saturation across cycles.</p>
+           <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">{t('engagementGrowthDashboard.subtitle')}</p>
         </div>
         <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border-2 border-white/5 shadow-inner">
           {(['7d', '30d', '90d'] as const).map((p) => (
@@ -92,8 +94,8 @@ export default function EngagementGrowthDashboard() {
               type="button"
               key={p}
               onClick={() => setPeriod(p)}
-              title={`View ${p === '7d' ? '7' : p === '30d' ? '30' : '90'} Cycles`}
-              aria-label={`View ${p === '7d' ? '7' : p === '30d' ? '30' : '90'} Cycles`}
+              title={t('engagementGrowthDashboard.viewCycles', { count: p === '7d' ? '7' : p === '30d' ? '30' : '90' })}
+              aria-label={t('engagementGrowthDashboard.viewCycles', { count: p === '7d' ? '7' : p === '30d' ? '30' : '90' })}
               className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${
                 period === p
                   ? 'bg-white text-black shadow-2xl scale-105'
@@ -109,10 +111,10 @@ export default function EngagementGrowthDashboard() {
       {/* Metrics Grid */}
       {metrics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-          <MetricCard label="Resonance" value={formatNumber(metrics.engagement.current)} change={metrics.engagement.change} icon={Heart} color="text-indigo-400" />
-          <MetricCard label="Node Density" value={formatNumber(metrics.followers.current)} change={metrics.followers.change} icon={Users} color="text-violet-400" />
-          <MetricCard label="Saturation" value={formatNumber(metrics.reach.current)} change={metrics.reach.change} icon={Eye} color="text-emerald-400" />
-          <MetricCard label="Kinetic Rate" value={`${metrics.engagementRate.current.toFixed(2)}%`} change={metrics.engagementRate.change} icon={Target} color="text-amber-400" />
+          <MetricCard label={t('engagementGrowthDashboard.metricResonance')} value={formatNumber(metrics.engagement.current)} change={metrics.engagement.change} icon={Heart} color="text-indigo-400" />
+          <MetricCard label={t('engagementGrowthDashboard.metricNodeDensity')} value={formatNumber(metrics.followers.current)} change={metrics.followers.change} icon={Users} color="text-violet-400" />
+          <MetricCard label={t('engagementGrowthDashboard.metricSaturation')} value={formatNumber(metrics.reach.current)} change={metrics.reach.change} icon={Eye} color="text-emerald-400" />
+          <MetricCard label={t('engagementGrowthDashboard.metricKineticRate')} value={`${metrics.engagementRate.current.toFixed(2)}%`} change={metrics.engagementRate.change} icon={Target} color="text-amber-400" />
         </div>
       )}
 
@@ -123,7 +125,7 @@ export default function EngagementGrowthDashboard() {
           <div className="flex items-center gap-6 mb-12 relative z-10">
             <div className="p-5 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl shadow-indigo-500/20"><TrendingUp size={32} className="text-indigo-400" /></div>
             <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">
-              Strategic Growth Heuristics
+              {t('engagementGrowthDashboard.strategicHeuristics')}
             </h3>
           </div>
 
@@ -163,7 +165,7 @@ export default function EngagementGrowthDashboard() {
                 </div>
                 {insight.action && (
                   <button className="mt-8 text-[12px] font-black text-white uppercase italic tracking-[0.4em] hover:text-indigo-400 transition-colors flex items-center gap-4 group">
-                    EXECUTE_PROTOCOL <span className="group-hover:translate-x-2 transition-transform">→</span>
+                    {t('engagementGrowthDashboard.executeProtocol')} <span className="group-hover:translate-x-2 transition-transform">→</span>
                   </button>
                 )}
               </motion.div>

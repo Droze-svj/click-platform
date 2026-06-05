@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Trophy, Target, CheckCircle2, Circle, Flame } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Challenge {
   id: string
@@ -18,6 +19,7 @@ interface Challenge {
 }
 
 export default function DailyChallenges() {
+  const { t } = useTranslation()
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
@@ -82,13 +84,13 @@ export default function DailyChallenges() {
         <div className="flex items-center gap-2">
           <Trophy className="w-5 h-5 text-orange-600 dark:text-orange-400" />
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-            Daily Challenges
+            {t('dailyChallenges.title')}
           </h3>
         </div>
         {completedCount > 0 && (
           <div className="flex items-center gap-1 text-sm text-orange-600 dark:text-orange-400">
             <Flame className="w-4 h-4" />
-            <span>{completedCount}/{challenges.length} completed</span>
+            <span>{t('dailyChallenges.completedCount', { completed: completedCount, total: challenges.length })}</span>
           </div>
         )}
       </div>
@@ -158,7 +160,9 @@ export default function DailyChallenges() {
           <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-sm font-medium">
-              {completedCount} challenge{completedCount !== 1 ? 's' : ''} completed today! 🎉
+              {completedCount === 1
+                ? t('dailyChallenges.completedTodaySingular', { count: completedCount })
+                : t('dailyChallenges.completedTodayPlural', { count: completedCount })}
             </span>
           </div>
         </div>
@@ -170,7 +174,7 @@ export default function DailyChallenges() {
           onClick={() => router.push('/dashboard/achievements')}
           className="mt-4 w-full text-center text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
         >
-          View all challenges →
+          {t('dailyChallenges.viewAllChallenges')}
         </button>
       )}
     </div>

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Palette, Eye, EyeOff, RotateCcw, Sliders, Upload } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ChromaKeySettings {
   keyColor: { r: number, g: number, b: number }
@@ -44,6 +45,7 @@ export default function ChromaKey({
   ])
 
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   // Pick color from video frame
   const pickColorFromVideo = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -68,7 +70,7 @@ export default function ChromaKey({
     })
 
     setColorPickerActive(false)
-    showToast(`Picked color: RGB(${r}, ${g}, ${b})`, 'success')
+    showToast(t('chromaKey.pickedColor', { r, g, b }), 'success')
   }, [colorPickerActive, settings, onSettingsChange, showToast])
 
   // Apply chroma key effect
@@ -224,7 +226,7 @@ export default function ChromaKey({
       matteBlur: 2,
       enable: true
     })
-    showToast('Chroma key settings reset', 'info')
+    showToast(t('chromaKey.settingsReset'), 'info')
   }, [onSettingsChange, showToast])
 
   const uploadBackground = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,7 +237,7 @@ export default function ChromaKey({
     reader.onload = (e) => {
       const result = e.target?.result as string
       setBackgroundImages(prev => [...prev, result])
-      showToast('Background uploaded successfully', 'success')
+      showToast(t('chromaKey.backgroundUploaded'), 'success')
     }
     reader.readAsDataURL(file)
   }, [showToast])
@@ -248,10 +250,10 @@ export default function ChromaKey({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <Palette className="w-5 h-5" />
-              Chroma Key (Green Screen)
+              {t('chromaKey.title')}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Remove backgrounds and composite videos
+              {t('chromaKey.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -263,7 +265,7 @@ export default function ChromaKey({
                   ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                   : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
               }`}
-              title={showOriginal ? 'Show composited' : 'Show original'}
+              title={showOriginal ? t('chromaKey.showComposited') : t('chromaKey.showOriginal')}
             >
               {showOriginal ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
@@ -271,7 +273,7 @@ export default function ChromaKey({
               type="button"
               onClick={resetSettings}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
-              title="Reset settings"
+              title={t('chromaKey.resetSettings')}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -300,19 +302,19 @@ export default function ChromaKey({
               />
               {settings.enable && (
                 <div className="absolute top-4 right-4 bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
-                  Chroma Key Active
+                  {t('chromaKey.chromaKeyActive')}
                 </div>
               )}
               {colorPickerActive && (
                 <div className="absolute top-4 left-4 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
-                  Click to pick key color
+                  {t('chromaKey.clickToPickKeyColor')}
                 </div>
               )}
             </div>
 
             {/* Background Selection */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3">Background</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3">{t('chromaKey.background')}</h4>
               <div className="grid grid-cols-4 gap-3 mb-4">
                 {backgroundImages.map((bg, index) => (
                   <button
@@ -320,13 +322,13 @@ export default function ChromaKey({
                     key={index}
                     onClick={() => {
                       // This would typically update the background image
-                      showToast('Background selected', 'success')
+                      showToast(t('chromaKey.backgroundSelected'), 'success')
                     }}
                     className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all"
                   >
                     <img
                       src={bg}
-                      alt={`Background ${index + 1}`}
+                      alt={t('chromaKey.backgroundAlt', { number: index + 1 })}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         // Fallback to gradient if image fails to load
@@ -360,7 +362,7 @@ export default function ChromaKey({
           <div className="space-y-6">
             {/* Enable/Disable */}
             <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <span className="font-medium text-gray-900 dark:text-white">Enable Chroma Key</span>
+              <span className="font-medium text-gray-900 dark:text-white">{t('chromaKey.enableChromaKey')}</span>
               <button
                 type="button"
                 onClick={() => onSettingsChange({ ...settings, enable: !settings.enable })}
@@ -380,7 +382,7 @@ export default function ChromaKey({
             <div>
               <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <Palette className="w-4 h-4" />
-                Key Color
+                {t('chromaKey.keyColor')}
               </h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -402,7 +404,7 @@ export default function ChromaKey({
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
-                  {colorPickerActive ? 'Cancel Color Picker' : 'Pick Color from Video'}
+                  {colorPickerActive ? t('chromaKey.cancelColorPicker') : t('chromaKey.pickColorFromVideo')}
                 </button>
               </div>
             </div>
@@ -411,12 +413,12 @@ export default function ChromaKey({
             <div>
               <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <Sliders className="w-4 h-4" />
-                Key Settings
+                {t('chromaKey.keySettings')}
               </h4>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    Similarity: {settings.similarity}
+                    {t('chromaKey.similarity', { value: settings.similarity })}
                   </label>
                   <input
                     type="range"
@@ -430,7 +432,7 @@ export default function ChromaKey({
 
                 <div>
                   <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    Smoothness: {settings.smoothness}
+                    {t('chromaKey.smoothness', { value: settings.smoothness })}
                   </label>
                   <input
                     type="range"
@@ -444,7 +446,7 @@ export default function ChromaKey({
 
                 <div>
                   <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    Spill Suppression: {settings.spillSuppression}%
+                    {t('chromaKey.spillSuppression', { value: settings.spillSuppression })}
                   </label>
                   <input
                     type="range"
@@ -458,7 +460,7 @@ export default function ChromaKey({
 
                 <div>
                   <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    Edge Feather: {settings.edgeFeather}
+                    {t('chromaKey.edgeFeather', { value: settings.edgeFeather })}
                   </label>
                   <input
                     type="range"
@@ -472,7 +474,7 @@ export default function ChromaKey({
 
                 <div>
                   <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    Matte Blur: {settings.matteBlur}
+                    {t('chromaKey.matteBlur', { value: settings.matteBlur })}
                   </label>
                   <input
                     type="range"
@@ -488,7 +490,7 @@ export default function ChromaKey({
 
             {/* Preset Buttons */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3">Presets</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3">{t('chromaKey.presets')}</h4>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -500,7 +502,7 @@ export default function ChromaKey({
                   })}
                   className="px-3 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                 >
-                  Green Screen
+                  {t('chromaKey.greenScreen')}
                 </button>
                 <button
                   type="button"
@@ -512,7 +514,7 @@ export default function ChromaKey({
                   })}
                   className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                 >
-                  Blue Screen
+                  {t('chromaKey.blueScreen')}
                 </button>
               </div>
             </div>

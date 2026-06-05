@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import LogEmitter from '../utils/logEmitter';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const DirectorLog = () => {
+    const { t } = useTranslation();
     useEffect(() => {
         // logEmitter is a singleton instance, not a class with getInstance().
         const emitter = LogEmitter;
@@ -15,7 +17,7 @@ const DirectorLog = () => {
         };
     }, []);
 
-    return <div>Director Log</div>;
+    return <div>{t('directorLog.title')}</div>;
 };
 
 export default DirectorLog;

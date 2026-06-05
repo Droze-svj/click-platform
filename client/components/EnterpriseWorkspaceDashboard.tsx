@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Building2,
   Users,
@@ -29,6 +30,7 @@ export default function EnterpriseWorkspaceDashboard() {
   const [sla, setSla] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const loadWorkspaces = useCallback(async () => {
     try {
@@ -43,9 +45,9 @@ export default function EnterpriseWorkspaceDashboard() {
         }
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to load workspaces', 'error')
+      showToast(error.response?.data?.message || t('enterpriseWorkspaceDashboard.failedToLoadWorkspaces'), 'error')
     }
-  }, [showToast])
+  }, [showToast, t])
 
   const loadWorkspaceData = useCallback(async (workspaceId: string) => {
     setLoading(true)
@@ -65,11 +67,11 @@ export default function EnterpriseWorkspaceDashboard() {
       if (complianceRes.data.success) setCompliance(complianceRes.data.data)
       if (slaRes.data.success) setSla(slaRes.data.data)
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to load workspace data', 'error')
+      showToast(error.response?.data?.message || t('enterpriseWorkspaceDashboard.failedToLoadWorkspaceData'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     loadWorkspaces()
@@ -87,14 +89,14 @@ export default function EnterpriseWorkspaceDashboard() {
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Enterprise Workspaces</h1>
+            <h1 className="text-3xl font-bold mb-2">{t('enterpriseWorkspaceDashboard.title')}</h1>
             <p className="text-indigo-100">
-              Multi-brand/multi-client workspaces with granular permissions
+              {t('enterpriseWorkspaceDashboard.subtitle')}
             </p>
           </div>
           <button className="bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2">
             <Building2 className="w-5 h-5 inline mr-2" />
-            New Workspace
+            {t('enterpriseWorkspaceDashboard.newWorkspace')}
           </button>
         </div>
       </div>
@@ -127,24 +129,24 @@ export default function EnterpriseWorkspaceDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Building2 className="w-6 h-6 text-indigo-600" />
-              Workspace Details
+              {t('enterpriseWorkspaceDashboard.workspaceDetails')}
             </h2>
             <div className="space-y-3">
               <div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Type</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('enterpriseWorkspaceDashboard.type')}</div>
                 <div className="font-medium capitalize">{selectedWorkspace.type}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Your Role</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('enterpriseWorkspaceDashboard.yourRole')}</div>
                 <div className="font-medium capitalize">{selectedWorkspace.userRole}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Members</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('enterpriseWorkspaceDashboard.members')}</div>
                 <div className="font-medium">{selectedWorkspace.members?.length || 0}</div>
               </div>
               {selectedWorkspace.settings?.dataResidency && (
                 <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Data Residency</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('enterpriseWorkspaceDashboard.dataResidency')}</div>
                   <div className="font-medium flex items-center gap-2">
                     <Globe className="w-4 h-4" />
                     {selectedWorkspace.settings.dataResidency.region.toUpperCase()}
@@ -159,7 +161,7 @@ export default function EnterpriseWorkspaceDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Shield className="w-6 h-6 text-indigo-600" />
-                Your Permissions
+                {t('enterpriseWorkspaceDashboard.yourPermissions')}
               </h2>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 {Object.entries(selectedWorkspace.userPermissions).map(([key, value]: [string, any]) => (
@@ -182,11 +184,11 @@ export default function EnterpriseWorkspaceDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <FileText className="w-6 h-6 text-indigo-600" />
-              Recent Audit Logs
+              {t('enterpriseWorkspaceDashboard.recentAuditLogs')}
             </h2>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {auditLogs.length === 0 ? (
-                <div className="text-sm text-gray-500 text-center py-4">No audit logs</div>
+                <div className="text-sm text-gray-500 text-center py-4">{t('enterpriseWorkspaceDashboard.noAuditLogs')}</div>
               ) : (
                 auditLogs.map((log: any, index: number) => (
                   <div key={index} className="p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm">
@@ -204,18 +206,18 @@ export default function EnterpriseWorkspaceDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Workflow className="w-6 h-6 text-indigo-600" />
-              Workflow Templates
+              {t('enterpriseWorkspaceDashboard.workflowTemplates')}
             </h2>
             <div className="space-y-2">
               {templates.length === 0 ? (
-                <div className="text-sm text-gray-500 text-center py-4">No templates</div>
+                <div className="text-sm text-gray-500 text-center py-4">{t('enterpriseWorkspaceDashboard.noTemplates')}</div>
               ) : (
                 templates.map((template: any) => (
                   <div key={template._id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded">
                     <div className="font-medium">{template.name}</div>
                     <div className="text-xs text-gray-500">{template.description}</div>
                     <div className="text-xs text-indigo-600 mt-1">
-                      Used {template.usageCount || 0} times
+                      {t('enterpriseWorkspaceDashboard.usedTimes', { count: template.usageCount || 0 })}
                     </div>
                   </div>
                 ))
@@ -228,11 +230,11 @@ export default function EnterpriseWorkspaceDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Shield className="w-6 h-6 text-indigo-600" />
-                GDPR Compliance
+                {t('enterpriseWorkspaceDashboard.gdprCompliance')}
               </h2>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">GDPR Enabled</span>
+                  <span className="text-sm">{t('enterpriseWorkspaceDashboard.gdprEnabled')}</span>
                   {compliance.gdprEnabled ? (
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                   ) : (
@@ -240,13 +242,13 @@ export default function EnterpriseWorkspaceDashboard() {
                   )}
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Data Residency</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{t('enterpriseWorkspaceDashboard.dataResidency')}</div>
                   <div className="font-medium">{compliance.dataResidency.toUpperCase()}</div>
                 </div>
                 {compliance.issues && compliance.issues.length > 0 && (
                   <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded">
                     <div className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
-                      {compliance.issues.length} Issues Found
+                      {t('enterpriseWorkspaceDashboard.issuesFound', { count: compliance.issues.length })}
                     </div>
                   </div>
                 )}
@@ -259,12 +261,12 @@ export default function EnterpriseWorkspaceDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <BarChart3 className="w-6 h-6 text-indigo-600" />
-                SLA Status
+                {t('enterpriseWorkspaceDashboard.slaStatus')}
               </h2>
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">Uptime</span>
+                    <span className="text-sm">{t('enterpriseWorkspaceDashboard.uptime')}</span>
                     <span className={`font-medium ${
                       sla.compliance?.uptime ? 'text-green-600' : 'text-red-600'
                     }`}>
@@ -282,7 +284,7 @@ export default function EnterpriseWorkspaceDashboard() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">Response Time</span>
+                    <span className="text-sm">{t('enterpriseWorkspaceDashboard.responseTime')}</span>
                     <span className={`font-medium ${
                       sla.compliance?.responseTime ? 'text-green-600' : 'text-red-600'
                     }`}>
@@ -293,7 +295,7 @@ export default function EnterpriseWorkspaceDashboard() {
                 {sla.violations && sla.violations.length > 0 && (
                   <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded">
                     <div className="text-sm font-medium text-red-900 dark:text-red-100">
-                      {sla.violations.length} SLA Violations
+                      {t('enterpriseWorkspaceDashboard.slaViolations', { count: sla.violations.length })}
                     </div>
                   </div>
                 )}

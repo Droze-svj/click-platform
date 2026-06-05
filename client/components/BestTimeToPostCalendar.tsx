@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Clock, Calendar as CalendarIcon, TrendingUp } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -15,6 +16,7 @@ interface BestTime {
 }
 
 export default function BestTimeToPostCalendar() {
+  const { t } = useTranslation()
   const [bestTimes, setBestTimes] = useState<BestTime[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
@@ -49,7 +51,7 @@ export default function BestTimeToPostCalendar() {
   // Group by day and hour
   const timeMatrix = days.reduce((acc, day) => {
     acc[day] = hours.map(hour => {
-      const time = bestTimes.find(t => t.day === day && t.hour === hour)
+      const time = bestTimes.find(bt => bt.day === day && bt.hour === hour)
       return {
         hour,
         engagement: time?.engagement || 0,
@@ -60,7 +62,7 @@ export default function BestTimeToPostCalendar() {
     return acc
   }, {} as Record<string, Array<{ hour: number; engagement: number; posts: number; score: number }>>)
 
-  const maxScore = Math.max(...bestTimes.map(t => t.score), 1)
+  const maxScore = Math.max(...bestTimes.map(bt => bt.score), 1)
 
   const getColor = (score: number) => {
     if (score === 0) return 'bg-gray-100 dark:bg-gray-800'
@@ -92,7 +94,7 @@ export default function BestTimeToPostCalendar() {
         <div className="flex items-center gap-2">
           <Clock className="w-6 h-6 text-green-600" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Best Time to Post
+            {t('bestTimeToPostCalendar.title')}
           </h3>
         </div>
         <select
@@ -100,7 +102,7 @@ export default function BestTimeToPostCalendar() {
           onChange={(e) => setSelectedPlatform(e.target.value)}
           className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
         >
-          <option value="all">All Platforms</option>
+          <option value="all">{t('bestTimeToPostCalendar.allPlatforms')}</option>
           <option value="twitter">Twitter/X</option>
           <option value="linkedin">LinkedIn</option>
           <option value="facebook">Facebook</option>
@@ -115,16 +117,16 @@ export default function BestTimeToPostCalendar() {
         <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-5 h-5 text-green-600" />
-            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Top 5 Best Times</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('bestTimeToPostCalendar.top5BestTimes')}</h4>
           </div>
           <div className="space-y-2">
             {topTimes.map((time, idx) => (
               <div key={idx} className="flex items-center justify-between text-sm">
                 <span className="text-gray-700 dark:text-gray-300">
-                  {time.day} at {time.hour}:00
+                  {t('bestTimeToPostCalendar.dayAtHour', { day: time.day, hour: time.hour })}
                 </span>
                 <span className="font-semibold text-green-600">
-                  Score: {time.score.toFixed(1)}
+                  {t('bestTimeToPostCalendar.scoreLabel', { score: time.score.toFixed(1) })}
                 </span>
               </div>
             ))}
@@ -163,7 +165,7 @@ export default function BestTimeToPostCalendar() {
                     <div
                       key={`${day}-${hour}`}
                       className={`h-8 rounded ${getColor(time.score)} cursor-pointer hover:ring-2 hover:ring-green-500 transition-all`}
-                      title={`${day} ${hour}:00 - Engagement: ${time.engagement}, Posts: ${time.posts}, Score: ${time.score.toFixed(1)}`}
+                      title={t('bestTimeToPostCalendar.cellTooltip', { day, hour, engagement: time.engagement, posts: time.posts, score: time.score.toFixed(1) })}
                     />
                   )
                 })}
@@ -175,7 +177,7 @@ export default function BestTimeToPostCalendar() {
 
       {/* Legend */}
       <div className="mt-6 flex items-center justify-center gap-4">
-        <span className="text-sm text-gray-600 dark:text-gray-400">Less Optimal</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">{t('bestTimeToPostCalendar.lessOptimal')}</span>
         <div className="flex gap-1">
           <div className="w-4 h-4 bg-gray-100 dark:bg-gray-800 rounded"></div>
           <div className="w-4 h-4 bg-green-200 dark:bg-green-900 rounded"></div>
@@ -183,7 +185,7 @@ export default function BestTimeToPostCalendar() {
           <div className="w-4 h-4 bg-green-600 dark:bg-green-500 rounded"></div>
           <div className="w-4 h-4 bg-green-800 dark:bg-green-400 rounded"></div>
         </div>
-        <span className="text-sm text-gray-600 dark:text-gray-400">Most Optimal</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">{t('bestTimeToPostCalendar.mostOptimal')}</span>
       </div>
     </div>
   )

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import { X, RefreshCw, Trash2, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -15,6 +16,7 @@ interface JobDetailsModalProps {
 }
 
 export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onRefresh }: JobDetailsModalProps) {
+  const { t } = useTranslation()
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [retrying, setRetrying] = useState(false)
@@ -79,7 +81,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Job Details</h2>
+          <h2 className="text-2xl font-bold">{t('jobDetailsModal.jobDetails')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -104,7 +106,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
               {getStateIcon(job.state)}
               <div>
                 <h3 className="font-semibold text-lg">{job.name}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">State: {job.state}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('jobDetailsModal.stateLabel', { state: job.state })}</p>
               </div>
             </div>
 
@@ -112,7 +114,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
             {job.state === 'active' && (
               <div>
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span>Progress</span>
+                  <span>{t('jobDetailsModal.progress')}</span>
                   <span>{job.progress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -126,7 +128,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
 
             {/* Job Data */}
             <div>
-              <h4 className="font-semibold mb-2">Job Data</h4>
+              <h4 className="font-semibold mb-2">{t('jobDetailsModal.jobData')}</h4>
               <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm">
                 {JSON.stringify(job.data, null, 2)}
               </pre>
@@ -135,23 +137,23 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
             {/* Metadata */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Created</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('jobDetailsModal.created')}</p>
                 <p className="font-medium">{new Date(job.createdAt).toLocaleString()}</p>
               </div>
               {job.processedOn && (
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Started</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('jobDetailsModal.started')}</p>
                   <p className="font-medium">{new Date(job.processedOn).toLocaleString()}</p>
                 </div>
               )}
               {job.finishedOn && (
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Finished</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('jobDetailsModal.finished')}</p>
                   <p className="font-medium">{new Date(job.finishedOn).toLocaleString()}</p>
                 </div>
               )}
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Attempts</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('jobDetailsModal.attempts')}</p>
                 <p className="font-medium">{job.attemptsMade}</p>
               </div>
             </div>
@@ -159,7 +161,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
             {/* Error */}
             {job.failedReason && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">Error</h4>
+                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">{t('jobDetailsModal.error')}</h4>
                 <p className="text-sm text-red-700 dark:text-red-300">{job.failedReason}</p>
               </div>
             )}
@@ -174,7 +176,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                 >
                   <RefreshCw className={`w-4 h-4 ${retrying ? 'animate-spin' : ''}`} />
-                  {retrying ? 'Retrying...' : 'Retry Job'}
+                  {retrying ? t('jobDetailsModal.retrying') : t('jobDetailsModal.retryJob')}
                 </button>
               )}
               <button
@@ -182,13 +184,13 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
                 onClick={onClose}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
               >
-                Close
+                {t('jobDetailsModal.close')}
               </button>
             </div>
           </div>
         ) : (
           <div className="p-6 text-center">
-            <p className="text-gray-500">Job not found</p>
+            <p className="text-gray-500">{t('jobDetailsModal.jobNotFound')}</p>
           </div>
         )}
       </div>

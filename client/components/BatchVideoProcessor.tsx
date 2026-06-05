@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Play, Pause, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface BatchJob {
   id: string
@@ -31,17 +32,18 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
 
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const operations = [
-    { id: 'compress', name: 'Compress', description: 'Reduce file size' },
-    { id: 'convert', name: 'Convert Format', description: 'Change video format to MP4' },
-    { id: 'thumbnail', name: 'Generate Thumbnails', description: 'Create video thumbnails' },
-    { id: 'extract-audio', name: 'Extract Audio', description: 'Extract audio tracks' },
+    { id: 'compress', name: t('batchVideoProcessor.opCompressName'), description: t('batchVideoProcessor.opCompressDesc') },
+    { id: 'convert', name: t('batchVideoProcessor.opConvertName'), description: t('batchVideoProcessor.opConvertDesc') },
+    { id: 'thumbnail', name: t('batchVideoProcessor.opThumbnailName'), description: t('batchVideoProcessor.opThumbnailDesc') },
+    { id: 'extract-audio', name: t('batchVideoProcessor.opExtractAudioName'), description: t('batchVideoProcessor.opExtractAudioDesc') },
   ]
 
   const addBatchJob = () => {
     if (selectedVideos.size === 0) {
-      showToast('Please select at least one video', 'error')
+      showToast(t('batchVideoProcessor.selectAtLeastOne'), 'error')
       return
     }
 
@@ -50,7 +52,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
       return {
         id: `${videoId}-${Date.now()}-${Math.random()}`,
         videoId,
-        videoName: video?.name || `Video ${videoId}`,
+        videoName: video?.name || t('batchVideoProcessor.videoFallbackName', { videoId }),
         operation: selectedOperation,
         status: 'pending' as const,
         progress: 0,
@@ -67,7 +69,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
 
   const startBatchProcessing = async () => {
     if (jobs.length === 0) {
-      showToast('No jobs to process', 'error')
+      showToast(t('batchVideoProcessor.noJobsToProcess'), 'error')
       return
     }
 
@@ -75,7 +77,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
     const token = localStorage.getItem('token')
 
     if (!token) {
-      showToast('Authentication required', 'error')
+      showToast(t('batchVideoProcessor.authRequired'), 'error')
       setIsProcessing(false)
       return
     }
@@ -158,7 +160,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
     }
 
     setIsProcessing(false)
-    showToast(`Batch processing completed. ${jobs.filter(j => j.status === 'completed').length} successful, ${jobs.filter(j => j.status === 'failed').length} failed.`, 'success')
+    showToast(t('batchVideoProcessor.batchCompleted', { successful: jobs.filter(j => j.status === 'completed').length, failed: jobs.filter(j => j.status === 'failed').length }), 'success')
 
     if (onBatchComplete) {
       onBatchComplete(jobs)
@@ -202,12 +204,12 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--text-main)]">Batch Video Processor</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--text-main)]">{t('batchVideoProcessor.title')}</h3>
 
         {/* Operation Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Select Operation
+            {t('batchVideoProcessor.selectOperation')}
           </label>
           <select
             value={selectedOperation}
@@ -225,7 +227,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
         {/* Video Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Select Videos ({selectedVideos.size} selected)
+            {t('batchVideoProcessor.selectVideos', { count: selectedVideos.size })}
           </label>
           <div className="max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md">
             {videos.map(video => (
@@ -260,7 +262,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
             disabled={selectedVideos.size === 0}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add to Queue
+            {t('batchVideoProcessor.addToQueue')}
           </button>
 
           <button
@@ -269,7 +271,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
             disabled={jobs.length === 0 || isProcessing}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProcessing ? 'Processing...' : 'Start Batch'}
+            {isProcessing ? t('batchVideoProcessor.processing') : t('batchVideoProcessor.startBatch')}
           </button>
 
           {jobs.some(job => job.status === 'completed') && (
@@ -278,7 +280,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
               onClick={clearCompletedJobs}
               className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
             >
-              Clear Completed
+              {t('batchVideoProcessor.clearCompleted')}
             </button>
           )}
         </div>
@@ -288,7 +290,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
       {jobs.length > 0 && (
         <div>
           <h4 className="text-md font-medium mb-3 text-gray-900 dark:text-[var(--text-main)]">
-            Processing Queue ({jobs.length} jobs)
+            {t('batchVideoProcessor.processingQueue', { count: jobs.length })}
           </h4>
 
           <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -326,7 +328,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
                       rel="noopener noreferrer"
                       className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      Download
+                      {t('batchVideoProcessor.download')}
                     </a>
                   )}
 
@@ -334,7 +336,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
                     type="button"
                     onClick={() => removeJob(job.id)}
                     className="text-gray-400 hover:text-red-500"
-                    title="Remove job"
+                    title={t('batchVideoProcessor.removeJob')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

@@ -26,6 +26,7 @@ import {
 import { useToast } from '../contexts/ToastContext'
 import VideoProgressTracker from './VideoProgressTracker'
 import { extractApiError } from '../utils/apiResponse'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TextOverlay {
   id: string
@@ -108,12 +109,13 @@ export default function EnhancedVideoTools({
   const [voiceoverVoice, setVoiceoverVoice] = useState('alloy')
 
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const debugEnabled = useMemo(() => process.env.NEXT_PUBLIC_DEBUG_VIDEO === 'true', [])
 
   const handleProcess = async (tool: string, options: any = {}) => {
     if (!videoUrl && !videoPath) {
-      showToast('Video is required', 'error')
+      showToast(t('enhancedVideoTools.videoRequired'), 'error')
       return
     }
 
@@ -123,7 +125,7 @@ export default function EnhancedVideoTools({
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        showToast('You must be logged in to edit videos', 'error')
+        showToast(t('enhancedVideoTools.mustBeLoggedIn'), 'error')
         return
       }
 
@@ -162,12 +164,12 @@ export default function EnhancedVideoTools({
           endpoint = '/api/export'
           break
         default:
-          showToast('Unknown tool', 'error')
+          showToast(t('enhancedVideoTools.unknownTool'), 'error')
           return
       }
 
       setCurrentOperation(tool)
-      showToast(`${tool.replace('-', ' ')} started`, 'info')
+      showToast(t('enhancedVideoTools.toolStarted', { tool: tool.replace('-', ' ') }), 'info')
 
       // Prepare request body based on tool
       const formData = new FormData()
@@ -245,7 +247,7 @@ export default function EnhancedVideoTools({
 
       if (result.success || result.status === 'completed') {
         setLastResult(result.result || result)
-        showToast(`${tool.replace('-', ' ')} completed successfully!`, 'success')
+        showToast(t('enhancedVideoTools.toolCompleted', { tool: tool.replace('-', ' ') }), 'success')
 
         if (result.result?.resultUrl) {
           // Create download link
@@ -259,13 +261,13 @@ export default function EnhancedVideoTools({
           onProcessed({ tool, status: 'completed', result })
         }
       } else {
-        throw new Error(result.error || result.message || 'Processing failed')
+        throw new Error(result.error || result.message || t('enhancedVideoTools.processingFailed'))
       }
 
     } catch (error: any) {
       console.error('Enhanced video processing error:', error)
       const errorObj = extractApiError(error)
-      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || `Failed to process video: ${tool}`, 'error')
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || t('enhancedVideoTools.failedToProcess', { tool }), 'error')
     } finally {
       setIsProcessing(false)
       setActiveTool(null)
@@ -276,75 +278,83 @@ export default function EnhancedVideoTools({
   const tools = [
     {
       id: 'add-text',
-      name: 'Add Text',
+      name: t('enhancedVideoTools.addTextName'),
       icon: <Type className="w-5 h-5" />,
-      description: 'Add text overlays to your video',
+      description: t('enhancedVideoTools.addTextDesc'),
       category: 'visual'
     },
     {
       id: 'apply-filters',
-      name: 'Apply Filters',
+      name: t('enhancedVideoTools.applyFiltersName'),
       icon: <Filter className="w-5 h-5" />,
-      description: 'Enhance video with color and effects',
+      description: t('enhancedVideoTools.applyFiltersDesc'),
       category: 'visual'
     },
     {
       id: 'add-audio',
-      name: 'Add Audio',
+      name: t('enhancedVideoTools.addAudioName'),
       icon: <Music className="w-5 h-5" />,
-      description: 'Mix background music or sound effects',
+      description: t('enhancedVideoTools.addAudioDesc'),
       category: 'audio'
     },
     {
       id: 'generate-voiceover',
-      name: 'AI Voiceover',
+      name: t('enhancedVideoTools.voiceoverName'),
       icon: <Mic className="w-5 h-5" />,
-      description: 'Generate AI voice narration',
+      description: t('enhancedVideoTools.voiceoverDesc'),
       category: 'audio'
     },
     {
       id: 'crop-video',
-      name: 'Crop & Resize',
+      name: t('enhancedVideoTools.cropName'),
       icon: <Crop className="w-5 h-5" />,
-      description: 'Change video dimensions and crop',
+      description: t('enhancedVideoTools.cropDesc'),
       category: 'editing'
     },
     {
       id: 'split-merge',
-      name: 'Split & Merge',
+      name: t('enhancedVideoTools.splitMergeName'),
       icon: <Split className="w-5 h-5" />,
-      description: 'Split video and merge segments',
+      description: t('enhancedVideoTools.splitMergeDesc'),
       category: 'editing'
     },
     {
       id: 'add-transitions',
-      name: 'Add Transitions',
+      name: t('enhancedVideoTools.transitionsName'),
       icon: <Zap className="w-5 h-5" />,
-      description: 'Smooth transitions between clips',
+      description: t('enhancedVideoTools.transitionsDesc'),
       category: 'editing'
     },
     {
       id: 'stabilize',
-      name: 'Stabilize Video',
+      name: t('enhancedVideoTools.stabilizeName'),
       icon: <Wand2 className="w-5 h-5" />,
-      description: 'Reduce camera shake and stabilize',
+      description: t('enhancedVideoTools.stabilizeDesc'),
       category: 'effects'
     },
     {
       id: 'color-correct',
-      name: 'Color Correction',
+      name: t('enhancedVideoTools.colorCorrectName'),
       icon: <Palette className="w-5 h-5" />,
-      description: 'Professional color grading',
+      description: t('enhancedVideoTools.colorCorrectDesc'),
       category: 'effects'
     },
     {
       id: 'export-enhanced',
-      name: 'Export Enhanced',
+      name: t('enhancedVideoTools.exportName'),
       icon: <Download className="w-5 h-5" />,
-      description: 'Export with all enhancements',
+      description: t('enhancedVideoTools.exportDesc'),
       category: 'export'
     }
   ]
+
+  const categoryLabels: Record<string, string> = {
+    visual: t('enhancedVideoTools.categoryVisual'),
+    audio: t('enhancedVideoTools.categoryAudio'),
+    editing: t('enhancedVideoTools.categoryEditing'),
+    effects: t('enhancedVideoTools.categoryEffects'),
+    export: t('enhancedVideoTools.categoryExport')
+  }
 
   const categories = ['visual', 'audio', 'editing', 'effects', 'export']
   const categoryIcons = {
@@ -358,7 +368,7 @@ export default function EnhancedVideoTools({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
-        Enhanced Video Tools
+        {t('enhancedVideoTools.title')}
       </h3>
 
       {/* Tool Categories */}
@@ -371,7 +381,7 @@ export default function EnhancedVideoTools({
               className="flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-sm capitalize"
             >
               {categoryIcons[category as keyof typeof categoryIcons]}
-              {category}
+              {categoryLabels[category]}
             </button>
           ))}
         </div>
@@ -383,10 +393,10 @@ export default function EnhancedVideoTools({
         <div className="space-y-3">
           <h4 className="font-medium flex items-center gap-2">
             <Music className="w-4 h-4" />
-            Audio Settings
+            {t('enhancedVideoTools.audioSettings')}
           </h4>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Background Music URL</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('enhancedVideoTools.backgroundMusicUrl')}</label>
             <input
               type="url"
               value={backgroundMusic}
@@ -396,7 +406,7 @@ export default function EnhancedVideoTools({
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Audio Volume ({audioVolume}%)</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('enhancedVideoTools.audioVolume', { value: audioVolume })}</label>
             <input
               type="range"
               min="0"
@@ -412,29 +422,29 @@ export default function EnhancedVideoTools({
         <div className="space-y-3">
           <h4 className="font-medium flex items-center gap-2">
             <Mic className="w-4 h-4" />
-            AI Voiceover
+            {t('enhancedVideoTools.aiVoiceover')}
           </h4>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Voice</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('enhancedVideoTools.voice')}</label>
             <select
               value={voiceoverVoice}
               onChange={(e) => setVoiceoverVoice(e.target.value)}
               className="w-full px-3 py-2 border rounded text-sm bg-white dark:bg-gray-900"
             >
-              <option value="alloy">Alloy (Balanced)</option>
-              <option value="echo">Echo (Masculine)</option>
-              <option value="fable">Fable (British)</option>
-              <option value="onyx">Onyx (Deep)</option>
-              <option value="nova">Nova (Youthful)</option>
-              <option value="shimmer">Shimmer (Warm)</option>
+              <option value="alloy">{t('enhancedVideoTools.voiceAlloy')}</option>
+              <option value="echo">{t('enhancedVideoTools.voiceEcho')}</option>
+              <option value="fable">{t('enhancedVideoTools.voiceFable')}</option>
+              <option value="onyx">{t('enhancedVideoTools.voiceOnyx')}</option>
+              <option value="nova">{t('enhancedVideoTools.voiceNova')}</option>
+              <option value="shimmer">{t('enhancedVideoTools.voiceShimmer')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Script Text</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('enhancedVideoTools.scriptText')}</label>
             <textarea
               value={voiceoverText}
               onChange={(e) => setVoiceoverText(e.target.value)}
-              placeholder="Enter text for AI voiceover..."
+              placeholder={t('enhancedVideoTools.scriptTextPlaceholder')}
               rows={3}
               className="w-full px-3 py-2 border rounded text-sm bg-white dark:bg-gray-900"
             />
@@ -445,20 +455,20 @@ export default function EnhancedVideoTools({
         <div className="space-y-3">
           <h4 className="font-medium flex items-center gap-2">
             <Zap className="w-4 h-4" />
-            Transitions
+            {t('enhancedVideoTools.transitionsHeading')}
           </h4>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Transition Type</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('enhancedVideoTools.transitionType')}</label>
             <select
               value={transitionType}
               onChange={(e) => setTransitionType(e.target.value)}
               className="w-full px-3 py-2 border rounded text-sm bg-white dark:bg-gray-900"
             >
-              <option value="fade">Fade</option>
-              <option value="wipe">Wipe</option>
-              <option value="slide">Slide</option>
-              <option value="dissolve">Dissolve</option>
-              <option value="pixelate">Pixelate</option>
+              <option value="fade">{t('enhancedVideoTools.transitionFade')}</option>
+              <option value="wipe">{t('enhancedVideoTools.transitionWipe')}</option>
+              <option value="slide">{t('enhancedVideoTools.transitionSlide')}</option>
+              <option value="dissolve">{t('enhancedVideoTools.transitionDissolve')}</option>
+              <option value="pixelate">{t('enhancedVideoTools.transitionPixelate')}</option>
             </select>
           </div>
         </div>
@@ -467,30 +477,30 @@ export default function EnhancedVideoTools({
         <div className="space-y-3">
           <h4 className="font-medium flex items-center gap-2">
             <Download className="w-4 h-4" />
-            Export Settings
+            {t('enhancedVideoTools.exportSettings')}
           </h4>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Format</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('enhancedVideoTools.format')}</label>
             <select
               value={exportFormat}
               onChange={(e) => setExportFormat(e.target.value)}
               className="w-full px-3 py-2 border rounded text-sm bg-white dark:bg-gray-900"
             >
-              <option value="mp4">MP4 (Recommended)</option>
-              <option value="webm">WebM</option>
-              <option value="mov">MOV</option>
+              <option value="mp4">{t('enhancedVideoTools.formatMp4')}</option>
+              <option value="webm">{t('enhancedVideoTools.formatWebm')}</option>
+              <option value="mov">{t('enhancedVideoTools.formatMov')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Quality</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('enhancedVideoTools.quality')}</label>
             <select
               value={exportQuality}
               onChange={(e) => setExportQuality(e.target.value as any)}
               className="w-full px-3 py-2 border rounded text-sm bg-white dark:bg-gray-900"
             >
-              <option value="high">High Quality</option>
-              <option value="medium">Medium Quality</option>
-              <option value="low">Low Quality (Small file)</option>
+              <option value="high">{t('enhancedVideoTools.qualityHigh')}</option>
+              <option value="medium">{t('enhancedVideoTools.qualityMedium')}</option>
+              <option value="low">{t('enhancedVideoTools.qualityLow')}</option>
             </select>
           </div>
         </div>
@@ -527,7 +537,7 @@ export default function EnhancedVideoTools({
             </p>
             <div className="mt-1">
               <span className="inline-block px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded capitalize">
-                {tool.category}
+                {categoryLabels[tool.category]}
               </span>
             </div>
           </button>
@@ -547,9 +557,9 @@ export default function EnhancedVideoTools({
               setActiveTool(null)
               setLastResult(result?.result || result)
               if (result?.status === 'failed') {
-                showToast(result?.error || `${currentOperation} failed`, 'error')
+                showToast(result?.error || t('enhancedVideoTools.operationFailed', { operation: currentOperation }), 'error')
               } else {
-                showToast(`${currentOperation} completed`, 'success')
+                showToast(t('enhancedVideoTools.operationCompleted', { operation: currentOperation }), 'success')
               }
               if (onProcessed) {
                 onProcessed({ tool: currentOperation, status: 'completed', result })
@@ -561,14 +571,14 @@ export default function EnhancedVideoTools({
 
       {lastResult?.resultUrl && (
         <div className="mt-4 flex items-center justify-between rounded border border-gray-200 dark:border-gray-700 p-3">
-          <div className="text-sm text-gray-700 dark:text-gray-200">Latest output</div>
+          <div className="text-sm text-gray-700 dark:text-gray-200">{t('enhancedVideoTools.latestOutput')}</div>
           <a
             className="text-sm font-semibold text-purple-700 dark:text-purple-400 underline"
             href={lastResult.resultUrl}
             target="_blank"
             rel="noreferrer"
           >
-            Download / View
+            {t('enhancedVideoTools.downloadView')}
           </a>
         </div>
       )}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SubscriptionStatus {
   status: string
@@ -19,6 +20,7 @@ interface SubscriptionStatus {
 }
 
 export default function SubscriptionStatus() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { user } = useAuth()
   const [status, setStatus] = useState<SubscriptionStatus | null>(null)
@@ -62,16 +64,16 @@ export default function SubscriptionStatus() {
   }
 
   const getStatusText = () => {
-    if (status.isExpired) return 'Expired'
-    if (status.isExpiringSoon) return `Expires in ${status.daysUntilExpiry} days`
-    if (status.status === 'active') return 'Active'
+    if (status.isExpired) return t('subscriptionStatus.expired')
+    if (status.isExpiringSoon) return t('subscriptionStatus.expiresInDays', { days: status.daysUntilExpiry })
+    if (status.status === 'active') return t('subscriptionStatus.active')
     return status.status.charAt(0).toUpperCase() + status.status.slice(1)
   }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Subscription Status</h3>
+        <h3 className="text-lg font-semibold">{t('subscriptionStatus.title')}</h3>
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor()}`}>
           {getStatusText()}
         </span>
@@ -79,13 +81,13 @@ export default function SubscriptionStatus() {
 
       <div className="space-y-3">
         <div>
-          <p className="text-sm text-gray-600">Current Plan</p>
-          <p className="font-semibold">{status.package?.name || 'No package'}</p>
+          <p className="text-sm text-gray-600">{t('subscriptionStatus.currentPlan')}</p>
+          <p className="font-semibold">{status.package?.name || t('subscriptionStatus.noPackage')}</p>
         </div>
 
         {status.endDate && (
           <div>
-            <p className="text-sm text-gray-600">Expires On</p>
+            <p className="text-sm text-gray-600">{t('subscriptionStatus.expiresOn')}</p>
             <p className="font-semibold">
               {new Date(status.endDate).toLocaleDateString()}
             </p>
@@ -94,8 +96,8 @@ export default function SubscriptionStatus() {
 
         {status.daysUntilExpiry > 0 && (
           <div>
-            <p className="text-sm text-gray-600">Days Remaining</p>
-            <p className="font-semibold">{status.daysUntilExpiry} days</p>
+            <p className="text-sm text-gray-600">{t('subscriptionStatus.daysRemaining')}</p>
+            <p className="font-semibold">{t('subscriptionStatus.daysValue', { days: status.daysUntilExpiry })}</p>
           </div>
         )}
 
@@ -105,7 +107,7 @@ export default function SubscriptionStatus() {
             onClick={() => router.push('/dashboard/membership')}
             className="w-full mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
           >
-            {status.isExpired ? 'Renew Subscription' : 'Upgrade Now'}
+            {status.isExpired ? t('subscriptionStatus.renewSubscription') : t('subscriptionStatus.upgradeNow')}
           </button>
         )}
       </div>

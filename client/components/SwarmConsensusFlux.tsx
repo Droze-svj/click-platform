@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Activity, ShieldCheck, Cpu, Fingerprint, BarChart3, Database, Workflow, Signal } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ConsensusBlock {
   _id: string;
@@ -18,6 +19,7 @@ interface ConsensusBlock {
 const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
 
 export default function SwarmConsensusFlux() {
+  const { t } = useTranslation()
   const [blocks, setBlocks] = useState<ConsensusBlock[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -61,13 +63,13 @@ export default function SwarmConsensusFlux() {
                <Database className="text-indigo-400" size={28} />
             </div>
             <div>
-               <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-1">Consensus Flux</h2>
-               <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none border-l-2 border-indigo-500/20 pl-4 ml-1">Live Refinery Ledger // 2026.4_SOVEREIGN</p>
+               <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-1">{t('swarmConsensusFlux.title')}</h2>
+               <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none border-l-2 border-indigo-500/20 pl-4 ml-1">{t('swarmConsensusFlux.subtitle')}</p>
             </div>
          </div>
          <div className="flex items-center gap-3">
             <Signal size={12} className="text-emerald-400 animate-ping" />
-            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic">Lattice_Sync</span>
+            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic">{t('swarmConsensusFlux.latticeSync')}</span>
          </div>
       </div>
 
@@ -94,7 +96,7 @@ export default function SwarmConsensusFlux() {
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">ID: {block.contentId.substring(0, 8)}...</span>
                    </div>
                    <p className="text-[12px] font-black text-white uppercase tracking-wider italic leading-none opacity-80 group-hover/item:opacity-100 transition-opacity">
-                     {block.swarmFeedback === 'Initial refinery pass' ? 'SYNTHESIS_REFINED' : 'ADAPTIVE_PULSE_CORRECTION'}
+                     {block.swarmFeedback === 'Initial refinery pass' ? t('swarmConsensusFlux.synthesisRefined') : t('swarmConsensusFlux.adaptivePulseCorrection')}
                    </p>
                 </div>
               </div>
@@ -121,8 +123,8 @@ export default function SwarmConsensusFlux() {
       </div>
 
       <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between opacity-40 group-hover:opacity-100 transition-opacity">
-         <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] italic">Chain_Link Integrity Verified</p>
-         <button className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic hover:underline">VIEW_FULL_LEDGER</button>
+         <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] italic">{t('swarmConsensusFlux.chainLinkVerified')}</p>
+         <button className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic hover:underline">{t('swarmConsensusFlux.viewFullLedger')}</button>
       </div>
     </div>
   )

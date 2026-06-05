@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Video, FileText, Calendar, Settings, Search, Zap } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function QuickActionsMenu() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -38,25 +40,25 @@ export default function QuickActionsMenu() {
   const actions = [
     {
       icon: <Video size={20} />,
-      label: 'Upload Video',
+      label: t('quickActionsMenu.uploadVideo'),
       shortcut: 'V',
       action: () => router.push('/dashboard/video')
     },
     {
       icon: <FileText size={20} />,
-      label: 'Create Content',
+      label: t('quickActionsMenu.createContent'),
       shortcut: 'C',
       action: () => router.push('/dashboard/content')
     },
     {
       icon: <Calendar size={20} />,
-      label: 'Schedule Post',
+      label: t('quickActionsMenu.schedulePost'),
       shortcut: 'S',
       action: () => router.push('/dashboard/scheduler')
     },
     {
       icon: <Search size={20} />,
-      label: 'Search',
+      label: t('quickActionsMenu.search'),
       shortcut: '/',
       action: () => {
         const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement
@@ -67,13 +69,13 @@ export default function QuickActionsMenu() {
     },
     {
       icon: <Zap size={20} />,
-      label: 'Quick Actions',
+      label: t('quickActionsMenu.quickActions'),
       shortcut: 'K',
       action: () => setIsOpen(false)
     },
     {
       icon: <Settings size={20} />,
-      label: 'Settings',
+      label: t('quickActionsMenu.settings'),
       shortcut: ',',
       action: () => router.push('/dashboard/settings')
     }
@@ -90,7 +92,7 @@ export default function QuickActionsMenu() {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Search actions..."
+            placeholder={t('quickActionsMenu.searchActionsPlaceholder')}
             autoFocus
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
           />
@@ -115,7 +117,7 @@ export default function QuickActionsMenu() {
           ))}
         </div>
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 text-center">
-          Press <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Esc</kbd> to close
+          {t('quickActionsMenu.press')} <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Esc</kbd> {t('quickActionsMenu.toClose')}
         </div>
       </div>
     </div>

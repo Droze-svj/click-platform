@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { useOAuth } from '../hooks/useOAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SocialAccount {
     id: string
@@ -25,6 +26,7 @@ interface SocialAccount {
 }
 
 export default function SocialAccountManager() {
+    const { t } = useTranslation()
     const { showToast } = useToast()
     const { connect, disconnect, getConnections, loading: oauthLoading } = useOAuth()
     const [accounts, setAccounts] = useState<SocialAccount[]>([])
@@ -50,9 +52,9 @@ export default function SocialAccountManager() {
                         formattedAccounts.push({
                             id: data.platformUserId || Math.random().toString(),
                             platform: platform as any,
-                            username: data.username || data.platformUsername || 'Connected User',
+                            username: data.username || data.platformUsername || t('socialAccountManager.connectedUser'),
                             status: 'active',
-                            lastSync: data.connectedAt ? new Date(data.connectedAt).toLocaleDateString() : 'Just now'
+                            lastSync: data.connectedAt ? new Date(data.connectedAt).toLocaleDateString() : t('socialAccountManager.justNow')
                         })
                     }
                 })
@@ -71,10 +73,10 @@ export default function SocialAccountManager() {
 
     const handleLink = async (platformId: string) => {
         try {
-            showToast(`Initiating secure connection with ${platformId}...`, 'info')
+            showToast(t('socialAccountManager.connecting', { platform: platformId }), 'info')
             await connect(platformId)
         } catch (error: any) {
-            showToast(`Failed to connect ${platformId}: ${error.message}`, 'error')
+            showToast(t('socialAccountManager.connectFailed', { platform: platformId, error: error.message }), 'error')
         }
     }
 
@@ -82,9 +84,9 @@ export default function SocialAccountManager() {
         try {
             await disconnect(platformId)
             setAccounts(prev => prev.filter(acc => acc.platform !== platformId))
-            showToast(`${platformId} disconnected successfully`, 'success')
+            showToast(t('socialAccountManager.disconnected', { platform: platformId }), 'success')
         } catch (error: any) {
-            showToast(`Failed to disconnect ${platformId}: ${error.message}`, 'error')
+            showToast(t('socialAccountManager.disconnectFailed', { platform: platformId, error: error.message }), 'error')
         }
     }
 
@@ -96,13 +98,13 @@ export default function SocialAccountManager() {
                         <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-gray-900 dark:text-[var(--text-main)] uppercase tracking-tighter">Social Vault</h2>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">Connected Account Intelligence</p>
+                        <h2 className="text-xl font-black text-gray-900 dark:text-[var(--text-main)] uppercase tracking-tighter">{t('socialAccountManager.vaultTitle')}</h2>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">{t('socialAccountManager.vaultSubtitle')}</p>
                     </div>
                 </div>
                 <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center gap-2 px-4 border border-emerald-500/20">
                     <Zap className="w-3 h-3 fill-emerald-500" />
-                    <span className="text-[8px] font-black uppercase tracking-widest letter-spacing-2">Live Cloud Sync</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest letter-spacing-2">{t('socialAccountManager.liveCloudSync')}</span>
                 </div>
             </div>
 
@@ -125,10 +127,10 @@ export default function SocialAccountManager() {
                                 <p className="text-[10px] md:text-xs font-black uppercase mb-1">{p.name}</p>
                                 {isLinked ? (
                                     <span className="text-[8px] font-bold text-emerald-500 flex items-center gap-1 justify-center">
-                                        <CheckCircle2 className="w-2 h-2" /> LINKED
+                                        <CheckCircle2 className="w-2 h-2" /> {t('socialAccountManager.linked')}
                                     </span>
                                 ) : (
-                                    <span className="text-[8px] font-bold text-gray-400 group-hover:text-inherit">CONNECT</span>
+                                    <span className="text-[8px] font-bold text-gray-400 group-hover:text-inherit">{t('socialAccountManager.connect')}</span>
                                 )}
                             </div>
                         </button>
@@ -138,7 +140,7 @@ export default function SocialAccountManager() {
 
             {/* Connected Accounts List */}
             <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[3px] mb-6">Active Vault Connections</h3>
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[3px] mb-6">{t('socialAccountManager.activeConnections')}</h3>
                 
                 {isLoading ? (
                     <div className="animate-pulse space-y-4">
@@ -149,7 +151,7 @@ export default function SocialAccountManager() {
                 ) : accounts.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 dark:bg-gray-950 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
                         <Link2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No accounts linked to vault</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('socialAccountManager.noAccounts')}</p>
                     </div>
                 ) : accounts.map(acc => (
                     <div key={acc.id} className="group relative bg-gray-50 dark:bg-gray-950 p-5 rounded-2xl border border-transparent hover:border-blue-500/30 transition-all flex items-center justify-between">
@@ -164,19 +166,19 @@ export default function SocialAccountManager() {
                             </div>
                             <div>
                                 <h4 className="text-sm font-black text-gray-900 dark:text-[var(--text-main)] leading-none mb-2">{acc.username}</h4>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">API Refresh: {acc.lastSync}</p>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">{t('socialAccountManager.apiRefresh', { date: acc.lastSync })}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-900 rounded-full border border-gray-100 dark:border-gray-800 shadow-sm">
                                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
+                                <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">{t('socialAccountManager.active')}</span>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => handleUnlink(acc.platform)}
-                                title={`Disconnect ${acc.platform}`}
-                                aria-label={`Disconnect ${acc.platform} account`}
+                                title={t('socialAccountManager.disconnectTitle', { platform: acc.platform })}
+                                aria-label={t('socialAccountManager.disconnectAria', { platform: acc.platform })}
                                 className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all"
                             >
                                 <Unlink className="w-4 h-4" />
@@ -189,10 +191,10 @@ export default function SocialAccountManager() {
             <div className="mt-8 pt-8 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <p className="text-[10px] font-bold text-gray-500 italic">256-bit OAuth Encryption Active</p>
+                    <p className="text-[10px] font-bold text-gray-500 italic">{t('socialAccountManager.encryptionActive')}</p>
                 </div>
                 <button className="text-[10px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform">
-                    View API Logs
+                    {t('socialAccountManager.viewApiLogs')}
                     <ExternalLink className="w-3 h-3" />
                 </button>
             </div>

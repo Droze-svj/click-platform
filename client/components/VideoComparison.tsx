@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface VideoComparisonProps {
   originalVideo: string
@@ -10,6 +11,7 @@ interface VideoComparisonProps {
 }
 
 export default function VideoComparison({ originalVideo, processedVideo, onClose }: VideoComparisonProps) {
+  const { t } = useTranslation()
   const [isPlayingOriginal, setIsPlayingOriginal] = useState(false)
   const [isPlayingProcessed, setIsPlayingProcessed] = useState(false)
   const [isMutedOriginal, setIsMutedOriginal] = useState(true)
@@ -63,7 +65,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Video Comparison</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('videoComparison.title')}</h3>
           {onClose && (
             <button
               type="button"
@@ -79,7 +81,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Original Video */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] text-center">Original</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] text-center">{t('videoComparison.original')}</h4>
               <div className="relative bg-black rounded-lg overflow-hidden">
                 <video
                   ref={originalRef}
@@ -111,7 +113,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
 
             {/* Processed Video */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] text-center">Processed</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] text-center">{t('videoComparison.processed')}</h4>
               <div className="relative bg-black rounded-lg overflow-hidden">
                 <video
                   ref={processedRef}
@@ -160,11 +162,11 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
               }}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-sm font-medium"
             >
-              Reset Both
+              {t('videoComparison.resetBoth')}
             </button>
 
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              Videos sync automatically - play one to control both
+              {t('videoComparison.syncHint')}
             </div>
           </div>
         </div>

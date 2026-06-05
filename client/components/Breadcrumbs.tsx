@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ChevronRight, Home } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface BreadcrumbItem {
   label: string
@@ -14,14 +15,15 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ items, className = '' }: BreadcrumbsProps) {
+  const { t } = useTranslation()
   const allItems = [
-    { label: 'Home', href: '/dashboard' },
+    { label: t('breadcrumbs.home'), href: '/dashboard' },
     ...items
   ]
 
   return (
     <nav 
-      aria-label="Breadcrumb" 
+      aria-label={t('breadcrumbs.ariaLabel')}
       className={`flex items-center space-x-2 text-sm ${className}`}
     >
       <ol className="flex items-center space-x-2">
@@ -34,7 +36,7 @@ export default function Breadcrumbs({ items, className = '' }: BreadcrumbsProps)
                 <Link
                   href={item.href || '#'}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                  aria-label="Home"
+                  aria-label={t('breadcrumbs.home')}
                 >
                   <Home size={16} />
                 </Link>

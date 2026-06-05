@@ -7,6 +7,7 @@ import {
   Type as FontIcon, ToggleLeft, ToggleRight
 } from 'lucide-react'
 import styles from './DynamicSubtitleEngine.module.css'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type DynStyle = CSSProperties & Record<`--${string}`, string | number | undefined>
 
@@ -95,6 +96,15 @@ export default function DynamicSubtitleEngine({
   smartDodgeEnabled = false,
   videoRef,
 }: DynamicSubtitleEngineProps) {
+  const { t } = useTranslation()
+  const presetName = (id: string) => {
+    switch (id) {
+      case 'hormozi': return t('dynamicSubtitleEngine.presetViralImpact')
+      case 'beast': return t('dynamicSubtitleEngine.presetRetentionGlow')
+      case 'minimal': return t('dynamicSubtitleEngine.presetCleanStudio')
+      default: return id
+    }
+  }
   const [activePreset, setActivePreset] = useState<SubtitlePreset>(PRESETS[0])
   const [internalZones, setInternalZones] = useState<AvoidanceZone[]>(avoidanceZones)
   const [smartDodgeActive, setSmartDodgeActive] = useState(smartDodgeEnabled)
@@ -213,7 +223,7 @@ export default function DynamicSubtitleEngine({
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-xl">
         <h3 className="text-sm font-black text-gray-900 dark:text-[var(--text-main)] mb-4 uppercase tracking-[2px] flex items-center gap-2">
           <Palette className="w-4 h-4 text-indigo-500" />
-          Aesthetic Presets
+          {t('dynamicSubtitleEngine.aestheticPresets')}
         </h3>
         <div className="grid grid-cols-3 gap-3">
           {PRESETS.map(preset => (
@@ -230,7 +240,7 @@ export default function DynamicSubtitleEngine({
               <span className={`text-lg uppercase tracking-tighter ${preset.font} ${
                 activePreset.id === preset.id ? 'text-indigo-500' : 'text-gray-400'
               }`}>Aa</span>
-              <span className="text-[9px] font-black uppercase text-gray-500">{preset.name}</span>
+              <span className="text-[9px] font-black uppercase text-gray-500">{presetName(preset.id)}</span>
             </button>
           ))}
         </div>
@@ -240,22 +250,24 @@ export default function DynamicSubtitleEngine({
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-indigo-400" />
             <div>
-              <p className="text-[10px] font-black text-white uppercase">Smart Dodge</p>
+              <p className="text-[10px] font-black text-white uppercase">{t('dynamicSubtitleEngine.smartDodge')}</p>
               <p className="text-[9px] text-slate-500">
-                {isDetecting ? '⚡ Detecting faces…' : 'Captions avoid faces & objects'}
+                {isDetecting ? t('dynamicSubtitleEngine.detectingFaces') : t('dynamicSubtitleEngine.captionsAvoid')}
               </p>
             </div>
             {internalZones.length > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-[8px] font-black text-indigo-400">
-                {internalZones.length} zone{internalZones.length !== 1 ? 's' : ''}
+                {internalZones.length === 1
+                  ? t('dynamicSubtitleEngine.zoneCount', { count: internalZones.length })
+                  : t('dynamicSubtitleEngine.zoneCountPlural', { count: internalZones.length })}
               </span>
             )}
           </div>
           <button
             type="button"
             onClick={() => setSmartDodgeActive(v => !v)}
-            title="Toggle Smart Dodge"
-            aria-label="Toggle Smart Dodge face avoidance"
+            title={t('dynamicSubtitleEngine.toggleSmartDodge')}
+            aria-label={t('dynamicSubtitleEngine.toggleSmartDodgeAria')}
             className="flex items-center gap-1 text-indigo-400"
           >
             {smartDodgeActive
@@ -271,9 +283,9 @@ export default function DynamicSubtitleEngine({
             <div className="flex items-center gap-2">
               <Mic className="w-4 h-4 text-rose-400" />
               <div>
-                <p className="text-[10px] font-black text-white uppercase">Vocal Intensity</p>
+                <p className="text-[10px] font-black text-white uppercase">{t('dynamicSubtitleEngine.vocalIntensity')}</p>
                 <p className="text-[9px] text-slate-500">
-                  {isShouting ? '🔥 Shouting — text enlarged' : isWhispering ? '🤫 Whispering — text reduced' : 'Normal'}
+                  {isShouting ? t('dynamicSubtitleEngine.shouting') : isWhispering ? t('dynamicSubtitleEngine.whispering') : t('dynamicSubtitleEngine.normal')}
                 </p>
               </div>
             </div>
@@ -300,7 +312,7 @@ export default function DynamicSubtitleEngine({
         {internalZones.map((zone, i) => (
           <div
             key={i}
-            title={zone.label ?? 'Detection zone'}
+            title={zone.label ?? t('dynamicSubtitleEngine.detectionZone')}
             className={`absolute border border-dashed border-indigo-500/50 rounded pointer-events-none ${styles.zoneOverlay}`}
             style={{ '--zone-x': `${zone.x}%`, '--zone-y': `${zone.y}%`, '--zone-w': `${zone.w}%`, '--zone-h': `${zone.h}%` } as DynStyle}
           >
@@ -371,12 +383,12 @@ export default function DynamicSubtitleEngine({
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
           <p className="text-[8px] font-black text-white/50 uppercase tracking-widest flex items-center gap-2">
             <Zap className="w-3 h-3 text-yellow-400" />
-            Real-time Subtitle Engine
+            {t('dynamicSubtitleEngine.realtimeEngine')}
             {smartDodgeActive && (
               <>
                 <span className="text-white/20">·</span>
                 <Eye className="w-3 h-3 text-indigo-400" />
-                Smart Dodge {isDetecting ? '⚡' : 'Active'}
+                {t('dynamicSubtitleEngine.smartDodge')} {isDetecting ? '⚡' : t('dynamicSubtitleEngine.active')}
               </>
             )}
           </p>
@@ -386,17 +398,19 @@ export default function DynamicSubtitleEngine({
       {/* Engine Controls */}
       <div className="grid grid-cols-2 gap-4">
         <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
-          <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block tracking-widest">Global Font</label>
+          <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block tracking-widest">{t('dynamicSubtitleEngine.globalFont')}</label>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-900 dark:text-white uppercase">Inter Black Italics</span>
             <FontIcon className="w-4 h-4 text-gray-400" />
           </div>
         </div>
         <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
-          <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block tracking-widest">Caption Y Position</label>
+          <label className="text-[10px] font-black text-gray-500 uppercase mb-2 block tracking-widest">{t('dynamicSubtitleEngine.captionYPosition')}</label>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-900 dark:text-white uppercase">
-              {internalZones.length > 0 ? `Dodging — ${Math.round(captionY)}%` : `Default — ${Math.round(captionY)}%`}
+              {internalZones.length > 0
+                ? t('dynamicSubtitleEngine.dodgingPosition', { pct: Math.round(captionY) })
+                : t('dynamicSubtitleEngine.defaultPosition', { pct: Math.round(captionY) })}
             </span>
             <Layout className="w-4 h-4 text-gray-400" />
           </div>

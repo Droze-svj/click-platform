@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import LoadingSpinner from './LoadingSpinner'
 import ErrorAlert from './ErrorAlert'
 import {
@@ -45,6 +46,7 @@ const itemVariants = {
 }
 
 export default function DashboardOverview() {
+  const { t } = useTranslation()
   const [stats, setStats] = useState<any>(null)
   const [overview, setOverview] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -68,7 +70,7 @@ export default function DashboardOverview() {
       setOverview(overviewResponse.overview)
     } catch (err: any) {
       console.error('Failed to load dashboard data:', err)
-      setError(err.message || 'Failed to sync with Click Cloud')
+      setError(err.message || t('dashboardOverview.syncError'))
     } finally {
       setLoading(false)
     }
@@ -83,7 +85,7 @@ export default function DashboardOverview() {
             <Zap className="w-6 h-6 text-indigo-400" />
           </div>
         </div>
-        <span className="text-slate-400 font-bold uppercase tracking-widest text-xs">Synchronizing Intelligence</span>
+        <span className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('dashboardOverview.synchronizing')}</span>
       </div>
     )
   }
@@ -94,9 +96,9 @@ export default function DashboardOverview() {
         <div className="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
           <ShieldCheck className="w-6 h-6" />
         </div>
-        <h3 className="text-xl font-bold text-[var(--text-main)]">Connection Interrupted</h3>
+        <h3 className="text-xl font-bold text-[var(--text-main)]">{t('dashboardOverview.connectionInterrupted')}</h3>
         <p className="text-rose-200/60 text-sm max-w-sm mx-auto">{error}</p>
-        <button type="button" onClick={loadDashboardData} className="px-6 py-2 bg-rose-600 text-white rounded-xl font-bold text-sm">Retry Sync</button>
+        <button type="button" onClick={loadDashboardData} className="px-6 py-2 bg-rose-600 text-white rounded-xl font-bold text-sm">{t('dashboardOverview.retrySync')}</button>
       </div>
     )
   }
@@ -122,23 +124,23 @@ export default function DashboardOverview() {
               <div className="space-y-6 text-center md:text-left">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-black uppercase tracking-widest">
                   <Sparkles className="w-3 h-3" />
-                  Elite Access Active
+                  {t('dashboardOverview.eliteAccessActive')}
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-[var(--text-main)]">
-                  Welcome back, <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{overview.user.name.split(' ')[0]}</span>.
+                  {t('dashboardOverview.welcomeBack')} <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{overview.user.name.split(' ')[0]}</span>.
                 </h1>
                 <p className="text-slate-400 text-lg md:text-xl font-medium max-w-xl">
-                  Your autonomous ecosystem is performing perfectly. Engagement is <span className="text-emerald-400 font-bold">up 14.2%</span> since your last visit.
+                  {t('dashboardOverview.ecosystemPerformingPrefix')} <span className="text-emerald-400 font-bold">{t('dashboardOverview.engagementUp', { percent: '14.2%' })}</span> {t('dashboardOverview.sinceLastVisit')}
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                   <span className="px-5 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-widest flex items-center gap-2">
                     <CheckCircle2 className="w-3 h-3" />
-                    Verified Domain
+                    {t('dashboardOverview.verifiedDomain')}
                   </span>
                   <span className="px-5 py-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-black uppercase tracking-widest flex items-center gap-2">
                     <ShieldCheck className="w-3 h-3" />
-                    Enterprise Safe
+                    {t('dashboardOverview.enterpriseSafe')}
                   </span>
                 </div>
               </div>
@@ -146,11 +148,11 @@ export default function DashboardOverview() {
               <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                 <button className="flex flex-col items-center justify-center p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
                   <Plus className="w-8 h-8 text-indigo-400 mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-black text-white uppercase tracking-widest">New Content</span>
+                  <span className="text-xs font-black text-white uppercase tracking-widest">{t('dashboardOverview.newContent')}</span>
                 </button>
                 <button className="flex flex-col items-center justify-center p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
                   <Calendar className="w-8 h-8 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-black text-white uppercase tracking-widest">Scheduler</span>
+                  <span className="text-xs font-black text-white uppercase tracking-widest">{t('dashboardOverview.scheduler')}</span>
                 </button>
               </div>
             </div>
@@ -162,10 +164,10 @@ export default function DashboardOverview() {
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Intelligence Core', value: stats.postsCount, sub: 'Optimized Posts', icon: <FileText className="text-indigo-400" />, color: 'indigo' },
-            { label: 'Brand Reach', value: stats.followersCount.toLocaleString(), sub: 'Global Audience', icon: <Users className="text-blue-400" />, color: 'blue' },
-            { label: 'Engagement Velocity', value: `${stats.engagementRate}%`, sub: 'Above Benchmark', icon: <TrendingUp className="text-emerald-400" />, color: 'emerald' },
-            { label: 'Retention Health', value: stats.trialDaysLeft, sub: 'Days Remaining', icon: <Clock className="text-amber-400" />, color: 'amber' }
+            { label: t('dashboardOverview.intelligenceCore'), value: stats.postsCount, sub: t('dashboardOverview.optimizedPosts'), icon: <FileText className="text-indigo-400" />, color: 'indigo' },
+            { label: t('dashboardOverview.brandReach'), value: stats.followersCount.toLocaleString(), sub: t('dashboardOverview.globalAudience'), icon: <Users className="text-blue-400" />, color: 'blue' },
+            { label: t('dashboardOverview.engagementVelocity'), value: `${stats.engagementRate}%`, sub: t('dashboardOverview.aboveBenchmark'), icon: <TrendingUp className="text-emerald-400" />, color: 'emerald' },
+            { label: t('dashboardOverview.retentionHealth'), value: stats.trialDaysLeft, sub: t('dashboardOverview.daysRemaining'), icon: <Clock className="text-amber-400" />, color: 'amber' }
           ].map((s, i) => (
             <motion.div
               key={i}
@@ -204,7 +206,7 @@ export default function DashboardOverview() {
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                   <Zap className="w-5 h-5 text-indigo-400" />
-                  <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Direct Operations</h2>
+                  <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">{t('dashboardOverview.directOperations')}</h2>
                 </div>
                 <button className="p-3 rounded-2xl bg-white/5 text-slate-500">
                   <MoreHorizontal className="w-5 h-5" />
@@ -234,13 +236,13 @@ export default function DashboardOverview() {
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                   <Activity className="w-5 h-5 text-emerald-400" />
-                  <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Intelligence Log</h2>
+                  <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">{t('dashboardOverview.intelligenceLog')}</h2>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-3">
                     {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-[#050505] bg-slate-800" />)}
                   </div>
-                  <span className="text-xs font-bold text-slate-500 text-xs">8 Online</span>
+                  <span className="text-xs font-bold text-slate-500 text-xs">{t('dashboardOverview.online', { count: 8 })}</span>
                 </div>
               </div>
 

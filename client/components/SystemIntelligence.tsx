@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useToast } from '../contexts/ToastContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface QueueStat {
   name: string;
@@ -34,6 +35,7 @@ export default function SystemIntelligence() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const fetchStats = useCallback(async (isSilent = false) => {
     if (!isSilent) setIsRefreshing(true);
@@ -47,7 +49,7 @@ export default function SystemIntelligence() {
       if (data.success) {
         setStats(data.stats);
       } else {
-        showToast('Failed to fetch system metrics', 'error');
+        showToast(t('systemIntelligence.failedToFetchMetrics'), 'error');
       }
     } catch (err) {
       console.error('Error fetching queue stats:', err);
@@ -66,10 +68,10 @@ export default function SystemIntelligence() {
   const handleRetryAll = async (queueName: string) => {
     // In a real implementation, we would have a 'retry-all' endpoint
     // For now, we'll notify that we are initiating recovery
-    showToast(`Initiating recovery protocol for ${queueName}...`, 'info');
+    showToast(t('systemIntelligence.initiatingRecovery', { queueName }), 'info');
     // Simulate API call
     setTimeout(() => {
-      showToast(`Recovery sequence queued for ${queueName}`, 'success');
+      showToast(t('systemIntelligence.recoveryQueued', { queueName }), 'success');
       fetchStats();
     }, 1500);
   };
@@ -93,17 +95,17 @@ export default function SystemIntelligence() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-[var(--text-main)] flex items-center gap-3">
             <Zap className="text-amber-500 fill-amber-500 w-8 h-8" />
-            System Intelligence
+            {t('systemIntelligence.title')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Real-time telemetry for the Sovereign Neural Engine & Distribution Workers.
+            {t('systemIntelligence.subtitle')}
           </p>
         </div>
         
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="px-3 py-1 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-200 dark:border-slate-800">
             <Database className="w-3.5 h-3.5 mr-2 text-blue-500" />
-            Redis Health: <span className="text-green-500 ml-1 font-bold">Optimal</span>
+            {t('systemIntelligence.redisHealth')} <span className="text-green-500 ml-1 font-bold">{t('systemIntelligence.optimal')}</span>
           </Badge>
           <Button 
             variant="outline" 
@@ -112,7 +114,7 @@ export default function SystemIntelligence() {
             className="bg-white dark:bg-slate-900 h-9 px-3 py-1"
           >
             <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
-            {isRefreshing ? 'Syncing...' : 'Sync Now'}
+            {isRefreshing ? t('systemIntelligence.syncing') : t('systemIntelligence.syncNow')}
           </Button>
         </div>
       </div>
@@ -130,7 +132,7 @@ export default function SystemIntelligence() {
                   variant={queue.failed > 0 ? "destructive" : "secondary"}
                   className="rounded-full px-2 py-0.5 text-[10px]"
                 >
-                  {queue.active > 0 ? 'ACTIVE' : 'IDLE'}
+                  {queue.active > 0 ? t('systemIntelligence.statusActive') : t('systemIntelligence.statusIdle')}
                 </Badge>
               </div>
             </CardHeader>
@@ -138,25 +140,25 @@ export default function SystemIntelligence() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" /> Waiting
+                    <Clock className="w-3 h-3" /> {t('systemIntelligence.waiting')}
                   </p>
                   <p className="text-2xl font-bold">{queue.waiting}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                    <Activity className="w-3 h-3" /> Processing
+                    <Activity className="w-3 h-3" /> {t('systemIntelligence.processing')}
                   </p>
                   <p className="text-2xl font-bold text-blue-500">{queue.active}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3" /> Completed
+                    <CheckCircle2 className="w-3 h-3" /> {t('systemIntelligence.completed')}
                   </p>
                   <p className="text-2xl font-bold text-green-500">{queue.completed}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                    <AlertCircle className="w-3 h-3" /> Failed
+                    <AlertCircle className="w-3 h-3" /> {t('systemIntelligence.failed')}
                   </p>
                   <p className="text-2xl font-bold text-rose-500">{queue.failed}</p>
                 </div>
@@ -165,7 +167,7 @@ export default function SystemIntelligence() {
               <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex justify-between text-[10px] text-slate-400 mb-1 font-medium">
-                    <span>THROUGHPUT</span>
+                    <span>{t('systemIntelligence.throughput')}</span>
                     <span>{queue.total > 0 ? Math.round((queue.completed / queue.total) * 100) : 0}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -181,7 +183,7 @@ export default function SystemIntelligence() {
                     variant="ghost" 
                     className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 p-0"
                     onClick={() => handleRetryAll(queue.name)}
-                    title="Retry all failed jobs"
+                    title={t('systemIntelligence.retryAllFailed')}
                   >
                     <RotateCcw className="w-4 h-4" />
                   </Button>
@@ -197,7 +199,7 @@ export default function SystemIntelligence() {
           <CardHeader>
             <CardTitle className="text-lg font-bold flex items-center gap-2">
               <Cpu className="w-5 h-5 text-indigo-500" />
-              Node Topology
+              {t('systemIntelligence.nodeTopology')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -210,10 +212,10 @@ export default function SystemIntelligence() {
                   )} />
                   <div className="flex-1">
                     <p className="text-[10px] font-bold text-slate-400">{node}</p>
-                    <p className="text-xs font-medium">Worker Instance #{i + 101}</p>
+                    <p className="text-xs font-medium">{t('systemIntelligence.workerInstance', { num: i + 101 })}</p>
                   </div>
                   <Badge variant="outline" className="text-[10px] h-5">
-                    {i === 3 ? 'WARMING' : 'STABLE'}
+                    {i === 3 ? t('systemIntelligence.warming') : t('systemIntelligence.stable')}
                   </Badge>
                 </div>
               ))}

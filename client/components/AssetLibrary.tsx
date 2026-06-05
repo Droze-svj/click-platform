@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { apiGet, apiPost, apiDelete } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Asset {
   _id?: string
@@ -99,6 +100,7 @@ export default function AssetLibrary({
   currentTime = 0,
   videoDuration = 0
 }: AssetLibraryProps) {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const [assets, setAssets] = useState<Asset[]>([])
   const [loading, setLoading] = useState(false)
@@ -215,7 +217,7 @@ export default function AssetLibrary({
       }
     } catch (error) {
       console.error('Failed to load assets:', error)
-      showToast('Neural repository sync failed', 'error')
+      showToast(t('assetLibrary.repositorySyncFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -237,17 +239,17 @@ export default function AssetLibrary({
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         if (res.success) {
-          showToast('Waveform digitized and uploaded', 'success')
+          showToast(t('assetLibrary.waveformUploaded'), 'success')
           const newAsset = { ...res.data, isUserUpload: true };
           setAssets(prev => [newAsset, ...prev]);
         }
       } else {
-        showToast(`${type.toUpperCase()} node successfully synchronized`, 'success')
+        showToast(t('assetLibrary.nodeSynchronized', { type: type.toUpperCase() }), 'success')
         loadAssets()
       }
     } catch (error) {
       console.error('Upload failed:', error)
-      showToast(`Neural intake failed for ${type}`, 'error')
+      showToast(t('assetLibrary.intakeFailed', { type }), 'error')
     } finally {
       setUploading(false)
     }
@@ -353,10 +355,10 @@ export default function AssetLibrary({
           <div className="space-y-4">
             <div className={`inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-${currentTheme.accent}/10 border border-${currentTheme.accent}/20 text-${currentTheme.accent} text-[9px] font-black uppercase tracking-[0.4em]`}>
               <Orbit className="w-3.5 h-3.5 animate-spin-slow" />
-              Repository Indexer
+              {t('assetLibrary.repositoryIndexer')}
             </div>
             <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter flex items-center gap-4">
-              Intelligence Library
+              {t('assetLibrary.intelligenceLibrary')}
             </h3>
           </div>
 
@@ -365,7 +367,7 @@ export default function AssetLibrary({
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-white transition-colors" />
               <input
                 type="text"
-                placeholder="Analyze repository..."
+                placeholder={t('assetLibrary.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all font-medium text-sm"
@@ -400,7 +402,7 @@ export default function AssetLibrary({
               {type === 'favorites' && <Star className="w-3.5 h-3.5" />}
               {type === 'recent' && <History className="w-3.5 h-3.5" />}
               {type === 'uploads' && <Upload className="w-3.5 h-3.5" />}
-              {type === 'favorites' ? 'Favorites' : type === 'recent' ? 'Recent' : type === 'uploads' ? 'My Nodes' : type}
+              {type === 'favorites' ? t('assetLibrary.categoryFavorites') : type === 'recent' ? t('assetLibrary.categoryRecent') : type === 'uploads' ? t('assetLibrary.categoryMyNodes') : type}
             </button>
           ))}
         </div>
@@ -408,9 +410,9 @@ export default function AssetLibrary({
         {/* Digital Intake Area */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[
-            { type: 'music', label: 'DIGITIZE WAVEFORM', color: 'bg-blue-600', icon: Music },
-            { type: 'image', label: 'SYNCHRONIZE VISUALS', color: 'bg-emerald-600', icon: ImageIcon },
-            { type: 'broll', label: 'INDEX REPOSITORY', color: 'bg-purple-600', icon: Video }
+            { type: 'music', label: t('assetLibrary.uploadDigitizeWaveform'), color: 'bg-blue-600', icon: Music },
+            { type: 'image', label: t('assetLibrary.uploadSynchronizeVisuals'), color: 'bg-emerald-600', icon: ImageIcon },
+            { type: 'broll', label: t('assetLibrary.uploadIndexRepository'), color: 'bg-purple-600', icon: Video }
           ].map((upload, idx) => (
             <label key={idx} className="block group">
               <input
@@ -446,7 +448,7 @@ export default function AssetLibrary({
             >
               <Cpu className="w-10 h-10 text-indigo-400" />
             </motion.div>
-            <div className={`text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] animate-pulse`}>Analyzing Neural Strands...</div>
+            <div className={`text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] animate-pulse`}>{t('assetLibrary.analyzingStrands')}</div>
           </div>
         ) : filteredAssets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-96 text-center space-y-6">
@@ -454,8 +456,8 @@ export default function AssetLibrary({
               <Sparkles className="w-10 h-10 text-slate-700" />
             </div>
             <div className="space-y-2">
-              <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight">Repository Empty</h4>
-              <p className="text-slate-500 text-sm font-medium">Synchronize new neural nodes to populate your library.</p>
+              <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight">{t('assetLibrary.repositoryEmpty')}</h4>
+              <p className="text-slate-500 text-sm font-medium">{t('assetLibrary.repositoryEmptyDescription')}</p>
             </div>
           </div>
         ) : viewMode === 'grid' ? (
@@ -542,7 +544,7 @@ export default function AssetLibrary({
                           e.stopPropagation()
                           onAddToTimeline(asset, currentTime)
                           addToRecent(asset)
-                          showToast('Asset integrated into timeline', 'success')
+                          showToast(t('assetLibrary.assetIntegratedTimeline'), 'success')
                         }}
                         className={`w-12 h-12 bg-indigo-600 hover:bg-indigo-500 rounded-2xl flex items-center justify-center text-white border border-white/20 transition-all shadow-[0_0_30px_rgba(99,102,241,0.5)]`}
                       >
@@ -559,7 +561,7 @@ export default function AssetLibrary({
                     </div>
                     {!(asset as any).isUserUpload && (
                       <div className="bg-indigo-600/90 text-[8px] font-black text-white px-2 py-1 rounded-lg uppercase tracking-tighter shadow-lg backdrop-blur-md self-start border border-white/10">
-                        NEURAL NODE
+                        {t('assetLibrary.neuralNode')}
                       </div>
                     )}
                   </div>
@@ -568,7 +570,7 @@ export default function AssetLibrary({
                 {/* Info Area */}
                 <div className="p-6 space-y-3">
                   <h4 className="text-lg font-black text-[var(--text-main)] tracking-tight italic truncate group-hover:text-indigo-400 transition-colors">
-                    {asset.title || 'UNTITLED NODE'}
+                    {asset.title || t('assetLibrary.untitledNode')}
                   </h4>
                   <div className="flex items-center justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest">
                     <div className="flex items-center gap-2">
@@ -577,7 +579,7 @@ export default function AssetLibrary({
                     </div>
                     <div className="flex items-center gap-2 group-hover:text-slate-300 transition-colors">
                       <Fingerprint className="w-3.5 h-3.5" />
-                      ID: {asset.id?.slice(-4)}
+                      {t('assetLibrary.idLabel')} {asset.id?.slice(-4)}
                     </div>
                   </div>
                 </div>
@@ -601,12 +603,12 @@ export default function AssetLibrary({
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
                   <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight group-hover:text-indigo-400 transition-colors">
-                    {asset.title || 'UNTITLED NODE'}
+                    {asset.title || t('assetLibrary.untitledNode')}
                   </h4>
                   <div className="flex items-center gap-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">
                     <span className="flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> {formatDuration(asset.duration)}</span>
                     <span className="flex items-center gap-2"><Cpu className="w-3.5 h-3.5" /> {asset.type}</span>
-                    <span className="opacity-40">{asset.artist || 'NEURAL GENERATED'}</span>
+                    <span className="opacity-40">{asset.artist || t('assetLibrary.neuralGenerated')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -619,7 +621,7 @@ export default function AssetLibrary({
                       onClick={(e) => {
                         e.stopPropagation()
                         onAddToTimeline(asset, currentTime)
-                        showToast('Asset integrated', 'success')
+                        showToast(t('assetLibrary.assetIntegrated'), 'success')
                       }}
                       className="p-3.5 bg-indigo-600 text-white rounded-xl shadow-xl shadow-indigo-500/20 hover:scale-110 transition-all"
                     >
@@ -648,8 +650,8 @@ export default function AssetLibrary({
                 <div className="absolute inset-0 bg-indigo-500/20 blur-[10px] rounded-full" />
               </div>
               <div className="space-y-1">
-                <div className="text-[11px] font-black text-white uppercase tracking-widest leading-none">Neural Intake Active</div>
-                <div className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">Digitizing Repository Strands...</div>
+                <div className="text-[11px] font-black text-white uppercase tracking-widest leading-none">{t('assetLibrary.intakeActive')}</div>
+                <div className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">{t('assetLibrary.digitizingStrands')}</div>
               </div>
             </div>
           </motion.div>
@@ -685,12 +687,12 @@ export default function AssetLibrary({
                   ) : (
                     <div className="text-white relative z-10 flex flex-col items-center gap-6">
                       <Play className="w-20 h-20 opacity-20" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600">Neural Player Node</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600">{t('assetLibrary.neuralPlayerNode')}</span>
                     </div>
                   )}
                 </div>
                 <div className="flex justify-end gap-6 pt-4">
-                  <button className="px-10 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest text-xs shadow-3xl shadow-indigo-600/30 border border-white/10">Integrate Into Workspace</button>
+                  <button className="px-10 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest text-xs shadow-3xl shadow-indigo-600/30 border border-white/10">{t('assetLibrary.integrateIntoWorkspace')}</button>
                 </div>
               </div>
             </motion.div>

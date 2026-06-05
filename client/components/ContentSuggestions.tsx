@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiGet } from '../lib/api'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ContentIdea {
   title: string
@@ -14,6 +15,7 @@ interface ContentIdea {
 }
 
 export default function ContentSuggestions() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { showToast } = useToast()
   const [ideas, setIdeas] = useState<ContentIdea[]>([])
@@ -47,7 +49,7 @@ export default function ContentSuggestions() {
         setTrending(trendingRes)
       }
     } catch (error) {
-      showToast('Failed to load suggestions', 'error')
+      showToast(t('contentSuggestions.loadFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -65,13 +67,13 @@ export default function ContentSuggestions() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">💡 Content Suggestions</h2>
+        <h2 className="text-xl font-semibold">{t('contentSuggestions.title')}</h2>
         <button
           type="button"
           onClick={loadSuggestions}
           className="text-sm text-purple-600 hover:text-purple-800"
         >
-          Refresh
+          {t('contentSuggestions.refresh')}
         </button>
       </div>
 
@@ -85,7 +87,7 @@ export default function ContentSuggestions() {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          Daily Ideas
+          {t('contentSuggestions.tabDailyIdeas')}
         </button>
         <button
           type="button"
@@ -96,7 +98,7 @@ export default function ContentSuggestions() {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          Content Gaps
+          {t('contentSuggestions.tabContentGaps')}
         </button>
         <button
           type="button"
@@ -107,12 +109,12 @@ export default function ContentSuggestions() {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          Trending
+          {t('contentSuggestions.tabTrending')}
         </button>
       </div>
 
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading suggestions...</div>
+        <div className="text-center py-8 text-gray-500">{t('contentSuggestions.loading')}</div>
       ) : (
         <>
           {activeTab === 'ideas' && (
@@ -143,12 +145,12 @@ export default function ContentSuggestions() {
                     onClick={() => handleUseIdea(idea)}
                     className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
                   >
-                    Use This Idea
+                    {t('contentSuggestions.useThisIdea')}
                   </button>
                 </div>
               ))}
               {ideas.length === 0 && (
-                <div className="text-center py-8 text-gray-500">No ideas available</div>
+                <div className="text-center py-8 text-gray-500">{t('contentSuggestions.noIdeas')}</div>
               )}
             </div>
           )}
@@ -161,7 +163,7 @@ export default function ContentSuggestions() {
                     <div>
                       <p className="font-semibold capitalize">{gap.platform}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {gap.count} posts • {gap.recommendation}
+                        {t('contentSuggestions.gapPostsRecommendation', { count: gap.count, recommendation: gap.recommendation })}
                       </p>
                     </div>
                     <button
@@ -169,14 +171,14 @@ export default function ContentSuggestions() {
                       onClick={() => router.push(`/dashboard/content?platform=${gap.platform}`)}
                       className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
                     >
-                      Create
+                      {t('contentSuggestions.create')}
                     </button>
                   </div>
                 </div>
               ))}
               {gaps.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  Great! You&apos;re posting to all platforms regularly.
+                  {t('contentSuggestions.noGaps')}
                 </div>
               )}
             </div>
@@ -192,12 +194,12 @@ export default function ContentSuggestions() {
                 >
                   <div className="flex items-center justify-between">
                     <p className="font-medium">{topic}</p>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Trending</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{t('contentSuggestions.trendingBadge')}</span>
                   </div>
                 </div>
               ))}
               {trending.length === 0 && (
-                <div className="text-center py-8 text-gray-500">No trending topics available</div>
+                <div className="text-center py-8 text-gray-500">{t('contentSuggestions.noTrending')}</div>
               )}
             </div>
           )}

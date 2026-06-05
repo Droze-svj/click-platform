@@ -3,15 +3,16 @@
 import { useState, useEffect } from 'react'
 import { apiGet, apiPut } from '../lib/api'
 import { Bell, Mail, Smartphone, CheckCircle, Inbox, Filter } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_USER_SETTINGS = '/user/settings'
 
 const CHANNEL_KEYS = ['inApp', 'email'] as const
 const CATEGORY_KEYS = ['task', 'project', 'content', 'approval', 'mention', 'system', 'workflow'] as const
 const PRIORITY_OPTIONS = [
-  { value: 'all', label: 'All notifications' },
-  { value: 'high_medium', label: 'High & medium only' },
-  { value: 'high_only', label: 'High priority only' }
+  { value: 'all', labelKey: 'all' },
+  { value: 'high_medium', labelKey: 'highMedium' },
+  { value: 'high_only', labelKey: 'highOnly' }
 ] as const
 
 interface NotificationPreferencesProps {
@@ -45,6 +46,7 @@ const defaultCategories: Record<string, boolean> = {
 }
 
 export default function NotificationPreferences({ onUpdate }: NotificationPreferencesProps) {
+  const { t } = useTranslation()
   const [preferences, setPreferences] = useState<NotificationsShape>({
     email: true,
     push: true,
@@ -123,12 +125,12 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Bell className="w-5 h-5" />
-          Notification Preferences
+          {t('notificationPreferences.title')}
         </h3>
         {saved && (
           <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
             <CheckCircle className="w-4 h-4" />
-            Saved
+            {t('notificationPreferences.saved')}
           </span>
         )}
       </div>
@@ -137,11 +139,11 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         <section>
           <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2 flex items-center gap-2">
             <Inbox className="w-4 h-4" />
-            Channels
+            {t('notificationPreferences.channels')}
           </h4>
           <div className="space-y-2">
             <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <span className="text-sm">In-app</span>
+              <span className="text-sm">{t('notificationPreferences.inApp')}</span>
               <ToggleSwitch
                 enabled={channels.inApp !== false}
                 onChange={(val) => updateChannel('inApp', val)}
@@ -150,7 +152,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
             <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gray-500" />
-                <span className="text-sm">Email</span>
+                <span className="text-sm">{t('notificationPreferences.email')}</span>
               </div>
               <ToggleSwitch
                 enabled={channels.email !== false}
@@ -163,26 +165,27 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         <section>
           <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2 flex items-center gap-2">
             <Filter className="w-4 h-4" />
-            Priority
+            {t('notificationPreferences.priorityHeading')}
           </h4>
           <select
             value={preferences.priorityTiers || 'all'}
             onChange={(e) => setPreferences(prev => ({ ...prev, priorityTiers: e.target.value }))}
+            aria-label={t('notificationPreferences.priorityHeading')}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
           >
             {PRIORITY_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{t(`notificationPreferences.priority.${o.labelKey}`)}</option>
             ))}
           </select>
         </section>
 
         <section>
-          <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2">Categories</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Choose which types of updates you want.</p>
+          <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2">{t('notificationPreferences.categories')}</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('notificationPreferences.categoriesDescription')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {CATEGORY_KEYS.map(cat => (
               <div key={cat} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <span className="text-sm capitalize">{cat}</span>
+                <span className="text-sm capitalize">{t(`notificationPreferences.category.${cat}`)}</span>
                 <ToggleSwitch
                   enabled={categories[cat] !== false}
                   onChange={(val) => updateCategory(cat, val)}
@@ -195,8 +198,8 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         <section className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Content Ready</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">When your content is processed</p>
+              <p className="font-medium">{t('notificationPreferences.contentReady')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('notificationPreferences.contentReadyDescription')}</p>
             </div>
             <ToggleSwitch
               enabled={preferences.contentReady !== false}
@@ -205,8 +208,8 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Weekly Digest</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Weekly summary of your activity</p>
+              <p className="font-medium">{t('notificationPreferences.weeklyDigest')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('notificationPreferences.weeklyDigestDescription')}</p>
             </div>
             <ToggleSwitch
               enabled={!!preferences.weeklyDigest}
@@ -215,8 +218,8 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Achievements</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">When you unlock achievements</p>
+              <p className="font-medium">{t('notificationPreferences.achievements')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('notificationPreferences.achievementsDescription')}</p>
             </div>
             <ToggleSwitch
               enabled={preferences.achievements !== false}
@@ -225,8 +228,8 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Mentions</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">When you&apos;re mentioned</p>
+              <p className="font-medium">{t('notificationPreferences.mentions')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('notificationPreferences.mentionsDescription')}</p>
             </div>
             <ToggleSwitch
               enabled={preferences.mentions !== false}
@@ -235,8 +238,8 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Push</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Browser push notifications</p>
+              <p className="font-medium">{t('notificationPreferences.push')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('notificationPreferences.pushDescription')}</p>
             </div>
             <ToggleSwitch
               enabled={preferences.push !== false}
@@ -252,7 +255,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         disabled={saving}
         className="mt-6 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
       >
-        {saving ? 'Saving...' : 'Save Preferences'}
+        {saving ? t('notificationPreferences.saving') : t('notificationPreferences.savePreferences')}
       </button>
     </div>
   )

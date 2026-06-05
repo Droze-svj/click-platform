@@ -21,6 +21,7 @@ import {
   Type,
   X
 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface VideoFilter {
   brightness: number
@@ -75,6 +76,7 @@ interface VideoTemplatesProps {
 const LAST_TEMPLATE_KEY = 'click-video-last-template-id'
 
 export default function VideoTemplates({ onApplyTemplate, currentFilters }: VideoTemplatesProps) {
+  const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [personalizeId, setPersonalizeId] = useState<string | null>(null)
@@ -631,12 +633,12 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
   ]
 
   const categories = [
-    { id: 'all', name: 'All Templates', count: templates.length },
-    { id: 'social', name: 'Click Style', count: templates.filter(t => t.category === 'social').length },
-    { id: 'cinematic', name: 'Cinematic', count: templates.filter(t => t.category === 'cinematic').length },
-    { id: 'mood', name: 'Mood', count: templates.filter(t => t.category === 'mood').length },
-    { id: 'creative', name: 'Creative', count: templates.filter(t => t.category === 'creative').length },
-    { id: 'nature', name: 'Nature', count: templates.filter(t => t.category === 'nature').length }
+    { id: 'all', name: t('videoTemplates.categoryAll'), count: templates.length },
+    { id: 'social', name: t('videoTemplates.categoryClickStyle'), count: templates.filter(tpl => tpl.category === 'social').length },
+    { id: 'cinematic', name: t('videoTemplates.categoryCinematic'), count: templates.filter(tpl => tpl.category === 'cinematic').length },
+    { id: 'mood', name: t('videoTemplates.categoryMood'), count: templates.filter(tpl => tpl.category === 'mood').length },
+    { id: 'creative', name: t('videoTemplates.categoryCreative'), count: templates.filter(tpl => tpl.category === 'creative').length },
+    { id: 'nature', name: t('videoTemplates.categoryNature'), count: templates.filter(tpl => tpl.category === 'nature').length }
   ]
 
   const filteredTemplates = templates.filter(template => {
@@ -671,10 +673,10 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
         <div>
           <h3 className="font-bold text-xl text-gray-900 dark:text-[var(--text-main)] mb-1 flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-500" />
-            Professional Templates
+            {t('videoTemplates.title')}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Click-style templates for viral content
+            {t('videoTemplates.subtitle')}
           </p>
         </div>
         <div className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-xs font-semibold">
@@ -686,7 +688,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Search templates..."
+          placeholder={t('videoTemplates.searchPlaceholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
@@ -715,19 +717,20 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm">
           <div className="w-96 h-full bg-white dark:bg-gray-900 shadow-2xl p-8 transform transition-transform duration-500 animate-slide-in-right border-l border-purple-500/20">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="font-bold text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Personalize Design</h3>
-              <button type="button" onClick={() => setPersonalizeId(null)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X className="w-6 h-6" /></button>
+              <h3 className="font-bold text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{t('videoTemplates.personalizeDesign')}</h3>
+              <button type="button" onClick={() => setPersonalizeId(null)} title={t('videoTemplates.close')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X className="w-6 h-6" /></button>
             </div>
 
             <div className="space-y-8">
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Primary Brand Color</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">{t('videoTemplates.primaryBrandColor')}</label>
                 <div className="flex flex-wrap gap-3 mb-4">
                   {['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#000000', '#FFFFFF'].map(color => (
                     <button
                       type="button"
                       key={color}
                       onClick={() => setCustomColor(color)}
+                      title={t('videoTemplates.selectColor', { color })}
                       className={`w-10 h-10 rounded-xl border-2 transition-all transform hover:scale-110 ${customColor === color ? 'border-purple-500 ring-4 ring-purple-500/20' : 'border-transparent shadow-md'}`}
                       style={{ backgroundColor: color }}
                     />
@@ -737,12 +740,14 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                   type="color"
                   value={customColor}
                   onChange={(e) => setCustomColor(e.target.value)}
+                  title={t('videoTemplates.customColorLabel')}
+                  aria-label={t('videoTemplates.customColorLabel')}
                   className="w-full h-12 rounded-xl cursor-pointer bg-gray-50 border-none px-1"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Typography / Font</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">{t('videoTemplates.typographyFont')}</label>
                 <div className="space-y-2">
                   {['Inter', 'Impact', 'Montserrat', 'Playfair Display', 'Oswald', 'Roboto'].map(font => (
                     <button
@@ -752,7 +757,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                       className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all ${customFont === font ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 shadow-lg' : 'border-gray-100 dark:border-gray-800 hover:border-purple-200 dark:hover:border-purple-800'}`}
                       style={{ fontFamily: font }}
                     >
-                      {font} Selection
+                      {t('videoTemplates.fontSelection', { font })}
                     </button>
                   ))}
                 </div>
@@ -762,14 +767,14 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                 <button
                   type="button"
                   onClick={() => {
-                    const template = templates.find(t => t.id === personalizeId);
+                    const template = templates.find(tpl => tpl.id === personalizeId);
                     if (template) applyTemplate(template);
                     setPersonalizeId(null);
                   }}
                   className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-purple-500/20 hover:shadow-purple-500/40 transition-all transform hover:scale-102 flex items-center justify-center gap-2"
                 >
                   <Zap className="w-5 h-5 fill-white" />
-                  Save & Apply to Video
+                  {t('videoTemplates.saveApply')}
                 </button>
               </div>
             </div>
@@ -791,7 +796,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                 onClick={(e) => { e.stopPropagation(); applyTemplate(template); }}
                 className="px-4 py-2 bg-white text-gray-900 rounded-xl font-bold hover:bg-gray-100 transition-all"
               >
-                Quick Apply
+                {t('videoTemplates.quickApply')}
               </button>
               <button
                 type="button"
@@ -799,7 +804,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                 className="px-4 py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-500 transition-all border border-purple-400 flex items-center gap-1.5"
               >
                 <Palette className="w-4 h-4" />
-                Personalize
+                {t('videoTemplates.personalize')}
               </button>
             </div>
 
@@ -811,7 +816,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
             )}
             {lastUsedId === template.id && (
               <div className="absolute top-3 left-3 px-2 py-1 bg-slate-600/90 text-white text-[10px] font-semibold rounded-full z-20">
-                Recently used
+                {t('videoTemplates.recentlyUsed')}
               </div>
             )}
 
@@ -841,17 +846,17 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
 
             <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                <span className="font-semibold">Perfect for:</span> {template.recommendedFor.slice(0, 2).join(', ')}
+                <span className="font-semibold">{t('videoTemplates.perfectFor')}</span> {template.recommendedFor.slice(0, 2).join(', ')}
                 {template.recommendedFor.length > 2 && ` +${template.recommendedFor.length - 2}`}
               </div>
               <div className="flex items-center justify-between">
-                <button className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm font-semibold rounded-lg transition-all transform group-hover:scale-105 shadow-md">
-                  Apply Template
+                <button type="button" className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm font-semibold rounded-lg transition-all transform group-hover:scale-105 shadow-md">
+                  {t('videoTemplates.applyTemplate')}
                 </button>
                 {template.textOverlays && template.textOverlays.length > 0 && (
                   <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
                     <Type className="w-3 h-3" />
-                    Text Included
+                    {t('videoTemplates.textIncluded')}
                   </span>
                 )}
               </div>
@@ -863,8 +868,8 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
       {filteredTemplates.length === 0 && (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <Palette className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No templates found matching your criteria</p>
-          <p className="text-sm mt-1">Try adjusting your search or category filter</p>
+          <p>{t('videoTemplates.noTemplatesFound')}</p>
+          <p className="text-sm mt-1">{t('videoTemplates.noTemplatesHint')}</p>
         </div>
       )}
     </div>

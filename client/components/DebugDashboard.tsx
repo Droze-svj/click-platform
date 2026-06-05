@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface DebugDashboardProps {
   isOpen: boolean
@@ -8,6 +9,7 @@ interface DebugDashboardProps {
 }
 
 export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps) {
+  const { t } = useTranslation()
   const [debugData, setDebugData] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState('overview')
   const [autoRefresh, setAutoRefresh] = useState(true)
@@ -92,7 +94,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
           borderBottom: '1px solid #e5e7eb'
         }}>
           <h2 style={{ fontSize: '20px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            🔍 Debug Dashboard
+            🔍 {t('debugDashboard.title')}
           </h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
@@ -106,7 +108,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
                 fontSize: '12px'
               }}
             >
-              {autoRefresh ? '👁️ Auto-refresh' : '👁️‍🗨️ Manual'}
+              {autoRefresh ? `👁️ ${t('debugDashboard.autoRefresh')}` : `👁️‍🗨️ ${t('debugDashboard.manual')}`}
             </button>
             <button
               type="button"
@@ -119,7 +121,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
                 fontSize: '12px'
               }}
             >
-              🔄 Refresh
+              🔄 {t('debugDashboard.refresh')}
             </button>
             <button
               type="button"
@@ -132,7 +134,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
                 fontSize: '12px'
               }}
             >
-              💾 Export
+              💾 {t('debugDashboard.export')}
             </button>
             <button
               type="button"
@@ -145,7 +147,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
                 fontSize: '12px'
               }}
             >
-              🗑️ Clear
+              🗑️ {t('debugDashboard.clear')}
             </button>
             <button
               type="button"
@@ -180,7 +182,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
                   textTransform: 'capitalize'
                 }}
               >
-                {tab}
+                {t(`debugDashboard.tab_${tab}`)}
               </button>
             ))}
           </div>
@@ -190,25 +192,25 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                 <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Total Events</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>{t('debugDashboard.totalEvents')}</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{debugData.length}</div>
                 </div>
                 <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>API Calls</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>{t('debugDashboard.apiCalls')}</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{apiCalls.length}</div>
                 </div>
                 <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Errors</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>{t('debugDashboard.errors')}</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'red' }}>{errors.length}</div>
                 </div>
                 <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>Performance</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>{t('debugDashboard.performance')}</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{performanceMetrics.length}</div>
                 </div>
               </div>
 
               <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Recent Events</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{t('debugDashboard.recentEvents')}</h3>
                 <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                   {debugData.slice(-10).reverse().map((event, index) => (
                     <div key={index} style={{
@@ -244,7 +246,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
 
           {activeTab === 'performance' && (
             <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Performance Metrics</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{t('debugDashboard.performanceMetrics')}</h3>
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {performanceMetrics.slice(-10).reverse().map((metric, index) => (
                   <div key={index} style={{
@@ -269,7 +271,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
 
           {activeTab === 'api' && (
             <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>API Call History</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{t('debugDashboard.apiCallHistory')}</h3>
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {apiCalls.slice(-10).reverse().map((call, index) => (
                   <div key={index} style={{
@@ -305,7 +307,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
 
           {activeTab === 'errors' && (
             <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Error Events</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{t('debugDashboard.errorEvents')}</h3>
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {errors.slice(-10).reverse().map((error, index) => (
                   <div key={index} style={{
@@ -333,7 +335,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
 
           {activeTab === 'components' && (
             <div style={{ padding: '16px', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Component Events</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{t('debugDashboard.componentEvents')}</h3>
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {componentEvents.slice(-10).reverse().map((event, index) => (
                   <div key={index} style={{

@@ -29,9 +29,16 @@ try { fs.mkdirSync(TUS_DIR, { recursive: true }); } catch { /* exists */ }
 const ALLOWED_EXT = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.m4v', '.mpg', '.mpeg', '.3gp'];
 const MAX_SIZE = parseInt(process.env.MAX_FILE_SIZE || '5368709120', 10); // 5GB
 
+// How long a partial/abandoned upload stays resumable before it can be swept.
+// This is the practical "resume window" — a user can close the tab and finish a
+// big upload within this period. Defaults to 24h. The generic temp sweep skips
+// the tus dir (see server/index.js) so only tus's own expiration governs it,
+// which removes by per-upload age and never touches an active/recent upload.
+const TUS_EXPIRY_MS = parseInt(process.env.TUS_EXPIRY_MS || '86400000', 10); // 24h
+
 const tusServer = new Server({
   path: '/api/upload/tus',
-  datastore: new FileStore({ directory: TUS_DIR }),
+  datastore: new FileStore({ directory: TUS_DIR, expirationPeriodInMilliseconds: TUS_EXPIRY_MS }),
   maxSize: MAX_SIZE,
   respectForwardedHeaders: true,
 
@@ -91,4 +98,24 @@ const tusServer = new Server({
   },
 });
 
-module.exports = { tusServer, TUS_DIR };
+/**
+ * Remove expired (abandoned) resumable uploads using tus's own per-upload
+ * expiration. Unlike a blunt directory sweep this only deletes uploads whose
+ * own age exceeds TUS_EXPIRY_MS, so active and recently-touched uploads — and
+ * anything still inside the resume window — are preserved. Safe to call on a
+ * timer; returns the number of uploads removed (0 if the store is empty or the
+ * datastore doesn't support expiration).
+ */
+async function cleanupExpiredTusUploads() {
+  try {
+    if (typeof tusServer.cleanUpExpiredUploads !== 'function') return 0;
+    const removed = await tusServer.cleanUpExpiredUploads();
+    if (removed > 0) logger.info('[tus] swept expired resumable uploads', { removed });
+    return removed || 0;
+  } catch (err) {
+    logger.warn('[tus] expired-upload sweep failed', { error: err.message });
+    return 0;
+  }
+}
+
+module.exports = { tusServer, TUS_DIR, cleanupExpiredTusUploads };

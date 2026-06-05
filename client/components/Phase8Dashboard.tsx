@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)]'
 const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] border'
@@ -47,6 +48,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
 // ─── A: Omni-Model Router Panel ────────────────────────────────────────────
 
 const OmniModelPanel = () => {
+  const { t } = useTranslation()
   const [models, setModels] = useState<any[]>([])
   const [routingDemo, setRoutingDemo] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -67,9 +69,9 @@ const OmniModelPanel = () => {
       ]
       const result = await apiPost('/phase8/omni-router/route', { scenes: demoScenes })
       setRoutingDemo(result.manifest)
-      showToast('Omni-Model routing complete', 'success')
+      showToast(t('phase8Dashboard.omniModelRoutingComplete'), 'success')
     } catch {
-      showToast('Demo routing failed', 'error')
+      showToast(t('phase8Dashboard.demoRoutingFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -85,7 +87,7 @@ const OmniModelPanel = () => {
 
   return (
     <div className={`${glass} p-10 space-y-8`}>
-      <SectionHeader icon={Cpu} title="Omni-Model Router" subtitle="Solve Model Lock-in // Best Model Per Scene" color="indigo" badge="NEW" />
+      <SectionHeader icon={Cpu} title={t('phase8Dashboard.omniModelRouterTitle')} subtitle={t('phase8Dashboard.omniModelRouterSubtitle')} color="indigo" badge={t('phase8Dashboard.newBadge')} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {models.map(model => (
@@ -100,8 +102,8 @@ const OmniModelPanel = () => {
               ))}
             </div>
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.05]">
-              <span className="text-[9px] text-slate-600 font-mono">${model.costPerSegment}/seg</span>
-              <span className="text-[9px] text-slate-600 font-mono">{(model.avgLatencyMs / 1000).toFixed(1)}s latency</span>
+              <span className="text-[9px] text-slate-600 font-mono">{t('phase8Dashboard.costPerSegment', { cost: model.costPerSegment })}</span>
+              <span className="text-[9px] text-slate-600 font-mono">{t('phase8Dashboard.latencySeconds', { seconds: (model.avgLatencyMs / 1000).toFixed(1) })}</span>
             </div>
           </div>
         ))}
@@ -110,20 +112,20 @@ const OmniModelPanel = () => {
       <button type="button" onClick={runDemoRoute} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-indigo-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <GitBranch className="w-4 h-4" />}
-        Run Demo Routing
+        {t('phase8Dashboard.runDemoRouting')}
       </button>
 
       <AnimatePresence>
         {routingDemo && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Routing Result</p>
+            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{t('phase8Dashboard.routingResult')}</p>
             <div className="grid gap-3">
               {routingDemo.scenes?.map((scene: any, i: number) => (
                 <div key={i} className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
                   <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-400">{i + 1}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-white font-bold truncate">{scene.originalScene?.description?.substring(0, 60)}...</p>
-                    <p className="text-[9px] text-slate-500 font-mono mt-0.5">Scene type: {scene.sceneType}</p>
+                    <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t('phase8Dashboard.sceneType', { type: scene.sceneType })}</p>
                   </div>
                   <div className={`${pill} ${modelColorMap[scene.assignedModel] || 'text-slate-400 border-slate-500/20'}`}>
                     {scene.modelLabel}
@@ -133,8 +135,8 @@ const OmniModelPanel = () => {
               ))}
             </div>
             <div className="flex gap-6 pt-4 border-t border-white/5">
-              <div><p className="text-[8px] text-slate-600 uppercase font-bold">Total Cost</p><p className="text-lg font-black text-white">${routingDemo.totalEstimatedCost?.toFixed(3)}</p></div>
-              <div><p className="text-[8px] text-slate-600 uppercase font-bold">Est. Latency</p><p className="text-lg font-black text-white">{(routingDemo.totalEstimatedLatencyMs / 1000).toFixed(0)}s</p></div>
+              <div><p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.totalCost')}</p><p className="text-lg font-black text-white">${routingDemo.totalEstimatedCost?.toFixed(3)}</p></div>
+              <div><p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.estLatency')}</p><p className="text-lg font-black text-white">{(routingDemo.totalEstimatedLatencyMs / 1000).toFixed(0)}s</p></div>
             </div>
           </motion.div>
         )}
@@ -146,6 +148,7 @@ const OmniModelPanel = () => {
 // ─── B: Spatial Memory Panel ───────────────────────────────────────────────
 
 const SpatialMemoryPanel = () => {
+  const { t } = useTranslation()
   const [ledger, setLedger] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const { showToast } = useToast()
@@ -163,9 +166,9 @@ const SpatialMemoryPanel = () => {
       }
       const result = await apiPost('/phase8/spatial/build', { script: demoScript, projectId: `demo_${Date.now()}` })
       setLedger(result.ledger)
-      showToast('Spatial Ledger built', 'success')
+      showToast(t('phase8Dashboard.spatialLedgerBuilt'), 'success')
     } catch {
-      showToast('Ledger build failed', 'error')
+      showToast(t('phase8Dashboard.ledgerBuildFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -175,18 +178,18 @@ const SpatialMemoryPanel = () => {
 
   return (
     <div className={`${glass} p-10 space-y-8`}>
-      <SectionHeader icon={Layers} title="Spatial Memory" subtitle="Narrative Continuity Ledger // Zero Scene Drift" color="purple" badge="2026 FIRST" />
+      <SectionHeader icon={Layers} title={t('phase8Dashboard.spatialMemoryTitle')} subtitle={t('phase8Dashboard.spatialMemorySubtitle')} color="purple" badge={t('phase8Dashboard.firstBadge')} />
 
       <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/15">
         <p className="text-xs text-slate-400 leading-relaxed italic">
-          <span className="text-purple-400 font-black not-italic">How it works:</span> Every prop, character trait, and lighting condition from Scene 1 is tracked in an invisible Spatial Ledger. Each subsequent scene generation prompt receives a continuity enforcement block &mdash; so the coffee cup doesn&apos;t vanish and the laptop stays consistent across all 4 camera angles.
+          <span className="text-purple-400 font-black not-italic">{t('phase8Dashboard.howItWorks')}</span> {t('phase8Dashboard.spatialMemoryDescription')}
         </p>
       </div>
 
       <button type="button" onClick={buildDemoLedger} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-purple-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
-        Build Demo Ledger
+        {t('phase8Dashboard.buildDemoLedger')}
       </button>
 
       <AnimatePresence>
@@ -195,21 +198,21 @@ const SpatialMemoryPanel = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
                 <p className="text-2xl font-black text-white">{ledger.scenes?.length || 0}</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Scenes Tracked</p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">{t('phase8Dashboard.scenesTracked')}</p>
               </div>
               <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
                 <p className="text-2xl font-black text-white">{Object.keys(ledger.globalEntities || {}).length}</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Global Entities</p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">{t('phase8Dashboard.globalEntities')}</p>
               </div>
               <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
                 <p className={`text-2xl font-black ${riskColor(ledger.riskScore || 0)}`}>{ledger.riskScore || 0}</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">Risk Score</p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">{t('phase8Dashboard.riskScore')}</p>
               </div>
             </div>
 
             {ledger.continuityLog?.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Continuity Enforcements</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('phase8Dashboard.continuityEnforcements')}</p>
                 {ledger.continuityLog.map((log: any, i: number) => (
                   <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
                     <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
@@ -229,6 +232,7 @@ const SpatialMemoryPanel = () => {
 // ─── C: AEO Metadata Panel ──────────────────────────────────────────────────
 
 const AEOMetadataPanel = () => {
+  const { t } = useTranslation()
   const [aeoData, setAeoData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [productName, setProductName] = useState('My SaaS Tool')
@@ -245,9 +249,9 @@ const AEOMetadataPanel = () => {
         creatorData: { name: 'Sovereign Creator', brandName: 'CLICK Agency' }
       })
       setAeoData(result.preview)
-      showToast('AEO Metadata built', 'success')
+      showToast(t('phase8Dashboard.aeoMetadataBuilt'), 'success')
     } catch {
-      showToast('AEO build failed', 'error')
+      showToast(t('phase8Dashboard.aeoBuildFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -255,28 +259,28 @@ const AEOMetadataPanel = () => {
 
   return (
     <div className={`${glass} p-10 space-y-8`}>
-      <SectionHeader icon={FileJson} title="AEO Metadata" subtitle="Answer Engine Optimization // AI-Agent Readable" color="emerald" badge="Zero-Click Commerce" />
+      <SectionHeader icon={FileJson} title={t('phase8Dashboard.aeoMetadataTitle')} subtitle={t('phase8Dashboard.aeoMetadataSubtitle')} color="emerald" badge={t('phase8Dashboard.zeroClickCommerceBadge')} />
 
       <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
         <p className="text-xs text-slate-400 leading-relaxed italic">
-          <span className="text-emerald-400 font-black not-italic">The advantage:</span> Every published video embeds Schema.org structured data, entity relationships, and pricing into its C2PA block. When someone asks ChatGPT &quot;what&apos;s the best SaaS tool for this?&quot;, your video is surfaced as a direct answer.
+          <span className="text-emerald-400 font-black not-italic">{t('phase8Dashboard.theAdvantage')}</span> {t('phase8Dashboard.aeoMetadataDescription')}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">Product Name</label>
-          <input id="aeo-product-name" title="Product Name" placeholder="My SaaS Tool" value={productName} onChange={e => setProductName(e.target.value)}
+          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">{t('phase8Dashboard.productName')}</label>
+          <input id="aeo-product-name" title={t('phase8Dashboard.productName')} placeholder={t('phase8Dashboard.productNamePlaceholder')} value={productName} onChange={e => setProductName(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
         </div>
         <div>
-          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">Price (USD)</label>
-          <input id="aeo-product-price" title="Price USD" placeholder="97" value={productPrice} onChange={e => setProductPrice(e.target.value)}
+          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">{t('phase8Dashboard.priceUsd')}</label>
+          <input id="aeo-product-price" title={t('phase8Dashboard.priceUsdTitle')} placeholder={t('phase8Dashboard.priceUsdPlaceholder')} value={productPrice} onChange={e => setProductPrice(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
         </div>
         <div>
-          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">CTA URL</label>
-          <input id="aeo-cta-url" title="CTA URL" placeholder="https://myproduct.com" value={ctaUrl} onChange={e => setCtaUrl(e.target.value)}
+          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">{t('phase8Dashboard.ctaUrl')}</label>
+          <input id="aeo-cta-url" title={t('phase8Dashboard.ctaUrl')} placeholder={t('phase8Dashboard.ctaUrlPlaceholder')} value={ctaUrl} onChange={e => setCtaUrl(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
         </div>
       </div>
@@ -284,19 +288,19 @@ const AEOMetadataPanel = () => {
       <button type="button" onClick={buildAEO} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-emerald-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-        Build AEO Metadata
+        {t('phase8Dashboard.buildAeoMetadata')}
       </button>
 
       <AnimatePresence>
         {aeoData && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
-              <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2">AI Agent Summary</p>
+              <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2">{t('phase8Dashboard.aiAgentSummary')}</p>
               <p className="text-sm text-white font-bold italic">&quot;{aeoData.summary}&quot;</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Key Facts (ChatGPT reads these)</p>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.keyFacts')}</p>
                 <div className="space-y-2">
                   {aeoData.keyFacts?.map((fact: string, i: number) => (
                     <div key={i} className="flex items-center gap-2 text-[10px] text-slate-300 font-bold">
@@ -306,7 +310,7 @@ const AEOMetadataPanel = () => {
                 </div>
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Targeted Query Hooks</p>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.targetedQueryHooks')}</p>
                 <div className="space-y-2">
                   {aeoData.queryTargets?.map((q: string, i: number) => (
                     <p key={i} className="text-[10px] text-indigo-300 font-mono italic">&quot;{q}&quot;</p>
@@ -324,6 +328,7 @@ const AEOMetadataPanel = () => {
 // ─── D: UGC Raw Panel ──────────────────────────────────────────────────────
 
 const UGCRawPanel = () => {
+  const { t } = useTranslation()
   const [profiles, setProfiles] = useState<any[]>([])
   const [selectedProfile, setSelectedProfile] = useState('raw-testimonial')
   const [selectedIntensity, setSelectedIntensity] = useState<'subtle' | 'medium' | 'heavy'>('medium')
@@ -346,9 +351,9 @@ const UGCRawPanel = () => {
         apiPost('/phase8/ugc/degradation-manifest', { profile: selectedProfile, intensity: selectedIntensity })
       ])
       setDemoResult({ humanized: humanized.humanizedScript, manifest: manifest.manifest })
-      showToast(`UGC synthesis complete — Authenticity: ${manifest.manifest.authenticityScore}%`, 'success')
+      showToast(t('phase8Dashboard.ugcSynthesisComplete', { score: manifest.manifest.authenticityScore }), 'success')
     } catch {
-      showToast('UGC synthesis failed', 'error')
+      showToast(t('phase8Dashboard.ugcSynthesisFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -356,11 +361,11 @@ const UGCRawPanel = () => {
 
   return (
     <div className={`${glass} p-10 space-y-8`}>
-      <SectionHeader icon={Eye} title="UGC Raw Synthesizer" subtitle="Bypass the AI Filter // Authentic at Machine Scale" color="amber" badge="AI FATIGUE FIX" />
+      <SectionHeader icon={Eye} title={t('phase8Dashboard.ugcRawSynthesizerTitle')} subtitle={t('phase8Dashboard.ugcRawSynthesizerSubtitle')} color="amber" badge={t('phase8Dashboard.aiFatigueFixBadge')} />
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">UGC Profile</p>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.ugcProfile')}</p>
           <div className="space-y-2">
             {profiles.map(p => (
               <button type="button" key={p.id} onClick={() => setSelectedProfile(p.id)}
@@ -372,14 +377,14 @@ const UGCRawPanel = () => {
           </div>
         </div>
         <div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Humanization Intensity</p>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.humanizationIntensity')}</p>
           <div className="space-y-3">
             {(['subtle', 'medium', 'heavy'] as const).map(level => (
               <button type="button" key={level} onClick={() => setSelectedIntensity(level)}
                 className={`w-full p-4 rounded-xl text-left transition-all capitalize text-sm font-black ${selectedIntensity === level ? 'bg-amber-600 text-white' : 'bg-white/[0.02] border border-white/5 text-slate-500'}`}>
-                {level}
+                {t(`phase8Dashboard.intensity_${level}`)}
                 <span className="text-[9px] block font-normal opacity-70 mt-0.5">
-                  {level === 'subtle' ? 'Micro-imperfections only' : level === 'medium' ? 'Balanced natural feel' : 'Maximum authenticity (heavy filler)'}
+                  {level === 'subtle' ? t('phase8Dashboard.intensitySubtleDesc') : level === 'medium' ? t('phase8Dashboard.intensityMediumDesc') : t('phase8Dashboard.intensityHeavyDesc')}
                 </span>
               </button>
             ))}
@@ -390,7 +395,7 @@ const UGCRawPanel = () => {
       <button type="button" onClick={runDemo} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-amber-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-        Synthesize UGC Demo
+        {t('phase8Dashboard.synthesizeUgcDemo')}
       </button>
 
       <AnimatePresence>
@@ -398,9 +403,9 @@ const UGCRawPanel = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/15">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Humanized Voiceover (SSML)</p>
+                <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest">{t('phase8Dashboard.humanizedVoiceover')}</p>
                 <span className={`${pill} text-emerald-400 border-emerald-500/20`}>
-                  Auth Score: {demoResult.manifest?.authenticityScore}%
+                  {t('phase8Dashboard.authScore', { score: demoResult.manifest?.authenticityScore })}
                 </span>
               </div>
               <p className="text-[10px] text-slate-300 font-mono leading-relaxed break-all">
@@ -409,15 +414,15 @@ const UGCRawPanel = () => {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <p className="text-[8px] text-slate-600 uppercase font-bold">Camera Shake</p>
+                <p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.cameraShake')}</p>
                 <p className="text-lg font-black text-white mt-1">{demoResult.manifest?.video?.shakeAmplitudePx}px</p>
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <p className="text-[8px] text-slate-600 uppercase font-bold">JPEG Quality</p>
+                <p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.jpegQuality')}</p>
                 <p className="text-lg font-black text-white mt-1">{demoResult.manifest?.video?.compressionQuality}%</p>
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <p className="text-[8px] text-slate-600 uppercase font-bold">Cut Variance</p>
+                <p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.cutVariance')}</p>
                 <p className="text-lg font-black text-white mt-1">±{demoResult.manifest?.pacing?.variancePercent}%</p>
               </div>
             </div>
@@ -431,6 +436,7 @@ const UGCRawPanel = () => {
 // ─── E: Zero-Party Data Panel ──────────────────────────────────────────────
 
 const ZeroPartyDataPanel = () => {
+  const { t } = useTranslation()
   const [overlayTypes, setOverlayTypes] = useState<any[]>([])
   const [manifest, setManifest] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -449,9 +455,9 @@ const ZeroPartyDataPanel = () => {
         options: { overlayCount: 2, productData: { name: 'CLICK Platform', ctaUrl: 'https://click.ai', pricing: { price: '97', currency: 'USD' } } }
       })
       setManifest(result.manifest)
-      showToast(`Generated ${result.manifest?.overlays?.length} overlays — proj. ${result.manifest?.projectedCaptureRate} capture rate`, 'success')
+      showToast(t('phase8Dashboard.overlaysGenerated', { count: result.manifest?.overlays?.length, rate: result.manifest?.projectedCaptureRate }), 'success')
     } catch {
-      showToast('Overlay generation failed', 'error')
+      showToast(t('phase8Dashboard.overlayGenerationFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -467,19 +473,19 @@ const ZeroPartyDataPanel = () => {
 
   return (
     <div className={`${glass} p-10 space-y-8`}>
-      <SectionHeader icon={MousePointer2} title="Zero-Party Data Overlays" subtitle="First-Party Signal Engine // Self-Improving Loop" color="rose" badge="Cookies Dead 2026" />
+      <SectionHeader icon={MousePointer2} title={t('phase8Dashboard.zeroPartyDataTitle')} subtitle={t('phase8Dashboard.zeroPartyDataSubtitle')} color="rose" badge={t('phase8Dashboard.cookiesDeadBadge')} />
 
       <div className="flex flex-wrap gap-3">
-        {overlayTypes.map(t => (
-          <div key={t.id} className={`p-4 rounded-2xl border ${typeColorMap[t.id] || 'text-slate-400 border-white/5'}`}>
-            <p className="text-[10px] font-black uppercase">{t.label}</p>
-            <p className="text-[9px] opacity-60 mt-0.5 max-w-[160px]">{t.description}</p>
+        {overlayTypes.map(overlayType => (
+          <div key={overlayType.id} className={`p-4 rounded-2xl border ${typeColorMap[overlayType.id] || 'text-slate-400 border-white/5'}`}>
+            <p className="text-[10px] font-black uppercase">{overlayType.label}</p>
+            <p className="text-[9px] opacity-60 mt-0.5 max-w-[160px]">{overlayType.description}</p>
           </div>
         ))}
       </div>
 
       <div>
-        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Target Platform</p>
+        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.targetPlatform')}</p>
         <div className="flex gap-3 flex-wrap">
           {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin'].map(p => (
             <button type="button" key={p} onClick={() => setPlatform(p)}
@@ -493,21 +499,21 @@ const ZeroPartyDataPanel = () => {
       <button type="button" onClick={generateManifest} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-rose-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MousePointer2 className="w-4 h-4" />}
-        Generate Overlay Manifest
+        {t('phase8Dashboard.generateOverlayManifest')}
       </button>
 
       <AnimatePresence>
         {manifest && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{manifest.overlays?.length} Overlays Generated</p>
-              <span className={`${pill} text-emerald-400 border-emerald-500/20`}>Proj. Capture: {manifest.projectedCaptureRate}</span>
+              <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{t('phase8Dashboard.overlaysGeneratedCount', { count: manifest.overlays?.length })}</p>
+              <span className={`${pill} text-emerald-400 border-emerald-500/20`}>{t('phase8Dashboard.projCapture', { rate: manifest.projectedCaptureRate })}</span>
             </div>
             {manifest.overlays?.map((overlay: any, i: number) => (
               <div key={i} className={`p-6 rounded-2xl border ${typeColorMap[overlay.type] || 'border-white/5'}`}>
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-black uppercase">{overlay.type} · {overlay.label}</p>
-                  <span className="text-[9px] font-mono text-slate-500">@{overlay.startTimeSeconds?.toFixed(1)}s for {overlay.durationSeconds}s</span>
+                  <span className="text-[9px] font-mono text-slate-500">{t('phase8Dashboard.overlayTiming', { start: overlay.startTimeSeconds?.toFixed(1), duration: overlay.durationSeconds })}</span>
                 </div>
                 {overlay.content?.question && (
                   <p className="text-sm text-white font-bold mb-3">&quot;{overlay.content.question}&quot;</p>
@@ -521,10 +527,10 @@ const ZeroPartyDataPanel = () => {
                 )}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {overlay.captureConfig?.feedToRevenueOracle && (
-                    <span className="text-[8px] text-emerald-400 font-bold uppercase">→ Revenue Oracle Sync</span>
+                    <span className="text-[8px] text-emerald-400 font-bold uppercase">{t('phase8Dashboard.revenueOracleSync')}</span>
                   )}
                   {overlay.captureConfig?.updateSwarmConsensus && (
-                    <span className="text-[8px] text-indigo-400 font-bold uppercase">→ Swarm Consensus Update</span>
+                    <span className="text-[8px] text-indigo-400 font-bold uppercase">{t('phase8Dashboard.swarmConsensusUpdate')}</span>
                   )}
                 </div>
               </div>
@@ -539,12 +545,13 @@ const ZeroPartyDataPanel = () => {
 // ─── Main Phase 8 Dashboard ────────────────────────────────────────────────
 
 export default function Phase8Dashboard() {
+  const { t } = useTranslation()
   const SECTIONS = [
-    { id: 'omni', label: 'Omni-Model', icon: Cpu },
-    { id: 'spatial', label: 'Spatial Memory', icon: Layers },
-    { id: 'aeo', label: 'AEO Metadata', icon: Globe },
-    { id: 'ugc', label: 'UGC Raw', icon: Eye },
-    { id: 'zpd', label: 'Zero-Party Data', icon: MousePointer2 }
+    { id: 'omni', label: t('phase8Dashboard.navOmniModel'), icon: Cpu },
+    { id: 'spatial', label: t('phase8Dashboard.navSpatialMemory'), icon: Layers },
+    { id: 'aeo', label: t('phase8Dashboard.navAeoMetadata'), icon: Globe },
+    { id: 'ugc', label: t('phase8Dashboard.navUgcRaw'), icon: Eye },
+    { id: 'zpd', label: t('phase8Dashboard.navZeroPartyData'), icon: MousePointer2 }
   ]
 
   const [activeSection, setActiveSection] = useState('omni')
@@ -559,11 +566,11 @@ export default function Phase8Dashboard() {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className={`${pill} text-indigo-400 border-indigo-500/20`}>Phase 8 — Market Domination</span>
+              <span className={`${pill} text-indigo-400 border-indigo-500/20`}>{t('phase8Dashboard.headerPill')}</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <h1 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Sovereign 2026</h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">5 Systems That Make CLICK Undisputable</p>
+            <h1 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('phase8Dashboard.headerTitle')}</h1>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{t('phase8Dashboard.headerSubtitle')}</p>
           </div>
         </div>
 

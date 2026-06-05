@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ShieldCheck, Users, Sparkles } from 'lucide-react'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type SocialProofData = {
   available: boolean
@@ -13,6 +14,7 @@ type SocialProofData = {
 }
 
 export default function SocialProofWidget({ className }: { className?: string }) {
+  const { t } = useTranslation()
   const [data, setData] = useState<SocialProofData | null>(null)
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function SocialProofWidget({ className }: { className?: string })
   return (
     <div
       role="region"
-      aria-label="Platform credibility"
+      aria-label={t('socialProofWidget.regionLabel')}
       className={
         className ||
         'rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-surface)] backdrop-blur-md px-5 py-4 grid grid-cols-3 gap-4'
@@ -45,22 +47,22 @@ export default function SocialProofWidget({ className }: { className?: string })
         <p className="text-2xl font-bold text-[var(--text-main)]">
           {Intl.NumberFormat().format(data.creators || 0)}
         </p>
-        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">creators</p>
+        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{t('socialProofWidget.creators')}</p>
       </div>
       <div className="flex flex-col items-start gap-1">
         <Sparkles size={16} className="text-[var(--text-muted)]" />
         <p className="text-2xl font-bold text-[var(--text-main)]">
           {Intl.NumberFormat().format(data.publishedPosts || 0)}
         </p>
-        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">posts published</p>
+        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{t('socialProofWidget.postsPublished')}</p>
       </div>
       <div className="flex flex-col items-start gap-1">
         <ShieldCheck size={16} className="text-emerald-500" />
         <p className="text-sm font-bold text-[var(--text-main)]">
-          {data.verifiedC2PA ? 'C2PA signed' : 'unsigned'}
+          {data.verifiedC2PA ? t('socialProofWidget.c2paSigned') : t('socialProofWidget.unsigned')}
         </p>
         <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
-          SOC 2: {data.soc2 || 'pending'}
+          {t('socialProofWidget.soc2', { status: data.soc2 || t('socialProofWidget.pending') })}
         </p>
       </div>
     </div>

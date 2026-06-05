@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react'
 // import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface KanbanCard {
   id: string
@@ -53,6 +54,7 @@ interface ApprovalKanbanBoardProps {
 }
 
 export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspaceId }: ApprovalKanbanBoardProps) {
+  const { t } = useTranslation()
   const [board, setBoard] = useState<KanbanBoard | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedCard, setSelectedCard] = useState<KanbanCard | null>(null)
@@ -134,7 +136,7 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
   }
 
   if (!board) {
-    return <div className="p-8 text-center text-gray-500">No board data available</div>
+    return <div className="p-8 text-center text-gray-500">{t('approvalKanbanBoard.noBoardData')}</div>
   }
 
   return (
@@ -142,23 +144,23 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
       {/* Summary */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Total</div>
+          <div className="text-sm text-gray-600">{t('approvalKanbanBoard.total')}</div>
           <div className="text-2xl font-bold">{board.summary.total}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Overdue</div>
+          <div className="text-sm text-gray-600">{t('approvalKanbanBoard.overdue')}</div>
           <div className="text-2xl font-bold text-red-600">{board.summary.overdue}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">At Risk</div>
+          <div className="text-sm text-gray-600">{t('approvalKanbanBoard.atRisk')}</div>
           <div className="text-2xl font-bold text-orange-600">{board.summary.atRisk}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">With Client</div>
+          <div className="text-sm text-gray-600">{t('approvalKanbanBoard.withClient')}</div>
           <div className="text-2xl font-bold text-blue-600">{board.summary.byStatus.with_client || 0}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Approved</div>
+          <div className="text-sm text-gray-600">{t('approvalKanbanBoard.approved')}</div>
           <div className="text-2xl font-bold text-green-600">{board.summary.byStatus.approved || 0}</div>
         </div>
       </div>
@@ -200,15 +202,15 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
 
                   {card.sla && (
                     <div className={`text-xs mb-2 ${getSLAColor(card.sla)}`}>
-                      {card.sla.status === 'overdue' && '⚠️ Overdue'}
-                      {card.sla.status === 'at_risk' && `⚠️ ${Math.round(card.sla.hoursRemaining)}h left`}
-                      {card.sla.status === 'on_time' && `✓ ${Math.round(card.sla.hoursRemaining)}h left`}
+                      {card.sla.status === 'overdue' && `⚠️ ${t('approvalKanbanBoard.overdue')}`}
+                      {card.sla.status === 'at_risk' && `⚠️ ${t('approvalKanbanBoard.hoursLeft', { hours: Math.round(card.sla.hoursRemaining) })}`}
+                      {card.sla.status === 'on_time' && `✓ ${t('approvalKanbanBoard.hoursLeft', { hours: Math.round(card.sla.hoursRemaining) })}`}
                     </div>
                   )}
 
                   {card.dueDate && (
                     <div className="text-xs text-gray-500">
-                      Due: {new Date(card.dueDate).toLocaleDateString()}
+                      {t('approvalKanbanBoard.due')} {new Date(card.dueDate).toLocaleDateString()}
                     </div>
                   )}
 
@@ -254,11 +256,11 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Status</label>
+                <label className="text-sm font-medium text-gray-700">{t('approvalKanbanBoard.status')}</label>
                 <div className="mt-1">{selectedCard.stageName}</div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Priority</label>
+                <label className="text-sm font-medium text-gray-700">{t('approvalKanbanBoard.priority')}</label>
                 <div className="mt-1">
                   <span className={`px-2 py-1 rounded text-xs border ${getPriorityColor(selectedCard.priority)}`}>
                     {selectedCard.priority}
@@ -267,11 +269,11 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
               </div>
               {selectedCard.sla && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700">SLA Status</label>
+                  <label className="text-sm font-medium text-gray-700">{t('approvalKanbanBoard.slaStatus')}</label>
                   <div className={`mt-1 ${getSLAColor(selectedCard.sla)}`}>
-                    {selectedCard.sla.status === 'overdue' && '⚠️ Overdue'}
-                    {selectedCard.sla.status === 'at_risk' && `⚠️ At Risk - ${Math.round(selectedCard.sla.hoursRemaining)} hours remaining`}
-                    {selectedCard.sla.status === 'on_time' && `✓ On Time - ${Math.round(selectedCard.sla.hoursRemaining)} hours remaining`}
+                    {selectedCard.sla.status === 'overdue' && `⚠️ ${t('approvalKanbanBoard.overdue')}`}
+                    {selectedCard.sla.status === 'at_risk' && `⚠️ ${t('approvalKanbanBoard.atRiskHoursRemaining', { hours: Math.round(selectedCard.sla.hoursRemaining) })}`}
+                    {selectedCard.sla.status === 'on_time' && `✓ ${t('approvalKanbanBoard.onTimeHoursRemaining', { hours: Math.round(selectedCard.sla.hoursRemaining) })}`}
                   </div>
                 </div>
               )}

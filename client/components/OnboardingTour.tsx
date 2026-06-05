@@ -1,37 +1,38 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TourStep {
   target: string
-  title: string
-  content: string
+  titleKey: string
+  contentKey: string
   position?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 const tourSteps: TourStep[] = [
   {
     target: 'dashboard',
-    title: 'Welcome to Click!',
-    content: 'This is your dashboard. Here you can see all your content and quick stats.',
+    titleKey: 'dashboardTitle',
+    contentKey: 'dashboardContent',
     position: 'bottom'
   },
   {
     target: 'video-upload',
-    title: 'Video Processing',
-    content: 'Upload videos here to automatically generate short-form clips with captions.',
+    titleKey: 'videoTitle',
+    contentKey: 'videoContent',
     position: 'bottom'
   },
   {
     target: 'content-generator',
-    title: 'Content Generator',
-    content: 'Transform your text into social media posts for multiple platforms.',
+    titleKey: 'contentGeneratorTitle',
+    contentKey: 'contentGeneratorContent',
     position: 'bottom'
   },
   {
     target: 'scripts',
-    title: 'Script Generator',
-    content: 'Create professional scripts for YouTube, podcasts, and more.',
+    titleKey: 'scriptsTitle',
+    contentKey: 'scriptsContent',
     position: 'bottom'
   }
 ]
@@ -42,6 +43,7 @@ interface OnboardingTourProps {
 }
 
 export default function OnboardingTour({ openByRequest, onClose }: OnboardingTourProps) {
+  const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(0)
   const [isActive, setIsActive] = useState(false)
 
@@ -157,15 +159,15 @@ export default function OnboardingTour({ openByRequest, onClose }: OnboardingTou
         className="fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-80"
         style={getPositionStyles()}
       >
-        <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{step.content}</p>
+        <h3 className="font-semibold text-lg mb-2">{t(`onboardingTour.${step.titleKey}`)}</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t(`onboardingTour.${step.contentKey}`)}</p>
         <div className="flex justify-between items-center">
           <button
             type="button"
             onClick={handleSkip}
             className="text-sm text-gray-600 hover:text-gray-800"
           >
-            Skip Tour
+            {t('onboardingTour.skipTour')}
           </button>
           <div className="flex gap-2">
             {currentStep > 0 && (
@@ -174,7 +176,7 @@ export default function OnboardingTour({ openByRequest, onClose }: OnboardingTou
                 onClick={() => setCurrentStep(currentStep - 1)}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm"
               >
-                Previous
+                {t('onboardingTour.previous')}
               </button>
             )}
             <button
@@ -182,7 +184,7 @@ export default function OnboardingTour({ openByRequest, onClose }: OnboardingTou
               onClick={handleNext}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
             >
-              {currentStep === tourSteps.length - 1 ? 'Finish' : 'Next'}
+              {currentStep === tourSteps.length - 1 ? t('onboardingTour.finish') : t('onboardingTour.next')}
             </button>
           </div>
         </div>

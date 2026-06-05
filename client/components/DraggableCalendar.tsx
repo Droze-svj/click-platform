@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -24,6 +25,7 @@ interface DraggableCalendarProps {
 }
 
 export default function DraggableCalendar({ view = 'month', onPostUpdate }: DraggableCalendarProps) {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const [posts, setPosts] = useState<ScheduledPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,7 +50,7 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
         setPosts(response.data.data || [])
       }
     } catch (error) {
-      showToast('Failed to load scheduled posts', 'error')
+      showToast(t('draggableCalendar.failedToLoadPosts'), 'error')
     } finally {
       setLoading(false)
     }
@@ -79,12 +81,12 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
         }
       )
 
-      showToast('Post rescheduled successfully', 'success')
+      showToast(t('draggableCalendar.postRescheduled'), 'success')
       setDraggedPost(null)
       loadPosts()
       onPostUpdate?.()
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to reschedule post', 'error')
+      showToast(error.response?.data?.error || t('draggableCalendar.failedToReschedule'), 'error')
       setDraggedPost(null)
     }
   }
@@ -134,11 +136,20 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
   }
 
   const days = getDaysInMonth()
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const monthNames = [
+    t('draggableCalendar.monthJanuary'), t('draggableCalendar.monthFebruary'), t('draggableCalendar.monthMarch'),
+    t('draggableCalendar.monthApril'), t('draggableCalendar.monthMay'), t('draggableCalendar.monthJune'),
+    t('draggableCalendar.monthJuly'), t('draggableCalendar.monthAugust'), t('draggableCalendar.monthSeptember'),
+    t('draggableCalendar.monthOctober'), t('draggableCalendar.monthNovember'), t('draggableCalendar.monthDecember')
+  ]
+  const dayNames = [
+    t('draggableCalendar.daySun'), t('draggableCalendar.dayMon'), t('draggableCalendar.dayTue'),
+    t('draggableCalendar.dayWed'), t('draggableCalendar.dayThu'), t('draggableCalendar.dayFri'),
+    t('draggableCalendar.daySat')
+  ]
 
   if (loading) {
-    return <div className="text-center py-8">Loading calendar...</div>
+    return <div className="text-center py-8">{t('draggableCalendar.loadingCalendar')}</div>
   }
 
   return (
@@ -157,14 +168,14 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
             }}
             className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            ← Previous
+            {t('draggableCalendar.previous')}
           </button>
           <button
             type="button"
             onClick={() => setCurrentDate(new Date())}
             className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            Today
+            {t('draggableCalendar.today')}
           </button>
           <button
             type="button"
@@ -175,7 +186,7 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
             }}
             className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            Next →
+            {t('draggableCalendar.next')}
           </button>
         </div>
       </div>
@@ -215,14 +226,14 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
                         draggable
                         onDragStart={() => handleDragStart(post._id)}
                         className={`text-xs p-1 rounded ${getPlatformColor(post.platform)} text-white cursor-move truncate`}
-                        title={`${post.platform}: ${post.content.text.substring(0, 50)}...`}
+                        title={t('draggableCalendar.postTitle', { platform: post.platform, text: post.content.text.substring(0, 50) })}
                       >
                         {post.platform}
                       </div>
                     ))}
                     {dayPosts.length > 3 && (
                       <div className="text-xs text-gray-500">
-                        +{dayPosts.length - 3} more
+                        {t('draggableCalendar.morePosts', { count: dayPosts.length - 3 })}
                       </div>
                     )}
                   </div>
@@ -235,7 +246,7 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
 
       {/* Legend */}
       <div className="mt-6 flex flex-wrap gap-4">
-        <p className="text-sm font-semibold">Platforms:</p>
+        <p className="text-sm font-semibold">{t('draggableCalendar.platforms')}</p>
         {['twitter', 'instagram', 'linkedin', 'facebook', 'tiktok', 'youtube'].map(platform => (
           <div key={platform} className="flex items-center gap-2">
             <div className={`w-4 h-4 rounded ${getPlatformColor(platform)}`} />
@@ -245,7 +256,7 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
       </div>
 
       <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-        💡 Drag and drop posts to reschedule them
+        {t('draggableCalendar.dragTip')}
       </div>
     </div>
   )

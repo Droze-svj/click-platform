@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { RefreshCw, TrendingUp, CheckCircle2 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface PlatformAnalyticsSyncProps {
   postId?: string
@@ -13,6 +14,7 @@ export default function PlatformAnalyticsSync({ postId, onSync }: PlatformAnalyt
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const syncAnalytics = async () => {
     setIsSyncing(true)
@@ -34,12 +36,12 @@ export default function PlatformAnalyticsSync({ postId, onSync }: PlatformAnalyt
       if (response.ok) {
         const data = await response.json()
         setLastSync(new Date())
-        showToast('Analytics synced successfully', 'success')
+        showToast(t('platformAnalyticsSync.analyticsSyncedSuccessfully'), 'success')
         if (onSync) {
           onSync(data.data)
         }
       } else {
-        showToast('Failed to sync analytics', 'error')
+        showToast(t('platformAnalyticsSync.failedToSyncAnalytics'), 'error')
       }
     } catch (error) {
       showToast('Failed to sync analytics', 'error')
@@ -57,13 +59,13 @@ export default function PlatformAnalyticsSync({ postId, onSync }: PlatformAnalyt
         className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-        <span>{isSyncing ? 'Syncing...' : 'Sync Analytics'}</span>
+        <span>{isSyncing ? t('platformAnalyticsSync.syncing') : t('platformAnalyticsSync.syncAnalytics')}</span>
       </button>
       
       {lastSync && (
         <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
           <CheckCircle2 className="w-4 h-4 text-green-600" />
-          <span>Synced {lastSync.toLocaleTimeString()}</span>
+          <span>{t('platformAnalyticsSync.syncedAt', { time: lastSync.toLocaleTimeString() })}</span>
         </div>
       )}
     </div>

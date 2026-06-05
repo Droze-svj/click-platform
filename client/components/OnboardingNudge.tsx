@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Sparkles, X, ArrowRight } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * OnboardingNudge — soft first-run banner.
@@ -21,6 +22,7 @@ import { usePathname } from 'next/navigation'
 const DISMISS_KEY = 'click-onboarding-nudge-dismissed'
 
 export default function OnboardingNudge() {
+  const { t } = useTranslation()
   const pathname = usePathname()
   const [show, setShow] = useState(false)
 
@@ -60,10 +62,10 @@ export default function OnboardingNudge() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-[var(--text-main)] leading-snug">
-            New to Click? Take the 5-step tour to set up your style and connect a platform.
+            {t('onboardingNudge.title')}
           </p>
           <p className="text-xs text-[var(--text-dim)] leading-snug mt-0.5">
-            Two minutes, then the AI is calibrated for your niche.
+            {t('onboardingNudge.subtitle')}
           </p>
         </div>
       </div>
@@ -72,12 +74,12 @@ export default function OnboardingNudge() {
           href="/dashboard/onboarding"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--tint-indigo-fg)] text-[var(--page-bg)] text-[11px] font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
         >
-          Start tour <ArrowRight size={12} />
+          {t('onboardingNudge.startTour')} <ArrowRight size={12} />
         </Link>
         <button
          type="button"
           onClick={dismiss}
-          aria-label="Dismiss onboarding nudge"
+          aria-label={t('onboardingNudge.dismiss')}
           className="w-9 h-9 rounded-xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-heavy)] transition-all"
         >
           <X size={14} />

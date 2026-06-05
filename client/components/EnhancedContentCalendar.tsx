@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { Calendar, AlertCircle, Plus, LayoutGrid, Zap } from 'lucide-react'
 import { API_URL } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ScheduledPost {
   _id: string
@@ -31,6 +32,7 @@ interface ContentGap {
 }
 
 export default function EnhancedContentCalendar() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { showToast } = useToast()
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
@@ -55,7 +57,7 @@ export default function EnhancedContentCalendar() {
         setCalendar(response.data.data || {})
       }
     } catch (error) {
-      showToast('Failed to load calendar', 'error')
+      showToast(t('enhancedContentCalendar.failedToLoadCalendar'), 'error')
     } finally {
       setLoading(false)
     }
@@ -163,8 +165,8 @@ export default function EnhancedContentCalendar() {
             <Calendar className="text-primary-600 dark:text-primary-400" size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">Content Calendar</h2>
-            <p className="text-xs font-bold text-surface-500 uppercase tracking-wider mt-1">Schedule & Gaps</p>
+            <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">{t('enhancedContentCalendar.title')}</h2>
+            <p className="text-xs font-bold text-surface-500 uppercase tracking-wider mt-1">{t('enhancedContentCalendar.scheduleAndGaps')}</p>
           </div>
         </div>
         <div className="flex bg-surface-50 dark:bg-surface-950 p-1.5 rounded-xl border border-surface-200 dark:border-surface-800 shadow-sm w-fit">
@@ -173,21 +175,21 @@ export default function EnhancedContentCalendar() {
             onClick={() => setView('month')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'month' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
-            Month
+            {t('enhancedContentCalendar.month')}
           </button>
           <button
             type="button"
             onClick={() => setView('week')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'week' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
-            Week
+            {t('enhancedContentCalendar.week')}
           </button>
           <button
             type="button"
             onClick={() => setView('day')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'day' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
-            Day
+            {t('enhancedContentCalendar.day')}
           </button>
         </div>
       </div>
@@ -200,10 +202,12 @@ export default function EnhancedContentCalendar() {
           </div>
           <div>
             <h3 className="font-black text-amber-900 dark:text-amber-300 tracking-tight">
-              {gaps.length} Content Gap{gaps.length !== 1 ? 's' : ''} Detected
+              {gaps.length === 1
+                ? t('enhancedContentCalendar.contentGapDetected', { count: gaps.length })
+                : t('enhancedContentCalendar.contentGapsDetected', { count: gaps.length })}
             </h3>
             <p className="text-sm font-medium text-amber-700 dark:text-amber-400 mt-1">
-              Consider scheduling content for these dates to maintain consistency across platforms.
+              {t('enhancedContentCalendar.gapsConsistencyHint')}
             </p>
           </div>
         </div>
@@ -241,7 +245,7 @@ export default function EnhancedContentCalendar() {
                       {day.getDate()}
                     </span>
                     {isGap && (
-                      <div title="Content Gap">
+                      <div title={t('enhancedContentCalendar.contentGap')}>
                         <AlertCircle className="text-amber-500 animate-pulse" size={14} />
                       </div>
                     )}
@@ -258,7 +262,7 @@ export default function EnhancedContentCalendar() {
                     ))}
                     {posts.length > 3 && (
                       <div className="text-[10px] font-bold text-surface-500 text-center mt-2">
-                        +{posts.length - 3} more
+                        {t('enhancedContentCalendar.morePosts', { count: posts.length - 3 })}
                       </div>
                     )}
                   </div>
@@ -273,23 +277,23 @@ export default function EnhancedContentCalendar() {
       <div className="mt-8 flex flex-wrap gap-6 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-wider pt-6 border-t border-surface-200 dark:border-surface-800">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-surface-800 rounded-sm shadow-sm" />
-          <span>X (Twitter)</span>
+          <span>{t('enhancedContentCalendar.legendXTwitter')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-blue-600 rounded-sm shadow-sm" />
-          <span>LinkedIn</span>
+          <span>{t('enhancedContentCalendar.legendLinkedin')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-indigo-600 rounded-sm shadow-sm" />
-          <span>Facebook</span>
+          <span>{t('enhancedContentCalendar.legendFacebook')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-pink-500 rounded-sm shadow-sm" />
-          <span>Instagram</span>
+          <span>{t('enhancedContentCalendar.legendInstagram')}</span>
         </div>
         <div className="flex items-center gap-2">
           <AlertCircle className="text-amber-500" size={16} />
-          <span>Content Gap</span>
+          <span>{t('enhancedContentCalendar.contentGap')}</span>
         </div>
       </div>
     </div>

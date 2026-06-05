@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SubscriptionStatus {
   status: string
@@ -19,6 +20,7 @@ interface SubscriptionStatus {
 }
 
 export default function SubscriptionBanner() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { user } = useAuth()
   const [status, setStatus] = useState<SubscriptionStatus | null>(null)
@@ -71,13 +73,15 @@ export default function SubscriptionBanner() {
           <div className="ml-3">
             <p className={`text-sm font-medium text-${bannerType === 'error' ? 'red' : 'yellow'}-800`}>
               {status.isExpired
-                ? 'Your subscription has expired'
-                : `Your subscription expires in ${status.daysUntilExpiry} day${status.daysUntilExpiry > 1 ? 's' : ''}`}
+                ? t('subscriptionBanner.expiredTitle')
+                : status.daysUntilExpiry > 1
+                  ? t('subscriptionBanner.expiresInDays', { days: status.daysUntilExpiry })
+                  : t('subscriptionBanner.expiresInDay', { days: status.daysUntilExpiry })}
             </p>
             <p className={`mt-1 text-sm text-${bannerType === 'error' ? 'red' : 'yellow'}-700`}>
               {status.isExpired
-                ? 'Please renew your subscription to continue using all features.'
-                : 'Renew now to avoid interruption of service.'}
+                ? t('subscriptionBanner.expiredMessage')
+                : t('subscriptionBanner.expiringMessage')}
             </p>
           </div>
         </div>
@@ -87,13 +91,13 @@ export default function SubscriptionBanner() {
             onClick={() => router.push('/dashboard/membership')}
             className={`px-4 py-2 text-sm font-medium text-white bg-${bannerType === 'error' ? 'red' : 'yellow'}-600 rounded-md hover:bg-${bannerType === 'error' ? 'red' : 'yellow'}-700`}
           >
-            {status.isExpired ? 'Renew Now' : 'Upgrade'}
+            {status.isExpired ? t('subscriptionBanner.renewNow') : t('subscriptionBanner.upgrade')}
           </button>
           <button
             type="button"
             onClick={() => setDismissed(true)}
             className="text-gray-400 hover:text-gray-600"
-            aria-label="Dismiss"
+            aria-label={t('subscriptionBanner.dismiss')}
           >
             ✕
           </button>

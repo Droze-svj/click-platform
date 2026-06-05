@@ -4,8 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AdvancedSearch from './AdvancedSearch'
 import { X } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function GlobalSearchOverlay() {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -46,11 +48,11 @@ export default function GlobalSearchOverlay() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Neural Discovery Engine</span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('globalSearchOverlay.neuralDiscoveryEngine')}</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded-md border border-white/10">
-                  <span className="text-[10px] font-bold text-gray-500">ESC</span>
+                  <span className="text-[10px] font-bold text-gray-500">{t('globalSearchOverlay.esc')}</span>
                 </div>
                 <button
                   type="button"
@@ -72,15 +74,15 @@ export default function GlobalSearchOverlay() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   <kbd className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-500 font-bold">↑↓</kbd>
-                  <span className="text-[10px] text-gray-600 font-bold uppercase">Navigate</span>
+                  <span className="text-[10px] text-gray-600 font-bold uppercase">{t('globalSearchOverlay.navigate')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <kbd className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-500 font-bold">↵</kbd>
-                  <span className="text-[10px] text-gray-600 font-bold uppercase">Select</span>
+                  <span className="text-[10px] text-gray-600 font-bold uppercase">{t('globalSearchOverlay.select')}</span>
                 </div>
               </div>
               <div className="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">
-                Powered by Gemini 1.5 Flash Neural Engine
+                {t('globalSearchOverlay.poweredByGemini')}
               </div>
             </div>
           </motion.div>

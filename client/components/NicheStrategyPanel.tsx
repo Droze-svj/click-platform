@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiGet } from '../lib/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface NicheInfo {
   niche: string;
@@ -38,6 +39,7 @@ const SECTION_ICONS: Record<string, string> = {
 };
 
 export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPlatform = 'tiktok', onNicheChange, onHookSelect, className = '' }: NicheStrategyPanelProps) {
+  const { t } = useTranslation();
   const [allNiches, setAllNiches] = useState<{value: string; label: string}[]>([]);
   const [nicheInfo, setNicheInfo] = useState<NicheInfo | null>(null);
   const [hookTypes, setHookTypes] = useState<HookType[]>([]);
@@ -92,10 +94,10 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
   };
 
   const SECTIONS = [
-    { id: 'hooks', label: '🎣 Hooks' },
-    { id: 'psychology', label: '🧠 Psychology' },
-    { id: 'archetype', label: '🎬 Content Types' },
-    { id: 'cta', label: '📣 CTAs' }
+    { id: 'hooks', label: `🎣 ${t('nicheStrategyPanel.tabHooks')}` },
+    { id: 'psychology', label: `🧠 ${t('nicheStrategyPanel.tabPsychology')}` },
+    { id: 'archetype', label: `🎬 ${t('nicheStrategyPanel.tabContentTypes')}` },
+    { id: 'cta', label: `📣 ${t('nicheStrategyPanel.tabCtas')}` }
   ] as const;
 
   return (
@@ -124,12 +126,12 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
           <span style={{ fontSize: 20 }}>🧬</span>
           <div>
-            <div style={{ color: '#00c864', fontSize: 13, fontWeight: 700, letterSpacing: '0.05em' }}>NICHE INTELLIGENCE</div>
-            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Audience psychology & proven patterns</div>
+            <div style={{ color: '#00c864', fontSize: 13, fontWeight: 700, letterSpacing: '0.05em' }}>{t('nicheStrategyPanel.headerTitle')}</div>
+            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{t('nicheStrategyPanel.headerSubtitle')}</div>
           </div>
         </div>
         <select
-          title="Select Content Niche"
+          title={t('nicheStrategyPanel.selectNicheTitle')}
           value={selectedNiche}
           onChange={e => handleNicheChange(e.target.value)}
           style={{
@@ -172,7 +174,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
       </div>
 
       {loading ? (
-        <div style={{ padding: 30, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading niche intelligence...</div>
+        <div style={{ padding: 30, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>{t('nicheStrategyPanel.loading')}</div>
       ) : nicheInfo ? (
         <div style={{ overflowY: 'auto', maxHeight: 380, padding: 14 }}>
 
@@ -180,7 +182,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
           {activeSection === 'hooks' && (
             <div>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: '0 0 10px' }}>
-                Proven hook templates for {nicheInfo.label}. Fill in {} with your specific details.
+                {t('nicheStrategyPanel.hooksIntro', { label: nicheInfo.label })}
               </p>
               {(nicheInfo.hookPatterns || []).map((hook, i) => (
                 <div key={i} style={{ marginBottom: 8, padding: '10px 12px', background: 'rgba(0,200,100,0.06)', border: '1px solid rgba(0,200,100,0.12)', borderRadius: 8 }}>
@@ -193,7 +195,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
                       onClick={() => copyHook(hook)}
                       style={{ padding: '3px 10px', background: 'rgba(0,200,100,0.12)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: 5, color: '#00c864', fontSize: 11, cursor: 'pointer' }}
                     >
-                      {copiedHook === hook ? '✅ Copied' : '📋 Copy'}
+                      {copiedHook === hook ? `✅ ${t('nicheStrategyPanel.copied')}` : `📋 ${t('nicheStrategyPanel.copy')}`}
                     </button>
                     {onHookSelect && (
                       <button
@@ -201,7 +203,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
                         onClick={() => onHookSelect(hook)}
                         style={{ padding: '3px 10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 5, color: 'rgba(255,255,255,0.6)', fontSize: 11, cursor: 'pointer' }}
                       >
-                        Use in Editor
+                        {t('nicheStrategyPanel.useInEditor')}
                       </button>
                     )}
                   </div>
@@ -213,9 +215,9 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
           {/* PSYCHOLOGY Section */}
           {activeSection === 'psychology' && nicheInfo.audiencePsychology && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <PsychologyCard icon="✨" title="Core Desires" items={nicheInfo.audiencePsychology.core_desires} color="#00c864" />
-              <PsychologyCard icon="⚠️" title="Core Fears (address these)" items={nicheInfo.audiencePsychology.core_fears} color="#ffb400" />
-              <PsychologyCard icon="🎯" title="Buying Triggers" items={nicheInfo.audiencePsychology.buying_triggers} color="#a855f7" />
+              <PsychologyCard icon="✨" title={t('nicheStrategyPanel.coreDesires')} items={nicheInfo.audiencePsychology.core_desires} color="#00c864" />
+              <PsychologyCard icon="⚠️" title={t('nicheStrategyPanel.coreFears')} items={nicheInfo.audiencePsychology.core_fears} color="#ffb400" />
+              <PsychologyCard icon="🎯" title={t('nicheStrategyPanel.buyingTriggers')} items={nicheInfo.audiencePsychology.buying_triggers} color="#a855f7" />
             </div>
           )}
 
@@ -223,7 +225,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
           {activeSection === 'archetype' && (
             <div>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: '0 0 10px' }}>
-                Highest-performing content formats for {nicheInfo.label}
+                {t('nicheStrategyPanel.archetypeIntro', { label: nicheInfo.label })}
               </p>
               {(nicheInfo.contentArchetypes || []).map((arc, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 7, border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -234,7 +236,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
 
               {nicheInfo.postingCadence && (
                 <div style={{ marginTop: 14, padding: '10px 12px', background: 'rgba(0,200,100,0.06)', borderRadius: 8, border: '1px solid rgba(0,200,100,0.12)' }}>
-                  <div style={{ color: '#00c864', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>📅 Best Posting Days</div>
+                  <div style={{ color: '#00c864', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>📅 {t('nicheStrategyPanel.bestPostingDays')}</div>
                   <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 6 }}>
                     {nicheInfo.postingCadence.optimal_days.map(day => (
                       <span key={day} style={{ padding: '2px 8px', background: 'rgba(0,200,100,0.15)', borderRadius: 4, color: '#00c864', fontSize: 11 }}>{day}</span>
@@ -250,7 +252,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
           {activeSection === 'cta' && (
             <div>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: '0 0 10px' }}>
-                Proven CTAs that resonate with {nicheInfo.label} audiences
+                {t('nicheStrategyPanel.ctaIntro', { label: nicheInfo.label })}
               </p>
               {(nicheInfo.ctaPatterns || []).map((cta, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -268,7 +270,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
 
               {nicheInfo.topObjections && (
                 <div style={{ marginTop: 14 }}>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', marginBottom: 8 }}>🤔 TOP OBJECTIONS TO ADDRESS</div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', marginBottom: 8 }}>🤔 {t('nicheStrategyPanel.topObjections')}</div>
                   {nicheInfo.topObjections.map((obj, i) => (
                     <div key={i} style={{ padding: '6px 10px', marginBottom: 5, background: 'rgba(255,100,0,0.07)', borderRadius: 6, border: '1px solid rgba(255,100,0,0.12)', color: 'rgba(255,200,150,0.8)', fontSize: 12 }}>
                       "{obj}"

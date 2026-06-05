@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Edit3, Save, X, CheckCircle2 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface BulkContentEditorProps {
   selectedIds: string[]
@@ -21,10 +22,11 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
   })
   const [isSaving, setIsSaving] = useState(false)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const handleSave = async () => {
     if (selectedIds.length === 0) {
-      showToast('No items selected', 'error')
+      showToast(t('bulkContentEditor.noItemsSelected'), 'error')
       return
     }
 
@@ -33,7 +35,7 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
       const token = localStorage.getItem('token')
       const payload: any = {}
       
-      if (updates.tags) payload.tags = updates.tags.split(',').map(t => t.trim())
+      if (updates.tags) payload.tags = updates.tags.split(',').map(tag => tag.trim())
       if (updates.category) payload.category = updates.category
       if (updates.folderId) payload.folderId = updates.folderId
       if (updates.status) payload.status = updates.status
@@ -52,14 +54,14 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
       })
 
       if (response.ok) {
-        showToast(`Updated ${selectedIds.length} item(s)`, 'success')
+        showToast(t('bulkContentEditor.updateSuccess', { count: selectedIds.length }), 'success')
         onUpdate()
         onClose()
       } else {
-        showToast('Failed to update items', 'error')
+        showToast(t('bulkContentEditor.updateFailed'), 'error')
       }
     } catch (error) {
-      showToast('Failed to update items', 'error')
+      showToast(t('bulkContentEditor.updateFailed'), 'error')
     } finally {
       setIsSaving(false)
     }
@@ -76,7 +78,7 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
           <div className="flex items-center gap-2">
             <Edit3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
-              Bulk Edit ({selectedIds.length} items)
+              {t('bulkContentEditor.bulkEditTitle', { count: selectedIds.length })}
             </h3>
           </div>
           <button
@@ -95,53 +97,53 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             <Edit3 className="w-4 h-4" />
-            <span>Edit Selected Items</span>
+            <span>{t('bulkContentEditor.editSelectedItems')}</span>
           </button>
         ) : (
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tags (comma-separated)
+                {t('bulkContentEditor.tagsLabel')}
               </label>
               <input
                 type="text"
                 value={updates.tags}
                 onChange={(e) => setUpdates({ ...updates, tags: e.target.value })}
-                placeholder="tag1, tag2, tag3"
+                placeholder={t('bulkContentEditor.tagsPlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Category
+                {t('bulkContentEditor.categoryLabel')}
               </label>
               <select
                 value={updates.category}
                 onChange={(e) => setUpdates({ ...updates, category: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
               >
-                <option value="">No change</option>
-                <option value="social">Social</option>
-                <option value="blog">Blog</option>
-                <option value="video">Video</option>
-                <option value="other">Other</option>
+                <option value="">{t('bulkContentEditor.noChange')}</option>
+                <option value="social">{t('bulkContentEditor.categorySocial')}</option>
+                <option value="blog">{t('bulkContentEditor.categoryBlog')}</option>
+                <option value="video">{t('bulkContentEditor.categoryVideo')}</option>
+                <option value="other">{t('bulkContentEditor.categoryOther')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Status
+                {t('bulkContentEditor.statusLabel')}
               </label>
               <select
                 value={updates.status}
                 onChange={(e) => setUpdates({ ...updates, status: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
               >
-                <option value="">No change</option>
-                <option value="draft">Draft</option>
-                <option value="completed">Completed</option>
-                <option value="scheduled">Scheduled</option>
+                <option value="">{t('bulkContentEditor.noChange')}</option>
+                <option value="draft">{t('bulkContentEditor.statusDraft')}</option>
+                <option value="completed">{t('bulkContentEditor.statusCompleted')}</option>
+                <option value="scheduled">{t('bulkContentEditor.statusScheduled')}</option>
               </select>
             </div>
 
@@ -151,7 +153,7 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
                 onClick={() => setIsEditing(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
-                Cancel
+                {t('bulkContentEditor.cancel')}
               </button>
               <button
                 type="button"
@@ -162,12 +164,12 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
                 {isSaving ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    <span>Saving...</span>
+                    <span>{t('bulkContentEditor.saving')}</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>Save Changes</span>
+                    <span>{t('bulkContentEditor.saveChanges')}</span>
                   </>
                 )}
               </button>

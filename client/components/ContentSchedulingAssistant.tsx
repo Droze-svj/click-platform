@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Clock, TrendingUp, Sparkles, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SchedulingAssistantProps {
   contentId?: string
@@ -22,6 +23,7 @@ interface OptimalTime {
 }
 
 export default function ContentSchedulingAssistant({ contentId, content }: SchedulingAssistantProps) {
+  const { t } = useTranslation()
   const [optimalTimes, setOptimalTimes] = useState<OptimalTime[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -78,7 +80,7 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
         <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
           <Sparkles className="w-4 h-4" />
           <p className="text-sm">
-            Connect social accounts to get optimal posting time suggestions
+            {t('contentSchedulingAssistant.connectAccountsPrompt')}
           </p>
         </div>
       </div>
@@ -90,7 +92,7 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
       <div className="flex items-center gap-2 mb-4">
         <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
         <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-          Best Times to Post
+          {t('contentSchedulingAssistant.bestTimesToPost')}
         </h3>
       </div>
 
@@ -109,13 +111,13 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
                   <div className="flex items-center gap-1">
                     <TrendingUp className="w-3 h-3 text-green-600 dark:text-green-400" />
                     <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                      {time.score}% optimal
+                      {t('contentSchedulingAssistant.percentOptimal', { score: time.score })}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Clock className="w-3 h-3" />
-                  <span>{time.day} at {time.time}</span>
+                  <span>{t('contentSchedulingAssistant.dayAtTime', { day: time.day, time: time.time })}</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {time.reason}
@@ -126,7 +128,7 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
                 onClick={() => handleSchedule(time)}
                 className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
-                Schedule
+                {t('contentSchedulingAssistant.schedule')}
               </button>
             </div>
           </div>
@@ -138,7 +140,7 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
         onClick={() => router.push('/dashboard/scheduler')}
         className="mt-4 w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
       >
-        View all optimal times →
+        {t('contentSchedulingAssistant.viewAllOptimalTimes')}
       </button>
     </div>
   )

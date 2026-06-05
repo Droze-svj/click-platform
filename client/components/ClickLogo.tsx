@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ClickLogoProps {
   size?: number
@@ -25,6 +26,7 @@ export default function ClickLogo({
   className = '',
   wordmarkClassName = '',
 }: ClickLogoProps) {
+  const { t } = useTranslation()
   const id = React.useId()
   return (
     <span className={`inline-flex items-center gap-2.5 text-[var(--text-main)] ${className}`}>
@@ -34,7 +36,7 @@ export default function ClickLogo({
         viewBox="0 0 64 64"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        aria-label="Click logo"
+        aria-label={t('clickLogo.logoAriaLabel')}
         role="img"
       >
         <defs>
@@ -79,7 +81,7 @@ export default function ClickLogo({
         } ${
           /tracking-(tighter|tight|normal|wide|wider|widest)/.test(wordmarkClassName) ? '' : 'tracking-tight'
         } ${wordmarkClassName}`}>
-          Click
+          {t('clickLogo.wordmark')}
         </span>
       )}
     </span>

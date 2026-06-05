@@ -14,6 +14,7 @@ import {
     Sparkles
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface PublicProject {
     id: string
@@ -28,6 +29,7 @@ interface PublicProject {
 }
 
 export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => void }) {
+    const { t } = useTranslation()
     const [searchQuery, setSearchQuery] = useState('')
     const { showToast } = useToast()
 
@@ -68,7 +70,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
     ]
 
     const handleRemix = (project: PublicProject) => {
-        showToast(`Cloning "${project.title}" into your workspace...`, 'success')
+        showToast(t('remixHub.cloningToast', { title: project.title }), 'success')
         onRemix(project.id)
     }
 
@@ -80,13 +82,13 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                     <div>
                         <h2 className="text-3xl font-black text-gray-900 dark:text-[var(--text-main)] flex items-center gap-3">
                             <Users className="w-8 h-8 text-fuchsia-500" />
-                            Remix Hub
+                            {t('remixHub.title')}
                         </h2>
-                        <p className="text-sm text-gray-500 mt-1 font-medium italic">Discover and clone the community&apos;s most viral templates</p>
+                        <p className="text-sm text-gray-500 mt-1 font-medium italic">{t('remixHub.subtitle')}</p>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-fuchsia-500 text-white rounded-xl shadow-lg shadow-fuchsia-500/20">
                         <Flame className="w-4 h-4 fill-white" />
-                        <span className="text-xs font-black uppercase tracking-widest">Trending Now</span>
+                        <span className="text-xs font-black uppercase tracking-widest">{t('remixHub.trendingNow')}</span>
                     </div>
                 </div>
 
@@ -94,7 +96,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search viral hooks, B-roll sequences..."
+                        placeholder={t('remixHub.searchPlaceholder')}
                         className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm focus:ring-2 focus:ring-fuchsia-500 outline-none transition-all text-sm font-bold"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -115,7 +117,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                                 <Play className="w-12 h-12 text-white/50 group-hover:text-fuchsia-500 transition-colors" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                                    <span className="text-[10px] font-black text-white uppercase tracking-tighter">{project.level}</span>
+                                    <span className="text-[10px] font-black text-white uppercase tracking-tighter">{t(`remixHub.level.${project.level}`)}</span>
                                 </div>
                             </div>
 
@@ -150,7 +152,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                                         className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-fuchsia-500 dark:hover:bg-fuchsia-500 hover:text-white transition-all shadow-lg shadow-fuchsia-500/0 hover:shadow-fuchsia-500/20"
                                     >
                                         <Sparkles className="w-3 h-3" />
-                                        Remix
+                                        {t('remixHub.remix')}
                                     </button>
                                 </div>
                             </div>

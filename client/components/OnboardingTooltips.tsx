@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { HelpCircle, X } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Tooltip {
   id: string
   target: string
-  title: string
-  content: string
+  titleKey: string
+  contentKey: string
   position: 'top' | 'bottom' | 'left' | 'right'
 }
 
@@ -15,27 +16,28 @@ const tooltips: Tooltip[] = [
   {
     id: 'create-content',
     target: '[data-tooltip="create-content"]',
-    title: 'Create Content',
-    content: 'Click here to generate new content from text or upload videos',
+    titleKey: 'createContentTitle',
+    contentKey: 'createContentContent',
     position: 'bottom',
   },
   {
     id: 'templates',
     target: '[data-tooltip="templates"]',
-    title: 'Templates',
-    content: 'Browse and use templates to speed up your content creation',
+    titleKey: 'templatesTitle',
+    contentKey: 'templatesContent',
     position: 'bottom',
   },
   {
     id: 'analytics',
     target: '[data-tooltip="analytics"]',
-    title: 'Analytics',
-    content: 'Track your content performance and engagement metrics',
+    titleKey: 'analyticsTitle',
+    contentKey: 'analyticsContent',
     position: 'bottom',
   },
 ]
 
 export default function OnboardingTooltips() {
+  const { t } = useTranslation()
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
   const [completedTooltips, setCompletedTooltips] = useState<Set<string>>(
     new Set(JSON.parse(localStorage.getItem('completedTooltips') || '[]'))
@@ -43,7 +45,7 @@ export default function OnboardingTooltips() {
 
   useEffect(() => {
     // Show first uncompleted tooltip
-    const uncompleted = tooltips.find(t => !completedTooltips.has(t.id))
+    const uncompleted = tooltips.find(tip => !completedTooltips.has(tip.id))
     if (uncompleted) {
       setTimeout(() => {
         setActiveTooltip(uncompleted.id)
@@ -62,7 +64,7 @@ export default function OnboardingTooltips() {
     localStorage.setItem('completedTooltips', JSON.stringify(Array.from(newCompleted)))
 
     // Show next tooltip
-    const currentIndex = tooltips.findIndex(t => t.id === tooltipId)
+    const currentIndex = tooltips.findIndex(tip => tip.id === tooltipId)
     const nextTooltip = tooltips[currentIndex + 1]
     if (nextTooltip && !newCompleted.has(nextTooltip.id)) {
       setTimeout(() => {
@@ -73,7 +75,7 @@ export default function OnboardingTooltips() {
     }
   }
 
-  const tooltip = tooltips.find(t => t.id === activeTooltip)
+  const tooltip = tooltips.find(tip => tip.id === activeTooltip)
   if (!tooltip) return null
 
   const targetElement = document.querySelector(tooltip.target)
@@ -98,7 +100,7 @@ export default function OnboardingTooltips() {
         <div className="flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
-            {tooltip.title}
+            {t(`onboardingTooltips.${tooltip.titleKey}`)}
           </h3>
         </div>
         <button
@@ -110,18 +112,18 @@ export default function OnboardingTooltips() {
         </button>
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-        {tooltip.content}
+        {t(`onboardingTooltips.${tooltip.contentKey}`)}
       </p>
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {tooltips.findIndex(t => t.id === tooltip.id) + 1} of {tooltips.length}
+          {t('onboardingTooltips.stepCounter', { current: tooltips.findIndex(tip => tip.id === tooltip.id) + 1, total: tooltips.length })}
         </span>
         <button
           type="button"
           onClick={() => completeTooltip(tooltip.id)}
           className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
         >
-          Got it
+          {t('onboardingTooltips.gotIt')}
         </button>
       </div>
     </div>

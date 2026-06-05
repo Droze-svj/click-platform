@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Save, CheckCircle, AlertCircle } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AutoSaveDraftProps {
   content: string
@@ -16,6 +17,7 @@ export default function AutoSaveDraft({
   onSave, 
   saveInterval = 30000 // 30 seconds default
 }: AutoSaveDraftProps) {
+  const { t } = useTranslation()
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -71,13 +73,13 @@ export default function AutoSaveDraft({
   const getStatusText = () => {
     switch (saveStatus) {
       case 'saving':
-        return 'Saving...'
+        return t('autoSaveDraft.saving')
       case 'saved':
-        return lastSaved ? `Saved at ${lastSaved.toLocaleTimeString()}` : 'Saved'
+        return lastSaved ? t('autoSaveDraft.savedAt', { time: lastSaved.toLocaleTimeString() }) : t('autoSaveDraft.saved')
       case 'error':
-        return 'Save failed'
+        return t('autoSaveDraft.saveFailed')
       default:
-        return 'Auto-saving...'
+        return t('autoSaveDraft.autoSaving')
     }
   }
 

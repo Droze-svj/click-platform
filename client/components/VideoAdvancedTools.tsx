@@ -5,6 +5,7 @@ import { Video, Minimize2, Scissors, Music, Image as ImageIcon, FileVideo } from
 import { useToast } from '../contexts/ToastContext'
 import VideoProgressTracker from './VideoProgressTracker'
 import { extractApiError } from '../utils/apiResponse'
+import { useTranslation } from '@/hooks/useTranslation'
 
 // Simple logging function for video editing operations
 const logVideoEdit = (action: string, data: any) => {
@@ -36,6 +37,7 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
   const [exportFormat, setExportFormat] = useState('mp4')
   const [exportQuality, setExportQuality] = useState<'low' | 'medium' | 'high'>('high')
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const debugEnabled = useMemo(() => process.env.NEXT_PUBLIC_DEBUG_VIDEO === 'true', [])
 
@@ -50,7 +52,7 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
 
     if (!videoUrl && !videoPath) {
       logVideoEdit('process_error_no_video', { tool })
-      showToast('Video is required', 'error')
+      showToast(t('videoAdvancedTools.videoRequired'), 'error')
       return
     }
 
@@ -67,7 +69,7 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
 
       if (!token) {
         logVideoEdit('process_error_no_auth', { tool })
-        showToast('You must be logged in to edit videos', 'error')
+        showToast(t('videoAdvancedTools.loginRequired'), 'error')
         return
       }
 
@@ -96,12 +98,12 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
           endpoint = '/api/export'
           break
         default:
-          showToast('Unknown tool', 'error')
+          showToast(t('videoAdvancedTools.unknownTool'), 'error')
           return
       }
 
       setCurrentOperation(tool)
-      showToast(`${tool} started`, 'info')
+      showToast(t('videoAdvancedTools.toolStarted', { tool }), 'info')
 
       logVideoEdit('preparing_request', {
         tool,
@@ -218,7 +220,7 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
         console.error('[VideoAdvancedTools] error', error)
       }
       const errorObj = extractApiError(error)
-      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || `Failed to process video: ${tool}`, 'error')
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || t('videoAdvancedTools.processFailed', { tool }), 'error')
       setIsProcessing(false)
       setActiveTool(null)
       setCurrentOperation(null)
@@ -231,57 +233,57 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
   const tools = [
     {
       id: 'compress',
-      name: 'Minimize2 Video',
+      name: t('videoAdvancedTools.toolCompressName'),
       icon: <Minimize2 className="w-5 h-5" />,
-      description: 'Reduce file size while maintaining quality',
+      description: t('videoAdvancedTools.toolCompressDesc'),
     },
     {
       id: 'thumbnail',
-      name: 'Generate Thumbnail',
+      name: t('videoAdvancedTools.toolThumbnailName'),
       icon: <ImageIcon className="w-5 h-5" />,
-      description: 'Create video thumbnail',
+      description: t('videoAdvancedTools.toolThumbnailDesc'),
     },
     {
       id: 'metadata',
-      name: 'Get Metadata',
+      name: t('videoAdvancedTools.toolMetadataName'),
       icon: <FileVideo className="w-5 h-5" />,
-      description: 'View video information',
+      description: t('videoAdvancedTools.toolMetadataDesc'),
     },
     {
       id: 'convert',
-      name: 'Convert Format',
+      name: t('videoAdvancedTools.toolConvertName'),
       icon: <Video className="w-5 h-5" />,
-      description: 'Change video format',
+      description: t('videoAdvancedTools.toolConvertDesc'),
     },
     {
       id: 'trim',
-      name: 'Trim Video',
+      name: t('videoAdvancedTools.toolTrimName'),
       icon: <Scissors className="w-5 h-5" />,
-      description: 'Cut video segments',
+      description: t('videoAdvancedTools.toolTrimDesc'),
     },
     {
       id: 'extract-audio',
-      name: 'Extract Audio',
+      name: t('videoAdvancedTools.toolExtractAudioName'),
       icon: <Music className="w-5 h-5" />,
-      description: 'Extract audio track',
+      description: t('videoAdvancedTools.toolExtractAudioDesc'),
     },
     {
       id: 'export',
-      name: 'Export Video',
+      name: t('videoAdvancedTools.toolExportName'),
       icon: <FileVideo className="w-5 h-5" />,
-      description: 'Export processed video',
+      description: t('videoAdvancedTools.toolExportDesc'),
     },
   ]
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
-        Advanced Video Tools
+        {t('videoAdvancedTools.title')}
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">Trim</div>
+          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">{t('videoAdvancedTools.trim')}</div>
           <div className="flex gap-2">
             <input
               value={trimStart}
@@ -296,11 +298,11 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
               className="w-1/2 rounded border px-2 py-1 text-sm bg-white dark:bg-gray-900"
             />
           </div>
-          <div className="text-[11px] text-gray-500 mt-1">startTime (hh:mm:ss), duration (seconds)</div>
+          <div className="text-[11px] text-gray-500 mt-1">{t('videoAdvancedTools.trimHelp')}</div>
         </div>
 
         <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">Convert</div>
+          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">{t('videoAdvancedTools.convert')}</div>
           <select
             value={convertFormat}
             onChange={(e) => setConvertFormat(e.target.value)}
@@ -314,27 +316,27 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
         </div>
 
         <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">Compress</div>
+          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">{t('videoAdvancedTools.compress')}</div>
           <select
             value={compressQuality}
             onChange={(e) => setCompressQuality(e.target.value as any)}
             className="w-full rounded border px-2 py-1 text-sm bg-white dark:bg-gray-900"
           >
-            <option value="low">low (smallest)</option>
-            <option value="medium">medium</option>
-            <option value="high">high (best)</option>
+            <option value="low">{t('videoAdvancedTools.qualityLowSmallest')}</option>
+            <option value="medium">{t('videoAdvancedTools.qualityMedium')}</option>
+            <option value="high">{t('videoAdvancedTools.qualityHighBest')}</option>
           </select>
         </div>
 
         <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">Export</div>
+          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-2">{t('videoAdvancedTools.export')}</div>
           <div className="space-y-2">
             <select
               value={exportFormat}
               onChange={(e) => setExportFormat(e.target.value)}
               className="w-full rounded border px-2 py-1 text-sm bg-white dark:bg-gray-900"
             >
-              <option value="mp4">mp4 (recommended)</option>
+              <option value="mp4">{t('videoAdvancedTools.formatMp4Recommended')}</option>
               <option value="webm">webm</option>
               <option value="mov">mov</option>
               <option value="avi">avi</option>
@@ -344,9 +346,9 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
               onChange={(e) => setExportQuality(e.target.value as any)}
               className="w-full rounded border px-2 py-1 text-sm bg-white dark:bg-gray-900"
             >
-              <option value="high">High Quality</option>
-              <option value="medium">Medium Quality</option>
-              <option value="low">Low Quality (small file)</option>
+              <option value="high">{t('videoAdvancedTools.qualityHigh')}</option>
+              <option value="medium">{t('videoAdvancedTools.qualityMediumQuality')}</option>
+              <option value="low">{t('videoAdvancedTools.qualityLowSmallFile')}</option>
             </select>
           </div>
         </div>
@@ -399,9 +401,9 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
               setActiveTool(null)
               setLastResult(result?.result || result)
               if (result?.status === 'failed') {
-                showToast(result?.error || `${currentOperation} failed`, 'error')
+                showToast(result?.error || t('videoAdvancedTools.operationFailed', { operation: currentOperation }), 'error')
               } else {
-                showToast(`${currentOperation} completed`, 'success')
+                showToast(t('videoAdvancedTools.operationCompleted', { operation: currentOperation }), 'success')
               }
               if (onProcessed) {
                 onProcessed({ tool: currentOperation, status: 'completed', result })
@@ -413,28 +415,28 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
 
       {lastResult?.resultUrl && (
         <div className="mt-4 flex items-center justify-between rounded border border-gray-200 dark:border-gray-700 p-3">
-          <div className="text-sm text-gray-700 dark:text-gray-200">Latest output</div>
+          <div className="text-sm text-gray-700 dark:text-gray-200">{t('videoAdvancedTools.latestOutput')}</div>
           <a
             className="text-sm font-semibold text-purple-700 dark:text-purple-400 underline"
             href={lastResult.resultUrl}
             target="_blank"
             rel="noreferrer"
           >
-            Download / View
+            {t('videoAdvancedTools.downloadView')}
           </a>
         </div>
       )}
 
       {lastResult?.thumbnailUrl && (
         <div className="mt-4 flex items-center justify-between rounded border border-gray-200 dark:border-gray-700 p-3">
-          <div className="text-sm text-gray-700 dark:text-gray-200">Latest thumbnail</div>
+          <div className="text-sm text-gray-700 dark:text-gray-200">{t('videoAdvancedTools.latestThumbnail')}</div>
           <a
             className="text-sm font-semibold text-purple-700 dark:text-purple-400 underline"
             href={lastResult.thumbnailUrl}
             target="_blank"
             rel="noreferrer"
           >
-            Open
+            {t('videoAdvancedTools.open')}
           </a>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Eye, X } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ContentQuickPreviewProps {
   content: {
@@ -17,6 +18,7 @@ interface ContentQuickPreviewProps {
 }
 
 export default function ContentQuickPreview({ content, children }: ContentQuickPreviewProps) {
+  const { t } = useTranslation()
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -83,7 +85,7 @@ export default function ContentQuickPreview({ content, children }: ContentQuickP
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-[var(--text-main)]">
-                  Quick Preview
+                  {t('contentQuickPreview.quickPreview')}
                 </h3>
               </div>
               <button
@@ -105,13 +107,13 @@ export default function ContentQuickPreview({ content, children }: ContentQuickP
                 {previewData.thumbnail && (
                   <img
                     src={previewData.thumbnail}
-                    alt={previewData.title || 'Preview'}
+                    alt={previewData.title || t('contentQuickPreview.previewAlt')}
                     className="w-full h-48 object-cover rounded-lg mb-4"
                   />
                 )}
                 
                 <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
-                  {previewData.title || 'Untitled'}
+                  {previewData.title || t('contentQuickPreview.untitled')}
                 </h4>
                 
                 {previewData.text && (

@@ -3,6 +3,7 @@
 import React, { Suspense, ComponentType } from 'react'
 import { ErrorBoundary } from './ErrorBoundary'
 import LoadingSpinner from './LoadingSpinner'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface LazyWrapperProps {
   children: React.ReactNode
@@ -21,6 +22,7 @@ export const LazyWrapper: React.FC<LazyWrapperProps> = ({
   errorFallback,
   suspenseKey
 }) => {
+  const { t } = useTranslation()
   const defaultFallback = (
     <div className="flex items-center justify-center p-4">
       <LoadingSpinner size="sm" />
@@ -33,7 +35,7 @@ export const LazyWrapper: React.FC<LazyWrapperProps> = ({
         <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <p className="text-sm">Failed to load component</p>
+        <p className="text-sm">{t('lazyWrapper.failedToLoadComponent')}</p>
       </div>
     </div>
   )

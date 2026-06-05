@@ -2,48 +2,50 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface QuickAction {
-  label: string
+  labelKey: string
   icon: string
   action: string
-  description: string
+  descriptionKey: string
 }
 
 const quickActions: QuickAction[] = [
   {
-    label: 'Upload Video',
+    labelKey: 'uploadVideo',
     icon: '🎥',
     action: '/dashboard/video',
-    description: 'Upload and process video'
+    descriptionKey: 'uploadAndProcessVideo'
   },
   {
-    label: 'Generate Content',
+    labelKey: 'generateContent',
     icon: '✨',
     action: '/dashboard/content',
-    description: 'Create social media posts'
+    descriptionKey: 'createSocialMediaPosts'
   },
   {
-    label: 'Create Script',
+    labelKey: 'createScript',
     icon: '📝',
     action: '/dashboard/scripts',
-    description: 'Generate writing scripts'
+    descriptionKey: 'generateWritingScripts'
   },
   {
-    label: 'Schedule Post',
+    labelKey: 'schedulePost',
     icon: '📅',
     action: '/dashboard/scheduler',
-    description: 'Schedule content'
+    descriptionKey: 'scheduleContent'
   },
   {
-    label: 'View Analytics',
+    labelKey: 'viewAnalytics',
     icon: '📊',
     action: '/dashboard/analytics',
-    description: 'Check performance'
+    descriptionKey: 'checkPerformance'
   }
 ]
 
 export default function QuickActions() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -52,7 +54,7 @@ export default function QuickActions() {
       {isOpen ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 w-64">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-sm">Quick Actions</h3>
+            <h3 className="font-semibold text-sm">{t('quickActions.quickActions')}</h3>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
@@ -75,9 +77,9 @@ export default function QuickActions() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{action.icon}</span>
                   <div>
-                    <p className="font-medium text-sm">{action.label}</p>
+                    <p className="font-medium text-sm">{t(`quickActions.${action.labelKey}`)}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {action.description}
+                      {t(`quickActions.${action.descriptionKey}`)}
                     </p>
                   </div>
                 </div>
@@ -90,7 +92,7 @@ export default function QuickActions() {
           type="button"
           onClick={() => setIsOpen(true)}
           className="w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 flex items-center justify-center text-2xl transition-transform hover:scale-110"
-          aria-label="Quick Actions"
+          aria-label={t('quickActions.quickActions')}
         >
           ⚡
         </button>

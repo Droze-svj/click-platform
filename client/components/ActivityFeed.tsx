@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Activity {
   _id: string
@@ -16,6 +17,7 @@ interface Activity {
 }
 
 export default function ActivityFeed({ limit = 10 }: { limit?: number }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,7 +75,7 @@ export default function ActivityFeed({ limit = 10 }: { limit?: number }) {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('activityFeed.recentActivity')}</h2>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse">
@@ -88,9 +90,9 @@ export default function ActivityFeed({ limit = 10 }: { limit?: number }) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+      <h2 className="text-xl font-semibold mb-4">{t('activityFeed.recentActivity')}</h2>
       {activities.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No recent activity</p>
+        <p className="text-gray-500 text-center py-8">{t('activityFeed.noRecentActivity')}</p>
       ) : (
         <div className="space-y-4">
           {activities.map((activity) => (

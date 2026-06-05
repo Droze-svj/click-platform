@@ -17,6 +17,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface LedgerBlock {
   index: number
@@ -44,6 +45,7 @@ interface LedgerState {
 }
 
 export const SovereignLedger: React.FC = () => {
+  const { t } = useTranslation()
   const [blocks, setBlocks] = useState<LedgerBlock[]>([])
   const [state, setState] = useState<LedgerState | null>(null)
   const [loading, setLoading] = useState(true)
@@ -75,7 +77,7 @@ export const SovereignLedger: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center p-20 min-h-[400px]">
         <Activity className="text-primary-500 animate-spin mb-6" size={48} />
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic animate-pulse">Syncing_Ledger_Nodes...</p>
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic animate-pulse">{t('sovereignLedger.syncingNodes')}</p>
       </div>
     )
   }
@@ -87,10 +89,10 @@ export const SovereignLedger: React.FC = () => {
         <div className="bg-black/40 border-2 border-white/5 rounded-[2.5rem] p-6 backdrop-blur-3xl shadow-2xl group hover:border-emerald-500/20 transition-all">
           <div className="flex items-center gap-3 mb-4">
             <Shield size={16} className={state?.isValid ? 'text-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'text-rose-400'} />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Integrity</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">{t('sovereignLedger.integrity')}</span>
           </div>
           <div className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter text-white flex items-center gap-3">
-            {state?.isValid ? 'SECURE' : 'FAIL'}
+            {state?.isValid ? t('sovereignLedger.secure') : t('sovereignLedger.fail')}
             {state?.isValid && <CheckCircle2 size={20} className="text-emerald-400" />}
           </div>
         </div>
@@ -98,17 +100,17 @@ export const SovereignLedger: React.FC = () => {
         <div className="bg-black/40 border-2 border-white/5 rounded-[2.5rem] p-6 backdrop-blur-3xl shadow-2xl group hover:border-primary-500/20 transition-all">
           <div className="flex items-center gap-3 mb-4">
             <Database size={16} className="text-primary-400" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Chain_Ht</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">{t('sovereignLedger.chainHeight')}</span>
           </div>
           <div className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter text-white">
-            {state?.height} <span className="text-[12px] text-primary-400">NODES</span>
+            {state?.height} <span className="text-[12px] text-primary-400">{t('sovereignLedger.nodes')}</span>
           </div>
         </div>
 
         <div className="bg-black/40 border-2 border-white/5 rounded-[2.5rem] p-6 backdrop-blur-3xl shadow-2xl md:col-span-2 group hover:border-primary-500/20 transition-all overflow-hidden relative">
           <div className="flex items-center gap-3 mb-4">
             <Lock size={16} className="text-primary-400" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Last_Hash_Sig</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">{t('sovereignLedger.lastHashSig')}</span>
           </div>
           <div className="text-sm sm:text-lg font-mono font-bold text-primary-300 truncate leading-none mt-2">
             {state?.lastHash}
@@ -120,11 +122,11 @@ export const SovereignLedger: React.FC = () => {
       <div className="space-y-6 lg:space-y-8">
         <div className="flex flex-col sm:flex-row items-center justify-between px-4 gap-4">
           <label className="text-[12px] font-black text-slate-500 uppercase tracking-[0.5em] sm:tracking-[0.8em] italic flex items-center gap-4">
-            <Fingerprint size={18} className="text-primary-400" /> DECISION_AUDIT_TRAIL
+            <Fingerprint size={18} className="text-primary-400" /> {t('sovereignLedger.auditTrail')}
           </label>
           <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary-500/5 border border-primary-500/20">
             <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-            <span className="text-[9px] font-black text-primary-400 uppercase tracking-widest italic">Live_Sync</span>
+            <span className="text-[9px] font-black text-primary-400 uppercase tracking-widest italic">{t('sovereignLedger.liveSync')}</span>
           </div>
         </div>
 
@@ -148,12 +150,12 @@ export const SovereignLedger: React.FC = () => {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3 mb-2">
                         <span className="text-[10px] font-black text-primary-400 uppercase tracking-widest italic">#{block.index}</span>
-                        <span className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter italic truncate">{block.data?.type || 'UNKNOWN_NODE'}</span>
+                        <span className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter italic truncate">{block.data?.type || t('sovereignLedger.unknownNode')}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Clock size={12} className="text-slate-600" />
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight italic">
-                          {new Date(block.timestamp).toLocaleTimeString()} // AGENT: {block.data?.agent || 'SOVEREIGN'}
+                          {t('sovereignLedger.agentLine', { time: new Date(block.timestamp).toLocaleTimeString(), agent: block.data?.agent || 'SOVEREIGN' })}
                         </span>
                       </div>
                     </div>
@@ -182,7 +184,7 @@ export const SovereignLedger: React.FC = () => {
                       <div className="space-y-6">
                         <div className="flex items-center gap-3">
                           <Activity size={14} className="text-primary-400" />
-                          <h5 className="text-[10px] font-black text-primary-400 uppercase tracking-widest italic leading-none">Decision_Matrix_Payload</h5>
+                          <h5 className="text-[10px] font-black text-primary-400 uppercase tracking-widest italic leading-none">{t('sovereignLedger.decisionMatrixPayload')}</h5>
                         </div>
                         <pre className="bg-black/60 rounded-[1.5rem] p-6 text-[11px] font-mono text-primary-200 overflow-x-auto border-2 border-white/5 shadow-inner custom-scrollbar">
                           {JSON.stringify(block.data?.decision || {}, null, 2)}
@@ -191,24 +193,24 @@ export const SovereignLedger: React.FC = () => {
                       <div className="space-y-6">
                         <div className="flex items-center gap-3">
                           <TrendingUp size={14} className="text-emerald-400" />
-                          <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">Fiscal_Delta_Inference</h5>
+                          <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">{t('sovereignLedger.fiscalDeltaInference')}</h5>
                         </div>
                         <div className="bg-emerald-500/5 rounded-[2rem] p-8 border-2 border-emerald-500/10 relative overflow-hidden group/fiscal shadow-xl">
                           <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover/fiscal:opacity-[0.08] transition-opacity duration-1000"><Zap size={120} className="text-white" /></div>
                           <div className="flex justify-between items-center mb-6 relative z-10">
-                            <span className="text-[11px] font-black text-slate-500 uppercase italic">Revenue Impact</span>
+                            <span className="text-[11px] font-black text-slate-500 uppercase italic">{t('sovereignLedger.revenueImpact')}</span>
                             <span className="text-3xl font-black text-emerald-400 italic tracking-tighter">
                               +${block.data.fiscal?.revenueImpact?.toLocaleString() || '0.00'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center relative z-10">
-                            <span className="text-[11px] font-black text-slate-500 uppercase italic">Payout Hash</span>
-                            <span className="text-[11px] font-mono text-slate-400 tracking-tighter opacity-60">{block.data.fiscal?.payoutId || 'Pending_Hash...'}</span>
+                            <span className="text-[11px] font-black text-slate-500 uppercase italic">{t('sovereignLedger.payoutHash')}</span>
+                            <span className="text-[11px] font-mono text-slate-400 tracking-tighter opacity-60">{block.data.fiscal?.payoutId || t('sovereignLedger.pendingHash')}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/5 border-2 border-white/5 group-hover:border-emerald-500/20 transition-colors">
                           <CheckCircle2 size={16} className="text-emerald-400" />
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Inference cryptographically verified</span>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{t('sovereignLedger.inferenceVerified')}</span>
                         </div>
                       </div>
                     </div>
