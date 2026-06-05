@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { AlertCircle, RefreshCw, CheckCircle, XCircle, Lightbulb } from 'lucide-react';
 import { AppError } from '../utils/errorHandler';
 import { cn } from '../lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RecoverySuggestion {
   actions: string[];
@@ -26,6 +27,7 @@ export default function ErrorRecovery({
   onDismiss,
   className,
 }: ErrorRecoveryProps) {
+  const { t } = useTranslation();
   const [retrying, setRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
@@ -69,14 +71,14 @@ export default function ErrorRecovery({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
           <Lightbulb className="h-5 w-5" />
-          Recovery Suggestions
+          {t('errorRecovery.recoverySuggestions')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {recovery.actions && recovery.actions.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">
-              Try these steps:
+              {t('errorRecovery.tryTheseSteps')}
             </p>
             <ul className="list-disc list-inside space-y-1 text-xs text-blue-700 dark:text-blue-300">
               {recovery.actions.map((action, idx) => (
@@ -95,11 +97,11 @@ export default function ErrorRecovery({
               className="flex items-center gap-2"
             >
               <RefreshCw className={cn('h-4 w-4', retrying && 'animate-spin')} />
-              {retrying ? 'Retrying...' : retryAfter ? `Retry in ${retryAfter}s` : 'Try Again'}
+              {retrying ? t('errorRecovery.retrying') : retryAfter ? t('errorRecovery.retryIn', { seconds: retryAfter }) : t('errorRecovery.tryAgain')}
             </Button>
             {retryCount > 0 && (
               <span className="text-xs text-blue-600 dark:text-blue-400">
-                Attempt {retryCount}
+                {t('errorRecovery.attempt', { count: retryCount })}
               </span>
             )}
           </div>
@@ -111,7 +113,7 @@ export default function ErrorRecovery({
             variant="ghost"
             className="w-full"
           >
-            Dismiss
+            {t('errorRecovery.dismiss')}
           </Button>
         )}
       </CardContent>

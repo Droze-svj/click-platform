@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DNASummary {
   hasSetupDNA: boolean;
@@ -33,6 +34,7 @@ const VOICE_EMOJI: Record<string, string> = {
 };
 
 export default function CreatorDNA({ onDNASaved, compact = false, className = '' }: CreatorDNAProps) {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState<DNASummary | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -124,7 +126,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
   const currentQuestion = questions[quizStep];
   const progress = questions.length > 0 ? ((quizStep) / questions.length) * 100 : 0;
 
-  if (loading) return <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Loading Creator DNA...</div>;
+  if (loading) return <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>{t('creatorDNA.loading')}</div>;
 
   return (
     <div className={`creator-dna ${className}`} style={{
@@ -139,8 +141,8 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 22 }}>🧬</span>
           <div>
-            <div style={{ color: '#a855f7', fontSize: 13, fontWeight: 700, letterSpacing: '0.05em' }}>CREATOR DNA</div>
-            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Your unique voice profile</div>
+            <div style={{ color: '#a855f7', fontSize: 13, fontWeight: 700, letterSpacing: '0.05em' }}>{t('creatorDNA.headerTitle')}</div>
+            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{t('creatorDNA.headerSubtitle')}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -159,7 +161,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                 cursor: 'pointer'
               }}
             >
-              {v === 'summary' ? '📊 Profile' : v === 'quiz' ? '✏️ Edit DNA' : '👤 Avatar'}
+              {v === 'summary' ? t('creatorDNA.tabProfile') : v === 'quiz' ? t('creatorDNA.tabEditDNA') : t('creatorDNA.tabAvatar')}
             </button>
           ))}
         </div>
@@ -170,10 +172,10 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
         <div style={{ padding: 16 }}>
           {!summary.hasSetupDNA && (
             <div style={{ padding: '12px 14px', background: 'rgba(168,85,247,0.08)', borderRadius: 10, border: '1px dashed rgba(168,85,247,0.3)', marginBottom: 14, textAlign: 'center' }}>
-              <div style={{ color: '#a855f7', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>🧬 Your Creator DNA is not set up</div>
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 10 }}>Set up your DNA so CLICK writes in YOUR voice, not generic AI voice.</div>
+              <div style={{ color: '#a855f7', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{t('creatorDNA.notSetUpTitle')}</div>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 10 }}>{t('creatorDNA.notSetUpDescription')}</div>
               <button type="button" onClick={() => setView('quiz')} style={{ padding: '8px 18px', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                🚀 Set Up My DNA (2 mins)
+                {t('creatorDNA.setUpButton')}
               </button>
             </div>
           )}
@@ -183,13 +185,13 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
               {/* Voice Profile */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
                 {[
-                  { label: 'Tone', value: summary.voice.tone, emoji: VOICE_EMOJI[summary.voice.tone] || '🎙️' },
-                  { label: 'Personality', value: summary.voice.personality, emoji: VOICE_EMOJI[summary.voice.personality] || '💡' },
-                  { label: 'Pacing', value: summary.voice.pacing, emoji: summary.voice.pacing === 'fast' ? '⚡' : summary.voice.pacing === 'slow' ? '🎬' : '🎯' }
+                  { key: 'tone', label: t('creatorDNA.voiceTone'), value: summary.voice.tone, emoji: VOICE_EMOJI[summary.voice.tone] || '🎙️' },
+                  { key: 'personality', label: t('creatorDNA.voicePersonality'), value: summary.voice.personality, emoji: VOICE_EMOJI[summary.voice.personality] || '💡' },
+                  { key: 'pacing', label: t('creatorDNA.voicePacing'), value: summary.voice.pacing, emoji: summary.voice.pacing === 'fast' ? '⚡' : summary.voice.pacing === 'slow' ? '🎬' : '🎯' }
                 ].map(item => (
-                  <div key={item.label} style={{ padding: '10px 12px', background: 'rgba(168,85,247,0.08)', borderRadius: 8, border: '1px solid rgba(168,85,247,0.12)', textAlign: 'center' }}>
+                  <div key={item.key} style={{ padding: '10px 12px', background: 'rgba(168,85,247,0.08)', borderRadius: 8, border: '1px solid rgba(168,85,247,0.12)', textAlign: 'center' }}>
                     <div style={{ fontSize: 18, marginBottom: 4 }}>{item.emoji}</div>
-                    <div style={{ color: '#a855f7', fontSize: 11, letterSpacing: '0.06em', marginBottom: 2 }}>{item.label.toUpperCase()}</div>
+                    <div style={{ color: '#a855f7', fontSize: 11, letterSpacing: '0.06em', marginBottom: 2 }}>{item.label}</div>
                     <div style={{ color: '#fff', fontSize: 12, fontWeight: 600 }}>{item.value}</div>
                   </div>
                 ))}
@@ -198,7 +200,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
               {/* Core Message */}
               {summary.content.coreMessage && (
                 <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', marginBottom: 10 }}>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: '0.08em', marginBottom: 4 }}>CORE MESSAGE</div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: '0.08em', marginBottom: 4 }}>{t('creatorDNA.coreMessageLabel')}</div>
                   <div style={{ color: '#fff', fontSize: 12, lineHeight: 1.5 }}>&quot;{summary.content.coreMessage}&quot;</div>
                 </div>
               )}
@@ -206,7 +208,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
               {/* Unique Angle */}
               {summary.content.uniqueAngle && (
                 <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', marginBottom: 10 }}>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: '0.08em', marginBottom: 4 }}>UNIQUE ANGLE</div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: '0.08em', marginBottom: 4 }}>{t('creatorDNA.uniqueAngleLabel')}</div>
                   <div style={{ color: '#fff', fontSize: 12, lineHeight: 1.5 }}>{summary.content.uniqueAngle}</div>
                 </div>
               )}
@@ -214,7 +216,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
               {/* Clichés to Avoid */}
               {summary.clichesToAvoid.length > 0 && (
                 <div style={{ padding: '10px 12px', background: 'rgba(255,60,60,0.06)', borderRadius: 8, border: '1px solid rgba(255,60,60,0.12)' }}>
-                  <div style={{ color: '#ff6060', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>🚫 YOUR OVERUSED PHRASES (CLICK avoids these)</div>
+                  <div style={{ color: '#ff6060', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>{t('creatorDNA.overusedPhrasesLabel')}</div>
                   <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                     {summary.clichesToAvoid.map((p, i) => (
                       <span key={i} style={{ padding: '2px 8px', background: 'rgba(255,60,60,0.1)', borderRadius: 4, color: '#ff9999', fontSize: 11, textDecoration: 'line-through' }}>
@@ -235,8 +237,8 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
           {/* Progress bar */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 6 }}>
-              <span>Question {quizStep + 1} of {questions.length}</span>
-              <span>{Math.round(progress)}% complete</span>
+              <span>{t('creatorDNA.questionProgress', { current: quizStep + 1, total: questions.length })}</span>
+              <span>{t('creatorDNA.percentComplete', { percent: Math.round(progress) })}</span>
             </div>
             <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2 }}>
               <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, #a855f7, #7c3aed)', borderRadius: 2, transition: 'width 0.3s' }} />
@@ -248,7 +250,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
             <div>
               <div style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 14, lineHeight: 1.5 }}>
                 {currentQuestion.question}
-                {currentQuestion.optional && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 400 }}> (optional)</span>}
+                {currentQuestion.optional && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 400 }}> {t('creatorDNA.optional')}</span>}
               </div>
 
               {currentQuestion.type === 'single_select' && currentQuestion.options && (
@@ -340,7 +342,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                 fontSize: 13, cursor: quizStep === 0 ? 'not-allowed' : 'pointer'
               }}
             >
-              ← Back
+              {t('creatorDNA.back')}
             </button>
 
             {quizStep < questions.length - 1 ? (
@@ -355,7 +357,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                   cursor: 'pointer'
                 }}
               >
-                Next →
+                {t('creatorDNA.next')}
               </button>
             ) : (
               <button
@@ -370,7 +372,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                   cursor: saving ? 'not-allowed' : 'pointer'
                 }}
               >
-                {saved ? '✅ DNA Saved!' : saving ? 'Saving...' : '🧬 Save My DNA'}
+                {saved ? t('creatorDNA.dnaSaved') : saving ? t('creatorDNA.saving') : t('creatorDNA.saveMyDNA')}
               </button>
             )}
           </div>
@@ -404,32 +406,32 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                  avatarData?.characterId === 'alchemist' ? '🧙‍♂️' :
                  avatarData?.characterId === 'neon_hustler' ? '🌃' : '✨'}
               </div>
-              <div style={{ color: '#a855f7', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>PREVIEW</div>
+              <div style={{ color: '#a855f7', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>{t('creatorDNA.preview')}</div>
               <div style={{
                 position: 'absolute', bottom: 0, width: '100%', padding: '6px 0',
                 background: 'rgba(168,85,247,0.1)', textAlign: 'center', color: '#fff', fontSize: 10
               }}>
-                {avatarData?.characterId?.replace('_', ' ').toUpperCase() || 'SELECT AN ARCHETYPE'}
+                {avatarData?.characterId?.replace('_', ' ').toUpperCase() || t('creatorDNA.selectArchetype')}
               </div>
             </div>
 
             {/* Archetype Info Section */}
             <div style={{ flex: 1 }}>
-              <div style={{ color: '#fff', fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Digital Identity Synthesis</div>
+              <div style={{ color: '#fff', fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{t('creatorDNA.digitalIdentityTitle')}</div>
               <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, lineHeight: 1.5, marginBottom: 16 }}>
-                Your avatar archetype defines how you appear in autonomous content and meta-verses. Choose a persona that resonates with your brand voice.
+                {t('creatorDNA.digitalIdentityDescription')}
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {[
-                  { id: 'modern_minimalist', label: '🧑‍💼 Minimalist' },
-                  { id: 'casual_creator', label: '🤳 Casual' },
-                  { id: 'tech_innovator', label: '💻 Innovator' },
-                  { id: 'investor', label: '📈 Investor' },
-                  { id: 'biohacker', label: '🧬 Bio-Hacker' },
-                  { id: 'alchemist', label: '🧙‍♂️ Alchemist' },
-                  { id: 'neon_hustler', label: '🌃 Hustler' },
-                  { id: 'custom', label: '✨ Custom' }
+                  { id: 'modern_minimalist', label: t('creatorDNA.archetypeMinimalist') },
+                  { id: 'casual_creator', label: t('creatorDNA.archetypeCasual') },
+                  { id: 'tech_innovator', label: t('creatorDNA.archetypeInnovator') },
+                  { id: 'investor', label: t('creatorDNA.archetypeInvestor') },
+                  { id: 'biohacker', label: t('creatorDNA.archetypeBioHacker') },
+                  { id: 'alchemist', label: t('creatorDNA.archetypeAlchemist') },
+                  { id: 'neon_hustler', label: t('creatorDNA.archetypeHustler') },
+                  { id: 'custom', label: t('creatorDNA.archetypeCustom') }
                 ].map(av => (
                   <button
                     type="button"
@@ -457,7 +459,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
             <div style={{
               marginBottom: 20, padding: 12, background: 'rgba(168,85,247,0.05)', borderRadius: 10, border: '1px solid rgba(168,85,247,0.15)'
             }}>
-              <div style={{ color: '#a855f7', fontSize: 11, fontWeight: 700, marginBottom: 6, letterSpacing: '0.05em' }}>VRM MODEL INTEGRATION</div>
+              <div style={{ color: '#a855f7', fontSize: 11, fontWeight: 700, marginBottom: 6, letterSpacing: '0.05em' }}>{t('creatorDNA.vrmModelIntegration')}</div>
               <input
                 type="text"
                 value={avatarData?.customUrl || ''}
@@ -469,13 +471,13 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                   boxSizing: 'border-box'
                 }}
               />
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 6 }}>Support for .vrm, .glb, and ReadyPlayerMe formats.</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 6 }}>{t('creatorDNA.vrmFormatSupport')}</div>
             </div>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ color: saved ? '#00c864' : 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: 500 }}>
-              {saved ? '✨ Synchronized with Neural Core' : 'Select an archetype above'}
+              {saved ? t('creatorDNA.synchronizedStatus') : t('creatorDNA.selectArchetypeAbove')}
             </div>
             <button
               type="button"
@@ -491,7 +493,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                 transition: 'all 0.3s ease'
               }}
             >
-              {saved ? '✅ IDENTITY SAVED' : saving ? 'SYNCING...' : '👤 FINALIZE AVATAR'}
+              {saved ? t('creatorDNA.identitySaved') : saving ? t('creatorDNA.syncing') : t('creatorDNA.finalizeAvatar')}
             </button>
           </div>
         </div>

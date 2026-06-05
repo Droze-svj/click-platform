@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, Eye, Heart, MessageCircle, Share2, BarChart3 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ContentInsightsProps {
   contentId: string
@@ -24,6 +25,7 @@ interface Insights {
 export default function ContentInsights({ contentId, compact = false }: ContentInsightsProps) {
   const [insights, setInsights] = useState<Insights | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { t } = useTranslation()
 
   const loadInsights = useCallback(async () => {
     try {
@@ -68,7 +70,7 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)]">Quick Insights</h4>
+            <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)]">{t('contentInsights.quickInsights')}</h4>
           </div>
           {insights.trend === 'up' ? (
             <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -80,19 +82,19 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
         <div className="grid grid-cols-4 gap-2 text-center">
           <div>
             <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.views}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Views</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.views')}</div>
           </div>
           <div>
             <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.engagement}%</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Engagement</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.engagement')}</div>
           </div>
           <div>
             <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.likes}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Likes</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.likes')}</div>
           </div>
           <div>
             <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.shares}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Shares</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.shares')}</div>
           </div>
         </div>
       </div>
@@ -104,7 +106,7 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
       <div className="flex items-center gap-2 mb-4">
         <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
         <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-          Content Insights
+          {t('contentInsights.title')}
         </h3>
         {insights.trend === 'up' && (
           <div className="ml-auto flex items-center gap-1 text-green-600 dark:text-green-400">
@@ -119,22 +121,22 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
           <div className="text-2xl font-bold text-gray-900 dark:text-white">{insights.views}</div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">Views</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.views')}</div>
         </div>
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <Heart className="w-5 h-5 text-red-600 dark:text-red-400 mx-auto mb-2" />
           <div className="text-2xl font-bold text-gray-900 dark:text-white">{insights.likes}</div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">Likes</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.likes')}</div>
         </div>
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400 mx-auto mb-2" />
           <div className="text-2xl font-bold text-gray-900 dark:text-white">{insights.comments}</div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">Comments</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.comments')}</div>
         </div>
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <Share2 className="w-5 h-5 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
           <div className="text-2xl font-bold text-gray-900 dark:text-white">{insights.shares}</div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">Shares</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.shares')}</div>
         </div>
       </div>
 
@@ -142,14 +144,14 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
       <div className="space-y-3">
         <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <p className="text-sm text-blue-800 dark:text-blue-300">
-            <strong>Best Platform:</strong> {insights.bestPlatform}
+            <strong>{t('contentInsights.bestPlatform')}</strong> {insights.bestPlatform}
           </p>
         </div>
         
         {insights.optimalPostTime && (
           <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
             <p className="text-sm text-green-800 dark:text-green-300">
-              <strong>Optimal Post Time:</strong> {insights.optimalPostTime}
+              <strong>{t('contentInsights.optimalPostTime')}</strong> {insights.optimalPostTime}
             </p>
           </div>
         )}
@@ -157,7 +159,7 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
         {insights.recommendations && insights.recommendations.length > 0 && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Recommendations
+              {t('contentInsights.recommendations')}
             </h4>
             <ul className="space-y-1">
               {insights.recommendations.map((rec, index) => (

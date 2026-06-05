@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
 import { apiGet, apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Suggestion {
   type: 'workflow' | 'action' | 'onboarding'
@@ -17,6 +18,7 @@ interface Suggestion {
 
 export default function NextStepsPanel() {
   const router = useRouter()
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,8 +53,8 @@ export default function NextStepsPanel() {
         list = [
           {
             type: 'onboarding',
-            title: step.title || 'Next step',
-            description: step.description || 'Continue setup',
+            title: step.title || t('nextStepsPanel.nextStep'),
+            description: step.description || t('nextStepsPanel.continueSetup'),
             route: routeByComponent[step.component] || '/dashboard',
           },
           ...list,
@@ -113,7 +115,7 @@ export default function NextStepsPanel() {
     }`}>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 className="font-semibold text-sm">Suggested Next Steps</h3>
+          <h3 className="font-semibold text-sm">{t('nextStepsPanel.suggestedNextSteps')}</h3>
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}

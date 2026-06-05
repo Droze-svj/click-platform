@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ClientSummary {
   clientWorkspaceId: string
@@ -51,6 +52,7 @@ interface MultiClientRollupDashboardProps {
 }
 
 export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiClientRollupDashboardProps) {
+  const { t } = useTranslation()
   const [rollup, setRollup] = useState<MultiClientRollup | null>(null)
   const [loading, setLoading] = useState(true)
   const [aiSummary, setAiSummary] = useState<string | null>(null)
@@ -105,7 +107,7 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
   }
 
   if (!rollup) {
-    return <div className="p-8 text-center text-gray-500">No rollup data available</div>
+    return <div className="p-8 text-center text-gray-500">{t('multiClientRollupDashboard.noRollupData')}</div>
   }
 
   const getSeverityColor = (severity: string) => {
@@ -127,21 +129,21 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Multi-Client Rollup Dashboard</h1>
+        <h1 className="text-3xl font-bold">{t('multiClientRollupDashboard.title')}</h1>
         <button
           type="button"
           onClick={generateSummary}
           disabled={generatingSummary}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
         >
-          {generatingSummary ? 'Generating...' : 'Generate AI Summary'}
+          {generatingSummary ? t('multiClientRollupDashboard.generating') : t('multiClientRollupDashboard.generateAiSummary')}
         </button>
       </div>
 
       {/* AI Summary */}
       {aiSummary && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <h2 className="font-semibold mb-2">AI-Generated Summary</h2>
+          <h2 className="font-semibold mb-2">{t('multiClientRollupDashboard.aiGeneratedSummary')}</h2>
           <p className="text-gray-700 whitespace-pre-wrap">{aiSummary}</p>
         </div>
       )}
@@ -149,61 +151,61 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Total Clients</div>
+          <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.totalClients')}</div>
           <div className="text-2xl font-bold">{rollup.riskSummary.totalClients}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Clients at Risk</div>
+          <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.clientsAtRisk')}</div>
           <div className="text-2xl font-bold text-red-600">{rollup.riskSummary.clientsAtRisk}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Average Health Score</div>
+          <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.averageHealthScore')}</div>
           <div className={`text-2xl font-bold ${getHealthColor(rollup.totals.averageHealthScore)}`}>
             {rollup.totals.averageHealthScore.toFixed(0)}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Total Revenue</div>
+          <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.totalRevenue')}</div>
           <div className="text-2xl font-bold">${rollup.totals.totalRevenue.toLocaleString()}</div>
         </div>
       </div>
 
       {/* Risk Summary */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Risk Summary</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('multiClientRollupDashboard.riskSummary')}</h2>
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-red-600">{rollup.riskSummary.criticalRisks}</div>
-            <div className="text-sm text-gray-600">Critical</div>
+            <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.critical')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600">{rollup.riskSummary.highRisks}</div>
-            <div className="text-sm text-gray-600">High</div>
+            <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.high')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-yellow-600">{(rollup.riskSummary as any).mediumRisks || 0}</div>
-            <div className="text-sm text-gray-600">Medium</div>
+            <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.medium')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-600">{(rollup.riskSummary as any).lowRisks || 0}</div>
-            <div className="text-sm text-gray-600">Low</div>
+            <div className="text-sm text-gray-600">{t('multiClientRollupDashboard.low')}</div>
           </div>
         </div>
       </div>
 
       {/* Client List */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">All Clients</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('multiClientRollupDashboard.allClients')}</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left p-3">Client</th>
-                <th className="text-right p-3">Health Score</th>
-                <th className="text-right p-3">Engagement Rate</th>
-                <th className="text-right p-3">ROI</th>
-                <th className="text-right p-3">Revenue</th>
-                <th className="text-center p-3">Risk Flags</th>
+                <th className="text-left p-3">{t('multiClientRollupDashboard.client')}</th>
+                <th className="text-right p-3">{t('multiClientRollupDashboard.healthScore')}</th>
+                <th className="text-right p-3">{t('multiClientRollupDashboard.engagementRate')}</th>
+                <th className="text-right p-3">{t('multiClientRollupDashboard.roi')}</th>
+                <th className="text-right p-3">{t('multiClientRollupDashboard.revenue')}</th>
+                <th className="text-center p-3">{t('multiClientRollupDashboard.riskFlags')}</th>
               </tr>
             </thead>
             <tbody>
@@ -251,7 +253,7 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
       {/* Top Performers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Top by Engagement</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('multiClientRollupDashboard.topByEngagement')}</h2>
           <div className="space-y-3">
             {rollup.topPerformers.byEngagement.map((client, i) => (
               <div key={i} className="flex justify-between items-center">
@@ -262,7 +264,7 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Top by ROI</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('multiClientRollupDashboard.topByRoi')}</h2>
           <div className="space-y-3">
             {rollup.topPerformers.byRoi.map((client, i) => (
               <div key={i} className="flex justify-between items-center">

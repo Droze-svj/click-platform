@@ -8,6 +8,7 @@ import { Loader2, FileText, Play, Zap, Sparkles } from 'lucide-react';
 import { Skeleton, CardSkeleton } from './LoadingSkeleton';
 // import { ErrorBoundary } from './ErrorBoundary'; // Temporarily disabled for build
 import { cn } from '../lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface WorkflowTemplate {
   name: string;
@@ -23,6 +24,7 @@ export default function WorkflowTemplates() {
   const [categories, setCategories] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchTemplates();
@@ -76,7 +78,7 @@ export default function WorkflowTemplates() {
       });
       const data = await response.json();
       if (data.success) {
-        alert('Workflow created successfully!');
+        alert(t('workflowTemplates.createSuccess'));
       }
     } catch (error) {
       console.error('Create from template error:', error);
@@ -92,9 +94,9 @@ export default function WorkflowTemplates() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-purple-600" />
-              Workflow Templates
+              {t('workflowTemplates.title')}
               <Badge variant="outline" className="ml-auto">
-                {Object.keys(templates).length} templates
+                {t('workflowTemplates.templateCount', { count: Object.keys(templates).length })}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -104,7 +106,7 @@ export default function WorkflowTemplates() {
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Zap className="h-4 w-4 text-amber-500" />
-                  Suggested for you
+                  {t('workflowTemplates.suggestedForYou')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {suggestedIds.map((id) => {
@@ -127,8 +129,8 @@ export default function WorkflowTemplates() {
                         <CardContent className="space-y-3">
                           <p className="text-sm text-muted-foreground">{template.description}</p>
                           <div className="flex flex-wrap gap-2">
-                            <Badge variant="outline">{template.triggers?.length ?? 0} triggers</Badge>
-                            <Badge variant="outline">{template.actions?.length ?? 0} actions</Badge>
+                            <Badge variant="outline">{t('workflowTemplates.triggerCount', { count: template.triggers?.length ?? 0 })}</Badge>
+                            <Badge variant="outline">{t('workflowTemplates.actionCount', { count: template.actions?.length ?? 0 })}</Badge>
                           </div>
                           <Button
                             onClick={() => createFromTemplate(id)}
@@ -138,12 +140,12 @@ export default function WorkflowTemplates() {
                             {creating === id ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Creating...
+                                {t('workflowTemplates.creating')}
                               </>
                             ) : (
                               <>
                                 <Play className="mr-2 h-4 w-4" />
-                                Use Template
+                                {t('workflowTemplates.useTemplate')}
                               </>
                             )}
                           </Button>
@@ -178,8 +180,8 @@ export default function WorkflowTemplates() {
                         <CardContent className="space-y-3">
                           <p className="text-sm text-muted-foreground">{item.description}</p>
                           <div className="flex flex-wrap gap-2">
-                            <Badge variant="outline">{template.triggers.length} triggers</Badge>
-                            <Badge variant="outline">{template.actions.length} actions</Badge>
+                            <Badge variant="outline">{t('workflowTemplates.triggerCount', { count: template.triggers.length })}</Badge>
+                            <Badge variant="outline">{t('workflowTemplates.actionCount', { count: template.actions.length })}</Badge>
                           </div>
                           <Button
                             onClick={() => createFromTemplate(item.id)}
@@ -189,12 +191,12 @@ export default function WorkflowTemplates() {
                             {creating === item.id ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Creating...
+                                {t('workflowTemplates.creating')}
                               </>
                             ) : (
                               <>
                                 <Play className="mr-2 h-4 w-4" />
-                                Use Template
+                                {t('workflowTemplates.useTemplate')}
                               </>
                             )}
                           </Button>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, Filter, X, Clock, Star, TrendingUp, Sparkles, Save, History, Bell, Eye, MoreVertical, Copy, ExternalLink, AlertCircle } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SearchResult {
   content: any
@@ -24,6 +25,7 @@ interface SearchSuggestion {
 }
 
 export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (content: any) => void }) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([])
@@ -239,7 +241,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const createSearchAlert = async () => {
     try {
-      const name = prompt('Enter alert name:')
+      const name = prompt(t('advancedSearch.enterAlertName'))
       if (!name) return
 
       await apiPost('/search/alerts', {
@@ -248,10 +250,10 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
         filters,
         frequency: 'daily'
       })
-      alert('Search alert created!')
+      alert(t('advancedSearch.searchAlertCreated'))
       loadSearchAlerts()
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error creating alert')
+      alert(error.response?.data?.error || t('advancedSearch.errorCreatingAlert'))
     }
   }
 
@@ -328,7 +330,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search content, tags, descriptions..."
+              placeholder={t('advancedSearch.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
             {query && (
@@ -365,12 +367,12 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Searching...
+                {t('advancedSearch.searching')}
               </>
             ) : (
               <>
                 <Search className="w-5 h-5" />
-                Search
+                {t('advancedSearch.search')}
               </>
             )}
           </button>
@@ -401,14 +403,14 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {showFilters && facets && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Filters</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('advancedSearch.filters')}</h3>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={clearFilters}
                 className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
-                Clear All
+                {t('advancedSearch.clearAll')}
               </button>
               <button
                 type="button"
@@ -424,7 +426,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           {facets.platforms.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Platforms
+                {t('advancedSearch.platforms')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {facets.platforms.map(platform => (
@@ -449,7 +451,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           {facets.contentTypes.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Content Types
+                {t('advancedSearch.contentTypes')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {facets.contentTypes.map(type => (
@@ -474,7 +476,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           {facets.tags.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tags
+                {t('advancedSearch.tags')}
               </label>
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {facets.tags.slice(0, 20).map(tag => (
@@ -499,7 +501,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           {facets.statuses.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
+                {t('advancedSearch.status')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {facets.statuses.map(status => (
@@ -534,7 +536,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center gap-2 text-sm"
         >
           <Sparkles className="w-4 h-4" />
-          {searchType === 'semantic' ? 'AI Search' : searchType === 'faceted' ? 'Faceted Search' : 'Natural Language'}
+          {searchType === 'semantic' ? t('advancedSearch.aiSearch') : searchType === 'faceted' ? t('advancedSearch.facetedSearch') : t('advancedSearch.naturalLanguage')}
         </button>
         {query && (
           <>
@@ -544,7 +546,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center gap-2 text-sm"
             >
               <Save className="w-4 h-4" />
-              Save Search
+              {t('advancedSearch.saveSearch')}
             </button>
             <button
               type="button"
@@ -552,7 +554,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center gap-2 text-sm"
             >
               <Bell className="w-4 h-4" />
-              Create Alert
+              {t('advancedSearch.createAlert')}
             </button>
           </>
         )}
@@ -565,7 +567,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <History className="w-4 h-4" />
-                Recent Searches
+                {t('advancedSearch.recentSearches')}
               </h3>
               <div className="space-y-2">
                 {searchHistory.slice(0, 5).map((item, idx) => (
@@ -575,7 +577,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                     onClick={() => handleHistoryClick(item)}
                     className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
                   >
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{item.query || 'No query'}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{item.query || t('advancedSearch.noQuery')}</span>
                     <Clock className="w-3 h-3 text-gray-400" />
                   </button>
                 ))}
@@ -587,7 +589,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <Star className="w-4 h-4" />
-                Saved Searches
+                {t('advancedSearch.savedSearches')}
               </h3>
               <div className="space-y-2">
                 {savedSearches.slice(0, 5).map((saved) => (
@@ -611,7 +613,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {clusteredResults && clusteredResults.clusters.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-            Results by Category
+            {t('advancedSearch.resultsByCategory')}
           </h3>
           <div className="space-y-4">
             {clusteredResults.clusters.map((cluster: any) => (
@@ -627,7 +629,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                       className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer"
                     >
                       <p className="text-sm text-gray-900 dark:text-white">
-                        {item.content?.title || item.title || 'Untitled'}
+                        {item.content?.title || item.title || t('advancedSearch.untitled')}
                       </p>
                     </div>
                   ))}
@@ -643,7 +645,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-              {results.length} {results.length === 1 ? 'result' : 'results'}
+              {results.length === 1
+                ? t('advancedSearch.resultCountSingular', { count: results.length })
+                : t('advancedSearch.resultCountPlural', { count: results.length })}
             </h3>
             <div className="flex gap-2">
               {query && (
@@ -654,7 +658,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                     className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
                     <Save className="w-4 h-4" />
-                    Save
+                    {t('advancedSearch.save')}
                   </button>
                   <button
                     type="button"
@@ -662,7 +666,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                     className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
                   >
                     <Bell className="w-4 h-4" />
-                    Alert
+                    {t('advancedSearch.alert')}
                   </button>
                 </>
               )}
@@ -681,20 +685,20 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                       onClick={() => handleResultClick(result, idx)}
                       className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                     >
-                      {result.content.title || 'Untitled'}
+                      {result.content.title || t('advancedSearch.untitled')}
                     </h4>
                   </div>
                   <div className="flex items-center gap-2">
                     {result.relevanceScore > 0 && (
                       <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
-                        {result.relevanceScore}% match
+                        {t('advancedSearch.matchPercent', { score: result.relevanceScore })}
                       </span>
                     )}
                     <button
                       type="button"
                       onClick={() => handleResultClick(result, idx)}
                       className="p-1 text-gray-400 hover:text-gray-600"
-                      title="Preview"
+                      title={t('advancedSearch.preview')}
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -716,7 +720,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                   {result.matchedFields.length > 0 && (
                     <>
                       <span>•</span>
-                      <span>Matched: {result.matchedFields.join(', ')}</span>
+                      <span>{t('advancedSearch.matchedFields', { fields: result.matchedFields.join(', ') })}</span>
                     </>
                   )}
                 </div>
@@ -731,7 +735,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
           <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
             <Bell className="w-4 h-4" />
-            Active Search Alerts
+            {t('advancedSearch.activeSearchAlerts')}
           </h3>
           <div className="space-y-2">
             {searchAlerts.filter((a: any) => a.isActive).slice(0, 5).map((alert: any) => (
@@ -739,7 +743,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{alert.name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {alert.frequency} • {alert.notificationCount} notifications
+                    {t('advancedSearch.alertFrequencyNotifications', { frequency: alert.frequency, count: alert.notificationCount })}
                   </p>
                 </div>
                 <button
@@ -751,7 +755,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                   }}
                   className="text-xs text-blue-600 hover:text-blue-700"
                 >
-                  Run
+                  {t('advancedSearch.run')}
                 </button>
               </div>
             ))}
@@ -782,7 +786,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Type</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedSearch.type')}</p>
                   <p className="font-medium text-gray-900 dark:text-white capitalize">
                     {previewContent.content.type}
                   </p>
@@ -790,20 +794,20 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
                 {previewContent.content.description && (
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Description</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedSearch.description')}</p>
                     <p className="text-gray-900 dark:text-white">{previewContent.content.description}</p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Posts</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedSearch.totalPosts')}</p>
                     <p className="text-lg font-semibold text-gray-900 dark:text-white">
                       {previewContent.stats.totalPosts}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Engagement</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedSearch.totalEngagement')}</p>
                     <p className="text-lg font-semibold text-gray-900 dark:text-white">
                       {previewContent.stats.totalEngagement.toLocaleString()}
                     </p>
@@ -813,17 +817,17 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                 <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                   {previewContent.quickActions.canEdit && (
                     <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                      Edit
+                      {t('advancedSearch.edit')}
                     </button>
                   )}
                   {previewContent.quickActions.canDuplicate && (
                     <button className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
-                      Duplicate
+                      {t('advancedSearch.duplicate')}
                     </button>
                   )}
                   {previewContent.quickActions.canSchedule && (
                     <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                      Schedule
+                      {t('advancedSearch.schedule')}
                     </button>
                   )}
                 </div>
@@ -837,8 +841,8 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {!loading && query && results.length === 0 && (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p>No results found for &quot;{query}&quot;</p>
-          <p className="text-sm mt-2">Try adjusting your search or filters</p>
+          <p>{t('advancedSearch.noResultsFor', { query })}</p>
+          <p className="text-sm mt-2">{t('advancedSearch.tryAdjusting')}</p>
         </div>
       )}
     </div>

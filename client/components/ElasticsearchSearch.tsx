@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Search, Loader2, Sparkles } from 'lucide-react'
 import { useDebounce } from '../hooks/useDebounce'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SearchResult {
   _id: string
@@ -19,8 +20,9 @@ interface ElasticsearchSearchProps {
 
 export default function ElasticsearchSearch({
   onResultSelect,
-  placeholder = 'Search with Elasticsearch...',
+  placeholder,
 }: ElasticsearchSearchProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [suggestions, setSuggestions] = useState<string[]>([])
@@ -118,7 +120,7 @@ export default function ElasticsearchSearch({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('elasticsearchSearch.searchPlaceholder')}
           className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
         {isLoading && (
@@ -175,7 +177,7 @@ export default function ElasticsearchSearch({
                 </div>
                 {result._score && (
                   <span className="text-xs text-purple-600 dark:text-purple-400">
-                    Score: {result._score.toFixed(2)}
+                    {t('elasticsearchSearch.score', { score: result._score.toFixed(2) })}
                   </span>
                 )}
               </div>

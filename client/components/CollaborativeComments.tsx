@@ -7,6 +7,7 @@ import { apiGet, apiPost } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Comment {
   _id: string
@@ -19,6 +20,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
   const { user } = useAuth()
   const { on, off, socket } = useSocket(user?.id)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
@@ -78,14 +80,14 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
           teamId,
           pulse: {
             userName: user.name,
-            action: 'Commented on',
+            action: t('collaborativeComments.commentedOn'),
             target: title,
             type: 'collaboration'
           }
         })
       }
     } catch (err) {
-      showToast('Failed to send comment', 'error')
+      showToast(t('collaborativeComments.sendFailed'), 'error')
     } finally {
       setSending(false)
     }
@@ -102,18 +104,18 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
       <div className="p-6 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MessageSquare className="w-4 h-4 text-indigo-500" />
-          <h3 className="text-xs font-black uppercase tracking-widest text-[var(--text-main)] italic">Neural Feedback Thread</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-[var(--text-main)] italic">{t('collaborativeComments.title')}</h3>
         </div>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
         {loading ? (
           <div className="flex items-center justify-center h-full text-slate-600 text-[10px] uppercase font-bold tracking-[0.2em] animate-pulse">
-            Retrieving Transmissions...
+            {t('collaborativeComments.loading')}
           </div>
         ) : comments.length === 0 ? (
           <div className="flex items-center justify-center h-full text-slate-700 text-[10px] uppercase font-bold tracking-[0.2em] italic">
-            No active signals in this frequency
+            {t('collaborativeComments.empty')}
           </div>
         ) : (
           <AnimatePresence initial={false}>
@@ -146,7 +148,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Inject feedback..."
+            placeholder={t('collaborativeComments.inputPlaceholder')}
             className="w-full bg-black/40 border border-white/10 rounded-2xl pl-4 pr-12 py-4 text-xs text-white placeholder:text-slate-700 focus:outline-none focus:border-indigo-500 transition-all"
           />
           <button

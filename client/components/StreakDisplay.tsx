@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -12,6 +13,7 @@ interface Streak {
 }
 
 export default function StreakDisplay() {
+  const { t } = useTranslation()
   const [streak, setStreak] = useState<Streak | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -42,19 +44,19 @@ export default function StreakDisplay() {
     <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg p-4 text-white">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm opacity-90">Current Streak</p>
+          <p className="text-sm opacity-90">{t('streakDisplay.currentStreak')}</p>
           <p className="text-3xl font-bold flex items-center gap-2">
             {streak.currentStreak} {streak.currentStreak > 0 ? '🔥' : ''}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-sm opacity-90">Longest Streak</p>
+          <p className="text-sm opacity-90">{t('streakDisplay.longestStreak')}</p>
           <p className="text-2xl font-bold">{streak.longestStreak} ⭐</p>
         </div>
       </div>
       {streak.currentStreak > 0 && (
         <p className="text-xs mt-2 opacity-75">
-          Keep it up! Come back tomorrow to continue your streak.
+          {t('streakDisplay.keepItUp')}
         </p>
       )}
     </div>

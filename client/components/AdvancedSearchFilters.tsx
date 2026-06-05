@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Search, Filter, X, Star, Clock } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AdvancedSearchFiltersProps {
   onSearch: (query: string, filters: any) => void
@@ -10,6 +11,7 @@ interface AdvancedSearchFiltersProps {
 }
 
 export default function AdvancedSearchFilters({ onSearch, items, searchFields = ['name', 'description'] }: AdvancedSearchFiltersProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({
     category: '',
@@ -74,7 +76,7 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search effects, presets, templates..."
+          placeholder={t('advancedSearchFilters.searchPlaceholder')}
           className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
         {searchQuery && (
@@ -100,7 +102,7 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
           }`}
         >
           <Clock className="w-4 h-4 inline mr-1" />
-          Recent
+          {t('advancedSearchFilters.recent')}
         </button>
         <button
           type="button"
@@ -112,7 +114,7 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
           }`}
         >
           <Star className="w-4 h-4 inline mr-1" />
-          Favorites
+          {t('advancedSearchFilters.favorites')}
         </button>
         <button
           type="button"
@@ -123,25 +125,27 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
               : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
           }`}
         >
-          Most Used
+          {t('advancedSearchFilters.mostUsed')}
         </button>
         <select
           value={filters.category}
           onChange={(e) => setFilters({ ...filters, category: e.target.value })}
           className="px-3 py-1 rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
         >
-          <option value="">All Categories</option>
-          <option value="color-grading">Color Grading</option>
-          <option value="audio-mixing">Audio Mixing</option>
-          <option value="typography">Typography</option>
-          <option value="motion-graphics">Motion Graphics</option>
-          <option value="transitions">Transitions</option>
+          <option value="">{t('advancedSearchFilters.allCategories')}</option>
+          <option value="color-grading">{t('advancedSearchFilters.colorGrading')}</option>
+          <option value="audio-mixing">{t('advancedSearchFilters.audioMixing')}</option>
+          <option value="typography">{t('advancedSearchFilters.typography')}</option>
+          <option value="motion-graphics">{t('advancedSearchFilters.motionGraphics')}</option>
+          <option value="transitions">{t('advancedSearchFilters.transitions')}</option>
         </select>
       </div>
 
       {/* Results Count */}
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'}
+        {filteredItems.length === 1
+          ? t('advancedSearchFilters.resultCountSingular', { count: filteredItems.length })
+          : t('advancedSearchFilters.resultCountPlural', { count: filteredItems.length })}
       </div>
     </div>
   )

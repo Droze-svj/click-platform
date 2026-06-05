@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { DollarSign, TrendingUp, Target, Calculator } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -23,6 +24,7 @@ interface ROIData {
 }
 
 export default function ROICalculator() {
+  const { t } = useTranslation()
   const [roiData, setRoiData] = useState<ROIData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -44,12 +46,12 @@ export default function ROICalculator() {
         setRoiData(response.data.data)
       } else {
         setRoiData(null)
-        setError('Unable to load ROI data.')
+        setError(t('roiCalculator.unableToLoad'))
       }
     } catch (error: any) {
       console.error('ROI data error:', error)
       setRoiData(null)
-      setError('Unable to load ROI data. Please try again.')
+      setError(t('roiCalculator.unableToLoadRetry'))
     } finally {
       setLoading(false)
     }
@@ -94,19 +96,19 @@ export default function ROICalculator() {
         <div className="flex items-center gap-2 mb-4">
           <Calculator className="w-6 h-6 text-green-600" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            ROI Calculator
+            {t('roiCalculator.title')}
           </h3>
         </div>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {error || 'No ROI data yet.'}
+            {error || t('roiCalculator.noData')}
           </p>
           <button
             type="button"
             onClick={() => loadROIData()}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-colors"
           >
-            Retry
+            {t('roiCalculator.retry')}
           </button>
         </div>
       </div>
@@ -119,13 +121,13 @@ export default function ROICalculator() {
         <div className="flex items-center gap-2">
           <Calculator className="w-6 h-6 text-green-600" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            ROI Calculator
+            {t('roiCalculator.title')}
           </h3>
         </div>
         <div className="flex gap-4">
           <div>
             <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
-              Hourly Rate ($)
+              {t('roiCalculator.hourlyRate')}
             </label>
             <input
               type="number"
@@ -146,7 +148,7 @@ export default function ROICalculator() {
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
-                {p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
+                {p === '7d' ? t('roiCalculator.period7d') : p === '30d' ? t('roiCalculator.period30d') : t('roiCalculator.period90d')}
               </button>
             ))}
           </div>
@@ -158,7 +160,7 @@ export default function ROICalculator() {
         <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4 border-l-4 border-green-500">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="w-5 h-5 text-green-600" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Estimated Value</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('roiCalculator.estimatedValue')}</span>
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(roiData.estimatedValue)}
@@ -168,7 +170,7 @@ export default function ROICalculator() {
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 border-l-4 border-blue-500">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-5 h-5 text-blue-600" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">ROI</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('roiCalculator.roi')}</span>
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {roiData.roi > 0 ? '+' : ''}{roiData.roi.toFixed(1)}%
@@ -178,7 +180,7 @@ export default function ROICalculator() {
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 border-l-4 border-purple-500">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-5 h-5 text-purple-600" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Cost/Engagement</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('roiCalculator.costPerEngagement')}</span>
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(roiData.costPerEngagement)}
@@ -188,7 +190,7 @@ export default function ROICalculator() {
         <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-lg p-4 border-l-4 border-yellow-500">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-5 h-5 text-yellow-600" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Cost/Reach</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('roiCalculator.costPerReach')}</span>
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatCurrency(roiData.costPerReach)}
@@ -199,19 +201,19 @@ export default function ROICalculator() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Engagement</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('roiCalculator.totalEngagement')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(roiData.totalEngagement)}
           </p>
         </div>
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Reach</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('roiCalculator.totalReach')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {formatNumber(roiData.totalReach)}
           </p>
         </div>
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Time Spent</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('roiCalculator.timeSpent')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {roiData.timeSpent.toFixed(1)}h
           </p>
@@ -222,7 +224,7 @@ export default function ROICalculator() {
       {roiData.recommendations.length > 0 && (
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
           <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-            Recommendations to Improve ROI
+            {t('roiCalculator.recommendationsTitle')}
           </h4>
           <div className="space-y-3">
             {roiData.recommendations.map((rec, idx) => (
@@ -237,7 +239,7 @@ export default function ROICalculator() {
                   {rec.description}
                 </p>
                 <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                  Potential: {rec.potentialIncrease}
+                  {t('roiCalculator.potential', { value: rec.potentialIncrease })}
                 </p>
               </div>
             ))}

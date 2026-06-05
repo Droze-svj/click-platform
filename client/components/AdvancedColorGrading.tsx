@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Sliders, RotateCcw, Download, Upload, Palette, Eye, EyeOff } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ColorGradeSettings {
   brightness: number
@@ -42,6 +43,7 @@ export default function AdvancedColorGrading({
   onSettingsChange,
   previewImage
 }: AdvancedColorGradingProps) {
+  const { t } = useTranslation()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced' | 'curves' | 'scopes'>('basic')
   const [showPreview, setShowPreview] = useState(true)
@@ -220,10 +222,10 @@ export default function AdvancedColorGrading({
   }, [settings.curves, activeTab, updateSetting])
 
   const tabs = [
-    { id: 'basic', label: 'Basic', icon: Sliders },
-    { id: 'advanced', label: 'Advanced', icon: Palette },
-    { id: 'curves', label: 'Curves', icon: Palette },
-    { id: 'scopes', label: 'Scopes', icon: Eye }
+    { id: 'basic', label: t('advancedColorGrading.tabBasic'), icon: Sliders },
+    { id: 'advanced', label: t('advancedColorGrading.tabAdvanced'), icon: Palette },
+    { id: 'curves', label: t('advancedColorGrading.tabCurves'), icon: Palette },
+    { id: 'scopes', label: t('advancedColorGrading.tabScopes'), icon: Eye }
   ]
 
   return (
@@ -234,10 +236,10 @@ export default function AdvancedColorGrading({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <Palette className="w-5 h-5" />
-              Advanced Color Grading
+              {t('advancedColorGrading.title')}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Professional color correction and grading tools
+              {t('advancedColorGrading.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -256,7 +258,7 @@ export default function AdvancedColorGrading({
               type="button"
               onClick={resetSettings}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
-              title="Reset all settings"
+              title={t('advancedColorGrading.resetAllSettings')}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -273,7 +275,7 @@ export default function AdvancedColorGrading({
               type="button"
               onClick={exportSettings}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
-              title="Export settings"
+              title={t('advancedColorGrading.exportSettings')}
             >
               <Download className="w-4 h-4" />
             </button>
@@ -309,10 +311,10 @@ export default function AdvancedColorGrading({
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {/* Brightness & Contrast */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Brightness & Contrast</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{t('advancedColorGrading.sectionBrightnessContrast')}</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Brightness: {settings.brightness}%
+                  {t('advancedColorGrading.brightnessLabel', { value: settings.brightness })}
                 </label>
                 <input
                   type="range"
@@ -325,7 +327,7 @@ export default function AdvancedColorGrading({
               </div>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Contrast: {settings.contrast}%
+                  {t('advancedColorGrading.contrastLabel', { value: settings.contrast })}
                 </label>
                 <input
                   type="range"
@@ -340,10 +342,10 @@ export default function AdvancedColorGrading({
 
             {/* Color */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Color</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{t('advancedColorGrading.sectionColor')}</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Saturation: {settings.saturation}%
+                  {t('advancedColorGrading.saturationLabel', { value: settings.saturation })}
                 </label>
                 <input
                   type="range"
@@ -356,7 +358,7 @@ export default function AdvancedColorGrading({
               </div>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Hue: {settings.hue}°
+                  {t('advancedColorGrading.hueLabel', { value: settings.hue })}
                 </label>
                 <input
                   type="range"
@@ -371,10 +373,10 @@ export default function AdvancedColorGrading({
 
             {/* Temperature */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">White Balance</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{t('advancedColorGrading.sectionWhiteBalance')}</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Temperature: {settings.temperature}K
+                  {t('advancedColorGrading.temperatureLabel', { value: settings.temperature })}
                 </label>
                 <input
                   type="range"
@@ -387,7 +389,7 @@ export default function AdvancedColorGrading({
               </div>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Tint: {settings.tint}
+                  {t('advancedColorGrading.tintLabel', { value: settings.tint })}
                 </label>
                 <input
                   type="range"
@@ -406,10 +408,10 @@ export default function AdvancedColorGrading({
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {/* Tone */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Tone</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{t('advancedColorGrading.sectionTone')}</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Highlights: {settings.highlights}
+                  {t('advancedColorGrading.highlightsLabel', { value: settings.highlights })}
                 </label>
                 <input
                   type="range"
@@ -422,7 +424,7 @@ export default function AdvancedColorGrading({
               </div>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Shadows: {settings.shadows}
+                  {t('advancedColorGrading.shadowsLabel', { value: settings.shadows })}
                 </label>
                 <input
                   type="range"
@@ -435,7 +437,7 @@ export default function AdvancedColorGrading({
               </div>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Clarity: {settings.clarity}
+                  {t('advancedColorGrading.clarityLabel', { value: settings.clarity })}
                 </label>
                 <input
                   type="range"
@@ -450,10 +452,10 @@ export default function AdvancedColorGrading({
 
             {/* Detail */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Detail</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{t('advancedColorGrading.sectionDetail')}</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Dehaze: {settings.dehaze}
+                  {t('advancedColorGrading.dehazeLabel', { value: settings.dehaze })}
                 </label>
                 <input
                   type="range"
@@ -466,7 +468,7 @@ export default function AdvancedColorGrading({
               </div>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Vibrance: {settings.vibrance}%
+                  {t('advancedColorGrading.vibranceLabel', { value: settings.vibrance })}
                 </label>
                 <input
                   type="range"
@@ -481,10 +483,10 @@ export default function AdvancedColorGrading({
 
             {/* Exposure */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Exposure</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">{t('advancedColorGrading.sectionExposure')}</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Exposure: {settings.exposure}
+                  {t('advancedColorGrading.exposureLabel', { value: settings.exposure })}
                 </label>
                 <input
                   type="range"
@@ -498,7 +500,7 @@ export default function AdvancedColorGrading({
               </div>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Gamma: {settings.gamma}%
+                  {t('advancedColorGrading.gammaLabel', { value: settings.gamma })}
                 </label>
                 <input
                   type="range"
@@ -526,19 +528,19 @@ export default function AdvancedColorGrading({
               <div className="flex justify-center gap-4 mt-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-white rounded"></div>
-                  <span className="text-gray-300">Master</span>
+                  <span className="text-gray-300">{t('advancedColorGrading.channelMaster')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded"></div>
-                  <span className="text-gray-300">Red</span>
+                  <span className="text-gray-300">{t('advancedColorGrading.channelRed')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded"></div>
-                  <span className="text-gray-300">Green</span>
+                  <span className="text-gray-300">{t('advancedColorGrading.channelGreen')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                  <span className="text-gray-300">Blue</span>
+                  <span className="text-gray-300">{t('advancedColorGrading.channelBlue')}</span>
                 </div>
               </div>
             </div>
@@ -549,27 +551,27 @@ export default function AdvancedColorGrading({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-[var(--text-main)] font-medium mb-2">Waveform</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">{t('advancedColorGrading.waveform')}</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-end justify-center">
-                  <div className="text-gray-500 text-sm">Waveform Monitor</div>
+                  <div className="text-gray-500 text-sm">{t('advancedColorGrading.waveformMonitor')}</div>
                 </div>
               </div>
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-[var(--text-main)] font-medium mb-2">Vectorscope</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">{t('advancedColorGrading.vectorscope')}</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-center justify-center">
-                  <div className="text-gray-500 text-sm">Vectorscope</div>
+                  <div className="text-gray-500 text-sm">{t('advancedColorGrading.vectorscope')}</div>
                 </div>
               </div>
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-[var(--text-main)] font-medium mb-2">Histogram</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">{t('advancedColorGrading.histogram')}</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-end justify-center">
-                  <div className="text-gray-500 text-sm">RGB Histogram</div>
+                  <div className="text-gray-500 text-sm">{t('advancedColorGrading.rgbHistogram')}</div>
                 </div>
               </div>
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-[var(--text-main)] font-medium mb-2">RGB Parade</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">{t('advancedColorGrading.rgbParade')}</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-end justify-center">
-                  <div className="text-gray-500 text-sm">RGB Parade</div>
+                  <div className="text-gray-500 text-sm">{t('advancedColorGrading.rgbParade')}</div>
                 </div>
               </div>
             </div>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)]'
 const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] border'
@@ -44,6 +45,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
 
 // ─── Phase 11: Arbitrage Panel ───────────────────────────────────────────────
 const ArbitragePanel = () => {
+    const { t } = useTranslation()
     const [offers, setOffers] = useState<any[]>([])
     const { showToast } = useToast()
 
@@ -52,16 +54,16 @@ const ArbitragePanel = () => {
             const res = await apiGet('/phase11/arbitrage/offers')
             if (res.offers) setOffers(res.offers)
         } catch {
-            showToast('Failed to load active offers', 'error')
+            showToast(t('phase10Dashboard.failedToLoadActiveOffers'), 'error')
         }
     }
 
     const steerFunnel = async (offerId: string) => {
         try {
             await apiPost('/phase11/arbitrage/steer', { offerId, targetNiche: 'high_ticket_affiliate' })
-            showToast(`Sovereign Funnel steered to Offer: ${offerId}`, 'success')
+            showToast(t('phase10Dashboard.sovereignFunnelSteered', { offerId }), 'success')
         } catch {
-            showToast('Steering failed', 'error')
+            showToast(t('phase10Dashboard.steeringFailed'), 'error')
         }
     }
 
@@ -70,28 +72,28 @@ const ArbitragePanel = () => {
 
     return (
         <div className={`${glass} p-10 space-y-8`}>
-            <SectionHeader icon={DollarSign} title="Arbitrage Steering" subtitle="Live High-Ticket Monetization" color="orange" badge="PHASE 11" />
+            <SectionHeader icon={DollarSign} title={t('phase10Dashboard.arbitrageSteeringTitle')} subtitle={t('phase10Dashboard.arbitrageSteeringSubtitle')} color="orange" badge={t('phase10Dashboard.arbitrageSteeringBadge')} />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {offers.map(offer => (
                     <div key={offer.id} className="p-6 rounded-3xl bg-orange-500/5 border border-orange-500/20 flex flex-col justify-between">
                         <div>
-                            <p className="text-[10px] text-orange-400 uppercase font-black tracking-widest mb-1">{offer.velocity} velocity</p>
+                            <p className="text-[10px] text-orange-400 uppercase font-black tracking-widest mb-1">{t('phase10Dashboard.velocityLabel', { velocity: offer.velocity })}</p>
                             <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase mb-4">{offer.name}</h4>
                             <div className="flex gap-4 mb-6">
                                 <div className="text-center">
-                                    <p className="text-[8px] font-bold text-slate-500 uppercase">CVR</p>
+                                    <p className="text-[8px] font-bold text-slate-500 uppercase">{t('phase10Dashboard.cvr')}</p>
                                     <p className="text-lg font-black text-white italic">{(offer.conversionRate * 100).toFixed(1)}%</p>
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-[8px] font-bold text-slate-500 uppercase">PCV</p>
+                                    <p className="text-[8px] font-bold text-slate-500 uppercase">{t('phase10Dashboard.pcv')}</p>
                                     <p className="text-lg font-black text-white italic">${offer.pcv}</p>
                                 </div>
                             </div>
                         </div>
                         <button type="button" onClick={() => steerFunnel(offer.id)}
                             className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-400 text-black font-black text-[9px] uppercase tracking-widest transition-all">
-                            Steer Swarm to this Offer
+                            {t('phase10Dashboard.steerSwarmToThisOffer')}
                         </button>
                     </div>
                 ))}
@@ -102,6 +104,7 @@ const ArbitragePanel = () => {
 
 // ─── Phase 12: Encirclement Panel ────────────────────────────────────────────
 const EncirclementPanel = () => {
+    const { t } = useTranslation()
     const [network, setNetwork] = useState<any>(null)
     const { showToast } = useToast()
 
@@ -110,7 +113,7 @@ const EncirclementPanel = () => {
             const res = await apiGet('/phase12/s2s/network-health')
             if (res.health !== undefined) setNetwork(res)
         } catch {
-            showToast('S2S Network down', 'error')
+            showToast(t('phase10Dashboard.s2sNetworkDown'), 'error')
         }
     }
 
@@ -119,28 +122,28 @@ const EncirclementPanel = () => {
 
     return (
         <div className={`${glass} p-10 space-y-8`}>
-            <SectionHeader icon={Terminal} title="Global Encirclement" subtitle="Cross-Sovereign Knowledge Pulse" color="purple" badge="GOD MODE ACTIVE" />
+            <SectionHeader icon={Terminal} title={t('phase10Dashboard.globalEncirclementTitle')} subtitle={t('phase10Dashboard.globalEncirclementSubtitle')} color="purple" badge={t('phase10Dashboard.godModeActiveBadge')} />
             
             <div className="grid grid-cols-3 gap-6">
                 <div className={`${glass} p-6 text-center bg-purple-500/5`}>
-                    <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest mb-1">Network Health</p>
+                    <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest mb-1">{t('phase10Dashboard.networkHealth')}</p>
                     <p className="text-2xl font-black text-white italic">{(network?.health * 100).toFixed(1)}%</p>
                 </div>
                 <div className={`${glass} p-6 text-center bg-purple-500/5`}>
-                    <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest mb-1">Aggregated Revenue</p>
+                    <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest mb-1">{t('phase10Dashboard.aggregatedRevenue')}</p>
                     <p className="text-2xl font-black text-white italic">${(network?.overLordStats?.totalRevenueAggregated / 1000000).toFixed(1)}M</p>
                 </div>
                 <div className={`${glass} p-6 text-center bg-purple-500/5`}>
-                    <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest mb-1">Victory Vectors</p>
+                    <p className="text-[8px] font-bold text-purple-400 uppercase tracking-widest mb-1">{t('phase10Dashboard.victoryVectors')}</p>
                     <p className="text-2xl font-black text-white italic">{network?.overLordStats?.victoriesToday}</p>
                 </div>
             </div>
 
             <div className="p-8 rounded-[2rem] bg-black/40 border border-white/5 font-mono text-[10px] text-purple-300 leading-relaxed max-h-[200px] overflow-y-auto">
-                <p className="">[SYSTEM] Initializing S2S encrypted tunnel...</p>
-                <p className="">[SYSTEM] Encirclement active. 14 sibling instances connected.</p>
-                <p className="">[PULSE] Vector Received: Hook &quot;e7a1b&quot; dominating in Cluster-East.</p>
-                <p className="">[PULSE] Local Synthesis updated with +14% velocity weighting.</p>
+                <p className="">{t('phase10Dashboard.logInitializingTunnel')}</p>
+                <p className="">{t('phase10Dashboard.logEncirclementActive', { count: 14 })}</p>
+                <p className="">{t('phase10Dashboard.logVectorReceived', { hook: 'e7a1b', cluster: 'Cluster-East' })}</p>
+                <p className="">{t('phase10Dashboard.logLocalSynthesis', { percent: 14 })}</p>
             </div>
         </div>
     )
@@ -148,15 +151,16 @@ const EncirclementPanel = () => {
 
 // ─── Stability: System Health Panel ──────────────────────────────────────────
 const StabilityPanel = () => {
+    const { t } = useTranslation()
     return (
         <div className={`${glass} p-10 space-y-8`}>
-            <SectionHeader icon={Shield} title="Production Stability" subtitle="Infrastructure Hardening Matrix" color="cyan" badge="STABLE" />
-            
+            <SectionHeader icon={Shield} title={t('phase10Dashboard.productionStabilityTitle')} subtitle={t('phase10Dashboard.productionStabilitySubtitle')} color="cyan" badge={t('phase10Dashboard.stableBadge')} />
+
             <div className="space-y-4">
                 {[
-                    { label: 'Phase 1: Quality Wall (Tests)', status: '82% coverage', icon: CheckCircle2, color: 'text-emerald-400' },
-                    { label: 'Phase 2: OAuth Persistence', status: 'Healthy', icon: Zap, color: 'text-cyan-400' },
-                    { label: 'Phase 3: S3 Asset Migration', status: 'In Progress', icon: Cloud, color: 'text-amber-400' }
+                    { label: t('phase10Dashboard.stabilityPhase1Label'), status: t('phase10Dashboard.stabilityPhase1Status'), icon: CheckCircle2, color: 'text-emerald-400' },
+                    { label: t('phase10Dashboard.stabilityPhase2Label'), status: t('phase10Dashboard.stabilityPhase2Status'), icon: Zap, color: 'text-cyan-400' },
+                    { label: t('phase10Dashboard.stabilityPhase3Label'), status: t('phase10Dashboard.stabilityPhase3Status'), icon: Cloud, color: 'text-amber-400' }
                 ].map(item => (
                     <div key={item.label} className="flex justify-between items-center p-6 rounded-2xl bg-white/[0.02] border border-white/5">
                         <div className="flex items-center gap-4">
@@ -173,6 +177,7 @@ const StabilityPanel = () => {
 
 // ─── Original Phase 10 Components (Fleet/Oracle) ───
 const FleetManagementPanel = () => {
+    const { t } = useTranslation()
     const [fleetStats, setFleetStats] = useState<any>(null)
     const { showToast } = useToast()
     useEffect(() => {
@@ -186,10 +191,10 @@ const FleetManagementPanel = () => {
     }, [])
     return (
         <div className={`${glass} p-10 space-y-8`}>
-            <SectionHeader icon={Network} title="Fleet Commander" subtitle="Multi-Tenant Node Orchestration" color="indigo" badge="GOD MODE" />
+            <SectionHeader icon={Network} title={t('phase10Dashboard.fleetCommanderTitle')} subtitle={t('phase10Dashboard.fleetCommanderSubtitle')} color="indigo" badge={t('phase10Dashboard.godModeBadge')} />
             <div className="flex items-center gap-6">
                 <div className="px-6 py-4 rounded-xl border border-white/10 bg-black/40 text-center">
-                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Active Nodes</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">{t('phase10Dashboard.activeNodes')}</p>
                     <p className="text-3xl font-black text-white italic">{fleetStats?.totalNodes || 0}</p>
                 </div>
             </div>
@@ -198,11 +203,12 @@ const FleetManagementPanel = () => {
 }
 
 export default function SovereignDashboard() {
+  const { t } = useTranslation()
   const SECTIONS = [
-    { id: 'fleet', label: 'Fleet Commander', icon: Network },
-    { id: 'arbitrage', label: 'Arbitrage Strategy', icon: DollarSign },
-    { id: 'encirclement', label: 'Global S2S', icon: Globe },
-    { id: 'stability', label: 'System Health', icon: Shield }
+    { id: 'fleet', label: t('phase10Dashboard.navFleetCommander'), icon: Network },
+    { id: 'arbitrage', label: t('phase10Dashboard.navArbitrageStrategy'), icon: DollarSign },
+    { id: 'encirclement', label: t('phase10Dashboard.navGlobalS2s'), icon: Globe },
+    { id: 'stability', label: t('phase10Dashboard.navSystemHealth'), icon: Shield }
   ]
 
   const [activeSection, setActiveSection] = useState('fleet')
@@ -217,11 +223,11 @@ export default function SovereignDashboard() {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className={`${pill} text-purple-400 border-purple-500/20`}>Sovereign 2026 — Phase 12</span>
+              <span className={`${pill} text-purple-400 border-purple-500/20`}>{t('phase10Dashboard.headerPill')}</span>
               <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
             </div>
-            <h1 className="text-5xl font-black text-purple-50 italic uppercase tracking-tighter leading-none">The Overlord Terminal</h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">Final Market Encirclement Engine</p>
+            <h1 className="text-5xl font-black text-purple-50 italic uppercase tracking-tighter leading-none">{t('phase10Dashboard.headerTitle')}</h1>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{t('phase10Dashboard.headerSubtitle')}</p>
           </div>
         </div>
 

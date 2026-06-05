@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Plus, Send, Clock, CheckCircle2, XCircle, ShieldAlert, Sparkles, Activity, Search, AlertTriangle, Fingerprint } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SupportTicket {
   _id: string
@@ -23,6 +24,7 @@ interface SupportTicket {
 const glassStyle = "backdrop-blur-3xl bg-black/40 border border-white/10 shadow-2xl shadow-black/40"
 
 export default function SupportTicketSystem() {
+  const { t } = useTranslation()
   const [tickets, setTickets] = useState<SupportTicket[]>([])
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -71,11 +73,11 @@ export default function SupportTicketSystem() {
       if (response.ok) {
         await loadTickets()
         setIsCreating(false)
-        showToast('Secure Ticket Uplink Established', 'success')
+        showToast(t('supportTicketSystem.uplinkEstablished'), 'success')
       }
     } catch (error) {
       console.error('Failed to create ticket:', error)
-      showToast('Uplink Failed', 'error')
+      showToast(t('supportTicketSystem.uplinkFailed'), 'error')
     }
   }
 
@@ -97,15 +99,15 @@ export default function SupportTicketSystem() {
       if (response.ok) {
         setNewMessage('')
         await loadTickets()
-        const updated = tickets.find(t => t._id === selectedTicket._id)
+        const updated = tickets.find(item => item._id === selectedTicket._id)
         if (updated) setSelectedTicket(updated)
-        showToast('Encrypted Packet Sent', 'success')
+        showToast(t('supportTicketSystem.packetSent'), 'success')
         setIsTyping(true)
         setTimeout(() => setIsTyping(false), 3000)
       }
     } catch (error) {
       console.error('Failed to send message:', error)
-      showToast('Transmission Failed', 'error')
+      showToast(t('supportTicketSystem.transmissionFailed'), 'error')
     }
   }
 
@@ -135,10 +137,10 @@ export default function SupportTicketSystem() {
               </div>
               <div>
                 <h1 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">
-                  Support Nexus
+                  {t('supportTicketSystem.supportNexus')}
                 </h1>
                 <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] block italic">
-                  Elite Customer Operations Protocol
+                  {t('supportTicketSystem.operationsProtocol')}
                 </span>
               </div>
             </div>
@@ -148,12 +150,12 @@ export default function SupportTicketSystem() {
             <div className={`hidden lg:flex items-center gap-4 px-6 py-3 rounded-2xl ${glassStyle}`}>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">All Systems Nominal</span>
+                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">{t('supportTicketSystem.allSystemsNominal')}</span>
               </div>
               <div className="w-px h-6 bg-white/10" />
               <div className="flex items-center gap-3">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest italic">AI Agent Ready</span>
+                <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest italic">{t('supportTicketSystem.aiAgentReady')}</span>
               </div>
             </div>
 
@@ -164,7 +166,7 @@ export default function SupportTicketSystem() {
               className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest italic flex items-center gap-3 shadow-[0_0_30px_rgba(79,70,229,0.3)] border border-indigo-400/30 hover:bg-indigo-500 transition-colors"
             >
               <Plus className="w-5 h-5" />
-              Establish Uplink
+              {t('supportTicketSystem.establishUplink')}
             </motion.button>
           </div>
         </div>
@@ -188,7 +190,7 @@ export default function SupportTicketSystem() {
           {/* Active Uplinks (Ticket List) */}
           <div className="lg:col-span-4 space-y-4">
             <div className="flex items-center justify-between mb-6">
-              <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Active Strands</span>
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] italic">{t('supportTicketSystem.activeStrands')}</span>
               <div className="p-2 bg-white/5 rounded-lg border border-white/5">
                 <Search className="w-4 h-4 text-slate-500" />
               </div>
@@ -198,7 +200,7 @@ export default function SupportTicketSystem() {
               {tickets.length === 0 ? (
                 <div className={`p-10 text-center rounded-[2rem] ${glassStyle}`}>
                   <Fingerprint className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">No Active Uplinks</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{t('supportTicketSystem.noActiveUplinks')}</p>
                 </div>
               ) : (
                 tickets.map((ticket) => (
@@ -250,12 +252,12 @@ export default function SupportTicketSystem() {
                       {selectedTicket.subject}
                     </h2>
                     <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      <span className="flex items-center gap-2"><Clock className="w-3 h-3" /> Initiated: {new Date(selectedTicket.createdAt).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-2"><Fingerprint className="w-3 h-3" /> Kernel: {selectedTicket.category}</span>
+                      <span className="flex items-center gap-2"><Clock className="w-3 h-3" /> {t('supportTicketSystem.initiated', { date: new Date(selectedTicket.createdAt).toLocaleDateString() })}</span>
+                      <span className="flex items-center gap-2"><Fingerprint className="w-3 h-3" /> {t('supportTicketSystem.kernel', { category: selectedTicket.category })}</span>
                     </div>
                   </div>
                   <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex flex-col items-end">
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic mb-1">Status</span>
+                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic mb-1">{t('supportTicketSystem.statusLabel')}</span>
                     <span className="text-sm font-black text-white uppercase italic">{selectedTicket.status}</span>
                   </div>
                 </div>
@@ -304,7 +306,7 @@ export default function SupportTicketSystem() {
                         <Sparkles className="w-5 h-5 animate-pulse" />
                       </div>
                       <div className="p-4 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 rounded-tr-none flex items-center justify-center gap-3">
-                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Nexus Routing</span>
+                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">{t('supportTicketSystem.nexusRouting')}</span>
                         <span className="flex gap-1.5">
                           <motion.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                           <motion.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
@@ -319,8 +321,8 @@ export default function SupportTicketSystem() {
                 <div className="p-6 border-t border-white/5 bg-white/[0.01] flex flex-col gap-4">
                   {/* Quick Actions / AI Suggestions */}
                   <div className="flex flex-wrap items-center gap-3 px-2">
-                    <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.2em] italic flex items-center gap-1"><Sparkles className="w-3 h-3" /> Neural Drafts:</span>
-                    {['Status Update?', 'Escalate Priority', 'Send Diagnostics', 'Close Uplink'].map((draft, i) => (
+                    <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.2em] italic flex items-center gap-1"><Sparkles className="w-3 h-3" /> {t('supportTicketSystem.neuralDrafts')}</span>
+                    {[t('supportTicketSystem.draftStatusUpdate'), t('supportTicketSystem.draftEscalatePriority'), t('supportTicketSystem.draftSendDiagnostics'), t('supportTicketSystem.draftCloseUplink')].map((draft, i) => (
                       <button
                         type="button"
                         key={i}
@@ -345,7 +347,7 @@ export default function SupportTicketSystem() {
                             sendMessage();
                           }
                         }}
-                        placeholder="TRANSMIT SUPPORT KERNEL..."
+                        placeholder={t('supportTicketSystem.messagePlaceholder')}
                         className="w-full bg-black/50 border border-white/10 rounded-3xl pl-12 pr-6 py-4 text-sm font-black text-white italic placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 transition-colors custom-scrollbar resize-none h-[60px]"
                       />
                     </div>
@@ -365,8 +367,8 @@ export default function SupportTicketSystem() {
                 <div className="p-8 rounded-full bg-white/[0.02] border border-white/5 shadow-[0_0_100px_rgba(255,255,255,0.02)] mb-8">
                   <ShieldAlert className="w-20 h-20 text-slate-700" />
                 </div>
-                <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-2">No Uplink Selected</h3>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Select an active strand from the index to begin transmission</p>
+                <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-2">{t('supportTicketSystem.noUplinkSelected')}</h3>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{t('supportTicketSystem.selectStrandPrompt')}</p>
               </div>
             )}
           </div>
@@ -383,6 +385,7 @@ function CreateTicketForm({
   onSubmit: (data: any) => void
   onCancel: () => void
 }) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
@@ -408,10 +411,10 @@ function CreateTicketForm({
           </div>
           <div>
             <h2 className="text-3xl font-black text-[var(--text-main)] uppercase italic tracking-tighter mb-2">
-              New Uplink
+              {t('supportTicketSystem.newUplink')}
             </h2>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic leading-relaxed">
-              Establish a secure connection with the Click support entity. Detail your request for optimal neural routing.
+              {t('supportTicketSystem.newUplinkDescription')}
             </p>
           </div>
         </div>
@@ -421,7 +424,7 @@ function CreateTicketForm({
             <input
               id="ticket-subject"
               type="text"
-              placeholder="UPLINK DESIGNATION (SUBJECT)..."
+              placeholder={t('supportTicketSystem.subjectPlaceholder')}
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               required
@@ -431,7 +434,7 @@ function CreateTicketForm({
           <div>
             <textarea
               id="ticket-description"
-              placeholder="TRANSMISSION PAYLOAD (DESCRIPTION)..."
+              placeholder={t('supportTicketSystem.descriptionPlaceholder')}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               required
@@ -442,7 +445,7 @@ function CreateTicketForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="ticket-category" className="block text-[9px] font-black text-slate-500 uppercase tracking-widest italic mb-3">
-                Routing Kernel
+                {t('supportTicketSystem.routingKernel')}
               </label>
               <select
                 id="ticket-category"
@@ -450,16 +453,16 @@ function CreateTicketForm({
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-6 py-4 border border-white/10 rounded-2xl bg-black/40 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-indigo-500/50 appearance-none italic"
               >
-                <option value="technical">Technical Matrix</option>
-                <option value="billing">Commercial Sector</option>
-                <option value="feature-request">Neural Request</option>
-                <option value="bug-report">Anomaly Report</option>
-                <option value="other">Uncategorized</option>
+                <option value="technical">{t('supportTicketSystem.categoryTechnical')}</option>
+                <option value="billing">{t('supportTicketSystem.categoryBilling')}</option>
+                <option value="feature-request">{t('supportTicketSystem.categoryFeatureRequest')}</option>
+                <option value="bug-report">{t('supportTicketSystem.categoryBugReport')}</option>
+                <option value="other">{t('supportTicketSystem.categoryOther')}</option>
               </select>
             </div>
             <div>
               <label htmlFor="ticket-priority" className="block text-[9px] font-black text-slate-500 uppercase tracking-widest italic mb-3">
-                Uplink Priority
+                {t('supportTicketSystem.uplinkPriority')}
               </label>
               <select
                 id="ticket-priority"
@@ -467,10 +470,10 @@ function CreateTicketForm({
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                 className="w-full px-6 py-4 border border-white/10 rounded-2xl bg-black/40 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-indigo-500/50 appearance-none italic"
               >
-                <option value="low">Low (Standard Routing)</option>
-                <option value="medium">Medium (Elevated)</option>
-                <option value="high">High (Priority)</option>
-                <option value="urgent">Urgent (Bypass All)</option>
+                <option value="low">{t('supportTicketSystem.priorityLow')}</option>
+                <option value="medium">{t('supportTicketSystem.priorityMedium')}</option>
+                <option value="high">{t('supportTicketSystem.priorityHigh')}</option>
+                <option value="urgent">{t('supportTicketSystem.priorityUrgent')}</option>
               </select>
             </div>
           </div>
@@ -480,12 +483,12 @@ function CreateTicketForm({
               onClick={onCancel}
               className="px-8 py-4 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 hover:text-white transition-all italic"
             >
-              Abort
+              {t('supportTicketSystem.abort')}
             </button>
             <button              type="submit"
               className="px-10 py-4 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:bg-indigo-500 transition-all"
             >
-              Transmit Uplink
+              {t('supportTicketSystem.transmitUplink')}
             </button>
           </div>
         </form>

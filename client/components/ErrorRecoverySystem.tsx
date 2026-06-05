@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/hooks/useTranslation'
 
 declare global {
   interface Window {
@@ -49,8 +50,8 @@ class ErrorRecoveryManager {
       // Network connectivity errors
       {
         id: 'network_timeout',
-        name: 'Network Timeout',
-        description: 'Request timed out - could be connectivity issue',
+        name: 'errorRecoverySystem.patternNetworkTimeoutName',
+        description: 'errorRecoverySystem.patternNetworkTimeoutDesc',
         detect: (error) => {
           return error?.message?.includes('timeout') ||
                  error?.message?.includes('network') ||
@@ -78,8 +79,8 @@ class ErrorRecoveryManager {
       // API authentication errors
       {
         id: 'auth_expired',
-        name: 'Authentication Expired',
-        description: 'Token expired - attempting refresh',
+        name: 'errorRecoverySystem.patternAuthExpiredName',
+        description: 'errorRecoverySystem.patternAuthExpiredDesc',
         detect: (error) => {
           return error?.status === 401 ||
                  error?.message?.includes('unauthorized') ||
@@ -116,8 +117,8 @@ class ErrorRecoveryManager {
       // Memory pressure
       {
         id: 'memory_pressure',
-        name: 'Memory Pressure',
-        description: 'High memory usage detected - cleaning up',
+        name: 'errorRecoverySystem.patternMemoryPressureName',
+        description: 'errorRecoverySystem.patternMemoryPressureDesc',
         detect: (error) => {
           if (typeof performance !== 'undefined' && 'memory' in performance) {
             const mem = (performance as any).memory
@@ -158,8 +159,8 @@ class ErrorRecoveryManager {
       // Component hydration mismatch
       {
         id: 'hydration_mismatch',
-        name: 'Hydration Mismatch',
-        description: 'Client/server mismatch - refreshing',
+        name: 'errorRecoverySystem.patternHydrationMismatchName',
+        description: 'errorRecoverySystem.patternHydrationMismatchDesc',
         detect: (error) => {
           return error?.message?.includes('hydration') ||
                  error?.message?.includes('mismatch') ||
@@ -178,8 +179,8 @@ class ErrorRecoveryManager {
       // API rate limiting
       {
         id: 'rate_limited',
-        name: 'Rate Limited',
-        description: 'Too many requests - waiting before retry',
+        name: 'errorRecoverySystem.patternRateLimitedName',
+        description: 'errorRecoverySystem.patternRateLimitedDesc',
         detect: (error) => {
           return error?.status === 429 ||
                  error?.message?.includes('rate limit') ||
@@ -205,8 +206,8 @@ class ErrorRecoveryManager {
       // Service worker issues
       {
         id: 'service_worker_error',
-        name: 'Service Worker Error',
-        description: 'Service worker issue - unregistering',
+        name: 'errorRecoverySystem.patternServiceWorkerErrorName',
+        description: 'errorRecoverySystem.patternServiceWorkerErrorDesc',
         detect: (error) => {
           return error?.message?.includes('service worker') ||
                  error?.message?.includes('serviceworker') ||
@@ -233,8 +234,8 @@ class ErrorRecoveryManager {
       // WebSocket connection issues
       {
         id: 'websocket_error',
-        name: 'WebSocket Error',
-        description: 'WebSocket connection failed - attempting reconnect',
+        name: 'errorRecoverySystem.patternWebsocketErrorName',
+        description: 'errorRecoverySystem.patternWebsocketErrorDesc',
         detect: (error) => {
           return error?.message?.includes('websocket') ||
                  error?.message?.includes('socket') ||
@@ -297,7 +298,7 @@ class ErrorRecoveryManager {
                 id: `${pattern.id}_error_${Date.now()}`,
                 timestamp: Date.now(),
                 errorType: pattern.name,
-                action: `Failed: ${fixError}`,
+                action: 'errorRecoverySystem.actionFailed',
                 success: false,
                 details: { originalError: error, fixError }
               }
@@ -418,6 +419,7 @@ export default function ErrorRecoverySystem() {
 
 // Recovery status display component
 export function RecoveryStatusDisplay() {
+  const { t } = useTranslation()
   const [recoveryHistory, setRecoveryHistory] = useState<RecoveryAction[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -454,7 +456,7 @@ export function RecoveryStatusDisplay() {
       boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
     }}>
       <div style={{ marginBottom: 4, cursor: 'pointer' }} onClick={() => setIsExpanded(!isExpanded)}>
-        🔧 Recovery: {successCount}/{totalCount} successful
+        🔧 {t('errorRecoverySystem.recoveryStatus', { success: successCount, total: totalCount })}
         <span style={{ marginLeft: 4 }}>{isExpanded ? '▼' : '▶'}</span>
       </div>
 
@@ -469,9 +471,9 @@ export function RecoveryStatusDisplay() {
               fontSize: 10
             }}>
               <div style={{ fontWeight: 'bold' }}>
-                {recovery.success ? '✅' : '❌'} {recovery.errorType}
+                {recovery.success ? '✅' : '❌'} {t(recovery.errorType)}
               </div>
-              <div style={{ opacity: 0.8 }}>{recovery.action}</div>
+              <div style={{ opacity: 0.8 }}>{t(recovery.action)}</div>
               <div style={{ opacity: 0.6, fontSize: 9 }}>
                 {new Date(recovery.timestamp).toLocaleTimeString()}
               </div>

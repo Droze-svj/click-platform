@@ -5,6 +5,7 @@ import { AlertCircle, X, AlertTriangle, Info } from 'lucide-react';
 import { AppError, getUserFriendlyMessage } from '../utils/errorHandler';
 import { cn } from '../lib/utils';
 import ErrorRecovery from './ErrorRecovery';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ErrorDisplayProps {
   error: AppError | Error | string;
@@ -23,11 +24,12 @@ export default function ErrorDisplay({
   className,
   showRecovery = true,
 }: ErrorDisplayProps) {
+  const { t } = useTranslation();
   const errorMessage = typeof error === 'string'
     ? error
     : error instanceof AppError
     ? getUserFriendlyMessage(error)
-    : error.message || 'An error occurred';
+    : error.message || t('errorDisplay.defaultError');
 
   const variantStyles = {
     error: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300',
@@ -59,6 +61,7 @@ export default function ErrorDisplay({
         <button
           type="button"
           onClick={onDismiss}
+          aria-label={t('errorDisplay.dismiss')}
           className="flex-shrink-0 text-current opacity-70 hover:opacity-100"
         >
           <X className="h-4 w-4" />

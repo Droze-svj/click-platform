@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { AlertTriangle, TrendingUp, TrendingDown, Activity, BarChart3 } from 'lucide-react';
 import LoadingSkeleton from './LoadingSkeleton';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ErrorStatistics {
   totalErrors: number;
@@ -20,6 +21,7 @@ interface ErrorStatistics {
 }
 
 export default function ErrorAnalyticsDashboard() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<ErrorStatistics | null>(null);
   const [period, setPeriod] = useState(7); // days
@@ -59,7 +61,7 @@ export default function ErrorAnalyticsDashboard() {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-center text-gray-500">No error data available</p>
+          <p className="text-center text-gray-500">{t('errorAnalyticsDashboard.noErrorData')}</p>
         </CardContent>
       </Card>
     );
@@ -70,7 +72,7 @@ export default function ErrorAnalyticsDashboard() {
       <div className="space-y-6 animate-in fade-in duration-300">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Error Analytics</h2>
+          <h2 className="text-2xl font-bold">{t('errorAnalyticsDashboard.title')}</h2>
           <div className="flex gap-2">
             {[7, 30, 90].map(days => (
               <Button
@@ -78,7 +80,7 @@ export default function ErrorAnalyticsDashboard() {
                 variant={period === days ? 'default' : 'outline'}
                 onClick={() => setPeriod(days)}
               >
-                {days}d
+                {t('errorAnalyticsDashboard.daysShort', { count: days })}
               </Button>
             ))}
           </div>
@@ -88,7 +90,7 @@ export default function ErrorAnalyticsDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Errors</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">{t('errorAnalyticsDashboard.totalErrors')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalErrors}</div>
@@ -97,7 +99,7 @@ export default function ErrorAnalyticsDashboard() {
 
           <Card className="border-red-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-600">Critical Errors</CardTitle>
+              <CardTitle className="text-sm font-medium text-red-600">{t('errorAnalyticsDashboard.criticalErrors')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{stats.criticalErrors}</div>
@@ -106,7 +108,7 @@ export default function ErrorAnalyticsDashboard() {
 
           <Card className="border-yellow-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-yellow-600">Client Errors</CardTitle>
+              <CardTitle className="text-sm font-medium text-yellow-600">{t('errorAnalyticsDashboard.clientErrors')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">{stats.clientErrors}</div>
@@ -115,7 +117,7 @@ export default function ErrorAnalyticsDashboard() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Users Affected</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">{t('errorAnalyticsDashboard.usersAffected')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.uniqueUsersAffected}</div>
@@ -128,7 +130,7 @@ export default function ErrorAnalyticsDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Error Trend
+              {t('errorAnalyticsDashboard.errorTrend')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -136,17 +138,17 @@ export default function ErrorAnalyticsDashboard() {
               {stats.trend === 'increasing' ? (
                 <>
                   <TrendingUp className="h-5 w-5 text-red-500" />
-                  <span className="text-red-600 font-semibold">Increasing</span>
+                  <span className="text-red-600 font-semibold">{t('errorAnalyticsDashboard.trendIncreasing')}</span>
                 </>
               ) : stats.trend === 'decreasing' ? (
                 <>
                   <TrendingDown className="h-5 w-5 text-green-500" />
-                  <span className="text-green-600 font-semibold">Decreasing</span>
+                  <span className="text-green-600 font-semibold">{t('errorAnalyticsDashboard.trendDecreasing')}</span>
                 </>
               ) : (
                 <>
                   <Activity className="h-5 w-5 text-gray-500" />
-                  <span className="text-gray-600 font-semibold">Stable</span>
+                  <span className="text-gray-600 font-semibold">{t('errorAnalyticsDashboard.trendStable')}</span>
                 </>
               )}
             </div>
@@ -157,7 +159,7 @@ export default function ErrorAnalyticsDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Errors by Type</CardTitle>
+              <CardTitle>{t('errorAnalyticsDashboard.errorsByType')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -173,7 +175,7 @@ export default function ErrorAnalyticsDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Top Error Paths</CardTitle>
+              <CardTitle>{t('errorAnalyticsDashboard.topErrorPaths')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">

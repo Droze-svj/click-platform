@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bot, CheckCircle2, X, Loader2, Zap, MessageSquare, ChevronRight } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,20 +23,20 @@ interface ClientFeedbackAgentProps {
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
 }
 
-const ACTION_LABELS: Record<string, string> = {
-  lower_music: 'Lower music volume',
-  remove_silence: 'Remove silent pause',
-  speed_ramp: 'Speed up section',
-  cut_segment: 'Cut this segment',
-  adjust_captions: 'Adjust caption style',
+const ACTION_LABEL_KEYS: Record<string, string> = {
+  lower_music: 'clientFeedbackAgent.labelLowerMusic',
+  remove_silence: 'clientFeedbackAgent.labelRemoveSilence',
+  speed_ramp: 'clientFeedbackAgent.labelSpeedRamp',
+  cut_segment: 'clientFeedbackAgent.labelCutSegment',
+  adjust_captions: 'clientFeedbackAgent.labelAdjustCaptions',
 }
 
-const ACTION_DESCRIPTIONS: Record<string, string> = {
-  lower_music: 'Reduces background music by −6 dB on audio track A1',
-  remove_silence: 'Applies silence removal at the detected timestamp',
-  speed_ramp: 'Ramps playback speed to 1.25× at this point',
-  cut_segment: 'Marks segment for deletion on ghost layer',
-  adjust_captions: 'Opens caption settings for review',
+const ACTION_DESCRIPTION_KEYS: Record<string, string> = {
+  lower_music: 'clientFeedbackAgent.descLowerMusic',
+  remove_silence: 'clientFeedbackAgent.descRemoveSilence',
+  speed_ramp: 'clientFeedbackAgent.descSpeedRamp',
+  cut_segment: 'clientFeedbackAgent.descCutSegment',
+  adjust_captions: 'clientFeedbackAgent.descAdjustCaptions',
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
   onDecline,
   showToast,
 }) => {
+  const { t } = useTranslation()
   const [parsing, setParsing] = useState(false)
   const [parsed, setParsed] = useState<ParsedAction | null>(null)
   const [dismissed, setDismissed] = useState(false)
@@ -98,7 +100,9 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
     if (!parsed) return
     setApplied(true)
     onAccept?.(parsed)
-    showToast(`✓ AI edit applied — ${ACTION_LABELS[parsed.action ?? ''] ?? 'Edit applied'}`, 'success')
+    const labelKey = ACTION_LABEL_KEYS[parsed.action ?? '']
+    const appliedLabel = labelKey ? t(labelKey) : t('clientFeedbackAgent.editApplied')
+    showToast(t('clientFeedbackAgent.aiEditApplied', { label: appliedLabel }), 'success')
   }
 
   const handleDecline = () => {
@@ -109,8 +113,10 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
   if (dismissed || applied) return null
   if (!parsed || !parsed.parseable) return null
 
-  const actionLabel = ACTION_LABELS[parsed.action ?? ''] ?? parsed.action
-  const actionDesc = ACTION_DESCRIPTIONS[parsed.action ?? ''] ?? 'Apply AI-suggested edit'
+  const actionLabelKey = ACTION_LABEL_KEYS[parsed.action ?? '']
+  const actionLabel = actionLabelKey ? t(actionLabelKey) : parsed.action
+  const actionDescKey = ACTION_DESCRIPTION_KEYS[parsed.action ?? '']
+  const actionDesc = actionDescKey ? t(actionDescKey) : t('clientFeedbackAgent.applyAiSuggestedEdit')
   const formattedTime = parsed.timestamp !== null
     ? `${Math.floor((parsed.timestamp ?? 0) / 60)}:${String((parsed.timestamp ?? 0) % 60).padStart(2, '0')}`
     : null
@@ -135,14 +141,14 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
 
           <div className="flex-1 min-w-0">
             {parsing ? (
-              <p className="text-[10px] text-slate-500 italic">Analyzing comment…</p>
+              <p className="text-[10px] text-slate-500 italic">{t('clientFeedbackAgent.analyzingComment')}</p>
             ) : (
               <>
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-[10px] font-black text-fuchsia-400 uppercase tracking-wider">
-                    🤖 AI Draft Ready
+                    {t('clientFeedbackAgent.aiDraftReady')}
                   </p>
-                  <span className="text-[8px] text-slate-600">from {authorName}&apos;s comment</span>
+                  <span className="text-[8px] text-slate-600">{t('clientFeedbackAgent.fromAuthorComment', { author: authorName })}</span>
                 </div>
 
                 <div className="flex items-start gap-2 mb-3">
@@ -157,7 +163,7 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
                     <p className="text-[10px] font-black text-white">{actionLabel}</p>
                     <p className="text-[9px] text-slate-600">
                       {actionDesc}
-                      {formattedTime && ` at ${formattedTime}`}
+                      {formattedTime && t('clientFeedbackAgent.atTime', { time: formattedTime })}
                       {parsed.parameter && ` (${parsed.parameter})`}
                     </p>
                   </div>
@@ -172,7 +178,7 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
                     onClick={handleAccept}
                     className="flex-1 py-2 rounded-xl bg-fuchsia-600 text-white font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1.5"
                   >
-                    <CheckCircle2 className="w-3 h-3" /> Accept Ghost Edit
+                    <CheckCircle2 className="w-3 h-3" /> {t('clientFeedbackAgent.acceptGhostEdit')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.03 }}
@@ -180,7 +186,7 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
                     onClick={handleDecline}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 font-black text-[9px] uppercase tracking-widest flex items-center gap-1"
                   >
-                    <X className="w-3 h-3" /> Decline
+                    <X className="w-3 h-3" /> {t('clientFeedbackAgent.decline')}
                   </motion.button>
                 </div>
               </>

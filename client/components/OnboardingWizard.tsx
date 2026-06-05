@@ -11,31 +11,33 @@ import {
   Upload, Download, ChevronRight, X, Check,
   Sparkles, Zap, ArrowRight, Brain, Target, Rocket
 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface OnboardingWizardProps {
   onComplete: () => void
 }
 
 // ── Niche Quiz Data ────────────────────────────────────────────────────────────
+// Display-text fields hold translation keys resolved via `t()` at render time.
 const NICHE_TYPES = [
-  { id: 'creator', label: 'Content Creator', emoji: '🎬', desc: 'YouTube, TikTok, Reels' },
-  { id: 'brand', label: 'Brand / Business', emoji: '🏢', desc: 'Marketing & Growth' },
-  { id: 'educator', label: 'Educator', emoji: '🎓', desc: 'Courses & Tutorials' },
-  { id: 'agency', label: 'Agency', emoji: '🚀', desc: 'Client work & campaigns' },
+  { id: 'creator', labelKey: 'onboardingWizard.nicheCreatorLabel', emoji: '🎬', descKey: 'onboardingWizard.nicheCreatorDesc' },
+  { id: 'brand', labelKey: 'onboardingWizard.nicheBrandLabel', emoji: '🏢', descKey: 'onboardingWizard.nicheBrandDesc' },
+  { id: 'educator', labelKey: 'onboardingWizard.nicheEducatorLabel', emoji: '🎓', descKey: 'onboardingWizard.nicheEducatorDesc' },
+  { id: 'agency', labelKey: 'onboardingWizard.nicheAgencyLabel', emoji: '🚀', descKey: 'onboardingWizard.nicheAgencyDesc' },
 ]
 
 const PLATFORM_TARGETS = [
-  { id: 'tiktok', label: 'TikTok', emoji: '🎵' },
-  { id: 'instagram', label: 'Instagram Reels', emoji: '📸' },
-  { id: 'youtube', label: 'YouTube Shorts', emoji: '▶️' },
-  { id: 'linkedin', label: 'LinkedIn', emoji: '💼' },
+  { id: 'tiktok', labelKey: 'onboardingWizard.platformTiktok', emoji: '🎵' },
+  { id: 'instagram', labelKey: 'onboardingWizard.platformInstagram', emoji: '📸' },
+  { id: 'youtube', labelKey: 'onboardingWizard.platformYoutube', emoji: '▶️' },
+  { id: 'linkedin', labelKey: 'onboardingWizard.platformLinkedin', emoji: '💼' },
 ]
 
 const CREATOR_GOALS = [
-  { id: 'viral', label: 'Go Viral', emoji: '🔥', tip: 'AI optimizes for hook strength and trend alignment' },
-  { id: 'engagement', label: 'Boost Engagement', emoji: '💬', tip: 'AI maximizes comment triggers and CTAs' },
-  { id: 'monetize', label: 'Monetize', emoji: '💰', tip: 'AI targets high-RPM topics and sponsorship angles' },
-  { id: 'brand_awareness', label: 'Brand Awareness', emoji: '📣', tip: 'AI ensures consistent brand voice and recall' },
+  { id: 'viral', labelKey: 'onboardingWizard.goalViralLabel', emoji: '🔥', tipKey: 'onboardingWizard.goalViralTip' },
+  { id: 'engagement', labelKey: 'onboardingWizard.goalEngagementLabel', emoji: '💬', tipKey: 'onboardingWizard.goalEngagementTip' },
+  { id: 'monetize', labelKey: 'onboardingWizard.goalMonetizeLabel', emoji: '💰', tipKey: 'onboardingWizard.goalMonetizeTip' },
+  { id: 'brand_awareness', labelKey: 'onboardingWizard.goalBrandAwarenessLabel', emoji: '📣', tipKey: 'onboardingWizard.goalBrandAwarenessTip' },
 ]
 
 // ── Main Steps ─────────────────────────────────────────────────────────────────
@@ -43,38 +45,39 @@ const STEPS = [
   {
     id: 'import',
     icon: Upload,
-    title: 'Import your first video',
-    subtitle: 'Drag & drop or browse — any format works',
+    titleKey: 'onboardingWizard.stepImportTitle',
+    subtitleKey: 'onboardingWizard.stepImportSubtitle',
     color: 'from-blue-600 to-indigo-600',
-    tip: 'Pro tip: TikTok downloads, screen recordings, and phone footage all work perfectly.',
-    action: 'Import Video',
-    skip: "I'll do this later",
+    tipKey: 'onboardingWizard.stepImportTip',
+    actionKey: 'onboardingWizard.stepImportAction',
+    skipKey: 'onboardingWizard.stepImportSkip',
   },
   {
     id: 'hook',
     icon: Sparkles,
-    title: 'Add a viral hook',
-    subtitle: 'CLICK auto-generates hooks trained on 100M+ viral videos',
+    titleKey: 'onboardingWizard.stepHookTitle',
+    subtitleKey: 'onboardingWizard.stepHookSubtitle',
     color: 'from-indigo-600 to-purple-600',
-    tip: 'The first 3 seconds determine 80% of your watch time. Let AI craft the perfect opener.',
-    action: 'Generate Hook',
-    skip: 'Skip for now',
+    tipKey: 'onboardingWizard.stepHookTip',
+    actionKey: 'onboardingWizard.stepHookAction',
+    skipKey: 'onboardingWizard.stepHookSkip',
   },
   {
     id: 'export',
     icon: Download,
-    title: 'Export for your platform',
-    subtitle: 'One-click platform optimization — TikTok, Reels, Shorts',
+    titleKey: 'onboardingWizard.stepExportTitle',
+    subtitleKey: 'onboardingWizard.stepExportSubtitle',
     color: 'from-purple-600 to-pink-600',
-    tip: 'CLICK automatically formats, compresses, and captions your video for maximum reach.',
-    action: 'Export & Publish',
-    skip: 'Explore first',
+    tipKey: 'onboardingWizard.stepExportTip',
+    actionKey: 'onboardingWizard.stepExportAction',
+    skipKey: 'onboardingWizard.stepExportSkip',
   },
 ]
 
 export const CLICK_NICHE_KEY = 'click_creator_profile'
 
 export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
+  const { t } = useTranslation()
   // -2 = niche quiz, -1 = welcome, 0+ = main steps
   const [currentStep, setCurrentStep] = useState(-2)
   const [completed, setCompleted] = useState<Set<string>>(new Set())
@@ -149,7 +152,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         className="relative w-full max-w-lg mx-4"
       >
-        <button type="button" onClick={onComplete} title="Close onboarding"
+        <button type="button" onClick={onComplete} title={t('onboardingWizard.closeOnboarding')}
           className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all z-10"
         >
           <X className="w-4 h-4" />
@@ -177,8 +180,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                     <Brain className="w-4 h-4 text-indigo-400" />
                   </div>
                   <div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400">AI Calibration</div>
-                    <div className="text-[10px] text-slate-500">Step {quizStep + 1} of 3</div>
+                    <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{t('onboardingWizard.aiCalibration')}</div>
+                    <div className="text-[10px] text-slate-500">{t('onboardingWizard.stepOfThree', { step: quizStep + 1 })}</div>
                   </div>
                   <div className="ml-auto flex gap-1.5">
                     {[0,1,2].map(i => (
@@ -189,16 +192,16 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
                 {quizStep === 0 && (
                   <>
-                    <h3 className="text-xl font-black tracking-tight mb-1">Who are you creating for?</h3>
-                    <p className="text-slate-500 text-xs mb-5">Click will tailor its AI to your exact context.</p>
+                    <h3 className="text-xl font-black tracking-tight mb-1">{t('onboardingWizard.quizNicheHeading')}</h3>
+                    <p className="text-slate-500 text-xs mb-5">{t('onboardingWizard.quizNicheSubtitle')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {NICHE_TYPES.map(n => (
                         <button type="button" key={n.id} onClick={() => setNicheType(n.id)}
                           className={`p-4 rounded-2xl border text-left transition-all ${nicheType === n.id ? 'bg-indigo-600/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
                         >
                           <div className="text-2xl mb-1">{n.emoji}</div>
-                          <div className="text-xs font-black text-white">{n.label}</div>
-                          <div className="text-[9px] text-slate-600 mt-0.5">{n.desc}</div>
+                          <div className="text-xs font-black text-white">{t(n.labelKey)}</div>
+                          <div className="text-[9px] text-slate-600 mt-0.5">{t(n.descKey)}</div>
                         </button>
                       ))}
                     </div>
@@ -207,15 +210,15 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
                 {quizStep === 1 && (
                   <>
-                    <h3 className="text-xl font-black tracking-tight mb-1">Primary platform?</h3>
-                    <p className="text-slate-500 text-xs mb-5">Optimizes export settings, aspect ratio &amp; captions.</p>
+                    <h3 className="text-xl font-black tracking-tight mb-1">{t('onboardingWizard.quizPlatformHeading')}</h3>
+                    <p className="text-slate-500 text-xs mb-5">{t('onboardingWizard.quizPlatformSubtitle')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {PLATFORM_TARGETS.map(p => (
                         <button type="button" key={p.id} onClick={() => setPlatformTarget(p.id)}
                           className={`p-4 rounded-2xl border text-left flex items-center gap-3 transition-all ${platformTarget === p.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
                         >
                           <span className="text-xl">{p.emoji}</span>
-                          <span className="text-xs font-black text-white">{p.label}</span>
+                          <span className="text-xs font-black text-white">{t(p.labelKey)}</span>
                         </button>
                       ))}
                     </div>
@@ -224,16 +227,16 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
                 {quizStep === 2 && (
                   <>
-                    <h3 className="text-xl font-black tracking-tight mb-1">What&apos;s your main goal?</h3>
-                    <p className="text-slate-500 text-xs mb-5">AI will score and optimize every edit toward this.</p>
+                    <h3 className="text-xl font-black tracking-tight mb-1">{t('onboardingWizard.quizGoalHeading')}</h3>
+                    <p className="text-slate-500 text-xs mb-5">{t('onboardingWizard.quizGoalSubtitle')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {CREATOR_GOALS.map(g => (
                         <button type="button" key={g.id} onClick={() => setCreatorGoal(g.id)}
                           className={`p-4 rounded-2xl border text-left transition-all ${creatorGoal === g.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
                         >
                           <div className="text-2xl mb-1">{g.emoji}</div>
-                          <div className="text-xs font-black text-white">{g.label}</div>
-                          <div className="text-[9px] text-slate-500 mt-0.5">{g.tip}</div>
+                          <div className="text-xs font-black text-white">{t(g.labelKey)}</div>
+                          <div className="text-[9px] text-slate-500 mt-0.5">{t(g.tipKey)}</div>
                         </button>
                       ))}
                     </div>
@@ -242,7 +245,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                         className="mt-4 p-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20"
                       >
                         <p className="text-[10px] text-indigo-300">
-                          <span className="font-black">✦ AI Mode: </span>{selectedGoal.tip}
+                          <span className="font-black">{t('onboardingWizard.aiModePrefix')}</span>{t(selectedGoal.tipKey)}
                         </p>
                       </motion.div>
                     )}
@@ -252,7 +255,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 <button type="button" onClick={advanceQuiz} disabled={!quizCanAdvance}
                   className="w-full mt-5 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-sm uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/20"
                 >
-                  {quizStep < 2 ? 'Continue' : 'Configure My AI'} <ArrowRight className="w-4 h-4" />
+                  {quizStep < 2 ? t('onboardingWizard.continue') : t('onboardingWizard.configureMyAi')} <ArrowRight className="w-4 h-4" />
                 </button>
               </motion.div>
             )}
@@ -267,26 +270,26 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/20 border border-emerald-500/30 mb-4">
                     <Zap className="w-3.5 h-3.5 text-emerald-400" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                      AI Configured for {NICHE_TYPES.find(n => n.id === nicheType)?.label || 'You'}
+                      {t('onboardingWizard.aiConfiguredFor', { target: (() => { const n = NICHE_TYPES.find(n => n.id === nicheType); return n ? t(n.labelKey) : t('onboardingWizard.fallbackYou') })() })}
                     </span>
                   </div>
-                  <h2 className="text-2xl font-black tracking-tight mb-2">Your AI stack is ready</h2>
+                  <h2 className="text-2xl font-black tracking-tight mb-2">{t('onboardingWizard.aiStackReady')}</h2>
                   <p className="text-slate-500 text-sm leading-relaxed">
-                    Every edit is now scored specifically for{' '}
-                    <span className="text-indigo-400 font-bold">{CREATOR_GOALS.find(g => g.id === creatorGoal)?.label || 'your goal'}</span>.
+                    {t('onboardingWizard.everyEditScoredFor')}{' '}
+                    <span className="text-indigo-400 font-bold">{(() => { const g = CREATOR_GOALS.find(g => g.id === creatorGoal); return g ? t(g.labelKey) : t('onboardingWizard.fallbackYourGoal') })()}</span>.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mb-6">
                   {[
-                    { icon: Target, label: 'Goal-Tuned', desc: 'Scoring', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                    { icon: Rocket, label: 'Platform', desc: 'Optimized', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                    { icon: Brain, label: 'Neural', desc: 'Calibrated', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+                    { icon: Target, labelKey: 'onboardingWizard.featureGoalTunedLabel', descKey: 'onboardingWizard.featureGoalTunedDesc', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+                    { icon: Rocket, labelKey: 'onboardingWizard.featurePlatformLabel', descKey: 'onboardingWizard.featurePlatformDesc', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                    { icon: Brain, labelKey: 'onboardingWizard.featureNeuralLabel', descKey: 'onboardingWizard.featureNeuralDesc', color: 'text-purple-400', bg: 'bg-purple-500/10' },
                   ].map(f => (
-                    <div key={f.label} className={`p-3 rounded-2xl ${f.bg} border border-white/5 text-center`}>
+                    <div key={f.labelKey} className={`p-3 rounded-2xl ${f.bg} border border-white/5 text-center`}>
                       <f.icon className={`w-5 h-5 ${f.color} mx-auto mb-1`} />
-                      <div className="text-[9px] font-black text-white">{f.label}</div>
-                      <div className="text-[8px] text-slate-500">{f.desc}</div>
+                      <div className="text-[9px] font-black text-white">{t(f.labelKey)}</div>
+                      <div className="text-[8px] text-slate-500">{t(f.descKey)}</div>
                     </div>
                   ))}
                 </div>
@@ -294,9 +297,9 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 <button type="button" onClick={advanceStep}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-sm uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30"
                 >
-                  Start Creating <ArrowRight className="w-4 h-4" />
+                  {t('onboardingWizard.startCreating')} <ArrowRight className="w-4 h-4" />
                 </button>
-                <p className="text-center text-[9px] text-slate-600 mt-3">Takes about 90 seconds · No credit card required</p>
+                <p className="text-center text-[9px] text-slate-600 mt-3">{t('onboardingWizard.takesNinetySeconds')}</p>
               </motion.div>
             )}
 
@@ -327,24 +330,24 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   <step.icon className="w-7 h-7 text-white" />
                 </div>
 
-                <h3 className="text-xl font-black tracking-tight mb-2">{step.title}</h3>
-                <p className="text-slate-400 text-sm mb-4">{step.subtitle}</p>
+                <h3 className="text-xl font-black tracking-tight mb-2">{t(step.titleKey)}</h3>
+                <p className="text-slate-400 text-sm mb-4">{t(step.subtitleKey)}</p>
 
                 <div className="p-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 mb-6">
                   <p className="text-[10px] text-indigo-300 leading-relaxed">
-                    <span className="font-black">✦ Pro tip: </span>{step.tip}
+                    <span className="font-black">{t('onboardingWizard.proTipPrefix')}</span>{t(step.tipKey)}
                   </p>
                 </div>
 
                 <button type="button" onClick={advanceStep}
                   className={`w-full py-4 rounded-2xl bg-gradient-to-r ${step.color} text-white font-black text-sm uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg mb-3`}
                 >
-                  {step.action} <ChevronRight className="w-4 h-4" />
+                  {t(step.actionKey)} <ChevronRight className="w-4 h-4" />
                 </button>
                 <button type="button" onClick={skipStep}
                   className="w-full py-2 text-[10px] font-black text-slate-500 hover:text-slate-300 uppercase tracking-widest transition-all"
                 >
-                  {step.skip}
+                  {t(step.skipKey)}
                 </button>
               </motion.div>
             )}
@@ -356,11 +359,11 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 className="p-8 text-center"
               >
                 <div className="text-5xl mb-4">🎉</div>
-                <h3 className="text-2xl font-black mb-2">You&apos;re all set!</h3>
+                <h3 className="text-2xl font-black mb-2">{t('onboardingWizard.allSet')}</h3>
                 <p className="text-slate-400 text-sm">
-                  CLICK is tuned for{' '}
-                  <span className="text-indigo-400 font-bold">{CREATOR_GOALS.find(g => g.id === creatorGoal)?.label || 'success'}</span>.
-                  Make your first video go viral.
+                  {t('onboardingWizard.clickTunedFor')}{' '}
+                  <span className="text-indigo-400 font-bold">{(() => { const g = CREATOR_GOALS.find(g => g.id === creatorGoal); return g ? t(g.labelKey) : t('onboardingWizard.fallbackSuccess') })()}</span>.
+                  {' '}{t('onboardingWizard.makeFirstVideoViral')}
                 </p>
               </motion.div>
             )}

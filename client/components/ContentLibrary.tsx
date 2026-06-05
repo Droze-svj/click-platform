@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { BookOpen, Search, Filter, Plus, Copy, Edit, Trash2 } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface LibraryItem {
   id: string
@@ -20,6 +21,7 @@ export default function ContentLibrary() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<string>('all')
   const [loading, setLoading] = useState(true)
+  const { t } = useTranslation()
 
   useEffect(() => {
     loadLibrary()
@@ -118,12 +120,12 @@ export default function ContentLibrary() {
         <div className="flex items-center gap-2">
           <BookOpen className="w-6 h-6 text-blue-600" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Content Library
+            {t('contentLibrary.title')}
           </h3>
         </div>
         <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
           <Plus className="w-4 h-4" />
-          Add to Library
+          {t('contentLibrary.addToLibrary')}
         </button>
       </div>
 
@@ -135,7 +137,7 @@ export default function ContentLibrary() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search library..."
+            placeholder={t('contentLibrary.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           />
         </div>
@@ -146,11 +148,11 @@ export default function ContentLibrary() {
             onChange={(e) => setFilterType(e.target.value)}
             className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white appearance-none"
           >
-            <option value="all">All Types</option>
-            <option value="article">Articles</option>
-            <option value="video">Videos</option>
-            <option value="podcast">Podcasts</option>
-            <option value="quote">Quotes</option>
+            <option value="all">{t('contentLibrary.filterAll')}</option>
+            <option value="article">{t('contentLibrary.filterArticles')}</option>
+            <option value="video">{t('contentLibrary.filterVideos')}</option>
+            <option value="podcast">{t('contentLibrary.filterPodcasts')}</option>
+            <option value="quote">{t('contentLibrary.filterQuotes')}</option>
           </select>
         </div>
       </div>
@@ -161,11 +163,11 @@ export default function ContentLibrary() {
           <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400 mb-2">
             {searchQuery || filterType !== 'all'
-              ? 'No items match your search'
-              : 'Your content library is empty'}
+              ? t('contentLibrary.noMatches')
+              : t('contentLibrary.empty')}
           </p>
           <button className="text-blue-600 dark:text-blue-400 hover:underline">
-            Add your first item
+            {t('contentLibrary.addFirstItem')}
           </button>
         </div>
       ) : (
@@ -204,14 +206,14 @@ export default function ContentLibrary() {
 
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-500">
-                  Used {item.usageCount} times
+                  {t('contentLibrary.usedTimes', { count: item.usageCount })}
                 </span>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => handleUseItem(item)}
                     className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                    title="Use this content"
+                    title={t('contentLibrary.useThisContent')}
                   >
                     <Copy className="w-4 h-4" />
                   </button>
@@ -219,7 +221,7 @@ export default function ContentLibrary() {
                     type="button"
                     onClick={() => duplicateItem(item)}
                     className="p-1.5 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
-                    title="Duplicate"
+                    title={t('contentLibrary.duplicate')}
                   >
                     <Copy className="w-4 h-4" />
                   </button>

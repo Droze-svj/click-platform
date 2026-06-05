@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface DiffItem {
   type: 'added' | 'removed' | 'unchanged' | 'modified'
@@ -17,6 +18,7 @@ interface ContentComparisonProps {
 }
 
 export default function ContentComparison({ original, edited, onClose }: ContentComparisonProps) {
+  const { t } = useTranslation()
   const [comparison, setComparison] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
@@ -56,7 +58,7 @@ export default function ContentComparison({ original, edited, onClose }: Content
           onClick={compare}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          Compare Content
+          {t('contentComparison.compareContent')}
         </button>
       </div>
     )
@@ -76,7 +78,7 @@ export default function ContentComparison({ original, edited, onClose }: Content
     <div className="p-6">
       {onClose && (
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Content Comparison</h2>
+          <h2 className="text-xl font-semibold">{t('contentComparison.title')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -90,19 +92,19 @@ export default function ContentComparison({ original, edited, onClose }: Content
       {/* Summary */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Added</div>
+          <div className="text-sm text-gray-600">{t('contentComparison.added')}</div>
           <div className="text-2xl font-bold text-green-600">{comparison.changes.added}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Removed</div>
+          <div className="text-sm text-gray-600">{t('contentComparison.removed')}</div>
           <div className="text-2xl font-bold text-red-600">{comparison.changes.removed}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Modified</div>
+          <div className="text-sm text-gray-600">{t('contentComparison.modified')}</div>
           <div className="text-2xl font-bold text-yellow-600">{comparison.changes.modified}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600">Similarity</div>
+          <div className="text-sm text-gray-600">{t('contentComparison.similarity')}</div>
           <div className="text-2xl font-bold text-blue-600">{comparison.similarity}%</div>
         </div>
       </div>
@@ -110,7 +112,7 @@ export default function ContentComparison({ original, edited, onClose }: Content
       {/* Side-by-Side View */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="font-semibold mb-2">Original</h3>
+          <h3 className="font-semibold mb-2">{t('contentComparison.original')}</h3>
           <div className="space-y-1">
             {comparison.diff.map((item: DiffItem, i: number) => (
               <span
@@ -123,7 +125,7 @@ export default function ContentComparison({ original, edited, onClose }: Content
           </div>
         </div>
         <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="font-semibold mb-2">Edited</h3>
+          <h3 className="font-semibold mb-2">{t('contentComparison.edited')}</h3>
           <div className="space-y-1">
             {comparison.diff.map((item: DiffItem, i: number) => (
               <span

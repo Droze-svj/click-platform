@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { extractApiData } from '../utils/apiResponse'
 import { apiGet, apiPost, apiPut, handleApiError } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface CaptionSegment {
   id: number
@@ -43,6 +44,7 @@ export default function VideoCaptionEditor({
   videoUrl,
   onSave
 }: VideoCaptionEditorProps) {
+  const { t } = useTranslation()
   const [captions, setCaptions] = useState<CaptionData | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isTranslating, setIsTranslating] = useState(false)
@@ -94,7 +96,7 @@ export default function VideoCaptionEditor({
         }
       }
     } catch (err: any) {
-      setError(handleApiError(err) || 'Failed to generate captions')
+      setError(handleApiError(err) || t('videoCaptionEditor.generateFailed'))
     } finally {
       setIsGenerating(false)
     }
@@ -108,7 +110,7 @@ export default function VideoCaptionEditor({
       await apiPost<any>(`/video/captions/${contentId}/translate`, { targetLanguage })
       await loadCaptions()
     } catch (err: any) {
-      setError(handleApiError(err) || 'Failed to translate captions')
+      setError(handleApiError(err) || t('videoCaptionEditor.translateFailed'))
     } finally {
       setIsTranslating(false)
     }
@@ -157,7 +159,7 @@ export default function VideoCaptionEditor({
       }
       setIsEditing(false)
     } catch (err: any) {
-      setError(handleApiError(err) || 'Failed to save caption edits')
+      setError(handleApiError(err) || t('videoCaptionEditor.saveEditsFailed'))
     }
   }
 
@@ -194,7 +196,7 @@ export default function VideoCaptionEditor({
           <div className="flex items-center gap-2">
             <Captions className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-              Video Captions
+              {t('videoCaptionEditor.title')}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -206,8 +208,8 @@ export default function VideoCaptionEditor({
                     setSelectedFormat(e.target.value as 'srt' | 'vtt' | 'ssa')
                     loadCaptions()
                   }}
-                  aria-label="Caption export format"
-                  title="Caption export format"
+                  aria-label={t('videoCaptionEditor.exportFormatLabel')}
+                  title={t('videoCaptionEditor.exportFormatLabel')}
                   className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="srt">SRT</option>
@@ -220,7 +222,7 @@ export default function VideoCaptionEditor({
                   className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
                   <Download className="w-4 h-4" />
-                  Download
+                  {t('videoCaptionEditor.download')}
                 </button>
               </>
             )}
@@ -244,7 +246,7 @@ export default function VideoCaptionEditor({
           <div className="text-center py-8">
             <Captions className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              No captions generated yet
+              {t('videoCaptionEditor.noCaptionsYet')}
             </p>
             <div className="flex flex-col gap-2 items-center">
               <button
@@ -256,24 +258,24 @@ export default function VideoCaptionEditor({
                 {isGenerating ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Generating...</span>
+                    <span>{t('videoCaptionEditor.generating')}</span>
                   </>
                 ) : (
                   <>
                     <Captions className="w-4 h-4" />
-                    <span>Generate Auto-Captions</span>
+                    <span>{t('videoCaptionEditor.generateAutoCaptions')}</span>
                   </>
                 )}
               </button>
               <div className="mt-2">
                 <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
-                  Or select language:
+                  {t('videoCaptionEditor.orSelectLanguage')}
                 </label>
                 <select
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
-                  aria-label="Caption source language"
-                  title="Caption source language"
+                  aria-label={t('videoCaptionEditor.sourceLanguageLabel')}
+                  title={t('videoCaptionEditor.sourceLanguageLabel')}
                   className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   {languages.map((lang) => (
@@ -288,7 +290,7 @@ export default function VideoCaptionEditor({
                   disabled={isGenerating}
                   className="ml-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
-                  Generate
+                  {t('videoCaptionEditor.generate')}
                 </button>
               </div>
             </div>
@@ -299,7 +301,7 @@ export default function VideoCaptionEditor({
           <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400">
-              Generating captions... This may take a few minutes.
+              {t('videoCaptionEditor.generatingCaptions')}
             </p>
           </div>
         )}
@@ -310,13 +312,13 @@ export default function VideoCaptionEditor({
             <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <div className="flex items-center gap-4">
                 <div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Language:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('videoCaptionEditor.language')}</span>
                   <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
                     {languages.find(l => l.code === captions.language)?.name || captions.language}
                   </span>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Format:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('videoCaptionEditor.format')}</span>
                   <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white uppercase">
                     {captions.format}
                   </span>
@@ -328,7 +330,7 @@ export default function VideoCaptionEditor({
                 className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
               >
                 <Edit3 className="w-4 h-4" />
-                {isEditing ? 'Cancel Edit' : 'Edit'}
+                {isEditing ? t('videoCaptionEditor.cancelEdit') : t('videoCaptionEditor.edit')}
               </button>
             </div>
 
@@ -348,9 +350,9 @@ export default function VideoCaptionEditor({
                           newSegments[index].text = e.target.value
                           setEditedSegments(newSegments)
                         }}
-                        aria-label={`Caption text for segment ${index + 1}`}
-                        title={`Caption text for segment ${index + 1}`}
-                        placeholder="Caption text"
+                        aria-label={t('videoCaptionEditor.segmentLabel', { number: index + 1 })}
+                        title={t('videoCaptionEditor.segmentLabel', { number: index + 1 })}
+                        placeholder={t('videoCaptionEditor.captionTextPlaceholder')}
                         className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         rows={2}
                       />
@@ -362,7 +364,7 @@ export default function VideoCaptionEditor({
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors mt-2"
                   >
                     <Save className="w-4 h-4" />
-                    Save Changes
+                    {t('videoCaptionEditor.saveChanges')}
                   </button>
                 </div>
               ) : (
@@ -375,12 +377,12 @@ export default function VideoCaptionEditor({
             {/* Translation */}
             <div className="flex items-center gap-2">
               <Languages className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Translate to:</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('videoCaptionEditor.translateTo')}</span>
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
-                aria-label="Translate captions to language"
-                title="Translate captions to language"
+                aria-label={t('videoCaptionEditor.translateLanguageLabel')}
+                title={t('videoCaptionEditor.translateLanguageLabel')}
                 className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 disabled={isTranslating}
               >
@@ -399,10 +401,10 @@ export default function VideoCaptionEditor({
                 {isTranslating ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin inline mr-1" />
-                    Translating...
+                    {t('videoCaptionEditor.translating')}
                   </>
                 ) : (
-                  'Translate'
+                  t('videoCaptionEditor.translate')
                 )}
               </button>
             </div>

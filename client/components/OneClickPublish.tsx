@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Platform {
   id: string
@@ -45,6 +46,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
   const [toneModulation, setToneModulation] = useState<'casual' | 'professional'>('casual')
   const [showSalvageAlert, setShowSalvageAlert] = useState(false)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const defaultPlatforms: Platform[] = platforms || [
     { id: 'tiktok', name: 'TikTok', icon: Smartphone, connected: true, color: 'text-pink-500' },
@@ -58,11 +60,11 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
     if (published.length > 0 && salvageActive) {
       const timer = setTimeout(() => {
         setShowSalvageAlert(true)
-        showToast('Salvage Protocol: Low initial CTR detected on TikTok. Prepare for pivot.', 'warning')
+        showToast(t('oneClickPublish.salvageLowCtr'), 'warning')
       }, 5000) // Fast simulation
       return () => clearTimeout(timer)
     }
-  }, [published, salvageActive, showToast])
+  }, [published, salvageActive, showToast, t])
 
   const handlePlatformToggle = (platformId: string) => {
     setSelectedPlatforms(prev =>
@@ -74,7 +76,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
 
   const handlePublish = async () => {
     if (selectedPlatforms.length === 0) {
-      showToast('Please select at least one platform', 'error')
+      showToast(t('oneClickPublish.selectAtLeastOne'), 'error')
       return
     }
 
@@ -100,21 +102,21 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
       if (publishedPlatforms.length > 0) {
         setPublished(publishedPlatforms)
         showToast(
-          `Neural Distribution Sync Complete: ${publishedPlatforms.length} nodes active.`,
+          t('oneClickPublish.syncComplete', { count: publishedPlatforms.length }),
           'success'
         )
       } else {
-        showToast('Failed to publish to any platform', 'error')
+        showToast(t('oneClickPublish.failedAnyPlatform'), 'error')
       }
     } catch (error) {
-      showToast('Distribution engine failure', 'error')
+      showToast(t('oneClickPublish.engineFailure'), 'error')
     } finally {
       setIsPublishing(false)
     }
   }
 
   const handleSalvageSwap = () => {
-    showToast('A/B Variant B deployed. Headline and Thumbnail swapped.', 'success')
+    showToast(t('oneClickPublish.variantBDeployed'), 'success')
     setShowSalvageAlert(false)
   }
 
@@ -126,7 +128,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white rounded-2xl hover:scale-105 transition-all shadow-lg shadow-indigo-600/20 font-black uppercase tracking-widest text-[10px]"
       >
         <Send className="w-4 h-4" />
-        <span>Deploy Content</span>
+        <span>{t('oneClickPublish.deployContent')}</span>
       </button>
     )
   }
@@ -142,17 +144,17 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
           <div className="space-y-1">
              <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-indigo-400" />
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Phase 10 Engine</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">{t('oneClickPublish.phase10Engine')}</span>
              </div>
              <h3 className="text-3xl font-black italic text-[var(--text-main)] uppercase tracking-tighter">
-               Neural Distribution
+               {t('oneClickPublish.neuralDistribution')}
              </h3>
           </div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            title="Close Distribution Window"
-            aria-label="Close Distribution Window"
+            title={t('oneClickPublish.closeDistributionWindow')}
+            aria-label={t('oneClickPublish.closeDistributionWindow')}
             className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-colors"
           >
             <X className="w-6 h-6" />
@@ -163,7 +165,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
            {/* Platform Grid */}
            <div className="space-y-4">
               <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                 <Globe className="w-3 h-3" /> Target Ecosystems
+                 <Globe className="w-3 h-3" /> {t('oneClickPublish.targetEcosystems')}
               </div>
               <div className="space-y-2">
                 {defaultPlatforms.map((platform) => {
@@ -176,7 +178,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                       key={platform.id}
                       onClick={() => !isPublished && handlePlatformToggle(platform.id)}
                       disabled={isPublishing || isPublished || !platform.connected}
-                      title={`Toggle ${platform.name}${isPublished ? ' (Published)' : ''}`}
+                      title={isPublished ? t('oneClickPublish.togglePlatformPublished', { name: platform.name }) : t('oneClickPublish.togglePlatform', { name: platform.name })}
                       className={`w-full flex items-center justify-between p-4 rounded-3xl border-2 transition-all group ${
                         isPublished
                           ? 'border-emerald-500/50 bg-emerald-500/10'
@@ -208,19 +210,19 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
            <div className="space-y-8">
               <div className="space-y-4">
                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <Sparkles className="w-3 h-3 text-purple-400" /> Strategic Protocols
+                    <Sparkles className="w-3 h-3 text-purple-400" /> {t('oneClickPublish.strategicProtocols')}
                  </div>
-                 
+
                  {/* Salvage Toggle */}
                  <div className="p-5 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between">
                     <div className="space-y-1">
-                       <div className="text-[11px] font-black text-white uppercase italic">Salvage Protocol</div>
-                       <div className="text-[8px] font-bold text-slate-500 uppercase">Auto-Pivot if CTR &lt; 2%</div>
+                       <div className="text-[11px] font-black text-white uppercase italic">{t('oneClickPublish.salvageProtocol')}</div>
+                       <div className="text-[8px] font-bold text-slate-500 uppercase">{t('oneClickPublish.autoPivotCtr')}</div>
                     </div>
                     <button
                        type="button"
                        onClick={() => setSalvageActive(!salvageActive)}
-                       title={salvageActive ? "Deactivate Salvage Protocol" : "Activate Salvage Protocol"}
+                       title={salvageActive ? t('oneClickPublish.deactivateSalvage') : t('oneClickPublish.activateSalvage')}
                        className={`w-12 h-6 rounded-full transition-all relative ${salvageActive ? 'bg-indigo-600' : 'bg-white/10'}`}
                     >
                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${salvageActive ? 'left-7' : 'left-1'}`} />
@@ -230,20 +232,20 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                  {/* Tone Modulator */}
                  <div className="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
                     <div className="flex items-center justify-between">
-                       <div className="text-[11px] font-black text-white uppercase italic">Tone Modulation</div>
-                       <div className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{toneModulation}</div>
+                       <div className="text-[11px] font-black text-white uppercase italic">{t('oneClickPublish.toneModulation')}</div>
+                       <div className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{t(`oneClickPublish.tone_${toneModulation}`)}</div>
                     </div>
                     <div className="flex gap-2">
-                       {['casual', 'professional'].map(t => (
+                       {['casual', 'professional'].map(tone => (
                          <button
                            type="button"
-                           key={t}
-                           onClick={() => setToneModulation(t as any)}
+                           key={tone}
+                           onClick={() => setToneModulation(tone as any)}
                            className={`flex-1 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${
-                             toneModulation === t ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white'
+                             toneModulation === tone ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white'
                            }`}
                          >
-                           {t}
+                           {t(`oneClickPublish.tone_${tone}`)}
                          </button>
                        ))}
                     </div>
@@ -263,7 +265,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                   <BarChart3 className="w-5 h-5" />
                 )}
                 <span className="text-xs font-black uppercase tracking-widest italic">
-                  {isPublishing ? 'Synchronizing Nodes...' : 'Execute Distribution'}
+                  {isPublishing ? t('oneClickPublish.synchronizingNodes') : t('oneClickPublish.executeDistribution')}
                 </span>
               </button>
            </div>
@@ -282,9 +284,9 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                    <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/20 border border-rose-500/40 flex items-center justify-center">
                       <ShieldAlert className="w-10 h-10 text-rose-500 animate-pulse" />
                    </div>
-                   <h4 className="text-2xl font-black italic text-[var(--text-main)] uppercase">Critical Under-Performance</h4>
+                   <h4 className="text-2xl font-black italic text-[var(--text-main)] uppercase">{t('oneClickPublish.criticalUnderPerformance')}</h4>
                    <p className="text-sm text-slate-300 font-medium">
-                      Initial retention data for <span className="text-white font-black italic">TIKTOK</span> is below baseline. Salvage Protocol suggests swapping to <span className="text-indigo-400 font-bold uppercase tracking-widest">Variant B</span> (High Friction Hook).
+                      {t('oneClickPublish.salvageAlertBefore')} <span className="text-white font-black italic">TIKTOK</span> {t('oneClickPublish.salvageAlertMiddle')} <span className="text-indigo-400 font-bold uppercase tracking-widest">{t('oneClickPublish.variantB')}</span> {t('oneClickPublish.salvageAlertAfter')}
                    </p>
                    <div className="flex gap-4 w-full">
                       <button
@@ -292,15 +294,15 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                         onClick={() => setShowSalvageAlert(false)}
                         className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white"
                       >
-                        Ignore
+                        {t('oneClickPublish.ignore')}
                       </button>
                       <button
                         type="button"
                         onClick={handleSalvageSwap}
-                        title="Swap to Variant B"
+                        title={t('oneClickPublish.swapToVariantB')}
                         className="flex-1 py-4 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20"
                       >
-                        Swap Variant B
+                        {t('oneClickPublish.swapVariantB')}
                       </button>
                    </div>
                 </div>

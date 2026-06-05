@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './MarketingStrategistChat.css';
 import AgentAvatar from './AgentAvatar';
 import { apiGet, apiPost } from '../lib/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Message {
   id: string;
@@ -20,18 +21,18 @@ interface MarketingStrategistChatProps {
   className?: string;
 }
 
-const STARTER_QUESTIONS = [
-  'How do I grow to 10K followers in my niche with $0 budget?',
-  'What content should I post every day this week?',
-  'Which platform should I focus on first?',
-  'How do I turn my content into revenue?',
-  'What makes my niche audience stop scrolling?'
+const STARTER_QUESTION_KEYS = [
+  'starterQuestion0',
+  'starterQuestion1',
+  'starterQuestion2',
+  'starterQuestion3',
+  'starterQuestion4'
 ];
 
-const PLAYBOOK_LABELS: Record<string, { icon: string; label: string }> = {
-  growth: { icon: '📈', label: 'Growth Playbook' },
-  engagement: { icon: '💬', label: 'Engagement Playbook' },
-  monetization: { icon: '💰', label: 'Monetization Playbook' }
+const PLAYBOOK_LABELS: Record<string, { icon: string; labelKey: string }> = {
+  growth: { icon: '📈', labelKey: 'growthPlaybook' },
+  engagement: { icon: '💬', labelKey: 'engagementPlaybook' },
+  monetization: { icon: '💰', labelKey: 'monetizationPlaybook' }
 };
 
 export default function MarketingStrategistChat({
@@ -39,6 +40,7 @@ export default function MarketingStrategistChat({
   platforms = ['tiktok'],
   className = ''
 }: MarketingStrategistChatProps) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -65,11 +67,11 @@ export default function MarketingStrategistChat({
     setMessages([{
       id: 'welcome',
       role: 'assistant',
-      content: `Hey! I'm your CLICK AI Marketing Strategist. I have deep knowledge of the **${niche || 'your'}** niche and what's working across all platforms right now.\n\nAsk me anything — from content strategy to 30-day growth plans. I give specific advice, not generic tips.`,
+      content: t('marketingStrategistChat.welcomeMessage', { niche: niche || t('marketingStrategistChat.yourNicheFallback') }),
       timestamp: new Date(),
-      followUps: STARTER_QUESTIONS.slice(0, 3)
+      followUps: STARTER_QUESTION_KEYS.slice(0, 3).map(k => t(`marketingStrategistChat.${k}`))
     }]);
-  }, [niche, fetchQuickTips]);
+  }, [niche, fetchQuickTips, t]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -96,7 +98,7 @@ export default function MarketingStrategistChat({
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data?.answer || data?.error || 'I couldn\'t generate a response. Try rephrasing your question.',
+        content: data?.answer || data?.error || t('marketingStrategistChat.couldNotGenerateResponse'),
         timestamp: new Date(),
         // Server returns followUps; older copies of the UI expected followUpQuestions.
         // Accept either so a response shape change doesn't strand existing chats.
@@ -109,7 +111,7 @@ export default function MarketingStrategistChat({
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Connection issue. Please try again.',
+        content: t('marketingStrategistChat.connectionIssue'),
         timestamp: new Date()
       }]);
     } finally {
@@ -126,7 +128,7 @@ export default function MarketingStrategistChat({
 
   const generate30DayPlan = async () => {
     if (!niche) return;
-    sendMessage(`Generate a specific 30-day content plan for ${niche} on ${platforms.join(' and ')} with $0 budget.`);
+    sendMessage(t('marketingStrategistChat.thirtyDayPlanPrompt', { niche, platforms: platforms.join(' and ') }));
   };
 
   return (
@@ -137,19 +139,19 @@ export default function MarketingStrategistChat({
         <AgentAvatar agentId="ora-1" size={48} />
         <div>
           <div className="mchat-title">
-            AI MARKETING STRATEGIST
+            {t('marketingStrategistChat.headerTitle')}
           </div>
           <div className="mchat-subtitle">
-            Niche-specific strategy · Real-time platform intelligence
+            {t('marketingStrategistChat.headerSubtitle')}
           </div>
         </div>
         <button
           type="button"
           onClick={generate30DayPlan}
           className="mchat-plan-btn"
-          aria-label="Generate a 30-day marketing plan"
+          aria-label={t('marketingStrategistChat.thirtyDayPlanAria')}
         >
-          📅 30-Day Plan
+          📅 {t('marketingStrategistChat.thirtyDayPlanButton')}
         </button>
       </div>
 
@@ -179,11 +181,11 @@ export default function MarketingStrategistChat({
                   <button
                     type="button"
                     key={pb}
-                    onClick={() => sendMessage(`Tell me more about the ${pb} strategy for ${niche}`)}
+                    onClick={() => sendMessage(t('marketingStrategistChat.tellMeMorePrompt', { playbook: pb, niche: niche || '' }))}
                     className="mchat-playbook-btn"
-                    aria-label={`View the ${pb} playbook`}
+                    aria-label={t('marketingStrategistChat.viewPlaybookAria', { playbook: pb })}
                   >
-                    {PLAYBOOK_LABELS[pb]?.icon} {PLAYBOOK_LABELS[pb]?.label || pb}
+                    {PLAYBOOK_LABELS[pb]?.icon} {PLAYBOOK_LABELS[pb] ? t(`marketingStrategistChat.${PLAYBOOK_LABELS[pb].labelKey}`) : pb}
                   </button>
                 ))}
               </div>
@@ -198,7 +200,7 @@ export default function MarketingStrategistChat({
                     key={i}
                     onClick={() => sendMessage(q)}
                     className="mchat-followup-btn"
-                    aria-label={`Ask follow-up: ${q}`}
+                    aria-label={t('marketingStrategistChat.askFollowUpAria', { question: q })}
                   >
                     ↳ {q}
                   </button>
@@ -215,7 +217,7 @@ export default function MarketingStrategistChat({
                 <div key={i} className="mchat-dot" />
               ))}
             </div>
-            <span>Analyzing your niche...</span>
+            <span>{t('marketingStrategistChat.analyzingYourNiche')}</span>
           </div>
         )}
 
@@ -229,17 +231,17 @@ export default function MarketingStrategistChat({
           value={inputValue}
           onChange={e => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask a strategy question… e.g. 'How do I get to 1K followers in 30 days?'"
+          placeholder={t('marketingStrategistChat.inputPlaceholder')}
           rows={1}
           className="mchat-textarea"
-          aria-label="Ask a strategy question"
+          aria-label={t('marketingStrategistChat.inputAria')}
         />
         <button
           type="button"
           onClick={() => sendMessage()}
           disabled={isLoading || !inputValue.trim()}
           className={`mchat-send-btn ${inputValue.trim() ? 'mchat-send-active' : 'mchat-send-disabled'}`}
-          aria-label="Send message"
+          aria-label={t('marketingStrategistChat.sendMessageAria')}
         >
           {isLoading ? '⏳' : '▶'}
         </button>

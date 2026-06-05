@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Activity, CheckCircle2, Clock, XCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface QueueStats {
   waiting: number
@@ -20,6 +21,7 @@ interface DashboardStats {
 }
 
 export default function JobQueueDashboard() {
+  const { t } = useTranslation()
   const [stats, setStats] = useState<DashboardStats>({})
   const [isLoading, setIsLoading] = useState(false)
   const { showToast } = useToast()
@@ -50,9 +52,9 @@ export default function JobQueueDashboard() {
   }
 
   const queues = [
-    { name: 'video-processing', label: 'Video Processing', color: 'purple' },
-    { name: 'content-generation', label: 'Content Generation', color: 'blue' },
-    { name: 'email-sending', label: 'Email Sending', color: 'green' },
+    { name: 'video-processing', label: t('jobQueueDashboard.videoProcessing'), color: 'purple' },
+    { name: 'content-generation', label: t('jobQueueDashboard.contentGeneration'), color: 'blue' },
+    { name: 'email-sending', label: t('jobQueueDashboard.emailSending'), color: 'green' },
   ]
 
   return (
@@ -61,13 +63,14 @@ export default function JobQueueDashboard() {
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-            Job Queue Dashboard
+            {t('jobQueueDashboard.title')}
           </h3>
         </div>
         <button
           type="button"
           onClick={loadDashboard}
           disabled={isLoading}
+          aria-label={t('jobQueueDashboard.refresh')}
           className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -88,7 +91,7 @@ export default function JobQueueDashboard() {
                   {queue.label}
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {(queueStats as any)?.error || 'Not available'}
+                  {(queueStats as any)?.error || t('jobQueueDashboard.notAvailable')}
                 </p>
               </div>
             )
@@ -106,7 +109,7 @@ export default function JobQueueDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Waiting</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('jobQueueDashboard.waiting')}</span>
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white">
                     {queueStats.waiting}
@@ -115,7 +118,7 @@ export default function JobQueueDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Active</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('jobQueueDashboard.active')}</span>
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white">
                     {queueStats.active}
@@ -124,7 +127,7 @@ export default function JobQueueDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Completed</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('jobQueueDashboard.completed')}</span>
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white">
                     {queueStats.completed}
@@ -133,7 +136,7 @@ export default function JobQueueDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <XCircle className="w-4 h-4 text-red-600" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Failed</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('jobQueueDashboard.failed')}</span>
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white">
                     {queueStats.failed}
@@ -142,7 +145,7 @@ export default function JobQueueDashboard() {
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Total
+                      {t('jobQueueDashboard.total')}
                     </span>
                     <span className="font-bold text-gray-900 dark:text-white">
                       {queueStats.total}

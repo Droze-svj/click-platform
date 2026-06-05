@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -14,6 +15,7 @@ interface BatchOperationsProps {
 
 export default function BatchOperations({ selectedItems, type, onComplete }: BatchOperationsProps) {
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [operation, setOperation] = useState<'delete' | 'export' | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -22,7 +24,7 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
   }
 
   const handleBatchDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedItems.length} items?`)) {
+    if (!confirm(t('batchOperations.confirmDelete', { count: selectedItems.length }))) {
       return
     }
 
@@ -42,10 +44,10 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
         {
         }
       )
-      showToast(`Deleted ${selectedItems.length} items successfully`, 'success')
+      showToast(t('batchOperations.deleteSuccess', { count: selectedItems.length }), 'success')
       onComplete()
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to delete items', 'error')
+      showToast(error.response?.data?.error || t('batchOperations.deleteFailed'), 'error')
     } finally {
       setLoading(false)
       setOperation(null)
@@ -74,10 +76,10 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
 
-      showToast(`Exported ${selectedItems.length} items successfully`, 'success')
+      showToast(t('batchOperations.exportSuccess', { count: selectedItems.length }), 'success')
       onComplete()
     } catch (error: any) {
-      showToast('Failed to export items', 'error')
+      showToast(t('batchOperations.exportFailed'), 'error')
     } finally {
       setLoading(false)
       setOperation(null)
@@ -89,7 +91,9 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium">
-            {selectedItems.length} item{selectedItems.length > 1 ? 's' : ''} selected
+            {selectedItems.length > 1
+              ? t('batchOperations.itemsSelectedPlural', { count: selectedItems.length })
+              : t('batchOperations.itemsSelected', { count: selectedItems.length })}
           </span>
           <div className="flex gap-2">
             <button
@@ -97,21 +101,21 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
               onClick={() => setOperation('export')}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
             >
-              Export
+              {t('batchOperations.export')}
             </button>
             <button
               type="button"
               onClick={() => setOperation('delete')}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
             >
-              Delete
+              {t('batchOperations.delete')}
             </button>
             <button
               type="button"
               onClick={onComplete}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
             >
-              Cancel
+              {t('batchOperations.cancel')}
             </button>
           </div>
         </div>
@@ -119,7 +123,7 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
         {operation === 'delete' && (
           <div className="mt-4 p-4 bg-red-50 rounded-lg">
             <p className="text-sm text-red-800 mb-2">
-              Are you sure you want to delete {selectedItems.length} items? This cannot be undone.
+              {t('batchOperations.deleteConfirmPrompt', { count: selectedItems.length })}
             </p>
             <div className="flex gap-2">
               <button
@@ -128,14 +132,14 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
                 disabled={loading}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm disabled:opacity-50"
               >
-                {loading ? 'Deleting...' : 'Confirm Delete'}
+                {loading ? t('batchOperations.deleting') : t('batchOperations.confirmDeleteButton')}
               </button>
               <button
                 type="button"
                 onClick={() => setOperation(null)}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
               >
-                Cancel
+                {t('batchOperations.cancel')}
               </button>
             </div>
           </div>
@@ -143,7 +147,7 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
 
         {operation === 'export' && loading && (
           <div className="mt-4 text-center text-sm text-gray-600">
-            Exporting...
+            {t('batchOperations.exporting')}
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import {
   BarChart3, Orbit, Cpu
 } from 'lucide-react'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = 'backdrop-blur-3xl bg-black/40 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.5)]'
 
@@ -18,6 +19,7 @@ interface OracleInsight {
 }
 
 export default function RevenueOracle() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [insights, setInsights] = useState<OracleInsight[]>([])
   const [meta, setMeta] = useState<{ status?: string; niche?: string; analyzedVideos?: number }>({})
@@ -52,7 +54,7 @@ export default function RevenueOracle() {
       <div className={`w-full h-[600px] ${glassStyle} rounded-[4rem] flex flex-col items-center justify-center space-y-8 relative overflow-hidden`}>
          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5" />
          <Orbit className="animate-spin text-indigo-500 opacity-20" size={120} />
-         <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] animate-pulse italic">Synchronizing_Oracle_Lattice...</p>
+         <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] animate-pulse italic">{t('revenueOracle.synchronizing')}</p>
       </div>
     )
   }
@@ -75,14 +77,14 @@ export default function RevenueOracle() {
              <TrendingUp className="text-emerald-400 relative z-10" size={36} />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none mb-2">Revenue Oracle_v6.1</h1>
-            <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.4em] italic leading-none border-l-2 border-emerald-500/20 pl-4 ml-1">Economic Foresight // Deep ROI Predictor</p>
+            <h1 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none mb-2">{t('revenueOracle.title')}</h1>
+            <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.4em] italic leading-none border-l-2 border-emerald-500/20 pl-4 ml-1">{t('revenueOracle.subtitle')}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-6 p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
            <div className="text-right">
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">Posts_Analyzed</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">{t('revenueOracle.postsAnalyzed')}</p>
               <p className="text-3xl font-black text-white italic tabular-nums leading-none tracking-tighter">
                 {typeof meta.analyzedVideos === 'number' ? meta.analyzedVideos : '—'}
               </p>
@@ -91,7 +93,7 @@ export default function RevenueOracle() {
            <div className="flex flex-col items-end">
               <span className="flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest italic">
                  <ShieldCheck size={14} />
-                 Niche
+                 {t('revenueOracle.niche')}
               </span>
               <p className="text-[8px] font-black text-emerald-500/40 uppercase tracking-widest mt-1">
                 {meta.niche || '—'}
@@ -107,35 +109,35 @@ export default function RevenueOracle() {
               <div className="flex items-center justify-between mb-8">
                  <div className="flex items-center gap-4">
                     <Zap className="text-amber-400" size={18} />
-                    <span className="text-[11px] font-black text-white uppercase tracking-widest italic">Sales Resonance</span>
+                    <span className="text-[11px] font-black text-white uppercase tracking-widest italic">{t('revenueOracle.salesResonance')}</span>
                  </div>
                  <span className="text-2xl font-black text-slate-600 italic tabular-nums">—</span>
               </div>
               <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative" />
-              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">Awaiting resonance data</p>
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">{t('revenueOracle.awaitingResonance')}</p>
            </div>
 
            <div className="p-8 rounded-[2.8rem] bg-white/[0.03] border border-white/10 group/stat hover:bg-indigo-500/5 transition-all duration-700">
               <div className="flex items-center justify-between mb-8">
                  <div className="flex items-center gap-4">
                     <BarChart3 className="text-indigo-400" size={18} />
-                    <span className="text-[11px] font-black text-white uppercase tracking-widest italic">Neural Pacing</span>
+                    <span className="text-[11px] font-black text-white uppercase tracking-widest italic">{t('revenueOracle.neuralPacing')}</span>
                  </div>
                  <span className="text-2xl font-black text-slate-600 italic tabular-nums">—</span>
               </div>
                <div className="flex justify-center items-center h-12 px-2">
-                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">No pacing telemetry</p>
+                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">{t('revenueOracle.noPacingTelemetry')}</p>
                </div>
-              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">Awaiting cut-frequency data</p>
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">{t('revenueOracle.awaitingCutFrequency')}</p>
            </div>
 
            <div className="p-8 rounded-[2.8rem] bg-emerald-500/10 border border-emerald-500/20">
               <div className="flex items-center gap-4 mb-4">
                  <ShieldCheck className="text-emerald-400" size={20} />
-                 <h3 className="text-[12px] font-black text-emerald-400 uppercase tracking-widest leading-none italic">Oracle Insights</h3>
+                 <h3 className="text-[12px] font-black text-emerald-400 uppercase tracking-widest leading-none italic">{t('revenueOracle.oracleInsights')}</h3>
               </div>
               <p className="text-[11px] font-black text-white leading-relaxed uppercase italic opacity-80">
-                {insights[0]?.text || 'Publish a few posts so Click can learn what works for you — insights will appear here.'}
+                {insights[0]?.text || t('revenueOracle.emptyInsightsHint')}
               </p>
            </div>
         </div>
@@ -145,8 +147,8 @@ export default function RevenueOracle() {
            <div className="absolute top-12 left-12 right-12 flex items-center gap-4">
               <Activity className="text-emerald-400 animate-pulse" size={20} />
               <div>
-                 <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">Strategic Insight Feed</h3>
-                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">AI-Analyzed // From your published-post performance</p>
+                 <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">{t('revenueOracle.strategicInsightFeed')}</h3>
+                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">{t('revenueOracle.feedSubtitle')}</p>
               </div>
            </div>
 
@@ -156,8 +158,8 @@ export default function RevenueOracle() {
                    <Activity className="text-slate-700" size={40} />
                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] italic text-center">
                      {meta.status === 'cold_start' || meta.status === 'manual'
-                       ? 'Publish posts so Click can analyze what works'
-                       : 'No insights yet'}
+                       ? t('revenueOracle.coldStartHint')
+                       : t('revenueOracle.noInsightsYet')}
                    </p>
                 </div>
               ) : (
@@ -169,7 +171,7 @@ export default function RevenueOracle() {
                      <div className="flex-1 min-w-0">
                        <p className="text-[12px] font-bold text-white/90 leading-relaxed italic">{insight.text}</p>
                        {insight.expectedImpact && (
-                         <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest mt-2 italic">Impact: {insight.expectedImpact}</p>
+                         <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest mt-2 italic">{t('revenueOracle.impact', { impact: insight.expectedImpact })}</p>
                        )}
                      </div>
                      {typeof insight.score === 'number' && (

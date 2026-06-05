@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useRealtimeProgress } from '../hooks/useRealtimeProgress'
 import { extractApiData } from '../utils/apiResponse'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface JobProgress {
   jobId: string
@@ -44,6 +45,7 @@ export default function JobProgressViewer({
   onError,
   showDetails = true
 }: JobProgressViewerProps) {
+  const { t } = useTranslation()
   const [job, setJob] = useState<JobProgress | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { progress: realtimeProgress, isConnected } = useRealtimeProgress({
@@ -106,7 +108,7 @@ export default function JobProgressViewer({
     return (
       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span>Loading job status...</span>
+        <span>{t('jobProgressViewer.loadingJobStatus')}</span>
       </div>
     )
   }
@@ -114,7 +116,7 @@ export default function JobProgressViewer({
   if (!job) {
     return (
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Job not found
+        {t('jobProgressViewer.jobNotFound')}
       </div>
     )
   }
@@ -204,7 +206,7 @@ export default function JobProgressViewer({
             </div>
           </div>
           {/* Connection Status */}
-          <div className="flex items-center gap-1 ml-2" title={isConnected ? 'Real-time updates active' : 'Polling mode'}>
+          <div className="flex items-center gap-1 ml-2" title={isConnected ? t('jobProgressViewer.realtimeUpdatesActive') : t('jobProgressViewer.pollingMode')}>
             {isConnected ? (
               <Wifi className="w-3 h-3 text-green-500" aria-hidden />
             ) : (
@@ -216,7 +218,7 @@ export default function JobProgressViewer({
           type="button"
           onClick={loadJobProgress}
           className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-          title="Refresh"
+          title={t('jobProgressViewer.refresh')}
         >
           <RefreshCw className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         </button>
@@ -233,7 +235,7 @@ export default function JobProgressViewer({
           </div>
           <div className="flex items-center justify-between mt-1 text-xs text-gray-600 dark:text-gray-400">
             <span>{job.progress || 0}%</span>
-            {getElapsedTime() && <span>{getElapsedTime()} elapsed</span>}
+            {getElapsedTime() && <span>{t('jobProgressViewer.elapsed', { time: getElapsedTime() as string })}</span>}
           </div>
         </div>
       )}
@@ -243,7 +245,7 @@ export default function JobProgressViewer({
         <div className="space-y-2 text-sm">
           {job.processedOn && (
             <div className="flex items-center justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Started:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('jobProgressViewer.started')}</span>
               <span className="text-gray-900 dark:text-white">
                 {new Date(job.processedOn).toLocaleTimeString()}
               </span>
@@ -251,7 +253,7 @@ export default function JobProgressViewer({
           )}
           {job.finishedOn && (
             <div className="flex items-center justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Finished:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('jobProgressViewer.finished')}</span>
               <span className="text-gray-900 dark:text-white">
                 {new Date(job.finishedOn).toLocaleTimeString()}
               </span>
@@ -259,13 +261,13 @@ export default function JobProgressViewer({
           )}
           {job.failedReason && (
             <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-600 dark:text-red-400">
-              <div className="font-medium mb-1">Error:</div>
+              <div className="font-medium mb-1">{t('jobProgressViewer.error')}</div>
               <div>{job.failedReason}</div>
             </div>
           )}
           {job.returnvalue && job.state === 'completed' && (
             <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded text-xs text-green-600 dark:text-green-400">
-              <div className="font-medium mb-1">Result:</div>
+              <div className="font-medium mb-1">{t('jobProgressViewer.result')}</div>
               <div className="font-mono text-xs">
                 {typeof job.returnvalue === 'object'
                   ? JSON.stringify(job.returnvalue, null, 2)

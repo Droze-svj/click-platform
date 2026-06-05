@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -33,6 +34,7 @@ interface CommentsSectionProps {
 export default function CommentsSection({ entityType, entityId, teamId }: CommentsSectionProps) {
   const { user } = useAuth()
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(true)
@@ -53,7 +55,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
         setComments(response.data.data || [])
       }
     } catch (error) {
-      showToast('Failed to load comments', 'error')
+      showToast(t('commentsSection.loadFailed'), 'error')
     } finally {
       setLoading(false)
     }
@@ -65,7 +67,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
 
   const handleAddComment = async () => {
     if (!newComment.trim()) {
-      showToast('Comment cannot be empty', 'error')
+      showToast(t('commentsSection.emptyError'), 'error')
       return
     }
 
@@ -86,10 +88,10 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
       if (response.data.success) {
         setNewComment('')
         await loadComments()
-        showToast('Comment added', 'success')
+        showToast(t('commentsSection.added'), 'success')
       }
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to add comment', 'error')
+      showToast(error.response?.data?.error || t('commentsSection.addFailed'), 'error')
     }
   }
 
@@ -104,7 +106,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
       )
       await loadComments()
     } catch (error) {
-      showToast('Failed to add reaction', 'error')
+      showToast(t('commentsSection.reactionFailed'), 'error')
     }
   }
 
@@ -119,18 +121,18 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
   }
 
   if (loading) {
-    return <div className="text-center py-4 text-gray-500">Loading comments...</div>
+    return <div className="text-center py-4 text-gray-500">{t('commentsSection.loading')}</div>
   }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Comments</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('commentsSection.title')}</h3>
 
       <div className="mb-4">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment..."
+          placeholder={t('commentsSection.inputPlaceholder')}
           className="w-full px-4 py-2 border rounded-lg mb-2"
           rows={3}
         />
@@ -139,7 +141,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
           onClick={handleAddComment}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
         >
-          Post Comment
+          {t('commentsSection.postComment')}
         </button>
       </div>
 
@@ -155,7 +157,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
               </div>
               {comment.isResolved && (
                 <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                  Resolved
+                  {t('commentsSection.resolved')}
                 </span>
               )}
             </div>
@@ -181,7 +183,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                ✅ Helpful {getReactionCount(comment, 'helpful')}
+                ✅ {t('commentsSection.helpful')} {getReactionCount(comment, 'helpful')}
               </button>
             </div>
           </div>
@@ -189,7 +191,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
       </div>
 
       {comments.length === 0 && (
-        <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
+        <p className="text-gray-500 text-center py-8">{t('commentsSection.empty')}</p>
       )}
     </div>
   )

@@ -31,14 +31,20 @@ async function cleanupOldFiles(directory, daysOld = 7) {
 // per entry so one undeletable file doesn't abort the sweep. Safe to point at
 // uploads/temp, tmp, etc. — anything older than the window is an ffmpeg/process
 // leftover that should have been cleaned at process completion.
-async function cleanupTempFiles(directory, hoursOld = 6) {
+async function cleanupTempFiles(directory, hoursOld = 6, options = {}) {
   let removed = 0;
+  // Entry names to never touch — e.g. the tus resumable-upload store, whose
+  // lifecycle is governed by tus's own per-upload expiration. Sweeping it here
+  // by directory mtime would wipe in-progress/paused uploads (a directory's
+  // mtime doesn't change when chunks are appended to existing files).
+  const exclude = new Set(options.exclude || []);
   try {
     const entries = await fs.readdir(directory, { withFileTypes: true });
     const now = Date.now();
     const maxAge = hoursOld * 60 * 60 * 1000;
 
     for (const entry of entries) {
+      if (exclude.has(entry.name)) continue;
       const entryPath = path.join(directory, entry.name);
       try {
         const stats = await fs.stat(entryPath);

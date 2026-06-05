@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Save, CheckCircle2, AlertCircle } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AutoSaveIndicatorProps {
   onSave: () => Promise<void>
@@ -12,8 +13,9 @@ interface AutoSaveIndicatorProps {
 export default function AutoSaveIndicator({ 
   onSave, 
   saveInterval = 30000, // 30 seconds default
-  content 
+  content
 }: AutoSaveIndicatorProps) {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
@@ -73,21 +75,21 @@ export default function AutoSaveIndicator({
       case 'saving':
         return {
           icon: <Save className="w-3 h-3 animate-pulse" />,
-          text: 'Saving...',
+          text: t('autoSaveIndicator.saving'),
           color: 'text-blue-600 dark:text-blue-400',
         }
       case 'saved':
         return {
           icon: <CheckCircle2 className="w-3 h-3" />,
-          text: lastSaved 
-            ? `Saved ${formatTimeAgo(lastSaved)}`
-            : 'Saved',
+          text: lastSaved
+            ? t('autoSaveIndicator.savedAgo', { time: formatTimeAgo(lastSaved, t) })
+            : t('autoSaveIndicator.saved'),
           color: 'text-green-600 dark:text-green-400',
         }
       case 'error':
         return {
           icon: <AlertCircle className="w-3 h-3" />,
-          text: 'Save failed',
+          text: t('autoSaveIndicator.saveFailed'),
           color: 'text-red-600 dark:text-red-400',
         }
       default:
@@ -106,13 +108,13 @@ export default function AutoSaveIndicator({
   )
 }
 
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string): string {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
-  
-  if (seconds < 60) return 'just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
+
+  if (seconds < 60) return t('autoSaveIndicator.justNow')
+  if (seconds < 3600) return t('autoSaveIndicator.minutesAgo', { minutes: Math.floor(seconds / 60) })
+  if (seconds < 86400) return t('autoSaveIndicator.hoursAgo', { hours: Math.floor(seconds / 3600) })
+  return t('autoSaveIndicator.daysAgo', { days: Math.floor(seconds / 86400) })
 }
 
 

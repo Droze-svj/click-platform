@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { sendDebugLog as sendDebugLogUtil } from '../utils/debugLog'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface DebugWrapperProps {
   children: React.ReactNode
@@ -29,6 +30,7 @@ export default function DebugWrapper({
   trackProps = false,
   trackPerformance = false
 }: DebugWrapperProps) {
+  const { t } = useTranslation()
   const renderStartTime = useRef<number>(0)
   const renderMetricsRef = useRef<RenderMetrics>({
     renderCount: 0,
@@ -172,14 +174,14 @@ export default function DebugWrapper({
         borderRadius: '5px'
       }}>
         <h3 style={{ color: 'red', margin: '0 0 10px 0' }}>
-          🚨 DebugWrapper: {componentName} Error
+          🚨 {t('debugWrapper.errorHeading', { component: componentName })}
         </h3>
         <p style={{ margin: '0', fontFamily: 'monospace', fontSize: '12px' }}>
           {error?.message}
         </p>
         {debugLevel === 'comprehensive' && error?.stack && (
           <details style={{ marginTop: '10px' }}>
-            <summary style={{ cursor: 'pointer', fontSize: '12px' }}>Stack Trace</summary>
+            <summary style={{ cursor: 'pointer', fontSize: '12px' }}>{t('debugWrapper.stackTrace')}</summary>
             <pre style={{
               fontSize: '10px',
               backgroundColor: '#f5f5f5',
@@ -217,7 +219,7 @@ export default function DebugWrapper({
             zIndex: 9999,
             fontFamily: 'monospace'
           }}>
-            🔍 {componentName} (renders: {renderMetricsRef.current.renderCount})
+            🔍 {t('debugWrapper.rendersBadge', { component: componentName, count: renderMetricsRef.current.renderCount })}
           </div>
         )}
         {children}

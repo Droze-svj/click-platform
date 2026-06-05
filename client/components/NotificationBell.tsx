@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
 import { apiGet, apiPut } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Notification {
   _id: string
@@ -19,6 +20,7 @@ interface Notification {
 }
 
 export default function NotificationBell() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { socket } = useSocket()
   const { showToast } = useToast()
@@ -134,7 +136,7 @@ export default function NotificationBell() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-800"
-        aria-label="Notifications"
+        aria-label={t('notificationBell.notifications')}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -149,22 +151,22 @@ export default function NotificationBell() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
           <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="font-semibold">Notifications</h3>
+            <h3 className="font-semibold">{t('notificationBell.notifications')}</h3>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={markAllAsRead}
                 className="text-sm text-blue-600 hover:underline"
               >
-                Mark all as read
+                {t('notificationBell.markAllAsRead')}
               </button>
             )}
           </div>
           <div className="divide-y">
             {loading ? (
-              <div className="p-4 text-center text-gray-500">Loading...</div>
+              <div className="p-4 text-center text-gray-500">{t('notificationBell.loading')}</div>
             ) : notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">No notifications</div>
+              <div className="p-4 text-center text-gray-500">{t('notificationBell.noNotifications')}</div>
             ) : (
               notifications.map((notification) => (
                 <div
@@ -198,7 +200,7 @@ export default function NotificationBell() {
                         {new Date(notification.createdAt).toLocaleString()}
                       </p>
                       {notification.link && (
-                        <span className="text-xs text-blue-600 mt-1 inline-block">View →</span>
+                        <span className="text-xs text-blue-600 mt-1 inline-block">{t('notificationBell.view')} →</span>
                       )}
                     </div>
                   </div>

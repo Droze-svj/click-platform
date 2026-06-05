@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSocket } from '../hooks/useSocket'
 import { useAuth } from '../hooks/useAuth'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Collaborator {
   userId: string
@@ -21,6 +22,7 @@ interface LiveCollaborationProps {
 }
 
 export default function LiveCollaboration({ contentId, onContentChange }: LiveCollaborationProps) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const router = useRouter()
   const { socket, connected } = useSocket(user?.id || null)
@@ -137,7 +139,9 @@ export default function LiveCollaboration({ contentId, onContentChange }: LiveCo
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {collaborators.length} {collaborators.length === 1 ? 'person' : 'people'} viewing
+              {collaborators.length === 1
+                ? t('liveCollaboration.viewingOne', { count: collaborators.length })
+                : t('liveCollaboration.viewingOther', { count: collaborators.length })}
             </span>
           </div>
           <div className="flex gap-2">
@@ -145,7 +149,7 @@ export default function LiveCollaboration({ contentId, onContentChange }: LiveCo
               <div
                 key={collaborator.userId}
                 className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-semibold"
-                title={collaborator.name || 'Collaborator'}
+                title={collaborator.name || t('liveCollaboration.collaborator')}
               >
                 {(collaborator.name || 'U')[0].toUpperCase()}
               </div>
@@ -163,7 +167,9 @@ export default function LiveCollaboration({ contentId, onContentChange }: LiveCo
       {typingUsers.size > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 mb-2 border border-gray-200 dark:border-gray-700">
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            {Array.from(typingUsers).length} {Array.from(typingUsers).length === 1 ? 'person' : 'people'} typing...
+            {Array.from(typingUsers).length === 1
+              ? t('liveCollaboration.typingOne', { count: Array.from(typingUsers).length })
+              : t('liveCollaboration.typingOther', { count: Array.from(typingUsers).length })}
           </p>
         </div>
       )}
@@ -173,7 +179,7 @@ export default function LiveCollaboration({ contentId, onContentChange }: LiveCo
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
           <span className="text-xs text-gray-600 dark:text-gray-400">
-            {connected ? 'Live' : 'Offline'}
+            {connected ? t('liveCollaboration.live') : t('liveCollaboration.offline')}
           </span>
         </div>
       </div>

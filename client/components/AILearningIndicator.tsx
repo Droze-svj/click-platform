@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Brain, Sparkles, ArrowRight } from 'lucide-react'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Performer {
   key: string
@@ -28,14 +29,16 @@ interface InsightsResponse {
   lastIngestedAt?: string | null
 }
 
-const FACET_LABELS: Record<string, string> = {
-  fonts: 'caption font',
-  captionStyles: 'caption style',
-  animations: 'animation preset',
-  motions: 'motion intensity',
-  hooks: 'hook framing',
-  colorGrades: 'color grade',
-  transitions: 'transition style',
+// Maps a facet id to a translation key suffix under the `aiLearningIndicator`
+// namespace. The human-readable label is resolved via `t()` at render time.
+const FACET_LABEL_KEYS: Record<string, string> = {
+  fonts: 'facetCaptionFont',
+  captionStyles: 'facetCaptionStyle',
+  animations: 'facetAnimationPreset',
+  motions: 'facetMotionIntensity',
+  hooks: 'facetHookFraming',
+  colorGrades: 'facetColorGrade',
+  transitions: 'facetTransitionStyle',
 }
 
 function pickStrongest(insights: InsightsResponse): { facet: string; performer: Performer } | null {
@@ -56,6 +59,7 @@ function pickStrongest(insights: InsightsResponse): { facet: string; performer: 
 }
 
 export default function AILearningIndicator() {
+  const { t } = useTranslation()
   const [insights, setInsights] = useState<InsightsResponse | null>(null)
 
   useEffect(() => {
@@ -73,30 +77,33 @@ export default function AILearningIndicator() {
   if (!strongest) return null
 
   const { facet, performer } = strongest
-  const facetLabel = FACET_LABELS[facet] || facet
-  const direction = (performer.performanceScore || 0) >= 0 ? 'lifts retention' : 'drags retention'
+  const facetLabelKey = FACET_LABEL_KEYS[facet]
+  const facetLabel = facetLabelKey ? t(`aiLearningIndicator.${facetLabelKey}`) : facet
+  const direction = (performer.performanceScore || 0) >= 0
+    ? t('aiLearningIndicator.directionLifts')
+    : t('aiLearningIndicator.directionDrags')
   const pct = Math.round(Math.abs(performer.performanceScore || 0) * 100)
 
   return (
     <div
       role="note"
-      aria-label="AI learning insight"
+      aria-label={t('aiLearningIndicator.ariaLabel')}
       className="rounded-2xl border border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)] backdrop-blur-md flex items-center gap-4 px-5 py-4"
     >
       <div className="w-10 h-10 rounded-xl bg-[var(--glass-surface)] border border-[var(--tint-indigo-edge)] flex items-center justify-center flex-shrink-0">
         <Brain size={18} className="text-[var(--tint-indigo-fg)]" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--tint-indigo-fg)] mb-1">AI learned</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--tint-indigo-fg)] mb-1">{t('aiLearningIndicator.aiLearned')}</p>
         <p className="text-sm text-[var(--text-main)] leading-snug">
-          Your <span className="font-semibold">{facetLabel}</span> pick <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-[var(--glass-surface)] border border-[var(--glass-border)]">{performer.key}</span> {direction} by ~{pct}% across {performer.sampleSize} posts.
+          {t('aiLearningIndicator.insightPrefix')} <span className="font-semibold">{facetLabel}</span> {t('aiLearningIndicator.insightPick')} <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-[var(--glass-surface)] border border-[var(--glass-border)]">{performer.key}</span> {direction} {t('aiLearningIndicator.insightSuffix', { pct: pct ?? 0, count: performer.sampleSize ?? 0 })}
         </p>
       </div>
       <Link
         href="/dashboard/analytics/creator"
         className="hidden sm:inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--tint-indigo-fg)] hover:text-[var(--text-main)] transition-colors"
       >
-        See more <ArrowRight size={12} />
+        {t('aiLearningIndicator.seeMore')} <ArrowRight size={12} />
       </Link>
       <Sparkles size={14} className="text-[var(--tint-indigo-fg)] flex-shrink-0 sm:hidden" />
     </div>

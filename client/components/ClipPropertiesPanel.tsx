@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Settings, Volume2, Zap, Move, RotateCw, Maximize2, Key, Film } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TimelineClip {
   id: string
@@ -31,6 +32,7 @@ interface ClipPropertiesPanelProps {
 }
 
 export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPropertiesPanelProps) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'basic' | 'motion' | 'audio' | 'keyframes'>('basic')
 
   if (!clip) return null
@@ -40,7 +42,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
       <div className="flex items-center justify-between mb-4">
         <h4 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
           <Settings className="w-4 h-4" />
-          Clip Properties - {clip.name}
+          {t('clipPropertiesPanel.titleWithName', { name: clip.name })}
         </h4>
         <button
           type="button"
@@ -54,10 +56,10 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
       {/* Tabs */}
       <div className="flex gap-2 mb-4 border-b border-gray-700">
         {[
-          { id: 'basic', label: 'Basic', icon: Film },
-          { id: 'motion', label: 'Motion', icon: Move },
-          { id: 'audio', label: 'Audio', icon: Volume2 },
-          { id: 'keyframes', label: 'Keyframes', icon: Key }
+          { id: 'basic', label: t('clipPropertiesPanel.tabBasic'), icon: Film },
+          { id: 'motion', label: t('clipPropertiesPanel.tabMotion'), icon: Move },
+          { id: 'audio', label: t('clipPropertiesPanel.tabAudio'), icon: Volume2 },
+          { id: 'keyframes', label: t('clipPropertiesPanel.tabKeyframes'), icon: Key }
         ].map(tab => {
           const Icon = tab.icon
           return (
@@ -82,7 +84,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
       {activeTab === 'basic' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-300 mb-2">Speed</label>
+            <label className="block text-xs text-gray-300 mb-2">{t('clipPropertiesPanel.speed')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -105,7 +107,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
           </div>
 
           <div>
-            <label className="block text-xs text-gray-300 mb-2">Opacity</label>
+            <label className="block text-xs text-gray-300 mb-2">{t('clipPropertiesPanel.opacity')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -132,7 +134,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
       {activeTab === 'motion' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-300 mb-2">Position X</label>
+            <label className="block text-xs text-gray-300 mb-2">{t('clipPropertiesPanel.positionX')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -157,7 +159,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
           </div>
 
           <div>
-            <label className="block text-xs text-gray-300 mb-2">Position Y</label>
+            <label className="block text-xs text-gray-300 mb-2">{t('clipPropertiesPanel.positionY')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -182,7 +184,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
           </div>
 
           <div>
-            <label className="block text-xs text-gray-300 mb-2">Scale</label>
+            <label className="block text-xs text-gray-300 mb-2">{t('clipPropertiesPanel.scale')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -207,7 +209,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
           </div>
 
           <div>
-            <label className="block text-xs text-gray-300 mb-2">Rotation</label>
+            <label className="block text-xs text-gray-300 mb-2">{t('clipPropertiesPanel.rotation')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -234,7 +236,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
       {activeTab === 'audio' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-300 mb-2">Volume</label>
+            <label className="block text-xs text-gray-300 mb-2">{t('clipPropertiesPanel.volume')}</label>
             <div className="flex items-center gap-2">
               <Volume2 className="w-4 h-4 text-gray-400" />
               <input
@@ -257,10 +259,10 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
           </div>
 
           <div className="bg-gray-900 rounded p-3">
-            <div className="text-xs text-gray-400 mb-2">Audio Fade</div>
+            <div className="text-xs text-gray-400 mb-2">{t('clipPropertiesPanel.audioFade')}</div>
             <div className="space-y-2">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Fade In (s)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('clipPropertiesPanel.fadeIn')}</label>
                 <input
                   type="number"
                   min="0"
@@ -270,7 +272,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Fade Out (s)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('clipPropertiesPanel.fadeOut')}</label>
                 <input
                   type="number"
                   min="0"
@@ -293,15 +295,15 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-gray-300 font-medium">{kf.property}</div>
-                    <div className="text-gray-500">Time: {kf.time.toFixed(2)}s | Value: {kf.value}</div>
+                    <div className="text-gray-500">{t('clipPropertiesPanel.timeValue', { time: kf.time.toFixed(2), value: kf.value })}</div>
                   </div>
-                  <button className="text-red-400 hover:text-red-300">Delete</button>
+                  <button className="text-red-400 hover:text-red-300">{t('clipPropertiesPanel.delete')}</button>
                 </div>
               </div>
             ))
           ) : (
             <div className="text-center text-gray-500 text-xs py-4">
-              No keyframes. Double-click clip to add keyframes.
+              {t('clipPropertiesPanel.noKeyframes')}
             </div>
           )}
         </div>

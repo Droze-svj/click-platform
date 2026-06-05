@@ -12,6 +12,7 @@ import {
 import { apiGet } from '../lib/api'
 import ToastContainer from '../components/ToastContainer'
 import { ErrorBoundary } from '../components/ErrorBoundary'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glass = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
 
@@ -92,6 +93,7 @@ function getMockData(): CommandCenterData {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function ResonanceCommandMatrix() {
+  const { t } = useTranslation()
   const [data, setData] = useState<CommandCenterData | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedPost, setSelectedPost] = useState<PostHealth | null>(null)
@@ -113,7 +115,7 @@ export default function ResonanceCommandMatrix() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-black min-h-screen text-white">
         <Brain size={64} className="text-indigo-500 animate-pulse mb-8 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
-        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Decoding Resonance Matrix...</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">{t('engagementCommandCenter.decodingMatrix')}</span>
      </div>
   );
 
@@ -138,32 +140,32 @@ export default function ResonanceCommandMatrix() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Resonance Matrix v9.4.2</span>
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('engagementCommandCenter.matrixVersion')}</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">ANOMALY_MONITOR_SYNCED</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('engagementCommandCenter.anomalyMonitorSynced')}</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Resonance Hub</h1>
-                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Real-time engagement anomaly detection and heuristic advisor protocol.</p>
+                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{t('engagementCommandCenter.resonanceHub')}</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">{t('engagementCommandCenter.headerSubtitle')}</p>
               </div>
            </div>
            <button type="button" onClick={fetchResonanceData} 
              className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] hover:bg-indigo-500 hover:text-white transition-all shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-6 group"
            >
               <RefreshCw size={28} className="group-hover:rotate-180 transition-transform duration-1000" />
-              SYNC_RESONANCE_DATA
+              {t('engagementCommandCenter.syncResonanceData')}
            </button>
         </header>
 
         {/* Trajectory Kinetic HUD */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 relative z-10">
           {[
-            { label: 'Resonance Integrity', value: data.overallScore, unit: '%', icon: Brain, color: getScoreColor(data.overallScore), trend: 'NODE_HEALTH' },
-            { label: 'Saturation (24h)', value: (data.totalViews / 1000).toFixed(1), unit: 'K', icon: Eye, color: 'text-white', trend: 'CUMULATIVE_REACH' },
-            { label: 'Avg Affinity', value: data.avgEngagementRate.toFixed(1), unit: '%', icon: Heart, color: 'text-rose-400', trend: 'SIGNAL_TRAJECTORY' },
-            { label: 'Workflow Velocity', value: data.workflowEfficiencyScore, unit: '%', icon: Zap, color: getScoreColor(data.workflowEfficiencyScore), trend: 'IDEATION_THROUGHPUT' },
+            { label: t('engagementCommandCenter.kpiResonanceIntegrity'), value: data.overallScore, unit: '%', icon: Brain, color: getScoreColor(data.overallScore), trend: t('engagementCommandCenter.trendNodeHealth') },
+            { label: t('engagementCommandCenter.kpiSaturation24h'), value: (data.totalViews / 1000).toFixed(1), unit: 'K', icon: Eye, color: 'text-white', trend: t('engagementCommandCenter.trendCumulativeReach') },
+            { label: t('engagementCommandCenter.kpiAvgAffinity'), value: data.avgEngagementRate.toFixed(1), unit: '%', icon: Heart, color: 'text-rose-400', trend: t('engagementCommandCenter.trendSignalTrajectory') },
+            { label: t('engagementCommandCenter.kpiWorkflowVelocity'), value: data.workflowEfficiencyScore, unit: '%', icon: Zap, color: getScoreColor(data.workflowEfficiencyScore), trend: t('engagementCommandCenter.trendIdeationThroughput') },
           ].map((kpi, i) => (
             <motion.div key={kpi.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
               whileHover={{ y: -10, backgroundColor: 'rgba(255,255,255,0.06)' }}
@@ -194,19 +196,19 @@ export default function ResonanceCommandMatrix() {
               <div className="space-y-12 relative z-10">
                  <div className="flex items-center gap-6">
                     <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-2xl animate-pulse"><Sparkles size={32} className="text-indigo-400" /></div>
-                    <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Heuristic Protocol</h3>
+                    <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">{t('engagementCommandCenter.heuristicProtocol')}</h3>
                  </div>
                  <div className="border-l-4 border-indigo-500/40 pl-10 space-y-6">
                     <p className="text-4xl font-black text-white leading-tight italic tracking-tighter max-w-2xl">
                        &quot;{data.nextBestAction}&quot;
                     </p>
                     <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed">
-                       Recommended based on multi-node engagement patterns and algorithmic resonance modeling.
+                       {t('engagementCommandCenter.recommendationBasis')}
                     </p>
                  </div>
               </div>
               <div className="flex items-center gap-6 text-[11px] font-black text-indigo-400 uppercase tracking-[0.8em] italic border-t border-white/5 pt-12">
-                 MISSION_CRITICAL_UPDATE_ACTIVE
+                 {t('engagementCommandCenter.missionCriticalUpdate')}
               </div>
            </motion.div>
 
@@ -221,7 +223,7 @@ export default function ResonanceCommandMatrix() {
                   <div className="flex items-center justify-between">
                      <div className="flex items-center gap-6">
                         <div className="w-16 h-16 rounded-[2rem] bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-2xl"><Flame size={32} className="text-orange-400 animate-pulse" /></div>
-                        <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Kinetic Breach</h3>
+                        <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">{t('engagementCommandCenter.kineticBreach')}</h3>
                      </div>
                      <ArrowUpRight size={40} className="text-orange-400 opacity-20 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                   </div>
@@ -229,15 +231,15 @@ export default function ResonanceCommandMatrix() {
                     +{data.peakVelocityPost.velocity}<span className="text-3xl text-slate-500 ml-2 not-italic tracking-widest opacity-40">/HR_FLUX</span>
                   </div>
                   <div className="flex items-center gap-6">
-                    <p className="text-2xl font-black text-white/50 uppercase italic tracking-widest">{data.peakVelocityPost.platform.toUpperCase()} PHANTOM NODE</p>
+                    <p className="text-2xl font-black text-white/50 uppercase italic tracking-widest">{t('engagementCommandCenter.phantomNode', { platform: data.peakVelocityPost.platform.toUpperCase() })}</p>
                     <div className="h-2 w-2 rounded-full bg-orange-500" />
-                    <p className="text-2xl font-black text-orange-400 italic">{(data.peakVelocityPost.views / 1000).toFixed(1)}K SATURATION</p>
+                    <p className="text-2xl font-black text-orange-400 italic">{t('engagementCommandCenter.saturationValue', { value: (data.peakVelocityPost.views / 1000).toFixed(1) })}</p>
                   </div>
                 </div>
 
                 {data.peakVelocityPost.anomalyAdvice && (
                   <div className="p-8 rounded-[2.5rem] bg-black/40 border border-white/5 relative z-10 group-hover:border-orange-500/40 transition-all duration-1000">
-                    <div className="text-[12px] font-black text-orange-400 uppercase tracking-widest italic mb-2">→ ADVISORY_PROTOCOL:</div>
+                    <div className="text-[12px] font-black text-orange-400 uppercase tracking-widest italic mb-2">{t('engagementCommandCenter.advisoryProtocol')}</div>
                     <p className="text-[18px] font-black text-white italic tracking-tight leading-snug">{data.peakVelocityPost.anomalyAdvice.action}</p>
                   </div>
                 )}
@@ -251,8 +253,8 @@ export default function ResonanceCommandMatrix() {
            <div className="flex items-center gap-8 mb-12 relative z-10">
               <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl shadow-indigo-500/20"><ActivitySquare size={40} className="text-indigo-400" /></div>
               <div>
-                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Node Integrity Ledger</h2>
-                 <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Diagnostic surveillance of high-cadence content nodes across the global substrate.</p>
+                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{t('engagementCommandCenter.nodeIntegrityLedger')}</h2>
+                 <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">{t('engagementCommandCenter.ledgerSubtitle')}</p>
               </div>
            </div>
 
@@ -269,7 +271,7 @@ export default function ResonanceCommandMatrix() {
                    
                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-6 mb-3">
-                         <span className="text-2xl font-black text-white uppercase italic tracking-tighter">{post.platform} NODE</span>
+                         <span className="text-2xl font-black text-white uppercase italic tracking-tighter">{t('engagementCommandCenter.platformNode', { platform: post.platform })}</span>
                          {post.anomalyType !== 'none' && (
                            <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest border border-orange-500/30 px-4 py-1.5 rounded-full bg-orange-500/5 shadow-[0_0_20px_rgba(249,115,22,0.1)]">
                              {post.anomalyType.replace('_', ' ')}
@@ -312,13 +314,13 @@ export default function ResonanceCommandMatrix() {
                        </div>
                        <div>
                           <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">
-                             {selectedPost.platform.toUpperCase()} Node Diagnostic
+                             {t('engagementCommandCenter.nodeDiagnostic', { platform: selectedPost.platform.toUpperCase() })}
                           </h4>
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] italic">Heuristic Depth Scan active...</span>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] italic">{t('engagementCommandCenter.depthScanActive')}</span>
                        </div>
                     </div>
                     <button type="button" onClick={() => setSelectedPost(null)} 
-                        title="Close Diagnostic" aria-label="Close Diagnostic"
+                        title={t('engagementCommandCenter.closeDiagnostic')} aria-label={t('engagementCommandCenter.closeDiagnostic')}
                         className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 shadow-2xl">
                         <X size={32} />
                     </button>
@@ -328,13 +330,13 @@ export default function ResonanceCommandMatrix() {
                     <div className={`text-[12rem] font-black italic tracking-tighter leading-none drop-shadow-2xl ${getScoreColor(selectedPost.healthScore)}`}>
                        {selectedPost.healthScore}<span className="text-4xl opacity-40 ml-4">%</span>
                     </div>
-                    <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none border-t border-white/5 pt-8">NODE_INTEGRITY_INDEX</div>
+                    <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none border-t border-white/5 pt-8">{t('engagementCommandCenter.nodeIntegrityIndex')}</div>
                  </div>
 
                  {selectedPost.anomalyType !== 'none' && selectedPost.anomalyAdvice && (
                    <div className="p-16 rounded-[4rem] bg-indigo-600/10 border border-indigo-500/30 space-y-8 relative z-10 shadow-[inset_0_0_80px_rgba(99,102,241,0.1)]">
                       <div className="flex items-center justify-between">
-                         <div className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] italic">→ HEURISTIC_RECOMMENDATION</div>
+                         <div className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] italic">{t('engagementCommandCenter.heuristicRecommendation')}</div>
                          <div className="flex items-center gap-4 text-orange-500 text-[11px] font-black uppercase tracking-widest italic animate-pulse">
                             <AlertTriangle size={16} /> {selectedPost.anomalyAdvice.urgency}
                          </div>
@@ -349,14 +351,14 @@ export default function ResonanceCommandMatrix() {
                  )}
 
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
-                    <DetailStat label="Saturation" value={selectedPost.views.toLocaleString()} icon={Eye} color="text-emerald-400" />
-                    <DetailStat label="Affinity" value={selectedPost.likes.toLocaleString()} icon={Heart} color="text-rose-400" />
-                    <DetailStat label="Signals" value={selectedPost.comments.toLocaleString()} icon={MessageSquare} color="text-indigo-400" />
-                    <DetailStat label="Flux Rate" value={`${selectedPost.velocity}/hr`} icon={Zap} color="text-amber-400" />
+                    <DetailStat label={t('engagementCommandCenter.statSaturation')} value={selectedPost.views.toLocaleString()} icon={Eye} color="text-emerald-400" />
+                    <DetailStat label={t('engagementCommandCenter.statAffinity')} value={selectedPost.likes.toLocaleString()} icon={Heart} color="text-rose-400" />
+                    <DetailStat label={t('engagementCommandCenter.statSignals')} value={selectedPost.comments.toLocaleString()} icon={MessageSquare} color="text-indigo-400" />
+                    <DetailStat label={t('engagementCommandCenter.statFluxRate')} value={`${selectedPost.velocity}/hr`} icon={Zap} color="text-amber-400" />
                  </div>
                  
                  <div className="pt-8 flex justify-center relative z-10">
-                    <button type="button" onClick={() => setSelectedPost(null)} className="px-16 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3.5rem] hover:bg-indigo-600 hover:text-white transition-all duration-700 shadow-2xl active:scale-95">CLOSE_DIAGNOSTIC</button>
+                    <button type="button" onClick={() => setSelectedPost(null)} className="px-16 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3.5rem] hover:bg-indigo-600 hover:text-white transition-all duration-700 shadow-2xl active:scale-95">{t('engagementCommandCenter.closeDiagnosticButton')}</button>
                  </div>
               </motion.div>
             </motion.div>

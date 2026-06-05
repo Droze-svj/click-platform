@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface UncertaintyFlag {
   type: string
@@ -33,6 +34,7 @@ interface AIConfidenceIndicatorProps {
 }
 
 export default function AIConfidenceIndicator({ contentId, onReviewRequested }: AIConfidenceIndicatorProps) {
+  const { t } = useTranslation()
   const [confidence, setConfidence] = useState<AIConfidenceScore | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -83,7 +85,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
     return (
       <div className="flex items-center gap-2 text-sm text-gray-600">
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-        <span>Analyzing confidence...</span>
+        <span>{t('aiConfidenceIndicator.analyzingConfidence')}</span>
       </div>
     )
   }
@@ -97,13 +99,13 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
       {/* Overall Confidence */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm font-medium text-gray-700">AI Confidence</div>
+          <div className="text-sm font-medium text-gray-700">{t('aiConfidenceIndicator.aiConfidence')}</div>
           <div className={`text-2xl font-bold ${getConfidenceColor(confidence.overallConfidence)}`}>
             {confidence.overallConfidence}%
           </div>
         </div>
         <div>
-          <div className="text-sm font-medium text-gray-700">Edit Effort</div>
+          <div className="text-sm font-medium text-gray-700">{t('aiConfidenceIndicator.editEffort')}</div>
           <div className={`text-2xl font-bold ${getConfidenceColor(100 - confidence.editEffort)}`}>
             {confidence.editEffort}%
           </div>
@@ -115,7 +117,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <div className="flex items-start justify-between">
             <div>
-              <div className="font-semibold text-red-800 mb-1">⚠️ Human Review Recommended</div>
+              <div className="font-semibold text-red-800 mb-1">⚠️ {t('aiConfidenceIndicator.humanReviewRecommended')}</div>
               <div className="text-sm text-red-700">{confidence.reviewReason}</div>
             </div>
             {onReviewRequested && (
@@ -124,7 +126,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
                 onClick={onReviewRequested}
                 className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
               >
-                Review
+                {t('aiConfidenceIndicator.review')}
               </button>
             )}
           </div>
@@ -134,7 +136,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
       {/* Uncertainty Flags */}
       {confidence.uncertaintyFlags.length > 0 && (
         <div>
-          <div className="text-sm font-medium text-gray-700 mb-2">Uncertainty Flags</div>
+          <div className="text-sm font-medium text-gray-700 mb-2">{t('aiConfidenceIndicator.uncertaintyFlags')}</div>
           <div className="space-y-2">
             {confidence.uncertaintyFlags.map((flag, i) => (
               <div
@@ -156,7 +158,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
 
       {/* Aspect Confidence */}
       <div>
-        <div className="text-sm font-medium text-gray-700 mb-2">Confidence by Aspect</div>
+        <div className="text-sm font-medium text-gray-700 mb-2">{t('aiConfidenceIndicator.confidenceByAspect')}</div>
         <div className="space-y-2">
           {Object.entries(confidence.aspectConfidence).map(([aspect, score]) => (
             <div key={aspect} className="flex items-center gap-2">

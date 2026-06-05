@@ -29,6 +29,7 @@ import {
   Lightbulb
 } from 'lucide-react'
 import { useCreatorProfile } from './OnboardingWizard'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = "relative overflow-hidden rounded-[2.5rem] border border-white/[0.05] bg-white/[0.02] backdrop-blur-2xl shadow-2xl transition-all"
 
@@ -50,6 +51,7 @@ const itemVariants = {
 }
 
 export default function NeuralWorkspaceHub() {
+  const { t } = useTranslation()
   const [workspaces, setWorkspaces] = useState<any[]>([])
   const [selectedWorkspace, setSelectedWorkspace] = useState<any>(null)
   const [auditLogs, setAuditLogs] = useState<any[]>([])
@@ -63,14 +65,14 @@ export default function NeuralWorkspaceHub() {
 
   const loadAdvisorData = useCallback(async () => {
     const goalMap: Record<string, { nba: string; forecast: string; efficiency: number }> = {
-      viral:          { nba: 'Post your next video tonight at 10 PM — Thursday nights are 23% above average for short-form virality.', forecast: '+18% reach forecast', efficiency: 82 },
-      engagement:     { nba: 'Reply to your top 3 comment threads from the last 48 hours to keep engagement momentum alive.', forecast: '+31% comment rate forecast', efficiency: 74 },
-      monetize:       { nba: 'Your RPM niche is trending — schedule content about affiliate tools for max monetization this week.', forecast: '+$120-$480 revenue uplift', efficiency: 68 },
-      brand_awareness:{ nba: 'Republish your top-performing branded clip with a template overlay to reinforce brand recall.', forecast: '+12% mention rate forecast', efficiency: 71 },
+      viral:          { nba: t('neuralWorkspaceHub.nbaViral'), forecast: t('neuralWorkspaceHub.forecastViral'), efficiency: 82 },
+      engagement:     { nba: t('neuralWorkspaceHub.nbaEngagement'), forecast: t('neuralWorkspaceHub.forecastEngagement'), efficiency: 74 },
+      monetize:       { nba: t('neuralWorkspaceHub.nbaMonetize'), forecast: t('neuralWorkspaceHub.forecastMonetize'), efficiency: 68 },
+      brand_awareness:{ nba: t('neuralWorkspaceHub.nbaBrandAwareness'), forecast: t('neuralWorkspaceHub.forecastBrandAwareness'), efficiency: 71 },
     }
     const goal = creatorProfile?.creatorGoal || 'engagement'
     setAdvisorData(goalMap[goal] || goalMap.engagement)
-  }, [creatorProfile])
+  }, [creatorProfile, t])
 
   useEffect(() => {
     loadWorkspaces()
@@ -87,7 +89,7 @@ export default function NeuralWorkspaceHub() {
         setSelectedWorkspace(ws[0])
       }
     } catch (error: any) {
-      showToast('Failed to synchronize workspaces', 'error')
+      showToast(t('neuralWorkspaceHub.failedToSynchronizeWorkspaces'), 'error')
     }
   }
 
@@ -106,11 +108,11 @@ export default function NeuralWorkspaceHub() {
       setCompliance(complianceRes?.data || complianceRes)
       setSla(slaRes?.data || slaRes)
     } catch (error: any) {
-      showToast('Neural telemetry link interrupted', 'error')
+      showToast(t('neuralWorkspaceHub.neuralTelemetryLinkInterrupted'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, t])
 
   useEffect(() => {
     if (selectedWorkspace) {
@@ -133,20 +135,20 @@ export default function NeuralWorkspaceHub() {
       <div className="space-y-8 border-b border-white/[0.05] pb-12">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em]">
           <Fingerprint className="w-3.5 h-3.5" />
-          Sovereign Governance Node
+          {t('neuralWorkspaceHub.sovereignGovernanceNode')}
         </div>
         <div className="flex flex-col xl:flex-row items-end justify-between gap-8">
           <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-[var(--text-main)] uppercase leading-[0.8]">
-            WORKSPACE<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">CONTROL</span>
+            {t('neuralWorkspaceHub.workspace')}<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">{t('neuralWorkspaceHub.control')}</span>
           </h1>
           <div className="flex-1 max-w-xl">
             <p className="text-slate-500 text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4">
                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               Autonomous Permissions Sync · March 2026
+               {t('neuralWorkspaceHub.autonomousPermissionsSync')}
             </p>
             <p className="text-slate-400 text-sm leading-relaxed italic border-l-2 border-indigo-500/30 pl-4">
-              Multi-brand management with <span className="text-indigo-400 font-bold">Neural Clearance</span> and global compliance crystallization.
+              {t('neuralWorkspaceHub.multiBrandManagementPre')} <span className="text-indigo-400 font-bold">{t('neuralWorkspaceHub.neuralClearance')}</span> {t('neuralWorkspaceHub.multiBrandManagementPost')}
             </p>
           </div>
           <motion.button
@@ -155,7 +157,7 @@ export default function NeuralWorkspaceHub() {
             className="px-10 py-5 rounded-2xl bg-indigo-600 text-white font-black text-xs tracking-[0.2em] uppercase shadow-2xl shadow-indigo-600/20 flex items-center gap-4 transition-all"
           >
             <Building2 className="w-4 h-4" />
-            New Workspace Cluster
+            {t('neuralWorkspaceHub.newWorkspaceCluster')}
           </motion.button>
         </div>
       </div>
@@ -180,7 +182,7 @@ export default function NeuralWorkspaceHub() {
             </button>
           ))}
           {workspaces.length === 0 && (
-            <div className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] py-4 px-6 italic">Searching Neural Cloud for clusters...</div>
+            <div className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] py-4 px-6 italic">{t('neuralWorkspaceHub.searchingNeuralCloud')}</div>
           )}
         </div>
       </motion.div>
@@ -197,27 +199,27 @@ export default function NeuralWorkspaceHub() {
                   <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400 shadow-inner">
                     <Building2 className="w-7 h-7" />
                   </div>
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">Core Cluster Hub</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">{t('neuralWorkspaceHub.coreClusterHub')}</div>
                 </div>
                 <div className="space-y-6 relative z-10">
-                  <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">Cluster Health</h3>
+                  <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">{t('neuralWorkspaceHub.clusterHealth')}</h3>
                   <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Sync Status</div>
+                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">{t('neuralWorkspaceHub.syncStatus')}</div>
                       <div className="text-lg font-black text-emerald-400 italic uppercase leading-none flex items-center gap-1.5">
-                        <span className="w-1 h-1 rounded-full bg-emerald-500" /> Normal
+                        <span className="w-1 h-1 rounded-full bg-emerald-500" /> {t('neuralWorkspaceHub.normal')}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Access Level</div>
-                      <div className="text-lg font-black text-white italic uppercase leading-none">{selectedWorkspace.userRole || 'Member'}</div>
+                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">{t('neuralWorkspaceHub.accessLevel')}</div>
+                      <div className="text-lg font-black text-white italic uppercase leading-none">{selectedWorkspace.userRole || t('neuralWorkspaceHub.member')}</div>
                     </div>
                     <div className="space-y-2">
-                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Total Nodes</div>
-                      <div className="text-lg font-black text-white italic uppercase leading-none">{selectedWorkspace.members?.length || 0} Entities</div>
+                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">{t('neuralWorkspaceHub.totalNodes')}</div>
+                      <div className="text-lg font-black text-white italic uppercase leading-none">{t('neuralWorkspaceHub.entitiesCount', { count: selectedWorkspace.members?.length || 0 })}</div>
                     </div>
                     <div className="space-y-2">
-                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Residency</div>
+                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">{t('neuralWorkspaceHub.residency')}</div>
                       <div className="text-lg font-black text-indigo-400 italic uppercase leading-none flex items-center gap-1.5 font-mono">
                         <Globe className="w-3 h-3" />
                         {selectedWorkspace.settings?.dataResidency?.region?.toUpperCase() || 'GLB'}
@@ -234,10 +236,10 @@ export default function NeuralWorkspaceHub() {
                   <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 shadow-inner">
                     <ShieldCheck className="w-7 h-7" />
                   </div>
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">Clearance Grid</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">{t('neuralWorkspaceHub.clearanceGrid')}</div>
                 </div>
                 <div className="space-y-6 relative z-10">
-                  <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">Node Permissions</h3>
+                  <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">{t('neuralWorkspaceHub.nodePermissions')}</h3>
                   <div className="grid grid-cols-1 gap-3">
                     {(selectedWorkspace.userPermissions ? Object.entries(selectedWorkspace.userPermissions) : []).slice(0, 6).map(([key, value]: [string, any]) => (
                       <div key={key} className="flex items-center justify-between p-3 px-4 rounded-xl bg-white/[0.02] border border-white/[0.05] transition-all hover:bg-white/[0.05]">
@@ -268,11 +270,11 @@ export default function NeuralWorkspaceHub() {
                     <Activity className="w-5 h-5 text-indigo-400" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">Sovereign Ledger</h3>
-                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Autonomous Integrity Audit</p>
+                    <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">{t('neuralWorkspaceHub.sovereignLedger')}</h3>
+                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{t('neuralWorkspaceHub.autonomousIntegrityAudit')}</p>
                   </div>
                 </div>
-                <button className="px-5 py-2.5 rounded-xl bg-white/[0.02] border border-white/10 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:bg-white/[0.05] hover:text-white transition-all shadow-xl">Export Sync Log</button>
+                <button className="px-5 py-2.5 rounded-xl bg-white/[0.02] border border-white/10 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:bg-white/[0.05] hover:text-white transition-all shadow-xl">{t('neuralWorkspaceHub.exportSyncLog')}</button>
               </div>
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
                 {auditLogs.length === 0 ? (
@@ -280,7 +282,7 @@ export default function NeuralWorkspaceHub() {
                     <div className="w-16 h-16 rounded-3xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center mx-auto opacity-40">
                       <Clock className="w-7 h-7 text-slate-600" />
                     </div>
-                    <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] italic">No active ledger entries</p>
+                    <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] italic">{t('neuralWorkspaceHub.noActiveLedgerEntries')}</p>
                   </div>
                 ) : (
                   auditLogs.map((log: any, index: number) => (
@@ -316,27 +318,27 @@ export default function NeuralWorkspaceHub() {
                   <Workflow className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Automation Nodes</h3>
-                  <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Workflow Repositories</p>
+                  <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{t('neuralWorkspaceHub.automationNodes')}</h3>
+                  <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{t('neuralWorkspaceHub.workflowRepositories')}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 {templates.length === 0 ? (
-                  <div className="text-slate-600 text-[10px] font-black uppercase tracking-widest italic p-8 bg-white/[0.02] border border-dashed border-white/10 rounded-[2rem] text-center">Empty Repository</div>
+                  <div className="text-slate-600 text-[10px] font-black uppercase tracking-widest italic p-8 bg-white/[0.02] border border-dashed border-white/10 rounded-[2rem] text-center">{t('neuralWorkspaceHub.emptyRepository')}</div>
                 ) : (
                   templates.map((template: any) => (
                     <div key={template._id} className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/[0.05] group hover:bg-white/[0.05] transition-all cursor-pointer">
                       <div className="font-black text-sm text-white uppercase italic tracking-tight">{template.name}</div>
                       <div className="text-[10px] text-slate-500 font-bold mt-1 line-clamp-1">{template.description}</div>
                       <div className="flex items-center justify-between mt-6">
-                        <div className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-full text-[8px] font-black border border-purple-500/20 uppercase tracking-widest">{template.category || 'Standard'}</div>
-                        <div className="text-[9px] font-black text-slate-600 tabular-nums uppercase tracking-widest">{template.usageCount || 0} DEPLOYED</div>
+                        <div className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-full text-[8px] font-black border border-purple-500/20 uppercase tracking-widest">{template.category || t('neuralWorkspaceHub.standard')}</div>
+                        <div className="text-[9px] font-black text-slate-600 tabular-nums uppercase tracking-widest">{t('neuralWorkspaceHub.deployedCount', { count: template.usageCount || 0 })}</div>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-              <button className="w-full py-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 text-purple-400 text-[9px] font-black uppercase tracking-[0.4em] transition-all shadow-xl">Sync Swarm Marketplace</button>
+              <button className="w-full py-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 text-purple-400 text-[9px] font-black uppercase tracking-[0.4em] transition-all shadow-xl">{t('neuralWorkspaceHub.syncSwarmMarketplace')}</button>
             </motion.div>
 
             {/* Compliance HUD */}
@@ -348,16 +350,16 @@ export default function NeuralWorkspaceHub() {
                     <Shield className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Governance Status</h3>
-                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Sovereign Compliance</p>
+                    <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{t('neuralWorkspaceHub.governanceStatus')}</h3>
+                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{t('neuralWorkspaceHub.sovereignCompliance')}</p>
                   </div>
                 </div>
                 <div className="space-y-6 relative z-10">
                   <div className="flex items-center justify-between p-5 px-6 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global GDPR</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('neuralWorkspaceHub.globalGdpr')}</span>
                     {compliance.gdprEnabled ? (
                       <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-[9px] font-black border border-emerald-500/20 italic uppercase tracking-widest">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Normal
+                        <CheckCircle2 className="w-3.5 h-3.5" /> {t('neuralWorkspaceHub.normal')}
                       </div>
                     ) : (
                       <XCircle className="w-5 h-5 text-rose-500" />
@@ -365,20 +367,20 @@ export default function NeuralWorkspaceHub() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-5 px-6 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05]">
-                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 font-mono">Residency</div>
+                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 font-mono">{t('neuralWorkspaceHub.residency')}</div>
                       <div className="text-xl font-black text-white italic uppercase leading-none">{compliance.dataResidency?.toUpperCase() || 'GLB'}</div>
                     </div>
                     <div className="p-5 px-6 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05]">
-                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 font-mono">Trust Lvl</div>
-                      <div className="text-xl font-black text-white italic uppercase leading-none">Tier 1</div>
+                      <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 font-mono">{t('neuralWorkspaceHub.trustLvl')}</div>
+                      <div className="text-xl font-black text-white italic uppercase leading-none">{t('neuralWorkspaceHub.tier1')}</div>
                     </div>
                   </div>
                   {compliance.issues && compliance.issues.length > 0 && (
                     <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] flex items-center gap-4 shadow-xl shadow-amber-500/05">
                       <AlertTriangle className="w-7 h-7 text-amber-400" />
                       <div>
-                        <div className="text-[11px] font-black text-amber-400 uppercase tracking-widest">{compliance.issues.length} Integrity Gaps</div>
-                        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-tight mt-0.5">Optimization available</p>
+                        <div className="text-[11px] font-black text-amber-400 uppercase tracking-widest">{t('neuralWorkspaceHub.integrityGaps', { count: compliance.issues.length })}</div>
+                        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-tight mt-0.5">{t('neuralWorkspaceHub.optimizationAvailable')}</p>
                       </div>
                     </div>
                   )}
@@ -394,14 +396,14 @@ export default function NeuralWorkspaceHub() {
                     <BarChart3 className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">SLA Telemetry</h3>
-                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Real-time Node Uptime</p>
+                    <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{t('neuralWorkspaceHub.slaTelemetry')}</h3>
+                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{t('neuralWorkspaceHub.realtimeNodeUptime')}</p>
                   </div>
                 </div>
                 <div className="space-y-8">
                   <div className="space-y-5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Signal Purity</span>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{t('neuralWorkspaceHub.signalPurity')}</span>
                       <span className={`text-2xl font-black italic tabular-nums ${
                         sla.compliance?.uptime ? 'text-emerald-400' : 'text-rose-500'
                       }`}>
@@ -420,11 +422,11 @@ export default function NeuralWorkspaceHub() {
                   </div>
                   <div className="flex items-center justify-between p-6 px-8 rounded-[2rem] bg-white/[0.02] border border-white/[0.05] shadow-inner">
                     <div className="space-y-2">
-                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic line-clamp-1">Avg Latency</span>
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic line-clamp-1">{t('neuralWorkspaceHub.avgLatency')}</span>
                       <div className="text-2xl font-black text-white italic tabular-nums">{sla.actual?.avgResponseTime}<span className="text-xs opacity-40 ml-1 font-mono tracking-tighter">MS</span></div>
                     </div>
                     <div className="text-right space-y-2">
-                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic line-clamp-1">Target</span>
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic line-clamp-1">{t('neuralWorkspaceHub.target')}</span>
                       <div className="text-2xl font-black text-slate-500 italic tabular-nums">{sla.configured?.responseTime}<span className="text-xs opacity-40 ml-1 font-mono tracking-tighter">MS</span></div>
                     </div>
                   </div>
@@ -432,8 +434,8 @@ export default function NeuralWorkspaceHub() {
                     <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] flex items-center gap-4 shadow-xl shadow-rose-500/05">
                       <ZapOff className="w-7 h-7 text-rose-500" />
                       <div>
-                        <div className="text-[11px] font-black text-rose-500 uppercase tracking-widest">{sla.violations.length} Dropouts</div>
-                         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-tight mt-0.5">SLA Non-Compliance</p>
+                        <div className="text-[11px] font-black text-rose-500 uppercase tracking-widest">{t('neuralWorkspaceHub.dropouts', { count: sla.violations.length })}</div>
+                         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-tight mt-0.5">{t('neuralWorkspaceHub.slaNonCompliance')}</p>
                       </div>
                     </div>
                   )}
@@ -452,9 +454,9 @@ export default function NeuralWorkspaceHub() {
             <Brain className="w-10 h-10 text-indigo-400" />
           </div>
           <div className="text-center md:text-left">
-            <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">SWARM ADVISOR</h3>
+            <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{t('neuralWorkspaceHub.swarmAdvisor')}</h3>
             <p className="text-[11px] text-slate-500 uppercase tracking-[0.4em] font-black mt-1">
-              {creatorProfile?.creatorGoal ? `Mission Strategy: ${creatorProfile.creatorGoal.replace('_', ' ')}` : 'AWAITING MISSION CALIBRATION'}
+              {creatorProfile?.creatorGoal ? t('neuralWorkspaceHub.missionStrategy', { goal: creatorProfile.creatorGoal.replace('_', ' ') }) : t('neuralWorkspaceHub.awaitingMissionCalibration')}
             </p>
           </div>
         </div>
@@ -464,14 +466,14 @@ export default function NeuralWorkspaceHub() {
             {/* Next Best Action */}
             <div className="md:col-span-2 p-8 rounded-[2.5rem] bg-indigo-500/05 border border-indigo-500/10 space-y-4 shadow-inner group-hover:border-indigo-500/20 transition-all">
               <div className="flex items-center gap-2.5 text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-                <Lightbulb className="w-4 h-4" /> Next Strategic Node
+                <Lightbulb className="w-4 h-4" /> {t('neuralWorkspaceHub.nextStrategicNode')}
               </div>
               <p className="text-white font-bold text-lg leading-relaxed italic border-l-2 border-indigo-500/30 pl-6">&quot;{advisorData.nba}&quot;</p>
             </div>
             {/* Forecast */}
             <div className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/[0.05] space-y-4 shadow-inner">
               <div className="flex items-center gap-2.5 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                <TrendingUp className="w-4 h-4" /> Predicted Yield
+                <TrendingUp className="w-4 h-4" /> {t('neuralWorkspaceHub.predictedYield')}
               </div>
               <p className="text-emerald-400 font-black text-2xl italic tracking-tight">{advisorData.forecast}</p>
             </div>
@@ -479,7 +481,7 @@ export default function NeuralWorkspaceHub() {
             <div className="md:col-span-3 space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
-                  <Zap className="w-4 h-4 text-amber-400" /> Swarm Alignment Score
+                  <Zap className="w-4 h-4 text-amber-400" /> {t('neuralWorkspaceHub.swarmAlignmentScore')}
                 </div>
                 <span className={`text-3xl font-black italic tabular-nums ${
                   advisorData.efficiency >= 80 ? 'text-emerald-400' : advisorData.efficiency >= 60 ? 'text-amber-400' : 'text-rose-400'
@@ -499,14 +501,14 @@ export default function NeuralWorkspaceHub() {
           </div>
         ) : (
           <div className="p-16 text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.5em] italic border-2 border-dashed border-white/5 rounded-[4rem]">
-            Sync mission profile via sovereignty core to activate Swarm Advisor
+            {t('neuralWorkspaceHub.syncMissionProfile')}
           </div>
         )}
       </motion.div>
 
       {/* Footer Info */}
       <motion.div variants={itemVariants} className="text-center pt-24 opacity-30">
-        <p className="text-[9px] text-slate-500 font-black uppercase tracking-[1em] italic">Click Core Neural Vector // v4.26 // Autonomous Governance Enabled</p>
+        <p className="text-[9px] text-slate-500 font-black uppercase tracking-[1em] italic">{t('neuralWorkspaceHub.footerTagline')}</p>
       </motion.div>
     </motion.div>
   )

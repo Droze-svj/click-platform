@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { User, Edit3, Check, X, Shield, Sparkles, Fingerprint } from 'lucide-react'
 import { apiPost } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const ProfileHUD = () => {
+  const { t } = useTranslation()
   const { user, refresh } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState(user?.name || '')
@@ -41,9 +43,9 @@ const ProfileHUD = () => {
               <User size={18} />
             </div>
             <div className="text-left">
-              <p className="text-[9px] sm:text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.2em] mb-0.5">Profile Hub</p>
+              <p className="text-[9px] sm:text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.2em] mb-0.5">{t('profileHud.profileHub')}</p>
               <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-xs sm:text-sm font-black text-[var(--text-main)] italic uppercase">{user?.name || 'Creator'}</span>
+                <span className="text-xs sm:text-sm font-black text-[var(--text-main)] italic uppercase">{user?.name || t('profileHud.creator')}</span>
                 <Edit3 size={10} className="text-[var(--text-dim)] opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
               </div>
             </div>
@@ -57,30 +59,30 @@ const ProfileHUD = () => {
           >
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
               <Shield size={16} className="text-indigo-400" />
-              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">Identity Matrix</h4>
+              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">{t('profileHud.identityMatrix')}</h4>
             </div>
 
             <div className="space-y-5">
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest block ml-1">Display Name</label>
+                <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest block ml-1">{t('profileHud.displayName')}</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--text-main)] focus:outline-none focus:border-indigo-500 transition-colors"
-                  placeholder="Your Name"
+                  placeholder={t('profileHud.yourName')}
                   autoFocus
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest block ml-1">Content Niche</label>
+                <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest block ml-1">{t('profileHud.contentNiche')}</label>
                 <input
                   type="text"
                   value={niche}
                   onChange={(e) => setNiche(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--text-main)] focus:outline-none focus:border-indigo-500 transition-colors"
-                  placeholder="e.g. Finance, Gaming, Tech"
+                  placeholder={t('profileHud.nichePlaceholder')}
                 />
               </div>
 
@@ -91,14 +93,14 @@ const ProfileHUD = () => {
                   className="flex-1 py-3 rounded-xl bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-2 shadow-glow-primary"
                 >
                   {saving ? <Sparkles size={14} className="animate-spin" /> : <Check size={14} />}
-                  Synchronize
+                  {t('profileHud.synchronize')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
                   disabled={saving}
-                  aria-label="Cancel profile edit"
-                  title="Cancel profile edit"
+                  aria-label={t('profileHud.cancelProfileEdit')}
+                  title={t('profileHud.cancelProfileEdit')}
                   className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all flex-shrink-0"
                 >
                   <X size={18} />
@@ -108,7 +110,7 @@ const ProfileHUD = () => {
 
             <div className="mt-6 flex items-center justify-center gap-2">
                <Fingerprint size={12} className="text-white/20" />
-               <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] text-center">Identity Synchronization Active</span>
+               <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] text-center">{t('profileHud.identitySynchronizationActive')}</span>
             </div>
           </motion.div>
         )}

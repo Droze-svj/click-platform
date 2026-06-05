@@ -18,6 +18,7 @@ import {
   MousePointer2
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = "backdrop-blur-2xl bg-black/40 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
 
@@ -50,6 +51,7 @@ const stepVariants = {
 }
 
 export default function OnboardingFlow() {
+  const { t } = useTranslation()
   const pathname = usePathname()
   const [isVisible, setIsVisible] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
@@ -71,26 +73,26 @@ export default function OnboardingFlow() {
   const steps = [
     {
       id: 'welcome',
-      title: 'Welcome to the click Ecosystem',
-      description: 'Your autonomous partner for high-performance content operations.',
+      title: t('onboardingFlow.welcomeTitle'),
+      description: t('onboardingFlow.welcomeDescription'),
       component: <WelcomeStep />
     },
     {
       id: 'profile',
-      title: 'Define Your Strategy',
-      description: 'Tailor the Click AI to your specific industry benchmarks.',
+      title: t('onboardingFlow.profileTitle'),
+      description: t('onboardingFlow.profileDescription'),
       component: <ProfileStep onComplete={() => nextStep()} />
     },
     {
       id: 'features',
-      title: 'Elite Features',
-      description: 'Unlock multi-platform intelligence and predictive growth.',
+      title: t('onboardingFlow.featuresTitle'),
+      description: t('onboardingFlow.featuresDescription'),
       component: <ExploreFeaturesStep />
     },
     {
       id: 'complete',
-      title: 'Ecosystem Primed',
-      description: 'You are now ready to dominate the social landscape.',
+      title: t('onboardingFlow.completeTitle'),
+      description: t('onboardingFlow.completeDescription'),
       component: <CompleteStep onComplete={() => finishOnboarding()} />
     }
   ]
@@ -115,7 +117,7 @@ export default function OnboardingFlow() {
   const finishOnboarding = () => {
     localStorage.setItem('onboarding_completed', 'true')
     setIsVisible(false)
-    showToast('Elite Access Granted', 'success')
+    showToast(t('onboardingFlow.eliteAccessGranted'), 'success')
   }
 
   if (isPublicPage || !isVisible) return null
@@ -151,7 +153,7 @@ export default function OnboardingFlow() {
             type="button"
             onClick={() => setIsVisible(false)}
             className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors text-slate-500 hover:text-white"
-            title="Close onboarding"
+            title={t('onboardingFlow.closeOnboarding')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -194,7 +196,7 @@ export default function OnboardingFlow() {
                 className="px-6 py-3 rounded-2xl border border-white/10 text-slate-400 font-bold text-sm hover:bg-white/5 hover:text-white transition-all flex items-center gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Back
+                {t('onboardingFlow.back')}
               </button>
             )}
             <button
@@ -202,7 +204,7 @@ export default function OnboardingFlow() {
               onClick={() => currentStep === steps.length - 1 ? finishOnboarding() : nextStep()}
               className="px-8 py-3 rounded-2xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all flex items-center gap-2"
             >
-              {currentStep === steps.length - 1 ? 'Start Dominating' : 'Next Intelligence'}
+              {currentStep === steps.length - 1 ? t('onboardingFlow.startDominating') : t('onboardingFlow.nextIntelligence')}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -213,6 +215,7 @@ export default function OnboardingFlow() {
 }
 
 function WelcomeStep() {
+  const { t } = useTranslation()
   return (
     <div className="text-center space-y-8 py-4">
       <div className="relative inline-block">
@@ -233,9 +236,9 @@ function WelcomeStep() {
         </motion.div>
       </div>
       <div className="space-y-4">
-        <h3 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">Click Genesis</h3>
+        <h3 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">{t('onboardingFlow.clickGenesis')}</h3>
         <p className="text-slate-400 text-lg font-medium max-w-md mx-auto leading-relaxed">
-          The only platform that doesn&apos;t just write—it <span className="text-white">operates</span>. Let&apos;s sync your brand with our autonomous engine.
+          {t('onboardingFlow.welcomeBodyBefore')}<span className="text-white">{t('onboardingFlow.welcomeBodyOperates')}</span>{t('onboardingFlow.welcomeBodyAfter')}
         </p>
       </div>
     </div>
@@ -243,12 +246,13 @@ function WelcomeStep() {
 }
 
 function ProfileStep({ onComplete }: { onComplete: () => void }) {
+  const { t } = useTranslation()
   const [selected, setSelected] = useState('')
   const niches = [
-    { id: 'tech', name: 'Technology', icon: <Zap className="w-5 h-5 text-indigo-400" /> },
-    { id: 'finance', name: 'Finance', icon: <ShieldCheck className="w-5 h-5 text-emerald-400" /> },
-    { id: 'media', name: 'Media/Ent', icon: <Video className="w-5 h-5 text-rose-400" /> },
-    { id: 'creators', name: 'Creators', icon: <Users className="w-5 h-5 text-blue-400" /> }
+    { id: 'tech', name: t('onboardingFlow.nicheTechnology'), icon: <Zap className="w-5 h-5 text-indigo-400" /> },
+    { id: 'finance', name: t('onboardingFlow.nicheFinance'), icon: <ShieldCheck className="w-5 h-5 text-emerald-400" /> },
+    { id: 'media', name: t('onboardingFlow.nicheMedia'), icon: <Video className="w-5 h-5 text-rose-400" /> },
+    { id: 'creators', name: t('onboardingFlow.nicheCreators'), icon: <Users className="w-5 h-5 text-blue-400" /> }
   ]
 
   return (
@@ -273,16 +277,17 @@ function ProfileStep({ onComplete }: { onComplete: () => void }) {
           </button>
         ))}
       </div>
-      <p className="text-center text-slate-500 text-sm font-medium">Click AI will calibrate its predictive models based on this selection.</p>
+      <p className="text-center text-slate-500 text-sm font-medium">{t('onboardingFlow.profileCalibrationNote')}</p>
     </div>
   )
 }
 
 function ExploreFeaturesStep() {
+  const { t } = useTranslation()
   const highlights = [
-    { title: 'Predictive ROI', desc: 'Real-time revenue attribution per post.', icon: <TrendingUp className="w-4 h-4" /> },
-    { title: 'Self-Healing Loop', desc: 'Auto-adjusts content if engagement dips.', icon: <RefreshCw className="w-4 h-4" /> },
-    { title: 'Multi-Core Publish', desc: 'One click, 6 platforms optimized.', icon: <Orbit className="w-4 h-4" /> }
+    { title: t('onboardingFlow.featurePredictiveRoiTitle'), desc: t('onboardingFlow.featurePredictiveRoiDesc'), icon: <TrendingUp className="w-4 h-4" /> },
+    { title: t('onboardingFlow.featureSelfHealingTitle'), desc: t('onboardingFlow.featureSelfHealingDesc'), icon: <RefreshCw className="w-4 h-4" /> },
+    { title: t('onboardingFlow.featureMultiCoreTitle'), desc: t('onboardingFlow.featureMultiCoreDesc'), icon: <Orbit className="w-4 h-4" /> }
   ]
 
   return (
@@ -303,6 +308,7 @@ function ExploreFeaturesStep() {
 }
 
 function CompleteStep({ onComplete }: { onComplete: () => void }) {
+  const { t } = useTranslation()
   return (
     <div className="text-center space-y-10 py-4">
       <div className="relative">
@@ -316,9 +322,9 @@ function CompleteStep({ onComplete }: { onComplete: () => void }) {
         <div className="absolute inset-0 bg-indigo-600/30 blur-3xl -z-10" />
       </div>
       <div className="space-y-4">
-        <h3 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">System Initialized</h3>
+        <h3 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">{t('onboardingFlow.systemInitialized')}</h3>
         <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-sm mx-auto">
-          Welcome to the new standard of <span className="text-white">Content Operations</span>. The ecosystem is live.
+          {t('onboardingFlow.completeBodyBefore')}<span className="text-white">{t('onboardingFlow.completeBodyContentOps')}</span>{t('onboardingFlow.completeBodyAfter')}
         </p>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Metric {
   id: string
@@ -34,6 +35,7 @@ export default function ReportBuilder({
   templateId,
   onSave
 }: ReportBuilderProps) {
+  const { t } = useTranslation()
   const [template, setTemplate] = useState<ReportTemplate | null>(null)
   const [draggedMetric, setDraggedMetric] = useState<string | null>(null)
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(null)
@@ -74,7 +76,7 @@ export default function ReportBuilder({
       // Create new template
       setTemplate({
         _id: '',
-        name: 'New Report Template',
+        name: t('reportBuilder.newTemplateName'),
         metrics: [],
         branding: {},
         layout: {}
@@ -159,14 +161,14 @@ export default function ReportBuilder({
   }
 
   if (!template) {
-    return <div className="p-8 text-center">Loading...</div>
+    return <div className="p-8 text-center">{t('reportBuilder.loading')}</div>
   }
 
   return (
     <div className="flex h-screen">
       {/* Sidebar - Available Metrics */}
       <div className="w-64 bg-gray-100 p-4 border-r">
-        <h3 className="font-semibold mb-4">Available Metrics</h3>
+        <h3 className="font-semibold mb-4">{t('reportBuilder.availableMetrics')}</h3>
         <div className="space-y-2">
           {availableMetrics.map(metric => (
             <div
@@ -175,7 +177,7 @@ export default function ReportBuilder({
               onDragStart={() => handleDragStart(metric.type)}
               className="p-3 bg-white rounded-lg shadow cursor-move hover:shadow-md transition-shadow"
             >
-              <div className="font-medium text-sm">{metric.label}</div>
+              <div className="font-medium text-sm">{t(`reportBuilder.metric.${metric.type}`)}</div>
               <div className="text-xs text-gray-500">{metric.type}</div>
             </div>
           ))}
@@ -229,10 +231,10 @@ export default function ReportBuilder({
       {/* Properties Panel */}
       {selectedMetric && (
         <div className="w-64 bg-gray-100 p-4 border-l">
-          <h3 className="font-semibold mb-4">Metric Properties</h3>
+          <h3 className="font-semibold mb-4">{t('reportBuilder.metricProperties')}</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Label</label>
+              <label className="block text-sm font-medium mb-1">{t('reportBuilder.label')}</label>
               <input
                 type="text"
                 value={selectedMetric.label}
@@ -247,7 +249,7 @@ export default function ReportBuilder({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Format</label>
+              <label className="block text-sm font-medium mb-1">{t('reportBuilder.format')}</label>
               <select
                 value={selectedMetric.format}
                 onChange={(e) => {
@@ -259,16 +261,16 @@ export default function ReportBuilder({
                 }}
                 className="w-full px-3 py-2 border rounded-lg"
               >
-                <option value="number">Number</option>
-                <option value="percentage">Percentage</option>
-                <option value="currency">Currency</option>
-                <option value="chart">Chart</option>
-                <option value="table">Table</option>
+                <option value="number">{t('reportBuilder.formatOption.number')}</option>
+                <option value="percentage">{t('reportBuilder.formatOption.percentage')}</option>
+                <option value="currency">{t('reportBuilder.formatOption.currency')}</option>
+                <option value="chart">{t('reportBuilder.formatOption.chart')}</option>
+                <option value="table">{t('reportBuilder.formatOption.table')}</option>
               </select>
             </div>
             {selectedMetric.format === 'chart' && (
               <div>
-                <label className="block text-sm font-medium mb-1">Chart Type</label>
+                <label className="block text-sm font-medium mb-1">{t('reportBuilder.chartType')}</label>
                 <select
                   value={selectedMetric.chartType || ''}
                   onChange={(e) => {
@@ -280,11 +282,11 @@ export default function ReportBuilder({
                   }}
                   className="w-full px-3 py-2 border rounded-lg"
                 >
-                  <option value="">None</option>
-                  <option value="line">Line</option>
-                  <option value="bar">Bar</option>
-                  <option value="pie">Pie</option>
-                  <option value="area">Area</option>
+                  <option value="">{t('reportBuilder.chartOption.none')}</option>
+                  <option value="line">{t('reportBuilder.chartOption.line')}</option>
+                  <option value="bar">{t('reportBuilder.chartOption.bar')}</option>
+                  <option value="pie">{t('reportBuilder.chartOption.pie')}</option>
+                  <option value="area">{t('reportBuilder.chartOption.area')}</option>
                 </select>
               </div>
             )}
@@ -305,7 +307,7 @@ export default function ReportBuilder({
           onClick={handleSave}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          Save Template
+          {t('reportBuilder.saveTemplate')}
         </button>
       </div>
     </div>

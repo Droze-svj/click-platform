@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -13,6 +14,7 @@ interface Achievement {
 }
 
 export default function AchievementBadge({ achievement, onClose }: { achievement: Achievement; onClose: () => void }) {
+  const { t } = useTranslation()
   const [show, setShow] = useState(true)
 
   useEffect(() => {
@@ -48,24 +50,24 @@ export default function AchievementBadge({ achievement, onClose }: { achievement
 
   const getAchievementTitle = (type: string) => {
     const titles: Record<string, string> = {
-      'first_video': 'First Video!',
-      'first_content': 'Content Creator!',
-      'first_script': 'Script Writer!',
-      'content_milestone_10': '10 Content Pieces!',
-      'content_milestone_50': '50 Content Pieces!',
-      'content_milestone_100': '100 Content Pieces!',
-      'video_milestone_10': '10 Videos!',
-      'video_milestone_50': '50 Videos!',
-      'streak_7': '7 Day Streak!',
-      'streak_30': '30 Day Streak!',
-      'streak_100': '100 Day Streak!',
-      'workflow_master': 'Workflow Master!',
-      'social_media_pro': 'Social Media Pro!',
-      'content_creator': 'Content Creator!',
-      'early_adopter': 'Early Adopter!',
-      'power_user': 'Power User!'
+      'first_video': t('achievementBadge.firstVideo'),
+      'first_content': t('achievementBadge.firstContent'),
+      'first_script': t('achievementBadge.firstScript'),
+      'content_milestone_10': t('achievementBadge.contentMilestone10'),
+      'content_milestone_50': t('achievementBadge.contentMilestone50'),
+      'content_milestone_100': t('achievementBadge.contentMilestone100'),
+      'video_milestone_10': t('achievementBadge.videoMilestone10'),
+      'video_milestone_50': t('achievementBadge.videoMilestone50'),
+      'streak_7': t('achievementBadge.streak7'),
+      'streak_30': t('achievementBadge.streak30'),
+      'streak_100': t('achievementBadge.streak100'),
+      'workflow_master': t('achievementBadge.workflowMaster'),
+      'social_media_pro': t('achievementBadge.socialMediaPro'),
+      'content_creator': t('achievementBadge.contentCreator'),
+      'early_adopter': t('achievementBadge.earlyAdopter'),
+      'power_user': t('achievementBadge.powerUser')
     }
-    return titles[type] || 'Achievement Unlocked!'
+    return titles[type] || t('achievementBadge.achievementUnlocked')
   }
 
   if (!show) return null
@@ -81,7 +83,7 @@ export default function AchievementBadge({ achievement, onClose }: { achievement
             <h3 className="font-bold text-xl mb-1">
               {getAchievementTitle(achievement.achievementType)}
             </h3>
-            <p className="text-sm opacity-90">Achievement Unlocked!</p>
+            <p className="text-sm opacity-90">{t('achievementBadge.achievementUnlocked')}</p>
           </div>
           <button
             type="button"

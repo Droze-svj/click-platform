@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { CheckCircle, XCircle, Clock, AlertCircle, Eye, MessageSquare, RefreshCw } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -36,6 +37,7 @@ interface Approval {
 }
 
 export default function ApprovalDashboard() {
+  const { t } = useTranslation()
   const [approvals, setApprovals] = useState<Approval[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'approved' | 'rejected'>('all')
@@ -77,7 +79,7 @@ export default function ApprovalDashboard() {
       loadApprovals()
       setSelectedApproval(null)
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error approving content')
+      alert(error.response?.data?.error || t('approvalDashboard.errorApproving'))
     }
   }
 
@@ -92,7 +94,7 @@ export default function ApprovalDashboard() {
       loadApprovals()
       setSelectedApproval(null)
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error rejecting content')
+      alert(error.response?.data?.error || t('approvalDashboard.errorRejecting'))
     }
   }
 
@@ -107,7 +109,7 @@ export default function ApprovalDashboard() {
       loadApprovals()
       setSelectedApproval(null)
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error requesting changes')
+      alert(error.response?.data?.error || t('approvalDashboard.errorRequestingChanges'))
     }
   }
 
@@ -159,13 +161,13 @@ export default function ApprovalDashboard() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Approval Dashboard
+            {t('approvalDashboard.title')}
           </h2>
           <button
             type="button"
             onClick={loadApprovals}
-            title="Refresh Approvals"
-            aria-label="Refresh Approvals"
+            title={t('approvalDashboard.refreshApprovals')}
+            aria-label={t('approvalDashboard.refreshApprovals')}
             className="p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
           >
             <RefreshCw className="w-5 h-5" />
@@ -185,7 +187,7 @@ export default function ApprovalDashboard() {
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1).replace('_', ' ')}
+              {t(`approvalDashboard.filter_${f}`)}
             </button>
           ))}
         </div>
@@ -194,7 +196,7 @@ export default function ApprovalDashboard() {
         {approvals.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <Clock className="w-16 h-16 mx-auto mb-4 opacity-50" />
-            <p>No approvals found</p>
+            <p>{t('approvalDashboard.noApprovalsFound')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -209,18 +211,18 @@ export default function ApprovalDashboard() {
                     <div className="flex items-center gap-3 mb-2">
                       {getStatusIcon(approval.status)}
                       <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
-                        {approval.contentId?.title || 'Untitled'}
+                        {approval.contentId?.title || t('approvalDashboard.untitled')}
                       </h3>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(approval.status)}`}>
-                        {approval.status.replace('_', ' ')}
+                        {t(`approvalDashboard.status_${approval.status}`)}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      Created by: {approval.createdBy?.name || approval.createdBy?.email}
+                      {t('approvalDashboard.createdBy', { name: approval.createdBy?.name || approval.createdBy?.email })}
                     </p>
                     {approval.stages && approval.stages.length > 0 && (
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Stage {approval.currentStage + 1} of {approval.stages.length}: {approval.stages[approval.currentStage]?.stageName}
+                        {t('approvalDashboard.stageProgress', { current: approval.currentStage + 1, total: approval.stages.length, stageName: approval.stages[approval.currentStage]?.stageName })}
                       </div>
                     )}
                   </div>
@@ -230,8 +232,8 @@ export default function ApprovalDashboard() {
                       e.stopPropagation()
                       setSelectedApproval(approval)
                     }}
-                    title="View Details"
-                    aria-label="View Approval Details"
+                    title={t('approvalDashboard.viewDetails')}
+                    aria-label={t('approvalDashboard.viewApprovalDetails')}
                     className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                   >
                     <Eye className="w-5 h-5" />
@@ -270,6 +272,7 @@ function ApprovalDetailModal({
   onReject: (id: string, reason: string, comment: string) => void
   onRequestChanges: (id: string, changes: string, comment: string) => void
 }) {
+  const { t } = useTranslation()
   const [comment, setComment] = useState('')
   const [rejectionReason, setRejectionReason] = useState('')
   const [requestedChanges, setRequestedChanges] = useState('')
@@ -287,21 +290,21 @@ function ApprovalDetailModal({
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-                Approval Details
+                {t('approvalDashboard.approvalDetails')}
               </h3>
               <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700">
                 ✕
               </button>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              You have already responded to this approval or are not an approver for this stage.
+              {t('approvalDashboard.alreadyResponded')}
             </p>
             <button
               type="button"
               onClick={onClose}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Close
+              {t('approvalDashboard.close')}
             </button>
           </div>
         </div>
@@ -315,7 +318,7 @@ function ApprovalDetailModal({
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-              {approval.contentId?.title || 'Untitled'}
+              {approval.contentId?.title || t('approvalDashboard.untitled')}
             </h3>
             <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700">
               ✕
@@ -325,10 +328,10 @@ function ApprovalDetailModal({
           {/* Current Stage Info */}
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
-              Current Stage: {currentStage?.stageName}
+              {t('approvalDashboard.currentStage', { stageName: currentStage?.stageName })}
             </h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Stage {approval.currentStage + 1} of {approval.stages.length}
+              {t('approvalDashboard.stageOfTotal', { current: approval.currentStage + 1, total: approval.stages.length })}
             </p>
           </div>
 
@@ -345,7 +348,7 @@ function ApprovalDetailModal({
                 }`}
               >
                 <CheckCircle className="w-4 h-4 inline mr-2" />
-                Approve
+                {t('approvalDashboard.approve')}
               </button>
               <button
                 type="button"
@@ -357,7 +360,7 @@ function ApprovalDetailModal({
                 }`}
               >
                 <MessageSquare className="w-4 h-4 inline mr-2" />
-                Request Changes
+                {t('approvalDashboard.requestChanges')}
               </button>
               <button
                 type="button"
@@ -369,28 +372,28 @@ function ApprovalDetailModal({
                 }`}
               >
                 <XCircle className="w-4 h-4 inline mr-2" />
-                Reject
+                {t('approvalDashboard.reject')}
               </button>
             </div>
 
             {action === 'approve' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Comment (optional)
+                  {t('approvalDashboard.commentOptional')}
                 </label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   rows={3}
-                  placeholder="Add a comment..."
+                  placeholder={t('approvalDashboard.addCommentPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={() => onApprove(approval._id, comment)}
                   className="mt-2 w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
-                  Submit Approval
+                  {t('approvalDashboard.submitApproval')}
                 </button>
               </div>
             )}
@@ -398,24 +401,24 @@ function ApprovalDetailModal({
             {action === 'reject' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Rejection Reason *
+                  {t('approvalDashboard.rejectionReasonRequired')}
                 </label>
                 <input
                   type="text"
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white mb-2"
-                  placeholder="e.g., Content doesn't meet brand guidelines"
+                  placeholder={t('approvalDashboard.rejectionReasonPlaceholder')}
                 />
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Comment (optional)
+                  {t('approvalDashboard.commentOptional')}
                 </label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   rows={3}
-                  placeholder="Add additional feedback..."
+                  placeholder={t('approvalDashboard.addFeedbackPlaceholder')}
                 />
                 <button
                   type="button"
@@ -423,7 +426,7 @@ function ApprovalDetailModal({
                   disabled={!rejectionReason.trim()}
                   className="mt-2 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
                 >
-                  Submit Rejection
+                  {t('approvalDashboard.submitRejection')}
                 </button>
               </div>
             )}
@@ -431,24 +434,24 @@ function ApprovalDetailModal({
             {action === 'changes' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Requested Changes *
+                  {t('approvalDashboard.requestedChangesRequired')}
                 </label>
                 <textarea
                   value={requestedChanges}
                   onChange={(e) => setRequestedChanges(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white mb-2"
                   rows={4}
-                  placeholder="Describe the changes needed..."
+                  placeholder={t('approvalDashboard.requestedChangesPlaceholder')}
                 />
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Comment (optional)
+                  {t('approvalDashboard.commentOptional')}
                 </label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   rows={3}
-                  placeholder="Add additional feedback..."
+                  placeholder={t('approvalDashboard.addFeedbackPlaceholder')}
                 />
                 <button
                   type="button"
@@ -456,7 +459,7 @@ function ApprovalDetailModal({
                   disabled={!requestedChanges.trim()}
                   className="mt-2 w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
                 >
-                  Request Changes
+                  {t('approvalDashboard.requestChanges')}
                 </button>
               </div>
             )}
@@ -464,7 +467,7 @@ function ApprovalDetailModal({
 
           {/* Approval History */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">Approval History</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">{t('approvalDashboard.approvalHistory')}</h4>
             <div className="space-y-2">
               {approval.stages.map((stage, idx) => (
                 <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-900 rounded">
@@ -473,12 +476,12 @@ function ApprovalDetailModal({
                       {stage.stageName}
                     </span>
                     <span className={`px-2 py-1 rounded text-xs ${getStatusColor(stage.status)}`}>
-                      {stage.status}
+                      {t(`approvalDashboard.status_${stage.status}`)}
                     </span>
                   </div>
                   {stage.approvals.map((approval, aIdx) => (
                     <div key={aIdx} className="text-sm text-gray-600 dark:text-gray-400 ml-4">
-                      {approval.approverId?.name}: {approval.status}
+                      {approval.approverId?.name}: {t(`approvalDashboard.status_${approval.status}`)}
                       {approval.comment && ` - ${approval.comment}`}
                     </div>
                   ))}

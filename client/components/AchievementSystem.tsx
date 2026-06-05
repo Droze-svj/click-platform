@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
     Trophy,
     Star,
@@ -46,6 +47,7 @@ const ACHIEVEMENTS: Record<string, Achievement> = {
 }
 
 export default function AchievementSystem() {
+    const { t } = useTranslation()
     const [unlocked, setUnlocked] = useState<Achievement | null>(null)
 
     useEffect(() => {
@@ -83,9 +85,9 @@ export default function AchievementSystem() {
                                 </div>
 
                                 <div className="flex-1">
-                                    <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400 mb-1">Achievement Unlocked</p>
-                                    <h4 className="text-xl font-black text-gray-900 dark:text-[var(--text-main)] leading-tight mb-1">{unlocked.title}</h4>
-                                    <p className="text-xs text-gray-500 font-medium">{unlocked.description}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400 mb-1">{t('achievementSystem.achievementUnlocked')}</p>
+                                    <h4 className="text-xl font-black text-gray-900 dark:text-[var(--text-main)] leading-tight mb-1">{t(`achievementSystem.${unlocked.id}Title`)}</h4>
+                                    <p className="text-xs text-gray-500 font-medium">{t(`achievementSystem.${unlocked.id}Description`)}</p>
                                 </div>
 
                                 <button
@@ -99,8 +101,8 @@ export default function AchievementSystem() {
 
                             <div className="px-6 pb-6 pt-2">
                                 <div className="flex items-center justify-between text-[10px] font-bold text-gray-500 mb-2">
-                                    <span>LEVEL PROGRESS</span>
-                                    <span className="text-blue-500">+500 XP</span>
+                                    <span>{t('achievementSystem.levelProgress')}</span>
+                                    <span className="text-blue-500">{t('achievementSystem.xpGain', { xp: 500 })}</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                     <motion.div

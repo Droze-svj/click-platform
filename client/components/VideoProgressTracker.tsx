@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, XCircle, Clock, Zap, Cpu, ArrowRight } from 'lucide-react'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Progress {
   videoId: string
@@ -31,6 +32,7 @@ export default function VideoProgressTracker({
   onError,
   autonomousMode = true 
 }: VideoProgressTrackerProps) {
+  const { t } = useTranslation()
   const [progress, setProgress] = useState<Progress | null>(null)
   const [isPolling, setIsPolling] = useState(true)
   const [failures, setFailures] = useState(0)
@@ -78,7 +80,7 @@ export default function VideoProgressTracker({
     return (
       <div className="w-full flex flex-col items-center justify-center py-12 rounded-2xl bg-surface-900 border border-surface-800 animate-pulse">
         <Cpu className="w-8 h-8 text-primary-500 mb-4 opacity-50" />
-        <span className="text-sm font-bold tracking-widest text-surface-400 uppercase">Waking Neural Engine...</span>
+        <span className="text-sm font-bold tracking-widest text-surface-400 uppercase">{t('videoProgressTracker.wakingEngine')}</span>
       </div>
     )
   }
@@ -117,16 +119,16 @@ export default function VideoProgressTracker({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-black text-surface-50 uppercase tracking-wider">
-                  {progress.operation || 'Autonomous AI Task'}
+                  {progress.operation || t('videoProgressTracker.autonomousTask')}
                 </span>
                 {autonomousMode && isProcessing && (
                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary-500/20 text-primary-400 uppercase tracking-widest border border-primary-500/30">
-                    Auto-Pilot
+                    {t('videoProgressTracker.autoPilot')}
                   </span>
                 )}
               </div>
               <p className="text-xs font-medium text-surface-400 mt-0.5">
-                {progress.message || 'Analyzing timeline nodes...'}
+                {progress.message || t('videoProgressTracker.analyzingNodes')}
               </p>
             </div>
           </div>
@@ -174,12 +176,12 @@ export default function VideoProgressTracker({
               className="mt-4 pt-4 border-t border-surface-800"
             >
               <div className="flex items-center gap-2 text-[10px] font-bold text-surface-500 uppercase tracking-widest mb-2">
-                <Cpu className="w-3 h-3" /> AI Decision Log
+                <Cpu className="w-3 h-3" /> {t('videoProgressTracker.decisionLog')}
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-xs text-surface-300">
                   <ArrowRight className="w-3 h-3 text-primary-500" />
-                  <span>{progress.message || "Executing spatial analysis on primary track..."}</span>
+                  <span>{progress.message || t('videoProgressTracker.executingAnalysis')}</span>
                 </div>
               </div>
             </motion.div>

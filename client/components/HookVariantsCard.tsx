@@ -15,6 +15,7 @@
 import { useState } from 'react'
 import { Sparkles, Copy, Check, RefreshCw, Wand2 } from 'lucide-react'
 import { apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Variant {
   id: string
@@ -30,6 +31,7 @@ interface HookVariantsCardProps {
 }
 
 export default function HookVariantsCard({ niche, platform, className = '' }: HookVariantsCardProps) {
+  const { t } = useTranslation()
   const [baseHook, setBaseHook] = useState('')
   const [variants, setVariants] = useState<Variant[]>([])
   const [loading, setLoading] = useState(false)
@@ -39,7 +41,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
 
   const generate = async () => {
     if (!baseHook.trim() || baseHook.trim().length < 4) {
-      setError('Give the AI at least 4 characters to work with.')
+      setError(t('hookVariantsCard.errorMinLength'))
       return
     }
     setLoading(true)
@@ -54,10 +56,10 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
         setVariants(data.variants)
         setPickedId(null)
       } else {
-        setError(data?.error || 'No variants returned.')
+        setError(data?.error || t('hookVariantsCard.errorNoVariants'))
       }
     } catch (err: any) {
-      setError(err?.message || 'Variant generation failed. Try again in a moment.')
+      setError(err?.message || t('hookVariantsCard.errorGenerationFailed'))
     } finally {
       setLoading(false)
     }
@@ -90,19 +92,19 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
           <Wand2 size={18} className="text-[var(--tint-amber-fg)]" />
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-amber-fg)]">A/B Hook Variants</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-amber-fg)]">{t('hookVariantsCard.abHookVariants')}</p>
           <h3 className="text-base font-bold text-[var(--text-main)] leading-tight">
-            One idea, three psychological framings.
+            {t('hookVariantsCard.subtitle')}
           </h3>
         </div>
       </header>
 
       <label className="block">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-dim)] mb-2 inline-block">Base hook or idea</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-dim)] mb-2 inline-block">{t('hookVariantsCard.baseHookLabel')}</span>
         <textarea
           value={baseHook}
           onChange={(e) => setBaseHook(e.target.value)}
-          placeholder="e.g. Most people screw up their morning routine — here's what works"
+          placeholder={t('hookVariantsCard.baseHookPlaceholder')}
           maxLength={600}
           rows={2}
           className="w-full px-4 py-3 rounded-xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-sm text-[var(--text-main)] placeholder:text-[var(--text-dim)] focus:border-[var(--tint-amber-edge)] focus:outline-none resize-none"
@@ -111,7 +113,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
 
       <div className="flex items-center justify-between gap-3 mt-3">
         <p className="text-[10px] text-[var(--text-dim)]">
-          Niche <span className="font-bold text-[var(--text-main)] capitalize">{niche}</span> · platform <span className="font-bold text-[var(--text-main)] capitalize">{platform}</span>
+          {t('hookVariantsCard.niche')} <span className="font-bold text-[var(--text-main)] capitalize">{niche}</span> · {t('hookVariantsCard.platform')} <span className="font-bold text-[var(--text-main)] capitalize">{platform}</span>
         </p>
         <button
          type="button"
@@ -120,7 +122,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--tint-amber-fg)] text-[var(--page-bg)] text-[11px] font-black uppercase tracking-widest hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
           {loading ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}
-          {loading ? 'Generating' : 'Generate variants'}
+          {loading ? t('hookVariantsCard.generating') : t('hookVariantsCard.generateVariants')}
         </button>
       </div>
 
@@ -144,7 +146,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
                     <button
                      type="button"
                       onClick={() => copy(v)}
-                      aria-label="Copy variant"
+                      aria-label={t('hookVariantsCard.copyVariant')}
                       className="w-8 h-8 rounded-lg bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)]"
                     >
                       {isCopied ? <Check size={14} className="text-[var(--tint-emerald-fg)]" /> : <Copy size={14} />}
@@ -154,7 +156,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
                       onClick={() => pick(v)}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-colors ${isPicked ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]' : 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)]'}`}
                     >
-                      {isPicked ? 'Picked' : 'Pick'}
+                      {isPicked ? t('hookVariantsCard.picked') : t('hookVariantsCard.pick')}
                     </button>
                   </div>
                 </div>

@@ -22,6 +22,7 @@ import {
   EffectsIcon
 } from './icons/VideoIcons'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface CustomTemplateSettings {
   // Basic Info
@@ -213,6 +214,7 @@ export default function CustomTemplateCreator({
   })
 
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const updateTemplate = useCallback((updates: Partial<CustomTemplateSettings>) => {
     setTemplate(prev => ({ ...prev, ...updates }))
@@ -237,7 +239,7 @@ export default function CustomTemplateCreator({
   const addTextOverlay = useCallback(() => {
     const newOverlay = {
       id: `overlay-${Date.now()}`,
-      text: 'Your Text Here',
+      text: t('customTemplateCreator.defaultOverlayText'),
       position: { x: 50, y: 50 },
       fontSize: template.typography.fontSize.subtitle,
       color: template.typography.textColor,
@@ -252,7 +254,7 @@ export default function CustomTemplateCreator({
       ...prev,
       textOverlays: [...prev.textOverlays, newOverlay]
     }))
-  }, [template.typography])
+  }, [template.typography, t])
 
   const removeTextOverlay = useCallback((id: string) => {
     setTemplate(prev => ({
@@ -272,13 +274,13 @@ export default function CustomTemplateCreator({
 
   const handleSave = useCallback(() => {
     if (!template.name.trim()) {
-      showToast('Please enter a template name', 'error')
+      showToast(t('customTemplateCreator.enterNameError'), 'error')
       return
     }
 
     onSave(template)
-    showToast('Custom template saved successfully!', 'success')
-  }, [template, onSave, showToast])
+    showToast(t('customTemplateCreator.savedSuccess'), 'success')
+  }, [template, onSave, showToast, t])
 
   const handlePreview = useCallback(() => {
     onPreview?.(template)
@@ -343,16 +345,16 @@ export default function CustomTemplateCreator({
       },
       textOverlays: []
     })
-    showToast('Template reset to defaults', 'info')
-  }, [showToast])
+    showToast(t('customTemplateCreator.resetInfo'), 'info')
+  }, [showToast, t])
 
   const tabs = [
-    { id: 'basic', label: 'Basic', icon: Save },
-    { id: 'colors', label: 'Colors', icon: ColorPaletteIcon },
-    { id: 'typography', label: 'Text', icon: TypographyIcon },
-    { id: 'layout', label: 'Layout', icon: TimelineIcon },
-    { id: 'audio', label: 'Audio', icon: AudioWaveIcon },
-    { id: 'effects', label: 'Effects', icon: EffectsIcon }
+    { id: 'basic', label: t('customTemplateCreator.tabBasic'), icon: Save },
+    { id: 'colors', label: t('customTemplateCreator.tabColors'), icon: ColorPaletteIcon },
+    { id: 'typography', label: t('customTemplateCreator.tabText'), icon: TypographyIcon },
+    { id: 'layout', label: t('customTemplateCreator.tabLayout'), icon: TimelineIcon },
+    { id: 'audio', label: t('customTemplateCreator.tabAudio'), icon: AudioWaveIcon },
+    { id: 'effects', label: t('customTemplateCreator.tabEffects'), icon: EffectsIcon }
   ]
 
   return (
@@ -362,10 +364,10 @@ export default function CustomTemplateCreator({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Custom Template Creator
+              {t('customTemplateCreator.title')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Design your perfect video editing style with complete customization
+              {t('customTemplateCreator.subtitle')}
             </p>
           </div>
           <div className="flex gap-3">
@@ -375,7 +377,7 @@ export default function CustomTemplateCreator({
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               <RotateCcw className="w-4 h-4 inline mr-2" />
-              Reset
+              {t('customTemplateCreator.reset')}
             </button>
             <button
               type="button"
@@ -383,7 +385,7 @@ export default function CustomTemplateCreator({
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               <Eye className="w-4 h-4 inline mr-2" />
-              Preview
+              {t('customTemplateCreator.preview')}
             </button>
             <button
               type="button"
@@ -391,7 +393,7 @@ export default function CustomTemplateCreator({
               className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               <Save className="w-4 h-4 inline mr-2" />
-              Save Template
+              {t('customTemplateCreator.saveTemplate')}
             </button>
           </div>
         </div>
@@ -428,25 +430,25 @@ export default function CustomTemplateCreator({
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Template Name *
+                      {t('customTemplateCreator.templateNameLabel')}
                     </label>
                     <input
                       type="text"
                       value={template.name}
                       onChange={(e) => updateTemplate({ name: e.target.value })}
-                      placeholder="My Custom Template"
+                      placeholder={t('customTemplateCreator.templateNamePlaceholder')}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description
+                      {t('customTemplateCreator.descriptionLabel')}
                     </label>
                     <textarea
                       value={template.description}
                       onChange={(e) => updateTemplate({ description: e.target.value })}
-                      placeholder="Describe your template style..."
+                      placeholder={t('customTemplateCreator.descriptionPlaceholder')}
                       rows={3}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -454,22 +456,22 @@ export default function CustomTemplateCreator({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Category
+                      {t('customTemplateCreator.categoryLabel')}
                     </label>
                     <select
                       value={template.category}
                       onChange={(e) => updateTemplate({ category: e.target.value })}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="Custom">Custom</option>
-                      <option value="Cinematic">Cinematic</option>
-                      <option value="Social Media">Social Media</option>
-                      <option value="Business">Business</option>
-                      <option value="Vlog">Vlog</option>
-                      <option value="Gaming">Gaming</option>
-                      <option value="Wedding">Wedding</option>
-                      <option value="Educational">Educational</option>
-                      <option value="Vintage">Vintage</option>
+                      <option value="Custom">{t('customTemplateCreator.categoryCustom')}</option>
+                      <option value="Cinematic">{t('customTemplateCreator.categoryCinematic')}</option>
+                      <option value="Social Media">{t('customTemplateCreator.categorySocialMedia')}</option>
+                      <option value="Business">{t('customTemplateCreator.categoryBusiness')}</option>
+                      <option value="Vlog">{t('customTemplateCreator.categoryVlog')}</option>
+                      <option value="Gaming">{t('customTemplateCreator.categoryGaming')}</option>
+                      <option value="Wedding">{t('customTemplateCreator.categoryWedding')}</option>
+                      <option value="Educational">{t('customTemplateCreator.categoryEducational')}</option>
+                      <option value="Vintage">{t('customTemplateCreator.categoryVintage')}</option>
                     </select>
                   </div>
                 </div>
@@ -477,26 +479,26 @@ export default function CustomTemplateCreator({
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Target Audience
+                      {t('customTemplateCreator.targetAudienceLabel')}
                     </label>
                     <input
                       type="text"
                       value={template.targetAudience}
                       onChange={(e) => updateTemplate({ targetAudience: e.target.value })}
-                      placeholder="e.g., Content creators, businesses"
+                      placeholder={t('customTemplateCreator.targetAudiencePlaceholder')}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Use Case
+                      {t('customTemplateCreator.useCaseLabel')}
                     </label>
                     <input
                       type="text"
                       value={template.useCase}
                       onChange={(e) => updateTemplate({ useCase: e.target.value })}
-                      placeholder="e.g., Product demos, tutorials"
+                      placeholder={t('customTemplateCreator.useCasePlaceholder')}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -504,7 +506,7 @@ export default function CustomTemplateCreator({
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Aspect Ratio
+                        {t('customTemplateCreator.aspectRatioLabel')}
                       </label>
                       <select
                         value={template.aspectRatio}
@@ -521,7 +523,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Resolution
+                        {t('customTemplateCreator.resolutionLabel')}
                       </label>
                       <select
                         value={template.resolution}
@@ -536,7 +538,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Frame Rate
+                        {t('customTemplateCreator.frameRateLabel')}
                       </label>
                       <select
                         value={template.frameRate}
@@ -558,12 +560,12 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Basic Adjustments</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.basicAdjustments')}</h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Brightness: {template.colorGrade.brightness}%
+                        {t('customTemplateCreator.brightness', { value: template.colorGrade.brightness })}
                       </label>
                       <input
                         type="range"
@@ -577,7 +579,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Contrast: {template.colorGrade.contrast}%
+                        {t('customTemplateCreator.contrast', { value: template.colorGrade.contrast })}
                       </label>
                       <input
                         type="range"
@@ -591,7 +593,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Saturation: {template.colorGrade.saturation}%
+                        {t('customTemplateCreator.saturation', { value: template.colorGrade.saturation })}
                       </label>
                       <input
                         type="range"
@@ -605,7 +607,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Vibrance: {template.colorGrade.vibrance}%
+                        {t('customTemplateCreator.vibrance', { value: template.colorGrade.vibrance })}
                       </label>
                       <input
                         type="range"
@@ -620,12 +622,12 @@ export default function CustomTemplateCreator({
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Advanced Color</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.advancedColor')}</h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Temperature: {template.colorGrade.temperature}K
+                        {t('customTemplateCreator.temperature', { value: template.colorGrade.temperature })}
                       </label>
                       <input
                         type="range"
@@ -639,7 +641,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Tint: {template.colorGrade.tint}
+                        {t('customTemplateCreator.tint', { value: template.colorGrade.tint })}
                       </label>
                       <input
                         type="range"
@@ -653,7 +655,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Highlights: {template.colorGrade.highlights}
+                        {t('customTemplateCreator.highlights', { value: template.colorGrade.highlights })}
                       </label>
                       <input
                         type="range"
@@ -667,7 +669,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Shadows: {template.colorGrade.shadows}
+                        {t('customTemplateCreator.shadows', { value: template.colorGrade.shadows })}
                       </label>
                       <input
                         type="range"
@@ -683,7 +685,7 @@ export default function CustomTemplateCreator({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Clarity: {template.colorGrade.clarity}
+                        {t('customTemplateCreator.clarity', { value: template.colorGrade.clarity })}
                       </label>
                       <input
                         type="range"
@@ -697,7 +699,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Dehaze: {template.colorGrade.dehaze}
+                        {t('customTemplateCreator.dehaze', { value: template.colorGrade.dehaze })}
                       </label>
                       <input
                         type="range"
@@ -718,11 +720,11 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Font Selection</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.fontSelection')}</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Primary Font
+                      {t('customTemplateCreator.primaryFontLabel')}
                     </label>
                     <select
                       value={template.typography.primaryFont}
@@ -739,7 +741,7 @@ export default function CustomTemplateCreator({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Secondary Font
+                      {t('customTemplateCreator.secondaryFontLabel')}
                     </label>
                     <select
                       value={template.typography.secondaryFont}
@@ -756,28 +758,28 @@ export default function CustomTemplateCreator({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Text Style
+                      {t('customTemplateCreator.textStyleLabel')}
                     </label>
                     <select
                       value={template.typography.textStyle}
                       onChange={(e) => updateNestedTemplate('typography.textStyle', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="minimal">Minimal</option>
-                      <option value="bold">Bold</option>
-                      <option value="elegant">Elegant</option>
-                      <option value="playful">Playful</option>
+                      <option value="minimal">{t('customTemplateCreator.textStyleMinimal')}</option>
+                      <option value="bold">{t('customTemplateCreator.textStyleBold')}</option>
+                      <option value="elegant">{t('customTemplateCreator.textStyleElegant')}</option>
+                      <option value="playful">{t('customTemplateCreator.textStylePlayful')}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Colors & Sizes</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.colorsAndSizes')}</h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Primary Color
+                        {t('customTemplateCreator.primaryColorLabel')}
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -797,7 +799,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Accent Color
+                        {t('customTemplateCreator.accentColorLabel')}
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -818,11 +820,11 @@ export default function CustomTemplateCreator({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Font Sizes
+                      {t('customTemplateCreator.fontSizesLabel')}
                     </label>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Title</label>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">{t('customTemplateCreator.fontSizeTitle')}</label>
                         <input
                           type="number"
                           min="12"
@@ -833,7 +835,7 @@ export default function CustomTemplateCreator({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Subtitle</label>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">{t('customTemplateCreator.fontSizeSubtitle')}</label>
                         <input
                           type="number"
                           min="8"
@@ -844,7 +846,7 @@ export default function CustomTemplateCreator({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Body</label>
+                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">{t('customTemplateCreator.fontSizeBody')}</label>
                         <input
                           type="number"
                           min="8"
@@ -862,13 +864,13 @@ export default function CustomTemplateCreator({
               {/* Text Overlays Section */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Text Overlays</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.textOverlaysTitle')}</h3>
                   <button
                     type="button"
                     onClick={addTextOverlay}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    Add Text Overlay
+                    {t('customTemplateCreator.addTextOverlay')}
                   </button>
                 </div>
 
@@ -878,7 +880,7 @@ export default function CustomTemplateCreator({
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Text
+                            {t('customTemplateCreator.overlayTextLabel')}
                           </label>
                           <input
                             type="text"
@@ -890,7 +892,7 @@ export default function CustomTemplateCreator({
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Font Size
+                            {t('customTemplateCreator.overlayFontSizeLabel')}
                           </label>
                           <input
                             type="number"
@@ -904,35 +906,35 @@ export default function CustomTemplateCreator({
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Animation
+                            {t('customTemplateCreator.animationLabel')}
                           </label>
                           <select
                             value={overlay.animation}
                             onChange={(e) => updateTextOverlay(overlay.id, { animation: e.target.value as any })}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value="none">None</option>
-                            <option value="fade-in">Fade In</option>
-                            <option value="slide-up">Slide Up</option>
-                            <option value="scale">Scale</option>
-                            <option value="typewriter">Typewriter</option>
-                            <option value="bounce">Bounce</option>
+                            <option value="none">{t('customTemplateCreator.animationNone')}</option>
+                            <option value="fade-in">{t('customTemplateCreator.animationFadeIn')}</option>
+                            <option value="slide-up">{t('customTemplateCreator.animationSlideUp')}</option>
+                            <option value="scale">{t('customTemplateCreator.animationScale')}</option>
+                            <option value="typewriter">{t('customTemplateCreator.animationTypewriter')}</option>
+                            <option value="bounce">{t('customTemplateCreator.animationBounce')}</option>
                           </select>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Style
+                            {t('customTemplateCreator.styleLabel')}
                           </label>
                           <select
                             value={overlay.style}
                             onChange={(e) => updateTextOverlay(overlay.id, { style: e.target.value as any })}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value="normal">Normal</option>
-                            <option value="bold">Bold</option>
-                            <option value="italic">Italic</option>
-                            <option value="uppercase">Uppercase</option>
+                            <option value="normal">{t('customTemplateCreator.styleNormal')}</option>
+                            <option value="bold">{t('customTemplateCreator.styleBold')}</option>
+                            <option value="italic">{t('customTemplateCreator.styleItalic')}</option>
+                            <option value="uppercase">{t('customTemplateCreator.styleUppercase')}</option>
                           </select>
                         </div>
                       </div>
@@ -941,7 +943,7 @@ export default function CustomTemplateCreator({
                         <div className="flex items-center gap-4">
                           <div>
                             <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                              Position (X: {overlay.position.x}%, Y: {overlay.position.y}%)
+                              {t('customTemplateCreator.positionLabel', { x: overlay.position.x, y: overlay.position.y })}
                             </label>
                             <div className="flex gap-2">
                               <input
@@ -969,7 +971,7 @@ export default function CustomTemplateCreator({
 
                           <div>
                             <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                              Color
+                              {t('customTemplateCreator.overlayColorLabel')}
                             </label>
                             <input
                               type="color"
@@ -985,7 +987,7 @@ export default function CustomTemplateCreator({
                           onClick={() => removeTextOverlay(overlay.id)}
                           className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
                         >
-                          Remove
+                          {t('customTemplateCreator.remove')}
                         </button>
                       </div>
                     </div>
@@ -994,8 +996,8 @@ export default function CustomTemplateCreator({
                   {template.textOverlays.length === 0 && (
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <Type className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No text overlays added yet</p>
-                      <p className="text-sm">Click &quot;Add Text Overlay&quot; to create custom text elements</p>
+                      <p>{t('customTemplateCreator.noOverlaysTitle')}</p>
+                      <p className="text-sm">{t('customTemplateCreator.noOverlaysHint')}</p>
                     </div>
                   )}
                 </div>
@@ -1007,82 +1009,82 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Layout Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.layoutSettings')}</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Text Position
+                      {t('customTemplateCreator.textPositionLabel')}
                     </label>
                     <select
                       value={template.layout.textPosition}
                       onChange={(e) => updateNestedTemplate('layout.textPosition', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="top">Top</option>
-                      <option value="center">Center</option>
-                      <option value="bottom">Bottom</option>
-                      <option value="lower-third">Lower Third</option>
+                      <option value="top">{t('customTemplateCreator.positionTop')}</option>
+                      <option value="center">{t('customTemplateCreator.positionCenter')}</option>
+                      <option value="bottom">{t('customTemplateCreator.positionBottom')}</option>
+                      <option value="lower-third">{t('customTemplateCreator.positionLowerThird')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Logo Position
+                      {t('customTemplateCreator.logoPositionLabel')}
                     </label>
                     <select
                       value={template.layout.logoPosition}
                       onChange={(e) => updateNestedTemplate('layout.logoPosition', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="top-left">Top Left</option>
-                      <option value="top-right">Top Right</option>
-                      <option value="bottom-left">Bottom Left</option>
-                      <option value="bottom-right">Bottom Right</option>
-                      <option value="center">Center</option>
+                      <option value="top-left">{t('customTemplateCreator.logoTopLeft')}</option>
+                      <option value="top-right">{t('customTemplateCreator.logoTopRight')}</option>
+                      <option value="bottom-left">{t('customTemplateCreator.logoBottomLeft')}</option>
+                      <option value="bottom-right">{t('customTemplateCreator.logoBottomRight')}</option>
+                      <option value="center">{t('customTemplateCreator.logoCenter')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Transition Style
+                      {t('customTemplateCreator.transitionStyleLabel')}
                     </label>
                     <select
                       value={template.layout.transitionStyle}
                       onChange={(e) => updateNestedTemplate('layout.transitionStyle', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="none">None</option>
-                      <option value="fade">Fade</option>
-                      <option value="slide">Slide</option>
-                      <option value="wipe">Wipe</option>
-                      <option value="zoom">Zoom</option>
+                      <option value="none">{t('customTemplateCreator.transitionNone')}</option>
+                      <option value="fade">{t('customTemplateCreator.transitionFade')}</option>
+                      <option value="slide">{t('customTemplateCreator.transitionSlide')}</option>
+                      <option value="wipe">{t('customTemplateCreator.transitionWipe')}</option>
+                      <option value="zoom">{t('customTemplateCreator.transitionZoom')}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Background</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.backgroundTitle')}</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Background Style
+                      {t('customTemplateCreator.backgroundStyleLabel')}
                     </label>
                     <select
                       value={template.layout.backgroundStyle}
                       onChange={(e) => updateNestedTemplate('layout.backgroundStyle', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="none">None</option>
-                      <option value="solid">Solid Color</option>
-                      <option value="gradient">Gradient</option>
-                      <option value="blur">Blur</option>
+                      <option value="none">{t('customTemplateCreator.backgroundNone')}</option>
+                      <option value="solid">{t('customTemplateCreator.backgroundSolid')}</option>
+                      <option value="gradient">{t('customTemplateCreator.backgroundGradient')}</option>
+                      <option value="blur">{t('customTemplateCreator.backgroundBlur')}</option>
                     </select>
                   </div>
 
                   {template.layout.backgroundStyle === 'solid' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Background Color
+                        {t('customTemplateCreator.backgroundColorLabel')}
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -1105,7 +1107,7 @@ export default function CustomTemplateCreator({
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Gradient Start
+                          {t('customTemplateCreator.gradientStartLabel')}
                         </label>
                         <div className="flex gap-2">
                           <input
@@ -1125,7 +1127,7 @@ export default function CustomTemplateCreator({
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Gradient End
+                          {t('customTemplateCreator.gradientEndLabel')}
                         </label>
                         <div className="flex gap-2">
                           <input
@@ -1153,7 +1155,7 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Audio Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.audioSettings')}</h3>
 
                   <div className="space-y-4">
                     <label className="flex items-center">
@@ -1163,7 +1165,7 @@ export default function CustomTemplateCreator({
                         onChange={(e) => updateNestedTemplate('audio.backgroundMusic', e.target.checked)}
                         className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                       />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Background Music</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.backgroundMusic')}</span>
                     </label>
 
                     <label className="flex items-center">
@@ -1173,7 +1175,7 @@ export default function CustomTemplateCreator({
                         onChange={(e) => updateNestedTemplate('audio.soundEffects', e.target.checked)}
                         className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                       />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sound Effects</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.soundEffects')}</span>
                     </label>
 
                     <label className="flex items-center">
@@ -1183,35 +1185,35 @@ export default function CustomTemplateCreator({
                         onChange={(e) => updateNestedTemplate('audio.voiceover', e.target.checked)}
                         className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                       />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Voiceover</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.voiceover')}</span>
                     </label>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Music Preferences</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.musicPreferences')}</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Music Style
+                      {t('customTemplateCreator.musicStyleLabel')}
                     </label>
                     <select
                       value={template.audio.musicStyle}
                       onChange={(e) => updateNestedTemplate('audio.musicStyle', e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="none">None</option>
-                      <option value="upbeat">Upbeat</option>
-                      <option value="calm">Calm</option>
-                      <option value="dramatic">Dramatic</option>
-                      <option value="corporate">Corporate</option>
+                      <option value="none">{t('customTemplateCreator.musicNone')}</option>
+                      <option value="upbeat">{t('customTemplateCreator.musicUpbeat')}</option>
+                      <option value="calm">{t('customTemplateCreator.musicCalm')}</option>
+                      <option value="dramatic">{t('customTemplateCreator.musicDramatic')}</option>
+                      <option value="corporate">{t('customTemplateCreator.musicCorporate')}</option>
                     </select>
                   </div>
 
                   {template.audio.backgroundMusic && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Music Volume: {template.audio.musicVolume}%
+                        {t('customTemplateCreator.musicVolume', { value: template.audio.musicVolume })}
                       </label>
                       <input
                         type="range"
@@ -1232,12 +1234,12 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Visual Effects</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.visualEffects')}</h3>
 
                   <div className="space-y-4">
                     <div>
                       <label className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Vignette</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.vignette')}</span>
                         <input
                           type="checkbox"
                           checked={template.effects.vignette}
@@ -1256,7 +1258,7 @@ export default function CustomTemplateCreator({
                             className="w-full"
                           />
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Intensity: {template.effects.vignetteIntensity}%
+                            {t('customTemplateCreator.intensity', { value: template.effects.vignetteIntensity })}
                           </div>
                         </div>
                       )}
@@ -1264,7 +1266,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Grain</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.grain')}</span>
                         <input
                           type="checkbox"
                           checked={template.effects.grain}
@@ -1283,7 +1285,7 @@ export default function CustomTemplateCreator({
                             className="w-full"
                           />
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Intensity: {template.effects.grainIntensity}%
+                            {t('customTemplateCreator.intensity', { value: template.effects.grainIntensity })}
                           </div>
                         </div>
                       )}
@@ -1291,7 +1293,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Glow</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.glow')}</span>
                         <input
                           type="checkbox"
                           checked={template.effects.glow}
@@ -1310,7 +1312,7 @@ export default function CustomTemplateCreator({
                             className="w-full"
                           />
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Intensity: {template.effects.glowIntensity}%
+                            {t('customTemplateCreator.intensity', { value: template.effects.glowIntensity })}
                           </div>
                         </div>
                       )}
@@ -1319,11 +1321,11 @@ export default function CustomTemplateCreator({
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Advanced Effects</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('customTemplateCreator.advancedEffects')}</h3>
 
                   <div className="space-y-4">
                     <label className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Chromatic Aberration</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.chromaticAberration')}</span>
                       <input
                         type="checkbox"
                         checked={template.effects.chromaticAberration}
@@ -1334,7 +1336,7 @@ export default function CustomTemplateCreator({
 
                     <div>
                       <label className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Color Pop</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('customTemplateCreator.colorPop')}</span>
                         <input
                           type="checkbox"
                           checked={template.effects.colorPop}
@@ -1345,7 +1347,7 @@ export default function CustomTemplateCreator({
                       {template.effects.colorPop && (
                         <div className="mt-2">
                           <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            Pop Color
+                            {t('customTemplateCreator.popColorLabel')}
                           </label>
                           <div className="flex gap-2">
                             <input

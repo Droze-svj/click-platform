@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { RefreshCw, X, CheckCircle } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 // import { // trackPWAEvent } from '../utils/analytics'
 
 interface PWAUpdateHandlerProps {
@@ -9,6 +10,7 @@ interface PWAUpdateHandlerProps {
 }
 
 export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) => {
+  const { t } = useTranslation()
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [updateComplete, setUpdateComplete] = useState(false)
@@ -126,10 +128,10 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
             </div>
             <div>
               <h3 className="font-semibold text-sm">
-                Update Available
+                {t('pWAUpdateHandler.updateAvailable')}
               </h3>
               <p className="text-xs text-blue-100">
-                New features & improvements
+                {t('pWAUpdateHandler.newFeaturesImprovements')}
               </p>
             </div>
           </div>
@@ -145,12 +147,12 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
         {/* Content */}
         <div className="mb-4">
           <p className="text-sm text-blue-100 mb-2">
-            A new version of Click is available with performance improvements and new features.
+            {t('pWAUpdateHandler.newVersionDescription')}
           </p>
           <div className="text-xs text-blue-200 space-y-1">
-            <div>• Faster loading times</div>
-            <div>• Bug fixes and stability</div>
-            <div>• New offline capabilities</div>
+            <div>• {t('pWAUpdateHandler.fasterLoadingTimes')}</div>
+            <div>• {t('pWAUpdateHandler.bugFixesStability')}</div>
+            <div>• {t('pWAUpdateHandler.newOfflineCapabilities')}</div>
           </div>
         </div>
 
@@ -165,12 +167,12 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
             {updating ? (
               <>
                 <RefreshCw className="w-3 h-3 animate-spin" />
-                Updating...
+                {t('pWAUpdateHandler.updating')}
               </>
             ) : (
               <>
                 <RefreshCw className="w-3 h-3" />
-                Update Now
+                {t('pWAUpdateHandler.updateNow')}
               </>
             )}
           </button>
@@ -180,7 +182,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
             onClick={handleRemindLater}
             className="px-3 py-2 text-xs text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
-            Later
+            {t('pWAUpdateHandler.later')}
           </button>
         </div>
 
@@ -188,7 +190,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
         {updateComplete && (
           <div className="mt-3 p-2 bg-green-500/20 rounded-lg flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-green-300" />
-            <span className="text-xs text-green-300">Update complete! Reloading...</span>
+            <span className="text-xs text-green-300">{t('pWAUpdateHandler.updateCompleteReloading')}</span>
           </div>
         )}
       </div>

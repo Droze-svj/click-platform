@@ -5,6 +5,7 @@ import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
 import { History, RotateCcw, Eye } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Version {
   _id: string
@@ -26,6 +27,7 @@ interface VersionHistoryProps {
 
 export default function VersionHistory({ contentId, onRestore }: VersionHistoryProps) {
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [versions, setVersions] = useState<Version[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null)
@@ -43,11 +45,11 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
         setVersions(response.data.data || [])
       }
     } catch (error) {
-      showToast('Failed to load version history', 'error')
+      showToast(t('versionHistory.loadFailed'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [contentId, showToast])
+  }, [contentId, showToast, t])
 
   useEffect(() => {
     if (contentId) {
@@ -56,7 +58,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
   }, [contentId, loadVersions])
 
   const handleRestore = async (version: Version) => {
-    if (!confirm(`Restore to version ${version.versionNumber}? This will overwrite the current content.`)) {
+    if (!confirm(t('versionHistory.restoreConfirm', { version: version.versionNumber }))) {
       return
     }
 
@@ -69,26 +71,26 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
         }
       )
 
-      showToast('Version restored successfully!', 'success')
+      showToast(t('versionHistory.restoreSuccess'), 'success')
       onRestore?.()
     } catch (error) {
-      showToast('Failed to restore version', 'error')
+      showToast(t('versionHistory.restoreFailed'), 'error')
     }
   }
 
   if (loading) {
-    return <LoadingSpinner size="sm" text="Loading version history..." />
+    return <LoadingSpinner size="sm" text={t('versionHistory.loading')} />
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
         <History size={20} className="text-purple-600" />
-        <h3 className="text-lg font-semibold">Version History</h3>
+        <h3 className="text-lg font-semibold">{t('versionHistory.title')}</h3>
       </div>
 
       {versions.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No version history available</p>
+        <p className="text-gray-500 text-center py-8">{t('versionHistory.empty')}</p>
       ) : (
         <div className="space-y-3">
           {versions.map((version) => (
@@ -98,12 +100,12 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="font-semibold">Version {version.versionNumber}</p>
+                  <p className="font-semibold">{t('versionHistory.version', { number: version.versionNumber })}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {new Date(version.createdAt).toLocaleString()}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    by {version.changedBy.name}
+                    {t('versionHistory.by', { name: version.changedBy.name })}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -111,7 +113,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
                     type="button"
                     onClick={() => setSelectedVersion(version)}
                     className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg"
-                    title="View version"
+                    title={t('versionHistory.viewVersion')}
                   >
                     <Eye size={18} />
                   </button>
@@ -120,7 +122,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
                       type="button"
                       onClick={() => handleRestore(version)}
                       className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg"
-                      title="Restore version"
+                      title={t('versionHistory.restoreVersion')}
                     >
                       <RotateCcw size={18} />
                     </button>
@@ -142,7 +144,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">
-                Version {selectedVersion.versionNumber}
+                {t('versionHistory.version', { number: selectedVersion.versionNumber })}
               </h3>
               <button
                 type="button"

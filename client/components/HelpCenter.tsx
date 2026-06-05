@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Search, BookOpen, MessageCircle, HelpCircle, ChevronRight } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface HelpArticle {
   _id: string
@@ -19,6 +20,7 @@ interface Category {
 }
 
 export default function HelpCenter() {
+  const { t } = useTranslation()
   const [articles, setArticles] = useState<HelpArticle[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -73,10 +75,10 @@ export default function HelpCenter() {
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-          Help Center
+          {t('helpCenter.title')}
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Find answers and get support
+          {t('helpCenter.subtitle')}
         </p>
       </div>
 
@@ -87,7 +89,7 @@ export default function HelpCenter() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search for help..."
+          placeholder={t('helpCenter.searchPlaceholder')}
           className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
       </div>
@@ -103,7 +105,7 @@ export default function HelpCenter() {
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
         >
-          All
+          {t('helpCenter.all')}
         </button>
         {categories.map((cat) => (
           <button
@@ -129,7 +131,7 @@ export default function HelpCenter() {
       ) : articles.length === 0 ? (
         <div className="text-center py-8">
           <HelpCircle className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600 dark:text-gray-400">No articles found</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('helpCenter.noArticlesFound')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -151,8 +153,8 @@ export default function HelpCenter() {
                 <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
               </div>
               <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
-                <span>{article.views} views</span>
-                <span>{article.helpful} helpful</span>
+                <span>{t('helpCenter.viewsCount', { count: article.views })}</span>
+                <span>{t('helpCenter.helpfulCount', { count: article.helpful })}</span>
               </div>
             </a>
           ))}
@@ -164,17 +166,17 @@ export default function HelpCenter() {
         <div className="flex items-center gap-3 mb-4">
           <MessageCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">
-            Still need help?
+            {t('helpCenter.stillNeedHelp')}
           </h2>
         </div>
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          Can&apos;t find what you&apos;re looking for? Contact our support team.
+          {t('helpCenter.supportPrompt')}
         </p>
         <a
           href="/help/support"
           className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
-          Contact Support
+          {t('helpCenter.contactSupport')}
         </a>
       </div>
     </div>

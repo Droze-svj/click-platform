@@ -10,6 +10,7 @@ import {
   Spline as SplineIcon,
   Activity
 } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Keyframe {
   id: string
@@ -27,6 +28,7 @@ interface KeyframeEditorProps {
 }
 
 export default function KeyframeEditor({ clipId, property, keyframes, onUpdate, duration }: KeyframeEditorProps) {
+  const { t } = useTranslation()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -54,12 +56,12 @@ export default function KeyframeEditor({ clipId, property, keyframes, onUpdate, 
             <SplineIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">Curve Editor: {property}</p>
-            <p className="text-[10px] text-gray-500 uppercase font-bold opacity-60">Manual override active</p>
+            <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">{t('keyframeEditor.curveEditor', { property })}</p>
+            <p className="text-[10px] text-gray-500 uppercase font-bold opacity-60">{t('keyframeEditor.manualOverrideActive')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 transition-colors">
+          <button aria-label={t('keyframeEditor.settings')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 transition-colors">
             <Settings2 className="w-4 h-4" />
           </button>
         </div>
@@ -118,7 +120,7 @@ export default function KeyframeEditor({ clipId, property, keyframes, onUpdate, 
 
         <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
           <Activity className="w-3 h-3 text-blue-400" />
-          <span className="text-[10px] font-black text-white uppercase tracking-widest">Double-click to add point</span>
+          <span className="text-[10px] font-black text-white uppercase tracking-widest">{t('keyframeEditor.doubleClickToAddPoint')}</span>
         </div>
       </div>
     </div>

@@ -43,6 +43,7 @@ import {
 } from 'lucide-react'
 import AudioWaveformGenerator from './AudioWaveformGenerator'
 import ClipPropertiesPanel from './ClipPropertiesPanel'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface TimelineClip {
   id: string
@@ -133,6 +134,7 @@ export default function ProfessionalTimeline({
   videoUrl,
   className = ''
 }: ProfessionalTimelineProps) {
+  const { t } = useTranslation()
   const timelineRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
   const [scrollLeft, setScrollLeft] = useState(0)
@@ -474,7 +476,7 @@ export default function ProfessionalTimeline({
             id: `marker-${Date.now()}`,
             time: currentTime,
             color: '#FFD700',
-            label: `Marker ${prev.length + 1}`
+            label: t('professionalTimeline.markerLabel', { number: prev.length + 1 })
           }])
           break
         case 's':
@@ -624,7 +626,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={onPlayPause}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
-            title="Play/Pause (Space)"
+            title={t('professionalTimeline.playPause')}
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
@@ -632,7 +634,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => onTimeUpdate(Math.max(0, snapTime(currentTime - (1 / FRAMES_PER_SECOND))))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
-            title="Step Back (←)"
+            title={t('professionalTimeline.stepBack')}
           >
             <SkipBack className="w-4 h-4" />
           </button>
@@ -640,7 +642,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => onTimeUpdate(Math.min(duration, snapTime(currentTime + (1 / FRAMES_PER_SECOND))))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
-            title="Step Forward (→)"
+            title={t('professionalTimeline.stepForward')}
           >
             <SkipForward className="w-4 h-4" />
           </button>
@@ -651,7 +653,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => setShowVersionHistory(!showVersionHistory)}
             className={`p-2 rounded transition-colors ${showVersionHistory ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}
-            title="Project History"
+            title={t('professionalTimeline.projectHistory')}
           >
             <Clock className="w-4 h-4" />
           </button>
@@ -663,7 +665,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => setSelectedTool('select')}
             className={`p-2 rounded transition-colors ${selectedTool === 'select' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
-            title="Selection Tool (V)"
+            title={t('professionalTimeline.selectionTool')}
           >
             <MousePointer2 className="w-4 h-4" />
           </button>
@@ -671,7 +673,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => setSelectedTool('razor')}
             className={`p-2 rounded transition-colors ${selectedTool === 'razor' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
-            title="Razor Tool (S)"
+            title={t('professionalTimeline.razorTool')}
           >
             <Scissors className="w-4 h-4" />
           </button>
@@ -682,14 +684,14 @@ export default function ProfessionalTimeline({
           <select
             value={editMode}
             onChange={(e) => setEditMode(e.target.value as EditMode)}
-            aria-label="Edit mode"
-            title="Edit mode"
+            aria-label={t('professionalTimeline.editMode')}
+            title={t('professionalTimeline.editMode')}
             className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm"
           >
-            <option value="normal">Normal</option>
-            <option value="ripple">Ripple</option>
-            <option value="roll">Roll</option>
-            <option value="slip">Slip</option>
+            <option value="normal">{t('professionalTimeline.modeNormal')}</option>
+            <option value="ripple">{t('professionalTimeline.modeRipple')}</option>
+            <option value="roll">{t('professionalTimeline.modeRoll')}</option>
+            <option value="slip">{t('professionalTimeline.modeSlip')}</option>
           </select>
 
           <div className="w-px h-6 bg-gray-600 mx-2" />
@@ -699,17 +701,17 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => setInPoint(currentTime)}
             className={`p-2 rounded transition-colors ${inPoint !== null ? 'bg-green-600' : 'hover:bg-gray-700'}`}
-            title="Set In Point (I)"
+            title={t('professionalTimeline.setInPoint')}
           >
-            I
+            {t('professionalTimeline.inAbbr')}
           </button>
           <button
             type="button"
             onClick={() => setOutPoint(currentTime)}
             className={`p-2 rounded transition-colors ${outPoint !== null ? 'bg-red-600' : 'hover:bg-gray-700'}`}
-            title="Set Out Point (O)"
+            title={t('professionalTimeline.setOutPoint')}
           >
-            O
+            {t('professionalTimeline.outAbbr')}
           </button>
           {(inPoint !== null || outPoint !== null) && (
             <button
@@ -719,9 +721,9 @@ export default function ProfessionalTimeline({
                 setOutPoint(null)
               }}
               className="p-2 hover:bg-gray-700 rounded transition-colors text-xs"
-              title="Clear In/Out"
+              title={t('professionalTimeline.clearInOut')}
             >
-              Clear
+              {t('professionalTimeline.clear')}
             </button>
           )}
 
@@ -732,7 +734,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => setZoom(prev => Math.max(MIN_ZOOM, prev / 1.5))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
-            title="Zoom Out"
+            title={t('professionalTimeline.zoomOut')}
           >
             <ZoomOut className="w-4 h-4" />
           </button>
@@ -743,7 +745,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => setZoom(prev => Math.min(MAX_ZOOM, prev * 1.5))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
-            title="Zoom In"
+            title={t('professionalTimeline.zoomIn')}
           >
             <ZoomIn className="w-4 h-4" />
           </button>
@@ -754,7 +756,7 @@ export default function ProfessionalTimeline({
             type="button"
             onClick={() => setSnapToGrid(!snapToGrid)}
             className={`p-2 rounded transition-colors ${snapToGrid ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
-            title="Snap to Grid"
+            title={t('professionalTimeline.snapToGrid')}
           >
             <Radio className="w-4 h-4" />
           </button>
@@ -808,7 +810,7 @@ export default function ProfessionalTimeline({
               className="absolute top-0 bottom-0 w-0.5 bg-green-500 z-10"
               style={{ left: timeToPixels(inPoint) }}
             >
-              <div className="absolute -top-6 left-0 text-xs text-green-400 font-bold">IN</div>
+              <div className="absolute -top-6 left-0 text-xs text-green-400 font-bold">{t('professionalTimeline.inAbbr')}</div>
             </div>
           )}
           {outPoint !== null && (
@@ -816,7 +818,7 @@ export default function ProfessionalTimeline({
               className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10"
               style={{ left: timeToPixels(outPoint) }}
             >
-              <div className="absolute -top-6 left-0 text-xs text-red-400 font-bold">OUT</div>
+              <div className="absolute -top-6 left-0 text-xs text-red-400 font-bold">{t('professionalTimeline.outAbbr')}</div>
             </div>
           )}
 
@@ -843,7 +845,7 @@ export default function ProfessionalTimeline({
             >
               <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 hidden group-hover:block z-50">
                 <div className="bg-gray-900 border border-emerald-500 p-2 rounded-lg shadow-2xl min-w-[150px]">
-                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">AI Suggestion: {suggestion.type}</p>
+                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">{t('professionalTimeline.aiSuggestion', { type: suggestion.type })}</p>
                   <p className="text-xs text-white leading-tight mb-2">{suggestion.description}</p>
                   <button
                     type="button"
@@ -853,7 +855,7 @@ export default function ProfessionalTimeline({
                     }}
                     className="w-full py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] rounded font-semibold transition-colors"
                   >
-                    Apply Edit
+                    {t('professionalTimeline.applyEdit')}
                   </button>
                 </div>
               </div>
@@ -911,7 +913,7 @@ export default function ProfessionalTimeline({
                         endTime: dropTime + (data.asset.duration || 5),
                         duration: data.asset.duration || 5,
                         type: data.asset.type === 'music' ? 'audio' : data.asset.type === 'image' ? 'image' : 'video',
-                        name: data.asset.title || 'New Asset',
+                        name: data.asset.title || t('professionalTimeline.newAsset'),
                         color: data.asset.type === 'music' ? '#8B5CF6' : data.asset.type === 'image' ? '#10B981' : '#3B82F6',
                         track: track.id,
                         sourceStartTime: 0,
@@ -946,7 +948,7 @@ export default function ProfessionalTimeline({
                             }
                           }}
                           className="p-1 hover:bg-gray-700 rounded transition-colors"
-                          title={isLocked ? 'Unlock Track' : 'Lock Track'}
+                          title={isLocked ? t('professionalTimeline.unlockTrack') : t('professionalTimeline.lockTrack')}
                         >
                           {isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </button>
@@ -964,7 +966,7 @@ export default function ProfessionalTimeline({
                             }
                           }}
                           className="p-1 hover:bg-gray-700 rounded transition-colors"
-                          title={isHidden ? 'Show Track' : 'Hide Track'}
+                          title={isHidden ? t('professionalTimeline.showTrack') : t('professionalTimeline.hideTrack')}
                         >
                           {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                         </button>
@@ -990,7 +992,7 @@ export default function ProfessionalTimeline({
                               }}
                               className={`p-1 rounded transition-colors ${soloTracks.has(track.id) ? 'bg-yellow-600' : 'hover:bg-gray-700'
                                 }`}
-                              title="Solo Track"
+                              title={t('professionalTimeline.soloTrack')}
                             >
                               <Headphones className="w-3 h-3" />
                             </button>
@@ -1014,7 +1016,7 @@ export default function ProfessionalTimeline({
                               }}
                               className={`p-1 rounded transition-colors ${mutedTracks.has(track.id) ? 'bg-red-600' : 'hover:bg-gray-700'
                                 }`}
-                              title="Mute Track"
+                              title={t('professionalTimeline.muteTrack')}
                             >
                               <VolumeX className="w-3 h-3" />
                             </button>
@@ -1044,7 +1046,7 @@ export default function ProfessionalTimeline({
                           }}
                           className="w-16 h-32 accent-blue-500"
                           style={{ writingMode: 'vertical-rl', direction: 'rtl' }}
-                          title={`Volume: ${trackVolumes[track.id] ?? 100}%`}
+                          title={t('professionalTimeline.volumeLabel', { volume: trackVolumes[track.id] ?? 100 })}
                         />
                         <span className="text-xs text-gray-500">{trackVolumes[track.id] ?? 100}%</span>
                       </div>
@@ -1165,7 +1167,7 @@ export default function ProfessionalTimeline({
                               })
                             }}
                             className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors z-20 shadow-lg"
-                            title="Delete Clip"
+                            title={t('professionalTimeline.deleteClip')}
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -1215,7 +1217,7 @@ export default function ProfessionalTimeline({
           <div className="border-t border-gray-700 bg-gray-800 p-4 max-h-64 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-sm font-semibold text-[var(--text-main)]">
-                Keyframe Editor - {clips.find(c => c.id === selectedClipForKeyframes)?.name}
+                {t('professionalTimeline.keyframeEditorFor', { name: clips.find(c => c.id === selectedClipForKeyframes)?.name ?? '' })}
               </h4>
               <button
                 type="button"
@@ -1228,7 +1230,7 @@ export default function ProfessionalTimeline({
             <div className="grid grid-cols-2 gap-4">
               {/* Opacity Keyframes */}
               <div className="bg-gray-900 rounded p-3">
-                <div className="text-xs font-semibold text-gray-300 mb-2">Opacity</div>
+                <div className="text-xs font-semibold text-gray-300 mb-2">{t('professionalTimeline.opacity')}</div>
                 <div className="space-y-2">
                   {clips.find(c => c.id === selectedClipForKeyframes)?.keyframes
                     ?.filter(kf => kf.property === 'opacity')
@@ -1240,8 +1242,8 @@ export default function ProfessionalTimeline({
                           min="0"
                           max="100"
                           value={kf.value}
-                          aria-label={`Opacity at ${kf.time.toFixed(2)} seconds`}
-                          title={`Opacity at ${kf.time.toFixed(2)} seconds`}
+                          aria-label={t('professionalTimeline.opacityAtSeconds', { time: kf.time.toFixed(2) })}
+                          title={t('professionalTimeline.opacityAtSeconds', { time: kf.time.toFixed(2) })}
                           onChange={(e) => {
                             const clip = clips.find(c => c.id === selectedClipForKeyframes)
                             if (clip) {
@@ -1276,14 +1278,14 @@ export default function ProfessionalTimeline({
                     }}
                     className="w-full px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors"
                   >
-                    + Add Opacity Keyframe
+                    {t('professionalTimeline.addOpacityKeyframe')}
                   </button>
                 </div>
               </div>
 
               {/* Volume Keyframes */}
               <div className="bg-gray-900 rounded p-3">
-                <div className="text-xs font-semibold text-gray-300 mb-2">Volume</div>
+                <div className="text-xs font-semibold text-gray-300 mb-2">{t('professionalTimeline.volume')}</div>
                 <div className="space-y-2">
                   {clips.find(c => c.id === selectedClipForKeyframes)?.keyframes
                     ?.filter(kf => kf.property === 'volume')
@@ -1295,8 +1297,8 @@ export default function ProfessionalTimeline({
                           min="0"
                           max="100"
                           value={kf.value}
-                          aria-label={`Volume at ${kf.time.toFixed(2)} seconds`}
-                          title={`Volume at ${kf.time.toFixed(2)} seconds`}
+                          aria-label={t('professionalTimeline.volumeAtSeconds', { time: kf.time.toFixed(2) })}
+                          title={t('professionalTimeline.volumeAtSeconds', { time: kf.time.toFixed(2) })}
                           onChange={(e) => {
                             const clip = clips.find(c => c.id === selectedClipForKeyframes)
                             if (clip) {
@@ -1331,7 +1333,7 @@ export default function ProfessionalTimeline({
                     }}
                     className="w-full px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors"
                   >
-                    + Add Volume Keyframe
+                    {t('professionalTimeline.addVolumeKeyframe')}
                   </button>
                 </div>
               </div>
@@ -1343,22 +1345,22 @@ export default function ProfessionalTimeline({
       {/* Timeline Footer */}
       <div className="p-2 border-t border-gray-700 bg-gray-800 flex items-center justify-between text-xs flex-shrink-0">
         <div className="flex items-center gap-4 text-gray-400">
-          <span>Clips: {clips.length}</span>
-          <span>Tracks: {tracks.length}</span>
-          {inPoint !== null && <span className="text-green-400">IN: {formatTime(inPoint)}</span>}
-          {outPoint !== null && <span className="text-red-400">OUT: {formatTime(outPoint)}</span>}
-          <span>Mode: {editMode}</span>
-          {soloTracks.size > 0 && <span className="text-yellow-400">Solo: {soloTracks.size}</span>}
-          {mutedTracks.size > 0 && <span className="text-red-400">Muted: {mutedTracks.size}</span>}
+          <span>{t('professionalTimeline.clipsCount', { count: clips.length })}</span>
+          <span>{t('professionalTimeline.tracksCount', { count: tracks.length })}</span>
+          {inPoint !== null && <span className="text-green-400">{t('professionalTimeline.inTime', { time: formatTime(inPoint) })}</span>}
+          {outPoint !== null && <span className="text-red-400">{t('professionalTimeline.outTime', { time: formatTime(outPoint) })}</span>}
+          <span>{t('professionalTimeline.modeLabel', { mode: editMode })}</span>
+          {soloTracks.size > 0 && <span className="text-yellow-400">{t('professionalTimeline.soloCount', { count: soloTracks.size })}</span>}
+          {mutedTracks.size > 0 && <span className="text-red-400">{t('professionalTimeline.mutedCount', { count: mutedTracks.size })}</span>}
         </div>
         <div className="flex items-center gap-2">
           <button className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
             <Save className="w-4 h-4 inline mr-1" />
-            Save
+            {t('professionalTimeline.save')}
           </button>
           <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors">
             <Download className="w-4 h-4 inline mr-1" />
-            Export
+            {t('professionalTimeline.export')}
           </button>
         </div>
       </div>

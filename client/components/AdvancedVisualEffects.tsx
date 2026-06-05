@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { EffectsIcon } from './icons/VideoIcons'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ParticleSystem {
   id: string
@@ -114,6 +115,7 @@ export default function AdvancedVisualEffects({
   )
   const [previewMode, setPreviewMode] = useState(false)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   // Track previous effects to prevent unnecessary updates
   const prevEffectsRef = useRef<{
@@ -184,7 +186,7 @@ export default function AdvancedVisualEffects({
     }
 
     setParticleSystems(prev => [...prev, newSystem])
-    showToast(`Added ${type} particle system`, 'success')
+    showToast(t('advancedVisualEffects.addedParticleSystem', { type }), 'success')
   }, [showToast])
 
   const addLensFlare = useCallback(() => {
@@ -205,7 +207,7 @@ export default function AdvancedVisualEffects({
     }
 
     setLensFlares(prev => [...prev, newFlare])
-    showToast('Added lens flare effect', 'success')
+    showToast(t('advancedVisualEffects.addedLensFlare'), 'success')
   }, [showToast])
 
   const addLightEffect = useCallback((type: LightEffect['type']) => {
@@ -225,7 +227,7 @@ export default function AdvancedVisualEffects({
     }
 
     setLightEffects(prev => [...prev, newLight])
-    showToast(`Added ${type} light effect`, 'success')
+    showToast(t('advancedVisualEffects.addedLightEffect', { type }), 'success')
   }, [showToast])
 
   const addMotionEffect = useCallback((type: MotionEffect['type']) => {
@@ -240,7 +242,7 @@ export default function AdvancedVisualEffects({
     }
 
     setMotionEffects(prev => [...prev, newMotion])
-    showToast(`Added ${type} motion effect`, 'success')
+    showToast(t('advancedVisualEffects.addedMotionEffect', { type }), 'success')
   }, [showToast])
 
   const removeEffect = useCallback((type: 'particles' | 'lights' | 'lenses' | 'motion', id: string) => {
@@ -258,7 +260,7 @@ export default function AdvancedVisualEffects({
         setMotionEffects(prev => prev.filter(motion => motion.id !== id))
         break
     }
-    showToast('Effect removed', 'success')
+    showToast(t('advancedVisualEffects.effectRemoved'), 'success')
   }, [showToast])
 
   const toggleEffect = useCallback((type: 'particles' | 'lights' | 'lenses' | 'motion', id: string) => {
@@ -315,14 +317,14 @@ export default function AdvancedVisualEffects({
     setLensFlares([])
     setLightEffects([])
     setMotionEffects([])
-    showToast('All effects reset', 'info')
+    showToast(t('advancedVisualEffects.allEffectsReset'), 'info')
   }, [showToast])
 
   const tabs = [
-    { id: 'particles', label: 'Particles', icon: Sparkles, count: particleSystems.length },
-    { id: 'lights', label: 'Lights', icon: Sun, count: lightEffects.length },
-    { id: 'lenses', label: 'Lens Flares', icon: Circle, count: lensFlares.length },
-    { id: 'motion', label: 'Motion', icon: EffectsIcon, count: motionEffects.length }
+    { id: 'particles', label: t('advancedVisualEffects.tabParticles'), icon: Sparkles, count: particleSystems.length },
+    { id: 'lights', label: t('advancedVisualEffects.tabLights'), icon: Sun, count: lightEffects.length },
+    { id: 'lenses', label: t('advancedVisualEffects.tabLensFlares'), icon: Circle, count: lensFlares.length },
+    { id: 'motion', label: t('advancedVisualEffects.tabMotion'), icon: EffectsIcon, count: motionEffects.length }
   ]
 
   return (
@@ -333,10 +335,10 @@ export default function AdvancedVisualEffects({
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
-              Advanced Visual Effects
+              {t('advancedVisualEffects.title')}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Cinematic particle systems, lighting effects, and motion graphics
+              {t('advancedVisualEffects.subtitle')}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -355,7 +357,7 @@ export default function AdvancedVisualEffects({
               type="button"
               onClick={resetAllEffects}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
-              title="Reset all effects"
+              title={t('advancedVisualEffects.resetAllEffects')}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -396,7 +398,7 @@ export default function AdvancedVisualEffects({
           <div className="space-y-6">
             {/* Preset Particle Systems */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Particle Presets</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('advancedVisualEffects.particlePresets')}</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
                   { type: 'fire' as const, icon: Flame, color: 'from-red-500 to-orange-500' },
@@ -426,7 +428,7 @@ export default function AdvancedVisualEffects({
 
             {/* Active Particle Systems */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('advancedVisualEffects.activeEffects')}</h4>
               <div className="space-y-3">
                 {particleSystems.map(system => (
                   <div key={system.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -460,7 +462,7 @@ export default function AdvancedVisualEffects({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Particles: {system.particleCount}
+                          {t('advancedVisualEffects.particlesLabel', { count: system.particleCount })}
                         </label>
                         <input
                           type="range"
@@ -476,7 +478,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Speed: {system.speed.max}
+                          {t('advancedVisualEffects.speedLabel', { value: system.speed.max })}
                         </label>
                         <input
                           type="range"
@@ -493,7 +495,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Opacity: {Math.round(system.opacity * 100)}%
+                          {t('advancedVisualEffects.opacityLabel', { value: Math.round(system.opacity * 100) })}
                         </label>
                         <input
                           type="range"
@@ -510,7 +512,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Color
+                          {t('advancedVisualEffects.colorLabel')}
                         </label>
                         <input
                           type="color"
@@ -528,8 +530,8 @@ export default function AdvancedVisualEffects({
                 {particleSystems.length === 0 && (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No particle effects added yet</p>
-                    <p className="text-sm">Choose a preset above to get started</p>
+                    <p>{t('advancedVisualEffects.noParticlesYet')}</p>
+                    <p className="text-sm">{t('advancedVisualEffects.noParticlesHint')}</p>
                   </div>
                 )}
               </div>
@@ -541,13 +543,13 @@ export default function AdvancedVisualEffects({
           <div className="space-y-6">
             {/* Light Effect Types */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Light Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('advancedVisualEffects.lightEffects')}</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
-                  { type: 'god-rays' as const, name: 'God Rays', color: 'from-yellow-400 to-orange-500' },
-                  { type: 'spotlight' as const, name: 'Spotlight', color: 'from-white to-gray-300' },
-                  { type: 'rim-light' as const, name: 'Rim Light', color: 'from-cyan-400 to-blue-500' },
-                  { type: 'ambient' as const, name: 'Ambient', color: 'from-purple-400 to-pink-500' }
+                  { type: 'god-rays' as const, name: t('advancedVisualEffects.lightGodRays'), color: 'from-yellow-400 to-orange-500' },
+                  { type: 'spotlight' as const, name: t('advancedVisualEffects.lightSpotlight'), color: 'from-white to-gray-300' },
+                  { type: 'rim-light' as const, name: t('advancedVisualEffects.lightRimLight'), color: 'from-cyan-400 to-blue-500' },
+                  { type: 'ambient' as const, name: t('advancedVisualEffects.lightAmbient'), color: 'from-purple-400 to-pink-500' }
                 ].map(lightType => (
                   <button
                     type="button"
@@ -564,7 +566,7 @@ export default function AdvancedVisualEffects({
 
             {/* Active Light Effects */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Lights</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('advancedVisualEffects.activeLights')}</h4>
               <div className="space-y-3">
                 {lightEffects.map(light => (
                   <div key={light.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -598,7 +600,7 @@ export default function AdvancedVisualEffects({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Intensity: {Math.round(light.intensity * 100)}%
+                          {t('advancedVisualEffects.intensityLabel', { value: Math.round(light.intensity * 100) })}
                         </label>
                         <input
                           type="range"
@@ -615,7 +617,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Color
+                          {t('advancedVisualEffects.colorLabel')}
                         </label>
                         <input
                           type="color"
@@ -629,7 +631,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Angle: {light.angle}°
+                          {t('advancedVisualEffects.angleLabel', { value: light.angle })}
                         </label>
                         <input
                           type="range"
@@ -645,7 +647,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Spread: {light.spread}°
+                          {t('advancedVisualEffects.spreadLabel', { value: light.spread })}
                         </label>
                         <input
                           type="range"
@@ -665,8 +667,8 @@ export default function AdvancedVisualEffects({
                 {lightEffects.length === 0 && (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <Sun className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No light effects added yet</p>
-                    <p className="text-sm">Choose a light type above to illuminate your video</p>
+                    <p>{t('advancedVisualEffects.noLightsYet')}</p>
+                    <p className="text-sm">{t('advancedVisualEffects.noLightsHint')}</p>
                   </div>
                 )}
               </div>
@@ -685,14 +687,14 @@ export default function AdvancedVisualEffects({
               >
                 <div className="flex items-center justify-center gap-2">
                   <Sun className="w-6 h-6" />
-                  <span className="font-medium">Add Lens Flare</span>
+                  <span className="font-medium">{t('advancedVisualEffects.addLensFlareButton')}</span>
                 </div>
               </button>
             </div>
 
             {/* Active Lens Flares */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Lens Flares</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('advancedVisualEffects.activeLensFlares')}</h4>
               <div className="space-y-3">
                 {lensFlares.map(flare => (
                   <div key={flare.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -711,7 +713,7 @@ export default function AdvancedVisualEffects({
                         </button>
                         <div>
                           <h5 className="font-medium text-gray-900 dark:text-white">{flare.name}</h5>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Lens flare effect</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedVisualEffects.lensFlareEffect')}</p>
                         </div>
                       </div>
                       <button
@@ -726,7 +728,7 @@ export default function AdvancedVisualEffects({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Intensity: {Math.round(flare.intensity * 100)}%
+                          {t('advancedVisualEffects.intensityLabel', { value: Math.round(flare.intensity * 100) })}
                         </label>
                         <input
                           type="range"
@@ -743,7 +745,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Color
+                          {t('advancedVisualEffects.colorLabel')}
                         </label>
                         <input
                           type="color"
@@ -757,7 +759,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Size: {flare.size}px
+                          {t('advancedVisualEffects.sizeLabel', { value: flare.size })}
                         </label>
                         <input
                           type="range"
@@ -773,7 +775,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Position X: {flare.position.x}%
+                          {t('advancedVisualEffects.positionXLabel', { value: flare.position.x })}
                         </label>
                         <input
                           type="range"
@@ -793,8 +795,8 @@ export default function AdvancedVisualEffects({
                 {lensFlares.length === 0 && (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <Sun className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No lens flares added yet</p>
-                    <p className="text-sm">Add a lens flare to create cinematic lighting effects</p>
+                    <p>{t('advancedVisualEffects.noLensFlaresYet')}</p>
+                    <p className="text-sm">{t('advancedVisualEffects.noLensFlaresHint')}</p>
                   </div>
                 )}
               </div>
@@ -806,13 +808,13 @@ export default function AdvancedVisualEffects({
           <div className="space-y-6">
             {/* Motion Effect Types */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Motion Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('advancedVisualEffects.motionEffects')}</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
-                  { type: 'blur' as const, name: 'Motion Blur', color: 'from-blue-500 to-cyan-500' },
-                  { type: 'ghost' as const, name: 'Ghost Echo', color: 'from-purple-500 to-pink-500' },
-                  { type: 'echo' as const, name: 'Time Echo', color: 'from-green-500 to-teal-500' },
-                  { type: 'strobe' as const, name: 'Strobe', color: 'from-red-500 to-orange-500' }
+                  { type: 'blur' as const, name: t('advancedVisualEffects.motionBlur'), color: 'from-blue-500 to-cyan-500' },
+                  { type: 'ghost' as const, name: t('advancedVisualEffects.motionGhostEcho'), color: 'from-purple-500 to-pink-500' },
+                  { type: 'echo' as const, name: t('advancedVisualEffects.motionTimeEcho'), color: 'from-green-500 to-teal-500' },
+                  { type: 'strobe' as const, name: t('advancedVisualEffects.motionStrobe'), color: 'from-red-500 to-orange-500' }
                 ].map(motionType => (
                   <button
                     type="button"
@@ -829,7 +831,7 @@ export default function AdvancedVisualEffects({
 
             {/* Active Motion Effects */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">{t('advancedVisualEffects.activeEffects')}</h4>
               <div className="space-y-3">
                 {motionEffects.map(motion => (
                   <div key={motion.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -863,7 +865,7 @@ export default function AdvancedVisualEffects({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Intensity: {Math.round(motion.intensity * 100)}%
+                          {t('advancedVisualEffects.intensityLabel', { value: Math.round(motion.intensity * 100) })}
                         </label>
                         <input
                           type="range"
@@ -880,7 +882,7 @@ export default function AdvancedVisualEffects({
 
                       <div>
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Duration: {motion.duration}ms
+                          {t('advancedVisualEffects.durationLabel', { value: motion.duration })}
                         </label>
                         <input
                           type="range"
@@ -898,7 +900,7 @@ export default function AdvancedVisualEffects({
                         <>
                           <div>
                             <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                              Frequency: {motion.frequency}Hz
+                              {t('advancedVisualEffects.frequencyLabel', { value: motion.frequency })}
                             </label>
                             <input
                               type="range"
@@ -920,8 +922,8 @@ export default function AdvancedVisualEffects({
                 {motionEffects.length === 0 && (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <Zap className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No motion effects added yet</p>
-                    <p className="text-sm">Choose a motion effect above to add dynamic movement</p>
+                    <p>{t('advancedVisualEffects.noMotionYet')}</p>
+                    <p className="text-sm">{t('advancedVisualEffects.noMotionHint')}</p>
                   </div>
                 )}
               </div>

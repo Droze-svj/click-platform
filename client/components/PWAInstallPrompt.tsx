@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { X, Download, Smartphone, Zap, Wifi } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 // import { // trackPWAEvent } from '../utils/analytics'
 
 interface PWAInstallPromptProps {
@@ -13,6 +14,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   onInstall,
   onDismiss
 }) => {
+  const { t } = useTranslation()
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [dismissed, setDismissed] = useState(false)
@@ -124,7 +126,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
     // trackPWAEvent('install_manual_attempt', { userAgent: navigator.userAgent })
 
     // Show manual install instructions
-    alert(`To install Click:\n\n1. Tap the share button in your browser\n2. Select "Add to Home Screen"\n3. Tap "Add" to install\n\nThe app will appear on your home screen!`)
+    alert(t('pwaInstallPrompt.manualInstructions'))
   }
 
   if (!showPrompt || dismissed) return null
@@ -140,16 +142,17 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] text-sm">
-                Install Click
+                {t('pwaInstallPrompt.installClick')}
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Get the full app experience
+                {t('pwaInstallPrompt.fullAppExperience')}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleDismiss}
+            aria-label={t('pwaInstallPrompt.dismiss')}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <X className="w-4 h-4" />
@@ -160,15 +163,15 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
         <div className="space-y-2 mb-4">
           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
             <Zap className="w-3 h-3 text-green-500" />
-            <span>Faster loading & offline access</span>
+            <span>{t('pwaInstallPrompt.featureFasterLoading')}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
             <Wifi className="w-3 h-3 text-blue-500" />
-            <span>Works without internet</span>
+            <span>{t('pwaInstallPrompt.featureWorksOffline')}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
             <Smartphone className="w-3 h-3 text-purple-500" />
-            <span>Native app-like experience</span>
+            <span>{t('pwaInstallPrompt.featureNativeExperience')}</span>
           </div>
         </div>
 
@@ -183,12 +186,12 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             {installing ? (
               <>
                 <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-                Installing...
+                {t('pwaInstallPrompt.installing')}
               </>
             ) : (
               <>
                 <Download className="w-3 h-3" />
-                Install App
+                {t('pwaInstallPrompt.installApp')}
               </>
             )}
           </button>
@@ -199,14 +202,14 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
               onClick={handleManualInstall}
               className="px-3 py-2 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
             >
-              How to install
+              {t('pwaInstallPrompt.howToInstall')}
             </button>
           )}
         </div>
 
         {/* Footer */}
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">
-          No app store required • Free to install
+          {t('pwaInstallPrompt.noAppStore')}
         </p>
       </div>
     </div>

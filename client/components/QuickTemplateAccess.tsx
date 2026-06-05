@@ -5,6 +5,7 @@ import { FileText, Sparkles, TrendingUp, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
 import { apiGet, apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface Template {
   _id: string
@@ -17,6 +18,7 @@ interface Template {
 }
 
 export default function QuickTemplateAccess() {
+  const { t } = useTranslation()
   const [templates, setTemplates] = useState<Template[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
@@ -46,7 +48,7 @@ export default function QuickTemplateAccess() {
     try {
       const res = await apiPost<any>(`/templates/${template._id}/use`, undefined, { withCredentials: true })
       if (res?.success) {
-        showToast('Template loaded!', 'success')
+        showToast(t('quickTemplateAccess.templateLoaded'), 'success')
         
         // Navigate based on category
         if (template.category === 'social') {
@@ -58,7 +60,7 @@ export default function QuickTemplateAccess() {
         }
       }
     } catch (error) {
-      showToast('Failed to load template', 'error')
+      showToast(t('quickTemplateAccess.failedToLoadTemplate'), 'error')
     }
   }
 
@@ -96,7 +98,7 @@ export default function QuickTemplateAccess() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-            Popular Templates
+            {t('quickTemplateAccess.popularTemplates')}
           </h3>
         </div>
         <button
@@ -104,7 +106,7 @@ export default function QuickTemplateAccess() {
           onClick={() => router.push('/dashboard/templates')}
           className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
         >
-          View all →
+          {t('quickTemplateAccess.viewAll')}
         </button>
       </div>
 
@@ -133,7 +135,7 @@ export default function QuickTemplateAccess() {
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>⭐ {template.rating.toFixed(1)}</span>
               <span>•</span>
-              <span>{template.usageCount} uses</span>
+              <span>{t('quickTemplateAccess.uses', { count: template.usageCount })}</span>
             </div>
           </button>
         ))}

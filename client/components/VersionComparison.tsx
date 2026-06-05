@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface VersionComparisonProps {
   entityId: string
@@ -19,6 +20,7 @@ export default function VersionComparison({
   version2,
   onClose
 }: VersionComparisonProps) {
+  const { t } = useTranslation()
   const [comparison, setComparison] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [exportFormat, setExportFormat] = useState<'json' | 'html' | 'pdf'>('json')
@@ -83,14 +85,14 @@ export default function VersionComparison({
   }
 
   if (!comparison) {
-    return <div className="p-8 text-center text-gray-500">No comparison data available</div>
+    return <div className="p-8 text-center text-gray-500">{t('versionComparison.noComparisonData')}</div>
   }
 
   return (
     <div className="p-6">
       {onClose && (
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Version Comparison</h2>
+          <h2 className="text-2xl font-bold">{t('versionComparison.title')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -104,44 +106,44 @@ export default function VersionComparison({
       {/* Version Info */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600">Version {comparison.version1.number}</div>
+          <div className="text-sm text-gray-600">{t('versionComparison.version', { number: comparison.version1.number })}</div>
           <div className="font-semibold mt-1">
             {new Date(comparison.version1.createdAt).toLocaleString()}
           </div>
           <div className="text-sm text-gray-500 mt-1">
-            {comparison.version1.changeReason || 'No reason provided'}
+            {comparison.version1.changeReason || t('versionComparison.noReasonProvided')}
           </div>
         </div>
         <div className="bg-green-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600">Version {comparison.version2.number}</div>
+          <div className="text-sm text-gray-600">{t('versionComparison.version', { number: comparison.version2.number })}</div>
           <div className="font-semibold mt-1">
             {new Date(comparison.version2.createdAt).toLocaleString()}
           </div>
           <div className="text-sm text-gray-500 mt-1">
-            {comparison.version2.changeReason || 'No reason provided'}
+            {comparison.version2.changeReason || t('versionComparison.noReasonProvided')}
           </div>
         </div>
       </div>
 
       {/* Summary */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 className="font-semibold mb-2">Summary</h3>
+        <h3 className="font-semibold mb-2">{t('versionComparison.summary')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-sm text-gray-600">Total Changes</div>
+            <div className="text-sm text-gray-600">{t('versionComparison.totalChanges')}</div>
             <div className="text-xl font-bold">{comparison.summary.totalChanges}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">Text Changed</div>
-            <div className="text-xl font-bold">{comparison.summary.textChanged ? 'Yes' : 'No'}</div>
+            <div className="text-sm text-gray-600">{t('versionComparison.textChanged')}</div>
+            <div className="text-xl font-bold">{comparison.summary.textChanged ? t('versionComparison.yes') : t('versionComparison.no')}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">Hashtags Changed</div>
-            <div className="text-xl font-bold">{comparison.summary.hashtagsChanged ? 'Yes' : 'No'}</div>
+            <div className="text-sm text-gray-600">{t('versionComparison.hashtagsChanged')}</div>
+            <div className="text-xl font-bold">{comparison.summary.hashtagsChanged ? t('versionComparison.yes') : t('versionComparison.no')}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">Media Changed</div>
-            <div className="text-xl font-bold">{comparison.summary.mediaChanged ? 'Yes' : 'No'}</div>
+            <div className="text-sm text-gray-600">{t('versionComparison.mediaChanged')}</div>
+            <div className="text-xl font-bold">{comparison.summary.mediaChanged ? t('versionComparison.yes') : t('versionComparison.no')}</div>
           </div>
         </div>
       </div>
@@ -149,16 +151,16 @@ export default function VersionComparison({
       {/* Side-by-Side Text Comparison */}
       {comparison.differences.text.changed && (
         <div className="mb-6">
-          <h3 className="font-semibold mb-4">Text Differences</h3>
+          <h3 className="font-semibold mb-4">{t('versionComparison.textDifferences')}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-red-50 rounded-lg p-4">
-              <div className="text-sm font-semibold mb-2 text-red-800">Version {comparison.version1.number} (Old)</div>
+              <div className="text-sm font-semibold mb-2 text-red-800">{t('versionComparison.versionOld', { number: comparison.version1.number })}</div>
               <pre className="text-sm whitespace-pre-wrap bg-white p-3 rounded border border-red-200">
                 {comparison.differences.text.oldValue}
               </pre>
             </div>
             <div className="bg-green-50 rounded-lg p-4">
-              <div className="text-sm font-semibold mb-2 text-green-800">Version {comparison.version2.number} (New)</div>
+              <div className="text-sm font-semibold mb-2 text-green-800">{t('versionComparison.versionNew', { number: comparison.version2.number })}</div>
               <pre className="text-sm whitespace-pre-wrap bg-white p-3 rounded border border-green-200">
                 {comparison.differences.text.newValue}
               </pre>
@@ -170,11 +172,11 @@ export default function VersionComparison({
       {/* Hashtag Changes */}
       {comparison.differences.hashtags.added.length > 0 || comparison.differences.hashtags.removed.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-semibold mb-4">Hashtag Changes</h3>
+          <h3 className="font-semibold mb-4">{t('versionComparison.hashtagChanges')}</h3>
           <div className="grid grid-cols-2 gap-4">
             {comparison.differences.hashtags.removed.length > 0 && (
               <div>
-                <div className="text-sm font-semibold mb-2 text-red-800">Removed</div>
+                <div className="text-sm font-semibold mb-2 text-red-800">{t('versionComparison.removed')}</div>
                 <div className="flex flex-wrap gap-2">
                   {comparison.differences.hashtags.removed.map((tag: string, i: number) => (
                     <span key={i} className="px-2 py-1 bg-red-100 text-red-800 rounded text-sm">
@@ -186,7 +188,7 @@ export default function VersionComparison({
             )}
             {comparison.differences.hashtags.added.length > 0 && (
               <div>
-                <div className="text-sm font-semibold mb-2 text-green-800">Added</div>
+                <div className="text-sm font-semibold mb-2 text-green-800">{t('versionComparison.added')}</div>
                 <div className="flex flex-wrap gap-2">
                   {comparison.differences.hashtags.added.map((tag: string, i: number) => (
                     <span key={i} className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
@@ -202,7 +204,7 @@ export default function VersionComparison({
 
       {/* Export Options */}
       <div className="bg-white rounded-lg shadow p-4">
-        <h3 className="font-semibold mb-4">Export for Legal/Compliance</h3>
+        <h3 className="font-semibold mb-4">{t('versionComparison.exportForCompliance')}</h3>
         <div className="flex gap-4 items-center">
           <select
             value={exportFormat}
@@ -218,7 +220,7 @@ export default function VersionComparison({
             onClick={handleExport}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Export
+            {t('versionComparison.export')}
           </button>
         </div>
       </div>

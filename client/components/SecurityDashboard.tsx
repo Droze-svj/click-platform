@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Shield, AlertTriangle, CheckCircle2, XCircle, BarChart3 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface SecurityStats {
   totalEvents: number
@@ -25,6 +26,7 @@ export default function SecurityDashboard() {
   const [events, setEvents] = useState<SecurityEvent[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   useEffect(() => {
     loadStats()
@@ -87,28 +89,28 @@ export default function SecurityDashboard() {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
               <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Events</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('securityDashboard.totalEvents')}</p>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalEvents}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Critical</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('securityDashboard.critical')}</p>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.criticalEvents}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
               <XCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Failed Logins</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('securityDashboard.failedLogins')}</p>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.failedLogins}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Suspicious</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('securityDashboard.suspicious')}</p>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.suspiciousActivities}</p>
           </div>
@@ -118,16 +120,16 @@ export default function SecurityDashboard() {
       {/* Recent Events */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
         <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
-          Recent Security Events
+          {t('securityDashboard.recentSecurityEvents')}
         </h3>
         {isLoading ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Loading events...</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('securityDashboard.loadingEvents')}</p>
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-8">
             <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">No security events</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('securityDashboard.noSecurityEvents')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -146,7 +148,7 @@ export default function SecurityDashboard() {
                     </p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded ${getSeverityColor(event.severity)}`}>
-                    {event.severity}
+                    {t(`securityDashboard.severity.${event.severity}`)}
                   </span>
                 </div>
               </div>

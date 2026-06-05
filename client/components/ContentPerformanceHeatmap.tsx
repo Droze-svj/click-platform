@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar, TrendingUp } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -17,6 +18,7 @@ export default function ContentPerformanceHeatmap() {
   const [heatmapData, setHeatmapData] = useState<HeatmapData[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
+  const { t } = useTranslation()
 
   const loadHeatmapData = useCallback(async () => {
     setLoading(true)
@@ -97,7 +99,7 @@ export default function ContentPerformanceHeatmap() {
         <div className="flex items-center gap-2">
           <Calendar className="w-6 h-6 text-blue-600" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-            Performance Heatmap
+            {t('contentPerformanceHeatmap.title')}
           </h3>
         </div>
         <div className="flex gap-2">
@@ -112,7 +114,7 @@ export default function ContentPerformanceHeatmap() {
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
-              {period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
+              {period === '7d' ? t('contentPerformanceHeatmap.period_7d') : period === '30d' ? t('contentPerformanceHeatmap.period_30d') : t('contentPerformanceHeatmap.period_90d')}
             </button>
           ))}
         </div>
@@ -151,7 +153,7 @@ export default function ContentPerformanceHeatmap() {
                       <div
                         key={`${date}-${hour}`}
                         className={`h-6 rounded ${getColor(intensity)} cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all`}
-                        title={`${date} ${hour}:00 - Engagement: ${data?.engagement || 0}, Posts: ${data?.posts || 0}`}
+                        title={t('contentPerformanceHeatmap.cellTooltip', { date, hour, engagement: data?.engagement || 0, posts: data?.posts || 0 })}
                       />
                     )
                   })}
@@ -165,7 +167,7 @@ export default function ContentPerformanceHeatmap() {
       {/* Legend */}
       <div className="mt-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Less</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{t('contentPerformanceHeatmap.less')}</span>
           <div className="flex gap-1">
             <div className="w-4 h-4 bg-gray-100 dark:bg-gray-800 rounded"></div>
             <div className="w-4 h-4 bg-blue-200 dark:bg-blue-900 rounded"></div>
@@ -173,11 +175,11 @@ export default function ContentPerformanceHeatmap() {
             <div className="w-4 h-4 bg-blue-600 dark:bg-blue-500 rounded"></div>
             <div className="w-4 h-4 bg-blue-800 dark:bg-blue-400 rounded"></div>
           </div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">More</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{t('contentPerformanceHeatmap.more')}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <TrendingUp className="w-4 h-4" />
-          <span>Hover to see engagement data</span>
+          <span>{t('contentPerformanceHeatmap.hoverHint')}</span>
         </div>
       </div>
     </div>

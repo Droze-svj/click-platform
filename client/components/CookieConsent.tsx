@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * Minimal, GDPR/ePrivacy-aware cookie consent banner.
@@ -22,6 +23,7 @@ const STORAGE_KEY = 'click.cookieConsent.v1'
 type Choice = 'accepted' | 'rejected' | null
 
 export function CookieConsent() {
+  const { t } = useTranslation()
   const [choice, setChoice] = useState<Choice>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -60,18 +62,16 @@ export function CookieConsent() {
   return (
     <div
       role="dialog"
-      aria-label="Cookie consent"
+      aria-label={t('cookieConsent.dialogLabel')}
       aria-describedby="cookie-consent-body"
       className="fixed inset-x-3 bottom-3 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-[100] bg-surface-card border-2 border-surface-100 dark:border-white/10 rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.4)] backdrop-blur-xl p-6 sm:p-7"
     >
-      <h2 className="text-sm font-bold text-surface-900 dark:text-white mb-2">We use cookies</h2>
+      <h2 className="text-sm font-bold text-surface-900 dark:text-white mb-2">{t('cookieConsent.heading')}</h2>
       <p id="cookie-consent-body" className="text-xs text-surface-500 dark:text-slate-400 leading-relaxed mb-5">
-        Click uses strictly-necessary cookies to keep you signed in and the product working.
-        With your consent we also use optional analytics cookies to understand how creators use
-        Click so we can improve it. You can change this any time in{' '}
-        <Link href="/dashboard/settings" className="text-primary-500 hover:underline">Settings</Link>.
-        See our{' '}
-        <Link href="/cookies" className="text-primary-500 hover:underline">Cookie Policy</Link>.
+        {t('cookieConsent.bodyIntro')}{' '}
+        <Link href="/dashboard/settings" className="text-primary-500 hover:underline">{t('cookieConsent.settingsLink')}</Link>.
+        {' '}{t('cookieConsent.bodySeeOur')}{' '}
+        <Link href="/cookies" className="text-primary-500 hover:underline">{t('cookieConsent.cookiePolicyLink')}</Link>.
       </p>
       <div className="flex flex-col sm:flex-row gap-2.5">
         <button
@@ -79,14 +79,14 @@ export function CookieConsent() {
           onClick={() => persist('rejected')}
           className="flex-1 px-4 py-2.5 rounded-xl border-2 border-surface-100 dark:border-white/10 bg-surface-page dark:bg-black/30 text-xs font-bold text-surface-700 dark:text-slate-300 hover:border-surface-200 dark:hover:border-white/20 transition-colors"
         >
-          Strictly necessary only
+          {t('cookieConsent.rejectButton')}
         </button>
         <button
           type="button"
           onClick={() => persist('accepted')}
           className="flex-1 px-4 py-2.5 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 transition-colors shadow-lg"
         >
-          Accept all
+          {t('cookieConsent.acceptButton')}
         </button>
       </div>
     </div>

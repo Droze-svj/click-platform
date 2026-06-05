@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Wifi, WifiOff } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function OfflineIndicator() {
+  const { t } = useTranslation()
   const [isOnline, setIsOnline] = useState(true)
   const [wasOffline, setWasOffline] = useState(false)
 
@@ -47,12 +49,12 @@ export default function OfflineIndicator() {
       {isOnline ? (
         <>
           <Wifi size={18} />
-          <span>Back online</span>
+          <span>{t('offlineIndicator.backOnline')}</span>
         </>
       ) : (
         <>
           <WifiOff size={18} />
-          <span>You&apos;re offline. Some features may be unavailable.</span>
+          <span>{t('offlineIndicator.offline')}</span>
         </>
       )}
     </div>

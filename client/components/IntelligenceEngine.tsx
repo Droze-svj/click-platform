@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Brain, Cpu, Zap, Activity, Shield, Sparkles, Network, Fingerprint, Quote, Lightbulb } from 'lucide-react'
 import { apiGet } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const IntelligenceEngine = () => {
+  const { t } = useTranslation()
   const [pulse, setPulse] = useState(0)
   const [activeNodes, setActiveNodes] = useState<number[]>([])
   const [insight, setInsight] = useState<{ quote: string, tip: string } | null>(null)
@@ -48,13 +50,13 @@ const IntelligenceEngine = () => {
             </div>
             <div className="flex flex-col items-center sm:items-start">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
-                <span className="px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em]">Neural Engine v4.0</span>
+                <span className="px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em]">{t('intelligenceEngine.neuralEngineVersion')}</span>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">RESONATING</span>
+                  <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">{t('intelligenceEngine.resonating')}</span>
                 </div>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-[var(--text-main)] tracking-tighter uppercase italic leading-none">Neural Command Center</h2>
+              <h2 className="text-3xl sm:text-4xl font-black text-[var(--text-main)] tracking-tighter uppercase italic leading-none">{t('intelligenceEngine.neuralCommandCenter')}</h2>
             </div>
           </div>
           
@@ -79,14 +81,14 @@ const IntelligenceEngine = () => {
                     <Lightbulb size={20} />
                   </div>
                   <p className="text-sm sm:text-base text-indigo-200 font-medium leading-relaxed">
-                    <span className="text-indigo-400 font-black uppercase text-[10px] tracking-widest block mb-1">Strategic Calibration</span>
+                    <span className="text-indigo-400 font-black uppercase text-[10px] tracking-widest block mb-1">{t('intelligenceEngine.strategicCalibration')}</span>
                     {insight.tip}
                   </p>
                 </div>
               </motion.div>
             ) : (
               <p className="text-base sm:text-lg text-[var(--text-dim)] font-medium leading-relaxed italic">
-                {loading ? 'Initializing neural scan...' : 'Autonomous multi-agent swarm analyzing content DNA. Synchronizing pattern-interrupts and viral heuristics across all mesh nodes.'}
+                {loading ? t('intelligenceEngine.initializing') : t('intelligenceEngine.analyzingDescription')}
               </p>
             )}
           </AnimatePresence>
@@ -97,8 +99,8 @@ const IntelligenceEngine = () => {
                    <Cpu size={20} />
                 </div>
                 <div className="text-left">
-                   <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest">Inference Load</p>
-                   <p className="text-sm font-black text-white italic">12.4 TFLOPS</p>
+                   <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest">{t('intelligenceEngine.inferenceLoad')}</p>
+                   <p className="text-sm font-black text-white italic">{t('intelligenceEngine.inferenceLoadValue')}</p>
                 </div>
              </div>
              <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center gap-4 group/node hover:bg-white/[0.05] transition-all">
@@ -106,8 +108,8 @@ const IntelligenceEngine = () => {
                    <Zap size={20} />
                 </div>
                 <div className="text-left">
-                   <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest">Latency Pulse</p>
-                   <p className="text-sm font-black text-white italic">8ms Synchronized</p>
+                   <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest">{t('intelligenceEngine.latencyPulse')}</p>
+                   <p className="text-sm font-black text-white italic">{t('intelligenceEngine.latencyPulseValue')}</p>
                 </div>
              </div>
           </div>
@@ -150,7 +152,7 @@ const IntelligenceEngine = () => {
                  <div className="absolute inset-0 rounded-full bg-indigo-500/10 animate-ping" style={{ animationDuration: '3s' }} />
                  <Fingerprint size={64} className="text-indigo-400 group-hover:scale-110 transition-transform duration-700" />
                  <div className="absolute -bottom-4 bg-indigo-500 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-[0.2em] shadow-glow-primary">
-                    CORE_ACTIVE
+                    {t('intelligenceEngine.coreActive')}
                  </div>
               </div>
 

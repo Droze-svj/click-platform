@@ -7,6 +7,7 @@ import { Server, Database, Cpu, HardDrive, AlertTriangle, CheckCircle } from 'lu
 import { Skeleton, CardSkeleton } from './LoadingSkeleton';
 // import { ErrorBoundary } from './ErrorBoundary'; // Temporarily disabled for build
 import { cn } from '../lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ResourceStatus {
   memory: {
@@ -28,6 +29,7 @@ interface ResourceStatus {
 }
 
 export default function InfrastructureDashboard() {
+  const { t } = useTranslation();
   const [resources, setResources] = useState<ResourceStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +79,7 @@ export default function InfrastructureDashboard() {
               "h-5 w-5",
               resources.cpu.usage > 80 ? "text-red-600" : "text-blue-600"
             )} />
-            CPU Usage
+            {t('infrastructureDashboard.cpuUsage')}
             {resources.cpu.usage > 80 ? (
               <AlertTriangle className="h-4 w-4 text-red-600 ml-auto" />
             ) : (
@@ -88,7 +90,7 @@ export default function InfrastructureDashboard() {
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Usage</span>
+              <span className="text-sm">{t('infrastructureDashboard.usage')}</span>
               <Badge variant={resources.cpu.usage > 80 ? 'destructive' : 'default'}>
                 {resources.cpu.usage.toFixed(1)}%
               </Badge>
@@ -103,7 +105,7 @@ export default function InfrastructureDashboard() {
                 style={{ width: `${Math.min(resources.cpu.usage, 100)}%` }}
               />
             </div>
-            <p className="text-xs text-muted-foreground">{resources.cpu.cores} cores</p>
+            <p className="text-xs text-muted-foreground">{t('infrastructureDashboard.cores', { count: resources.cpu.cores })}</p>
           </div>
         </CardContent>
       </Card>
@@ -118,7 +120,7 @@ export default function InfrastructureDashboard() {
               "h-5 w-5",
               resources.memory.percent > 80 ? "text-red-600" : "text-blue-600"
             )} />
-            Memory Usage
+            {t('infrastructureDashboard.memoryUsage')}
             {resources.memory.percent > 80 ? (
               <AlertTriangle className="h-4 w-4 text-red-600 ml-auto" />
             ) : (
@@ -129,7 +131,7 @@ export default function InfrastructureDashboard() {
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Usage</span>
+              <span className="text-sm">{t('infrastructureDashboard.usage')}</span>
               <Badge variant={resources.memory.percent > 80 ? 'destructive' : 'default'}>
                 {resources.memory.percent.toFixed(1)}%
               </Badge>
@@ -145,8 +147,10 @@ export default function InfrastructureDashboard() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {(resources.memory.used / 1024 / 1024 / 1024).toFixed(2)} GB /{' '}
-              {(resources.memory.total / 1024 / 1024 / 1024).toFixed(2)} GB
+              {t('infrastructureDashboard.memoryUsedTotal', {
+                used: (resources.memory.used / 1024 / 1024 / 1024).toFixed(2),
+                total: (resources.memory.total / 1024 / 1024 / 1024).toFixed(2),
+              })}
             </p>
           </div>
         </CardContent>
@@ -155,7 +159,7 @@ export default function InfrastructureDashboard() {
       {resources.alerts.length > 0 && (
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Alerts</CardTitle>
+            <CardTitle>{t('infrastructureDashboard.alerts')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

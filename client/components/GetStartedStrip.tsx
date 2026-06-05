@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { apiGet } from '../lib/api'
 import { X, ChevronRight } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const DISMISSED_KEY = 'get_started_strip_dismissed'
 
@@ -18,6 +19,7 @@ const stepRoutes: Record<string, string> = {
 }
 
 export default function GetStartedStrip() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [progress, setProgress] = useState<{
     totalSteps: number
@@ -90,7 +92,7 @@ export default function GetStartedStrip() {
           />
         </div>
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-          Get started: {completedSteps}/{totalSteps}
+          {t('getStartedStrip.getStarted', { completed: completedSteps, total: totalSteps })}
           {currentStepData?.title && (
             <span className="text-gray-500 dark:text-gray-400 font-normal"> — {currentStepData.title}</span>
           )}
@@ -102,14 +104,14 @@ export default function GetStartedStrip() {
           onClick={handleContinue}
           className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 rounded-lg transition"
         >
-          Continue
+          {t('getStartedStrip.continue')}
           <ChevronRight className="w-4 h-4" />
         </button>
         <button
          type="button"
           onClick={handleDismiss}
           className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg transition"
-          aria-label="Dismiss"
+          aria-label={t('getStartedStrip.dismiss')}
         >
           <X className="w-4 h-4" />
         </button>

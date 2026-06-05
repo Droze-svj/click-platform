@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Users, MessageSquare, Loader2 } from 'lucide-react'
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ActiveUser {
   userId: string
@@ -25,6 +26,7 @@ export default function RealtimeCollaboration({
   const [isJoining, setIsJoining] = useState(false)
   const socket = useSocket()
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const contentRef = useRef<string>('')
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function RealtimeCollaboration({
       }
     } catch (error) {
       console.error('Failed to join session:', error)
-      showToast('Failed to join collaboration session', 'error')
+      showToast(t('realtimeCollaboration.failedToJoin'), 'error')
     } finally {
       setIsJoining(false)
     }
@@ -113,12 +115,12 @@ export default function RealtimeCollaboration({
       }
       return newUsers
     })
-    showToast('Another user joined the session', 'info')
+    showToast(t('realtimeCollaboration.userJoined'), 'info')
   }
 
   const handleUserLeft = (data: { userId: string; activeUsers: string[] }) => {
     setActiveUsers(prev => prev.filter(u => u.userId !== data.userId))
-    showToast('A user left the session', 'info')
+    showToast(t('realtimeCollaboration.userLeft'), 'info')
   }
 
   const handleCursorUpdate = (data: { userId: string; cursor: any }) => {
@@ -138,7 +140,7 @@ export default function RealtimeCollaboration({
   }
 
   const handleComment = (data: { comment: any }) => {
-    showToast(`New comment: ${data.comment.text}`, 'info')
+    showToast(t('realtimeCollaboration.newComment', { text: data.comment.text }), 'info')
   }
 
   const sendContentChange = async (operation: string, change: any) => {
@@ -186,7 +188,7 @@ export default function RealtimeCollaboration({
     return (
       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span>Joining collaboration session...</span>
+        <span>{t('realtimeCollaboration.joiningSession')}</span>
       </div>
     )
   }
@@ -200,7 +202,7 @@ export default function RealtimeCollaboration({
           }`}
         />
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {isConnected ? 'Connected' : 'Disconnected'}
+          {isConnected ? t('realtimeCollaboration.connected') : t('realtimeCollaboration.disconnected')}
         </span>
       </div>
 
@@ -208,7 +210,9 @@ export default function RealtimeCollaboration({
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {activeUsers.length} {activeUsers.length === 1 ? 'user' : 'users'} editing
+            {activeUsers.length === 1
+              ? t('realtimeCollaboration.usersEditing', { count: activeUsers.length })
+              : t('realtimeCollaboration.usersEditing_plural', { count: activeUsers.length })}
           </span>
         </div>
       )}

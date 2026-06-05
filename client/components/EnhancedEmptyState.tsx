@@ -2,6 +2,7 @@
 
 import { Inbox, Plus, Sparkles, BookOpen, Video, FileText, TrendingUp } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface EnhancedEmptyStateProps {
   title: string
@@ -27,6 +28,7 @@ export default function EnhancedEmptyState({
   secondaryActions,
   suggestions
 }: EnhancedEmptyStateProps) {
+  const { t } = useTranslation()
   const router = useRouter()
 
   const getIcon = () => {
@@ -50,17 +52,17 @@ export default function EnhancedEmptyState({
 
   const defaultSecondaryActions = [
     {
-      label: 'Browse Templates',
+      label: t('enhancedEmptyState.browseTemplates'),
       onClick: () => router.push('/dashboard/templates'),
       icon: <Sparkles className="w-4 h-4" />
     },
     {
-      label: 'View Examples',
+      label: t('enhancedEmptyState.viewExamples'),
       onClick: () => router.push('/dashboard/library'),
       icon: <BookOpen className="w-4 h-4" />
     },
     {
-      label: 'Get Help',
+      label: t('enhancedEmptyState.getHelp'),
       onClick: () => router.push('/dashboard'),
       icon: <TrendingUp className="w-4 h-4" />
     }
@@ -116,7 +118,7 @@ export default function EnhancedEmptyState({
       {suggestions && suggestions.length > 0 && (
         <div className="w-full max-w-md">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">
-            Quick Tips
+            {t('enhancedEmptyState.quickTips')}
           </h4>
           <div className="space-y-2">
             {suggestions.map((suggestion, index) => (

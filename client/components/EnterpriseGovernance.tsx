@@ -18,6 +18,7 @@ import {
   Lock
 } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -44,6 +45,7 @@ interface ComplianceMetrics {
 }
 
 export default function EnterpriseGovernance() {
+  const { t } = useTranslation()
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [metrics, setMetrics] = useState<ComplianceMetrics | null>(null)
   const [loading, setLoading] = useState(true)
@@ -126,18 +128,18 @@ export default function EnterpriseGovernance() {
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500 flex items-center gap-3">
             <Shield className="w-8 h-8 text-blue-600" />
-            Enterprise Governance
+            {t('enterpriseGovernance.title')}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Centralized audit logging, compliance tracking, and ethics oversight.
+            {t('enterpriseGovernance.subtitle')}
           </p>
         </div>
         
         <div className="flex items-center gap-3">
           <div className="relative">
-            <select 
+            <select
               value={workspaceId}
-              title="Select Workspace"
+              title={t('enterpriseGovernance.selectWorkspace')}
               onChange={(e) => setWorkspaceId(e.target.value)}
               className="appearance-none bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-2 pr-10 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
             >
@@ -147,7 +149,7 @@ export default function EnterpriseGovernance() {
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none opacity-50" />
           </div>
-          <button title="Download Governance Report" className="p-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+          <button title={t('enterpriseGovernance.downloadGovernanceReport')} className="p-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
             <Download className="w-5 h-5" />
           </button>
         </div>
@@ -155,32 +157,32 @@ export default function EnterpriseGovernance() {
 
       {/* Analytics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard 
-          title="Compliance Score" 
-          value="98.2%" 
-          trend="+1.2%" 
-          icon={Zap} 
+        <MetricCard
+          title={t('enterpriseGovernance.complianceScore')}
+          value="98.2%"
+          trend="+1.2%"
+          icon={Zap}
           color="blue"
         />
-        <MetricCard 
-          title="Active Risk Flags" 
-          value={metrics?.totalChecks ? "3" : "0"} 
-          trend="Decreasing" 
-          icon={AlertTriangle} 
+        <MetricCard
+          title={t('enterpriseGovernance.activeRiskFlags')}
+          value={metrics?.totalChecks ? "3" : "0"}
+          trend={t('enterpriseGovernance.decreasing')}
+          icon={AlertTriangle}
           color="amber"
         />
-        <MetricCard 
-          title="Human Reviews" 
-          value="12" 
-          trend="Avg 4.2h SLA" 
-          icon={User} 
+        <MetricCard
+          title={t('enterpriseGovernance.humanReviews')}
+          value="12"
+          trend={t('enterpriseGovernance.avgSla')}
+          icon={User}
           color="indigo"
         />
-        <MetricCard 
-          title="Data Integrity" 
-          value="Verified" 
-          trend="AES-256 Active" 
-          icon={Lock} 
+        <MetricCard
+          title={t('enterpriseGovernance.dataIntegrity')}
+          value={t('enterpriseGovernance.verified')}
+          trend={t('enterpriseGovernance.aes256Active')}
+          icon={Lock}
           color="green"
         />
       </div>
@@ -191,18 +193,18 @@ export default function EnterpriseGovernance() {
           <div className="p-6 border-b border-gray-50 dark:border-white/5 flex items-center justify-between">
             <h2 className="font-bold text-lg flex items-center gap-2">
               <FileText className="w-5 h-5 text-blue-500" />
-              Real-time Audit Trail
+              {t('enterpriseGovernance.realTimeAuditTrail')}
             </h2>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30" />
-                <input 
-                  type="text" 
-                  placeholder="Search logs..." 
+                <input
+                  type="text"
+                  placeholder={t('enterpriseGovernance.searchLogsPlaceholder')}
                   className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <button title="Filter Logs" className="p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
+              <button title={t('enterpriseGovernance.filterLogs')} className="p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
                 <Filter className="w-4 h-4 opacity-50" />
               </button>
             </div>
@@ -212,11 +214,11 @@ export default function EnterpriseGovernance() {
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 dark:bg-white/[0.02] text-gray-500 dark:text-gray-400 font-medium uppercase text-[10px] tracking-wider">
                 <tr>
-                  <th className="px-6 py-4">Action</th>
-                  <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Resource</th>
-                  <th className="px-6 py-4">Timestamp</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">{t('enterpriseGovernance.colAction')}</th>
+                  <th className="px-6 py-4">{t('enterpriseGovernance.colUser')}</th>
+                  <th className="px-6 py-4">{t('enterpriseGovernance.colResource')}</th>
+                  <th className="px-6 py-4">{t('enterpriseGovernance.colTimestamp')}</th>
+                  <th className="px-6 py-4">{t('enterpriseGovernance.colStatus')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
@@ -229,7 +231,7 @@ export default function EnterpriseGovernance() {
                 ) : logs.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center opacity-40 italic">
-                      No logs found for this period.
+                      {t('enterpriseGovernance.noLogsFound')}
                     </td>
                   </tr>
                 ) : logs.map(log => (
@@ -246,7 +248,7 @@ export default function EnterpriseGovernance() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-medium">{log.userId?.name || 'System'}</span>
+                        <span className="font-medium">{log.userId?.name || t('enterpriseGovernance.systemUser')}</span>
                         <span className="text-[10px] opacity-50">{log.userId?.email}</span>
                       </div>
                     </td>
@@ -263,9 +265,9 @@ export default function EnterpriseGovernance() {
                         log.isVerified !== false ? 'text-green-500' : 'text-rose-500'
                       }`}>
                         {log.isVerified !== false ? (
-                          <><CheckCircle className="w-3 h-3" /> Verified</>
+                          <><CheckCircle className="w-3 h-3" /> {t('enterpriseGovernance.statusVerified')}</>
                         ) : (
-                          <><AlertTriangle className="w-3 h-3" /> Tampered</>
+                          <><AlertTriangle className="w-3 h-3" /> {t('enterpriseGovernance.statusTampered')}</>
                         )}
                       </div>
                     </td>
@@ -281,21 +283,20 @@ export default function EnterpriseGovernance() {
           <div className="bg-white dark:bg-[#0f172a] p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl shadow-blue-500/5">
             <h3 className="font-bold flex items-center gap-2 mb-4">
               <BarChart2 className="w-5 h-5 text-indigo-500" />
-              Ethics Breakdown
+              {t('enterpriseGovernance.ethicsBreakdown')}
             </h3>
             <div className="space-y-4">
-              <ProgressItem label="AI Transparency" value={95} color="blue" />
-              <ProgressItem label="Bias Mitigation" value={88} color="indigo" />
-              <ProgressItem label="IP Compliance" value={92} color="green" />
-              <ProgressItem label="GDPR Residency" value={100} color="emerald" />
+              <ProgressItem label={t('enterpriseGovernance.aiTransparency')} value={95} color="blue" />
+              <ProgressItem label={t('enterpriseGovernance.biasMitigation')} value={88} color="indigo" />
+              <ProgressItem label={t('enterpriseGovernance.ipCompliance')} value={92} color="green" />
+              <ProgressItem label={t('enterpriseGovernance.gdprResidency')} value={100} color="emerald" />
             </div>
             
             <div className="mt-6 p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10">
               <div className="flex gap-3">
                 <Info className="w-5 h-5 text-blue-500 shrink-0" />
                 <p className="text-[10px] leading-relaxed text-blue-600 dark:text-blue-400 font-medium">
-                  Compliance protocols are active. Automated deletion is scheduled for 3:00 AM UTC. 
-                  All AI content is marked with mandatory transparency tags.
+                  {t('enterpriseGovernance.complianceNotice')}
                 </p>
               </div>
             </div>
@@ -306,13 +307,12 @@ export default function EnterpriseGovernance() {
               <Shield className="w-32 h-32" />
             </div>
             <div className="relative z-10">
-              <h3 className="font-bold text-xl mb-2">DMA/DSA Ready</h3>
+              <h3 className="font-bold text-xl mb-2">{t('enterpriseGovernance.dmaDsaReady')}</h3>
               <p className="text-white/70 text-xs leading-relaxed mb-4">
-                Your platform is currently optimized for EU digital market standards, ensuring 
-                full interoperability and user choice.
+                {t('enterpriseGovernance.dmaDsaDescription')}
               </p>
               <button className="w-full py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-xs font-bold transition-all">
-                Download Compliance Pack
+                {t('enterpriseGovernance.downloadCompliancePack')}
               </button>
             </div>
           </div>

@@ -13,6 +13,7 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 import ErrorDisplay from './ErrorDisplay';
 import { parseApiError } from '../utils/errorHandler';
 import { apiGet, apiPost } from '../lib/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface AIModel {
   id: string;
@@ -44,6 +45,7 @@ export default function AIMultiModelSelector() {
   const [taskType, setTaskType] = useState('content-generation');
   const [error, setError] = useState<Error | null>(null);
   const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
 
   const fetchModels = useCallback(async () => {
     if (process.env.NODE_ENV === 'development') {
@@ -133,14 +135,14 @@ export default function AIMultiModelSelector() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-purple-600" />
-              Multi-Model AI Selector
+              {t('aiMultiModelSelector.title')}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
                     <Info className="h-4 w-4 text-gray-400" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Select different AI models for various tasks</p>
+                    <p>{t('aiMultiModelSelector.tooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -149,7 +151,7 @@ export default function AIMultiModelSelector() {
           <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Provider</label>
+              <label className="text-sm font-medium mb-2 block">{t('aiMultiModelSelector.provider')}</label>
               <Select
                 value={currentProvider}
                 onValueChange={(value) => {
@@ -172,7 +174,7 @@ export default function AIMultiModelSelector() {
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Model</label>
+              <label className="text-sm font-medium mb-2 block">{t('aiMultiModelSelector.model')}</label>
               <Select
                 value={currentModel}
                 onValueChange={(value) => initProvider(currentProvider, value)}
@@ -202,44 +204,44 @@ export default function AIMultiModelSelector() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
-            Model Comparison
+            {t('aiMultiModelSelector.modelComparison')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Task Type</label>
+            <label className="text-sm font-medium mb-2 block">{t('aiMultiModelSelector.taskType')}</label>
             <Select value={taskType} onValueChange={setTaskType}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="content-generation">Content Generation</SelectItem>
-                <SelectItem value="content-analysis">Content Analysis</SelectItem>
-                <SelectItem value="summarization">Summarization</SelectItem>
-                <SelectItem value="translation">Translation</SelectItem>
+                <SelectItem value="content-generation">{t('aiMultiModelSelector.taskContentGeneration')}</SelectItem>
+                <SelectItem value="content-analysis">{t('aiMultiModelSelector.taskContentAnalysis')}</SelectItem>
+                <SelectItem value="summarization">{t('aiMultiModelSelector.taskSummarization')}</SelectItem>
+                <SelectItem value="translation">{t('aiMultiModelSelector.taskTranslation')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium mb-2 block">Prompt</label>
+            <label className="text-sm font-medium mb-2 block">{t('aiMultiModelSelector.prompt')}</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               className="w-full p-2 border rounded"
               rows={4}
-              placeholder="Enter prompt to compare models..."
+              placeholder={t('aiMultiModelSelector.promptPlaceholder')}
             />
           </div>
           <Button onClick={compareModels} disabled={comparing || !prompt}>
             {comparing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Comparing...
+                {t('aiMultiModelSelector.comparing')}
               </>
             ) : (
               <>
                 <Zap className="mr-2 h-4 w-4" />
-                Compare Models
+                {t('aiMultiModelSelector.compareModels')}
               </>
             )}
           </Button>
@@ -247,13 +249,13 @@ export default function AIMultiModelSelector() {
           {comparison && (
             <div className="mt-4 space-y-4">
               <div className="p-4 bg-muted rounded">
-                <p className="font-medium mb-2">Best Model: {comparison.bestModel}</p>
+                <p className="font-medium mb-2">{t('aiMultiModelSelector.bestModel', { model: comparison.bestModel ?? '' })}</p>
               </div>
               {comparison.outputs.map((output, idx) => (
                 <div key={idx} className="p-4 border rounded">
                   <div className="flex items-center justify-between mb-2">
                     <Badge>{output.model}</Badge>
-                    <span className="text-sm text-muted-foreground">{output.tokens} tokens</span>
+                    <span className="text-sm text-muted-foreground">{t('aiMultiModelSelector.tokensCount', { count: output.tokens })}</span>
                   </div>
                   <p className="text-sm">{output.content}</p>
                 </div>

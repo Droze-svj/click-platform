@@ -23,6 +23,7 @@ import {
   Zap
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ExportPreset {
   id: string
@@ -61,12 +62,13 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
   })
 
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const exportPresets: ExportPreset[] = [
     // Instagram
     {
       id: 'instagram-feed',
-      name: 'Instagram Feed',
+      name: t('socialMediaExporter.presets.instagramFeed.name'),
       platform: 'Instagram',
       icon: <Instagram className="w-5 h-5 text-pink-500" />,
       resolution: { width: 1080, height: 1080 },
@@ -74,17 +76,17 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 90,
       recommendedBitrate: '3.5 Mbps',
       format: 'MP4',
-      description: 'Square format perfect for feed posts',
+      description: t('socialMediaExporter.presets.instagramFeed.description'),
       tips: [
-        'Use vertical text overlays',
-        'Add trending music',
-        'Include call-to-action in caption'
+        t('socialMediaExporter.presets.instagramFeed.tip1'),
+        t('socialMediaExporter.presets.instagramFeed.tip2'),
+        t('socialMediaExporter.presets.instagramFeed.tip3')
       ],
       hashtags: ['#Instagram', '#ContentCreator', '#SocialMedia']
     },
     {
       id: 'instagram-story',
-      name: 'Instagram Story',
+      name: t('socialMediaExporter.presets.instagramStory.name'),
       platform: 'Instagram',
       icon: <Instagram className="w-5 h-5 text-pink-500" />,
       resolution: { width: 1080, height: 1920 },
@@ -92,17 +94,17 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 15,
       recommendedBitrate: '2.5 Mbps',
       format: 'MP4',
-      description: 'Vertical format for Stories and Reels',
+      description: t('socialMediaExporter.presets.instagramStory.description'),
       tips: [
-        'Keep it under 15 seconds',
-        'Use engaging hooks in first 3 seconds',
-        'Add interactive stickers'
+        t('socialMediaExporter.presets.instagramStory.tip1'),
+        t('socialMediaExporter.presets.instagramStory.tip2'),
+        t('socialMediaExporter.presets.instagramStory.tip3')
       ],
       hashtags: ['#InstaStory', '#Reels', '#ShortVideo']
     },
     {
       id: 'instagram-reel',
-      name: 'Instagram Reel',
+      name: t('socialMediaExporter.presets.instagramReel.name'),
       platform: 'Instagram',
       icon: <Instagram className="w-5 h-5 text-pink-500" />,
       resolution: { width: 1080, height: 1920 },
@@ -110,11 +112,11 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 90,
       recommendedBitrate: '2.5 Mbps',
       format: 'MP4',
-      description: 'Long-form vertical video for Reels',
+      description: t('socialMediaExporter.presets.instagramReel.description'),
       tips: [
-        'Use trending audio',
-        'Add text overlays for accessibility',
-        'Include hook in first 5 seconds'
+        t('socialMediaExporter.presets.instagramReel.tip1'),
+        t('socialMediaExporter.presets.instagramReel.tip2'),
+        t('socialMediaExporter.presets.instagramReel.tip3')
       ],
       hashtags: ['#Reels', '#InstagramReels', '#Viral']
     },
@@ -122,7 +124,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
     // TikTok
     {
       id: 'tiktok-standard',
-      name: 'TikTok Video',
+      name: t('socialMediaExporter.presets.tiktokStandard.name'),
       platform: 'TikTok',
       icon: <Music className="w-5 h-5 text-black" />,
       resolution: { width: 1080, height: 1920 },
@@ -130,12 +132,12 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 180,
       recommendedBitrate: '2.5 Mbps',
       format: 'MP4',
-      description: 'Vertical format optimized for TikTok',
+      description: t('socialMediaExporter.presets.tiktokStandard.description'),
       tips: [
-        'Hook in first 3 seconds',
-        'Use trending sounds',
-        'Add captions for accessibility',
-        'Keep under 60 seconds for better engagement'
+        t('socialMediaExporter.presets.tiktokStandard.tip1'),
+        t('socialMediaExporter.presets.tiktokStandard.tip2'),
+        t('socialMediaExporter.presets.tiktokStandard.tip3'),
+        t('socialMediaExporter.presets.tiktokStandard.tip4')
       ],
       hashtags: ['#TikTok', '#Viral', '#FYP', '#ForYouPage']
     },
@@ -143,7 +145,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
     // YouTube
     {
       id: 'youtube-short',
-      name: 'YouTube Short',
+      name: t('socialMediaExporter.presets.youtubeShort.name'),
       platform: 'YouTube',
       icon: <Youtube className="w-5 h-5 text-red-500" />,
       resolution: { width: 1080, height: 1920 },
@@ -151,18 +153,18 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 60,
       recommendedBitrate: '5 Mbps',
       format: 'MP4',
-      description: 'Vertical short-form for YouTube Shorts',
+      description: t('socialMediaExporter.presets.youtubeShort.description'),
       tips: [
-        'Engaging thumbnail',
-        'Hook in first 5 seconds',
-        'Clear audio',
-        'Add end screen with subscribe button'
+        t('socialMediaExporter.presets.youtubeShort.tip1'),
+        t('socialMediaExporter.presets.youtubeShort.tip2'),
+        t('socialMediaExporter.presets.youtubeShort.tip3'),
+        t('socialMediaExporter.presets.youtubeShort.tip4')
       ],
       hashtags: ['#YouTubeShorts', '#Shorts', '#YouTube']
     },
     {
       id: 'youtube-standard',
-      name: 'YouTube Video',
+      name: t('socialMediaExporter.presets.youtubeStandard.name'),
       platform: 'YouTube',
       icon: <Youtube className="w-5 h-5 text-red-500" />,
       resolution: { width: 1920, height: 1080 },
@@ -170,12 +172,12 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 0, // No limit
       recommendedBitrate: '8 Mbps',
       format: 'MP4',
-      description: 'Horizontal format for standard YouTube videos',
+      description: t('socialMediaExporter.presets.youtubeStandard.description'),
       tips: [
-        'High quality audio',
-        'Clear title and thumbnail',
-        'Add chapters with timestamps',
-        'Include end screens and cards'
+        t('socialMediaExporter.presets.youtubeStandard.tip1'),
+        t('socialMediaExporter.presets.youtubeStandard.tip2'),
+        t('socialMediaExporter.presets.youtubeStandard.tip3'),
+        t('socialMediaExporter.presets.youtubeStandard.tip4')
       ],
       hashtags: ['#YouTube', '#Video', '#Tutorial']
     },
@@ -183,7 +185,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
     // Twitter/X
     {
       id: 'twitter-video',
-      name: 'Twitter Video',
+      name: t('socialMediaExporter.presets.twitterVideo.name'),
       platform: 'Twitter',
       icon: <Twitter className="w-5 h-5 text-blue-400" />,
       resolution: { width: 1280, height: 720 },
@@ -191,12 +193,12 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 140, // 2 minutes 20 seconds
       recommendedBitrate: '5 Mbps',
       format: 'MP4',
-      description: 'Horizontal format optimized for Twitter',
+      description: t('socialMediaExporter.presets.twitterVideo.description'),
       tips: [
-        'Keep under 2 minutes for better engagement',
-        'Clear audio',
-        'Add captions',
-        'Use relevant hashtags'
+        t('socialMediaExporter.presets.twitterVideo.tip1'),
+        t('socialMediaExporter.presets.twitterVideo.tip2'),
+        t('socialMediaExporter.presets.twitterVideo.tip3'),
+        t('socialMediaExporter.presets.twitterVideo.tip4')
       ],
       hashtags: ['#Twitter', '#Video', '#SocialMedia']
     },
@@ -204,7 +206,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
     // Facebook
     {
       id: 'facebook-feed',
-      name: 'Facebook Feed',
+      name: t('socialMediaExporter.presets.facebookFeed.name'),
       platform: 'Facebook',
       icon: <Facebook className="w-5 h-5 text-blue-600" />,
       resolution: { width: 1280, height: 720 },
@@ -212,18 +214,18 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 240, // 4 minutes
       recommendedBitrate: '4 Mbps',
       format: 'MP4',
-      description: 'Horizontal format for Facebook feed',
+      description: t('socialMediaExporter.presets.facebookFeed.description'),
       tips: [
-        'Engaging thumbnail',
-        'Clear audio',
-        'Add text overlays',
-        'Include call-to-action'
+        t('socialMediaExporter.presets.facebookFeed.tip1'),
+        t('socialMediaExporter.presets.facebookFeed.tip2'),
+        t('socialMediaExporter.presets.facebookFeed.tip3'),
+        t('socialMediaExporter.presets.facebookFeed.tip4')
       ],
       hashtags: ['#Facebook', '#Video', '#SocialMedia']
     },
     {
       id: 'facebook-reel',
-      name: 'Facebook Reel',
+      name: t('socialMediaExporter.presets.facebookReel.name'),
       platform: 'Facebook',
       icon: <Facebook className="w-5 h-5 text-blue-600" />,
       resolution: { width: 1080, height: 1920 },
@@ -231,12 +233,12 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 90,
       recommendedBitrate: '2.5 Mbps',
       format: 'MP4',
-      description: 'Vertical format for Facebook Reels',
+      description: t('socialMediaExporter.presets.facebookReel.description'),
       tips: [
-        'Use trending audio',
-        'Engaging hook',
-        'Clear text overlays',
-        'Add captions'
+        t('socialMediaExporter.presets.facebookReel.tip1'),
+        t('socialMediaExporter.presets.facebookReel.tip2'),
+        t('socialMediaExporter.presets.facebookReel.tip3'),
+        t('socialMediaExporter.presets.facebookReel.tip4')
       ],
       hashtags: ['#FacebookReels', '#Reels', '#Facebook']
     },
@@ -244,7 +246,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
     // Generic presets
     {
       id: 'mobile-optimized',
-      name: 'Mobile Optimized',
+      name: t('socialMediaExporter.presets.mobileOptimized.name'),
       platform: 'Mobile',
       icon: <Smartphone className="w-5 h-5 text-green-500" />,
       resolution: { width: 1080, height: 1920 },
@@ -252,17 +254,17 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 60,
       recommendedBitrate: '3 Mbps',
       format: 'MP4',
-      description: 'Optimized for mobile viewing',
+      description: t('socialMediaExporter.presets.mobileOptimized.description'),
       tips: [
-        'Vertical orientation',
-        'Clear text and graphics',
-        'Good contrast for small screens'
+        t('socialMediaExporter.presets.mobileOptimized.tip1'),
+        t('socialMediaExporter.presets.mobileOptimized.tip2'),
+        t('socialMediaExporter.presets.mobileOptimized.tip3')
       ],
       hashtags: ['#Mobile', '#Video', '#ShortForm']
     },
     {
       id: 'desktop-web',
-      name: 'Web/Desktop',
+      name: t('socialMediaExporter.presets.desktopWeb.name'),
       platform: 'Web',
       icon: <Monitor className="w-5 h-5 text-purple-500" />,
       resolution: { width: 1920, height: 1080 },
@@ -270,11 +272,11 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       maxDuration: 0,
       recommendedBitrate: '8 Mbps',
       format: 'MP4',
-      description: 'High quality for web and desktop',
+      description: t('socialMediaExporter.presets.desktopWeb.description'),
       tips: [
-        'High resolution',
-        'Clear audio',
-        'Professional quality'
+        t('socialMediaExporter.presets.desktopWeb.tip1'),
+        t('socialMediaExporter.presets.desktopWeb.tip2'),
+        t('socialMediaExporter.presets.desktopWeb.tip3')
       ],
       hashtags: ['#WebVideo', '#HD', '#Professional']
     }
@@ -301,7 +303,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
     }
 
     onExport(preset, exportConfig)
-    showToast(`Starting export for ${preset.platform} ${preset.name}`, 'info')
+    showToast(t('socialMediaExporter.startingExport', { platform: preset.platform, name: preset.name }), 'info')
   }
 
   const getPlatformIcon = (platform: string) => {
@@ -323,10 +325,10 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
         <Share className="w-6 h-6 text-blue-600 dark:text-blue-400" />
         <div>
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-            Social Media Export
+            {t('socialMediaExporter.title')}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Export your video optimized for different social media platforms
+            {t('socialMediaExporter.subtitle')}
           </p>
         </div>
       </div>
@@ -335,7 +337,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
         <h4 className="font-medium mb-3 flex items-center gap-2">
           <Settings className="w-4 h-4" />
-          Export Options
+          {t('socialMediaExporter.exportOptions')}
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="flex items-center gap-2">
@@ -345,7 +347,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               onChange={(e) => setExportOptions(prev => ({ ...prev, includeWatermark: e.target.checked }))}
               className="rounded"
             />
-            <span className="text-sm">Include watermark</span>
+            <span className="text-sm">{t('socialMediaExporter.includeWatermark')}</span>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -354,7 +356,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               onChange={(e) => setExportOptions(prev => ({ ...prev, addCaptions: e.target.checked }))}
               className="rounded"
             />
-            <span className="text-sm">Add captions</span>
+            <span className="text-sm">{t('socialMediaExporter.addCaptions')}</span>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -363,7 +365,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               onChange={(e) => setExportOptions(prev => ({ ...prev, optimizeAudio: e.target.checked }))}
               className="rounded"
             />
-            <span className="text-sm">Optimize audio</span>
+            <span className="text-sm">{t('socialMediaExporter.optimizeAudio')}</span>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -372,7 +374,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               onChange={(e) => setExportOptions(prev => ({ ...prev, addEndScreen: e.target.checked }))}
               className="rounded"
             />
-            <span className="text-sm">Add end screen</span>
+            <span className="text-sm">{t('socialMediaExporter.addEndScreen')}</span>
           </label>
           <label className="flex items-center gap-2 group relative">
             <input
@@ -382,8 +384,8 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               className="rounded border-orange-300 text-orange-500 focus:ring-orange-500"
             />
             <span className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">
-              AI Smart-Refit
-              <span className="text-[8px] bg-orange-100 dark:bg-orange-900/40 px-1 rounded">BETA</span>
+              {t('socialMediaExporter.aiSmartRefit')}
+              <span className="text-[8px] bg-orange-100 dark:bg-orange-900/40 px-1 rounded">{t('socialMediaExporter.beta')}</span>
             </span>
           </label>
         </div>
@@ -401,12 +403,12 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-lg font-black text-gray-900 dark:text-[var(--text-main)] uppercase tracking-tighter">Pro Scheduler</h4>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">Elite distribution engine</p>
+              <h4 className="text-lg font-black text-gray-900 dark:text-[var(--text-main)] uppercase tracking-tighter">{t('socialMediaExporter.proScheduler')}</h4>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">{t('socialMediaExporter.eliteEngine')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">Alpha Access</span>
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">{t('socialMediaExporter.alphaAccess')}</span>
           </div>
         </div>
 
@@ -417,8 +419,8 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
                 <Clock className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">Schedule Post</p>
-                <p className="text-[9px] text-gray-500 font-bold">Pick a future pulse moment</p>
+                <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">{t('socialMediaExporter.schedulePost')}</p>
+                <p className="text-[9px] text-gray-500 font-bold">{t('socialMediaExporter.schedulePostHint')}</p>
               </div>
               <input
                 type="checkbox"
@@ -435,14 +437,14 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
                   className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                   value={exportOptions.scheduledDate}
                   onChange={(e) => setExportOptions(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                  title="Scheduled Publish Date"
+                  title={t('socialMediaExporter.scheduledDateTitle')}
                 />
                 <input
                   type="time"
                   className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                   value={exportOptions.scheduledTime}
                   onChange={(e) => setExportOptions(prev => ({ ...prev, scheduledTime: e.target.value }))}
-                  title="Scheduled Publish Time"
+                  title={t('socialMediaExporter.scheduledTimeTitle')}
                 />
               </div>
             )}
@@ -454,8 +456,8 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
                 <Zap className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">Multi-Publish</p>
-                <p className="text-[9px] text-gray-500 font-bold">Sync across all linked accounts</p>
+                <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">{t('socialMediaExporter.multiPublish')}</p>
+                <p className="text-[9px] text-gray-500 font-bold">{t('socialMediaExporter.multiPublishHint')}</p>
               </div>
               <input
                 type="checkbox"
@@ -474,7 +476,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
           <div key={platform}>
             <h4 className="font-medium mb-3 flex items-center gap-2 capitalize">
               {getPlatformIcon(platform === 'generic' ? 'Web' : platform)}
-              {platform === 'generic' ? 'General' : platform}
+              {platform === 'generic' ? t('socialMediaExporter.general') : platform}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {presets.map(preset => (
@@ -498,19 +500,19 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
 
                   <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
                     <div className="flex justify-between">
-                      <span>Resolution:</span>
+                      <span>{t('socialMediaExporter.resolution')}</span>
                       <span>{preset.resolution.width}×{preset.resolution.height}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Aspect Ratio:</span>
+                      <span>{t('socialMediaExporter.aspectRatio')}</span>
                       <span>{preset.aspectRatio}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Max Duration:</span>
-                      <span>{preset.maxDuration || 'Unlimited'}</span>
+                      <span>{t('socialMediaExporter.maxDuration')}</span>
+                      <span>{preset.maxDuration || t('socialMediaExporter.unlimited')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Bitrate:</span>
+                      <span>{t('socialMediaExporter.bitrate')}</span>
                       <span>{preset.recommendedBitrate}</span>
                     </div>
                   </div>
@@ -548,7 +550,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
                     className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 flex items-center justify-center gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    Export
+                    {t('socialMediaExporter.export')}
                   </button>
                 </div>
               ))}
@@ -563,13 +565,13 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
           <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div className="text-sm">
             <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-              Export Information
+              {t('socialMediaExporter.exportInfoTitle')}
             </p>
             <ul className="text-blue-800 dark:text-blue-200 space-y-1">
-              <li>• Videos are processed in the background and may take several minutes</li>
-              <li>• You&apos;ll receive a notification when export is complete</li>
-              <li>• High-quality exports may require more processing time</li>
-              <li>• Check your downloads folder or the processed files section</li>
+              <li>• {t('socialMediaExporter.exportInfo1')}</li>
+              <li>• {t('socialMediaExporter.exportInfo2')}</li>
+              <li>• {t('socialMediaExporter.exportInfo3')}</li>
+              <li>• {t('socialMediaExporter.exportInfo4')}</li>
             </ul>
           </div>
         </div>

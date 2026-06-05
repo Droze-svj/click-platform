@@ -1,16 +1,18 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * Component that adds accessibility enhancements globally
  */
 export default function AccessibilityEnhancements() {
+  const { t } = useTranslation()
   useEffect(() => {
     // Skip to main content link
     const skipLink = document.createElement('a')
     skipLink.href = '#main-content'
-    skipLink.textContent = 'Skip to main content'
+    skipLink.textContent = t('accessibilityEnhancements.skipToMainContent')
     skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-purple-600 focus:text-white focus:rounded-lg'
     document.body.insertBefore(skipLink, document.body.firstChild)
 
@@ -57,7 +59,7 @@ export default function AccessibilityEnhancements() {
       document.removeEventListener('mousedown', handleMouseDown)
       skipLink.remove()
     }
-  }, [])
+  }, [t])
 
   return null
 }

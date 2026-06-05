@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { apiPost, handleApiError } from '../lib/api'
 import { Eye, EyeOff, Lock } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function ChangePasswordForm() {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -21,16 +23,16 @@ export default function ChangePasswordForm() {
 
   const validatePassword = (password: string) => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters'
+      return t('changePasswordForm.errorMinLength')
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      return 'Password must contain at least one lowercase letter'
+      return t('changePasswordForm.errorLowercase')
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Password must contain at least one uppercase letter'
+      return t('changePasswordForm.errorUppercase')
     }
     if (!/(?=.*\d)/.test(password)) {
-      return 'Password must contain at least one number'
+      return t('changePasswordForm.errorNumber')
     }
     return null
   }
@@ -42,7 +44,7 @@ export default function ChangePasswordForm() {
 
     // Validation
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('New passwords do not match')
+      setError(t('changePasswordForm.errorPasswordsDoNotMatch'))
       return
     }
 
@@ -71,7 +73,7 @@ export default function ChangePasswordForm() {
 
       setTimeout(() => setSuccess(false), 3000)
     } catch (error: any) {
-      setError(handleApiError(error) || 'Failed to change password')
+      setError(handleApiError(error) || t('changePasswordForm.errorFailedToChange'))
     } finally {
       setSaving(false)
     }
@@ -87,14 +89,14 @@ export default function ChangePasswordForm() {
 
       {success && (
         <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-600 dark:text-green-400">
-          Password changed successfully!
+          {t('changePasswordForm.successMessage')}
         </div>
       )}
 
       <div>
         <label htmlFor="currentPassword" className="text-sm font-medium mb-2 flex items-center gap-2">
           <Lock className="w-4 h-4" />
-          Current Password
+          {t('changePasswordForm.currentPassword')}
         </label>
         <div className="relative">
           <input
@@ -103,7 +105,7 @@ export default function ChangePasswordForm() {
             value={formData.currentPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
             required
-            placeholder="Enter current password"
+            placeholder={t('changePasswordForm.currentPasswordPlaceholder')}
             className="w-full px-4 py-2 pr-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
           />
           <button
@@ -117,7 +119,7 @@ export default function ChangePasswordForm() {
       </div>
 
       <div>
-        <label htmlFor="newPassword" className="block text-sm font-medium mb-2">New Password</label>
+        <label htmlFor="newPassword" className="block text-sm font-medium mb-2">{t('changePasswordForm.newPassword')}</label>
         <div className="relative">
           <input
             id="newPassword"
@@ -125,7 +127,7 @@ export default function ChangePasswordForm() {
             value={formData.newPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
             required
-            placeholder="Enter new password"
+            placeholder={t('changePasswordForm.newPasswordPlaceholder')}
             className="w-full px-4 py-2 pr-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
           />
           <button
@@ -137,12 +139,12 @@ export default function ChangePasswordForm() {
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          Must be at least 8 characters with uppercase, lowercase, and number
+          {t('changePasswordForm.passwordHint')}
         </p>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">Confirm New Password</label>
+        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">{t('changePasswordForm.confirmNewPassword')}</label>
         <div className="relative">
           <input
             id="confirmPassword"
@@ -150,7 +152,7 @@ export default function ChangePasswordForm() {
             value={formData.confirmPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
             required
-            placeholder="Confirm new password"
+            placeholder={t('changePasswordForm.confirmPasswordPlaceholder')}
             className="w-full px-4 py-2 pr-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
           />
           <button
@@ -167,7 +169,7 @@ export default function ChangePasswordForm() {
         disabled={saving}
         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
       >
-        {saving ? 'Changing...' : 'Change Password'}
+        {saving ? t('changePasswordForm.changing') : t('changePasswordForm.changePassword')}
       </button>
     </form>
   )

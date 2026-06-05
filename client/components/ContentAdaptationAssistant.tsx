@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Wand2, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -30,6 +31,7 @@ export default function ContentAdaptationAssistant({
   originalContent,
   onAdapted
 }: ContentAdaptationAssistantProps) {
+  const { t } = useTranslation()
   const [adaptations, setAdaptations] = useState<Adaptation[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
@@ -108,7 +110,7 @@ export default function ContentAdaptationAssistant({
       <div className="flex items-center gap-3 mb-6">
         <Wand2 className="w-6 h-6 text-purple-600" />
         <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-          AI Content Adaptation Assistant
+          {t('contentAdaptationAssistant.title')}
         </h3>
       </div>
 
@@ -116,7 +118,7 @@ export default function ContentAdaptationAssistant({
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           <span className="ml-3 text-gray-600 dark:text-gray-400">
-            Adapting content for all platforms...
+            {t('contentAdaptationAssistant.adaptingContent')}
           </span>
         </div>
       ) : adaptations.length > 0 ? (
@@ -138,7 +140,7 @@ export default function ContentAdaptationAssistant({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Score: <span className="font-semibold">{adaptation.score}/100</span>
+                    {t('contentAdaptationAssistant.score')} <span className="font-semibold">{adaptation.score}/100</span>
                   </div>
                   {!adaptation.optimized && (
                     <button
@@ -146,7 +148,7 @@ export default function ContentAdaptationAssistant({
                       onClick={() => applyAdaptation(adaptation.platform, adaptation)}
                       className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
                     >
-                      Apply
+                      {t('contentAdaptationAssistant.apply')}
                     </button>
                   )}
                 </div>
@@ -177,7 +179,7 @@ export default function ContentAdaptationAssistant({
                     <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                        Suggestions:
+                        {t('contentAdaptationAssistant.suggestions')}
                       </p>
                       <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                         {adaptation.suggestions.map((suggestion, idx) => (
@@ -194,7 +196,7 @@ export default function ContentAdaptationAssistant({
       ) : (
         <div className="text-center py-8">
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Click the button below to adapt your content for all platforms
+            {t('contentAdaptationAssistant.emptyPrompt')}
           </p>
           <button
             type="button"
@@ -202,7 +204,7 @@ export default function ContentAdaptationAssistant({
             className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-semibold"
           >
             <Wand2 className="w-5 h-5 inline mr-2" />
-            Adapt Content
+            {t('contentAdaptationAssistant.adaptContent')}
           </button>
         </div>
       )}

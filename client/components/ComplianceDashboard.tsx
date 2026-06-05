@@ -24,6 +24,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { extractApiData } from '../utils/apiResponse'
+import { useTranslation } from '@/hooks/useTranslation'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,7 @@ const CATEGORY_ICONS: Record<string, React.FC<{ className?: string }>> = {
 // ─── Subcomponents ───────────────────────────────────────────────────────────
 
 function ScoreRing({ score }: { score: number }) {
+  const { t } = useTranslation()
   const radius = 40
   const circ = 2 * Math.PI * radius
   const offset = circ - (score / 100) * circ
@@ -139,7 +141,7 @@ function ScoreRing({ score }: { score: number }) {
       </svg>
       <div className="text-center">
         <div className="text-2xl font-bold text-gray-900 dark:text-white">{score}</div>
-        <div className="text-xs text-gray-500 -mt-0.5">/ 100</div>
+        <div className="text-xs text-gray-500 -mt-0.5">{t('complianceDashboard.outOf100')}</div>
       </div>
     </div>
   )
@@ -169,6 +171,7 @@ function BreakdownRow({
   issueCount: number
   onClick?: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <button
       type="button"
@@ -184,7 +187,7 @@ function BreakdownRow({
       <div className="flex items-center gap-2">
         {issueCount > 0 && (
           <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">
-            {issueCount} issue{issueCount !== 1 ? 's' : ''}
+            {t('complianceDashboard.issueCount', { count: issueCount })}
           </span>
         )}
         {passed
@@ -199,6 +202,7 @@ function BreakdownRow({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ComplianceDashboard() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'checker' | 'rules' | 'platforms' | 'history'>('checker')
 
   // ── Checker State ──
@@ -244,7 +248,7 @@ export default function ComplianceDashboard() {
 
       if (!response.ok) {
         const err = await response.json()
-        throw new Error(err.message || 'Compliance check failed')
+        throw new Error(err.message || t('complianceDashboard.checkFailed'))
       }
 
       const data = await response.json()
@@ -354,10 +358,10 @@ export default function ComplianceDashboard() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   const TABS = [
-    { id: 'checker' as const, label: 'Pre-Publish Check', icon: Shield },
-    { id: 'rules' as const, label: 'Rules', icon: Settings },
-    { id: 'platforms' as const, label: 'Platform Policies', icon: Globe },
-    { id: 'history' as const, label: 'History', icon: BarChart2 },
+    { id: 'checker' as const, label: t('complianceDashboard.tabChecker'), icon: Shield },
+    { id: 'rules' as const, label: t('complianceDashboard.tabRules'), icon: Settings },
+    { id: 'platforms' as const, label: t('complianceDashboard.tabPlatforms'), icon: Globe },
+    { id: 'history' as const, label: t('complianceDashboard.tabHistory'), icon: BarChart2 },
   ]
 
   return (
@@ -371,10 +375,10 @@ export default function ComplianceDashboard() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-              Compliance & Brand Safety
+              {t('complianceDashboard.headerTitle')}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ensure content meets brand standards and platform policies before publishing
+              {t('complianceDashboard.headerSubtitle')}
             </p>
           </div>
         </div>
@@ -409,27 +413,27 @@ export default function ComplianceDashboard() {
                   <div className="lg:col-span-2 space-y-4">
                     <div>
                       <label htmlFor="compliance-content-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Content to Check
+                        {t('complianceDashboard.contentToCheck')}
                       </label>
                       <textarea
                         id="compliance-content-input"
-                        title="Content text to check for compliance"
-                        placeholder="Paste your post caption, video description, or any text to run a compliance check…"
+                        title={t('complianceDashboard.contentInputTitle')}
+                        placeholder={t('complianceDashboard.contentPlaceholder')}
                         value={checkerText}
                         onChange={(e) => setCheckerText(e.target.value)}
                         rows={8}
                         className="w-full p-4 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       />
                       <div className="flex justify-between mt-1">
-                        <span className="text-xs text-gray-400">{checkerText.length} characters</span>
-                        <span className="text-xs text-gray-400">{(checkerText.match(/#[^\s]+/g) || []).length} hashtags</span>
+                        <span className="text-xs text-gray-400">{t('complianceDashboard.charactersCount', { count: checkerText.length })}</span>
+                        <span className="text-xs text-gray-400">{t('complianceDashboard.hashtagsCount', { count: (checkerText.match(/#[^\s]+/g) || []).length })}</span>
                       </div>
                     </div>
 
                     {/* Platform selection */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Check Against Platforms (optional)
+                        {t('complianceDashboard.checkAgainstPlatforms')}
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {PLATFORMS.map(p => (
@@ -457,9 +461,9 @@ export default function ComplianceDashboard() {
                       className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                     >
                       {isChecking ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Checking…</>
+                        <><Loader2 className="w-4 h-4 animate-spin" /> {t('complianceDashboard.checking')}</>
                       ) : (
-                        <><Zap className="w-4 h-4" /> Run Compliance Check</>
+                        <><Zap className="w-4 h-4" /> {t('complianceDashboard.runCheck')}</>
                       )}
                     </button>
                   </div>
@@ -476,7 +480,7 @@ export default function ComplianceDashboard() {
                             <span className="capitalize">{report.status}</span>
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                            {report.issueCount} issue{report.issueCount !== 1 ? 's' : ''} found
+                            {t('complianceDashboard.issuesFound', { count: report.issueCount })}
                           </p>
                         </div>
                       </div>
@@ -484,25 +488,25 @@ export default function ComplianceDashboard() {
                       {/* Breakdown */}
                       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800 overflow-hidden">
                         <BreakdownRow
-                          label="Profanity"
+                          label={t('complianceDashboard.profanity')}
                           icon={ShieldX}
                           passed={report.breakdown.profanity.passed}
                           issueCount={report.breakdown.profanity.issues.length}
                         />
                         <BreakdownRow
-                          label="Spam"
+                          label={t('complianceDashboard.spam')}
                           icon={AlertTriangle}
                           passed={report.breakdown.spam.passed}
                           issueCount={report.breakdown.spam.issues.length}
                         />
                         <BreakdownRow
-                          label="Brand Safety"
+                          label={t('complianceDashboard.brandSafety')}
                           icon={Tag}
                           passed={report.breakdown.brandSafety.passed}
                           issueCount={report.breakdown.brandSafety.issues.length}
                         />
                         <BreakdownRow
-                          label="Link Safety"
+                          label={t('complianceDashboard.linkSafety')}
                           icon={Link2}
                           passed={report.breakdown.linkSafety.passed}
                           issueCount={report.breakdown.linkSafety.issues.length}
@@ -523,7 +527,7 @@ export default function ComplianceDashboard() {
                 {/* Issue cards */}
                 {report && report.issues.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Issues Found</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('complianceDashboard.issuesFoundHeading')}</h3>
                     <div className="grid gap-2">
                       {report.issues.map((issue, idx) => <IssueCard key={idx} issue={issue} />)}
                     </div>
@@ -533,7 +537,7 @@ export default function ComplianceDashboard() {
                 {/* Recommendations */}
                 {report && report.recommendations.length > 0 && (
                   <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4">
-                    <h3 className="font-semibold text-indigo-700 dark:text-indigo-300 mb-2 text-sm">Recommendations</h3>
+                    <h3 className="font-semibold text-indigo-700 dark:text-indigo-300 mb-2 text-sm">{t('complianceDashboard.recommendations')}</h3>
                     <ul className="space-y-1.5">
                       {report.recommendations.map((rec, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm text-indigo-700 dark:text-indigo-300">
@@ -552,15 +556,15 @@ export default function ComplianceDashboard() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Workspace Rules</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Custom keywords, blocked domains, and patterns for your brand</p>
+                    <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('complianceDashboard.workspaceRules')}</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">{t('complianceDashboard.workspaceRulesSubtitle')}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={loadRules}
-                      aria-label="Refresh workspace rules"
-                      title="Refresh workspace rules"
+                      aria-label={t('complianceDashboard.refreshRules')}
+                      title={t('complianceDashboard.refreshRules')}
                       className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <RefreshCw className={`w-4 h-4 ${isLoadingRules ? 'animate-spin' : ''}`} />
@@ -571,7 +575,7 @@ export default function ComplianceDashboard() {
                       onClick={() => setIsAddingRule(!isAddingRule)}
                       className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 transition-colors"
                     >
-                      <Plus className="w-4 h-4" /> Add Rule
+                      <Plus className="w-4 h-4" /> {t('complianceDashboard.addRule')}
                     </button>
                   </div>
                 </div>
@@ -579,76 +583,76 @@ export default function ComplianceDashboard() {
                 {/* Add rule form */}
                 {isAddingRule && (
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
-                    <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200">New Rule</h3>
+                    <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200">{t('complianceDashboard.newRule')}</h3>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="new-rule-name" className="text-xs text-gray-500 mb-1 block">Rule Name *</label>
+                        <label htmlFor="new-rule-name" className="text-xs text-gray-500 mb-1 block">{t('complianceDashboard.ruleNameLabel')}</label>
                         <input
                           id="new-rule-name"
                           type="text"
-                          title="Rule name"
-                          placeholder="e.g. Block Competitor Brands"
+                          title={t('complianceDashboard.ruleNameTitle')}
+                          placeholder={t('complianceDashboard.ruleNamePlaceholder')}
                           value={newRule.name}
                           onChange={e => setNewRule(p => ({ ...p, name: e.target.value }))}
                           className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
                       <div>
-                        <label htmlFor="new-rule-category" className="text-xs text-gray-500 mb-1 block">Category *</label>
+                        <label htmlFor="new-rule-category" className="text-xs text-gray-500 mb-1 block">{t('complianceDashboard.categoryLabel')}</label>
                         <select
                           id="new-rule-category"
-                          title="Rule category"
+                          title={t('complianceDashboard.categoryTitle')}
                           value={newRule.category}
                           onChange={e => setNewRule(p => ({ ...p, category: e.target.value }))}
                           className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                          <option value="brand_safety">Brand Safety</option>
-                          <option value="profanity">Profanity</option>
-                          <option value="link_safety">Link Safety</option>
-                          <option value="platform_policy">Platform Policy</option>
-                          <option value="legal">Legal</option>
-                          <option value="custom">Custom</option>
+                          <option value="brand_safety">{t('complianceDashboard.catBrandSafety')}</option>
+                          <option value="profanity">{t('complianceDashboard.catProfanity')}</option>
+                          <option value="link_safety">{t('complianceDashboard.catLinkSafety')}</option>
+                          <option value="platform_policy">{t('complianceDashboard.catPlatformPolicy')}</option>
+                          <option value="legal">{t('complianceDashboard.catLegal')}</option>
+                          <option value="custom">{t('complianceDashboard.catCustom')}</option>
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="new-rule-type" className="text-xs text-gray-500 mb-1 block">Rule Type *</label>
+                        <label htmlFor="new-rule-type" className="text-xs text-gray-500 mb-1 block">{t('complianceDashboard.ruleTypeLabel')}</label>
                         <select
                           id="new-rule-type"
-                          title="Rule type"
+                          title={t('complianceDashboard.ruleTypeTitle')}
                           value={newRule.ruleType}
                           onChange={e => setNewRule(p => ({ ...p, ruleType: e.target.value }))}
                           className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                          <option value="keyword_block">Block Keywords</option>
-                          <option value="keyword_require">Require Keywords</option>
-                          <option value="url_block">Block URLs / Domains</option>
-                          <option value="regex">Regex Pattern</option>
+                          <option value="keyword_block">{t('complianceDashboard.typeKeywordBlock')}</option>
+                          <option value="keyword_require">{t('complianceDashboard.typeKeywordRequire')}</option>
+                          <option value="url_block">{t('complianceDashboard.typeUrlBlock')}</option>
+                          <option value="regex">{t('complianceDashboard.typeRegex')}</option>
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="new-rule-severity" className="text-xs text-gray-500 mb-1 block">Severity</label>
+                        <label htmlFor="new-rule-severity" className="text-xs text-gray-500 mb-1 block">{t('complianceDashboard.severityLabel')}</label>
                         <select
                           id="new-rule-severity"
-                          title="Rule severity"
+                          title={t('complianceDashboard.severityTitle')}
                           value={newRule.severity}
                           onChange={e => setNewRule(p => ({ ...p, severity: e.target.value }))}
                           className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                          <option value="info">Info</option>
-                          <option value="warning">Warning</option>
-                          <option value="error">Error (block)</option>
+                          <option value="info">{t('complianceDashboard.sevInfo')}</option>
+                          <option value="warning">{t('complianceDashboard.sevWarning')}</option>
+                          <option value="error">{t('complianceDashboard.sevError')}</option>
                         </select>
                       </div>
                     </div>
                     <div>
                       <label htmlFor="new-rule-keywords" className="text-xs text-gray-500 mb-1 block">
-                        {newRule.ruleType === 'url_block' ? 'Blocked Domains (comma-separated)' : 'Keywords (comma-separated)'}
+                        {newRule.ruleType === 'url_block' ? t('complianceDashboard.blockedDomainsLabel') : t('complianceDashboard.keywordsLabel')}
                       </label>
                       <input
                         id="new-rule-keywords"
                         type="text"
-                        title="Keywords or domains"
-                        placeholder={newRule.ruleType === 'url_block' ? 'example.com, badsite.net' : 'competitor, rival-brand, off-brand-term'}
+                        title={t('complianceDashboard.keywordsTitle')}
+                        placeholder={newRule.ruleType === 'url_block' ? t('complianceDashboard.domainsPlaceholder') : t('complianceDashboard.keywordsPlaceholder')}
                         value={newRule.keywords}
                         onChange={e => setNewRule(p => ({ ...p, keywords: e.target.value }))}
                         className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -656,7 +660,7 @@ export default function ComplianceDashboard() {
                     </div>
                     <div className="flex justify-end gap-2">
                       <button type="button" onClick={() => setIsAddingRule(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                        Cancel
+                        {t('complianceDashboard.cancel')}
                       </button>
                       <button
                         type="button"
@@ -666,7 +670,7 @@ export default function ComplianceDashboard() {
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 disabled:opacity-50"
                       >
                         {isSavingRule ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                        Save Rule
+                        {t('complianceDashboard.saveRule')}
                       </button>
                     </div>
                   </div>
@@ -680,7 +684,7 @@ export default function ComplianceDashboard() {
                 ) : rules.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
                     <Shield className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">No compliance rules yet. Add one to protect your brand.</p>
+                    <p className="text-sm">{t('complianceDashboard.noRules')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -712,7 +716,7 @@ export default function ComplianceDashboard() {
                           </div>
                           {rule.triggerCount > 0 && (
                             <div className="text-right flex-shrink-0">
-                              <p className="text-xs text-gray-400">{rule.triggerCount} trigger{rule.triggerCount !== 1 ? 's' : ''}</p>
+                              <p className="text-xs text-gray-400">{t('complianceDashboard.triggerCount', { count: rule.triggerCount })}</p>
                             </div>
                           )}
                           <button
@@ -720,7 +724,7 @@ export default function ComplianceDashboard() {
                             id={`delete-rule-${rule._id}`}
                             onClick={() => handleDeleteRule(rule._id)}
                             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
-                            title="Deactivate rule"
+                            title={t('complianceDashboard.deactivateRule')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -736,8 +740,8 @@ export default function ComplianceDashboard() {
             {activeTab === 'platforms' && (
               <div className="space-y-4">
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Platform Content Policies</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Official limits and guidelines for each platform</p>
+                  <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('complianceDashboard.platformPoliciesTitle')}</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">{t('complianceDashboard.platformPoliciesSubtitle')}</p>
                 </div>
 
                 {isLoadingPolicies ? (
@@ -752,26 +756,26 @@ export default function ComplianceDashboard() {
                         <div className="space-y-1.5">
                           {policy.maxCharacters && (
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-500">Max characters</span>
+                              <span className="text-gray-500">{t('complianceDashboard.maxCharacters')}</span>
                               <span className="font-mono text-gray-900 dark:text-white">{policy.maxCharacters.toLocaleString()}</span>
                             </div>
                           )}
                           {policy.maxHashtags !== undefined && (
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-500">Max hashtags</span>
+                              <span className="text-gray-500">{t('complianceDashboard.maxHashtags')}</span>
                               <span className="font-mono text-gray-900 dark:text-white">{policy.maxHashtags}</span>
                             </div>
                           )}
                           {policy.recommendedHashtags !== undefined && (
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-500">Recommended hashtags</span>
+                              <span className="text-gray-500">{t('complianceDashboard.recommendedHashtags')}</span>
                               <span className="font-mono text-indigo-600 dark:text-indigo-400">{policy.recommendedHashtags}</span>
                             </div>
                           )}
                           {policy.noExternalLinks && (
                             <div className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
                               <AlertTriangle className="w-3.5 h-3.5" />
-                              No clickable external links in captions
+                              {t('complianceDashboard.noExternalLinks')}
                             </div>
                           )}
                           {(policy as any).notes && (
@@ -789,7 +793,7 @@ export default function ComplianceDashboard() {
                       onClick={loadPolicies}
                       className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg"
                     >
-                      Load Platform Policies
+                      {t('complianceDashboard.loadPolicies')}
                     </button>
                   </div>
                 )}
@@ -801,14 +805,14 @@ export default function ComplianceDashboard() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Compliance History</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Past compliance checks across your content library</p>
+                    <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('complianceDashboard.historyTitle')}</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">{t('complianceDashboard.historySubtitle')}</p>
                   </div>
                   <button
                     type="button"
                     onClick={loadHistory}
-                    aria-label="Refresh compliance history"
-                    title="Refresh compliance history"
+                    aria-label={t('complianceDashboard.refreshHistory')}
+                    title={t('complianceDashboard.refreshHistory')}
                     className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <RefreshCw className={`w-4 h-4 ${isLoadingHistory ? 'animate-spin' : ''}`} />
@@ -824,10 +828,10 @@ export default function ComplianceDashboard() {
                     {/* Summary stats */}
                     <div className="grid grid-cols-4 gap-3">
                       {[
-                        { label: 'Total Checks', value: history.summary.total, color: 'text-indigo-600' },
-                        { label: 'Passed', value: history.summary.passed, color: 'text-emerald-600' },
-                        { label: 'Warnings', value: history.summary.warnings, color: 'text-amber-600' },
-                        { label: 'Failed', value: history.summary.failed, color: 'text-red-600' },
+                        { label: t('complianceDashboard.totalChecks'), value: history.summary.total, color: 'text-indigo-600' },
+                        { label: t('complianceDashboard.passed'), value: history.summary.passed, color: 'text-emerald-600' },
+                        { label: t('complianceDashboard.warnings'), value: history.summary.warnings, color: 'text-amber-600' },
+                        { label: t('complianceDashboard.failed'), value: history.summary.failed, color: 'text-red-600' },
                       ].map(stat => (
                         <div key={stat.label} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
                           <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -837,7 +841,7 @@ export default function ComplianceDashboard() {
                     </div>
                     {history.summary.avgScore != null && (
                       <p className="text-center text-sm text-gray-500">
-                        Average compliance score: <span className="font-semibold text-gray-900 dark:text-white">{history.summary.avgScore}/100</span>
+                        {t('complianceDashboard.avgScoreLabel')} <span className="font-semibold text-gray-900 dark:text-white">{t('complianceDashboard.scoreOutOf100', { score: history.summary.avgScore })}</span>
                       </p>
                     )}
 
@@ -846,10 +850,10 @@ export default function ComplianceDashboard() {
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                           <tr>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Content</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Score</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Checked</th>
+                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colContent')}</th>
+                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colStatus')}</th>
+                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colScore')}</th>
+                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colChecked')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -860,7 +864,7 @@ export default function ComplianceDashboard() {
                               <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                 <td className="px-4 py-3">
                                   <p className="font-medium text-gray-900 dark:text-white truncate max-w-48">
-                                    {item.title || '(Untitled)'}
+                                    {item.title || t('complianceDashboard.untitled')}
                                   </p>
                                   <p className="text-xs text-gray-400 capitalize">{item.type}</p>
                                 </td>
@@ -888,8 +892,8 @@ export default function ComplianceDashboard() {
                 ) : (
                   <div className="text-center py-12 text-gray-400">
                     <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">No compliance history yet.</p>
-                    <p className="text-xs mt-1">Run a check on your content to start tracking.</p>
+                    <p className="text-sm">{t('complianceDashboard.noHistory')}</p>
+                    <p className="text-xs mt-1">{t('complianceDashboard.noHistoryHint')}</p>
                   </div>
                 )}
               </div>

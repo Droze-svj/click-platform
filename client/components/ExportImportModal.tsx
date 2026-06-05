@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -16,6 +17,7 @@ interface ExportImportModalProps {
 
 export default function ExportImportModal({ isOpen, onClose, type, selectedIds = [] }: ExportImportModalProps) {
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'export' | 'import'>('export')
   const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json')
   const [importFile, setImportFile] = useState<File | null>(null)
@@ -51,7 +53,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
 
-        showToast(`Exported ${selectedIds.length} items`, 'success')
+        showToast(t('exportImportModal.exportedItems', { count: selectedIds.length }), 'success')
       } else {
         // Export all
         const response = await axios.get(
@@ -71,11 +73,11 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
 
-        showToast('Export completed', 'success')
+        showToast(t('exportImportModal.exportCompleted'), 'success')
       }
       onClose()
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Export failed', 'error')
+      showToast(error.response?.data?.error || t('exportImportModal.exportFailed'), 'error')
     } finally {
       setExporting(false)
     }
@@ -83,7 +85,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
 
   const handleImport = async () => {
     if (!importFile) {
-      showToast('Please select a file', 'error')
+      showToast(t('exportImportModal.selectFile'), 'error')
       return
     }
 
@@ -94,7 +96,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
       const data = JSON.parse(fileContent)
 
       if (!Array.isArray(data)) {
-        showToast('Invalid file format. Expected an array of items.', 'error')
+        showToast(t('exportImportModal.invalidFileFormat'), 'error')
         return
       }
 
@@ -105,7 +107,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
         }
       )
 
-      showToast(`Imported ${data.length} items successfully`, 'success')
+      showToast(t('exportImportModal.importedItems', { count: data.length }), 'success')
       setImportFile(null)
       onClose()
       // Refresh the page or trigger a reload
@@ -114,9 +116,9 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
       if (error.response?.data?.error) {
         showToast(error.response.data.error, 'error')
       } else if (error instanceof SyntaxError) {
-        showToast('Invalid JSON file', 'error')
+        showToast(t('exportImportModal.invalidJsonFile'), 'error')
       } else {
-        showToast('Import failed', 'error')
+        showToast(t('exportImportModal.importFailed'), 'error')
       }
     } finally {
       setImporting(false)
@@ -129,7 +131,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
       if (file.type === 'application/json' || file.name.endsWith('.json')) {
         setImportFile(file)
       } else {
-        showToast('Please select a JSON file', 'error')
+        showToast(t('exportImportModal.selectJsonFile'), 'error')
       }
     }
   }
@@ -139,7 +141,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Export / Import</h2>
+            <h2 className="text-2xl font-bold">{t('exportImportModal.title')}</h2>
             <button
               type="button"
               onClick={onClose}
@@ -162,7 +164,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
                   : 'text-gray-600 dark:text-gray-400'
               }`}
             >
-              Export
+              {t('exportImportModal.tabExport')}
             </button>
             <button
               type="button"
@@ -173,7 +175,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
                   : 'text-gray-600 dark:text-gray-400'
               }`}
             >
-              Import
+              {t('exportImportModal.tabImport')}
             </button>
           </div>
 
@@ -181,7 +183,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
           {activeTab === 'export' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Format</label>
+                <label className="block text-sm font-medium mb-2">{t('exportImportModal.format')}</label>
                 <select
                   value={exportFormat}
                   onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv')}
@@ -195,7 +197,9 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
               {selectedIds.length > 0 && (
                 <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    Exporting {selectedIds.length} selected item{selectedIds.length !== 1 ? 's' : ''}
+                    {selectedIds.length === 1
+                      ? t('exportImportModal.exportingSelectedItem', { count: selectedIds.length })
+                      : t('exportImportModal.exportingSelectedItems', { count: selectedIds.length })}
                   </p>
                 </div>
               )}
@@ -206,7 +210,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
                 disabled={exporting}
                 className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {exporting ? 'Exporting...' : 'Export'}
+                {exporting ? t('exportImportModal.exporting') : t('exportImportModal.exportButton')}
               </button>
             </div>
           )}
@@ -215,7 +219,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
           {activeTab === 'import' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Select JSON File</label>
+                <label className="block text-sm font-medium mb-2">{t('exportImportModal.selectJsonFileLabel')}</label>
                 <input
                   type="file"
                   accept=".json,application/json"
@@ -224,14 +228,14 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
                 />
                 {importFile && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    Selected: {importFile.name}
+                    {t('exportImportModal.selectedFile', { name: importFile.name })}
                   </p>
                 )}
               </div>
 
               <div className="bg-yellow-50 dark:bg-yellow-900 p-3 rounded-lg">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  ⚠️ Importing will add new items. Existing items won&apos;t be overwritten.
+                  {t('exportImportModal.importWarning')}
                 </p>
               </div>
 
@@ -241,7 +245,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
                 disabled={!importFile || importing}
                 className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {importing ? 'Importing...' : 'Import'}
+                {importing ? t('exportImportModal.importing') : t('exportImportModal.importButton')}
               </button>
             </div>
           )}

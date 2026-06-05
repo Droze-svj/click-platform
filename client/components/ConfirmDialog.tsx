@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslation } from '@/hooks/useTranslation'
+
 interface ConfirmDialogProps {
   isOpen: boolean
   title: string
@@ -15,12 +17,13 @@ export default function ConfirmDialog({
   isOpen,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
   type = 'info'
 }: ConfirmDialogProps) {
+  const { t } = useTranslation()
   if (!isOpen) return null
 
   const colors = {
@@ -40,14 +43,14 @@ export default function ConfirmDialog({
             onClick={onCancel}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
           >
-            {cancelText}
+            {cancelText ?? t('confirmDialog.cancel')}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className={`px-4 py-2 text-white rounded-lg font-semibold ${colors[type]}`}
           >
-            {confirmText}
+            {confirmText ?? t('confirmDialog.confirm')}
           </button>
         </div>
       </div>

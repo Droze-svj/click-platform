@@ -6,6 +6,7 @@ import {
   Upload, Trash2, Eye, EyeOff, ChevronDown
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export interface BrandKitData {
   primaryColor: string
@@ -46,6 +47,7 @@ interface BrandKitProps {
 }
 
 const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => {} }) => {
+  const { t } = useTranslation()
   const [kit, setKit] = useState<BrandKitData>(DEFAULT_BRAND)
   const [saved, setSaved] = useState(false)
   const [previewMode, setPreviewMode] = useState(true)
@@ -68,16 +70,16 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
       localStorage.setItem(BRAND_KIT_KEY, JSON.stringify(kit))
       setSaved(true)
       onSave?.(kit)
-      showToast('✓ LEDGER_UPDATED: BRAND_KIT_SAVED', 'success')
+      showToast(t('brandKit.toastSaved'), 'success')
       setTimeout(() => setSaved(false), 3000)
     } catch {
-      showToast('WRITE_ERR: SAVE_FAILURE', 'error')
+      showToast(t('brandKit.toastSaveFailed'), 'error')
     }
   }, [kit, onSave, showToast])
 
   const handleApply = useCallback(() => {
     onApply?.(kit)
-    showToast('✓ SEQUENCE_SYNCED: BRAND_APPLIED', 'success')
+    showToast(t('brandKit.toastApplied'), 'success')
   }, [kit, onApply, showToast])
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,10 +93,10 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
   }
 
   const handleReset = () => {
-    if (!confirm('RESET_BRAND_CORE: Confirm factory calibration?')) return
+    if (!confirm(t('brandKit.resetConfirm'))) return
     setKit(DEFAULT_BRAND)
     localStorage.removeItem(BRAND_KIT_KEY)
-    showToast('✓ FACTORY_RESET_COMPLETE', 'info')
+    showToast(t('brandKit.toastResetComplete'), 'info')
   }
 
   return (
@@ -105,7 +107,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
           <div className="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-primary-500 shadow-sm">
              <Palette size={20} />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.4em] italic text-surface-900 dark:text-white leading-none">V-Identity Protocol</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.4em] italic text-surface-900 dark:text-white leading-none">{t('brandKit.protocolTitle')}</span>
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setPreviewMode(!previewMode)}
@@ -113,8 +115,8 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
             {previewMode ? <Eye size={18} /> : <EyeOff size={18} />}
           </button>
           <button type="button" onClick={handleReset}
-            aria-label="Reset brand kit"
-            title="Reset brand kit"
+            aria-label={t('brandKit.resetAria')}
+            title={t('brandKit.resetAria')}
             className="p-3 rounded-xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-400 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90">
             <Trash2 size={18} />
           </button>
@@ -126,19 +128,19 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
          <div className="space-y-10">
             {/* Colors */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">Chroma Lattice</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.chromaLattice')}</label>
               <div className="grid grid-cols-3 gap-4 p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] shadow-inner">
                 {[
-                  { key: 'primaryColor' as const, label: 'Primary' },
-                  { key: 'accentColor' as const,  label: 'Accent' },
-                  { key: 'backgroundColor' as const, label: 'Canvas' },
+                  { key: 'primaryColor' as const, label: t('brandKit.colorPrimary') },
+                  { key: 'accentColor' as const,  label: t('brandKit.colorAccent') },
+                  { key: 'backgroundColor' as const, label: t('brandKit.colorCanvas') },
                 ].map(c => (
                   <div key={c.key} className="flex flex-col items-center gap-3 group">
                     <div className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-surface-100 dark:border-surface-800 shadow-lg group-hover:scale-105 transition-transform duration-300">
                       <input type="color" value={kit[c.key] as string}
                         onChange={e => updateKit(c.key, e.target.value)}
-                        aria-label={`${c.label} brand color`}
-                        title={`${c.label} brand color`}
+                        aria-label={t('brandKit.brandColorAria', { label: c.label })}
+                        title={t('brandKit.brandColorAria', { label: c.label })}
                         className="absolute inset-0 w-[120%] h-[120%] -translate-x-[10%] -translate-y-[10%] cursor-pointer bg-transparent"
                       />
                     </div>
@@ -150,12 +152,12 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
 
             {/* Typography */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">Typographic Core</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.typographicCore')}</label>
               <div className="p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] shadow-inner space-y-8">
                  <div className="relative group">
                     <select value={kit.fontFamily} onChange={e => updateKit('fontFamily', e.target.value)}
-                      aria-label="Brand font family"
-                      title="Brand font family"
+                      aria-label={t('brandKit.fontFamilyAria')}
+                      title={t('brandKit.fontFamilyAria')}
                       className="w-full bg-surface-card dark:bg-surface-900 border-2 border-surface-200 dark:border-surface-800 rounded-2xl px-6 py-4 text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-md transition-all"
                     >
                       {BRAND_FONTS.map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f.toUpperCase()}</option>)}
@@ -165,13 +167,13 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                  
                  <div className="space-y-4">
                     <div className="flex items-center justify-between px-2">
-                       <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">Scale Factor</span>
-                       <span className="text-[11px] font-black text-primary-500 italic">{kit.captionFontSize}PX</span>
+                       <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">{t('brandKit.scaleFactor')}</span>
+                       <span className="text-[11px] font-black text-primary-500 italic">{t('brandKit.pixelValue', { value: kit.captionFontSize })}</span>
                     </div>
                     <input type="range" min={20} max={60} step={2} value={kit.captionFontSize}
                       onChange={e => updateKit('captionFontSize', parseInt(e.target.value))}
-                      aria-label={`Caption font scale: ${kit.captionFontSize}px`}
-                      title={`Caption font scale: ${kit.captionFontSize}px`}
+                      aria-label={t('brandKit.captionScaleAria', { size: kit.captionFontSize })}
+                      title={t('brandKit.captionScaleAria', { size: kit.captionFontSize })}
                       className="w-full accent-primary-500 h-1.5 bg-surface-card dark:bg-surface-800 rounded-full cursor-pointer shadow-inner"
                     />
                  </div>
@@ -185,7 +187,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
             <AnimatePresence>
               {previewMode && (
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">Neural Preview</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.neuralPreview')}</label>
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                     className="relative rounded-[2.5rem] overflow-hidden aspect-video border-2 border-surface-100 dark:border-surface-800 shadow-[0_40px_100px_rgba(0,0,0,0.3)] transition-all duration-500"
                     style={{ background: kit.backgroundColor }}
@@ -211,7 +213,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                       }}
                         className="uppercase italic"
                       >
-                        SAMPLE_SYNTHETIC_CAPTION
+                        {t('brandKit.sampleCaption')}
                       </span>
                     </div>
 
@@ -223,7 +225,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                         kit.logoPosition === 'bottom-right' ? 'bottom-4 right-4' :
                         'bottom-4 left-4'
                       }`} style={{ opacity: kit.logoOpacity / 100 }}>
-                        <img src={kit.logoUrl} alt="Logo preview" className="h-10 w-auto object-contain rounded-xl shadow-2xl" />
+                        <img src={kit.logoUrl} alt={t('brandKit.logoPreviewAlt')} className="h-10 w-auto object-contain rounded-xl shadow-2xl" />
                       </div>
                     )}
 
@@ -237,20 +239,20 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
 
             {/* Asset Injection */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">Asset Injection</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.assetInjection')}</label>
               <div className="p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] shadow-inner space-y-6">
-                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} aria-label="Upload logo image" title="Upload logo image" />
+                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} aria-label={t('brandKit.uploadLogoAria')} title={t('brandKit.uploadLogoAria')} />
                  
                  <div className="flex gap-4">
                     <button type="button" onClick={() => fileInputRef.current?.click()}
                       className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-surface-card dark:bg-surface-900 border-2 border-dashed border-surface-200 dark:border-surface-800 hover:border-primary-500/40 text-surface-400 hover:text-primary-500 transition-all text-[10px] font-black uppercase tracking-[0.2em] italic shadow-md">
                       <Upload size={18} />
-                      {kit.logoUrl ? 'REPLACE_VECTOR' : 'INJECT_LOGO'}
+                      {kit.logoUrl ? t('brandKit.replaceVector') : t('brandKit.injectLogo')}
                     </button>
                     {kit.logoUrl && (
                       <button type="button" onClick={() => updateKit('logoUrl', undefined)}
-                        aria-label="Remove logo"
-                        title="Remove logo"
+                        aria-label={t('brandKit.removeLogoAria')}
+                        title={t('brandKit.removeLogoAria')}
                         className="w-14 h-14 rounded-2xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-lg active:scale-90">
                         <Trash2 size={20} />
                       </button>
@@ -272,13 +274,13 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                       </div>
                       <div className="space-y-3">
                          <div className="flex items-center justify-between px-2">
-                           <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">Vector Opacity</span>
-                           <span className="text-[11px] font-black text-primary-500 italic">{kit.logoOpacity}%</span>
+                           <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">{t('brandKit.vectorOpacity')}</span>
+                           <span className="text-[11px] font-black text-primary-500 italic">{t('brandKit.percentValue', { value: kit.logoOpacity })}</span>
                          </div>
                          <input type="range" min={20} max={100} step={5} value={kit.logoOpacity}
                            onChange={e => updateKit('logoOpacity', parseInt(e.target.value))}
-                           aria-label={`Logo opacity: ${kit.logoOpacity}%`}
-                           title={`Logo opacity: ${kit.logoOpacity}%`}
+                           aria-label={t('brandKit.logoOpacityAria', { opacity: kit.logoOpacity })}
+                           title={t('brandKit.logoOpacityAria', { opacity: kit.logoOpacity })}
                            className="w-full accent-primary-500 h-1.5 bg-surface-card dark:bg-surface-800 rounded-full cursor-pointer shadow-inner"
                          />
                       </div>
@@ -286,9 +288,9 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                  )}
 
                  <input value={kit.watermarkText ?? ''} onChange={e => updateKit('watermarkText', e.target.value)}
-                   placeholder="INDEX_HANDLE (@yourhandle)"
-                   aria-label="Watermark handle"
-                   title="Watermark handle"
+                   placeholder={t('brandKit.watermarkPlaceholder')}
+                   aria-label={t('brandKit.watermarkAria')}
+                   title={t('brandKit.watermarkAria')}
                    className="w-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-[11px] font-black text-surface-900 dark:text-white uppercase italic tracking-widest placeholder:text-surface-200 dark:placeholder:text-slate-800 focus:border-primary-500 outline-none transition-all shadow-md"
                  />
               </div>
@@ -299,8 +301,8 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
       {/* Auto-apply toggle */}
       <div className="flex items-center justify-between px-6 py-5 rounded-[2rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800">
         <div>
-          <p className="text-[11px] font-black text-surface-900 dark:text-white uppercase italic tracking-tight leading-none mb-1">Auto-apply to all new clips</p>
-          <p className="text-[10px] font-bold text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">Brand kit applied automatically when Forge generates clips</p>
+          <p className="text-[11px] font-black text-surface-900 dark:text-white uppercase italic tracking-tight leading-none mb-1">{t('brandKit.autoApplyTitle')}</p>
+          <p className="text-[10px] font-bold text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">{t('brandKit.autoApplyDesc')}</p>
         </div>
         <label className="relative w-14 h-7 flex-shrink-0 cursor-pointer">
           <input
@@ -308,7 +310,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
             checked={kit.autoApplyToClips}
             onChange={() => updateKit('autoApplyToClips', !kit.autoApplyToClips)}
             className="sr-only"
-            aria-label={kit.autoApplyToClips ? 'Disable auto-apply to clips' : 'Enable auto-apply to clips'}
+            aria-label={kit.autoApplyToClips ? t('brandKit.disableAutoApplyAria') : t('brandKit.enableAutoApplyAria')}
           />
           <span className={`block w-14 h-7 rounded-full border-2 transition-all duration-300 ${kit.autoApplyToClips ? 'bg-emerald-500 border-emerald-500' : 'bg-surface-card dark:bg-surface-900 border-surface-100 dark:border-surface-800'}`}>
             <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-lg transition-all duration-300 ${kit.autoApplyToClips ? 'left-[calc(100%-1.375rem)]' : 'left-0.5'}`} />
@@ -321,7 +323,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
         <motion.button whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={handleApply}
           className="flex-1 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.6em] italic bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-600 dark:text-slate-400 hover:bg-surface-card hover:border-primary-500/40 transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95">
           <Sparkles size={20} className="text-primary-500" />
-          Omni-Channel Apply
+          {t('brandKit.omniChannelApply')}
         </motion.button>
         <motion.button whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={handleSave}
           className={`flex-1 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.8em] italic transition-all duration-500 flex items-center justify-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] active:scale-95 border-none ${
@@ -329,13 +331,13 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
               ? 'bg-emerald-500 text-white shadow-emerald-500/20'
               : 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white'
           }`}>
-          {saved ? <><CheckCircle2 size={22} />Commit Complete</> : <><Save size={22} />Commit Kit</>}
+          {saved ? <><CheckCircle2 size={22} />{t('brandKit.commitComplete')}</> : <><Save size={22} />{t('brandKit.commitKit')}</>}
         </motion.button>
       </footer>
 
       {/* Footer Info */}
       <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 text-center uppercase tracking-[0.8em] italic">
-        ENCRYPTED_LOCAL_STORAGE · SYNC_PENDING
+        {t('brandKit.footerInfo')}
       </p>
     </div>
   )

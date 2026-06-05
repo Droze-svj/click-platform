@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Upload, CheckCircle2, XCircle, RefreshCw, Wifi, WifiOff, X } from 'lucide-react'
 import { useRealtimeProgress } from '../hooks/useRealtimeProgress'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface UploadProgressProps {
   uploadId: string
@@ -19,6 +20,7 @@ export default function UploadProgress({
   onCancel,
   showCancel = true
 }: UploadProgressProps) {
+  const { t } = useTranslation()
   const { progress, isConnected } = useRealtimeProgress({
     uploadId,
     onComplete,
@@ -50,7 +52,7 @@ export default function UploadProgress({
     return (
       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
         <RefreshCw className="w-4 h-4 animate-spin" />
-        <span>Initializing upload...</span>
+        <span>{t('uploadProgress.initializingUpload')}</span>
       </div>
     )
   }
@@ -74,7 +76,7 @@ export default function UploadProgress({
     return (
       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
         <RefreshCw className="w-4 h-4 animate-spin" />
-        <span>Initializing upload...</span>
+        <span>{t('uploadProgress.initializingUpload')}</span>
       </div>
     )
   }
@@ -96,14 +98,14 @@ export default function UploadProgress({
             <XCircle className="w-4 h-4 text-gray-600" />
           )}
           <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {progress.status === 'uploading' ? 'Uploading...' :
-              progress.status === 'completed' ? 'Upload Complete' :
-                progress.status === 'failed' ? 'Upload Failed' :
-                  progress.status === 'cancelled' ? 'Upload Cancelled' :
-                    'Processing...'}
+            {progress.status === 'uploading' ? t('uploadProgress.uploading') :
+              progress.status === 'completed' ? t('uploadProgress.uploadComplete') :
+                progress.status === 'failed' ? t('uploadProgress.uploadFailed') :
+                  progress.status === 'cancelled' ? t('uploadProgress.uploadCancelled') :
+                    t('uploadProgress.processing')}
           </span>
           {/* Connection Status */}
-          <div className="flex items-center gap-1 ml-2" title={isConnected ? 'Real-time updates active' : 'Polling mode'}>
+          <div className="flex items-center gap-1 ml-2" title={isConnected ? t('uploadProgress.realtimeUpdatesActive') : t('uploadProgress.pollingMode')}>
             {isConnected ? (
               <Wifi className="w-3 h-3 text-green-500" aria-hidden />
             ) : (
@@ -121,7 +123,7 @@ export default function UploadProgress({
               onClick={handleCancel}
               disabled={isCancelling}
               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
-              title="Cancel upload"
+              title={t('uploadProgress.cancelUpload')}
             >
               <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
             </button>
@@ -146,7 +148,7 @@ export default function UploadProgress({
           {formatBytes(progress.bytesUploaded ?? 0)} / {formatBytes(progress.totalBytes ?? 0)}
         </span>
         {progress.estimatedTimeRemaining && progress.status === 'uploading' && (
-          <span>~{formatTime(progress.estimatedTimeRemaining)} remaining</span>
+          <span>{t('uploadProgress.timeRemaining', { time: formatTime(progress.estimatedTimeRemaining) })}</span>
         )}
       </div>
 

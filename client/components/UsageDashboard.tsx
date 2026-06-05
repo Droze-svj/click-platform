@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface UsageSummary {
   tier: {
@@ -55,6 +56,7 @@ interface UsageSummary {
 }
 
 export default function UsageDashboard() {
+  const { t } = useTranslation()
   const [usage, setUsage] = useState<UsageSummary | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -95,20 +97,20 @@ export default function UsageDashboard() {
   }
 
   if (!usage) {
-    return <div className="p-8 text-center text-gray-500">No usage data available</div>
+    return <div className="p-8 text-center text-gray-500">{t('usageDashboard.noUsageData')}</div>
   }
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Usage Dashboard</h1>
-        <p className="text-gray-600">Current Plan: {usage.tier.name}</p>
+        <h1 className="text-2xl font-bold mb-2">{t('usageDashboard.usageDashboard')}</h1>
+        <p className="text-gray-600">{t('usageDashboard.currentPlan', { plan: usage.tier.name })}</p>
       </div>
 
       {/* AI Minutes */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">AI Minutes</h2>
+          <h2 className="text-lg font-semibold">{t('usageDashboard.aiMinutes')}</h2>
           <span className="text-sm text-gray-600">
             {usage.usage.aiMinutes.used.toLocaleString()} / {usage.usage.aiMinutes.limit.toLocaleString()}
           </span>
@@ -120,10 +122,10 @@ export default function UsageDashboard() {
           ></div>
         </div>
         <div className="text-sm text-gray-600">
-          {usage.usage.aiMinutes.percentage}% used
+          {t('usageDashboard.percentUsed', { percent: usage.usage.aiMinutes.percentage })}
           {usage.usage.aiMinutes.overage > 0 && (
             <span className="text-red-600 ml-2">
-              ({usage.usage.aiMinutes.overage} over limit - ${usage.usage.aiMinutes.overageCost.toFixed(2)})
+              {t('usageDashboard.overLimit', { overage: usage.usage.aiMinutes.overage, cost: usage.usage.aiMinutes.overageCost.toFixed(2) })}
             </span>
           )}
         </div>
@@ -132,7 +134,7 @@ export default function UsageDashboard() {
       {/* Clients */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Clients</h2>
+          <h2 className="text-lg font-semibold">{t('usageDashboard.clients')}</h2>
           <span className="text-sm text-gray-600">
             {usage.usage.clients.used} / {usage.usage.clients.limit}
           </span>
@@ -144,10 +146,10 @@ export default function UsageDashboard() {
           ></div>
         </div>
         <div className="text-sm text-gray-600">
-          {usage.usage.clients.percentage}% used
+          {t('usageDashboard.percentUsed', { percent: usage.usage.clients.percentage })}
           {usage.usage.clients.overage > 0 && (
             <span className="text-red-600 ml-2">
-              ({usage.usage.clients.overage} over limit - ${usage.usage.clients.overageCost.toFixed(2)})
+              {t('usageDashboard.overLimit', { overage: usage.usage.clients.overage, cost: usage.usage.clients.overageCost.toFixed(2) })}
             </span>
           )}
         </div>
@@ -156,7 +158,7 @@ export default function UsageDashboard() {
       {/* Connected Profiles */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Connected Profiles</h2>
+          <h2 className="text-lg font-semibold">{t('usageDashboard.connectedProfiles')}</h2>
           <span className="text-sm text-gray-600">
             {usage.usage.profiles.used} / {usage.usage.profiles.limit}
           </span>
@@ -168,10 +170,10 @@ export default function UsageDashboard() {
           ></div>
         </div>
         <div className="text-sm text-gray-600">
-          {usage.usage.profiles.percentage}% used
+          {t('usageDashboard.percentUsed', { percent: usage.usage.profiles.percentage })}
           {usage.usage.profiles.overage > 0 && (
             <span className="text-red-600 ml-2">
-              ({usage.usage.profiles.overage} over limit - ${usage.usage.profiles.overageCost.toFixed(2)})
+              {t('usageDashboard.overLimit', { overage: usage.usage.profiles.overage, cost: usage.usage.profiles.overageCost.toFixed(2) })}
             </span>
           )}
         </div>
@@ -179,10 +181,10 @@ export default function UsageDashboard() {
 
       {/* Content Usage */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">Content Usage</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('usageDashboard.contentUsage')}</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-sm text-gray-600 mb-1">Posts</div>
+            <div className="text-sm text-gray-600 mb-1">{t('usageDashboard.posts')}</div>
             <div className="text-xl font-semibold">
               {usage.usage.content.posts.used.toLocaleString()}
               {usage.usage.content.posts.limit && (
@@ -191,7 +193,7 @@ export default function UsageDashboard() {
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-600 mb-1">Videos</div>
+            <div className="text-sm text-gray-600 mb-1">{t('usageDashboard.videos')}</div>
             <div className="text-xl font-semibold">
               {usage.usage.content.videos.toLocaleString()}
               {usage.usage.content.videos.limit && (
@@ -204,11 +206,11 @@ export default function UsageDashboard() {
 
       {/* Billing Period */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">Billing Period</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('usageDashboard.billingPeriod')}</h2>
         <div className="text-sm text-gray-600">
-          <div>Current Period: {new Date(usage.billing.currentPeriod.start).toLocaleDateString()} - {new Date(usage.billing.currentPeriod.end).toLocaleDateString()}</div>
+          <div>{t('usageDashboard.currentPeriod', { start: new Date(usage.billing.currentPeriod.start).toLocaleDateString(), end: new Date(usage.billing.currentPeriod.end).toLocaleDateString() })}</div>
           {usage.billing.nextBillingDate && (
-            <div className="mt-2">Next Billing: {new Date(usage.billing.nextBillingDate).toLocaleDateString()}</div>
+            <div className="mt-2">{t('usageDashboard.nextBilling', { date: new Date(usage.billing.nextBillingDate).toLocaleDateString() })}</div>
           )}
         </div>
       </div>

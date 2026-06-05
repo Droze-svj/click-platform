@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Trash2, Save, Settings, Users, Clock, CheckCircle, X } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -48,6 +49,7 @@ export default function ApprovalWorkflowBuilder({
   workflowId?: string
   onSave?: () => void
 }) {
+  const { t } = useTranslation()
   const [workflow, setWorkflow] = useState<Workflow>({
     name: '',
     description: '',
@@ -152,12 +154,12 @@ export default function ApprovalWorkflowBuilder({
 
   const saveWorkflow = async () => {
     if (!workflow.name.trim()) {
-      alert('Workflow name is required')
+      alert(t('approvalWorkflowBuilder.workflowNameRequired'))
       return
     }
 
     if (workflow.stages.length === 0) {
-      alert('At least one stage is required')
+      alert(t('approvalWorkflowBuilder.atLeastOneStageRequired'))
       return
     }
 
@@ -171,11 +173,11 @@ export default function ApprovalWorkflowBuilder({
       )
 
       if (response.data.success) {
-        alert('Workflow saved successfully!')
+        alert(t('approvalWorkflowBuilder.workflowSavedSuccess'))
         onSave?.()
       }
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error saving workflow')
+      alert(error.response?.data?.error || t('approvalWorkflowBuilder.errorSavingWorkflow'))
     } finally {
       setLoading(false)
     }
@@ -185,7 +187,7 @@ export default function ApprovalWorkflowBuilder({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-          Approval Workflow Builder
+          {t('approvalWorkflowBuilder.title')}
         </h2>
         <button
           type="button"
@@ -194,7 +196,7 @@ export default function ApprovalWorkflowBuilder({
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
         >
           <Save className="w-4 h-4" />
-          {loading ? 'Saving...' : 'Save Workflow'}
+          {loading ? t('approvalWorkflowBuilder.saving') : t('approvalWorkflowBuilder.saveWorkflow')}
         </button>
       </div>
 
@@ -202,26 +204,26 @@ export default function ApprovalWorkflowBuilder({
       <div className="mb-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Workflow Name *
+            {t('approvalWorkflowBuilder.workflowNameLabel')}
           </label>
           <input
             type="text"
             value={workflow.name}
             onChange={(e) => setWorkflow({ ...workflow, name: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            placeholder="e.g., Standard Content Approval"
+            placeholder={t('approvalWorkflowBuilder.workflowNamePlaceholder')}
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Description
+            {t('approvalWorkflowBuilder.descriptionLabel')}
           </label>
           <textarea
             value={workflow.description}
             onChange={(e) => setWorkflow({ ...workflow, description: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             rows={3}
-            placeholder="Describe this workflow..."
+            placeholder={t('approvalWorkflowBuilder.descriptionPlaceholder')}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -232,7 +234,7 @@ export default function ApprovalWorkflowBuilder({
             className="w-4 h-4 text-blue-600 rounded"
           />
           <label className="text-sm text-gray-700 dark:text-gray-300">
-            Set as default workflow
+            {t('approvalWorkflowBuilder.setAsDefault')}
           </label>
         </div>
       </div>
@@ -241,7 +243,7 @@ export default function ApprovalWorkflowBuilder({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
-            Approval Stages
+            {t('approvalWorkflowBuilder.approvalStages')}
           </h3>
           <button
             type="button"
@@ -249,13 +251,13 @@ export default function ApprovalWorkflowBuilder({
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Stage
+            {t('approvalWorkflowBuilder.addStage')}
           </button>
         </div>
 
         {workflow.stages.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <p>No stages yet. Click &quot;Add Stage&quot; to create your first approval stage.</p>
+            <p>{t('approvalWorkflowBuilder.noStagesYet')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -267,14 +269,14 @@ export default function ApprovalWorkflowBuilder({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-semibold">
-                      Stage {stage.order + 1}
+                      {t('approvalWorkflowBuilder.stageNumber', { number: stage.order + 1 })}
                     </span>
                     <input
                       type="text"
                       value={stage.name}
                       onChange={(e) => updateStage(stageIndex, { name: e.target.value })}
                       className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white font-semibold"
-                      placeholder="Stage name"
+                      placeholder={t('approvalWorkflowBuilder.stageNamePlaceholder')}
                     />
                   </div>
                   <button
@@ -289,29 +291,29 @@ export default function ApprovalWorkflowBuilder({
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description
+                      {t('approvalWorkflowBuilder.descriptionLabel')}
                     </label>
                     <textarea
                       value={stage.description}
                       onChange={(e) => updateStage(stageIndex, { description: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                       rows={2}
-                      placeholder="Stage description..."
+                      placeholder={t('approvalWorkflowBuilder.stageDescriptionPlaceholder')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Approval Type
+                      {t('approvalWorkflowBuilder.approvalType')}
                     </label>
                     <select
                       value={stage.approvalType}
                       onChange={(e) => updateStage(stageIndex, { approvalType: e.target.value as any })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     >
-                      <option value="all">All approvers must approve</option>
-                      <option value="any">Any approver can approve</option>
-                      <option value="majority">Majority must approve</option>
+                      <option value="all">{t('approvalWorkflowBuilder.approvalTypeAll')}</option>
+                      <option value="any">{t('approvalWorkflowBuilder.approvalTypeAny')}</option>
+                      <option value="majority">{t('approvalWorkflowBuilder.approvalTypeMajority')}</option>
                     </select>
                   </div>
 
@@ -319,7 +321,7 @@ export default function ApprovalWorkflowBuilder({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Approvers
+                        {t('approvalWorkflowBuilder.approvers')}
                       </label>
                       <button
                         type="button"
@@ -327,12 +329,12 @@ export default function ApprovalWorkflowBuilder({
                         className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                       >
                         <Plus className="w-3 h-3" />
-                        Add Approver
+                        {t('approvalWorkflowBuilder.addApprover')}
                       </button>
                     </div>
                     {stage.approvers.length === 0 ? (
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        No approvers added. Add at least one approver.
+                        {t('approvalWorkflowBuilder.noApprovers')}
                       </p>
                     ) : (
                       <div className="space-y-2">
@@ -355,7 +357,7 @@ export default function ApprovalWorkflowBuilder({
                               }}
                               className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                             >
-                              <option value="">Select approver...</option>
+                              <option value="">{t('approvalWorkflowBuilder.selectApprover')}</option>
                               {users.map(user => (
                                 <option key={user._id} value={user._id}>
                                   {user.name} ({user.email})
@@ -371,9 +373,9 @@ export default function ApprovalWorkflowBuilder({
                               }}
                               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                             >
-                              <option value="required">Required</option>
-                              <option value="optional">Optional</option>
-                              <option value="any">Any</option>
+                              <option value="required">{t('approvalWorkflowBuilder.roleRequired')}</option>
+                              <option value="optional">{t('approvalWorkflowBuilder.roleOptional')}</option>
+                              <option value="any">{t('approvalWorkflowBuilder.roleAny')}</option>
                             </select>
                             <button
                               type="button"
@@ -398,7 +400,7 @@ export default function ApprovalWorkflowBuilder({
                         className="w-4 h-4 text-blue-600 rounded"
                       />
                       <label className="text-sm text-gray-700 dark:text-gray-300">
-                        Auto-approve
+                        {t('approvalWorkflowBuilder.autoApprove')}
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -409,7 +411,7 @@ export default function ApprovalWorkflowBuilder({
                         className="w-4 h-4 text-blue-600 rounded"
                       />
                       <label className="text-sm text-gray-700 dark:text-gray-300">
-                        Can reject
+                        {t('approvalWorkflowBuilder.canReject')}
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -420,7 +422,7 @@ export default function ApprovalWorkflowBuilder({
                         className="w-4 h-4 text-blue-600 rounded"
                       />
                       <label className="text-sm text-gray-700 dark:text-gray-300">
-                        Can request changes
+                        {t('approvalWorkflowBuilder.canRequestChanges')}
                       </label>
                     </div>
                   </div>
@@ -434,7 +436,7 @@ export default function ApprovalWorkflowBuilder({
       {/* Settings */}
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-          Workflow Settings
+          {t('approvalWorkflowBuilder.workflowSettings')}
         </h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
@@ -448,7 +450,7 @@ export default function ApprovalWorkflowBuilder({
               className="w-4 h-4 text-blue-600 rounded"
             />
             <label className="text-sm text-gray-700 dark:text-gray-300">
-              Allow parallel approvals
+              {t('approvalWorkflowBuilder.allowParallelApprovals')}
             </label>
           </div>
           <div className="flex items-center gap-2">
@@ -462,7 +464,7 @@ export default function ApprovalWorkflowBuilder({
               className="w-4 h-4 text-blue-600 rounded"
             />
             <label className="text-sm text-gray-700 dark:text-gray-300">
-              Notify on stage change
+              {t('approvalWorkflowBuilder.notifyOnStageChange')}
             </label>
           </div>
           <div className="flex items-center gap-2">
@@ -476,7 +478,7 @@ export default function ApprovalWorkflowBuilder({
               className="w-4 h-4 text-blue-600 rounded"
             />
             <label className="text-sm text-gray-700 dark:text-gray-300">
-              Notify on rejection
+              {t('approvalWorkflowBuilder.notifyOnRejection')}
             </label>
           </div>
           <div className="flex items-center gap-2">
@@ -490,7 +492,7 @@ export default function ApprovalWorkflowBuilder({
               className="w-4 h-4 text-blue-600 rounded"
             />
             <label className="text-sm text-gray-700 dark:text-gray-300">
-              Allow creator to edit
+              {t('approvalWorkflowBuilder.allowCreatorEdit')}
             </label>
           </div>
         </div>

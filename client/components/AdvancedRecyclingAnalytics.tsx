@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, Minus, BarChart3, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
 import axios from 'axios'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -45,6 +46,7 @@ interface AdvancedAnalytics {
 }
 
 export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: number }) {
+  const { t } = useTranslation()
   const [analytics, setAnalytics] = useState<AdvancedAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -93,7 +95,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
   if (!analytics) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center text-gray-500">
-        No analytics data available
+        {t('advancedRecyclingAnalytics.noAnalyticsData')}
       </div>
     )
   }
@@ -103,31 +105,31 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Recycled</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.totalRecycled')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {analytics.overview.totalRecycled}
           </p>
         </div>
         <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Active</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.active')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {analytics.overview.active}
           </p>
         </div>
         <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Paused</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.paused')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {analytics.overview.paused}
           </p>
         </div>
         <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Reposts</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.totalReposts')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {analytics.overview.totalReposts}
           </p>
         </div>
         <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Evergreen</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.evergreen')}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {analytics.evergreen.total}
           </p>
@@ -138,17 +140,17 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5" />
-          Performance Metrics
+          {t('advancedRecyclingAnalytics.performanceMetrics')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Avg Original Engagement</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.avgOriginalEngagement')}</p>
             <p className="text-xl font-bold text-gray-900 dark:text-white">
               {formatNumber(analytics.performance.averageOriginalEngagement)}
             </p>
           </div>
           <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Avg Repost Engagement</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.avgRepostEngagement')}</p>
             <p className="text-xl font-bold text-gray-900 dark:text-white">
               {formatNumber(analytics.performance.averageRepostEngagement)}
             </p>
@@ -158,7 +160,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
               ? 'bg-green-50 dark:bg-green-900/20'
               : 'bg-red-50 dark:bg-red-900/20'
           }`}>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Avg Performance Change</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.avgPerformanceChange')}</p>
             <div className="flex items-center gap-2">
               {analytics.performance.averagePerformanceChange >= 0 ? (
                 <TrendingUp className="w-5 h-5 text-green-600" />
@@ -182,7 +184,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
           <div className="mt-4 grid grid-cols-2 gap-4">
             {analytics.performance.bestPerformer && (
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Best Performer</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.bestPerformer')}</p>
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-green-600" />
                   <p className="text-lg font-bold text-green-600">
@@ -193,7 +195,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
             )}
             {analytics.performance.worstPerformer && (
               <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Worst Performer</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('advancedRecyclingAnalytics.worstPerformer')}</p>
                 <div className="flex items-center gap-2">
                   <TrendingDown className="w-4 h-4 text-red-600" />
                   <p className="text-lg font-bold text-red-600">
@@ -209,34 +211,34 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
       {/* Trends */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-          Performance Trends
+          {t('advancedRecyclingAnalytics.performanceTrends')}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-green-600" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Improving</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedRecyclingAnalytics.improving')}</p>
             </div>
             <p className="text-2xl font-bold text-green-600">{analytics.trends.improving}</p>
           </div>
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Minus className="w-5 h-5 text-blue-600" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Stable</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedRecyclingAnalytics.stable')}</p>
             </div>
             <p className="text-2xl font-bold text-blue-600">{analytics.trends.stable}</p>
           </div>
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown className="w-5 h-5 text-yellow-600" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Declining</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedRecyclingAnalytics.declining')}</p>
             </div>
             <p className="text-2xl font-bold text-yellow-600">{analytics.trends.declining}</p>
           </div>
           <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-5 h-5 text-red-600" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Decay Detected</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedRecyclingAnalytics.decayDetected')}</p>
             </div>
             <p className="text-2xl font-bold text-red-600">{analytics.trends.decayDetected}</p>
           </div>
@@ -247,7 +249,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
       {Object.keys(analytics.platformBreakdown).length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
-            Platform Breakdown
+            {t('advancedRecyclingAnalytics.platformBreakdown')}
           </h3>
           <div className="space-y-3">
             {Object.entries(analytics.platformBreakdown).map(([platform, data]) => (
@@ -255,11 +257,11 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white capitalize">{platform}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {data.count} plans • {data.totalReposts} reposts
+                    {t('advancedRecyclingAnalytics.plansReposts', { count: data.count, reposts: data.totalReposts })}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Avg Engagement</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedRecyclingAnalytics.avgEngagement')}</p>
                   <p className="font-semibold text-gray-900 dark:text-white">
                     {formatNumber(data.averageEngagement)}
                   </p>
@@ -275,17 +277,17 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
-            Evergreen Content
+            {t('advancedRecyclingAnalytics.evergreenContent')}
           </h3>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Evergreen Content</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedRecyclingAnalytics.totalEvergreenContent')}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {analytics.evergreen.total}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Average Score</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t('advancedRecyclingAnalytics.averageScore')}</p>
               <p className="text-2xl font-bold text-green-600">
                 {analytics.evergreen.averageScore}%
               </p>

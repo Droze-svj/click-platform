@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -34,6 +35,7 @@ const platformStyles: Record<string, { bg: string; text: string; border: string 
 }
 
 export default function EnhancedContentPreview({ content, onClose }: EnhancedContentPreviewProps) {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -41,7 +43,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
     setCopied(id)
-    showToast('Copied to clipboard', 'success')
+    showToast(t('enhancedContentPreview.copiedToClipboard'), 'success')
     setTimeout(() => setCopied(null), 2000)
   }
 
@@ -61,7 +63,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center z-10">
-          <h2 className="text-2xl font-bold">{content.title || 'Content Preview'}</h2>
+          <h2 className="text-2xl font-bold">{content.title || t('enhancedContentPreview.contentPreview')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -87,7 +89,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  All Platforms
+                  {t('enhancedContentPreview.allPlatforms')}
                 </button>
                 {Array.from(new Set(posts.map(p => p.platform))).map((platform) => (
                   <button
@@ -140,14 +142,14 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
                               : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                           }`}
                         >
-                          {copied === postId ? '✓ Copied' : '📋 Copy'}
+                          {copied === postId ? t('enhancedContentPreview.copied') : t('enhancedContentPreview.copy')}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSchedule(post.platform, post.content)}
                           className="px-3 py-1 rounded text-sm bg-purple-600 text-white hover:bg-purple-700"
                         >
-                          📅 Schedule
+                          {t('enhancedContentPreview.schedule')}
                         </button>
                       </div>
                     </div>
@@ -171,10 +173,10 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
 
                     {/* Character Count */}
                     <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                      {post.content.length} characters
+                      {t('enhancedContentPreview.characters', { count: post.content.length })}
                       {post.platform === 'twitter' && (
                         <span className={post.content.length > 280 ? 'text-red-600' : ''}>
-                          {' '}/ 280 (Twitter limit)
+                          {' '}{t('enhancedContentPreview.twitterLimit')}
                         </span>
                       )}
                     </div>
@@ -185,7 +187,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
 
           {posts.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              <p>No generated content available</p>
+              <p>{t('enhancedContentPreview.noGeneratedContent')}</p>
             </div>
           )}
         </div>

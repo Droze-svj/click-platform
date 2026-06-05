@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { CollaborationIcon } from './icons/VideoIcons'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface UserPresence {
   id: string
@@ -79,9 +80,10 @@ export default function CollaborativeEditing({
   onCommentAdd,
   onCursorMove
 }: CollaborativeEditingProps) {
+  const { t } = useTranslation()
   const [session, setSession] = useState<EditSession>({
     id: sessionId || `session-${Date.now()}`,
-    name: 'Collaborative Edit Session',
+    name: t('collaborativeEditing.sessionName'),
     participants: [{
       id: currentUser.id,
       name: currentUser.name,
@@ -147,7 +149,7 @@ export default function CollaborativeEditing({
     onCommentAdd?.(comment)
     setNewComment('')
     setCommentPosition(null)
-    showToast('Comment added', 'success')
+    showToast(t('collaborativeEditing.commentAdded'), 'success')
   }, [currentUser, onCommentAdd, showToast])
 
   const resolveComment = useCallback((commentId: string) => {
@@ -158,19 +160,19 @@ export default function CollaborativeEditing({
       ),
       lastModified: Date.now()
     }))
-    showToast('Comment resolved', 'success')
+    showToast(t('collaborativeEditing.commentResolved'), 'success')
   }, [showToast])
 
   const inviteParticipant = useCallback((email: string) => {
     // Mock invitation (in real implementation, this would send an email/invitation)
-    showToast(`Invitation sent to ${email}`, 'success')
+    showToast(t('collaborativeEditing.invitationSent', { email }), 'success')
     setShowInviteDialog(false)
   }, [showToast])
 
   const generateShareLink = useCallback(() => {
     const shareUrl = `${window.location.origin}/collaborate/${session.id}`
     navigator.clipboard.writeText(shareUrl)
-    showToast('Share link copied to clipboard', 'success')
+    showToast(t('collaborativeEditing.shareLinkCopied'), 'success')
   }, [session.id, showToast])
 
   // Mock real-time updates (in real implementation, this would use WebSockets)
@@ -221,10 +223,10 @@ export default function CollaborativeEditing({
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    if (days > 0) return `${days}d ago`
-    if (hours > 0) return `${hours}h ago`
-    if (minutes > 0) return `${minutes}m ago`
-    return 'Just now'
+    if (days > 0) return t('collaborativeEditing.daysAgo', { count: days })
+    if (hours > 0) return t('collaborativeEditing.hoursAgo', { count: hours })
+    if (minutes > 0) return t('collaborativeEditing.minutesAgo', { count: minutes })
+    return t('collaborativeEditing.justNow')
   }
 
   return (
@@ -236,8 +238,8 @@ export default function CollaborativeEditing({
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{session.name}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {session.participants.length} participant{session.participants.length !== 1 ? 's' : ''} •
-              {session.comments.length} comment{session.comments.length !== 1 ? 's' : ''}
+              {t('collaborativeEditing.participantsCount', { count: session.participants.length })} •
+              {t('collaborativeEditing.commentsCount', { count: session.comments.length })}
             </p>
           </div>
 
@@ -248,7 +250,7 @@ export default function CollaborativeEditing({
                 key={participant.id}
                 className={`w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center text-white text-xs font-medium relative`}
                 style={{ backgroundColor: participant.color }}
-                title={`${participant.name} (${participant.status})`}
+                title={t('collaborativeEditing.participantTitle', { name: participant.name, status: participant.status })}
               >
                 {participant.avatar ? (
                   <img src={participant.avatar} alt={participant.name} className="w-full h-full rounded-full" />
@@ -290,7 +292,7 @@ export default function CollaborativeEditing({
             type="button"
             onClick={() => setShowInviteDialog(true)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
-            title="Invite collaborators"
+            title={t('collaborativeEditing.inviteCollaborators')}
           >
             <Users className="w-5 h-5" />
           </button>
@@ -300,7 +302,7 @@ export default function CollaborativeEditing({
             type="button"
             onClick={generateShareLink}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
-            title="Copy share link"
+            title={t('collaborativeEditing.copyShareLink')}
           >
             <Share className="w-5 h-5" />
           </button>
@@ -363,7 +365,7 @@ export default function CollaborativeEditing({
         <div className="absolute right-4 top-20 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-30">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Comments</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('collaborativeEditing.comments')}</h4>
               <button
                 type="button"
                 onClick={() => setShowCommentsPanel(false)}
@@ -378,8 +380,8 @@ export default function CollaborativeEditing({
             {session.comments.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No comments yet</p>
-                <p className="text-sm">Right-click on the video to add a comment</p>
+                <p>{t('collaborativeEditing.noComments')}</p>
+                <p className="text-sm">{t('collaborativeEditing.noCommentsHint')}</p>
               </div>
             ) : (
               session.comments.map(comment => (
@@ -408,7 +410,7 @@ export default function CollaborativeEditing({
                           onClick={() => resolveComment(comment.id)}
                           className="text-green-600 hover:text-green-700 text-sm"
                         >
-                          Resolve
+                          {t('collaborativeEditing.resolve')}
                         </button>
                       )}
                     </div>
@@ -416,7 +418,7 @@ export default function CollaborativeEditing({
                     {comment.resolved && (
                       <div className="flex items-center gap-1 mt-2 text-green-600 text-xs">
                         <CheckCircle className="w-3 h-3" />
-                        Resolved
+                        {t('collaborativeEditing.resolved')}
                       </div>
                     )}
                   </div>
@@ -437,7 +439,7 @@ export default function CollaborativeEditing({
                     addComment(newComment, commentPosition || { x: 50, y: 50, time: 0 })
                   }
                 }}
-                placeholder="Add a comment..."
+                placeholder={t('collaborativeEditing.addCommentPlaceholder')}
                 className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <button
@@ -459,7 +461,7 @@ export default function CollaborativeEditing({
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">Invite Collaborators</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('collaborativeEditing.inviteCollaboratorsTitle')}</h2>
                 <button
                   type="button"
                   onClick={() => setShowInviteDialog(false)}
@@ -474,23 +476,23 @@ export default function CollaborativeEditing({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email Address
+                    {t('collaborativeEditing.emailAddress')}
                   </label>
                   <input
                     type="email"
-                    placeholder="colleague@example.com"
+                    placeholder={t('collaborativeEditing.emailPlaceholder')}
                     className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Permission Level
+                    {t('collaborativeEditing.permissionLevel')}
                   </label>
                   <select className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="editor">Can edit and comment</option>
-                    <option value="commenter">Can only comment</option>
-                    <option value="viewer">View only</option>
+                    <option value="editor">{t('collaborativeEditing.permissionEditor')}</option>
+                    <option value="commenter">{t('collaborativeEditing.permissionCommenter')}</option>
+                    <option value="viewer">{t('collaborativeEditing.permissionViewer')}</option>
                   </select>
                 </div>
 
@@ -500,14 +502,14 @@ export default function CollaborativeEditing({
                     onClick={() => inviteParticipant('colleague@example.com')}
                     className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    Send Invitation
+                    {t('collaborativeEditing.sendInvitation')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowInviteDialog(false)}
                     className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
-                    Cancel
+                    {t('collaborativeEditing.cancel')}
                   </button>
                 </div>
               </div>
@@ -531,7 +533,7 @@ export default function CollaborativeEditing({
             ))}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            {session.participants.length} active
+            {t('collaborativeEditing.activeCount', { count: session.participants.length })}
           </div>
         </div>
       </div>

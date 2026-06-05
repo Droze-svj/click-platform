@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AudioWaveformGeneratorProps {
   audioUrl: string
@@ -17,6 +18,7 @@ export default function AudioWaveformGenerator({
   height,
   onWaveformGenerated
 }: AudioWaveformGeneratorProps) {
+  const { t } = useTranslation()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const [waveform, setWaveform] = useState<number[]>([])
@@ -133,7 +135,7 @@ export default function AudioWaveformGenerator({
   if (isGenerating) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <div className="text-xs text-gray-400">Generating waveform...</div>
+        <div className="text-xs text-gray-400">{t('audioWaveformGenerator.generatingWaveform')}</div>
       </div>
     )
   }

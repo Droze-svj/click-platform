@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { AlertTriangle, X, CheckCircle, Info, AlertCircle } from 'lucide-react'
 import { trapFocus } from './AccessibilityEnhancements'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ConfirmationDialogProps {
   isOpen: boolean
@@ -23,10 +24,11 @@ export default function ConfirmationDialog({
   title,
   message,
   type = 'warning',
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   isLoading = false
 }: ConfirmationDialogProps) {
+  const { t } = useTranslation()
   const dialogRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -117,7 +119,7 @@ export default function ConfirmationDialog({
                 type="button"
                 onClick={onClose}
                 className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                aria-label="Close dialog"
+                aria-label={t('confirmationDialog.closeDialog')}
               >
                 <X size={20} />
               </button>
@@ -133,7 +135,7 @@ export default function ConfirmationDialog({
               disabled={isLoading}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {cancelLabel}
+              {cancelLabel ?? t('confirmationDialog.cancel')}
             </button>
             <button
               type="button"
@@ -149,10 +151,10 @@ export default function ConfirmationDialog({
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Processing...
+                  {t('confirmationDialog.processing')}
                 </span>
               ) : (
-                confirmLabel
+                confirmLabel ?? t('confirmationDialog.confirm')
               )}
             </button>
           </div>

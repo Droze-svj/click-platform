@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { Eye, BarChart3, Circle } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ColorScopesProps {
   videoElement: HTMLVideoElement | null
@@ -14,6 +15,7 @@ interface ColorScopesProps {
 }
 
 export default function ColorScopes({ videoElement, filters }: ColorScopesProps) {
+  const { t } = useTranslation()
   const waveformCanvasRef = useRef<HTMLCanvasElement>(null)
   const vectorscopeCanvasRef = useRef<HTMLCanvasElement>(null)
   const histogramCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -204,13 +206,13 @@ export default function ColorScopes({ videoElement, filters }: ColorScopesProps)
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
           <Eye className="w-4 h-4" />
-          Color Scopes
+          {t('colorScopes.title')}
         </h4>
         <div className="flex gap-1">
           {[
-            { id: 'waveform', label: 'Waveform', icon: BarChart3 },
-            { id: 'vectorscope', label: 'Vectorscope', icon: Circle },
-            { id: 'histogram', label: 'Histogram', icon: BarChart3 }
+            { id: 'waveform', label: t('colorScopes.waveform'), icon: BarChart3 },
+            { id: 'vectorscope', label: t('colorScopes.vectorscope'), icon: Circle },
+            { id: 'histogram', label: t('colorScopes.histogram'), icon: BarChart3 }
           ].map(scope => {
             const Icon = scope.icon
             return (

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { apiPost } from '../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AnalysisResult {
   highlights: Array<{
@@ -73,10 +74,11 @@ export default function AIContentAnalysis({
   const [appliedSuggestions, setAppliedSuggestions] = useState<Set<string>>(new Set())
 
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const analyzeVideo = async () => {
     if (!videoUrl) {
-      showToast('Video URL is required for analysis', 'error')
+      showToast(t('aiContentAnalysis.videoUrlRequired'), 'error')
       return
     }
 
@@ -91,13 +93,13 @@ export default function AIContentAnalysis({
       if (response.success) {
         setAnalysis(response.data)
         onAnalysisComplete?.(response.data)
-        showToast('AI analysis completed!', 'success')
+        showToast(t('aiContentAnalysis.analysisCompleted'), 'success')
       } else {
-        throw new Error(response.error || 'Analysis failed')
+        throw new Error(response.error || t('aiContentAnalysis.analysisFailed'))
       }
     } catch (error: any) {
       console.error('AI analysis error:', error)
-      showToast(error.message || 'Failed to analyze video', 'error')
+      showToast(error.message || t('aiContentAnalysis.failedToAnalyze'), 'error')
     } finally {
       setIsAnalyzing(false)
     }
@@ -106,7 +108,7 @@ export default function AIContentAnalysis({
   const applySuggestion = (suggestion: AnalysisResult['suggestions'][0]) => {
     setAppliedSuggestions(prev => new Set([...Array.from(prev), suggestion.description]))
     onApplySuggestion?.(suggestion)
-    showToast(`Applied: ${suggestion.description}`, 'success')
+    showToast(t('aiContentAnalysis.appliedSuggestion', { description: suggestion.description }), 'success')
   }
 
   const formatTime = (seconds: number) => {
@@ -140,10 +142,10 @@ export default function AIContentAnalysis({
         <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
         <div>
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
-            AI Content Analysis
+            {t('aiContentAnalysis.title')}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Get intelligent insights and editing suggestions for your video
+            {t('aiContentAnalysis.subtitle')}
           </p>
         </div>
       </div>
@@ -159,17 +161,17 @@ export default function AIContentAnalysis({
             {isAnalyzing ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Analyzing...
+                {t('aiContentAnalysis.analyzing')}
               </>
             ) : (
               <>
                 <Brain className="w-4 h-4" />
-                Analyze Video with AI
+                {t('aiContentAnalysis.analyzeVideoWithAi')}
               </>
             )}
           </button>
           <p className="text-sm text-gray-500 mt-3 max-w-md mx-auto">
-            Our AI will analyze pacing, engagement, highlights, and provide professional editing suggestions
+            {t('aiContentAnalysis.analyzeHint')}
           </p>
         </div>
       )}
@@ -179,10 +181,10 @@ export default function AIContentAnalysis({
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'highlights', label: 'Highlights', icon: TrendingUp },
-              { id: 'suggestions', label: 'Suggestions', icon: Lightbulb },
-              { id: 'technical', label: 'Technical', icon: CheckCircle }
+              { id: 'overview', label: t('aiContentAnalysis.tabOverview'), icon: BarChart3 },
+              { id: 'highlights', label: t('aiContentAnalysis.tabHighlights'), icon: TrendingUp },
+              { id: 'suggestions', label: t('aiContentAnalysis.tabSuggestions'), icon: Lightbulb },
+              { id: 'technical', label: t('aiContentAnalysis.tabTechnical'), icon: CheckCircle }
             ].map(({ id, label, icon: Icon }) => (
               <button
                 type="button"
@@ -207,33 +209,33 @@ export default function AIContentAnalysis({
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="w-5 h-5 text-green-600" />
-                    <span className="font-medium">Engagement Score</span>
+                    <span className="font-medium">{t('aiContentAnalysis.engagementScore')}</span>
                   </div>
                   <div className="text-2xl font-bold text-green-600">{analysis.engagement.score}/100</div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {analysis.engagement.score > 70 ? 'Excellent' : analysis.engagement.score > 50 ? 'Good' : 'Needs improvement'}
+                    {analysis.engagement.score > 70 ? t('aiContentAnalysis.ratingExcellent') : analysis.engagement.score > 50 ? t('aiContentAnalysis.ratingGood') : t('aiContentAnalysis.ratingNeedsImprovement')}
                   </p>
                 </div>
 
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-5 h-5 text-blue-600" />
-                    <span className="font-medium">Pacing Score</span>
+                    <span className="font-medium">{t('aiContentAnalysis.pacingScore')}</span>
                   </div>
                   <div className="text-2xl font-bold text-blue-600">{analysis.pacing.score}/100</div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {analysis.pacing.suggestions.length > 0 ? `${analysis.pacing.suggestions.length} suggestions` : 'Well-paced'}
+                    {analysis.pacing.suggestions.length > 0 ? t('aiContentAnalysis.suggestionsCount', { count: analysis.pacing.suggestions.length }) : t('aiContentAnalysis.wellPaced')}
                   </p>
                 </div>
 
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Target className="w-5 h-5 text-purple-600" />
-                    <span className="font-medium">Highlights Found</span>
+                    <span className="font-medium">{t('aiContentAnalysis.highlightsFound')}</span>
                   </div>
                   <div className="text-2xl font-bold text-purple-600">{analysis.highlights.length}</div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Key moments identified
+                    {t('aiContentAnalysis.keyMomentsIdentified')}
                   </p>
                 </div>
               </div>
@@ -242,17 +244,17 @@ export default function AIContentAnalysis({
                 <div>
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Brain className="w-4 h-4" />
-                    Content Analysis
+                    {t('aiContentAnalysis.contentAnalysisHeading')}
                   </h4>
                   <div className="space-y-2">
                     <div>
-                      <span className="text-sm font-medium">Mood:</span>
+                      <span className="text-sm font-medium">{t('aiContentAnalysis.moodLabel')}</span>
                       <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-sm">
                         {analysis.content.mood}
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm font-medium">Themes:</span>
+                      <span className="text-sm font-medium">{t('aiContentAnalysis.themesLabel')}</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {analysis.content.themes.map((theme, index) => (
                           <span key={index} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
@@ -262,7 +264,7 @@ export default function AIContentAnalysis({
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm font-medium">Target Audience:</span>
+                      <span className="text-sm font-medium">{t('aiContentAnalysis.targetAudienceLabel')}</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {analysis.content.targetAudience.map((audience, index) => (
                           <span key={index} className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs">
@@ -277,18 +279,18 @@ export default function AIContentAnalysis({
                 <div>
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <CheckCircle className="w-4 h-4" />
-                    Technical Quality
+                    {t('aiContentAnalysis.technicalQualityHeading')}
                   </h4>
                   <div className="space-y-2">
                     <div>
-                      <span className="text-sm font-medium">Overall Quality:</span>
+                      <span className="text-sm font-medium">{t('aiContentAnalysis.overallQualityLabel')}</span>
                       <span className={`ml-2 px-2 py-1 rounded text-sm ${getQualityColor(analysis.technical.quality)}`}>
                         {analysis.technical.quality}
                       </span>
                     </div>
                     {analysis.technical.issues.length > 0 && (
                       <div>
-                        <span className="text-sm font-medium text-red-600">Issues:</span>
+                        <span className="text-sm font-medium text-red-600">{t('aiContentAnalysis.issuesLabel')}</span>
                         <ul className="mt-1 space-y-1">
                           {analysis.technical.issues.map((issue, index) => (
                             <li key={index} className="text-xs text-red-600 flex items-start gap-1">
@@ -308,9 +310,9 @@ export default function AIContentAnalysis({
           {/* Highlights Tab */}
           {selectedTab === 'highlights' && (
             <div className="space-y-4">
-              <h4 className="font-medium">Detected Highlights</h4>
+              <h4 className="font-medium">{t('aiContentAnalysis.detectedHighlights')}</h4>
               {analysis.highlights.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No highlights detected</p>
+                <p className="text-gray-500 text-center py-4">{t('aiContentAnalysis.noHighlightsDetected')}</p>
               ) : (
                 <div className="space-y-3">
                   {analysis.highlights.map((highlight, index) => (
@@ -318,7 +320,7 @@ export default function AIContentAnalysis({
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <TrendingUp className="w-4 h-4 text-green-600" />
-                          <span className="font-medium">Highlight {index + 1}</span>
+                          <span className="font-medium">{t('aiContentAnalysis.highlightNumber', { number: index + 1 })}</span>
                         </div>
                         <span className="text-sm text-gray-500">
                           {formatTime(highlight.startTime)} - {formatTime(highlight.endTime)}
@@ -327,7 +329,7 @@ export default function AIContentAnalysis({
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{highlight.reason}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-green-600">
-                          Confidence: {Math.round(highlight.confidence * 100)}%
+                          {t('aiContentAnalysis.confidencePercent', { percent: Math.round(highlight.confidence * 100) })}
                         </span>
                         <span className="text-xs text-gray-500">{highlight.suggestedAction}</span>
                       </div>
@@ -341,9 +343,9 @@ export default function AIContentAnalysis({
           {/* Suggestions Tab */}
           {selectedTab === 'suggestions' && (
             <div className="space-y-4">
-              <h4 className="font-medium">AI Editing Suggestions</h4>
+              <h4 className="font-medium">{t('aiContentAnalysis.aiEditingSuggestions')}</h4>
               {analysis.suggestions.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No suggestions available</p>
+                <p className="text-gray-500 text-center py-4">{t('aiContentAnalysis.noSuggestionsAvailable')}</p>
               ) : (
                 <div className="space-y-3">
                   {analysis.suggestions.map((suggestion, index) => (
@@ -357,7 +359,7 @@ export default function AIContentAnalysis({
                           <span className="font-medium capitalize">{suggestion.type}</span>
                         </div>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(suggestion.priority)}`}>
-                          {suggestion.priority} priority
+                          {t('aiContentAnalysis.priorityLabel', { priority: suggestion.priority })}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{suggestion.description}</p>
@@ -371,13 +373,13 @@ export default function AIContentAnalysis({
                             onClick={() => applySuggestion(suggestion)}
                             className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
                           >
-                            Apply
+                            {t('aiContentAnalysis.apply')}
                           </button>
                         )}
                         {appliedSuggestions.has(suggestion.description) && (
                           <span className="text-sm text-green-600 flex items-center gap-1">
                             <CheckCircle className="w-4 h-4" />
-                            Applied
+                            {t('aiContentAnalysis.applied')}
                           </span>
                         )}
                       </div>
@@ -392,11 +394,11 @@ export default function AIContentAnalysis({
           {selectedTab === 'technical' && (
             <div className="space-y-6">
               <div>
-                <h4 className="font-medium mb-3">Technical Quality</h4>
+                <h4 className="font-medium mb-3">{t('aiContentAnalysis.technicalQualityHeading')}</h4>
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">Overall Quality:</span>
+                    <span className="font-medium">{t('aiContentAnalysis.overallQualityLabel')}</span>
                     <span className={`px-2 py-1 rounded text-sm ${getQualityColor(analysis.technical.quality)}`}>
                       {analysis.technical.quality}
                     </span>
@@ -404,7 +406,7 @@ export default function AIContentAnalysis({
 
                   {analysis.technical.recommendations.length > 0 && (
                     <div>
-                      <h5 className="font-medium mb-2">Recommendations:</h5>
+                      <h5 className="font-medium mb-2">{t('aiContentAnalysis.recommendationsLabel')}</h5>
                       <ul className="space-y-1">
                         {analysis.technical.recommendations.map((rec, index) => (
                           <li key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
@@ -420,11 +422,11 @@ export default function AIContentAnalysis({
 
               {analysis.engagement.peakMoments.length > 0 && (
                 <div>
-                  <h4 className="font-medium mb-3">Engagement Peaks</h4>
+                  <h4 className="font-medium mb-3">{t('aiContentAnalysis.engagementPeaks')}</h4>
                   <div className="space-y-2">
                     {analysis.engagement.peakMoments.map((peak, index) => (
                       <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded">
-                        <span className="text-sm">Peak at {formatTime(peak.time)}</span>
+                        <span className="text-sm">{t('aiContentAnalysis.peakAt', { time: formatTime(peak.time) })}</span>
                         <div className="flex items-center gap-2">
                           <div className="w-20 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                             <div
@@ -453,12 +455,12 @@ export default function AIContentAnalysis({
               {isAnalyzing ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Re-analyzing...
+                  {t('aiContentAnalysis.reAnalyzing')}
                 </>
               ) : (
                 <>
                   <Brain className="w-4 h-4" />
-                  Re-analyze Video
+                  {t('aiContentAnalysis.reAnalyzeVideo')}
                 </>
               )}
             </button>
