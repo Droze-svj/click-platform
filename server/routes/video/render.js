@@ -39,6 +39,48 @@ const COMPOSITION_BY_RATIO = {
 
 const FPS = 30;
 
+const RATIO_TO_SIZE = {
+  '16:9': [1920, 1080],
+  '9:16': [1080, 1920],
+  '1:1': [1080, 1080],
+  '4:5': [1080, 1350],
+};
+
+/**
+ * Render using the same proven ffmpeg engine the manual editor already uses
+ * (videoRenderService.renderFromEditorState). This is the real export path —
+ * it bakes filters, text/shape overlays, trims and music into an MP4 with no
+ * Remotion/Chromium dependency. Output is normalized to RENDER_OUTPUT_DIR/<jobId>.mp4
+ * so the existing status/download endpoints work unchanged.
+ */
+async function runFfmpegRender({ tree, ratio, jobId, userId }) {
+  ensureRenderDir();
+  const outputPath = path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
+  const [width, height] = RATIO_TO_SIZE[ratio] || RATIO_TO_SIZE['16:9'];
+
+  const videoRenderService = require('../../services/videoRenderService');
+  const result = await videoRenderService.renderFromEditorState({
+    videoId: tree?.metadata?.contentId || null,
+    videoUrl: tree.videoUrl,
+    videoFilters: tree.filters || tree.videoFilters || {},
+    textOverlays: Array.isArray(tree.textOverlays) ? tree.textOverlays : [],
+    shapeOverlays: Array.isArray(tree.shapeOverlays) ? tree.shapeOverlays : [],
+    timelineSegments: Array.isArray(tree.timelineSegments) ? tree.timelineSegments : (tree.segments || []),
+    exportOptions: { width, height, duration: tree.duration, quality: tree.quality || 'high', codec: 'h264' },
+    userId,
+  });
+
+  if (!result || !result.outputPath) throw new Error('Render produced no output');
+  if (path.resolve(result.outputPath) !== path.resolve(outputPath)) {
+    await fs.promises.copyFile(result.outputPath, outputPath);
+    fs.promises.unlink(result.outputPath).catch(() => {});
+  }
+  const buf = await fs.promises.readFile(outputPath);
+  const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
+  logger.info('[render] ffmpeg render done', { jobId, sizeBytes: buf.length, ratio });
+  return { outputPath, sha256, sizeBytes: buf.length, compositionId: `ffmpeg-${ratio}`, signed: false, signer: null };
+}
+
 function tryRequireRemotion() {
   try {
     const bundler = require('@remotion/bundler');
@@ -101,14 +143,9 @@ async function getBundleLocation(bundler) {
 async function runRender({ tree, ratio, jobId, userId }) {
   const remotion = tryRequireRemotion();
   if (!remotion.available) {
-    // User-facing during the beta (full MP4 export render isn't enabled yet).
-    // The AI auto-edit clip is still downloadable from the content's clip URL.
-    const err = new Error(
-      'Full timeline export is not available yet in this beta. Your AI-edited clip can still be downloaded from the video page.'
-    );
-    err.statusCode = 501;
-    err.code = 'EXPORT_UNAVAILABLE_BETA';
-    throw err;
+    // No Remotion → render with the real ffmpeg engine (same one the manual
+    // editor uses). Produces a genuine export without Remotion/Chromium.
+    return runFfmpegRender({ tree, ratio, jobId, userId });
   }
   const { bundler, renderer } = remotion;
 
