@@ -13,7 +13,19 @@ function securityHeaders() {
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Adjust for production
         scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: ["'self'", process.env.API_URL || "http://localhost:5001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+        // media-src must be set explicitly — without it, video/audio falls back
+        // to default-src ('self') and Cloudinary-hosted uploads won't play.
+        // blob: covers local preview before upload; https: covers Cloudinary/CDN.
+        mediaSrc: ["'self'", "blob:", "data:", "https:"],
+        // connect-src must allow secure WebSockets (wss:) for socket.io realtime
+        // (clip-ready, processing progress) and https: for the API/Cloudinary.
+        // ws:// localhost entries keep dev working.
+        connectSrc: [
+          "'self'", "https:", "wss:",
+          process.env.API_URL || "http://localhost:5001",
+          "http://localhost:3000", "http://localhost:3001", "http://localhost:3002",
+          "ws://localhost:5001", "ws://localhost:3000",
+        ],
         frameSrc: ["'none'"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
