@@ -63,13 +63,26 @@ Optional (only if testers will use them): social OAuth client IDs/secrets,
 
 ## 3. Deploy
 
-1. Merge this branch to `main` (CI must be green).
-2. Render auto-deploys from `main` using `./Dockerfile` (it builds the Next app,
-   installs ffmpeg/yt-dlp/c2patool, and starts `node server/index.js`).
-3. The platform health check hits `/api/health/light` (always 200 when up).
-4. When live, open the Render URL — you should see the **Click app** (login /
-   landing), NOT a debug page. If you see a debug/status page, `NODE_ENV` isn't
-   `production`.
+> ⚠️ Click is its **own** Render service — do **not** reuse
+> `sovereign-platform.onrender.com` (that URL hosts a different product,
+> "Sovereign Trading"). `render.yaml` is named `click-platform`.
+
+**Create Click's Render service (one time):**
+1. Render → **New → Blueprint** → connect the **`Droze-svj/click-platform`** GitHub
+   repo. Render reads `render.yaml` and proposes a `click-platform` web service
+   (Docker). Approve it. It deploys to e.g. `https://click-platform.onrender.com`.
+2. If Render assigns a different URL (suffix), update `FRONTEND_URL` + `APP_URL` in
+   the service's env to that exact URL, and redeploy.
+3. Set the secret env vars (section 2) — most values are in your `.env.production`;
+   add the 3 Cloudinary vars.
+4. Confirm auto-deploy is on `main`. Future pushes to `main` redeploy automatically.
+
+The build uses `./Dockerfile` (builds the Next app, installs ffmpeg/yt-dlp/c2patool,
+runs `node server/index.js`). Health check = `/api/health/light` (200 when up).
+
+When live, open the URL — you should see the **Click** app (login / landing). If you
+see a debug/status page, `NODE_ENV` isn't `production`. If you see "Sovereign
+Trading", you opened the wrong service.
 
 ### Verify the deploy (2-min smoke test)
 - `GET /api/health/light` → 200.

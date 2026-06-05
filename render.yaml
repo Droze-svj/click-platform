@@ -10,8 +10,13 @@
 # time, not during a real user's render.
 
 services:
+  # Click — AI video editor. This is its OWN service, deliberately NOT named
+  # "sovereign-platform" (that URL hosts a different product, "Sovereign Trading").
+  # Render derives the URL from this name, e.g. https://click-platform.onrender.com
+  # (Render may append a suffix if the name is taken — update FRONTEND_URL/APP_URL
+  # below to whatever Render actually assigns).
   - type: web
-    name: sovereign-platform
+    name: click-platform
     env: docker
     dockerfilePath: ./Dockerfile
     region: oregon
@@ -28,9 +33,9 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
       - key: FRONTEND_URL
-        value: https://sovereign-platform.onrender.com
+        value: https://click-platform.onrender.com
       - key: APP_URL
-        value: https://sovereign-platform.onrender.com
+        value: https://click-platform.onrender.com
       - key: PORT
         value: "5001"
       # Beta: auto-verify new accounts so a missing email provider can't lock
