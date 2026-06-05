@@ -90,6 +90,12 @@ logger.debug('DEBUG: Auth route middleware registered');
  *       400:
  *         description: Validation error
  */
+// Public: lets the register page know whether to show the invite-code field.
+router.get('/registration-config', (req, res) => {
+  const { isRegistrationGated } = require('../utils/registrationGate');
+  res.json({ success: true, data: { gated: isRegistrationGated() } });
+});
+
 router.post('/register',
   authRateLimiter, validateRegister, async (req, res) => {
     try {
@@ -119,6 +125,14 @@ router.post('/register',
           details: passwordValidation.errors,
           suggestions: getPasswordSuggestions(password)
         });
+      }
+
+      // Invite gate (private beta): closed unless BETA_ALLOWED_EMAILS /
+      // BETA_INVITE_CODE allow this signup. No-op (open) when neither is set.
+      const { checkRegistrationGate } = require('../utils/registrationGate');
+      const gate = checkRegistrationGate({ email, inviteCode: req.body.inviteCode });
+      if (!gate.allowed) {
+        return res.status(403).json({ success: false, error: gate.message });
       }
 
       // Handle Mongoose registration fallback if Supabase is not available

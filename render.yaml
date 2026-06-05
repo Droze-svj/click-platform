@@ -37,6 +37,14 @@ services:
       # testers out of the dashboard. Set to "false"/unset for public launch.
       - key: AUTO_VERIFY_EMAIL
         value: "true"
+      # Invite gate for the private beta (optional). Set EITHER (or both):
+      #   BETA_ALLOWED_EMAILS = comma-separated emails that may register
+      #   BETA_INVITE_CODE    = a shared code testers must enter to sign up
+      # If neither is set, registration is open.
+      - key: BETA_ALLOWED_EMAILS
+        sync: false
+      - key: BETA_INVITE_CODE
+        sync: false
       # Gemini key — the code reads GOOGLE_AI_API_KEY (GEMINI_API_KEY below is
       # legacy/unused). Without this, AI features fall back to heuristics.
       - key: GOOGLE_AI_API_KEY
