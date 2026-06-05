@@ -109,16 +109,29 @@ Optional (only if testers will use them): social OAuth client IDs/secrets,
 
 ---
 
-## 6. Known beta limitations (tell your testers)
+## 6. Email & password reset (optional but recommended)
 
-- **Full timeline "Export" (manual editor)** is not enabled in the beta — it
-  needs a headless-render pipeline that isn't verified yet. Testers can still
-  download their **AI-edited clip** from the video page. (The Export button
-  returns a friendly "not available in beta" message.)
-- **Transactional email** (verify/reset links) may not send unless you configure
-  `SENDGRID_API_KEY`. Beta accounts are auto-verified, so this doesn't block
-  sign-in. If a tester forgets their password, reset it for them (or set up
-  SendGrid + the `/reset-password` flow).
+Transactional email (verification + password reset) is OFF until you set a
+provider. Beta accounts are auto-verified (`AUTO_VERIFY_EMAIL=true`), so email is
+NOT required for sign-in — but without it, password reset emails won't send.
+
+To enable it, set ONE of:
+- **SendGrid** (default): `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL` (a verified
+  sender). Uses SendGrid's SMTP relay.
+- **Any SMTP**: `EMAIL_PROVIDER=smtp` + `SMTP_HOST` + `SMTP_PORT` + `SMTP_USER` +
+  `SMTP_PASS` (auto-detected if `SMTP_HOST` is set even without `EMAIL_PROVIDER`).
+- Also set `EMAIL_FROM` + `EMAIL_FROM_NAME` for the From header.
+
+Once set: registration sends a real verification email, and **Forgot password →
+/reset-password** works end-to-end (the reset page now exists; link expires in 1h).
+If email is off and a tester forgets their password, reset it manually (re-run the
+comp script or update the user in MongoDB).
+
+## 7. Known beta notes (tell your testers)
+
+- **Export works**: the manual editor's Export renders a real MP4 (filters, text
+  & shape overlays, trims, music) via ffmpeg and downloads it. AI-edited clips are
+  also downloadable from the video page.
 - **Translations** in non-English locales are machine-quality (no human review).
 - **Social publishing** requires connecting a real account (OAuth creds set);
   without it the publish UI tells the user to connect first.

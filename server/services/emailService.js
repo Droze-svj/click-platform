@@ -11,20 +11,29 @@ let transporter = null;
  * Initialize email service
  */
 function initEmailService() {
-  const emailProvider = process.env.EMAIL_PROVIDER || 'sendgrid'; // sendgrid, mailgun, ses, smtp
+  // Auto-detect: if no provider is named but generic SMTP creds exist, use SMTP.
+  let emailProvider = process.env.EMAIL_PROVIDER; // sendgrid, mailgun, ses, smtp
+  if (!emailProvider) {
+    emailProvider = process.env.SMTP_HOST ? 'smtp' : 'sendgrid';
+  }
 
   try {
     switch (emailProvider) {
     case 'sendgrid':
       if (process.env.SENDGRID_API_KEY) {
+        // Use SendGrid's SMTP relay explicitly. The old `service: 'SendGrid'`
+        // shorthand was removed from modern nodemailer (v7) and silently failed
+        // to send — no verification or reset emails ever went out.
         transporter = nodemailer.createTransport({
-          service: 'SendGrid',
+          host: 'smtp.sendgrid.net',
+          port: 587,
+          secure: false,
           auth: {
             user: 'apikey',
             pass: process.env.SENDGRID_API_KEY,
           },
         });
-        logger.info('✅ Email service initialized (SendGrid)');
+        logger.info('✅ Email service initialized (SendGrid SMTP)');
       } else {
         logger.warn('⚠️ SendGrid API key not found. Email service disabled.');
       }
@@ -133,9 +142,23 @@ async function sendEmail(options) {
 /**
  * Send welcome email with template
  */
-async function sendWelcomeEmail(userEmail, userName) {
+async function sendWelcomeEmail(userEmail, userName, customContent = null) {
+  // Callers (registration, resend-verification, account-deletion) pass an
+  // explicit { to, subject, html } payload — most importantly the email
+  // VERIFICATION message that contains the verify link. Previously this third
+  // argument was ignored and a generic welcome (no link) was sent instead, so
+  // verification was impossible. Honor it when provided.
+  if (customContent && (customContent.html || customContent.text)) {
+    return sendEmail({
+      to: customContent.to || userEmail,
+      subject: customContent.subject || 'Welcome to Click! 🎉',
+      html: customContent.html,
+      text: customContent.text,
+    });
+  }
+
   const { getEmailTemplate } = require('../utils/emailTemplateEngine');
-  
+
   // Try to use template, fallback to inline HTML
   let html = getEmailTemplate('welcome', {
     userName: userName || 'there',
