@@ -132,11 +132,39 @@ const FEATURE_RATE_LIMITS = {
 
 
 /**
- * Get user tier from request (from auth middleware)
- * Falls back to 'free' if not set
+ * Map the canonical/legacy `subscription.plan` value (the field the User model
+ * actually stores — see server/models/User.js) onto a feature tier. Historically
+ * getUserTier only read `subscription.tier`, which the model never sets, so EVERY
+ * user — including paying customers — silently resolved to 'free' and was blocked
+ * from all gated features. This map is the bridge.
+ */
+const PLAN_TO_TIER = {
+  free: 'free',
+  creator: 'creator',
+  pro: 'pro',
+  agency: 'elite',
+  // Legacy billing-period values from older records:
+  monthly: 'pro',
+  annual: 'pro',
+  trial: 'pro',
+};
+
+/**
+ * Get user tier from request (from auth middleware).
+ * Resolution order: explicit tier → subscription.tier → mapped subscription.plan
+ * → trial status (trials get pro-level access so users can genuinely evaluate)
+ * → 'free'.
  */
 function getUserTier(req) {
-  return req.user?.tier || req.user?.subscription?.tier || 'free';
+  const sub = req.user?.subscription;
+  if (req.user?.tier) return req.user.tier;
+  if (sub?.tier) return sub.tier;
+  // Trial wins over the placeholder plan ('free' is the model default), so a
+  // user on a live trial gets pro-level features to genuinely evaluate Click.
+  // Once the trial expires the status flips to 'expired' and this falls through.
+  if (sub?.status === 'trial') return 'pro';
+  if (sub?.plan && PLAN_TO_TIER[sub.plan]) return PLAN_TO_TIER[sub.plan];
+  return 'free';
 }
 
 /** Ordered tier list for comparison */

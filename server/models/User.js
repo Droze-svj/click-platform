@@ -38,8 +38,13 @@ const userSchema = new mongoose.Schema({
       enum: ['monthly', 'annual', 'free', 'creator', 'pro', 'agency', 'trial'],
       default: 'free'
     },
-    startDate: Date,
-    endDate: Date,
+    startDate: { type: Date, default: Date.now },
+    // New accounts get a 14-day trial window so they can actually use Click
+    // immediately. hasSubscriptionAccess() treats a status:'trial' user with a
+    // future endDate as having access; without an endDate it was treated as
+    // expired, which silently blocked every brand-new user from uploading.
+    // Paid flows (Whop webhook / billing service) overwrite this on purchase.
+    endDate: { type: Date, default: () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
     whopSubscriptionId: String
   },
   niche: {

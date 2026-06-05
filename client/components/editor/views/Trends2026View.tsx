@@ -149,8 +149,7 @@ export default function Trends2026View({
     const baseScore = appliedHookId ? 65 : 42
     const overlayBonus = Math.min(15, appliedOverlays.size * 4)
     const soundBonus = appliedSoundId ? 8 : 0
-    const variance = Math.floor(Math.random() * 6)
-    setPredictedScore(Math.min(98, baseScore + overlayBonus + soundBonus + variance))
+    setPredictedScore(Math.min(98, baseScore + overlayBonus + soundBonus))
     setPredicting(false)
   }
 

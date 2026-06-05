@@ -448,7 +448,7 @@ export default function NeuralDashboard() {
           icon: Globe,
           colors: 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-500/20',
           colorHex: '#6366f1',
-          trend: '+12.5% this week',
+          trend: 'Total impressions',
           desc: 'Total impressions across your accounts.'
         },
         {
@@ -457,7 +457,7 @@ export default function NeuralDashboard() {
           icon: Zap,
           colors: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
           colorHex: '#f59e0b',
-          trend: 'Peak engagement',
+          trend: 'Likes, comments & shares',
           desc: 'Total likes, comments, and shares.'
         },
         {
@@ -646,10 +646,14 @@ export default function NeuralDashboard() {
                   <div className="flex items-center gap-5">
                     <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center"><Target size={24} className="text-emerald-600 dark:text-emerald-400" /></div>
                     <span className="text-lg font-black text-surface-900 dark:text-white italic uppercase tracking-tighter">Audience Peak</span>
-                    <span className="ml-auto text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500 bg-emerald-500/5 px-3 py-1 rounded-lg border-2 border-emerald-500/20 shadow-sm italic leading-none">OPTIMAL</span>
+                    {styleInsight?.topPicks?.publishHour != null && (
+                      <span className="ml-auto text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500 bg-emerald-500/5 px-3 py-1 rounded-lg border-2 border-emerald-500/20 shadow-sm italic leading-none">LEARNED</span>
+                    )}
                   </div>
                   <p className="text-base font-bold text-surface-500 dark:text-slate-400 leading-relaxed italic uppercase tracking-tight">
-                    Your synchronized platforms are currently reaching peak saturation. Engagement resonance is highest at <strong className="text-emerald-500">19:00 UTC</strong>.
+                    {styleInsight?.topPicks?.publishHour != null
+                      ? <>Based on your published clips, engagement is strongest around <strong className="text-emerald-500">{styleInsight.topPicks.publishHour}:00</strong>.</>
+                      : 'Publish more clips and Click will learn the publish hours that perform best for your audience.'}
                   </p>
                   <Link href="/dashboard/scheduler" className="inline-flex items-center gap-4 text-[10px] font-black text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-all uppercase tracking-[0.6em] italic mt-6 border-none">
                     Open <ArrowRight size={18} className="group-hover/card:translate-x-3 transition-transform duration-500" />

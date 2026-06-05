@@ -73,10 +73,13 @@ RUN npm install -g pnpm@9 && pnpm install --frozen-lockfile=false --prefer-froze
 # Server source.
 COPY server/ ./server/
 
-# Built frontend artifacts.
+# Built frontend artifacts + the client's node_modules so this single process
+# can serve the Next.js app in-process (next().getRequestHandler()). We copy the
+# exact Next/React install the build used to avoid version drift.
 COPY --from=frontend-builder /app/client/.next ./client/.next
 COPY --from=frontend-builder /app/client/public ./client/public
 COPY --from=frontend-builder /app/client/package.json ./client/package.json
+COPY --from=frontend-builder /app/client/node_modules ./client/node_modules
 
 # Writable directories the server creates lazily.
 RUN mkdir -p uploads/videos uploads/clips uploads/thumbnails uploads/music uploads/quotes logs

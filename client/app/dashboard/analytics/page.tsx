@@ -257,8 +257,8 @@ export default function SovereignAnalyticsMatrix() {
 
           {/* Quick Metrics Grid */}
           <div className="xl:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-10">
-             <ScoreCard label={t('analyticsPage.cardReach')} value={fmt(data?.total_views || 0)} icon={Eye} color="text-rose-500" trend="+12.4%" />
-             <ScoreCard label={t('analyticsPage.cardEngagement')} value={fmt(data?.total_engagement || 0)} icon={Waves} color="text-violet-500" trend="+8.2%" />
+             <ScoreCard label={t('analyticsPage.cardReach')} value={fmt(data?.total_views || 0)} icon={Eye} color="text-rose-500" />
+             <ScoreCard label={t('analyticsPage.cardEngagement')} value={fmt(data?.total_engagement || 0)} icon={Waves} color="text-violet-500" />
              <ScoreCard label={t('analyticsPage.cardPosts')} value={data?.total_posts || 0} icon={Boxes} color="text-primary-500" trend={t('analyticsPage.trendLive')} />
              <ScoreCard label={t('analyticsPage.cardStatus')} value={t('analyticsPage.statusHealthy')} icon={Cpu} color="text-emerald-500" trend={t('analyticsPage.trendSynced')} />
           </div>
@@ -393,11 +393,11 @@ export default function SovereignAnalyticsMatrix() {
   )
 }
 
-function ScoreCard({ label, value, icon: Icon, color, trend }: { label: string; value: string | number; icon: any; color: string; trend: string }) {
+function ScoreCard({ label, value, icon: Icon, color, trend }: { label: string; value: string | number; icon: any; color: string; trend?: string }) {
   const { t } = useTranslation()
   return (
     <motion.div whileHover={{ y: -10, scale: 1.02 }}
-      role="status" aria-label={t('analyticsPage.scoreCardAria', { label, value, trend })}
+      role="status" aria-label={t('analyticsPage.scoreCardAria', { label, value, trend: trend ?? '' })}
       className="bg-black/40 backdrop-blur-3xl border-2 border-white/5 p-10 rounded-[3.5rem] flex flex-col items-center text-center group relative overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-[0_40px_100px_rgba(0,0,0,0.4)]"
     >
        <div className="absolute top-0 right-0 p-10 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-1000 pointer-events-none" aria-hidden="true"><Monitor size={200} className="text-white" /></div>
@@ -406,9 +406,11 @@ function ScoreCard({ label, value, icon: Icon, color, trend }: { label: string; 
        </div>
        <div className="text-4xl sm:text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-5 group-hover:text-primary-500 transition-colors duration-500">{value}</div>
        <div className="text-[10px] sm:text-[12px] text-slate-700 font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] italic mb-8 leading-none group-hover:text-white transition-colors">{label}</div>
-       <div className="text-[10px] text-slate-800 font-black uppercase tracking-[1em] italic bg-black/20 px-8 py-3 rounded-2xl border-2 border-white/5 shadow-inner group-hover:border-primary-500/30 group-hover:text-primary-500 transition-all">
-          {trend}
-       </div>
+       {trend ? (
+         <div className="text-[10px] text-slate-800 font-black uppercase tracking-[1em] italic bg-black/20 px-8 py-3 rounded-2xl border-2 border-white/5 shadow-inner group-hover:border-primary-500/30 group-hover:text-primary-500 transition-all">
+            {trend}
+         </div>
+       ) : null}
     </motion.div>
   )
 }

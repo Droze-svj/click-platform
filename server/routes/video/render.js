@@ -101,10 +101,13 @@ async function getBundleLocation(bundler) {
 async function runRender({ tree, ratio, jobId, userId }) {
   const remotion = tryRequireRemotion();
   if (!remotion.available) {
+    // User-facing during the beta (full MP4 export render isn't enabled yet).
+    // The AI auto-edit clip is still downloadable from the content's clip URL.
     const err = new Error(
-      'Remotion not installed on this server. Run `npm install @remotion/bundler @remotion/renderer` to enable exports.'
+      'Full timeline export is not available yet in this beta. Your AI-edited clip can still be downloaded from the video page.'
     );
     err.statusCode = 501;
+    err.code = 'EXPORT_UNAVAILABLE_BETA';
     throw err;
   }
   const { bundler, renderer } = remotion;

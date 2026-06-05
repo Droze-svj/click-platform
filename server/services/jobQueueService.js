@@ -69,8 +69,12 @@ function getRedisConnection() {
   // Check if Redis is configured (validate non-empty strings)
   // IMPORTANT: Use process.env.REDIS_URL directly first to check raw value
   const rawRedisUrl = process.env.REDIS_URL;
-  const redisUrl = rawRedisUrl?.trim();
-  const redisHost = process.env.REDIS_HOST?.trim();
+  // Trim whitespace AND strip surrounding quotes — a common env-var mistake
+  // (REDIS_URL="rediss://...") otherwise leaves literal quotes that fail the
+  // redis:// / rediss:// scheme check below and silently disables all workers.
+  const stripQuotes = (s) => s?.trim().replace(/^["']+|["']+$/g, '').trim();
+  const redisUrl = stripQuotes(rawRedisUrl);
+  const redisHost = stripQuotes(process.env.REDIS_HOST);
 
   // Log what we found for debugging
   logger.info('🔍 getRedisConnection() called', {

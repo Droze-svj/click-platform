@@ -858,7 +858,10 @@ app.use('/api', (req, res, next) => {
 app.get('/api/test-mi', (req, res) => res.json({ success: true, message: 'MI test route works' }));
 
 // Serve a simple landing page for testing - MUST BE BEFORE OTHER ROUTES
-app.get('/', (req, res) => {
+app.get('/', (req, res, nextMw) => {
+  // In production the Next.js frontend owns "/" (served by the catch-all below).
+  // This debug/status landing page is dev-only.
+  if (process.env.NODE_ENV === 'production') return nextMw();
   res.send(`
 <!DOCTYPE html>
 <html lang="en">
@@ -1675,15 +1678,51 @@ curl -s https://click-platform.onrender.com/api/health
 </html>`);
 });
 
-// Serve Next.js build files in production (if available)
-if (process.env.NODE_ENV === 'production') {
-  const nextJsPath = path.join(__dirname, '../client/.next');
-
-  if (fs.existsSync(nextJsPath)) {
-    logger.info(`📦 Next.js build found, serving from: ${nextJsPath}`);
-    // Could add Next.js serving logic here if needed
+// ── Single-URL deployment: serve the Next.js frontend from this process ──
+// In production this Express server serves BOTH the API (/api/*) and the
+// Next.js app (everything else) on one port/URL. The handler is prepared
+// asynchronously at boot; the catch-all middleware (registered just before the
+// 404 handler) waits for it. Everything here is defensive: if Next can't be
+// loaded or prepared, the API keeps running and non-API routes fall through to
+// the normal 404 — the server never crashes because of frontend serving.
+let __nextHandler = null;
+let __nextReady = Promise.resolve();
+function initNextApp() {
+  if (process.env.NODE_ENV !== 'production') return Promise.resolve(null);
+  const clientDir = path.join(__dirname, '../client');
+  if (!fs.existsSync(path.join(clientDir, '.next'))) {
+    logger.warn('📦 Next.js build not found at client/.next — frontend will not be served by the API process');
+    return Promise.resolve(null);
+  }
+  let nextFactory;
+  try {
+    // Prefer the client's own Next install (exact version the build used).
+    nextFactory = require(path.join(clientDir, 'node_modules', 'next'));
+  } catch {
+    try {
+      nextFactory = require('next');
+    } catch (e) {
+      logger.error('📦 Next.js module not available in runtime — cannot serve frontend', { error: e.message });
+      return Promise.resolve(null);
+    }
+  }
+  try {
+    const nextApp = nextFactory({ dev: false, dir: clientDir });
+    const handlerPromise = nextApp.prepare().then(() => {
+      __nextHandler = nextApp.getRequestHandler();
+      logger.info('🖥️  Next.js frontend ready — serving app + API on one URL');
+      return __nextHandler;
+    });
+    return handlerPromise;
+  } catch (e) {
+    logger.error('📦 Failed to initialize Next.js frontend serving', { error: e.message });
+    return Promise.resolve(null);
   }
 }
+__nextReady = initNextApp().catch((e) => {
+  logger.error('📦 Next.js prepare() failed — frontend not served', { error: e.message });
+  return null;
+});
 
 // Database connection with multi-provider support
 // Supports Supabase, Prisma (PostgreSQL), and MongoDB (legacy)
@@ -1914,7 +1953,11 @@ app.use('/api/video/thumbnails', require('./routes/video/thumbnails'));
 app.use('/api/video/chapters', require('./routes/video/chapters'));
 app.use('/api/video/optimization', require('./routes/video/optimization'));
 app.use('/api/video/neural', require('./routes/video/neural'));
-app.use('/api/debug', require('./routes/debug'));
+// Debug log relay is a dev/staging tool that exposes recent server logs with no
+// auth — never expose it on the public production URL.
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/debug', require('./routes/debug'));
+}
 app.use('/api/ai/multi-model', require('./routes/ai/multi-model'));
 app.use('/api/ai/recommendations', require('./routes/ai/recommendations'));
 app.use('/api/ai/predictive', require('./routes/ai/predictive'));
@@ -2326,6 +2369,22 @@ app.post('/api/monitoring/test-alert', async (req, res) => {
     res.status(503).json({ error: 'Alerting system not initialized' })
   }
 })
+
+// Frontend catch-all: hand any non-API route to the Next.js app (production,
+// single-URL deployment). Registered after all /api routes and before the 404
+// handler so the API always wins. If the Next handler isn't available it falls
+// through to the normal 404 — never blocks the API.
+app.use(async (req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') return next();
+  if (
+    req.path.startsWith('/api') ||
+    req.path.startsWith('/socket.io') ||
+    req.path.startsWith('/uploads')
+  ) return next();
+  try { await __nextReady; } catch { /* fall through */ }
+  if (__nextHandler) return __nextHandler(req, res);
+  return next();
+});
 
 // 404 handler
 app.use(notFound);

@@ -82,11 +82,23 @@ async function getRemainingBudgetUsd(userId) {
     User = require('../models/User');
   } catch { /* intentionally empty */ }
 
+  // Map the stored subscription.plan onto a budget tier. Previously this read
+  // only subscription.tier (never set by the model), so every user got the
+  // free $0.50 budget regardless of what they paid for.
+  const PLAN_TO_BUDGET_TIER = {
+    free: 'free', creator: 'pro', pro: 'pro', agency: 'agency',
+    monthly: 'pro', annual: 'pro', trial: 'pro',
+  };
   const tier = await (async () => {
     if (!User) return 'free';
     try {
       const u = await User.findById(userId).lean();
-      return u?.subscription?.tier || u?.tier || 'free';
+      const sub = u?.subscription;
+      if (u?.tier && DEFAULT_TIER_BUDGETS_USD[u.tier]) return u.tier;
+      if (sub?.tier && DEFAULT_TIER_BUDGETS_USD[sub.tier]) return sub.tier;
+      if (sub?.status === 'trial') return 'pro';
+      if (sub?.plan && PLAN_TO_BUDGET_TIER[sub.plan]) return PLAN_TO_BUDGET_TIER[sub.plan];
+      return 'free';
     } catch {
       return 'free';
     }
