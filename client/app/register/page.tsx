@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { apiPost, handleApiError, setTokens } from '@/lib/api'
+import { apiGet, apiPost, handleApiError, setTokens } from '@/lib/api'
 import { getPlan, buildCheckoutTarget, type BillingPeriod, type PlanId } from '@/lib/plans'
 import { useTranslation } from '../../hooks/useTranslation'
 import LanguagePicker from '../../components/LanguagePicker'
@@ -30,6 +30,18 @@ export default function Register() {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // Private-beta invite gate. We ask the server whether sign-up is gated and,
+  // if so, show an invite-code field. The server enforces the gate regardless.
+  const [inviteCode, setInviteCode] = useState('')
+  const [gated, setGated] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    apiGet<{ data?: { gated?: boolean } }>('/auth/registration-config')
+      .then((res) => { if (!cancelled) setGated(!!res?.data?.gated) })
+      .catch(() => { /* default: not gated in the UI; server still enforces */ })
+    return () => { cancelled = true }
+  }, [])
 
   const planFromUrl = (searchParams?.get('plan') || '') as PlanId | ''
   const periodFromUrl = (searchParams?.get('period') === 'yearly' ? 'yearly' : 'monthly') as BillingPeriod
@@ -137,6 +149,7 @@ export default function Register() {
         lastName,
         email,
         password,
+        ...(inviteCode.trim() ? { inviteCode: inviteCode.trim() } : {}),
       })
 
       const token = response.data?.token || response.token
@@ -298,6 +311,9 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-8">
             <FormField label="Name" name="name" type="text" value={name} onChange={setName} placeholder="Jane Doe" required autoFocus />
             <FormField label="Email" name="email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
+            {gated && (
+              <FormField label="Invite code" name="inviteCode" type="text" value={inviteCode} onChange={setInviteCode} placeholder="Enter your beta invite code" />
+            )}
             
             <div className="space-y-4">
               <FormField label="Password" name="password" type="password" value={password} onChange={handlePasswordChange} placeholder="••••••••••••" required showPasswordToggle />

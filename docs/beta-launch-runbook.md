@@ -82,8 +82,18 @@ Optional (only if testers will use them): social OAuth client IDs/secrets,
 
 ## 4. Onboard the 5 testers
 
+### (Optional) Close sign-up to just your testers
+By default anyone with the URL can register. To gate it, set EITHER in Render:
+- `BETA_ALLOWED_EMAILS` = comma-separated tester emails (only those can register), or
+- `BETA_INVITE_CODE` = a shared code you give testers (the register page shows an
+  "Invite code" field when this is set).
+
+Leave both unset for open registration. The server enforces the gate; the UI shows
+the invite-code field automatically when a code is configured.
+
+### Steps
 1. Send them the Render URL and have each **register** at `/register`
-   (open registration; anyone with the link can sign up — keep the URL private).
+   (with the invite gate on, they use an invited email or the invite code).
    - New accounts automatically get a **14-day trial** with pro-level features,
      so they can start immediately.
 2. To give testers **full, year-long access to every feature** (best for
