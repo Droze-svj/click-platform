@@ -865,15 +865,14 @@ body {
   animation: liquid-glow 4s ease-in-out infinite;
 }
 
-/* Neural HUD Bar — compact top chrome for the video editor */
+/* HUD Bar — compact top chrome for the video editor (calm, neutral) */
 .neural-hud-bar {
-  background: rgba(5, 5, 10, 0.82);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  background: rgba(8, 8, 12, 0.78);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 80px rgba(99, 102, 241, 0.06);
+    0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 /* Neural HUD Command pill input area */
@@ -892,6 +891,20 @@ body {
 /* Neural HUD max width constraint */
 .neural-hud-max-w {
   max-width: 1100px;
+}
+
+/* Accessibility — quiet the HUD chrome when the user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .neural-hud-bar,
+  .neural-hud-dropdown {
+    transition: none !important;
+  }
+  .neural-hud-bar *,
+  .neural-hud-dropdown * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* Editor Control Strip — quick-access bar between HUD and content */

@@ -1,13 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Zap,
   Search,
   Undo2,
   Redo2,
-  Keyboard,
   Activity,
   TrendingUp,
   Flame,
@@ -16,9 +15,11 @@ import {
   Loader2,
   ChevronDown,
   Layout,
+  LayoutGrid,
+  Film,
+  Clock,
   Sparkles,
-  Radio,
-  Target,
+  Upload,
   Brain,
   Timer,
   Cpu,
@@ -70,11 +71,13 @@ function ScoreRing({
   size = 20,
   strokeWidth = 2.5,
   color,
+  animate = true,
 }: {
   value: number
   size?: number
   strokeWidth?: number
   color: string
+  animate?: boolean
 }) {
   const r = (size - strokeWidth) / 2
   const circ = 2 * Math.PI * r
@@ -92,11 +95,11 @@ function ScoreRing({
         cy={size / 2}
       />
       <motion.circle
-        className="transition-all duration-700 ease-out"
         strokeWidth={strokeWidth}
         strokeDasharray={circ}
-        initial={{ strokeDashoffset: circ }}
+        initial={animate ? { strokeDashoffset: circ } : false}
         animate={{ strokeDashoffset: fill }}
+        transition={{ duration: animate ? 0.7 : 0, ease: 'easeOut' }}
         stroke={color}
         fill="transparent"
         r={r}
@@ -108,7 +111,7 @@ function ScoreRing({
   )
 }
 
-/** Tiny 8-point sparkline SVG */
+/** Tiny sparkline SVG */
 function MiniSparkline({ data, color }: { data: number[]; color: string }) {
   const pts = data.slice(-10)
   const min = Math.min(...pts)
@@ -142,7 +145,7 @@ function HUDTooltip({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const open = () => {
-    timer.current = setTimeout(() => setShow(true), 600)
+    timer.current = setTimeout(() => setShow(true), 500)
   }
   const close = () => {
     if (timer.current) clearTimeout(timer.current)
@@ -155,16 +158,16 @@ function HUDTooltip({
       <AnimatePresence>
         {show && (
           <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.95 }}
-            transition={{ duration: 0.1 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 z-[60] pointer-events-none"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.12 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[60] pointer-events-none"
           >
-            <div className="neural-hud-dropdown rounded-xl px-2.5 py-1.5 whitespace-nowrap border border-white/10">
-              <div className="text-[10px] font-black text-white">{label}</div>
+            <div className="neural-hud-dropdown rounded-lg px-2.5 py-1.5 whitespace-nowrap border border-white/10">
+              <div className="text-[11px] font-medium text-white">{label}</div>
               {shortcut && (
-                <div className="text-[9px] text-slate-500 mt-0.5">{shortcut}</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">{shortcut}</div>
               )}
             </div>
           </motion.div>
@@ -180,45 +183,46 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
     value >= 90 ? 'bg-emerald-400' : value >= 70 ? 'bg-amber-400' : 'bg-red-400'
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[9px] text-slate-400 w-16 shrink-0">{label}</span>
+      <span className="text-[11px] text-slate-400 w-20 shrink-0">{label}</span>
       <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className={`h-full rounded-full ${barColorClass}`}
         />
       </div>
-      <span className="text-[9px] font-mono font-black text-slate-300 w-6 text-right">{value}</span>
+      <span className="text-[11px] font-mono tabular-nums text-slate-300 w-6 text-right">{value}</span>
     </div>
   )
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+/** Plain, human-readable names for each editor section. */
 const CATEGORY_LABELS: Partial<Record<EditorCategory, string>> = {
-  'edit': 'KINETIC_CALIBRATION',
-  'color': 'SPECTRAL_GRADING',
-  'ai': 'NEURAL_SYNTHESIS',
-  'effects': 'VISUAL_FX_MATRIX',
-  'timeline': 'TEMPORAL_SEQUENCE',
-  'export': 'FINAL_MANIFEST',
-  'style-vault': 'DNA_VAULT_CORE',
-  'ai-edit': 'AGENTIC_REVISION',
-  'assets': 'NEURAL_LATTICE_ASSETS',
-  'growth': 'RETENTION_TELEMETRY',
-  'chromakey': 'CHROMA_ISOLATION',
-  'visual-fx': 'SYNTHETIC_FX',
-  'ai-analysis': 'COGNITIVE_ANALYSIS',
-  'collaborate': 'SWARM_SYNC',
-  'scripts': 'NARRATIVE_NODE',
-  'scheduling': 'TEMPORAL_DISPATCH',
-  'short-clips': 'FRAGMENT_SYNTHESIS',
-  'predict': 'RETENTION_FORECAST',
-  'distribution': 'LATTICE_BROADCAST',
-  'spatial': 'SPATIAL_MATRIX',
-  'agent': 'AUTONOMOUS_ENTITY',
-  'dub': 'VOCAL_DOPPELGANGER',
+  'edit': 'Editing',
+  'color': 'Color',
+  'ai': 'AI Tools',
+  'effects': 'Effects',
+  'timeline': 'Timeline',
+  'export': 'Export',
+  'style-vault': 'Style Vault',
+  'ai-edit': 'AI Editing',
+  'assets': 'Assets',
+  'growth': 'Analytics',
+  'chromakey': 'Chroma Key',
+  'visual-fx': 'Visual FX',
+  'ai-analysis': 'AI Analysis',
+  'collaborate': 'Collaborate',
+  'scripts': 'Scripts',
+  'scheduling': 'Scheduling',
+  'short-clips': 'Short Clips',
+  'predict': 'Predictions',
+  'distribution': 'Distribution',
+  'spatial': 'Spatial',
+  'agent': 'AI Agent',
+  'dub': 'Dubbing',
 }
 
 function formatTime(s: number): string {
@@ -233,32 +237,6 @@ const scoreRingColor = (v: number) =>
 
 const scoreTxtColor = (v: number) =>
   v >= 90 ? 'text-emerald-400' : v >= 70 ? 'text-amber-400' : 'text-rose-400'
-
-const scoreBg = (v: number) =>
-  v >= 90
-    ? 'bg-emerald-500/5 border-emerald-500/20'
-    : v >= 70
-    ? 'bg-amber-500/5 border-amber-500/20'
-    : 'bg-rose-500/5 border-rose-500/20'
-
-// ─── Delta Flasher hook ───────────────────────────────────────────────────────
-
-function useDelta(value: number) {
-  const prev = useRef(value)
-  const [delta, setDelta] = useState<number | null>(null)
-
-  useEffect(() => {
-    const diff = value - prev.current
-    if (diff !== 0) {
-      setDelta(diff)
-      const t = setTimeout(() => setDelta(null), 2000)
-      return () => clearTimeout(t)
-    }
-    prev.current = value
-  }, [value])
-
-  return delta
-}
 
 // ─── Metric Pill ─────────────────────────────────────────────────────────────
 
@@ -275,7 +253,6 @@ function MetricPill({
   isOpen: boolean
   onClick: () => void
 }) {
-  const delta = useDelta(value)
   const col = scoreRingColor(value)
 
   return (
@@ -284,9 +261,9 @@ function MetricPill({
       onClick={onClick}
       aria-label={`${label} score ${value}%`}
       aria-haspopup="dialog"
-      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-2xl border-2 text-[10px] font-black uppercase italic transition-all backdrop-blur-xl ${scoreBg(value)} ${
-        isOpen ? 'ring-2 ring-primary-500/40 border-primary-500/40' : 'border-white/5'
-      } hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 shadow-lg`}
+      className={`relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-[11px] font-medium transition-colors bg-white/[0.03] ${
+        isOpen ? 'border-primary-500/40 bg-primary-500/5' : 'border-white/10 hover:bg-white/[0.06]'
+      } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40`}
       style={{ '--icon-col': col } as any}
     >
       {/* Ring + icon combined */}
@@ -295,25 +272,8 @@ function MetricPill({
         <Icon className="absolute w-2.5 h-2.5 text-[var(--icon-col)]" />
       </div>
 
-      <span className={`font-mono tabular-nums tracking-tighter ${scoreTxtColor(value)}`}>{value}%</span>
-      <span className="text-slate-500 hidden xl:block tracking-widest">{label}</span>
-
-      {/* Delta flash */}
-      <AnimatePresence>
-        {delta !== null && (
-          <motion.span
-            initial={{ opacity: 0, y: -6, scale: 0.8 }}
-            animate={{ opacity: 1, y: -20, scale: 1.2 }}
-            exit={{ opacity: 0, scale: 0.7 }}
-            transition={{ duration: 0.3 }}
-            className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-black pointer-events-none drop-shadow-md ${
-              delta > 0 ? 'text-emerald-400' : 'text-rose-400'
-            }`}
-          >
-            {delta > 0 ? `+${delta}` : delta}
-          </motion.span>
-        )}
-      </AnimatePresence>
+      <span className={`font-mono tabular-nums ${scoreTxtColor(value)}`}>{value}%</span>
+      <span className="text-slate-400 hidden xl:block">{label}</span>
     </button>
   )
 }
@@ -351,6 +311,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   isMakingViral = false,
   onExport
 }) => {
+  const reduceMotion = useReducedMotion()
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [openMetric, setOpenMetric] = useState<'engagement' | 'viral' | 'hook' | null>(null)
 
@@ -376,51 +337,47 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   const categoryLabel = activeCategory ? CATEGORY_LABELS[activeCategory] : undefined
 
   const aiTips: Record<string, string> = {
-    engagement: engagementScore >= 85 ? 'Strong retention. Add a call-to-action at 80%.' : 'Add cuts or energy at mid-roll to keep viewers hooked.',
-    viral: viralPotential >= 80 ? 'Viral potential is high. Add a hook overlay in frame 1.' : 'Increase pacing in the first 5s to boost shares.',
-    hook: hookStrength >= 88 ? 'Hook is excellent. Lock in opening frame.' : 'Start with a bold statement. Reduce talking-head duration.',
+    engagement: engagementScore >= 85 ? 'Strong retention. Add a call-to-action around 80%.' : 'Add cuts or energy mid-roll to keep viewers watching.',
+    viral: viralPotential >= 80 ? 'Viral potential is high. Add a hook overlay on the first frame.' : 'Increase pacing in the first 5s to boost shares.',
+    hook: hookStrength >= 88 ? 'Hook is excellent. Lock in the opening frame.' : 'Open with a bold statement. Shorten the talking-head intro.',
   }
+
+  // One consistent divider used between zones.
+  const Divider = () => <div className="hidden sm:block h-6 w-px bg-white/10 shrink-0" />
 
   return (
     <motion.div
-      initial={{ y: -30, opacity: 0 }}
+      initial={reduceMotion ? false : { y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] lg:w-[calc(100%-6rem)] neural-hud-max-w"
     >
       {/* ── Main bar ── */}
-      <div className="flex items-center gap-3 h-14 px-4 rounded-[1.5rem] sm:rounded-[2rem] border-2 border-white/5 bg-black/40 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-        
-        {/* Subtle Scanline Decor */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]" />
+      <div className="flex items-center gap-3 h-14 px-4 rounded-2xl border border-white/10 neural-hud-bar">
 
-        {/* ── Brand + Project Name ── */}
-        <div className="flex items-center gap-4 shrink-0 min-w-0 relative z-10">
-          <div className="w-9 h-9 rounded-[1.25rem] bg-primary-600 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] shrink-0 group-hover:scale-110 transition-transform duration-500">
-            <Zap className="w-4 h-4 text-white fill-white" />
+        {/* ════════ ZONE 1 · Identity ════════ */}
+        <div className="flex items-center gap-3 shrink-0 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-primary-600 flex items-center justify-center shrink-0">
+            <Zap className="w-4 h-4 text-white" />
           </div>
 
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2">
-              <input
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                aria-label="Project name"
-                className="bg-transparent border-none text-white font-black text-sm tracking-tight focus:ring-0 p-0 outline-none min-w-[80px] max-w-[140px] sm:max-w-[220px] lg:max-w-[320px] w-full truncate leading-none transition-all uppercase italic"
-                placeholder="UNTITLED_SEQUENCE"
-              />
-              <div className="hidden sm:block w-1 h-1 rounded-full bg-white/20 shrink-0" />
-            </div>
-            {/* Context label */}
+            <input
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              aria-label="Project name"
+              className="bg-transparent border-none text-white font-semibold text-sm focus:ring-0 p-0 outline-none min-w-[80px] max-w-[140px] sm:max-w-[200px] lg:max-w-[300px] w-full truncate leading-tight"
+              placeholder="Untitled project"
+            />
             <AnimatePresence mode="wait">
               {categoryLabel && (
                 <motion.span
                   key={categoryLabel}
-                  initial={{ opacity: 0, y: 3 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={reduceMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-[9px] font-black uppercase tracking-[0.3em] text-primary-400/60 leading-none mt-1 hidden sm:block italic"
+                  transition={{ duration: 0.15 }}
+                  className="text-[10px] uppercase tracking-wide text-slate-500 leading-none hidden sm:block"
                 >
                   {categoryLabel}
                 </motion.span>
@@ -428,20 +385,20 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
             </AnimatePresence>
           </div>
 
-          {/* Autosave pill */}
+          {/* Autosave status */}
           <AnimatePresence mode="wait">
             <motion.div
               key={autosaveStatus}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ duration: 0.2 }}
-              className={`flex items-center gap-1.5 p-1 sm:px-3 sm:py-1 rounded-full border-2 text-[9px] font-black uppercase tracking-widest shrink-0 shadow-sm ${
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className={`flex items-center gap-1.5 p-1 sm:px-2.5 sm:py-1 rounded-lg border text-[11px] font-medium shrink-0 ${
                 autosaveStatus === 'saving'
                   ? 'bg-amber-500/5 border-amber-500/20 text-amber-400'
                   : autosaveStatus === 'error'
                   ? 'bg-rose-500/5 border-rose-500/20 text-rose-400'
-                  : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
+                  : 'bg-white/[0.03] border-white/10 text-slate-400'
               }`}
             >
               {autosaveStatus === 'saving' ? (
@@ -449,19 +406,19 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               ) : autosaveStatus === 'error' ? (
                 <AlertCircle className="w-3 h-3" />
               ) : (
-                <CheckCircle2 className="w-3 h-3" />
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
               )}
-              <span className="hidden xl:block italic">
-                {autosaveStatus === 'saving' ? 'SYNCING' : autosaveStatus === 'error' ? 'FAIL' : 'SECURE'}
+              <span className="hidden xl:block">
+                {autosaveStatus === 'saving' ? 'Saving' : autosaveStatus === 'error' ? 'Save failed' : 'Saved'}
               </span>
             </motion.div>
           </AnimatePresence>
-          </div>
+        </div>
 
-          <div className="hidden sm:block h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
+        <Divider />
 
-          {/* ── Undo / Redo ── */}
-          <div className="hidden sm:flex items-center gap-1 shrink-0">
+        {/* ── Undo / Redo ── */}
+        <div className="hidden sm:flex items-center gap-1 shrink-0">
           <HUDTooltip label="Undo" shortcut="⌘ Z">
             <button
               type="button"
@@ -469,21 +426,9 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               disabled={!canUndo}
               aria-label="Undo"
               title="Undo (⌘Z)"
-              className="relative flex items-center justify-center w-9 h-9 rounded-xl hover:bg-white/[0.08] disabled:opacity-20 transition-all text-slate-300 hover:text-white border-2 border-transparent hover:border-white/5 active:scale-90"
+              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-white/[0.06] disabled:opacity-25 transition-colors text-slate-300 hover:text-white active:scale-95"
             >
               <Undo2 className="w-4 h-4" />
-              <AnimatePresence>
-                {canUndo && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary-600 text-[8px] font-black flex items-center justify-center text-white leading-none shadow-[0_2px_8px_rgba(99,102,241,0.5)]"
-                  >
-                    {historyIndex}
-                  </motion.span>
-                )}
-              </AnimatePresence>
             </button>
           </HUDTooltip>
 
@@ -494,65 +439,66 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               disabled={!canRedo}
               aria-label="Redo"
               title="Redo (⌘Y)"
-              className="flex items-center justify-center w-9 h-9 rounded-xl hover:bg-white/[0.08] disabled:opacity-20 transition-all text-slate-300 hover:text-white border-2 border-transparent hover:border-white/5 active:scale-90"
+              className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-white/[0.06] disabled:opacity-25 transition-colors text-slate-300 hover:text-white active:scale-95"
             >
               <Redo2 className="w-4 h-4" />
             </button>
           </HUDTooltip>
         </div>
 
-        <div className="hidden sm:block h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
+        <Divider />
 
-        {/* ── Live Timecode ── */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0 px-2 py-1 sm:px-3 sm:py-1.5 rounded-2xl bg-white/[0.03] border-2 border-white/5 shadow-inner">
-          <Timer className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-400 shrink-0" />
-          <span className="text-[10px] sm:text-xs font-mono font-black text-white tabular-nums tracking-tighter">
+        {/* ════════ ZONE 2 · Context & insight ════════ */}
+        {/* Timecode */}
+        <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/10">
+          <Timer className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+          <span className="text-xs font-mono tabular-nums text-white">
             {formatTime(currentTime)}
           </span>
-          <span className="text-[9px] sm:text-[10px] text-slate-600 font-black">/</span>
-          <span className="text-[10px] sm:text-xs font-mono font-black text-slate-500 tabular-nums tracking-tighter">
+          <span className="text-[10px] text-slate-600">/</span>
+          <span className="text-xs font-mono tabular-nums text-slate-500">
             {formatTime(duration)}
           </span>
         </div>
 
-        {/* ── Neural Command ── */}
+        {/* Command */}
         <button
           type="button"
           onClick={onCommandK}
-          aria-label="Open Command Menu"
-          title="Command Menu (⌘K)"
-          className="flex-1 md:flex-none md:w-auto min-w-[40px] max-w-[400px] flex items-center justify-center md:justify-start gap-3 p-2 md:px-4 h-10 rounded-2xl border-2 border-white/5 bg-black/20 hover:border-primary-500/30 hover:bg-primary-500/5 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 shadow-inner overflow-hidden"
+          aria-label="Search or run a command"
+          title="Search or run a command (⌘K)"
+          className="flex-1 md:flex-none md:w-auto min-w-[40px] max-w-[360px] flex items-center justify-center md:justify-start gap-2.5 px-2 md:px-3 h-10 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 overflow-hidden"
         >
-          <Search className="w-3.5 h-3.5 text-slate-500 group-hover:text-primary-400 transition-colors shrink-0" />
-          <span className="text-[10px] font-black italic uppercase tracking-[0.4em] text-slate-600 group-hover:text-slate-400 transition-colors truncate hidden md:inline-block">
-            NEURAL_OS_INPUT…
+          <Search className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition-colors shrink-0" />
+          <span className="text-xs text-slate-500 group-hover:text-slate-400 transition-colors truncate hidden md:inline-block">
+            Search or run a command
           </span>
-          <div className="flex items-center gap-1 ml-auto shrink-0 opacity-30 group-hover:opacity-100 transition-all duration-500">
-            <kbd className="text-[10px] font-black border-2 border-white/10 rounded-lg px-1.5 py-0.5 leading-none text-slate-500 bg-black/40">⌘</kbd>
-            <kbd className="text-[10px] font-black border-2 border-white/10 rounded-lg px-1.5 py-0.5 leading-none text-slate-500 bg-black/40">K</kbd>
+          <div className="flex items-center gap-1 ml-auto shrink-0">
+            <kbd className="text-[11px] font-medium border border-white/10 rounded px-1.5 py-0.5 leading-none text-slate-500 bg-black/30">⌘</kbd>
+            <kbd className="text-[11px] font-medium border border-white/10 rounded px-1.5 py-0.5 leading-none text-slate-500 bg-black/30">K</kbd>
           </div>
         </button>
 
-        {/* ── Metrics ── */}
-        <div className="flex items-center gap-2 shrink-0 overflow-x-auto no-scrollbar max-w-[140px] md:max-w-[240px] lg:max-w-none" ref={popoverRef}>
+        {/* Scores */}
+        <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar max-w-[140px] md:max-w-[240px] lg:max-w-none" ref={popoverRef}>
           <MetricPill
             icon={Activity}
             value={engagementScore}
-            label="RETENTION"
+            label="Retention"
             isOpen={openMetric === 'engagement'}
             onClick={() => toggleMetric('engagement')}
           />
           <MetricPill
             icon={Flame}
             value={viralPotential}
-            label="VIRAL"
+            label="Viral"
             isOpen={openMetric === 'viral'}
             onClick={() => toggleMetric('viral')}
           />
           <MetricPill
             icon={TrendingUp}
             value={hookStrength}
-            label="HOOK"
+            label="Hook"
             isOpen={openMetric === 'hook'}
             onClick={() => toggleMetric('hook')}
           />
@@ -560,85 +506,91 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           <AnimatePresence>
             {openMetric && (
               <MetricPopover
-                title={openMetric === 'engagement' ? 'Retention Matrix' : openMetric === 'viral' ? 'Viral Projection' : 'Hook Potency'}
+                title={openMetric === 'engagement' ? 'Retention' : openMetric === 'viral' ? 'Viral potential' : 'Hook strength'}
                 value={openMetric === 'engagement' ? engagementScore : openMetric === 'viral' ? viralPotential : hookStrength}
-                label={openMetric}
+                label={openMetric === 'engagement' ? 'Retention' : openMetric === 'viral' ? 'Viral' : 'Hook'}
                 heatmap={retentionHeatmap}
-                allScores={{ 
-                  'RETENTION': engagementScore, 
-                  'VIRAL': viralPotential, 
-                  'HOOK': hookStrength, 
-                  'SENTIMENT': sentimentDensity, 
-                  'TREND': trendAlignment 
+                allScores={{
+                  'Retention': engagementScore,
+                  'Viral': viralPotential,
+                  'Hook': hookStrength,
+                  'Sentiment': sentimentDensity,
+                  'Trend': trendAlignment
                 }}
                 tip={aiTips[openMetric]}
+                reduceMotion={!!reduceMotion}
               />
             )}
           </AnimatePresence>
         </div>
 
-        <div className="hidden sm:block h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
+        <Divider />
 
-        {/* ── Action Buttons ── */}
-        <div className="flex items-center gap-1 shrink-0">
-          <HUDTooltip label="Layout Matrix" shortcut="L">
-            <div className="relative hidden sm:block">
+        {/* ════════ ZONE 3 · Actions ════════ */}
+        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+          {/* Layout */}
+          <div className="relative hidden sm:block">
+            <HUDTooltip label="Workspace layout" shortcut="L">
               <button
                 type="button"
                 onClick={() => setLayoutOpen((v) => !v)}
-                aria-label="Layout Matrix"
-                title="Workspace Layout (L)"
-                className="flex items-center gap-1.5 px-3 h-10 rounded-xl hover:bg-white/[0.08] transition-all text-slate-400 hover:text-white border-2 border-transparent hover:border-white/5 active:scale-95"
+                aria-label="Workspace layout"
+                title="Workspace layout (L)"
+                className="flex items-center gap-1.5 px-2.5 h-9 rounded-lg hover:bg-white/[0.06] transition-colors text-slate-400 hover:text-white active:scale-95"
               >
                 <Layout className="w-4 h-4" />
-                <ChevronDown className={`w-3 h-3 transition-transform duration-500 ${layoutOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${layoutOpen ? 'rotate-180' : ''}`} />
               </button>
+            </HUDTooltip>
 
-              <AnimatePresence>
-                {layoutOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-3 w-60 rounded-3xl border-2 border-white/10 bg-black/60 backdrop-blur-3xl p-2 z-50 shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
-                  >
-                    <div className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 italic border-b-2 border-white/5 mb-2">Workspace_Matrix</div>
-                    {[
-                      { id: 'balanced', label: 'BALANCED_VIEW', icon: '⚖️', desc: 'Default Calibration' },
-                      { id: 'preview', label: 'CINEMATIC_CORE', icon: '🎬', desc: 'Focus on High-Fidelity' },
-                      { id: 'timeline', label: 'SEQUENCE_DEEP', icon: '🎵', desc: 'Granular Temporal Edit' },
-                    ].map((mode) => (
+            <AnimatePresence>
+              {layoutOpen && (
+                <motion.div
+                  initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-full right-0 mt-2 w-56 rounded-xl border border-white/10 neural-hud-dropdown p-1.5 z-50"
+                >
+                  <div className="px-3 py-2 text-[10px] uppercase tracking-wide text-slate-500 border-b border-white/5 mb-1">Workspace layout</div>
+                  {[
+                    { id: 'balanced', label: 'Balanced', icon: LayoutGrid, desc: 'Even split of preview and timeline' },
+                    { id: 'preview', label: 'Cinematic', icon: Film, desc: 'Larger preview, focus on playback' },
+                    { id: 'timeline', label: 'Timeline focus', icon: Clock, desc: 'More room for fine timeline edits' },
+                  ].map((mode) => {
+                    const Icon = mode.icon
+                    return (
                       <button
                         type="button"
                         key={mode.id}
                         onClick={() => { onLayoutChange({ focusMode: mode.id }); setLayoutOpen(false) }}
-                        className="w-full flex items-center gap-4 px-4 py-3 hover:bg-primary-500/10 rounded-2xl transition-all text-left group"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/[0.06] rounded-lg transition-colors text-left"
                       >
-                        <span className="text-xl group-hover:scale-125 transition-transform">{mode.icon}</span>
-                        <div>
-                          <div className="text-[11px] font-black text-white italic">{mode.label}</div>
-                          <div className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">{mode.desc}</div>
+                        <Icon className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div className="min-w-0">
+                          <div className="text-[12px] font-medium text-white">{mode.label}</div>
+                          <div className="text-[10px] text-slate-500 truncate">{mode.desc}</div>
                         </div>
                       </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </HUDTooltip>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-          {/* GPU/Agent Status */}
-          <div className="hidden xl:flex items-center gap-2 mx-2">
+          {/* GPU / Agent status (quiet, only when present) */}
+          <div className="hidden xl:flex items-center gap-1.5">
             {gpuBackend && (
-              <div className={`px-3 py-1.5 rounded-xl border-2 text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 ${gpuBackend === 'webgpu' ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'}`}>
+              <div className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.03] text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
                 <Cpu className="w-3 h-3" />
-                {gpuBackend.toUpperCase()}
+                GPU: {gpuBackend === 'webgpu' ? 'WebGPU' : gpuBackend === 'webgl2' ? 'WebGL2' : 'Canvas'}
               </div>
             )}
             {agentRunning && (
-              <div className="px-3 py-1.5 rounded-xl bg-fuchsia-500/5 border-2 border-fuchsia-500/20 text-fuchsia-400 text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 animate-pulse">
+              <div className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.03] text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
                 <Bot className="w-3 h-3" />
-                AGENT_LIVE
+                AI agent running
               </div>
             )}
           </div>
@@ -648,34 +600,36 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               type="button"
               onClick={onMakeItViral}
               disabled={isMakingViral}
-              className="flex items-center justify-center gap-2 px-2 sm:px-4 h-9 sm:h-10 rounded-xl bg-gradient-to-r from-fuchsia-500/10 to-indigo-500/10 hover:from-fuchsia-500 hover:to-indigo-500 border-2 border-fuchsia-500/20 hover:border-transparent text-fuchsia-400 hover:text-white transition-all duration-500 shadow-lg group disabled:opacity-50 disabled:cursor-wait"
+              className="flex items-center justify-center gap-2 px-2.5 sm:px-3 h-9 rounded-lg bg-primary-500/10 border border-primary-500/25 text-primary-300 hover:bg-primary-500/20 transition-colors disabled:opacity-50 disabled:cursor-wait"
               title="Run the one-click viral recipe — hook, cuts, B-roll, beat sync, CTA"
             >
               <Sparkles size={14} className={isMakingViral ? 'animate-spin' : ''} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] italic hidden sm:inline-block">
-                {isMakingViral ? 'COMPOSING…' : 'MAKE_VIRAL'}
+              <span className="text-[12px] font-medium hidden sm:inline-block">
+                {isMakingViral ? 'Working…' : 'Make Viral'}
               </span>
             </button>
           )}
 
-          <HUDTooltip label="Zen Mode" shortcut="Z">
-            <button 
+          <HUDTooltip label="Focus mode" shortcut="Z">
+            <button
+              type="button"
               onClick={() => setZenMode?.(!zenMode)}
-              className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all active:scale-90 ${zenMode ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40' : 'hover:bg-white/[0.08] text-slate-500 hover:text-white'}`}
+              aria-label="Focus mode"
+              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors active:scale-95 ${zenMode ? 'bg-primary-600 text-white' : 'hover:bg-white/[0.06] text-slate-400 hover:text-white'}`}
             >
               {zenMode ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </HUDTooltip>
 
-          {/* Final Launch Action */}
-          <button 
+          {/* Primary action */}
+          <button
             type="button"
             onClick={onExport}
-            className="flex items-center justify-center gap-2 px-2 sm:px-4 h-9 sm:h-10 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-lg group ml-1 active:scale-95"
-            title="Export and publish sequence (GO LIVE)"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 h-9 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-medium transition-colors active:scale-95 ml-0.5"
+            title="Export and publish"
           >
-             <Radio className="w-4 h-4 animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] italic group-hover:translate-x-1 transition-transform hidden sm:inline-block">GO_LIVE</span>
+            <Upload className="w-4 h-4" />
+            <span className="text-[12px] hidden sm:inline-block">Export</span>
           </button>
         </div>
 
@@ -695,6 +649,7 @@ function MetricPopover({
   heatmap,
   allScores,
   tip,
+  reduceMotion,
 }: {
   title: string
   value: number
@@ -702,50 +657,51 @@ function MetricPopover({
   heatmap: number[]
   allScores: Record<string, number>
   tip: string
+  reduceMotion: boolean
 }) {
   const col = scoreRingColor(value)
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 6, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 6, scale: 0.95 }}
-      transition={{ duration: 0.18 }}
-      className="absolute top-full left-0 mt-2 z-[60] w-52 max-h-[80vh] overflow-y-auto rounded-2xl border border-white/10 neural-hud-dropdown p-3"
+      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 6 }}
+      transition={{ duration: 0.15 }}
+      className="absolute top-full left-0 mt-2 z-[60] w-56 max-h-[80vh] overflow-y-auto rounded-xl border border-white/10 neural-hud-dropdown p-3.5"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{title}</div>
-          <div className="text-[9px] text-slate-500 mt-0.5">Live Neural Score</div>
+          <div className="text-[12px] font-semibold text-white">{title}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Live score</div>
         </div>
-        <div className="flex items-center gap-2" style={{ '--score-col': col } as any}>
-          <span className="text-[14px] font-black font-mono text-[var(--score-col)]">{value}</span>
-          <span className="text-[10px] text-slate-500 font-bold tracking-widest italic">{label.toUpperCase()}</span>
+        <div className="flex items-baseline gap-1" style={{ '--score-col': col } as any}>
+          <span className="text-[18px] font-semibold font-mono tabular-nums text-[var(--score-col)]">{value}</span>
+          <span className="text-[11px] text-slate-500">/ 100</span>
         </div>
       </div>
 
       {/* Sparkline */}
       <div className="mb-3">
-        <div className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 mb-1">Retention Heatmap</div>
+        <div className="text-[10px] uppercase tracking-wide text-slate-500 mb-1.5">Retention over time</div>
         <MiniSparkline data={heatmap} color={col} />
       </div>
 
-      <div className="h-px bg-white/5 mb-2.5" />
+      <div className="h-px bg-white/5 mb-3" />
 
       {/* All sub-scores */}
-      <div className="flex flex-col gap-1.5 mb-2.5">
+      <div className="flex flex-col gap-2 mb-3">
         {Object.entries(allScores).map(([k, v]) => (
           <ScoreBar key={k} label={k} value={v} />
         ))}
       </div>
 
-      <div className="h-px bg-white/5 mb-2" />
+      <div className="h-px bg-white/5 mb-2.5" />
 
       {/* AI tip */}
-      <div className="flex gap-1.5">
-        <Brain className="w-3 h-3 text-indigo-400 shrink-0 mt-0.5" />
-        <p className="text-[9px] text-slate-400 leading-relaxed">{tip}</p>
+      <div className="flex gap-2">
+        <Brain className="w-3.5 h-3.5 text-primary-400 shrink-0 mt-0.5" />
+        <p className="text-[11px] text-slate-400 leading-relaxed">{tip}</p>
       </div>
     </motion.div>
   )
