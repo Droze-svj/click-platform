@@ -753,8 +753,22 @@ async function renderFromEditorState(options) {
     videoCrop = null,
     exportOptions = {},
     timelineSegments = [],
+    chromaKey = null,
     userId,
   } = options
+
+  // Playback speed (global). Clamp to ffmpeg-sane bounds. setpts scales video PTS;
+  // atempo handles audio (chained for factors outside 0.5–2.0).
+  const playbackSpeed = (() => {
+    const s = Number(exportOptions.playbackSpeed ?? options.playbackSpeed ?? 1)
+    return Number.isFinite(s) && s > 0 ? Math.max(0.25, Math.min(4, s)) : 1
+  })()
+  // Single-clip reverse: when the timeline is effectively one segment and it's
+  // flagged reversed, reverse the whole render. (Multi-segment per-clip reverse +
+  // transitions require segment-concat rendering — handled in the timeline rebuild.)
+  const reverseWhole = Array.isArray(timelineSegments)
+    && timelineSegments.length <= 1
+    && timelineSegments.some(s => s && s.reversed)
 
   const width = exportOptions.width ?? 1920
   const height = exportOptions.height ?? 1080
@@ -807,6 +821,35 @@ async function renderFromEditorState(options) {
       logger.warn('Skip videoTransform', { error: e.message })
     }
   }
+
+  // ── Editor parity: chroma key, whole-clip reverse, and playback speed ──
+  // Applied to the base video before overlays. Order: reverse → chromakey → setpts.
+  const basePre = []
+  if (reverseWhole) basePre.push('reverse')
+  if (chromaKey && chromaKey.enabled && chromaKey.color) {
+    const hex = String(chromaKey.color).replace('#', '0x')
+    let tol = Number(chromaKey.tolerance)
+    if (!Number.isFinite(tol)) tol = 0.3
+    if (tol > 1) tol = tol / 100 // editor stores 0-100 in some paths, 0-1 in others
+    const similarity = Math.max(0.01, Math.min(1, tol))
+    let edge = Number(chromaKey.edge)
+    const blend = Number.isFinite(edge) ? Math.max(0, Math.min(1, (edge > 1 ? edge / 100 : edge))) : 0.1
+    basePre.push(`chromakey=${hex}:${similarity.toFixed(3)}:${blend.toFixed(3)}`)
+  }
+  if (playbackSpeed !== 1) basePre.push(`setpts=${(1 / playbackSpeed).toFixed(4)}*PTS`)
+  if (basePre.length > 0) videoFilters_ff.unshift(...basePre)
+
+  // Audio speed/reverse suffix injected at the [aout] tail (one consistent point).
+  const aSuffixParts = []
+  if (reverseWhole) aSuffixParts.push('areverse')
+  if (playbackSpeed !== 1) {
+    // atempo only accepts 0.5–2.0; chain factors outside that range.
+    let s = playbackSpeed
+    while (s > 2.0) { aSuffixParts.push('atempo=2.0'); s /= 2.0 }
+    while (s < 0.5) { aSuffixParts.push('atempo=0.5'); s /= 0.5 }
+    aSuffixParts.push(`atempo=${s.toFixed(4)}`)
+  }
+  const aSuffix = aSuffixParts.length > 0 ? ',' + aSuffixParts.join(',') : ''
 
   const overlayFilters = []
     ; (textOverlays || []).forEach((o) => {
@@ -1120,14 +1163,14 @@ async function renderFromEditorState(options) {
 
       if (hasAudio) {
         // Source has audio + background music added -> map both with sidechain compression
-        let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`
+        let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
         const complexStr = `${vidPart};${audPart}`
         command = command
           .complexFilter(complexStr)
           .outputOptions(['-map', '[vout]', '-map', '[aout]'])
       } else {
         // Silent source + background music added -> map only music track directly (skip sidechain amix)
-        let audPart = `[1:a]volume=${musicVolume},${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`
+        let audPart = `[1:a]volume=${musicVolume},${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
         const complexStr = `${vidPart};${audPart}`
         command = command
           .complexFilter(complexStr)
@@ -1144,13 +1187,13 @@ async function renderFromEditorState(options) {
           // would error on the mapped [vout] pad.
           const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
           const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
-          command = command.complexFilter(`${vidPart};[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`)
+          command = command.complexFilter(`${vidPart};[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
             .outputOptions(['-map', '[vout]', '-map', '[aout]'])
           videoMappedViaFiltergraph = true
         } else {
           // Source has audio, no music, no video filters -> apply audioFilters directly.
           // No complexFilter here, so .size() (-s W:H) below performs the scaling.
-          command = command.audioFilters(`highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11`)
+          command = command.audioFilters(`highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}`)
         }
       } else {
         // Source is completely silent and no background music added -> render as video only
