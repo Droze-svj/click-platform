@@ -55,6 +55,7 @@ import {
 } from '../../types/editor'
 import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS, resolveTimelineOverlaps, rippleDeleteAcrossTracks, intersectsRange } from '../../utils/editorUtils'
 import { getSegmentColor } from '../../utils/editorUtils'
+import { apiGet } from '../../lib/api'
 
 /** Per-lane track state: locked rejects edits, muted hides from preview, solo isolates. */
 export interface TrackLaneState {
@@ -96,6 +97,9 @@ interface ResizableTimelineProps {
   transcript?: Transcript | null
   aiDirectorSuggestions?: AIDirectorSuggestion[]
   engagementScore?: EngagementScore | null
+  /** Source the waveform peaks are decoded from. Either is enough; videoSrc wins. */
+  videoSrc?: string | null
+  contentId?: string | null
 }
 
 /** Minimum allowed duration (seconds) so an edge drag can never invert or zero a clip/overlay. */
@@ -108,7 +112,7 @@ type TimeFormatPreference = 'short' | 'tenths' | 'frames'
 
 const glassStyle = "backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl"
 
-const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, aiDirectorSuggestions = [], engagementScore = null }) => {
+const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, aiDirectorSuggestions = [], engagementScore = null, videoSrc = null, contentId = null }) => {
   const [timelineMode, setTimelineMode] = useState<'hybrid' | 'visual' | 'text'>('hybrid')
   const [focusLane, setFocusLane] = useState<string | null>(null)
 
@@ -158,17 +162,81 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     return Number.isFinite(n) && n >= 0.5 && n <= 4 ? n : 1
   })
 
-  // V4: Neural Waveform Generator
-  const waveformPoints = useMemo(() => {
-    const points = []
-    const segmentsCount = 100
-    // Use a deterministic wave pattern (sine/cosine mix) instead of Math.random to prevent hydration mismatch
-    for (let i = 0; i < segmentsCount; i++) {
-      const val = 15 + Math.abs(Math.sin(i * 0.8) * 20 + Math.cos(i * 0.3) * 10)
-      points.push(val)
+  // REAL audio peaks for the waveform track. Fetched from the backend
+  // (ffmpeg-decoded PCM), cached per-source. No fabricated/synthetic data:
+  // while loading or when the source has no audio we render a flat baseline.
+  const WAVEFORM_BUCKETS = 400
+  const peaksCacheRef = useRef<Map<string, number[]>>(new Map())
+  const [waveformPeaks, setWaveformPeaks] = useState<number[]>([])
+  const [waveformHasAudio, setWaveformHasAudio] = useState(false)
+  const waveformWarnedRef = useRef(false)
+
+  // The cache/fetch key: prefer the explicit source URL, else the contentId.
+  const waveformKey = useMemo(() => videoSrc || (contentId ? `id:${contentId}` : null), [videoSrc, contentId])
+
+  useEffect(() => {
+    if (!waveformKey) {
+      setWaveformPeaks([])
+      setWaveformHasAudio(false)
+      return
     }
-    return points
-  }, [])
+    // Serve from cache instantly when we've already decoded this source.
+    const cached = peaksCacheRef.current.get(waveformKey)
+    if (cached) {
+      setWaveformPeaks(cached)
+      setWaveformHasAudio(cached.length > 0)
+      return
+    }
+
+    let cancelled = false
+    const params = new URLSearchParams({ buckets: String(WAVEFORM_BUCKETS) })
+    if (videoSrc) params.set('videoUrl', videoSrc)
+    else if (contentId) params.set('contentId', contentId)
+
+    apiGet<{ data?: { peaks?: number[]; hasAudio?: boolean } }>(
+      `/video/manual-editing/waveform-peaks?${params.toString()}`
+    )
+      .then((res) => {
+        if (cancelled) return
+        const payload = res?.data ?? (res as any)
+        const peaks: number[] = Array.isArray(payload?.peaks) ? payload.peaks : []
+        const hasAudio = !!payload?.hasAudio && peaks.length > 0
+        peaksCacheRef.current.set(waveformKey, hasAudio ? peaks : [])
+        setWaveformPeaks(hasAudio ? peaks : [])
+        setWaveformHasAudio(hasAudio)
+      })
+      .catch(() => {
+        if (cancelled) return
+        // Resilient: never crash the timeline. Flat baseline + a one-time warn.
+        if (!waveformWarnedRef.current) {
+          waveformWarnedRef.current = true
+          console.warn('[ResizableTimeline] Failed to load audio waveform peaks; showing flat baseline.')
+        }
+        setWaveformPeaks([])
+        setWaveformHasAudio(false)
+      })
+
+    return () => { cancelled = true }
+  }, [waveformKey, videoSrc, contentId])
+
+  // SVG path for the waveform track (viewBox 0 0 100 48, baseline at y=24).
+  // Real peaks (0..1) → a symmetric envelope scaled to the track height. When
+  // there are no peaks (loading / no audio / fetch failure) we draw a flat
+  // baseline — never a fabricated wave.
+  const waveformPath = useMemo(() => {
+    if (!waveformPeaks.length) return 'M 0 24 L 100 24'
+    const n = waveformPeaks.length
+    const amp = 22 // max half-height within the 48-unit viewBox
+    const up = waveformPeaks.map((p, i) => {
+      const x = (i * 100) / (n - 1 || 1)
+      return `L ${x.toFixed(3)} ${(24 - Math.max(0, Math.min(1, p)) * amp).toFixed(3)}`
+    }).join(' ')
+    const down = waveformPeaks.map((p, i) => {
+      const x = ((n - 1 - i) * 100) / (n - 1 || 1)
+      return `L ${x.toFixed(3)} ${(24 + Math.max(0, Math.min(1, waveformPeaks[n - 1 - i])) * amp).toFixed(3)}`
+    }).join(' ')
+    return `M 0 24 ${up} ${down} Z`
+  }, [waveformPeaks])
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [rulerHoverTime, setRulerHoverTime] = useState<number | null>(null)
   const [draggingSegmentId, setDraggingSegmentId] = useState<string | null>(null)
@@ -1659,7 +1727,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <div className="relative h-14 w-full bg-white/[0.02] border border-white/5 rounded-2xl mb-8 overflow-hidden group/waveform shadow-inner">
                        <div className="absolute inset-y-0 left-6 flex items-center z-10 pointer-events-none">
                           <div className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse mr-3 shadow-[0_0_10px_rgba(232,121,249,0.8)]" />
-                          <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-[0.4em] italic opacity-60">Neural Audio Analysis // Quantum Waveform</span>
+                          <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-[0.4em] italic opacity-60">{waveformHasAudio ? 'Audio Waveform' : (waveformKey ? 'Audio Waveform // No Audio' : 'Audio Waveform')}</span>
                        </div>
 
                        {/* Playhead Reflection on Waveform */}
@@ -1678,10 +1746,13 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                              </filter>
                           </defs>
                           <path
-                            d={`M 0 24 ${waveformPoints.map((p, i) => `L ${i * (100 / (waveformPoints.length - 1))} ${24 - p/1.8} L ${i * (100 / (waveformPoints.length - 1))} ${24 + p/1.8}`).join(' ')} L 100 24`}
-                            fill="url(#waveform-grad)"
-                            filter="url(#wave-glow)"
-                            className="transition-all duration-1000"
+                            d={waveformPath}
+                            fill={waveformPeaks.length ? 'url(#waveform-grad)' : 'none'}
+                            stroke={waveformPeaks.length ? 'none' : 'currentColor'}
+                            strokeWidth={waveformPeaks.length ? 0 : 0.4}
+                            strokeOpacity={0.4}
+                            filter={waveformPeaks.length ? 'url(#wave-glow)' : undefined}
+                            className="transition-all duration-700"
                           />
                        </svg>
                        <motion.div

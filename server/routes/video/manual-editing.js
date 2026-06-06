@@ -1065,6 +1065,47 @@ router.post('/waveform/image', auth, upload.single('video'), asyncHandler(async 
   }
 }));
 
+/**
+ * GET /api/video/manual-editing/waveform-peaks
+ * Return REAL decoded audio peaks for the timeline waveform — no fabricated
+ * data. The client passes the source it already has (videoUrl) or a contentId;
+ * we decode the audio with ffmpeg and downsample to `buckets` normalized peaks.
+ *
+ * Query: contentId? , videoUrl? , buckets? (default 400)
+ * Response data: { peaks: number[], duration, sampleRate, hasAudio }
+ *   - hasAudio:false (with peaks:[]) when the source has no audio stream.
+ */
+router.get('/waveform-peaks', auth, asyncHandler(async (req, res) => {
+  const { contentId, videoUrl, buckets } = req.query;
+
+  if (!contentId && !videoUrl) {
+    return sendError(res, 'contentId or videoUrl is required', 400);
+  }
+
+  try {
+    // Resolve the source reference. An explicit videoUrl wins; otherwise look
+    // up the Content's original file URL (mirrors videoRenderService).
+    let source = videoUrl || null;
+    if (!source && contentId) {
+      const Content = require('../../models/Content');
+      const content = await Content.findById(contentId);
+      source = content?.originalFile?.url || null;
+      if (!source) {
+        return sendError(res, 'No audio source found for contentId', 404);
+      }
+    }
+
+    const result = await waveformService.extractWaveformPeaks(source, {
+      buckets: parseInt(buckets, 10) || 400,
+    });
+
+    sendSuccess(res, 'Waveform peaks generated', 200, result);
+  } catch (error) {
+    logger.error('Waveform peaks error', { error: error.message });
+    sendError(res, error.message, error.statusCode || 500);
+  }
+}));
+
 router.post('/waveform/beats', auth, upload.single('video'), asyncHandler(async (req, res) => {
   if (!req.file) {
     return sendError(res, 'Video file is required', 400);
