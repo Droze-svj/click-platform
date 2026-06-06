@@ -4,6 +4,10 @@
 const ffmpeg = require('fluent-ffmpeg')
 const path = require('path')
 const fs = require('fs')
+const os = require('os')
+const crypto = require('crypto')
+let sharp = null
+try { sharp = require('sharp') } catch (_) { /* sharp optional; svg/gradient overlays degrade gracefully */ }
 const Content = require('../models/Content')
 const logger = require('../utils/logger')
 const videoEnhancer = require('../utils/videoEnhancer')
@@ -195,7 +199,49 @@ function buildDrawTextFilter(overlay) {
   const fontPath = getSystemFontPath()
   const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : ''
 
-  return `drawtext=text='${safeText}'${fontfileOpt}:fontsize=${fontSize}:fontcolor='${fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
+  // ── Editor parity: animationIn/Out + per-overlay keyframes ──
+  // Time-based ramps for fade (alpha), pop/scale/zoom/flip (fontsize), slide
+  // (x/y offsets). When keyframes are present they additionally drive
+  // x/y/scale/opacity across absolute time. Falls back to the existing kinetic
+  // behavior when no animation/keyframe is set (no regression).
+  const startN = Number(start)
+  const endN = Number(end)
+  const anim = buildTextAnimation(overlay, startN, endN)
+
+  // Font size is INTENTIONALLY constant: animating drawtext's fontsize per
+  // frame crashes ffmpeg in this pipeline (see buildTextAnimation safety note).
+  // Scale-style animations and keyframe `scale` are expressed via alpha/opacity
+  // instead. Keyframe x/y/opacity remain fully honored below.
+  const fontSizeOpt = `fontsize=${fontSize}`
+  let finalX = x
+  let finalYExpr = finalY
+  let alphaOpt = ''
+
+  const kf = Array.isArray(overlay.keyframes) ? overlay.keyframes : null
+  const kfOpacity = kf ? buildKeyframeExpr(kf, 'opacity', 1) : null
+  const kfPx = kf ? buildKeyframeExpr(kf, 'positionX', 0) : null
+  const kfPy = kf ? buildKeyframeExpr(kf, 'positionY', 0) : null
+
+  // X/Y: combine base position with slide offsets (% of frame) and keyframe % offsets.
+  if (anim.xOff || kfPx) {
+    const slide = anim.xOff ? `+w*(${anim.xOff})` : ''
+    const kfp = kfPx ? `+w*(${kfPx})/100` : ''
+    finalX = `(${x})${slide}${kfp}`
+  }
+  if (anim.yOff || kfPy) {
+    const slide = anim.yOff ? `+h*(${anim.yOff})` : ''
+    const kfp = kfPy ? `+h*(${kfPy})/100` : ''
+    finalYExpr = `(${finalY})${slide}${kfp}`
+  }
+
+  // Alpha: combine animation alpha and keyframe opacity (drawtext `alpha` opt).
+  if (anim.alpha || kfOpacity) {
+    const a = anim.alpha ? `(${anim.alpha})` : '1'
+    const o = kfOpacity ? `(${kfOpacity})` : '1'
+    alphaOpt = `:alpha='min(${a}\\,${o})'`
+  }
+
+  return `drawtext=text='${safeText}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${finalYExpr}'${alphaOpt}:box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
 }
 
 /**
@@ -205,13 +251,457 @@ function buildDrawBoxFilter(shape) {
   const start = Number(shape.startTime ?? shape.start ?? 0)
   const end = Number(shape.endTime ?? shape.end ?? 5)
   const enable = `between(t\\,${start.toFixed(3)}\\,${end.toFixed(3)})`
-  const x = shape.x !== undefined ? `(w*${Number(shape.x) / 100})-(w*${(Number(shape.width) || 20) / 100})/2` : '(w-w*0.2)/2'
-  const y = shape.y !== undefined ? `(h*${Number(shape.y) / 100})-(h*${(Number(shape.height) || 20) / 100})/2` : '(h-h*0.2)/2'
-  const w = `w*${(Number(shape.width) || 20) / 100}`
-  const h = shape.kind === 'line' ? (Number(shape.strokeWidth) || 2) : `h*${(Number(shape.height) || 20) / 100}`
+  // NOTE: in the drawbox filter, `w`/`h` resolve to the BOX width/height, not the
+  // frame. Frame dimensions must be referenced as `iw`/`ih` (or in_w/in_h).
+  // The earlier implementation used bare `w`/`h` here, which made ffmpeg fail to
+  // evaluate the x/y expressions ("Error when evaluating the expression") and
+  // silently aborted every shape-overlay render. Use iw/ih for frame dims.
+  const x = shape.x !== undefined ? `(iw*${Number(shape.x) / 100})-(iw*${(Number(shape.width) || 20) / 100})/2` : '(iw-iw*0.2)/2'
+  const y = shape.y !== undefined ? `(ih*${Number(shape.y) / 100})-(ih*${(Number(shape.height) || 20) / 100})/2` : '(ih-ih*0.2)/2'
+  const w = `iw*${(Number(shape.width) || 20) / 100}`
+  const h = shape.kind === 'line' ? (Number(shape.strokeWidth) || 2) : `ih*${(Number(shape.height) || 20) / 100}`
   const color = String(shape.color || '#ffffff').replace('#', '0x')
-  const alpha = Number(shape.opacity ?? 0.5)
-  return `drawbox=x='${x}':y='${y}':w='${w}':h='${h}':color=${color}@${alpha}:t=fill:enable='${enable}'`
+  let alpha = clampNum(shape.opacity, 0, 1, 0.5)
+
+  // ── Editor parity: per-overlay keyframes ──
+  // drawbox supports time EXPRESSIONS for x/y/w/h but its color `@alpha` MUST be
+  // a CONSTANT ("Invalid alpha value specifier" otherwise). So we animate
+  // position via keyframes, and approximate keyframed opacity by collapsing it
+  // to the keyframes' average value (a constant) — documented limitation.
+  const kf = Array.isArray(shape.keyframes) ? shape.keyframes : null
+  let finalX = x
+  let finalY = y
+  if (kf) {
+    const kfPx = buildKeyframeExpr(kf, 'positionX', 0)
+    const kfPy = buildKeyframeExpr(kf, 'positionY', 0)
+    if (kfPx) finalX = `(${x})+iw*(${kfPx})/100`
+    if (kfPy) finalY = `(${y})+ih*(${kfPy})/100`
+    const opVals = kf.filter(k => Number.isFinite(Number(k && k.opacity))).map(k => Number(k.opacity))
+    if (opVals.length) alpha = clampNum(opVals.reduce((a, b) => a + b, 0) / opVals.length, 0, 1, alpha)
+  }
+  const colorOpt = `${color}@${alpha}`
+  return `drawbox=x='${finalX}':y='${finalY}':w='${w}':h='${h}':color=${colorOpt}:t=fill:enable='${enable}'`
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Editor→Export parity helpers (image / svg / gradient overlays, transforms,
+// keyframes, text animations). All coords are PERCENT (0–100); opacity 0–1;
+// times absolute seconds. Every builder is defensive: malformed input is
+// clamped or skipped (with a warn) so a single bad overlay never crashes a
+// render.
+// ──────────────────────────────────────────────────────────────────────────
+
+/** Clamp n to [lo,hi]; returns fallback when not finite. */
+function clampNum(n, lo, hi, fallback) {
+  const v = Number(n)
+  if (!Number.isFinite(v)) return fallback
+  return Math.min(hi, Math.max(lo, v))
+}
+
+/** FFmpeg time-window expression, comma-escaped for inline use in a chain. */
+function enableBetween(start, end) {
+  const s = clampNum(start, 0, 1e6, 0)
+  const e = clampNum(end, s, 1e6, s + 5)
+  return `between(t\\,${s.toFixed(3)}\\,${e.toFixed(3)})`
+}
+
+/**
+ * Build a piecewise-linear ffmpeg expression interpolating a single keyframe
+ * property (positionX/positionY/scale/rotation/opacity) over absolute time `t`.
+ * Returns null when there are <1 usable keyframes for the property.
+ * Each keyframe time is absolute seconds. Segments lerp linearly; before the
+ * first / after the last keyframe the value is held (clamped).
+ */
+function buildKeyframeExpr(keyframes, prop, fallback) {
+  if (!Array.isArray(keyframes) || keyframes.length === 0) return null
+  const pts = keyframes
+    .filter(k => k && Number.isFinite(Number(k.time)) && Number.isFinite(Number(k[prop])))
+    .map(k => ({ t: Number(k.time), v: Number(k[prop]) }))
+    .sort((a, b) => a.t - b.t)
+  if (pts.length === 0) return null
+  if (pts.length === 1) return `(${pts[0].v})`
+
+  // Build nested if(): held before first, lerp between, held after last.
+  let expr = `(${pts[pts.length - 1].v})` // value after last kf (held)
+  for (let i = pts.length - 1; i > 0; i--) {
+    const a = pts[i - 1]
+    const b = pts[i]
+    const dt = (b.t - a.t) || 1e-6
+    // linear: a.v + (t-a.t)/(b.t-a.t)*(b.v-a.v)
+    const lerp = `(${a.v}+((t-${a.t.toFixed(3)})/${dt.toFixed(6)})*(${b.v - a.v}))`
+    expr = `if(lt(t\\,${b.t.toFixed(3)})\\,${lerp}\\,${expr})`
+  }
+  // Held before first keyframe
+  expr = `if(lt(t\\,${pts[0].t.toFixed(3)})\\,(${pts[0].v})\\,${expr})`
+  void fallback
+  return expr
+}
+
+/**
+ * Build text in/out animation expressions for drawtext.
+ * Returns { alpha, xOff, yOff } where each is an ffmpeg expression string (or
+ * null when no animation affects that channel). Times are relative to the
+ * overlay's startTime/endTime windows.
+ *
+ * IMPORTANT ffmpeg-safety note: a TIME-VARYING `fontsize` in drawtext is unsafe
+ * on stable ffmpeg builds (5/6/8). Animating fontsize forces drawtext to
+ * re-layout glyphs every frame; when its output feeds a downstream
+ * scale/pad/denoise chain (as it does in this pipeline's upscale path) it
+ * intermittently SIGSEGVs the filter thread and produces a 48-byte empty file.
+ * We therefore implement ALL "scale-style" reveals (pop / scale-in / zoom-in /
+ * bounce / blur-in / flip-in) via the rock-solid `alpha` channel instead of a
+ * fontsize ramp. This is a deliberate, verified approximation:
+ *   fade                                   → alpha ramps 0→1 in, 1→0 out
+ *   pop / scale-in / zoom-in / bounce      → alpha reveal over animationInDuration
+ *                                            (reads as a quick pop-in; the size
+ *                                            "punch" is dropped for stability)
+ *   blur-in                                → alpha reveal (true per-frame blur on
+ *                                            text isn't cheaply expressible)
+ *   flip-in                                → alpha reveal (drawtext can't 3D-rotate
+ *                                            glyphs)
+ *   slide-*                                → x/y offset ramps from off-position to
+ *                                            0 during animationInDuration (stable)
+ * Per-overlay keyframe `scale` is likewise NOT applied to fontsize (same crash
+ * class); keyframes drive x/y/opacity which are safe.
+ */
+function buildTextAnimation(overlay, start, end) {
+  const inAnim = overlay.animationIn || 'none'
+  const outAnim = overlay.animationOut || 'none'
+  const inDur = clampNum(overlay.animationInDuration ?? 0.4, 0.05, 5, 0.4)
+  const outDur = clampNum(overlay.animationOutDuration ?? 0.4, 0.05, 5, 0.4)
+  const inEnd = (start + inDur)
+  const outStart = (end - outDur)
+
+  let alpha = null
+  let xOff = null
+  let yOff = null
+
+  // Linear ramps clamped to [0,1]
+  const inRamp = `min(1\\,max(0\\,(t-${start.toFixed(3)})/${inDur.toFixed(3)}))`
+  const outRamp = `min(1\\,max(0\\,(${end.toFixed(3)}-t)/${outDur.toFixed(3)}))`
+
+  // Scale-style reveals are routed through alpha (see safety note above).
+  const ALPHA_REVEAL_IN = ['fade', 'pop', 'scale-in', 'zoom-in', 'bounce', 'blur-in', 'flip-in']
+  const ALPHA_REVEAL_OUT = ['fade', 'zoom-out', 'scale-out', 'bounce-out', 'flip-out']
+  const inNeedsAlpha = ALPHA_REVEAL_IN.includes(inAnim)
+  const outNeedsAlpha = ALPHA_REVEAL_OUT.includes(outAnim)
+  if (inNeedsAlpha || outNeedsAlpha) {
+    const inA = inNeedsAlpha ? inRamp : '1'
+    const outA = outNeedsAlpha ? outRamp : '1'
+    alpha = `min(${inA}\\,${outA})`
+  }
+
+  // Slide offsets (1 unit = full frame dim; caller multiplies by w/h).
+  const slideAmt = 0.25 // 25% of frame travel
+  const applySlide = (anim, ramp) => {
+    const dir = `(1-${ramp})` // eases toward 0 within the window
+    switch (anim) {
+    case 'slide-top':    return [null, `(-${slideAmt}*${dir})`]
+    case 'slide-bottom': return [null, `(${slideAmt}*${dir})`]
+    case 'slide-left':   return [`(-${slideAmt}*${dir})`, null]
+    case 'slide-right':  return [`(${slideAmt}*${dir})`, null]
+    default: return [null, null]
+    }
+  }
+  if (inAnim.startsWith('slide-')) {
+    const [dx, dy] = applySlide(inAnim, inRamp)
+    if (dx) xOff = `if(lt(t\\,${inEnd.toFixed(3)})\\,${dx}\\,0)`
+    if (dy) yOff = `if(lt(t\\,${inEnd.toFixed(3)})\\,${dy}\\,0)`
+  }
+  if (outAnim.startsWith('slide-')) {
+    const [dx, dy] = applySlide(outAnim, outRamp)
+    const gate = `gt(t\\,${outStart.toFixed(3)})`
+    if (dx) xOff = `(${xOff || '0'})+if(${gate}\\,${dx}\\,0)`
+    if (dy) yOff = `(${yOff || '0'})+if(${gate}\\,${dy}\\,0)`
+  }
+
+  return { alpha, xOff, yOff }
+}
+
+/**
+ * CSS color → ffmpeg color token. Handles #hex, rgb()/rgba(), 'transparent',
+ * and named colors (passed through; ffmpeg knows the standard set).
+ * Returns { color, alpha } with color as 0xRRGGBB or a name, alpha 0–1.
+ */
+function cssColorToFfmpeg(css) {
+  const s = String(css || '').trim().toLowerCase()
+  if (!s || s === 'transparent') return { color: '0x000000', alpha: 0 }
+  let m = s.match(/^#([0-9a-f]{3})$/i)
+  if (m) {
+    const h = m[1]
+    return { color: `0x${h[0]}${h[0]}${h[1]}${h[1]}${h[2]}${h[2]}`, alpha: 1 }
+  }
+  m = s.match(/^#([0-9a-f]{6})$/i)
+  if (m) return { color: `0x${m[1]}`, alpha: 1 }
+  m = s.match(/^#([0-9a-f]{8})$/i)
+  if (m) return { color: `0x${m[1].slice(0, 6)}`, alpha: parseInt(m[1].slice(6), 16) / 255 }
+  m = s.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+)\s*)?\)$/i)
+  if (m) {
+    const r = clampNum(m[1], 0, 255, 0), g = clampNum(m[2], 0, 255, 0), b = clampNum(m[3], 0, 255, 0)
+    const a = m[4] !== undefined ? clampNum(m[4], 0, 1, 1) : 1
+    const hex = (n) => n.toString(16).padStart(2, '0')
+    return { color: `0x${hex(r)}${hex(g)}${hex(b)}`, alpha: a }
+  }
+  // Named color — pass through; default fully opaque.
+  return { color: s.replace(/[^a-z]/g, '') || 'white', alpha: 1 }
+}
+
+/** Parse a css color to {r,g,b,a} for sharp raster generation. */
+function cssColorToRgba(css) {
+  const { color, alpha } = cssColorToFfmpeg(css)
+  if (color.startsWith('0x')) {
+    const h = color.slice(2)
+    return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16), a: alpha }
+  }
+  // Minimal named-color table for gradient fallbacks.
+  const named = { black: [0, 0, 0], white: [255, 255, 255], red: [255, 0, 0], green: [0, 128, 0], blue: [0, 0, 255] }
+  const c = named[color] || [0, 0, 0]
+  return { r: c[0], g: c[1], b: c[2], a: alpha }
+}
+
+/**
+ * Build a single overlay filter segment for an IMAGE/SVG input (already added
+ * as ffmpeg input #inputIdx). Consumes the running [prevLabel] video and the
+ * [inputIdx:v] image, producing [outLabel].
+ *   - scales image to width%×height% of frame (W,H provided)
+ *   - applies opacity via format=rgba,colorchannelmixer=aa
+ *   - optional rotation
+ *   - keyframed x/y/scale/opacity when overlay.keyframes present
+ *   - gated by enable=between(start,end)
+ */
+function buildImageOverlaySegment(overlay, inputIdx, prevLabel, outLabel, W, H) {
+  const start = clampNum(overlay.startTime, 0, 1e6, 0)
+  const end = clampNum(overlay.endTime, start, 1e6, start + 5)
+  const wPct = clampNum(overlay.width, 0.1, 100, 20) / 100
+  const hPct = clampNum(overlay.height, 0.1, 100, 20) / 100
+  const opacity = clampNum(overlay.opacity, 0, 1, 1)
+  const rotation = clampNum(overlay.rotation, -360, 360, 0)
+  const xPct = clampNum(overlay.x, -200, 300, 50) / 100
+  const yPct = clampNum(overlay.y, -200, 300, 50) / 100
+
+  const ow = Math.max(2, Math.round(W * wPct))
+  const oh = Math.max(2, Math.round(H * hPct))
+
+  const kf = Array.isArray(overlay.keyframes) ? overlay.keyframes : null
+  const opacityExpr = kf ? buildKeyframeExpr(kf, 'opacity', opacity) : null
+  const pxExpr = kf ? buildKeyframeExpr(kf, 'positionX', 0) : null // % offset
+  const pyExpr = kf ? buildKeyframeExpr(kf, 'positionY', 0) : null
+  const rotExpr = kf ? buildKeyframeExpr(kf, 'rotation', rotation) : null
+
+  // Prepare the image label: scale → rgba → opacity → optional rotate.
+  const imgParts = [`scale=${ow}:${oh}`, 'format=rgba']
+  // Opacity: the `overlay` filter has no per-frame alpha multiply, so opacity is
+  // baked into the image stream via colorchannelmixer=aa (a CONSTANT). For
+  // keyframed opacity we collapse the keyframes to their average value — a
+  // documented approximation (true per-frame overlay alpha is not version-robust
+  // across ffmpeg 5/6/8). Position keyframes ARE applied per-frame via the
+  // overlay x/y expressions below.
+  let bakedOpacity = opacity
+  if (opacityExpr) {
+    const opVals = kf.filter(k => Number.isFinite(Number(k && k.opacity))).map(k => Number(k.opacity))
+    if (opVals.length) bakedOpacity = clampNum(opVals.reduce((a, b) => a + b, 0) / opVals.length, 0, 1, opacity)
+  }
+  if (bakedOpacity < 1) {
+    imgParts.push(`colorchannelmixer=aa=${bakedOpacity.toFixed(3)}`)
+  }
+  if (rotExpr) {
+    // Keyframed rotation (degrees → radians). A time-varying `rotate` cannot use
+    // rotw()/roth() for output sizing (they evaluate to NaN per-frame), so we
+    // pin the output to a fixed square bounding box (the image diagonal) that
+    // fits any rotation angle without clipping.
+    const diag = Math.ceil(Math.sqrt(ow * ow + oh * oh))
+    imgParts.push(`rotate='(${rotExpr})*PI/180':ow=${diag}:oh=${diag}:c=none`)
+  } else if (rotation !== 0) {
+    const rad = (rotation * Math.PI / 180).toFixed(6)
+    imgParts.push(`rotate=${rad}:ow=rotw(${rad}):oh=roth(${rad}):c=none`)
+  }
+  const imgLabel = `ov${inputIdx}`
+  const imgChain = `[${inputIdx}:v]${imgParts.join(',')}[${imgLabel}]`
+
+  // Overlay position: center the image at (xPct*W, yPct*H), plus keyframe % offsets.
+  let xExpr = `(main_w*${xPct.toFixed(4)})-(overlay_w/2)`
+  let yExpr = `(main_h*${yPct.toFixed(4)})-(overlay_h/2)`
+  if (pxExpr) xExpr = `(main_w*${xPct.toFixed(4)})-(overlay_w/2)+(main_w*(${pxExpr})/100)`
+  if (pyExpr) yExpr = `(main_h*${yPct.toFixed(4)})-(overlay_h/2)+(main_h*(${pyExpr})/100)`
+
+  const enable = enableBetween(start, end)
+  const overlayChain = `[${prevLabel}][${imgLabel}]overlay=x='${xExpr}':y='${yExpr}':enable='${enable}'[${outLabel}]`
+
+  return { chains: [imgChain, overlayChain] }
+}
+
+/**
+ * Generate a gradient PNG (RGBA) at frame size honoring direction/region/stops.
+ * Returns the temp file path. Uses sharp; throws if sharp unavailable.
+ */
+async function generateGradientPng(grad, W, H, tmpDir) {
+  if (!sharp) throw new Error('sharp not available for gradient rasterization')
+  const stops = Array.isArray(grad.colorStops) ? grad.colorStops : ['transparent', 'rgba(0,0,0,0.8)']
+  const c0 = cssColorToRgba(stops[0] ?? 'transparent')
+  const c1 = cssColorToRgba(stops[1] ?? 'rgba(0,0,0,0.8)')
+  const opacity = clampNum(grad.opacity, 0, 1, 1)
+  const region = grad.region || 'full'
+  const direction = grad.direction || 'top-to-bottom'
+
+  // Region band within the frame.
+  let bandY0 = 0, bandY1 = H
+  if (region === 'lower-third') { bandY0 = Math.round(H * 0.67); bandY1 = H }
+  else if (region === 'top-bar') { bandY0 = 0; bandY1 = Math.round(H * 0.20) }
+  else if (region === 'top-half') { bandY0 = 0; bandY1 = Math.round(H * 0.5) }
+  else if (region === 'bottom-half') { bandY0 = Math.round(H * 0.5); bandY1 = H }
+
+  const buf = Buffer.alloc(W * H * 4, 0) // transparent
+  const lerp = (a, b, t) => Math.round(a + (b - a) * t)
+  const cx = W / 2, cy = (bandY0 + bandY1) / 2
+  const maxR = Math.sqrt(Math.max(cx, W - cx) ** 2 + Math.max(cy - bandY0, bandY1 - cy) ** 2) || 1
+
+  for (let y = bandY0; y < bandY1; y++) {
+    for (let x = 0; x < W; x++) {
+      let t
+      switch (direction) {
+      case 'bottom-to-top': t = 1 - (y - bandY0) / Math.max(1, bandY1 - bandY0); break
+      case 'left-to-right': t = x / Math.max(1, W - 1); break
+      case 'right-to-left': t = 1 - x / Math.max(1, W - 1); break
+      case 'radial': t = Math.min(1, Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) / maxR); break
+      case 'top-to-bottom':
+      default: t = (y - bandY0) / Math.max(1, bandY1 - bandY0); break
+      }
+      const i = (y * W + x) * 4
+      buf[i] = lerp(c0.r, c1.r, t)
+      buf[i + 1] = lerp(c0.g, c1.g, t)
+      buf[i + 2] = lerp(c0.b, c1.b, t)
+      const a = (c0.a + (c1.a - c0.a) * t) * opacity
+      buf[i + 3] = Math.round(clampNum(a, 0, 1, 0) * 255)
+    }
+  }
+
+  const outPath = path.join(tmpDir, `grad-${crypto.randomBytes(6).toString('hex')}.png`)
+  await sharp(buf, { raw: { width: W, height: H, channels: 4 } }).png().toFile(outPath)
+  return outPath
+}
+
+/**
+ * Rasterize an SVG (http(s) url | /uploads local file | inline/data-URL) to a
+ * PNG at the overlay's target pixel size. Returns the temp PNG path.
+ */
+async function rasterizeSvgToPng(svgOverlay, W, H, tmpDir) {
+  if (!sharp) throw new Error('sharp not available for svg rasterization')
+  const url = String(svgOverlay.url || '')
+  let svgBuf
+  if (/^https?:\/\//i.test(url)) {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`svg fetch ${res.status}`)
+    svgBuf = Buffer.from(await res.arrayBuffer())
+  } else if (/^data:image\/svg\+xml/i.test(url)) {
+    const comma = url.indexOf(',')
+    const payload = url.slice(comma + 1)
+    svgBuf = url.slice(0, comma).includes('base64')
+      ? Buffer.from(payload, 'base64')
+      : Buffer.from(decodeURIComponent(payload), 'utf8')
+  } else if (url.trim().startsWith('<svg') || url.trim().startsWith('<?xml')) {
+    svgBuf = Buffer.from(url, 'utf8')
+  } else {
+    // /uploads local file
+    const local = toAbsolutePath(url)
+    svgBuf = fs.readFileSync(local)
+  }
+  const ow = Math.max(2, Math.round(W * clampNum(svgOverlay.width, 0.1, 100, 20) / 100))
+  const oh = Math.max(2, Math.round(H * clampNum(svgOverlay.height, 0.1, 100, 20) / 100))
+  const outPath = path.join(tmpDir, `svg-${crypto.randomBytes(6).toString('hex')}.png`)
+  await sharp(svgBuf, { density: 200 }).resize(ow, oh, { fit: 'fill' }).png().toFile(outPath)
+  return outPath
+}
+
+/**
+ * Build the BASE video transform chain (crop → scale → pad → rotate) from
+ * videoTransform + videoCrop. Supports keyframed scale/position/rotation via
+ * videoTransformKeyframes (interpolated with ffmpeg time expressions).
+ * Returns an array of filter strings to prepend to the base [0:v] chain
+ * (AFTER the mandatory scale=W:H that the caller emits).
+ */
+function buildVideoTransformChain(videoTransform, videoCrop, videoTransformKeyframes, W, H) {
+  const out = []
+  // Crop first (static — % insets relative to frame).
+  if (videoCrop && typeof videoCrop === 'object') {
+    const cx = clampNum(videoCrop.x, 0, 100, 0) / 100
+    const cy = clampNum(videoCrop.y, 0, 100, 0) / 100
+    const cw = clampNum(videoCrop.width, 1, 100, 100) / 100
+    const ch = clampNum(videoCrop.height, 1, 100, 100) / 100
+    out.push(`crop=iw*${cw.toFixed(4)}:ih*${ch.toFixed(4)}:iw*${cx.toFixed(4)}:ih*${cy.toFixed(4)}`)
+    // Re-scale back to target so downstream overlays use full-frame coords.
+    out.push(`scale=${W}:${H}`)
+  }
+
+  const kf = Array.isArray(videoTransformKeyframes) ? videoTransformKeyframes : null
+  const t = videoTransform && typeof videoTransform === 'object' ? videoTransform : {}
+
+  const scaleKf = kf ? buildKeyframeExpr(kf, 'scale', 1) : null
+  const rotKf = kf ? buildKeyframeExpr(kf, 'rotation', 0) : null
+  const pxKf = kf ? buildKeyframeExpr(kf, 'positionX', 0) : null
+  const pyKf = kf ? buildKeyframeExpr(kf, 'positionY', 0) : null
+
+  const scaleConst = clampNum(t.scale, 0.05, 10, 1)
+  const rotConst = clampNum(t.rotation, -360, 360, 0)
+  const pxConst = clampNum(t.positionX, -200, 200, 0)
+  const pyConst = clampNum(t.positionY, -200, 200, 0)
+
+  // Zoom/scale + position via zoompan is fiddly; use scale (keyframed via
+  // expression on a 2x supersample then crop) — but to stay version-robust we
+  // implement scale+pan with the `scale`+`crop` pair when keyframed, and a
+  // simple scale+pad+crop for the constant case.
+  const hasKf = !!(scaleKf || rotKf || pxKf || pyKf)
+
+  if (hasKf) {
+    // Scale up to the keyframed factor by rendering on a padded canvas and
+    // cropping a moving window. We scale the source by max factor then crop a
+    // W×H window whose origin moves with position/scale keyframes.
+    const sExpr = scaleKf || `${scaleConst}`
+    const pxExpr = pxKf || `${pxConst}`
+    const pyExpr = pyKf || `${pyConst}`
+    // Upscale to (W*maxScale)… but ffmpeg scale can't take time expr for size.
+    // Robust approach: scale to a fixed 2x canvas, then crop a moving/zooming
+    // window via crop with time-expr x/y/w/h.
+    const canvas = 2
+    out.push(`scale=${W * canvas}:${H * canvas}`)
+    // window size shrinks as scale grows: winW = W*canvas/scale
+    const winW = `(${W * canvas}/(${sExpr}))`
+    const winH = `(${H * canvas}/(${sExpr}))`
+    // center + position offset (% of frame → px on the canvas)
+    const ox = `((${W * canvas}-${winW})/2)+(${W * canvas}*(${pxExpr})/100)`
+    const oy = `((${H * canvas}-${winH})/2)+(${H * canvas}*(${pyExpr})/100)`
+    out.push(`crop=w='${winW}':h='${winH}':x='${ox}':y='${oy}'`)
+    out.push(`scale=${W}:${H}`)
+    if (rotKf) {
+      out.push(`rotate='${rotKf}*PI/180':ow=${W}:oh=${H}:c=none`)
+    } else if (rotConst !== 0) {
+      out.push(`rotate=${(rotConst * Math.PI / 180).toFixed(6)}:ow=${W}:oh=${H}:c=none`)
+    }
+  } else {
+    // Constant transform.
+    if (scaleConst !== 1) {
+      const sw = Math.max(2, Math.round(W * scaleConst))
+      const sh = Math.max(2, Math.round(H * scaleConst))
+      out.push(`scale=${sw}:${sh}`)
+      if (scaleConst > 1) {
+        // crop back to frame, honoring position offset
+        const ox = `(in_w-${W})/2+(in_w*${(pxConst / 100).toFixed(4)})`
+        const oy = `(in_h-${H})/2+(in_h*${(pyConst / 100).toFixed(4)})`
+        out.push(`crop=${W}:${H}:x='${ox}':y='${oy}'`)
+      } else {
+        // pad back to frame (zoom out), centered + offset
+        const padX = `(${W}-iw)/2+(${W}*${(pxConst / 100).toFixed(4)})`
+        const padY = `(${H}-ih)/2+(${H}*${(pyConst / 100).toFixed(4)})`
+        out.push(`pad=${W}:${H}:x='${padX}':y='${padY}':color=black`)
+      }
+    } else if (pxConst !== 0 || pyConst !== 0) {
+      // pure pan: pad+crop trick to translate without zoom
+      out.push(`pad=${W}:${H}:x='${W}*${(pxConst / 100).toFixed(4)}':y='${H}*${(pyConst / 100).toFixed(4)}':color=black`)
+    }
+    if (rotConst !== 0) {
+      out.push(`rotate=${(rotConst * Math.PI / 180).toFixed(6)}:ow=${W}:oh=${H}:c=none`)
+    }
+  }
+  return out
 }
 
 /**
@@ -255,6 +745,12 @@ async function renderFromEditorState(options) {
     videoFilters = {},
     textOverlays = [],
     shapeOverlays = [],
+    imageOverlays = [],
+    svgOverlays = [],
+    gradientOverlays = [],
+    videoTransform = null,
+    videoTransformKeyframes = [],
+    videoCrop = null,
     exportOptions = {},
     timelineSegments = [],
     userId,
@@ -296,6 +792,21 @@ async function renderFromEditorState(options) {
 
   const videoFilters_ff = buildVideoFilterChain(videoFilters)
   const lutFilters = buildLUTApproximation(videoFilters.lutId)
+
+  // ── Editor parity: BASE video transform / crop (applied to [0:v] before
+  // text/shape/overlay layers). Constant or keyframed scale/position/rotation. ──
+  const hasTransform = (videoTransform && typeof videoTransform === 'object') ||
+    (videoCrop && typeof videoCrop === 'object') ||
+    (Array.isArray(videoTransformKeyframes) && videoTransformKeyframes.length > 0)
+  if (hasTransform) {
+    try {
+      const xform = buildVideoTransformChain(videoTransform, videoCrop, videoTransformKeyframes, width, height)
+      // Prepend so transform happens first (right after the mandatory scale=W:H).
+      videoFilters_ff.unshift(...xform)
+    } catch (e) {
+      logger.warn('Skip videoTransform', { error: e.message })
+    }
+  }
 
   const overlayFilters = []
     ; (textOverlays || []).forEach((o) => {
@@ -404,6 +915,77 @@ async function renderFromEditorState(options) {
   const musicVolume = firstMusic?.properties?.volume ?? 0.5
   const hasMusic = !!firstMusic
 
+  // ── Editor parity: prepare multi-input visual overlays (image / svg /
+  // gradient). Each becomes an extra ffmpeg .input(); the overlay graph is
+  // chained in the complexFilter video branch. SVG/gradient are rasterized to
+  // temp PNGs (cleaned up after render). All overlays sorted by `layer` so draw
+  // order matches the editor. ──
+  const MAX_OVERLAYS = 30
+  const tmpRenderDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vrender-'))
+  const tmpFiles = [] // temp PNGs to clean up post-render
+  /** @type {{kind:string, source:string, spec:object, layer:number}[]} */
+  const overlayInputs = []
+
+  // Collect raw overlays tagged with kind + layer.
+  const rawOverlays = []
+  ;(imageOverlays || []).forEach((o) => {
+    if (!o || !o.url) { logger.warn('Skip image overlay: missing url'); return }
+    rawOverlays.push({ kind: 'image', spec: o, layer: clampNum(o.layer, -1e4, 1e4, 0) })
+  })
+  ;(svgOverlays || []).forEach((o) => {
+    if (!o || !o.url) { logger.warn('Skip svg overlay: missing url'); return }
+    rawOverlays.push({ kind: 'svg', spec: o, layer: clampNum(o.layer, -1e4, 1e4, 0) })
+  })
+  ;(gradientOverlays || []).forEach((o) => {
+    if (!o) { logger.warn('Skip gradient overlay: empty'); return }
+    rawOverlays.push({ kind: 'gradient', spec: o, layer: clampNum(o.layer, -1e4, 1e4, 0) })
+  })
+  rawOverlays.sort((a, b) => a.layer - b.layer)
+
+  if (rawOverlays.length > MAX_OVERLAYS) {
+    logger.warn('Overlay count exceeds cap; truncating', { count: rawOverlays.length, cap: MAX_OVERLAYS })
+    rawOverlays.length = MAX_OVERLAYS
+  }
+
+  // Resolve each overlay to a concrete ffmpeg input source (path/url) + spec.
+  for (const ro of rawOverlays) {
+    try {
+      if (ro.kind === 'image') {
+        const url = String(ro.spec.url)
+        const source = isRemoteUrl(url) ? url : toAbsolutePath(url)
+        overlayInputs.push({ kind: 'image', source, spec: ro.spec })
+      } else if (ro.kind === 'svg') {
+        const png = await rasterizeSvgToPng(ro.spec, width, height, tmpRenderDir)
+        tmpFiles.push(png)
+        // Treat as image overlay; svg already rasterized to target size, so
+        // pass width/height through (re-scale is idempotent/fill).
+        overlayInputs.push({ kind: 'image', source: png, spec: ro.spec })
+      } else if (ro.kind === 'gradient') {
+        const png = await generateGradientPng(ro.spec, width, height, tmpRenderDir)
+        tmpFiles.push(png)
+        // Gradient PNG is full-frame; overlay at 0,0 covering the whole frame.
+        overlayInputs.push({
+          kind: 'image',
+          source: png,
+          spec: {
+            x: 50, y: 50, width: 100, height: 100,
+            opacity: 1, // alpha already baked into the PNG
+            startTime: ro.spec.startTime, endTime: ro.spec.endTime,
+          },
+        })
+      }
+    } catch (e) {
+      logger.warn(`Skip ${ro.kind} overlay`, { error: e.message })
+    }
+  }
+  const hasVisualOverlays = overlayInputs.length > 0
+
+  // Best-effort cleanup of temp rasterized PNGs + dir.
+  const cleanupTmp = () => {
+    for (const f of tmpFiles) { try { fs.unlinkSync(f) } catch (_) { /* noop */ } }
+    try { fs.rmdirSync(tmpRenderDir) } catch (_) { /* noop */ }
+  }
+
   const { renderQueue, optimizeFFmpegCommand } = require('./performanceOptimizationService')
 
   // eslint-disable-next-line no-async-promise-executor
@@ -487,6 +1069,35 @@ async function renderFromEditorState(options) {
 
     const finalFilterStr = finalFilterList.length > 0 ? finalFilterList.join(',') : null;
 
+    // ── Editor parity: register visual overlay inputs (image/svg/gradient) and
+    // build their chained overlay graph. These inputs are added AFTER any music
+    // / commerce / resurrection inputs so we don't shift those hardcoded
+    // indices. We snapshot the current input count to compute our base index. ──
+    let overlayGraph = '' // chains appended to the video branch; consumes/ends [vout]
+    if (hasVisualOverlays) {
+      // fluent-ffmpeg tracks inputs on command._inputs.
+      let baseIdx = Array.isArray(command._inputs) ? command._inputs.length : (hasMusic ? 2 : 1)
+      const chains = []
+      let prevLabel = 'vbase' // base text/shape chain will be relabeled to [vbase]
+      overlayInputs.forEach((ov, i) => {
+        try {
+          command = command.input(ov.source)
+          const inputIdx = baseIdx + i
+          const isLast = i === overlayInputs.length - 1
+          const outLabel = isLast ? 'vout' : `vo${i}`
+          const seg = buildImageOverlaySegment(ov.spec, inputIdx, prevLabel, outLabel, width, height)
+          chains.push(...seg.chains)
+          prevLabel = outLabel
+        } catch (e) {
+          logger.warn('Skip visual overlay input', { error: e.message })
+        }
+      })
+      if (chains.length > 0) {
+        overlayGraph = ';' + chains.join(';')
+      }
+    }
+    const hasOverlayGraph = overlayGraph.length > 0
+
     // When a complexFilter maps an explicit [vout], scaling is done INSIDE the
     // filtergraph (scale=W:H prepended to the video chain). In that case we must
     // NOT also call .size() (-s W:H) on the mapped output — applying -s on top of
@@ -495,11 +1106,15 @@ async function renderFromEditorState(options) {
     // the size() call below only runs for the non-complexFilter branches.
     let videoMappedViaFiltergraph = false
 
+    // Base video label: when visual overlays are chained, the base text/shape
+    // chain must terminate at [vbase] and the overlay graph carries it to [vout].
+    const baseVidLabel = hasOverlayGraph ? 'vbase' : 'vout'
+
     if (hasMusic) {
       const musicVolume = firstMusic?.properties?.volume ?? 0.5
       const duckLevel = exportOptions.duckLevel ?? -12
       const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
-      const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[vout]`
+      const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
       videoMappedViaFiltergraph = true
       const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
@@ -522,11 +1137,14 @@ async function renderFromEditorState(options) {
       const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
       if (hasAudio) {
-        if (finalFilterStr) {
-          // Source has audio, no music, with video filters -> map with complex filter.
-          // Scale INSIDE the filtergraph (see videoMappedViaFiltergraph note) so we
-          // don't also need .size(), which would error on the mapped [vout] pad.
-          command = command.complexFilter(`[0:v]scale=${width}:${height},${finalFilterStr}[vout];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`)
+        if (finalFilterStr || hasOverlayGraph) {
+          // Source has audio, no music, with video filters/overlays -> map with
+          // complex filter. Scale INSIDE the filtergraph (see
+          // videoMappedViaFiltergraph note) so we don't also need .size(), which
+          // would error on the mapped [vout] pad.
+          const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
+          const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+          command = command.complexFilter(`${vidPart};[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`)
             .outputOptions(['-map', '[vout]', '-map', '[aout]'])
           videoMappedViaFiltergraph = true
         } else {
@@ -536,8 +1154,10 @@ async function renderFromEditorState(options) {
         }
       } else {
         // Source is completely silent and no background music added -> render as video only
-        if (finalFilterStr) {
-          command = command.complexFilter(`[0:v]scale=${width}:${height},${finalFilterStr}[vout]`)
+        if (finalFilterStr || hasOverlayGraph) {
+          const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
+          const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+          command = command.complexFilter(vidPart)
             .outputOptions(['-map', '[vout]'])
           videoMappedViaFiltergraph = true
         }
@@ -587,6 +1207,7 @@ async function renderFromEditorState(options) {
               if (p.percent) logger.debug('Render progress', { percent: p.percent.toFixed(1) })
             })
             .on('end', async () => {
+              cleanupTmp() // remove temp rasterized overlay PNGs
               if (!fs.existsSync(outputPath)) {
                 return jobReject(new Error('Neural Node Error: Output Fragment Missing'))
               }
@@ -674,6 +1295,7 @@ async function renderFromEditorState(options) {
               jobResolve({ outputPath, url, signed: c2paResult.signed })
             })
             .on('error', (err) => {
+              cleanupTmp() // remove temp rasterized overlay PNGs
               logger.error('Neural Node Failure', { error: err.message, videoId })
               jobReject(err)
             })
@@ -699,4 +1321,10 @@ module.exports = {
   buildVideoFilterChain,
   buildDrawTextFilter,
   buildDrawBoxFilter,
+  buildImageOverlaySegment,
+  buildVideoTransformChain,
+  buildKeyframeExpr,
+  buildTextAnimation,
+  generateGradientPng,
+  rasterizeSvgToPng,
 }

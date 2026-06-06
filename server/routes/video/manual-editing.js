@@ -687,7 +687,10 @@ router.get('/export/presets', auth, asyncHandler(async (req, res) => {
  * Render video from editor state (filters, text overlays, shapes, export options)
  */
 router.post('/render', auth, asyncHandler(async (req, res) => {
-  const { videoId, videoUrl, videoFilters, textOverlays, shapeOverlays, exportOptions, timelineSegments } = req.body;
+  const {
+    videoId, videoUrl, videoFilters, textOverlays, shapeOverlays, exportOptions, timelineSegments,
+    imageOverlays, svgOverlays, gradientOverlays, videoTransform, videoTransformKeyframes, videoCrop,
+  } = req.body;
 
   if (!videoId && !videoUrl) {
     return sendError(res, 'videoId or videoUrl is required', 400);
@@ -700,6 +703,14 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       videoFilters: videoFilters || {},
       textOverlays: Array.isArray(textOverlays) ? textOverlays : [],
       shapeOverlays: Array.isArray(shapeOverlays) ? shapeOverlays : [],
+      // Full editor→export parity: forward every overlay/transform type so no
+      // edit silently disappears in the exported video.
+      imageOverlays: Array.isArray(imageOverlays) ? imageOverlays : [],
+      svgOverlays: Array.isArray(svgOverlays) ? svgOverlays : [],
+      gradientOverlays: Array.isArray(gradientOverlays) ? gradientOverlays : [],
+      videoTransform: videoTransform || {},
+      videoTransformKeyframes: Array.isArray(videoTransformKeyframes) ? videoTransformKeyframes : [],
+      videoCrop: videoCrop || null,
       exportOptions: exportOptions || {},
       timelineSegments: Array.isArray(timelineSegments) ? timelineSegments : [],
       userId: req.user?._id || req.user?.id || null,
