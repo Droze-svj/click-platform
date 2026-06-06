@@ -117,11 +117,17 @@ class RenderQueue {
       job.startedAt = new Date().toISOString();
 
       try {
-        await job.execute();
+        // Capture and forward the execute() result. Previously this discarded
+        // the result and called onComplete(job) with the queue's own job object,
+        // so callers (e.g. videoRenderService) never received the render output
+        // ({ outputPath, url }) — manual exports completed but returned no
+        // downloadable URL.
+        const result = await job.execute();
         job.status = 'completed';
         job.completedAt = new Date().toISOString();
+        job.result = result;
         if (job.onComplete) {
-          job.onComplete(job);
+          job.onComplete(result);
         }
       } catch (error) {
         job.status = 'failed';

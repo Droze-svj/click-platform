@@ -1948,6 +1948,16 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     const content = await resolveContent(videoId);
     if (!content) throw new Error('Video content not found');
 
+    // `originalFile` is an optional subdocument on the Content schema, so a
+    // record can legitimately exist without a source URL (e.g. a draft that
+    // never finished uploading). Dereferencing `content.originalFile.url`
+    // blindly throws an opaque "Cannot read properties of undefined" that the
+    // route surfaces as a bare 500. Guard up front with a clear, actionable
+    // message so the user is told to re-upload instead.
+    if (!content.originalFile || !content.originalFile.url) {
+      throw new Error('No source video file found for this content. Please re-upload the video and try again.');
+    }
+
     // If the user has manual editor edits saved (text overlays, color
     // grading, timeline cuts, etc.), render those FIRST so the auto-edit
     // pipeline operates on their edited version instead of the raw
@@ -2091,7 +2101,21 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       });
     });
 
-    let duration = metadata.format.duration || 0;
+    // `metadata.format` can be absent on malformed inputs even when ffprobe
+    // doesn't error outright. Default both the container and duration so we
+    // never throw a raw TypeError here, and clamp duration to a small positive
+    // floor so downstream `t/duration` progress-bar / reduction math can never
+    // divide by zero (which would emit NaN/Infinity into the filtergraph).
+    const probedDuration = Number(metadata?.format?.duration) || 0;
+    let duration = probedDuration > 0 ? probedDuration : 0;
+    if (!(duration > 0)) {
+      // Fall back to any duration we already know about (DB record) before
+      // giving up — keeps short/streamed inputs editable.
+      duration = Number(content.originalFile?.duration) || 0;
+    }
+    if (!(duration > 0)) {
+      throw new Error('Could not determine the video duration. The file may be corrupt — please re-upload and try again.');
+    }
     let globalTimeOffset = 0;
     let globalDuration = duration;
     let transcript = content.captions?.text || (typeof content.transcript === 'string' ? content.transcript : content.transcript?.text) || content.metadata?.transcript || null;
@@ -2376,8 +2400,13 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       async () => enableAutoZoom ? await detectFaceMoments(inputPath, duration) : [],
     ], 4);
 
-    const keyMoments = keyMomentsResult.moments || {};
-    let textOverlays = keyMomentsResult.overlays || [];
+    // processInParallel() resolves a failed task to `null` (it swallows the
+    // error and logs it), so keyMomentsResult can be null here. Use optional
+    // chaining so a key-moment analysis failure degrades to empty moments
+    // instead of throwing "Cannot read properties of null" and aborting the
+    // whole edit.
+    const keyMoments = keyMomentsResult?.moments || {};
+    let textOverlays = keyMomentsResult?.overlays || [];
     let faceMoments = faceMomentsResult || [];
     const sentiment = sentimentResult;
     const beats = beatsResult || [];
@@ -3480,7 +3509,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
 
             // Multi-format export if enabled
             let multiFormatExports = null;
-            if (enableMultiFormatExport && exportFormats.length > 1) {
+            if (enableMultiFormatExport && Array.isArray(exportFormats) && exportFormats.length > 1) {
               emitProgress('export', 97, 'Exporting to multiple formats...');
               try {
                 multiFormatExports = await exportMultipleFormats(videoId, exportFormats);
@@ -3490,11 +3519,23 @@ Transcript: "${transcript.substring(0, 3500)}"`;
               }
             }
 
-            // Save edit history to prevent repetition
-            await saveEditHistory(videoId, silencePeriods, appliedEdits.map(e => ({ type: e, time: Date.now() })));
+            // Save edit history to prevent repetition. Best-effort: this is
+            // auxiliary bookkeeping — a DB hiccup here must NOT throw into the
+            // outer catch, which would call cleanupAll() and delete the freshly
+            // rendered+uploaded output, turning a successful edit into a failure.
+            try {
+              await saveEditHistory(videoId, silencePeriods, appliedEdits.map(e => ({ type: e, time: Date.now() })));
+            } catch (histErr) {
+              logger.warn('saveEditHistory failed (non-fatal)', { videoId, error: histErr.message });
+            }
 
-            // Auto-save edit version for undo/redo
-            await saveEditVersion(videoId, `Auto-Edit ${new Date().toISOString()}`);
+            // Auto-save edit version for undo/redo. Same best-effort contract:
+            // never let version snapshotting abort the success path.
+            try {
+              await saveEditVersion(videoId, `Auto-Edit ${new Date().toISOString()}`);
+            } catch (verErr) {
+              logger.warn('saveEditVersion failed (non-fatal)', { videoId, error: verErr.message });
+            }
 
             // Generate best thumbnail if enabled
             let thumbnailUrl = content.originalFile.thumbnail || '';
