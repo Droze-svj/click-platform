@@ -16,6 +16,57 @@ import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '..
 import { Rnd } from 'react-rnd'
 import { getAssetUrl } from '../../utils/url'
 
+/** Coerce a possibly-undefined/NaN number to a finite fallback. */
+function safeNum(n: any, fallback: number): number {
+  const v = Number(n)
+  return Number.isFinite(v) ? v : fallback
+}
+
+/** Clamp n to [lo,hi] (returns lo if NaN). */
+function clampNum(n: number, lo: number, hi: number): number {
+  if (!Number.isFinite(n)) return lo
+  return Math.min(hi, Math.max(lo, n))
+}
+
+/**
+ * Interpolate a text/shape/image/svg overlay's keyframed transform at the
+ * current playhead time, returning per-frame {x,y,scale,rotation,opacity}.
+ *
+ * Parity: matches the server export (videoRenderService.js buildTextOverlay /
+ * buildDrawBoxFilter / buildImageOverlay) where keyframe `positionX`/`positionY`
+ * are PERCENT OFFSETS added to the overlay's base x/y (server: `+w*(kfPx)/100`),
+ * while `scale`/`rotation`/`opacity` are absolute keyframe values. Easing is
+ * applied via interpolateTransformAtTime (client/utils/keyframeEasing.ts), which
+ * the export's buildKeyframeExpr approximates with piecewise-linear segments.
+ *
+ * Returns null when the overlay has no keyframes (caller keeps base position).
+ */
+function interpolateOverlayAtTime(
+  overlay: { x?: number; y?: number; opacity?: number; keyframes?: TransformKeyframe[] },
+  currentTime: number
+): { x: number; y: number; scale: number; rotation: number; opacity: number } | null {
+  const kf = Array.isArray(overlay.keyframes) ? overlay.keyframes : null
+  if (!kf || kf.length === 0) return null
+  const baseX = safeNum(overlay.x, 50)
+  const baseY = safeNum(overlay.y, 50)
+  // Defaults: positionX/Y default to 0 (offset), so absence of those keyframes
+  // leaves the base position untouched. scale/rotation/opacity default to identity.
+  const interp = interpolateTransformAtTime(kf, currentTime, {
+    positionX: 0,
+    positionY: 0,
+    scale: 1,
+    rotation: 0,
+    opacity: safeNum(overlay.opacity, 1),
+  })
+  return {
+    x: baseX + interp.positionX, // positionX is a % offset (server: +w*(kfPx)/100)
+    y: baseY + interp.positionY,
+    scale: interp.scale,
+    rotation: interp.rotation,
+    opacity: interp.opacity,
+  }
+}
+
 import { WebGPURenderer } from '../../lib/rendering/WebGPURenderer'
 
 /** Syncs B-roll video to segment time; playhead-driven. */
@@ -387,6 +438,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const [videoDimensions, setVideoDimensions] = useState<{ w: number; h: number } | null>(null)
   const [containerDimensions, setContainerDimensions] = useState<{ w: number; h: number } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  // Use the measured container if available; otherwise fall back to the live
+  // overlay layer's current rect (fix #3 init race) and only then to a constant.
+  // This keeps first-paint overlay positions correct before the ResizeObserver
+  // has fired, avoiding the position jump/flicker on load.
+  const containerW = (containerDimensions?.w
+    ?? (containerRef.current?.getBoundingClientRect().width || 0)) || 800
+  const containerH = (containerDimensions?.h
+    ?? (containerRef.current?.getBoundingClientRect().height || 0)) || 600
   const useCompareMode = typeof compareMode === 'string'
   const isSplit = useCompareMode && compareMode === 'split'
   const showAppliedFilters = useCompareMode ? (compareMode === 'after') : (typeof showBeforeAfter === 'boolean' ? showBeforeAfter : internalShowFilters)
@@ -459,8 +518,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     return () => resizeObserver.disconnect()
   }, [])
 
-  // Smart Guides State
+  // Smart Guides State. snapLines drives the on-screen guide rendering; the ref
+  // mirrors it synchronously so onDragStop reads the latest snap target without
+  // a React state-update race (fix #6: snapLines was set in onDrag but read
+  // stale in onDragStop).
   const [snapLines, setSnapLines] = useState<{ x?: number, y?: number }>({})
+  const snapLinesRef = useRef<{ x?: number, y?: number }>({})
+  const setSnap = (next: { x?: number, y?: number }) => {
+    snapLinesRef.current = next
+    setSnapLines(next)
+  }
 
   // Performance Monitoring
   const frameTimes = useRef<number[]>([])
@@ -471,6 +538,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   // timelineToSource. For a flat single-segment timeline the two are equal.
   const timelineTimeRef = useRef<number>(currentTime)
   const lastSegmentIdRef = useRef<string | null>(null)
+  const lastSegBoundarySeekRef = useRef<number>(0)
   const timelineSegmentsRef = useRef(timelineSegments)
   timelineSegmentsRef.current = timelineSegments
 
@@ -519,8 +587,18 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
       if (segId !== lastSegmentIdRef.current) {
         // Crossed a segment boundary — seek to the new segment's source point.
-        if (segId && Math.abs(v.currentTime - mapping.sourceTime) > 0.1) {
+        // Hysteresis (0.1s): only seek when the element is meaningfully out of
+        // sync, so float jitter exactly at a boundary doesn't re-seek every
+        // frame (which audibly glitches audio). lastSegBoundarySeekRef guards
+        // against re-issuing the same boundary seek before it settles.
+        const now2 = now
+        if (
+          segId &&
+          Math.abs(v.currentTime - mapping.sourceTime) > 0.1 &&
+          now2 - lastSegBoundarySeekRef.current > 100
+        ) {
           try { v.currentTime = mapping.sourceTime } catch (e) { /* pre-metadata */ }
+          lastSegBoundarySeekRef.current = now2
         }
         lastSegmentIdRef.current = segId
       }
@@ -600,17 +678,26 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const finalSat = sat
   const finalBright = brightnessAdj
 
+  // Blur parity: server buildVideoFilterChain uses
+  // `boxblur=lr=max(1, round(blur/10)):lp=1` (luma radius ≈ blur/10 px, applied
+  // once). A CSS gaussian blur of the same px value looks far stronger, so scale
+  // the CSS blur down to ~blur/10 px to land visually close to the export.
   const blurVal = effectiveFiltersAtTime.blur ?? 0
+  const cssBlurPx = blurVal > 0 ? Math.max(1, Math.round(blurVal / 10)) : 0
   const baseFilterString = showAppliedFilters
-    ? `brightness(${Math.min(150, Math.max(50, finalBright))}%) contrast(${finalContrast}%) saturate(${Math.min(200, Math.max(0, finalSat))}%) hue-rotate(${hueAdj}deg) sepia(${sepiaAdj}%) blur(${blurVal}px)`
+    ? `brightness(${Math.min(150, Math.max(50, finalBright))}%) contrast(${finalContrast}%) saturate(${Math.min(200, Math.max(0, finalSat))}%) hue-rotate(${hueAdj}deg) sepia(${sepiaAdj}%) blur(${cssBlurPx}px)`
     : ''
 
   // Integrate Chromakey inline SVG filter if enabled
   const hasChroma = chromaKey?.enabled
   const filterString = hasChroma ? `url(#chroma-key-matrix) ${baseFilterString}` : (baseFilterString || 'none')
 
+  // Parity: server buildVideoFilterChain applies `vignette=angle=PI/4` (a fixed,
+  // non-intensity-scaled darkening at the corners) whenever vignette > 0. The
+  // ffmpeg PI/4 vignette darkens corners to roughly 75% — so map our overlay
+  // opacity toward ~0.75 at full intensity (was 0.6, too light vs export).
   const vignetteOpacity = showAppliedFilters && (effectiveFiltersAtTime.vignette ?? 0) > 0
-    ? (effectiveFiltersAtTime.vignette / 100) * 0.6
+    ? (effectiveFiltersAtTime.vignette / 100) * 0.75
     : 0
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
@@ -674,13 +761,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         >
           <Rnd
             position={{
-              x: ((animatedTransform.positionX || 0) / 100) * (videoDimensions?.w || 800),
-              y: ((animatedTransform.positionY || 0) / 100) * (videoDimensions?.h || 600)
+              // Fix #2: guard NaN/undefined transform/dimension values.
+              x: (safeNum(animatedTransform.positionX, 0) / 100) * (videoDimensions?.w || 800),
+              y: (safeNum(animatedTransform.positionY, 0) / 100) * (videoDimensions?.h || 600)
             }}
             onDragStop={(e, d) => {
                const rawX = (d.x / (videoDimensions?.w || 800)) * 100
                const rawY = (d.y / (videoDimensions?.h || 600)) * 100
-               onUpdateVideoTransform?.({ ...videoTransform, positionX: rawX, positionY: rawY })
+               onUpdateVideoTransform?.({ ...videoTransform, positionX: safeNum(rawX, 0), positionY: safeNum(rawY, 0) })
             }}
             disableDragging={!isTransformMode || isPlaying}
             enableResizing={false}
@@ -758,8 +846,20 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
           {/* Text Overlays */}
           {textOverlays.map((text) => {
-            const { opacity, transform, filter } = getTextOverlayAnimationStyle(text, currentTime)
+            const { opacity: animOpacity, transform, filter } = getTextOverlayAnimationStyle(text, currentTime)
+            // Fix #1: live keyframe interpolation (parity: server buildTextOverlay
+            // — positionX/Y are % offsets on base x/y, scale/rotation/opacity
+            // absolute). Blends with animationIn/Out by multiplying opacities and
+            // composing the keyframe transform on top of the enter/exit transform.
+            const kfm = interpolateOverlayAtTime(text, currentTime)
+            const opacity = animOpacity * (kfm ? kfm.opacity : 1)
             if (opacity === 0) return null
+            // Fix #2: guard NaN/undefined coords before percent→px conversion.
+            const safeX = clampNum(kfm ? kfm.x : safeNum(text.x, 50), -50, 150)
+            const safeY = clampNum(kfm ? kfm.y : safeNum(text.y, 50), -50, 150)
+            const kfTransform = kfm
+              ? ` scale(${kfm.scale}) rotate(${kfm.rotation}deg)`
+              : ''
             const isSelected = selectedOverlayId === text.id
 
             return (
@@ -770,34 +870,35 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               >
                 <Rnd
                   bounds="parent"
-                  position={{ x: (text.x / 100) * (containerDimensions?.w || 800) || 0, y: (text.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  position={{ x: (safeX / 100) * containerW, y: (safeY / 100) * containerH }}
                   size={{
-                    width: text.width ? (text.width / 100) * (containerDimensions?.w || 800) : 'auto',
-                    height: text.height ? (text.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                    width: text.width ? (clampNum(safeNum(text.width, 30), 1, 100) / 100) * containerW : 'auto',
+                    height: text.height ? (clampNum(safeNum(text.height, 10), 1, 100) / 100) * containerH : 'auto'
                   }}
                   onDragStart={() => setActiveDragId(text.id)}
                   onDrag={(e, d) => {
                     if (!magneticSnapping) return
                     const snapDist = 3 // 3% snap threshold
-                    const pX = (d.x / (containerDimensions?.w || 800)) * 100
-                    const pY = (d.y / (containerDimensions?.h || 600)) * 100
+                    const pX = (d.x / containerW) * 100
+                    const pY = (d.y / containerH) * 100
                     const newSnap: {x?: number, y?: number} = {}
-                    
+
                     const snapPoints = [0, 25, 50, 75, 100]
                     for (const pt of snapPoints) {
                       if (Math.abs(pX - pt) < snapDist) newSnap.x = pt
                       if (Math.abs(pY - pt) < snapDist) newSnap.y = pt
                     }
-                    setSnapLines(newSnap)
+                    setSnap(newSnap)
                   }}
                   onDragStop={(e, d) => {
                     setActiveDragId(null)
-                    setSnapLines({})
-                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
-                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
+                    const snap = snapLinesRef.current
+                    setSnap({})
+                    const rawX = (d.x / containerW) * 100
+                    const rawY = (d.y / containerH) * 100
                     onUpdateOverlay?.('text', text.id, {
-                      x: snapLines.x !== undefined ? snapLines.x : rawX,
-                      y: snapLines.y !== undefined ? snapLines.y : rawY
+                      x: snap.x !== undefined ? snap.x : rawX,
+                      y: snap.y !== undefined ? snap.y : rawY
                     })
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
@@ -805,14 +906,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                      const oldHeight = ref.offsetHeight - delta.height
                      const ratio = oldHeight > 0 ? ref.offsetHeight / oldHeight : 1
                      const newFontSize = Math.max(12, Math.round(text.fontSize * ratio))
-                     const rawX = (position.x / (containerDimensions?.w || 800)) * 100
-                     const rawY = (position.y / (containerDimensions?.h || 600)) * 100
+                     const rawX = (position.x / containerW) * 100
+                     const rawY = (position.y / containerH) * 100
                      onUpdateOverlay?.('text', text.id, {
                        fontSize: newFontSize,
                        x: rawX,
                        y: rawY,
-                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
-                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100
+                       width: (ref.offsetWidth / containerW) * 100,
+                       height: (ref.offsetHeight / containerH) * 100
                      })
                   }}
                   className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
@@ -890,7 +991,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                           backgroundColor: text.backgroundColor || 'transparent',
                           padding: text.backgroundColor ? '4px 8px' : '0',
                           borderRadius: text.backgroundColor ? '4px' : '0',
-                          transform: transform.replace('translate(-50%, -50%)', ''), // Rnd handles base positioning
+                          transform: `${transform.replace('translate(-50%, -50%)', '')}${kfTransform}`, // Rnd handles base positioning; kfTransform = live keyframe scale/rotation
                           transformOrigin: 'center center'
                         }}
                       >
@@ -929,8 +1030,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
           {/* Image Overlays */}
           {imageOverlays.map((img) => {
-            const { opacity, transform } = getOverlayAnimationStyle(img.startTime, img.endTime, currentTime, img.animationIn, img.animationOut)
+            const { opacity: animOpacity, transform } = getOverlayAnimationStyle(img.startTime, img.endTime, currentTime, img.animationIn, img.animationOut)
+            // Fix #1: live keyframes (parity: server buildImageOverlay — positionX/Y
+            // % offsets, scale/rotation/opacity absolute).
+            const kfm = interpolateOverlayAtTime(img, currentTime)
+            const opacity = animOpacity * (kfm ? kfm.opacity : 1)
             if (opacity === 0) return null
+            // Fix #2: NaN/undefined coord guards.
+            const safeX = clampNum(kfm ? kfm.x : safeNum(img.x, 50), -50, 150)
+            const safeY = clampNum(kfm ? kfm.y : safeNum(img.y, 50), -50, 150)
+            const kfTransform = kfm ? ` scale(${kfm.scale}) rotate(${kfm.rotation}deg)` : ''
             const isSelected = selectedOverlayId === img.id
 
             return (
@@ -941,41 +1050,42 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               >
                 <Rnd
                   bounds="parent"
-                  position={{ x: (img.x / 100) * (containerDimensions?.w || 800) || 0, y: (img.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  position={{ x: (safeX / 100) * containerW, y: (safeY / 100) * containerH }}
                   size={{
-                    width: img.width ? (img.width / 100) * (containerDimensions?.w || 800) : 'auto',
-                    height: img.height ? (img.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                    width: img.width ? (clampNum(safeNum(img.width, 30), 1, 100) / 100) * containerW : 'auto',
+                    height: img.height ? (clampNum(safeNum(img.height, 30), 1, 100) / 100) * containerH : 'auto'
                   }}
                   onDragStart={() => setActiveDragId(img.id)}
                   onDrag={(e, d) => {
                     if (!magneticSnapping) return
                     const snapDist = 3
-                    const pX = (d.x / (containerDimensions?.w || 800)) * 100
-                    const pY = (d.y / (containerDimensions?.h || 600)) * 100
+                    const pX = (d.x / containerW) * 100
+                    const pY = (d.y / containerH) * 100
                     const newSnap: {x?: number, y?: number} = {}
                     const snapPoints = [0, 25, 50, 75, 100]
                     for (const pt of snapPoints) {
                       if (Math.abs(pX - pt) < snapDist) newSnap.x = pt
                       if (Math.abs(pY - pt) < snapDist) newSnap.y = pt
                     }
-                    setSnapLines(newSnap)
+                    setSnap(newSnap)
                   }}
                   onDragStop={(e, d) => {
                     setActiveDragId(null)
-                    setSnapLines({})
-                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
-                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
+                    const snap = snapLinesRef.current
+                    setSnap({})
+                    const rawX = (d.x / containerW) * 100
+                    const rawY = (d.y / containerH) * 100
                     onUpdateOverlay?.('image', img.id, {
-                      x: snapLines.x !== undefined ? snapLines.x : rawX,
-                      y: snapLines.y !== undefined ? snapLines.y : rawY
+                      x: snap.x !== undefined ? snap.x : rawX,
+                      y: snap.y !== undefined ? snap.y : rawY
                     })
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                      onUpdateOverlay?.('image', img.id, {
-                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
-                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100,
-                       x: (position.x / (containerDimensions?.w || 800)) * 100,
-                       y: (position.y / (containerDimensions?.h || 600)) * 100
+                       width: (ref.offsetWidth / containerW) * 100,
+                       height: (ref.offsetHeight / containerH) * 100,
+                       x: (position.x / containerW) * 100,
+                       y: (position.y / containerH) * 100
                      })
                   }}
                   className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
@@ -995,9 +1105,20 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                     alt="Image Layer"
                     className="w-full h-full object-contain pointer-events-none"
                     style={{
-                      opacity: img.opacity ?? 1,
-                      transform: transform.replace('translate(-50%, -50%)', ''), // Basic animation transforms on top of Rnd
+                      // When keyframes drive opacity, kfm.opacity is already in the
+                      // wrapper (seeded from img.opacity) — avoid double-applying.
+                      opacity: kfm ? 1 : (img.opacity ?? 1),
+                      transform: `${transform.replace('translate(-50%, -50%)', '')}${kfTransform}`,
                       transformOrigin: 'center center'
+                    }}
+                    onError={(e) => {
+                      // Fix #7: surface broken image assets instead of silent blank.
+                      console.warn('[Preview] image overlay failed to load:', getAssetUrl(img.url))
+                      const el = e.currentTarget
+                      el.style.opacity = '1'
+                      el.style.background = 'repeating-linear-gradient(45deg,rgba(239,68,68,0.15),rgba(239,68,68,0.15)10px,rgba(239,68,68,0.3)10px,rgba(239,68,68,0.3)20px)'
+                      el.style.outline = '1px dashed rgba(239,68,68,0.7)'
+                      el.alt = 'Image failed to load'
                     }}
                   />
                 </Rnd>
@@ -1007,8 +1128,17 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
           {/* Shape Overlays */}
           {shapeOverlays.map((shape) => {
-            const { opacity, transform } = getOverlayAnimationStyle(shape.startTime, shape.endTime, currentTime)
+            const { opacity: animOpacity, transform } = getOverlayAnimationStyle(shape.startTime, shape.endTime, currentTime)
+            // Fix #1: live keyframes (parity: server buildDrawBoxFilter — positionX/Y
+            // % offsets; opacity collapses to keyframe average in export, but the
+            // preview can show true per-frame opacity).
+            const kfm = interpolateOverlayAtTime(shape, currentTime)
+            const opacity = animOpacity * (kfm ? kfm.opacity : 1)
             if (opacity === 0) return null
+            // Fix #2: NaN/undefined coord guards.
+            const safeX = clampNum(kfm ? kfm.x : safeNum(shape.x, 50), -50, 150)
+            const safeY = clampNum(kfm ? kfm.y : safeNum(shape.y, 50), -50, 150)
+            const kfTransform = kfm ? ` scale(${kfm.scale}) rotate(${kfm.rotation}deg)` : ''
             const isSelected = selectedOverlayId === shape.id
 
             return (
@@ -1019,41 +1149,42 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               >
                 <Rnd
                   bounds="parent"
-                  position={{ x: (shape.x / 100) * (containerDimensions?.w || 800) || 0, y: (shape.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  position={{ x: (safeX / 100) * containerW, y: (safeY / 100) * containerH }}
                   size={{
-                    width: shape.width ? (shape.width / 100) * (containerDimensions?.w || 800) : 'auto',
-                    height: shape.height ? (shape.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                    width: shape.width ? (clampNum(safeNum(shape.width, 20), 1, 100) / 100) * containerW : 'auto',
+                    height: shape.height ? (clampNum(safeNum(shape.height, 20), 1, 100) / 100) * containerH : 'auto'
                   }}
                   onDragStart={() => setActiveDragId(shape.id)}
                   onDrag={(e, d) => {
                     if (!magneticSnapping) return
                     const snapDist = 3
-                    const pX = (d.x / (containerDimensions?.w || 800)) * 100
-                    const pY = (d.y / (containerDimensions?.h || 600)) * 100
+                    const pX = (d.x / containerW) * 100
+                    const pY = (d.y / containerH) * 100
                     const newSnap: {x?: number, y?: number} = {}
                     const snapPoints = [0, 25, 50, 75, 100]
                     for (const pt of snapPoints) {
                       if (Math.abs(pX - pt) < snapDist) newSnap.x = pt
                       if (Math.abs(pY - pt) < snapDist) newSnap.y = pt
                     }
-                    setSnapLines(newSnap)
+                    setSnap(newSnap)
                   }}
                   onDragStop={(e, d) => {
                     setActiveDragId(null)
-                    setSnapLines({})
-                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
-                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
+                    const snap = snapLinesRef.current
+                    setSnap({})
+                    const rawX = (d.x / containerW) * 100
+                    const rawY = (d.y / containerH) * 100
                     onUpdateOverlay?.('shape', shape.id, {
-                      x: snapLines.x !== undefined ? snapLines.x : rawX,
-                      y: snapLines.y !== undefined ? snapLines.y : rawY
+                      x: snap.x !== undefined ? snap.x : rawX,
+                      y: snap.y !== undefined ? snap.y : rawY
                     })
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                      onUpdateOverlay?.('shape', shape.id, {
-                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
-                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100,
-                       x: (position.x / (containerDimensions?.w || 800)) * 100,
-                       y: (position.y / (containerDimensions?.h || 600)) * 100
+                       width: (ref.offsetWidth / containerW) * 100,
+                       height: (ref.offsetHeight / containerH) * 100,
+                       x: (position.x / containerW) * 100,
+                       y: (position.y / containerH) * 100
                      })
                   }}
                   className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
@@ -1074,9 +1205,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                       backgroundColor: shape.kind === 'rect' ? shape.color : 'transparent',
                       borderRadius: shape.kind === 'circle' ? '50%' : '0',
                       border: shape.kind === 'line' ? `${shape.strokeWidth || 2}px solid ${shape.color}` : 'none',
-                      transform: transform.replace('translate(-50%, -50%)', ''),
+                      transform: `${transform.replace('translate(-50%, -50%)', '')}${kfTransform}`,
                       transformOrigin: 'center center',
-                      opacity: shape.opacity
+                      // kfm.opacity (seeded from shape.opacity) already in wrapper.
+                      opacity: kfm ? 1 : shape.opacity
                     }}
                   />
                 </Rnd>
@@ -1098,24 +1230,24 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               >
                 <Rnd
                   bounds="parent"
-                  position={{ x: (svg.x / 100) * (containerDimensions?.w || 800) || 0, y: (svg.y / 100) * (containerDimensions?.h || 600) || 0 }}
+                  position={{ x: (clampNum(safeNum(svg.x, 50), -50, 150) / 100) * containerW, y: (clampNum(safeNum(svg.y, 50), -50, 150) / 100) * containerH }}
                   size={{
-                    width: svg.width ? (svg.width / 100) * (containerDimensions?.w || 800) : 'auto',
-                    height: svg.height ? (svg.height / 100) * (containerDimensions?.h || 600) : 'auto'
+                    width: svg.width ? (clampNum(safeNum(svg.width, 20), 1, 100) / 100) * containerW : 'auto',
+                    height: svg.height ? (clampNum(safeNum(svg.height, 20), 1, 100) / 100) * containerH : 'auto'
                   }}
                   onDragStart={() => setActiveDragId(svg.id)}
                   onDragStop={(e, d) => {
                     setActiveDragId(null)
-                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
-                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
+                    const rawX = (d.x / containerW) * 100
+                    const rawY = (d.y / containerH) * 100
                     onUpdateOverlay?.('svg', svg.id, { x: rawX, y: rawY })
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                      onUpdateOverlay?.('svg', svg.id, {
-                       width: (ref.offsetWidth / (containerDimensions?.w || 800)) * 100,
-                       height: (ref.offsetHeight / (containerDimensions?.h || 600)) * 100,
-                       x: (position.x / (containerDimensions?.w || 800)) * 100,
-                       y: (position.y / (containerDimensions?.h || 600)) * 100
+                       width: (ref.offsetWidth / containerW) * 100,
+                       height: (ref.offsetHeight / containerH) * 100,
+                       x: (position.x / containerW) * 100,
+                       y: (position.y / containerH) * 100
                      })
                   }}
                   className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
@@ -1137,6 +1269,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                       src={getAssetUrl(svg.url)}
                       alt="SVG Layer"
                       className="w-full h-full object-contain pointer-events-none"
+                      onError={(e) => {
+                        // Fix #7: surface broken SVG assets instead of silent blank.
+                        console.warn('[Preview] svg overlay failed to load:', getAssetUrl(svg.url))
+                        const el = e.currentTarget
+                        el.style.background = 'repeating-linear-gradient(45deg,rgba(239,68,68,0.15),rgba(239,68,68,0.15)10px,rgba(239,68,68,0.3)10px,rgba(239,68,68,0.3)20px)'
+                        el.style.outline = '1px dashed rgba(239,68,68,0.7)'
+                        el.alt = 'SVG failed to load'
+                      }}
                     />
                   )}
                 </Rnd>
@@ -1166,11 +1306,20 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               if (!isActive) return null
               const isSelected = selectedOverlayId === grad.id
 
-              // Determine region layout coordinates
+              // Region layout — parity with server generateGradientPng pixel
+              // bands (videoRenderService.js): lower-third = bottom 33%
+              // (y0=0.67H), top-bar = top 20%, top-half = top 50%, bottom-half =
+              // bottom 50%, full = entire frame. Expressed here as percent of the
+              // container so it lands identically at any aspect ratio.
+              const region = grad.region || 'full'
               const width = 100
-              const height = grad.region === 'lower-third' ? 33 : grad.region === 'top-bar' ? 20 : grad.region === 'top-half' || grad.region === 'bottom-half' ? 50 : 100
               const x = 0
-              const y = grad.region === 'bottom-half' ? 50 : grad.region === 'lower-third' ? 67 : 0
+              let y = 0
+              let height = 100
+              if (region === 'lower-third') { y = 67; height = 33 }
+              else if (region === 'top-bar') { y = 0; height = 20 }
+              else if (region === 'top-half') { y = 0; height = 50 }
+              else if (region === 'bottom-half') { y = 50; height = 50 }
 
               return (
                 <div
@@ -1180,7 +1329,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 >
                   <Rnd
                     bounds="parent"
-                    position={{ x: (x / 100) * (containerDimensions?.w || 800) || 0, y: (y / 100) * (containerDimensions?.h || 600) || 0 }}
+                    position={{ x: (x / 100) * containerW, y: (y / 100) * containerH }}
                     size={{ width: `${width}%`, height: `${height}%` }}
                     className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
                     disableDragging={isPlaying}
