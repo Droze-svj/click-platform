@@ -697,10 +697,43 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'videoId or videoUrl is required', 400);
   }
 
+  // ── Multi-clip TIMELINE STITCHING pre-pass ──
+  // When the timeline has multiple primary-video segments (or any segment with
+  // reverse / per-segment speed / a transition / a source-trim window), stitch
+  // them into ONE intermediate MP4 first, then run the normal render on top of
+  // it (so overlays/filters/global-speed/chroma still apply). On any stitch
+  // failure we fall back to the original source — export must never hard-fail.
+  // The intermediate is cleaned up after the render completes.
+  const segsForStitch = Array.isArray(timelineSegments) ? timelineSegments : [];
+  let stitchedPath = null;
+  let effectiveVideoUrl = videoUrl || null;
+  let effectiveVideoId = videoId || null;
+  if (videoRenderService.needsStitch && videoRenderService.needsStitch(segsForStitch)) {
+    try {
+      const ex = exportOptions || {};
+      const inputForStitch = await videoRenderService.resolveInputPath(videoId || null, videoUrl || null);
+      stitchedPath = await videoRenderService.stitchSegments(
+        inputForStitch,
+        segsForStitch,
+        { width: ex.width ?? 1920, height: ex.height ?? 1080, fps: ex.fps ?? 30 }
+      );
+      if (stitchedPath) {
+        effectiveVideoUrl = stitchedPath;
+        effectiveVideoId = null;
+        logger.info('Timeline stitch pre-pass complete', { stitchedPath, segments: segsForStitch.length });
+      }
+    } catch (stitchErr) {
+      logger.warn('Timeline stitch failed; falling back to original source', { error: stitchErr.message });
+      stitchedPath = null;
+      effectiveVideoUrl = videoUrl || null;
+      effectiveVideoId = videoId || null;
+    }
+  }
+
   try {
     const result = await videoRenderService.renderFromEditorState({
-      videoId: videoId || null,
-      videoUrl: videoUrl || null,
+      videoId: effectiveVideoId,
+      videoUrl: effectiveVideoUrl,
       videoFilters: videoFilters || {},
       textOverlays: Array.isArray(textOverlays) ? textOverlays : [],
       shapeOverlays: Array.isArray(shapeOverlays) ? shapeOverlays : [],
@@ -719,6 +752,11 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       userId: req.user?._id || req.user?.id || null,
     });
 
+    // Clean up the stitched intermediate now that the final render is done.
+    if (stitchedPath) {
+      fs.promises.unlink(stitchedPath).catch(() => { /* already gone */ });
+    }
+
     // result.url may be a durable absolute URL (cloud storage) or a relative
     // "/uploads/..." path (local disk). Only prefix the host for relative paths;
     // an absolute http(s) URL is already directly downloadable.
@@ -733,6 +771,9 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       downloadUrl,
     });
   } catch (error) {
+    if (stitchedPath) {
+      fs.promises.unlink(stitchedPath).catch(() => { /* already gone */ });
+    }
     logger.error('Render error', { error: error.message, videoId });
     sendError(res, error.message || 'Render failed', 500);
   }
