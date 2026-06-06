@@ -49,9 +49,11 @@ interface ExportViewProps {
   shapeOverlays?: any[]
   imageOverlays?: any[]
   gradientOverlays?: any[]
+  svgOverlays?: any[]
   videoFilters: any
   videoTransform?: { scale?: number, positionX?: number, positionY?: number, rotation?: number }
   videoTransformKeyframes?: any[]
+  videoCrop?: any
   timelineSegments?: any[]
   videoDuration?: number
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
@@ -62,7 +64,7 @@ interface ExportViewProps {
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
-const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, timelineSegments = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
+const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, videoCrop, timelineSegments = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
   const [connectedAccounts, setConnectedAccounts] = useState<any>({})
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
@@ -547,6 +549,20 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                       videoTransformKeyframes: videoTransformKeyframes || [],
                       textOverlays: textOverlays || [],
                       shapeOverlays: shapeOverlays || [],
+                      imageOverlays: imageOverlays || [],
+                      svgOverlays: svgOverlays || [],
+                      gradientOverlays: gradientOverlays || [],
+                      // Editor stores crop as {top,right,bottom,left} % insets; the
+                      // render engine expects {x,y,width,height} %. Convert, and
+                      // only send when an actual crop is set.
+                      videoCrop: (videoCrop && (videoCrop.top || videoCrop.right || videoCrop.bottom || videoCrop.left))
+                        ? {
+                            x: videoCrop.left || 0,
+                            y: videoCrop.top || 0,
+                            width: Math.max(1, 100 - (videoCrop.left || 0) - (videoCrop.right || 0)),
+                            height: Math.max(1, 100 - (videoCrop.top || 0) - (videoCrop.bottom || 0)),
+                          }
+                        : undefined,
                       exportOptions: {
                         width: preset.width,
                         height: preset.height,
