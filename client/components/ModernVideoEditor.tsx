@@ -2628,6 +2628,8 @@ const ModernVideoEditor: React.FC<{
                       transcript={transcript}
                       aiDirectorSuggestions={aiDirectorSuggestions}
                       engagementScore={engagementScore}
+                      videoSrc={actualVideoUrl || null}
+                      contentId={videoId || null}
                     />
                   </div>
                 </div>
