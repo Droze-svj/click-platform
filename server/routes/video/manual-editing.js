@@ -690,6 +690,7 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
   const {
     videoId, videoUrl, videoFilters, textOverlays, shapeOverlays, exportOptions, timelineSegments,
     imageOverlays, svgOverlays, gradientOverlays, videoTransform, videoTransformKeyframes, videoCrop,
+    chromaKey, playbackSpeed,
   } = req.body;
 
   if (!videoId && !videoUrl) {
@@ -711,7 +712,9 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       videoTransform: videoTransform || {},
       videoTransformKeyframes: Array.isArray(videoTransformKeyframes) ? videoTransformKeyframes : [],
       videoCrop: videoCrop || null,
-      exportOptions: exportOptions || {},
+      // Chroma key + playback speed (whole-clip) parity.
+      chromaKey: chromaKey || null,
+      exportOptions: { ...(exportOptions || {}), playbackSpeed: playbackSpeed ?? (exportOptions && exportOptions.playbackSpeed) ?? 1 },
       timelineSegments: Array.isArray(timelineSegments) ? timelineSegments : [],
       userId: req.user?._id || req.user?.id || null,
     });

@@ -54,6 +54,8 @@ interface ExportViewProps {
   videoTransform?: { scale?: number, positionX?: number, positionY?: number, rotation?: number }
   videoTransformKeyframes?: any[]
   videoCrop?: any
+  chromaKey?: any
+  playbackSpeed?: number
   timelineSegments?: any[]
   videoDuration?: number
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
@@ -64,7 +66,7 @@ interface ExportViewProps {
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
-const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, videoCrop, timelineSegments = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
+const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, videoCrop, chromaKey, playbackSpeed, timelineSegments = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
   const [connectedAccounts, setConnectedAccounts] = useState<any>({})
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
@@ -563,6 +565,9 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                             height: Math.max(1, 100 - (videoCrop.top || 0) - (videoCrop.bottom || 0)),
                           }
                         : undefined,
+                      // Whole-clip speed + chroma key parity.
+                      chromaKey: (chromaKey && chromaKey.enabled) ? chromaKey : undefined,
+                      playbackSpeed: playbackSpeed && playbackSpeed !== 1 ? playbackSpeed : undefined,
                       exportOptions: {
                         width: preset.width,
                         height: preset.height,
