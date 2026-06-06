@@ -1359,8 +1359,290 @@ async function renderFromEditorState(options) {
   })
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// MULTI-CLIP TIMELINE STITCHING (low-risk PRE-PASS)
+//
+// This is a SEPARATE pass that runs BEFORE renderFromEditorState. It stitches
+// the primary VIDEO track's segments into ONE intermediate MP4 honoring:
+//   - per-segment SOURCE trim   ([sourceStartTime, sourceEndTime])
+//   - per-segment reverse       (reverse / areverse)
+//   - per-segment playbackSpeed (setpts / atempo)
+//   - cross-segment transitions (xfade + acrossfade) when transitionOut +
+//     transitionDuration are set, else plain concat
+//
+// The existing single-source render then runs on that intermediate so overlays/
+// filters/global-speed/chroma still apply on top — that pipeline is UNTOUCHED.
+//
+// DEFERRED (NOT implemented here — see TODOs below):
+//   - freezeFrame segments (hold a frame for N seconds)
+//   - J-cut / L-cut audio leads & tails (audio of one clip overlapping the
+//     neighbouring clip's video). True J/L cuts need per-segment audio offset
+//     handling that the current straight concat/acrossfade does not model.
+// ──────────────────────────────────────────────────────────────────────────
+
+/** Segment types that contribute to the primary visual track. */
+const PRIMARY_VIDEO_TYPES = new Set(['video', 'broll'])
+
+/** Clamp a per-segment playback speed to ffmpeg-sane bounds. */
+function normSegSpeed(v) {
+  const s = Number(v)
+  return Number.isFinite(s) && s > 0 ? Math.max(0.25, Math.min(4, s)) : 1
+}
+
+/**
+ * Select + order the primary-video segments from a timeline. Ignores audio-only
+ * and overlay segments (those are handled elsewhere / by the main render).
+ * Returns segments sorted by startTime (stable for equal/missing startTimes).
+ */
+function selectPrimarySegments(timelineSegments) {
+  if (!Array.isArray(timelineSegments)) return []
+  return timelineSegments
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => s && PRIMARY_VIDEO_TYPES.has(s.type))
+    .sort((a, b) => {
+      const ta = Number(a.s.startTime) || 0
+      const tb = Number(b.s.startTime) || 0
+      if (ta !== tb) return ta - tb
+      return a.i - b.i
+    })
+    .map(({ s }) => s)
+}
+
+/** True when a segment carries a per-segment flag that the single-source render can't honor. */
+function segmentHasSpecial(s) {
+  if (!s) return false
+  if (s.reversed) return true
+  if (normSegSpeed(s.playbackSpeed) !== 1) return true
+  if (s.transitionOut && Number(s.transitionDuration) > 0) return true
+  // An explicit source-trim window (other than "from 0") also needs the pre-pass
+  // to materialize the kept range before the main render.
+  if (Number(s.sourceStartTime) > 0) return true
+  if (Number.isFinite(Number(s.sourceEndTime))) return true
+  return false
+}
+
+/**
+ * Decide whether the timeline needs the stitch pre-pass. True when there are
+ * 2+ primary video segments, OR a single segment carries reverse / per-segment
+ * speed / a source-trim window (a transition needs a next segment, so it only
+ * matters in the multi-segment case).
+ */
+function needsStitch(timelineSegments) {
+  const segs = selectPrimarySegments(timelineSegments)
+  if (segs.length >= 2) return true
+  if (segs.length === 1) return segmentHasSpecial(segs[0])
+  return false
+}
+
+/**
+ * Probe whether a source has at least one audio stream. ffmpeg's `[i:a?]`
+ * optional-reference does NOT synthesize silence — it simply produces nothing,
+ * which breaks a labeled audio sub-graph feeding concat/acrossfade. So we detect
+ * audio up front and substitute a dedicated anullsrc input for silent segments.
+ * Best-effort: any probe failure assumes "has audio" (the common case) so we
+ * never wrongly drop a real track.
+ */
+function probeHasAudio(src) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(src, (err, data) => {
+      if (err || !data || !Array.isArray(data.streams)) return resolve(true)
+      resolve(data.streams.some((s) => s && s.codec_type === 'audio'))
+    })
+  })
+}
+
+/**
+ * Resolve a segment's concrete ffmpeg input (remote http(s) passthrough or
+ * absolute local path). Falls back to the shared inputPath when the segment has
+ * no own source (a trimmed view of the primary upload).
+ */
+function resolveSegmentSource(seg, fallbackInputPath) {
+  const raw = seg.sourceUrl || seg.url || seg.src || null
+  if (!raw) return fallbackInputPath
+  return isRemoteUrl(raw) ? raw : toAbsolutePath(raw)
+}
+
+/**
+ * Stitch primary video segments into a single intermediate MP4.
+ *
+ * @param {string} inputPath  shared/fallback source (already resolved abs/url)
+ * @param {Array}  segments   raw timelineSegments (mixed types ok — filtered here)
+ * @param {Object} opts       { width, height, fps }
+ * @returns {Promise<string|null>} path to intermediate MP4, or null for no-op
+ *          (single segment with no special flags → caller uses original source).
+ */
+async function stitchSegments(inputPath, segments, opts = {}) {
+  const segs = selectPrimarySegments(segments)
+
+  // No-op cases: nothing to stitch, or a single plain segment.
+  if (segs.length === 0) return null
+  if (segs.length === 1 && !segmentHasSpecial(segs[0])) return null
+
+  const W = Math.max(2, Math.round(opts.width ?? 1920))
+  const H = Math.max(2, Math.round(opts.height ?? 1080))
+  const FPS = Math.max(1, Math.round(opts.fps ?? 30))
+
+  // Build one ffmpeg invocation. Input index === segment index.
+  const cmd = ffmpeg()
+  const sources = segs.map((seg) => resolveSegmentSource(seg, inputPath))
+  for (const src of sources) cmd.input(src)
+
+  // Probe audio presence in parallel. Silent segments synthesize their audio
+  // with an in-graph `anullsrc` SOURCE FILTER (no extra input) — this avoids
+  // fluent-ffmpeg rejecting `-f lavfi` inputs (lavfi is a device, not a demuxer
+  // in its format whitelist) while staying version-robust across ffmpeg 5/6/8.
+  const hasAudio = await Promise.all(sources.map((s) => probeHasAudio(s)))
+
+  // Per-segment sub-graphs → normalized [vN]/[aN] labels with known durations.
+  const graph = []
+  /** kept (post-speed) duration of each segment, for xfade offset math. */
+  const segDurations = []
+
+  segs.forEach((seg, idx) => {
+    const ss = Math.max(0, Number(seg.sourceStartTime) || 0)
+    let se = Number(seg.sourceEndTime)
+    if (!Number.isFinite(se)) {
+      const dur = Number(seg.duration)
+      se = Number.isFinite(dur) && dur > 0 ? ss + dur : null
+    }
+    // trimmed source length (pre-speed). Null → whole remaining stream.
+    const trimLen = se != null && se > ss ? (se - ss) : null
+    const speed = normSegSpeed(seg.playbackSpeed)
+    const reversed = !!seg.reversed
+    // TODO(deferred): freezeFrame (hold a frame for N seconds) and J-cut/L-cut
+    // audio leads & tails (audio of one clip overlapping the neighbour's video)
+    // are NOT handled here. They require per-segment freeze synthesis and audio-
+    // offset modelling beyond the straight concat/acrossfade fold below.
+
+    // ── VIDEO sub-graph ──
+    const vParts = []
+    if (trimLen != null) {
+      vParts.push(`trim=start=${ss.toFixed(3)}:end=${se.toFixed(3)}`)
+    } else if (ss > 0) {
+      vParts.push(`trim=start=${ss.toFixed(3)}`)
+    }
+    vParts.push('setpts=PTS-STARTPTS')
+    if (reversed) vParts.push('reverse')
+    if (speed !== 1) vParts.push(`setpts=${(1 / speed).toFixed(6)}*PTS`)
+    // Normalize geometry/timebase BEFORE concat/xfade (avoids size/SAR/fps
+    // mismatch errors on stable ffmpeg). scale→pad keeps aspect, SAR=1, fps fixed.
+    vParts.push(`scale=${W}:${H}:force_original_aspect_ratio=decrease`)
+    vParts.push(`pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black`)
+    vParts.push('setsar=1')
+    vParts.push(`fps=${FPS}`)
+    vParts.push('format=yuv420p')
+    graph.push(`[${idx}:v]${vParts.join(',')}[v${idx}]`)
+
+    // ── AUDIO sub-graph (always produce a track so concat/acrossfade is
+    // uniform; silent segments synthesize silence via the anullsrc source filter). ──
+    const isSilence = !hasAudio[idx]
+    if (isSilence) {
+      // anullsrc filter node generates silence bounded to the POST-speed kept
+      // length so it lines up with the (sped-up) video. No input ref needed.
+      const silLen = trimLen != null ? (trimLen / speed) : 1
+      graph.push(
+        `anullsrc=channel_layout=stereo:sample_rate=44100,` +
+        `atrim=end=${silLen.toFixed(3)},asetpts=PTS-STARTPTS,` +
+        `aformat=sample_fmts=fltp:channel_layouts=stereo[a${idx}]`
+      )
+    } else {
+      const aParts = []
+      if (trimLen != null) {
+        aParts.push(`atrim=start=${ss.toFixed(3)}:end=${se.toFixed(3)}`)
+      } else if (ss > 0) {
+        aParts.push(`atrim=start=${ss.toFixed(3)}`)
+      }
+      aParts.push('asetpts=PTS-STARTPTS')
+      if (reversed) aParts.push('areverse')
+      if (speed !== 1) {
+        let s = speed
+        while (s > 2.0) { aParts.push('atempo=2.0'); s /= 2.0 }
+        while (s < 0.5) { aParts.push('atempo=0.5'); s /= 0.5 }
+        aParts.push(`atempo=${s.toFixed(6)}`)
+      }
+      aParts.push('aresample=44100')
+      aParts.push('aformat=sample_fmts=fltp:channel_layouts=stereo')
+      graph.push(`[${idx}:a]${aParts.join(',')}[a${idx}]`)
+    }
+
+    // Effective kept duration after speed (for xfade offset). When trimLen is
+    // unknown we can't compute an xfade offset — those segments fall back to
+    // plain concat (handled below).
+    segDurations.push(trimLen != null ? trimLen / speed : null)
+  })
+
+  // ── Concatenate, applying xfade/acrossfade where a transition is requested. ──
+  // We fold left-to-right: acc holds the running [v]/[a] labels and the running
+  // total video duration (needed to place each xfade offset).
+  let accV = 'v0'
+  let accA = 'a0'
+  let accDur = segDurations[0]
+  let lbl = 0 // unique label counter
+
+  for (let i = 1; i < segs.length; i++) {
+    const prev = segs[i - 1]
+    const wantXfade = prev.transitionOut && Number(prev.transitionDuration) > 0
+    const canXfade = wantXfade && Number.isFinite(accDur) && Number.isFinite(segDurations[i])
+
+    const outV = `vx${lbl}`
+    const outA = `ax${lbl}`
+    lbl++
+
+    if (canXfade) {
+      const dur = Math.max(0.05, Math.min(Number(prev.transitionDuration),
+        // keep transition shorter than either clip
+        Math.max(0.05, Math.min(accDur, segDurations[i]) - 0.05)))
+      const offset = Math.max(0, accDur - dur)
+      const tname = String(prev.transitionType || prev.transitionOut || 'fade')
+      // Map common editor names to valid xfade transitions; default fade.
+      const XFADE_OK = new Set(['fade', 'fadeblack', 'fadewhite', 'wipeleft',
+        'wiperight', 'wipeup', 'wipedown', 'slideleft', 'slideright', 'slideup',
+        'slidedown', 'dissolve', 'circleopen', 'circleclose', 'pixelize',
+        'radial', 'smoothleft', 'smoothright', 'smoothup', 'smoothdown'])
+      const xt = XFADE_OK.has(tname) ? tname : 'fade'
+      graph.push(`[${accV}][v${i}]xfade=transition=${xt}:duration=${dur.toFixed(3)}:offset=${offset.toFixed(3)}[${outV}]`)
+      graph.push(`[${accA}][a${i}]acrossfade=d=${dur.toFixed(3)}[${outA}]`)
+      // xfade overlaps the two clips → combined dur = accDur + segDur - overlap.
+      accDur = accDur + segDurations[i] - dur
+    } else {
+      graph.push(`[${accV}][${accA}][v${i}][a${i}]concat=n=2:v=1:a=1[${outV}][${outA}]`)
+      accDur = (Number.isFinite(accDur) && Number.isFinite(segDurations[i]))
+        ? accDur + segDurations[i] : null
+    }
+    accV = outV
+    accA = outA
+  }
+
+  const outputDir = path.join(__dirname, '../../uploads/exports')
+  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
+  const outPath = path.join(outputDir, `stitch-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.mp4`)
+
+  await new Promise((resolve, reject) => {
+    cmd
+      .complexFilter(graph, [accV, accA])
+      .outputOptions([
+        '-c:v', 'libx264',
+        '-preset', 'veryfast',
+        '-crf', '20',
+        '-pix_fmt', 'yuv420p',
+        '-c:a', 'aac',
+        '-b:a', '192k',
+        '-movflags', '+faststart',
+      ])
+      .on('error', (err) => reject(err))
+      .on('end', () => resolve())
+      .save(outPath)
+  })
+
+  return outPath
+}
+
 module.exports = {
   renderFromEditorState,
+  stitchSegments,
+  needsStitch,
+  selectPrimarySegments,
+  resolveInputPath,
   buildVideoFilterChain,
   buildDrawTextFilter,
   buildDrawBoxFilter,
