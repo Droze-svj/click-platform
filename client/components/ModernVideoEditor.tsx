@@ -43,7 +43,7 @@ import { EditorSidebar } from './editor/EditorSidebar'
 import { useMultiplayerTimeline } from '../hooks/useMultiplayerTimeline'
 import { PropertiesPanel } from './editor/PropertiesPanel'
 import RealTimeVideoPreview from './editor/RealTimeVideoPreview'
-import ResizableTimeline from './editor/ResizableTimeline'
+import ResizableTimeline, { TrackLaneState } from './editor/ResizableTimeline'
 import AiAssistant from './editor/AiAssistant'
 import AiTimelineChat from './editor/AiTimelineChat'
 import EngagementHeatMap from './editor/EngagementHeatMap'
@@ -363,6 +363,30 @@ const ModernVideoEditor: React.FC<{
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null)
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null)
   const [trackVisibility, setTrackVisibility] = useState<Record<number, boolean>>({})
+  // Per-track lock/mute/solo state for the timeline. Lock is enforced in the
+  // timeline; solo/mute fold into effective preview visibility below.
+  const [trackState, setTrackState] = useState<Record<number, TrackLaneState>>({})
+  // Effective visibility for the preview: a track is shown when not explicitly
+  // hidden (mute) AND (no track is soloed OR this track is soloed). Lanes group
+  // several underlying track indices, so the solo/mute on a lane's representative
+  // index propagates to its whole index range.
+  const effectiveTrackVisibility = useMemo<Record<number, boolean>>(() => {
+    const laneOf = (idx: number): number => {
+      if (idx === 4) return 4
+      if (idx < 2) return 0
+      if (idx < 5) return 2
+      return 6
+    }
+    const anySolo = Object.values(trackState).some((s) => s?.solo)
+    const result: Record<number, boolean> = {}
+    for (let idx = 0; idx <= 9; idx++) {
+      const lane = laneOf(idx)
+      const muted = trackVisibility[idx] === false
+      const soloed = !!trackState[lane]?.solo
+      result[idx] = !muted && (!anySolo || soloed)
+    }
+    return result
+  }, [trackVisibility, trackState])
 
   // Intelligence & Style DNA — order matters: styleProfile must initialize before
   // styleDNA so the DNA derivation can read the user's persisted picks.
@@ -2467,7 +2491,7 @@ const ModernVideoEditor: React.FC<{
                   compareMode={compareMode}
                   timelineEffects={timelineEffects}
                   timelineSegments={timelineSegments}
-                  trackVisibility={trackVisibility}
+                  trackVisibility={effectiveTrackVisibility}
                   previewQuality={previewQuality}
                   chromaKey={chromaKey}
                   onUpdateOverlay={handleUpdateOverlay}
@@ -2590,6 +2614,8 @@ const ModernVideoEditor: React.FC<{
                       onSegmentDeleted={() => showToast(t('modernVideoEditor.segmentPurged'), 'info')}
                       trackVisibility={trackVisibility}
                       onTrackVisibilityChange={(trackIndex, visible) => setTrackVisibility((prev) => ({ ...prev, [trackIndex]: visible }))}
+                      trackState={trackState}
+                      onTrackStateChange={(trackIndex, patch) => setTrackState((prev) => ({ ...prev, [trackIndex]: { ...prev[trackIndex], ...patch } }))}
                       effects={timelineEffects}
                       onEffectsChange={setTimelineEffects}
                       selectedEffectId={selectedEffectId}

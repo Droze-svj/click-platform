@@ -191,6 +191,42 @@ export function pushRecentSection(category: EditorCategory): void {
 }
 
 /**
+ * True ripple delete across ALL tracks: removes a time range [rangeStart, rangeEnd]
+ * and shifts every segment that starts at/after rangeEnd to the left by the gap,
+ * regardless of which track it lives on. Segments that straddle the deleted range
+ * are trimmed (their end is pulled in by the overlapping amount) but never inverted.
+ *
+ * `excludeIds` are segments that have already been removed by the caller (e.g. the
+ * deleted selection) and must not be shifted.
+ */
+export function rippleDeleteAcrossTracks(
+  segments: TimelineSegment[],
+  rangeStart: number,
+  rangeEnd: number,
+  excludeIds: string[] = []
+): TimelineSegment[] {
+  const gap = rangeEnd - rangeStart
+  if (gap <= 0) return segments
+  const excluded = new Set(excludeIds)
+  return segments.map((seg) => {
+    if (excluded.has(seg.id)) return seg
+    // Segment entirely after the removed range → shift left by the full gap.
+    if (seg.startTime >= rangeEnd) {
+      const newStart = Math.max(0, seg.startTime - gap)
+      const newEnd = Math.max(newStart, seg.endTime - gap)
+      return { ...seg, startTime: newStart, endTime: newEnd, duration: newEnd - newStart }
+    }
+    // Segment overlaps the removed range → trim the overlapping tail, keep start.
+    if (seg.endTime > rangeStart && seg.startTime < rangeEnd) {
+      const overlap = Math.min(seg.endTime, rangeEnd) - Math.max(seg.startTime, rangeStart)
+      const newEnd = Math.max(seg.startTime, seg.endTime - overlap)
+      return { ...seg, endTime: newEnd, duration: newEnd - seg.startTime }
+    }
+    return seg
+  })
+}
+
+/**
  * Resolves overlap collisions on a given timeline track by rippling/shifting subsequent segments to the right.
  * Also deduplicates exact visual duplicates on the same track.
  */
