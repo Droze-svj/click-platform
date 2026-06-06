@@ -52,8 +52,15 @@ import {
   AIDirectorSuggestion,
   EngagementScore
 } from '../../types/editor'
-import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS, resolveTimelineOverlaps } from '../../utils/editorUtils'
+import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS, resolveTimelineOverlaps, rippleDeleteAcrossTracks } from '../../utils/editorUtils'
 import { getSegmentColor } from '../../utils/editorUtils'
+
+/** Per-lane track state: locked rejects edits, muted hides from preview, solo isolates. */
+export interface TrackLaneState {
+  locked?: boolean
+  muted?: boolean
+  solo?: boolean
+}
 
 interface ResizableTimelineProps {
   duration: number
@@ -79,6 +86,9 @@ interface ResizableTimelineProps {
   density?: 'compact' | 'comfortable' | 'expanded'
   trackVisibility?: Record<number, boolean>
   onTrackVisibilityChange?: (trackIndex: number, visible: boolean) => void
+  /** Per-track lock/mute/solo state keyed by track index. Optional + backward compatible. */
+  trackState?: Record<number, TrackLaneState>
+  onTrackStateChange?: (trackIndex: number, patch: Partial<TrackLaneState>) => void
   markers?: TimelineMarker[]
   onMarkersChange?: (fn: (prev: TimelineMarker[]) => TimelineMarker[]) => void
   onAssetDrop?: (asset: any, trackIndex: number, time: number) => void
@@ -87,6 +97,8 @@ interface ResizableTimelineProps {
   engagementScore?: EngagementScore | null
 }
 
+/** Minimum allowed duration (seconds) so an edge drag can never invert or zero a clip/overlay. */
+const MIN_SEG_DURATION = 0.05
 const STORAGE_KEY_TIME_FORMAT = 'click-timeline-time-format'
 const STORAGE_KEY_FPS = 'click-timeline-fps'
 const STORAGE_KEY_ZOOM = 'click-timeline-zoom'
@@ -95,7 +107,7 @@ type TimeFormatPreference = 'short' | 'tenths' | 'frames'
 
 const glassStyle = "backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl"
 
-const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, aiDirectorSuggestions = [], engagementScore = null }) => {
+const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, aiDirectorSuggestions = [], engagementScore = null }) => {
   const [timelineMode, setTimelineMode] = useState<'hybrid' | 'visual' | 'text'>('hybrid')
   const [focusLane, setFocusLane] = useState<string | null>(null)
 
@@ -167,6 +179,46 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   const markers = controlledMarkers ?? internalMarkers
   const setMarkersList = onMarkersChange ?? setInternalMarkers
 
+  // --- Per-track lock / mute / solo state (uncontrolled fallback when no prop given) ---
+  const [internalTrackState, setInternalTrackState] = useState<Record<number, TrackLaneState>>({})
+  const trackState = trackStateProp ?? internalTrackState
+  const setTrackStatePatch = useCallback((trackIndex: number, patch: Partial<TrackLaneState>) => {
+    if (onTrackStateChange) onTrackStateChange(trackIndex, patch)
+    else setInternalTrackState((prev) => ({ ...prev, [trackIndex]: { ...prev[trackIndex], ...patch } }))
+  }, [onTrackStateChange])
+
+  // Lanes are visual groupings of underlying track indices. Track-state buttons
+  // act on the representative track index for each lane; segment lookups treat a
+  // lane's whole index range as sharing that state.
+  const laneTrackIndex = useCallback((lane: 'captions' | 'a-roll' | 'b-roll' | 'audio'): number => {
+    switch (lane) {
+      case 'captions': return 4   // V5 Graphics (text/captions)
+      case 'a-roll': return 0     // V1 A-Roll
+      case 'b-roll': return 2     // V3 B-Roll
+      case 'audio': return 6      // A1 Audio
+    }
+  }, [])
+
+  // Resolve effective state for a given segment's track index, honouring lane grouping.
+  const trackStateForIndex = useCallback((trackIndex: number): TrackLaneState => {
+    let lane: number
+    if (trackIndex < 2) lane = 0
+    else if (trackIndex < 5) lane = 2
+    else if (trackIndex === 5 || trackIndex === 4) lane = 4
+    else lane = 6
+    // captions lane (4) and a-roll lane (0): track 4 is captions, tracks 0/1 are a-roll
+    if (trackIndex === 4) lane = 4
+    return trackState[lane] ?? {}
+  }, [trackState])
+
+  const anySolo = useMemo(() => Object.values(trackState).some((s) => s?.solo), [trackState])
+
+  const isTrackLocked = useCallback((trackIndex: number) => !!trackStateForIndex(trackIndex).locked, [trackStateForIndex])
+  const isSegmentLocked = useCallback((id: string) => {
+    const seg = segments.find((s) => s.id === id)
+    return seg ? isTrackLocked(seg.track) : false
+  }, [segments, isTrackLocked])
+
   // --- Mock Stakeholder Comments ---
   const [mockComments, setMockComments] = useState([
      { id: 'c1', time: 2.5, author: 'Acme Client', text: 'Make this logo bigger if possible.', resolved: false },
@@ -216,12 +268,16 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     const contentEl = contentRef.current
     if (!scrollEl || !contentEl || maxDur <= 0) return
     const update = () => {
-      const cw = contentEl.offsetWidth
+      // Bug 7: the visible fraction must be relative to the FULL zoomed content
+      // width (scrollWidth), not the viewport width (offsetWidth). Using offsetWidth
+      // made the fractions scale wrong at zoom>1, so the mini-map viewport and
+      // visible-word culling drifted as you zoomed.
+      const totalWidth = Math.max(scrollEl.scrollWidth, contentEl.scrollWidth, 1)
       const sw = scrollEl.clientWidth
-      if (cw <= 0) return
+      if (totalWidth <= 0) return
       const buffer = 0.05
-      const startFrac = Math.max(0, scrollEl.scrollLeft / cw - buffer)
-      const endFrac = Math.min(1, (scrollEl.scrollLeft + sw) / cw + buffer)
+      const startFrac = Math.max(0, scrollEl.scrollLeft / totalWidth - buffer)
+      const endFrac = Math.min(1, (scrollEl.scrollLeft + sw) / totalWidth + buffer)
       setVisibleTimeRange({ start: startFrac * maxDur, end: endFrac * maxDur })
     }
     update()
@@ -230,7 +286,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     ro.observe(scrollEl)
     ro.observe(contentEl)
     return () => { scrollEl.removeEventListener('scroll', update); ro.disconnect() }
-  }, [maxDur])
+  }, [maxDur, zoom])
 
   const visibleWords = useMemo(() => {
     if (!transcript?.words) return []
@@ -256,7 +312,9 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     segments.find((s) => currentTime >= s.startTime && currentTime < s.endTime),
     [segments, currentTime])
 
-  const seekTo = useCallback((clientX: number) => {
+  // Bug 5: `live` = continuous scrub (no coarse grid snap, so the preview follows
+  // the playhead smoothly). On click/release we still snap for precise landing.
+  const seekTo = useCallback((clientX: number, live = false) => {
     const contentEl = contentRef.current
     if (!contentEl) return
     const innerEl = contentEl.firstElementChild as HTMLElement
@@ -266,7 +324,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     let t = x * maxDur
 
-    if (snapEnabled) {
+    if (snapEnabled && !live) {
       const tEdge = snapToNearestEdge(t, magneticEdges, snapStep * 1.2)
       if (tEdge !== t) {
         t = tEdge
@@ -285,11 +343,13 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     const scrollEl = scrollRef.current
     const contentEl = contentRef.current
     if (!scrollEl || !contentEl || zoom <= 1) return
-    const contentWidth = contentEl.offsetWidth
-    if (contentWidth <= 0) return
-    const playheadPosition = (currentTime / maxDur) * contentWidth
     const scrollWidth = scrollEl.scrollWidth
     const clientWidth = scrollEl.clientWidth
+    if (scrollWidth <= 0) return
+    // Bug 7: playhead position must be measured against the full zoomed content
+    // (scrollWidth), not the viewport (offsetWidth), so the playhead stays centered
+    // and doesn't jump when zooming.
+    const playheadPosition = (currentTime / maxDur) * scrollWidth
     const targetScroll = Math.max(0, Math.min(scrollWidth - clientWidth, playheadPosition - clientWidth / 2))
     if (userSeekRef.current) {
       scrollEl.scrollTo({ left: targetScroll, behavior: 'smooth' })
@@ -312,11 +372,30 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
   useEffect(() => {
     if (!isScrubbing) return
-    const onMove = (e: MouseEvent) => seekTo(e.clientX)
-    const onUp = () => setIsScrubbing(false)
+    // Bug 5: rAF-throttle live scrub so the preview follows smoothly (one update
+    // per frame) without a heavy debounce; coalesce intra-frame moves.
+    let rafId: number | null = null
+    let pendingX: number | null = null
+    let lastX = 0
+    const flush = () => {
+      rafId = null
+      if (pendingX !== null) { lastX = pendingX; seekTo(pendingX, true); pendingX = null }
+    }
+    const onMove = (e: MouseEvent) => {
+      pendingX = e.clientX
+      if (rafId === null) rafId = requestAnimationFrame(flush)
+    }
+    const onUp = () => {
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null }
+      // Final landing snaps to grid/edges for precision.
+      seekTo(pendingX ?? lastX, false)
+      pendingX = null
+      setIsScrubbing(false)
+    }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
@@ -331,10 +410,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
   const deleteSegmentById = useCallback((id: string) => {
     if (!onSegmentsChange) return
+    if (isSegmentLocked(id)) return // Bug 6: locked tracks reject delete
     onSegmentsChange((prev) => prev.filter((seg) => seg.id !== id))
     if (selectedSegmentId === id) onSegmentSelect?.(null)
     onSegmentDeleted?.()
-  }, [onSegmentsChange, onSegmentSelect, onSegmentDeleted, selectedSegmentId])
+  }, [onSegmentsChange, onSegmentSelect, onSegmentDeleted, selectedSegmentId, isSegmentLocked])
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedEffectId && onEffectsChange) {
@@ -344,33 +424,25 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       return
     }
     if (selectedIds.length > 0 && onSegmentsChange) {
-      const toRemove = segments.filter((s) => selectedIds.includes(s.id))
+      // Bug 6: never delete segments on locked tracks.
+      const toRemove = segments.filter((s) => selectedIds.includes(s.id) && !isTrackLocked(s.track))
       if (toRemove.length === 0) return
+      const removeIds = toRemove.map((s) => s.id)
       const rangeStart = Math.min(...toRemove.map((s) => s.startTime))
       const rangeEnd = Math.max(...toRemove.map((s) => s.endTime))
-      const gap = rangeEnd - rangeStart
       onSegmentsChange((prev) => {
-        let next = prev.filter((seg) => !selectedIds.includes(seg.id))
-        if (rippleOnDelete && gap > 0) {
-          next = next.map((seg) => {
-            if (seg.startTime >= rangeEnd) {
-              const newStart = seg.startTime - gap
-              const newEnd = seg.endTime - gap
-              return { ...seg, startTime: newStart, endTime: newEnd, duration: newEnd - newStart }
-            }
-            if (seg.endTime > rangeStart && seg.startTime < rangeEnd) {
-              const newEnd = Math.max(seg.startTime, seg.endTime - gap)
-              return { ...seg, endTime: newEnd, duration: newEnd - seg.startTime }
-            }
-            return seg
-          })
+        const surviving = prev.filter((seg) => !removeIds.includes(seg.id))
+        // Bug 3: true ripple — shift subsequent segments on ALL tracks to close the gap.
+        if (rippleOnDelete && rangeEnd > rangeStart) {
+          const locked = surviving.filter((s) => isTrackLocked(s.track)).map((s) => s.id)
+          return rippleDeleteAcrossTracks(surviving, rangeStart, rangeEnd, locked)
         }
-        return next
+        return surviving
       })
       onSegmentSelect?.(null)
       onSegmentDeleted?.()
     }
-  }, [selectedIds, selectedEffectId, segments, rippleOnDelete, onSegmentsChange, onEffectsChange, onEffectSelect, onSegmentSelect, onEffectDeleted, onSegmentDeleted])
+  }, [selectedIds, selectedEffectId, segments, rippleOnDelete, onSegmentsChange, onEffectsChange, onEffectSelect, onSegmentSelect, onEffectDeleted, onSegmentDeleted, isTrackLocked])
 
   const handleDuplicateEffect = useCallback((effectId: string) => {
     if (!onEffectsChange) return
@@ -486,17 +558,20 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       onTextOverlaysChange((prev) => prev.map(o => {
         if (o.id !== id) return o
         if (edge === 'start') {
-          const start = Math.min(v, o.endTime - 0.25)
+          // Clamp so start can never reach/pass end: keep at least MIN_SEG_DURATION.
+          const start = Math.max(0, Math.min(v, o.endTime - MIN_SEG_DURATION))
           return { ...o, startTime: start }
         } else {
-          const end = Math.max(v, o.startTime + 0.25)
-          return { ...o, endTime: Math.min(end, maxDur) }
+          // Clamp so end can never reach/pass start.
+          const end = Math.min(maxDur, Math.max(v, o.startTime + MIN_SEG_DURATION))
+          return { ...o, endTime: end }
         }
       }))
       return
     }
 
     if (!onSegmentsChange) return
+    if (isSegmentLocked(id)) return // Bug 6: locked tracks reject trim
     let v = value
     if (snapEnabled) {
       const edgeSnap = snapToNearestEdge(v, magneticEdges, snapStep * 1.5)
@@ -513,28 +588,36 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       let diff = 0
 
       if (edge === 'start') {
-        const start = Math.min(v, seg.endTime - 0.25)
+        // Bug 1: clamp start strictly below end (min duration) so it can never invert.
+        const start = Math.max(0, Math.min(v, seg.endTime - MIN_SEG_DURATION))
         diff = start - seg.startTime
         next[segIndex] = { ...seg, startTime: start, duration: seg.endTime - start }
       } else {
-        const end = Math.max(v, seg.startTime + 0.25)
+        // Bug 1: clamp end strictly above start (min duration), then to maxDur.
+        const end = Math.min(maxDur, Math.max(v, seg.startTime + MIN_SEG_DURATION))
         diff = end - seg.endTime
-        next[segIndex] = { ...seg, endTime: Math.min(end, maxDur), duration: Math.min(end, maxDur) - seg.startTime }
+        next[segIndex] = { ...seg, endTime: end, duration: end - seg.startTime }
       }
 
-      // Ripple affect later segments on the same track
-      if (rippleOnDelete && diff !== 0) {
-         next = next.map(s => {
-           if (s.id !== id && s.track === seg.track && s.startTime >= (edge === 'start' ? seg.startTime : seg.endTime)) {
-             return { ...s, startTime: Math.max(0, s.startTime + diff), endTime: Math.max(s.duration, s.endTime + diff) }
-           }
-           return s
-         })
+      if (diff === 0) return next
+
+      // Bug 3: ripple subsequent clips on ALL tracks when ripple is enabled.
+      if (rippleOnDelete) {
+        const boundary = edge === 'start' ? seg.startTime : seg.endTime
+        next = next.map(s => {
+          if (s.id === id) return s
+          if (s.startTime >= boundary && !isTrackLocked(s.track)) {
+            const newStart = Math.max(0, s.startTime + diff)
+            const newEnd = Math.max(newStart + MIN_SEG_DURATION, s.endTime + diff)
+            return { ...s, startTime: newStart, endTime: newEnd, duration: newEnd - newStart }
+          }
+          return s
+        })
       }
 
       return next
     })
-  }, [maxDur, snapEnabled, snapStep, magneticEdges, onSegmentsChange, rippleOnDelete])
+  }, [maxDur, snapEnabled, snapStep, magneticEdges, onSegmentsChange, rippleOnDelete, textOverlays, onTextOverlaysChange, isSegmentLocked, isTrackLocked])
 
   const trimSegmentStartToPlayhead = useCallback((seg: TimelineSegment) => {
     if (!onSegmentsChange || currentTime <= seg.startTime || currentTime >= seg.endTime) return
@@ -591,6 +674,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     }
 
     if (!onSegmentsChange) return
+    if (isSegmentLocked(id)) return // Bug 6: locked tracks reject move
     const segDur = originalEnd - originalStart
     let newStart = originalStart + deltaTime
 
@@ -621,22 +705,31 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       next = next.map((seg) => {
         if (seg.id !== id) return seg
         const updatedTrack = newTrack !== undefined ? newTrack : seg.track
-        return { ...seg, startTime: newStart, endTime: Math.min(newEnd, maxDur), duration: Math.min(newEnd, maxDur) - newStart, track: updatedTrack }
+        const clampedEnd = Math.min(newEnd, maxDur)
+        // Bug 4: keyframe times are absolute — shift them by the same Δt the segment
+        // moved so they stay attached to their original frames within the clip.
+        const shiftedKeyframes = (diff !== 0 && seg.transformKeyframes)
+          ? seg.transformKeyframes.map(kf => ({ ...kf, time: kf.time + diff }))
+          : seg.transformKeyframes
+        return { ...seg, startTime: newStart, endTime: clampedEnd, duration: clampedEnd - newStart, track: updatedTrack, transformKeyframes: shiftedKeyframes }
       })
 
-      // Ripple all subsequent clips if ripple enabled
+      // Bug 3: ripple subsequent clips on ALL tracks when ripple is enabled.
       if (rippleOnDelete && diff !== 0) {
         next = next.map(seg => {
-          if (seg.id !== id && seg.track === oldSeg.track && seg.startTime >= originalStart) {
-            return { ...seg, startTime: Math.max(0, seg.startTime + diff), endTime: Math.max(seg.duration, seg.endTime + diff) }
+          if (seg.id === id) return seg
+          if (seg.startTime >= originalStart && !isTrackLocked(seg.track)) {
+            const ns = Math.max(0, seg.startTime + diff)
+            const ne = Math.max(ns + MIN_SEG_DURATION, seg.endTime + diff)
+            return { ...seg, startTime: ns, endTime: ne, duration: ne - ns }
           }
-           return seg
+          return seg
         })
       }
 
       return next
     })
-  }, [maxDur, snapEnabled, snapStep, magneticEdges, onSegmentsChange, rippleOnDelete])
+  }, [maxDur, snapEnabled, snapStep, magneticEdges, onSegmentsChange, rippleOnDelete, textOverlays, onTextOverlaysChange, isSegmentLocked, isTrackLocked])
 
   const splitSegmentAt = useCallback((seg: TimelineSegment, atTime: number) => {
     if (!onSegmentsChange) return
@@ -789,10 +882,13 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     const { x: startX, y: startY, startTime: origStart, endTime: origEnd, track: origTrack } = dragSegmentStartRef.current
     const onMove = (e: MouseEvent) => {
       const contentEl = contentRef.current
-      const w = contentEl?.offsetWidth
+      // Bug 7: convert pixel delta using the inner (zoomed) content width, not the
+      // viewport, so drag distance maps to the correct time delta at any zoom.
+      const innerEl = contentEl?.firstElementChild as HTMLElement | undefined
+      const w = innerEl?.offsetWidth || contentEl?.offsetWidth
       if (!w) return
       const deltaTime = ((e.clientX - startX) / w) * maxDur
-      
+
       const hoveredEl = document.elementFromPoint(e.clientX, e.clientY)
       const trackEl = hoveredEl?.closest('[data-track-drop]') as HTMLElement | null
       let newTrack = origTrack
@@ -842,22 +938,50 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     if (e.button === 0) {
       onSegmentSelect?.(e.metaKey || e.ctrlKey ? null : seg.id, e.metaKey || e.ctrlKey)
     }
+    // Bug 6: locked tracks may be selected but not dragged.
+    if (isTrackLocked(seg.track)) return
     setDraggingSegmentId(seg.id)
     dragSegmentStartRef.current = { x: e.clientX, y: e.clientY, startTime: seg.startTime, endTime: seg.endTime, track: seg.track }
-  }, [selectedIds, onSegmentSelect])
+  }, [selectedIds, onSegmentSelect, isTrackLocked])
 
   const handleSegmentEdgeMouseDown = useCallback((e: React.MouseEvent, seg: TimelineSegment, edge: 'start' | 'end') => {
     e.stopPropagation()
+    if (isTrackLocked(seg.track)) return // Bug 6: locked tracks reject trim
     setDraggingEdgeId(seg.id)
     dragEdgeStartRef.current = { id: seg.id, edge, startX: e.clientX, startTime: seg.startTime, endTime: seg.endTime }
+  }, [isTrackLocked])
+
+  // Bug 2: dedicated overlay handlers — overlays have no track/duration, so the old
+  // `seg as any` cast through the segment handlers was unsafe. These retime the
+  // overlay through updateSegmentEdge/moveSegmentTo, both of which detect overlays
+  // by id and operate on startTime/endTime only (no track field).
+  const handleOverlayEdgeMouseDown = useCallback((e: React.MouseEvent, overlay: TextOverlay, edge: 'start' | 'end') => {
+    e.stopPropagation()
+    setDraggingEdgeId(overlay.id)
+    dragEdgeStartRef.current = { id: overlay.id, edge, startX: e.clientX, startTime: overlay.startTime, endTime: overlay.endTime }
   }, [])
+
+  const handleOverlayBodyMouseDown = useCallback((e: React.MouseEvent, overlay: TextOverlay) => {
+    if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
+    e.stopPropagation()
+    if (e.button === 0 && (e.shiftKey || e.metaKey)) {
+      onSegmentSelect?.(overlay.id, true)
+    } else if (e.button === 0) {
+      onSegmentSelect?.(overlay.id, false)
+    }
+    setDraggingSegmentId(overlay.id)
+    // track is irrelevant for overlays; moveSegmentTo's overlay branch ignores it.
+    dragSegmentStartRef.current = { x: e.clientX, y: e.clientY, startTime: overlay.startTime, endTime: overlay.endTime, track: 0 }
+  }, [onSegmentSelect])
 
   useEffect(() => {
     if (!draggingEdgeId || !dragEdgeStartRef.current) return
     const { id, edge, startX, startTime, endTime } = dragEdgeStartRef.current
     const onMove = (e: MouseEvent) => {
       const contentEl = contentRef.current
-      const w = contentEl?.offsetWidth
+      // Bug 7: use inner zoomed content width for accurate delta at any zoom.
+      const innerEl = contentEl?.firstElementChild as HTMLElement | undefined
+      const w = innerEl?.offsetWidth || contentEl?.offsetWidth
       if (!w) return
       const deltaTime = ((e.clientX - startX) / w) * maxDur
       if (edge === 'start') {
@@ -926,9 +1050,12 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       if (data.type === 'library-asset' && data.asset) {
         const contentEl = contentRef.current
         if (!contentEl) return
-        const rect = contentEl.getBoundingClientRect()
+        // Bug 7: measure against the inner (zoomed) content element so the drop
+        // lands at the correct time when zoomed/scrolled, not the viewport.
+        const innerEl = (contentEl.firstElementChild as HTMLElement | null) ?? contentEl
+        const rect = innerEl.getBoundingClientRect()
         const dropX = e.clientX - rect.left
-        const rawTime = (dropX / contentEl.offsetWidth) * maxDur
+        const rawTime = (dropX / (rect.width || contentEl.offsetWidth)) * maxDur
         // Snap drop time to grid or playhead
         let t = rawTime
         if (snapEnabled) {
@@ -944,6 +1071,33 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   }, [maxDur, snapEnabled, snapStep, magneticEdges, onAssetDrop])
 
   const isCompact = density === 'compact'
+
+  // Bug 6: reusable lock/mute/solo controls wired to per-track state.
+  // Mute is mapped onto trackVisibility (already consumed by the preview to hide a
+  // track); lock/solo use trackState. `muted = trackVisibility[idx] === false`.
+  const renderLaneControls = (laneKey: 'captions' | 'a-roll' | 'b-roll' | 'audio') => {
+    const idx = laneTrackIndex(laneKey)
+    const st = trackState[idx] ?? {}
+    const muted = trackVisibility[idx] === false
+    const dimmed = anySolo && !st.solo
+    const toggleMute = () => onTrackVisibilityChange?.(idx, muted)
+    const toggleLock = () => setTrackStatePatch(idx, { locked: !st.locked })
+    const toggleSolo = () => setTrackStatePatch(idx, { solo: !st.solo })
+    return (
+      <div className={`flex items-center gap-1 transition-opacity ${dimmed ? 'opacity-30' : 'opacity-40 group-hover/track:opacity-100'}`}>
+        <button type="button" onClick={toggleSolo} title={st.solo ? 'Unsolo Track' : 'Solo Track'} aria-pressed={st.solo ? 'true' : 'false'}
+          className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider transition-colors ${st.solo ? 'bg-amber-500 text-black' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>S</button>
+        <button type="button" onClick={toggleMute} title={muted ? 'Unmute Track' : 'Mute Track'} aria-pressed={muted ? 'true' : 'false'}
+          className={`p-1 rounded transition-colors ${muted ? 'bg-rose-500/30 text-rose-300' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>
+          {muted ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+        </button>
+        <button type="button" onClick={toggleLock} title={st.locked ? 'Unlock Track' : 'Lock Track'} aria-pressed={st.locked ? 'true' : 'false'}
+          className={`p-1 rounded transition-colors ${st.locked ? 'bg-indigo-500/30 text-indigo-300' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>
+          <Lock className="w-3 h-3" />
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -1117,6 +1271,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                 className="h-full overflow-x-auto overflow-y-hidden select-none scrollbar-hide touch-none cursor-pointer"
                 onMouseMove={handleRulerHover}
                 onMouseLeave={() => setRulerHoverTime(null)}
+                onMouseDown={(e) => { if (e.button === 0) { seekTo(e.clientX, true); setIsScrubbing(true) } }}
                 onClick={(e) => seekTo(e.clientX)}
                 onTouchStart={handleRulerTouch}
                 onTouchMove={handleRulerTouch}
@@ -1231,10 +1386,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)] animate-pulse" />
                                   <span className="text-[8px] font-bold text-emerald-100/50 uppercase tracking-widest">Active Sync</span>
                                </div>
-                               <div className="flex items-center gap-1 opacity-40 group-hover/track:opacity-100 transition-opacity">
-                                  <button className="p-1 hover:bg-white/10 hover:text-white rounded text-slate-400" title="Mute Track"><EyeOff className="w-3 h-3" /></button>
-                                  <button className="p-1 hover:bg-white/10 hover:text-white rounded text-slate-400" title="Lock Track"><Lock className="w-3 h-3" /></button>
-                               </div>
+                               {renderLaneControls('captions')}
                             </div>
                          </div>
                        )}
@@ -1259,10 +1411,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.8)]" />
                                   <span className="text-[8px] font-bold text-blue-100/50 uppercase tracking-widest">Locked 4K RAW</span>
                                </div>
-                               <div className="flex items-center gap-1 opacity-40 group-hover/track:opacity-100 transition-opacity bg-black/40 rounded-lg p-0.5 border border-white/5">
-                                  <button className="px-1.5 py-0.5 hover:bg-white/10 hover:text-white rounded text-slate-400 text-[8px] font-black uppercase tracking-wider" title="Solo Track">Solo</button>
-                                   <div className="w-px h-3 bg-white/20" />
-                                  <button className="px-1.5 py-0.5 hover:bg-white/10 hover:text-white rounded text-slate-400 text-[8px] font-black uppercase tracking-wider" title="Mute Track">M</button>
+                               <div className="bg-black/40 rounded-lg p-0.5 border border-white/5">
+                                  {renderLaneControls('a-roll')}
                                </div>
                             </div>
                          </div>
@@ -1288,9 +1438,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.8)]" />
                                   <span className="text-[8px] font-bold text-amber-100/50 uppercase tracking-widest">Global Vault</span>
                                </div>
-                               <div className="flex items-center gap-1 opacity-40 group-hover/track:opacity-100 transition-opacity">
-                                  <button className="px-1.5 py-0.5 hover:bg-white/10 hover:text-white rounded text-slate-400 text-[8px] font-black uppercase tracking-wider">Source</button>
-                               </div>
+                               {renderLaneControls('b-roll')}
                             </div>
                          </div>
                        )}
@@ -1315,10 +1463,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 shadow-[0_0_5px_rgba(192,38,211,0.8)]" />
                                   <span className="text-[8px] font-bold text-fuchsia-100/50 uppercase tracking-widest">48kHz Spatial</span>
                                </div>
-                               <div className="flex items-center gap-1 opacity-40 group-hover/track:opacity-100 transition-opacity bg-black/40 rounded-lg p-0.5 border border-white/5">
-                                  <button className="px-1.5 py-0.5 hover:bg-white/10 hover:text-white rounded text-slate-400 text-[8px] font-black uppercase tracking-wider" title="Solo Track">Solo</button>
-                                  <div className="w-px h-3 bg-white/20" />
-                                  <button className="px-1.5 py-0.5 hover:bg-white/10 hover:text-white rounded text-slate-400 text-[8px] font-black uppercase tracking-wider" title="Mute Track">M</button>
+                               <div className="bg-black/40 rounded-lg p-0.5 border border-white/5">
+                                  {renderLaneControls('audio')}
                                </div>
                             </div>
                          </div>
@@ -1535,7 +1681,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                whileTap={{ scale: 0.98 }}
                                className={`absolute top-4 bottom-4 rounded-xl border-2 flex flex-col justify-center px-4 cursor-pointer group/node transition-all duration-300 ${selectedIds.includes(o.id) ? 'bg-emerald-500/40 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)] z-30 ring-2 ring-emerald-500/20' : 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 z-20 hover:border-emerald-500/50'}`}
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(o.id, e.shiftKey || e.metaKey) }}
-                               onMouseDown={(e) => handleSegmentBodyMouseDown(e, o as any)}
+                               onMouseDown={(e) => handleOverlayBodyMouseDown(e, o)}
                              >
                                 {selectedIds.includes(o.id) && (
                                    <motion.div
@@ -1551,9 +1697,9 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    {formatTime(o.endTime - o.startTime)}
                                 </div>
 
-                                {/* Precision Resize Handles */}
-                                <div onMouseDown={(e) => handleSegmentEdgeMouseDown(e, o as any, 'start')} className="absolute left-0 top-0 bottom-0 w-2 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity" />
-                                <div onMouseDown={(e) => handleSegmentEdgeMouseDown(e, o as any, 'end')} className="absolute right-0 top-0 bottom-0 w-2 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity" />
+                                {/* Precision Resize Handles (Bug 2: overlay-specific retiming) */}
+                                <div onMouseDown={(e) => handleOverlayEdgeMouseDown(e, o, 'start')} className="absolute left-0 top-0 bottom-0 w-2 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity" />
+                                <div onMouseDown={(e) => handleOverlayEdgeMouseDown(e, o, 'end')} className="absolute right-0 top-0 bottom-0 w-2 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity" />
                              </motion.div>
                            ))}
                         </div>
@@ -1701,8 +1847,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                           const contentEl = contentRef.current;
                                           if (!contentEl) return;
                                           const deltaX = moveEvt.clientX - startX;
-                                          const deltaTime = (deltaX / contentEl.offsetWidth) * maxDur;
-                                          let newTime = Math.max(s.startTime, Math.min(s.endTime, startKfTime + deltaTime));
+                                          // Bug 7: use inner zoomed content width for accurate delta at any zoom.
+                                          const innerEl = contentEl.firstElementChild as HTMLElement | null;
+                                          const cw = innerEl?.offsetWidth || contentEl.offsetWidth;
+                                          const deltaTime = (deltaX / cw) * maxDur;
+                                          const newTime = Math.max(s.startTime, Math.min(s.endTime, startKfTime + deltaTime));
 
                                           if (onSegmentsChange) {
                                               onSegmentsChange(prev => prev.map(seg => {
@@ -1805,8 +1954,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                           const contentEl = contentRef.current;
                                           if (!contentEl) return;
                                           const deltaX = moveEvt.clientX - startX;
-                                          const deltaTime = (deltaX / contentEl.offsetWidth) * maxDur;
-                                          let newTime = Math.max(s.startTime, Math.min(s.endTime, startKfTime + deltaTime));
+                                          // Bug 7: use inner zoomed content width for accurate delta at any zoom.
+                                          const innerEl = contentEl.firstElementChild as HTMLElement | null;
+                                          const cw = innerEl?.offsetWidth || contentEl.offsetWidth;
+                                          const deltaTime = (deltaX / cw) * maxDur;
+                                          const newTime = Math.max(s.startTime, Math.min(s.endTime, startKfTime + deltaTime));
 
                                           if (onSegmentsChange) {
                                               onSegmentsChange(prev => prev.map(seg => {
