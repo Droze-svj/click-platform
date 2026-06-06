@@ -92,6 +92,22 @@ export const parseTime = (input: string, maxDuration: number = Infinity): number
 /** Snap time to nearest grid step (e.g. 5 for 5-second marks) */
 export const snapToGrid = (time: number, step: number): number => Math.round(time / step) * step
 
+/**
+ * Returns true when a timed item [itemStart, itemEnd] intersects the visible
+ * window [winStart, winEnd]. Used by the timeline to virtualize lanes — items
+ * that touch the window (even partially) are kept mounted. A `null` window
+ * (range not yet measured) is treated as "everything visible" so nothing is
+ * culled before the first scroll/resize measurement.
+ */
+export function intersectsRange(
+  itemStart: number,
+  itemEnd: number,
+  win: { start: number; end: number } | null
+): boolean {
+  if (!win) return true
+  return itemEnd >= win.start && itemStart <= win.end
+}
+
 export const getSegmentColor = (type: TimelineSegmentType | string): string => {
   const colors: { [key: string]: string } = {
     video: '#3B82F6',

@@ -34,7 +34,8 @@ import {
   Activity,
   Video,
   Film,
-  MessageSquare
+  MessageSquare,
+  Wand2
 } from 'lucide-react'
 import {
   TimelineSegment,
@@ -52,7 +53,7 @@ import {
   AIDirectorSuggestion,
   EngagementScore
 } from '../../types/editor'
-import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS, resolveTimelineOverlaps, rippleDeleteAcrossTracks } from '../../utils/editorUtils'
+import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS, resolveTimelineOverlaps, rippleDeleteAcrossTracks, intersectsRange } from '../../utils/editorUtils'
 import { getSegmentColor } from '../../utils/editorUtils'
 
 /** Per-lane track state: locked rejects edits, muted hides from preview, solo isolates. */
@@ -477,6 +478,142 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       return { ...eff, endTime: Math.min(end, maxDur) }
     }))
   }, [maxDur, snapEnabled, snapStep, onEffectsChange])
+
+  // --- VIRTUALIZATION WINDOW ---------------------------------------------
+  // Expand the measured visible range by an overscan margin (±20% of the window
+  // width) so items just outside the viewport are still mounted — this keeps
+  // scrolling smooth and prevents pop-in at the edges. `visibleTimeRange` is
+  // already recomputed only on scroll / zoom / resize (rAF-coalesced by the
+  // browser's native scroll event), so this memo never causes per-frame storms.
+  const virtualWindow = useMemo(() => {
+    if (!visibleTimeRange) return null
+    const width = Math.max(0, visibleTimeRange.end - visibleTimeRange.start)
+    const overscan = width * 0.2
+    return {
+      start: Math.max(0, visibleTimeRange.start - overscan),
+      end: Math.min(maxDur, visibleTimeRange.end + overscan),
+    }
+  }, [visibleTimeRange, maxDur])
+
+  // An item must stay mounted while it is actively being dragged or is selected,
+  // regardless of the window, so it can never vanish mid-drag near an edge.
+  const isItemPinned = useCallback((id: string) => {
+    return id === draggingSegmentId || id === draggingEdgeId || id === selectedEffectId || selectedIds.includes(id)
+  }, [draggingSegmentId, draggingEdgeId, selectedEffectId, selectedIds])
+
+  // Keep a timed [start,end] item if it intersects the overscan window OR is pinned.
+  const isItemVisible = useCallback((id: string, start: number, end: number) => {
+    return isItemPinned(id) || intersectsRange(start, end, virtualWindow)
+  }, [isItemPinned, virtualWindow])
+
+  const visibleSegments = useMemo(
+    () => segments.filter((s) => isItemVisible(s.id, s.startTime, s.endTime)),
+    [segments, isItemVisible])
+  const visibleEffects = useMemo(
+    () => effects.filter((e) => isItemVisible(e.id, e.startTime, e.endTime)),
+    [effects, isItemVisible])
+  const visibleTextOverlays = useMemo(
+    () => textOverlays.filter((o) => isItemVisible(o.id, o.startTime, o.endTime)),
+    [textOverlays, isItemVisible])
+  const visibleMarkers = useMemo(
+    () => markers.filter((m) => isItemPinned(m.id) || intersectsRange(m.time, m.time, virtualWindow)),
+    [markers, isItemPinned, virtualWindow])
+
+  // --- EFFECT LANE: drag-to-move + selection -----------------------------
+  const [draggingEffectId, setDraggingEffectId] = useState<string | null>(null)
+  const dragEffectStartRef = useRef<{ id: string; startX: number; startTime: number; endTime: number } | null>(null)
+  const [draggingEffectEdgeId, setDraggingEffectEdgeId] = useState<string | null>(null)
+  const dragEffectEdgeStartRef = useRef<{ id: string; edge: 'start' | 'end'; startX: number; startTime: number; endTime: number } | null>(null)
+
+  // Move an effect block by a delta, keeping its duration and snapping like segments.
+  const moveEffectTo = useCallback((id: string, originalStart: number, originalEnd: number, deltaTime: number) => {
+    if (!onEffectsChange) return
+    const effDur = originalEnd - originalStart
+    let newStart = originalStart + deltaTime
+    if (snapEnabled) {
+      const otherEdges = magneticEdges.filter(e => Math.abs(e - originalStart) > 0.01 && Math.abs(e - originalEnd) > 0.01)
+      const edgeSnapStart = snapToNearestEdge(newStart, otherEdges, snapStep * 1.5)
+      const edgeSnapEnd = snapToNearestEdge(newStart + effDur, otherEdges, snapStep * 1.5)
+      if (Math.abs(edgeSnapStart - newStart) <= Math.abs(edgeSnapEnd - (newStart + effDur))) {
+        newStart = edgeSnapStart !== newStart ? edgeSnapStart : snapToGrid(newStart, snapStep)
+      } else {
+        newStart = edgeSnapEnd !== (newStart + effDur) ? (edgeSnapEnd - effDur) : snapToGrid(newStart, snapStep)
+      }
+    }
+    newStart = Math.max(0, Math.min(maxDur - effDur, newStart))
+    const newEnd = newStart + effDur
+    onEffectsChange((prev) => prev.map((eff) => eff.id === id ? { ...eff, startTime: newStart, endTime: Math.min(newEnd, maxDur) } : eff))
+  }, [onEffectsChange, snapEnabled, magneticEdges, snapStep, maxDur])
+
+  const handleEffectBodyMouseDown = useCallback((e: React.MouseEvent, eff: TimelineEffect) => {
+    if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
+    e.stopPropagation()
+    onEffectSelect?.(eff.id)
+    if (eff.locked) return // respect lock model — selectable but not draggable
+    setDraggingEffectId(eff.id)
+    dragEffectStartRef.current = { id: eff.id, startX: e.clientX, startTime: eff.startTime, endTime: eff.endTime }
+  }, [onEffectSelect])
+
+  const handleEffectEdgeMouseDown = useCallback((e: React.MouseEvent, eff: TimelineEffect, edge: 'start' | 'end') => {
+    e.stopPropagation()
+    onEffectSelect?.(eff.id)
+    if (eff.locked) return
+    setDraggingEffectEdgeId(eff.id)
+    dragEffectEdgeStartRef.current = { id: eff.id, edge, startX: e.clientX, startTime: eff.startTime, endTime: eff.endTime }
+  }, [onEffectSelect])
+
+  // Effect body drag listener (move whole block).
+  useEffect(() => {
+    if (!draggingEffectId || !dragEffectStartRef.current) return
+    const { id, startX, startTime, endTime } = dragEffectStartRef.current
+    const onMove = (e: MouseEvent) => {
+      const contentEl = contentRef.current
+      const innerEl = contentEl?.firstElementChild as HTMLElement | undefined
+      const w = innerEl?.offsetWidth || contentEl?.offsetWidth
+      if (!w) return
+      const deltaTime = ((e.clientX - startX) / w) * maxDur
+      moveEffectTo(id, startTime, endTime, deltaTime)
+    }
+    const onUp = () => {
+      setDraggingEffectId(null)
+      dragEffectStartRef.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [draggingEffectId, maxDur, moveEffectTo])
+
+  // Effect edge-trim drag listener (resize via updateEffectEdge — keeps min-duration clamp).
+  useEffect(() => {
+    if (!draggingEffectEdgeId || !dragEffectEdgeStartRef.current) return
+    const { id, edge, startX, startTime, endTime } = dragEffectEdgeStartRef.current
+    const onMove = (e: MouseEvent) => {
+      const contentEl = contentRef.current
+      const innerEl = contentEl?.firstElementChild as HTMLElement | undefined
+      const w = innerEl?.offsetWidth || contentEl?.offsetWidth
+      if (!w) return
+      const deltaTime = ((e.clientX - startX) / w) * maxDur
+      if (edge === 'start') updateEffectEdge(id, 'start', startTime + deltaTime)
+      else updateEffectEdge(id, 'end', endTime + deltaTime)
+    }
+    const onUp = () => {
+      setDraggingEffectEdgeId(null)
+      dragEffectEdgeStartRef.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [draggingEffectEdgeId, maxDur, updateEffectEdge])
 
   const handleSeekHover = (e: React.MouseEvent<HTMLDivElement>) => {
     const contentEl = contentRef.current
@@ -1310,7 +1447,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     ))}
 
                    {/* Markers */}
-                   {markers.map(m => (
+                   {visibleMarkers.map(m => (
                      <div
                        key={m.id}
                        className="absolute top-0 h-full w-[2px] bg-amber-500/50 cursor-pointer group/marker z-20"
@@ -1672,7 +1809,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                 </div>
                               </div>
                             ))}
-                           {textOverlays.map(o => (
+                           {visibleTextOverlays.map(o => (
                              <motion.div
                                key={o.id}
                                layoutId={o.id}
@@ -1713,7 +1850,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
                           onDrop={(e) => handleTrackDrop(e, 0)}
                         >
-                           {segments.filter(s => s.track < 2).map(s => (
+                           {visibleSegments.filter(s => s.track < 2).map(s => (
                              <React.Fragment key={s.id}>
                                {/* J-Cut Audio Extension Wing */}
                                {s.audioLeadInSec && s.audioLeadInSec > 0 && (
@@ -1887,7 +2024,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
                           onDrop={(e) => handleTrackDrop(e, 2)}
                         >
-                           {segments.filter(s => s.track >= 2 && s.track < 5).map(s => (
+                           {visibleSegments.filter(s => s.track >= 2 && s.track < 5).map(s => (
                              <motion.div
                                key={s.id}
                                layoutId={s.id}
@@ -1993,7 +2130,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
                           onDrop={(e) => handleTrackDrop(e, 6)}
                         >
-                           {segments.filter(s => s.track >= 6).map(s => (
+                           {visibleSegments.filter(s => s.track >= 6).map(s => (
                              <motion.div
                                key={s.id}
                                layoutId={s.id}
@@ -2039,6 +2176,58 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                 </div>
                              </motion.div>
                            ))}
+                        </div>
+                      )}
+
+                      {/* LANE: EFFECTS (NEURAL LAYERS) — retimable effect blocks */}
+                      {(!focusLane || focusLane === 'fx') && (
+                        <div
+                          className={`h-20 relative rounded-2xl border border-white/[0.03] transition-all duration-500 overflow-hidden ${focusLane === 'fx' ? 'bg-violet-500/[0.05] border-violet-500/20' : ''}`}
+                        >
+                           {/* Lane label */}
+                           <div className="absolute inset-y-0 left-4 flex items-center z-10 pointer-events-none opacity-30">
+                              <Wand2 className="w-3.5 h-3.5 text-violet-400" />
+                              <span className="text-[9px] font-black text-violet-400 uppercase tracking-widest ml-3">Neural Layers // Effects</span>
+                           </div>
+
+                           {visibleEffects.map((eff) => {
+                             const left = timeToX(eff.startTime)
+                             const width = Math.max(0, timeToX(eff.endTime) - timeToX(eff.startTime))
+                             const color = eff.color || EFFECT_TYPE_COLORS[eff.type] || '#8B5CF6'
+                             const isSelected = selectedEffectId === eff.id
+                             const disabled = eff.enabled === false
+                             return (
+                               <motion.div
+                                 key={eff.id}
+                                 layoutId={`effect-${eff.id}`}
+                                 style={{ left: `${left}%`, width: `${width}%`, backgroundColor: `${color}33`, borderColor: `${color}80` }}
+                                 whileTap={{ scale: 0.98 }}
+                                 className={`absolute top-3 bottom-3 rounded-lg flex items-center px-3 gap-2 group/node transition-all overflow-hidden border ${eff.locked ? 'cursor-not-allowed' : 'cursor-pointer'} ${isSelected ? 'z-30 ring-2 ring-white/70 shadow-[0_0_24px_rgba(139,92,246,0.5)]' : 'z-20 hover:brightness-125'} ${disabled ? 'opacity-40 saturate-50' : ''}`}
+                                 onClick={(e) => { e.stopPropagation(); onEffectSelect?.(eff.id) }}
+                                 onMouseDown={(e) => handleEffectBodyMouseDown(e, eff)}
+                               >
+                                  <div className="p-1 rounded-md bg-black/40 border border-white/10 backdrop-blur-md shrink-0">
+                                     {eff.locked ? <Lock className="w-3 h-3 text-white/80" /> : <Sparkles className="w-3 h-3" style={{ color }} />}
+                                  </div>
+                                  <div className="flex flex-col min-w-0 z-10">
+                                     <span className="text-[10px] font-black text-white italic truncate uppercase drop-shadow-md">{eff.name}</span>
+                                     <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">{eff.type} · {formatTime(eff.endTime - eff.startTime)}</span>
+                                  </div>
+
+                                  {/* Edge-trim handles (skipped when locked) */}
+                                  {!eff.locked && (
+                                    <>
+                                      <div data-resize-handle onMouseDown={(e) => handleEffectEdgeMouseDown(e, eff, 'start')} className="absolute left-0 top-0 bottom-0 w-3 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center transition-colors">
+                                         <div className="w-0.5 h-3 bg-white/50 rounded-full" />
+                                      </div>
+                                      <div data-resize-handle onMouseDown={(e) => handleEffectEdgeMouseDown(e, eff, 'end')} className="absolute right-0 top-0 bottom-0 w-3 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center transition-colors">
+                                         <div className="w-0.5 h-3 bg-white/50 rounded-full" />
+                                      </div>
+                                    </>
+                                  )}
+                               </motion.div>
+                             )
+                           })}
                         </div>
                       )}
                    </div>
