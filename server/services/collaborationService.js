@@ -11,15 +11,35 @@ const directiveClaims = new Map(); // teamId -> Map(directiveId -> { userId, use
 const teamActivityStream = new Map(); // teamId -> Array of pulses
 
 /**
+ * Derive a stable, deterministic color from a user id so the same user always
+ * renders with the same avatar color across every client. Pure hash → HSL.
+ */
+function colorForUser(userId) {
+  try {
+    const str = String(userId || '');
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) | 0;
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 70%, 55%)`;
+  } catch {
+    return 'hsl(220, 70%, 55%)';
+  }
+}
+
+/**
  * Track user presence
  */
-function trackPresence(userId, socketId, room, cursor = null) {
+function trackPresence(userId, socketId, room, cursor = null, name = null) {
   try {
     const userPresence = {
       userId,
       socketId,
       room,
       cursor,
+      name: name || null,
+      color: colorForUser(userId),
       lastSeen: new Date()
     };
 
@@ -131,6 +151,8 @@ function getRoomUsers(room) {
       if (presence) {
         users.push({
           userId: presence.userId,
+          name: presence.name || null,
+          color: presence.color || colorForUser(presence.userId),
           cursor: presence.cursor,
           lastSeen: presence.lastSeen
         });
@@ -309,6 +331,7 @@ module.exports = {
   trackPresence,
   removePresence,
   updateCursor,
+  colorForUser,
   getRoomUsers,
   getActiveUsers,
   isUserEditing,

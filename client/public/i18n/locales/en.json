@@ -5708,6 +5708,18 @@
     "footerTagline": "Click Core Neural Vector // v4.26 // Autonomous Governance Enabled"
   },
   "modernVideoEditor": {
+    "collabActiveTitle": "Active Collaboration",
+    "collabSolo": "You're the only one editing — share this project to collaborate",
+    "collabOnlineCount": "{{count}} editing now",
+    "collabFeedbackTitle": "EDITORIAL FEEDBACK",
+    "collabNoComments": "No comments yet — start the conversation",
+    "collabInputPlaceholder": "Leave feedback for your team…",
+    "collabSend": "Send feedback",
+    "collabSendFailed": "Couldn't send — you appear to be offline",
+    "collabOffline": "Reconnecting… feedback is paused",
+    "collabAnonymous": "Teammate",
+    "collabNoProjectTitle": "Save your project to collaborate",
+    "collabNoProjectBody": "Real-time collaboration unlocks once this draft is saved as a project. Then invite your team to edit together live.",
     "noVideoLoaded": "No video loaded",
     "composingViralRecipe": "Composing your viral edit recipe in {{language}}…",
     "noSuggestionsReturned": "No suggestions returned — your video may already be tight",
