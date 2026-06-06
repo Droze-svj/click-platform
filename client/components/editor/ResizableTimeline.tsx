@@ -619,10 +619,20 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   const deleteSegmentById = useCallback((id: string) => {
     if (!onSegmentsChange) return
     if (isSegmentLocked(id)) return // Bug 6: locked tracks reject delete
-    onSegmentsChange((prev) => prev.filter((seg) => seg.id !== id))
+    onSegmentsChange((prev) => {
+      const target = prev.find((seg) => seg.id === id)
+      // Segment groups: deleting one member deletes the whole linked group,
+      // except members on locked tracks (their lane rejects edits).
+      if (target?.groupId) {
+        return prev.filter((seg) =>
+          seg.groupId !== target.groupId || isTrackLocked(seg.track)
+        )
+      }
+      return prev.filter((seg) => seg.id !== id)
+    })
     if (selectedSegmentId === id) onSegmentSelect?.(null)
     onSegmentDeleted?.()
-  }, [onSegmentsChange, onSegmentSelect, onSegmentDeleted, selectedSegmentId, isSegmentLocked])
+  }, [onSegmentsChange, onSegmentSelect, onSegmentDeleted, selectedSegmentId, isSegmentLocked, isTrackLocked])
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedEffectId && onEffectsChange) {
@@ -1045,9 +1055,23 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       if (!oldSeg) return prev
 
       const diff = newStart - originalStart
+      // Segment groups: when the dragged clip belongs to a group, every other
+      // member shifts by the same Δt so the group stays linked. Locked members
+      // are skipped (their lane rejects edits), matching single-move behaviour.
+      const groupId = oldSeg.groupId
 
       next = next.map((seg) => {
-        if (seg.id !== id) return seg
+        if (seg.id !== id) {
+          if (groupId && seg.groupId === groupId && diff !== 0 && !isTrackLocked(seg.track)) {
+            const ns = Math.max(0, Math.min(maxDur - (seg.endTime - seg.startTime), seg.startTime + diff))
+            const ne = ns + (seg.endTime - seg.startTime)
+            const shiftedKf = seg.transformKeyframes
+              ? seg.transformKeyframes.map(kf => ({ ...kf, time: kf.time + (ns - seg.startTime) }))
+              : seg.transformKeyframes
+            return { ...seg, startTime: ns, endTime: ne, duration: ne - ns, transformKeyframes: shiftedKf }
+          }
+          return seg
+        }
         const updatedTrack = newTrack !== undefined ? newTrack : seg.track
         const clampedEnd = Math.min(newEnd, maxDur)
         // Bug 4: keyframe times are absolute — shift them by the same Δt the segment
@@ -1062,6 +1086,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       if (rippleOnDelete && diff !== 0) {
         next = next.map(seg => {
           if (seg.id === id) return seg
+          // Group members were already shifted above; don't ripple them again.
+          if (groupId && seg.groupId === groupId) return seg
           if (seg.startTime >= originalStart && !isTrackLocked(seg.track)) {
             const ns = Math.max(0, seg.startTime + diff)
             const ne = Math.max(ns + MIN_SEG_DURATION, seg.endTime + diff)
@@ -1142,6 +1168,37 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       onSegmentSelect?.(copies[0].id, false)
     }
   }, [selectedIds, segments, duplicateSegment, onSegmentsChange, maxDur, onSegmentSelect])
+
+  // Segment groups: assign a shared groupId to the current multi-selection so the
+  // clips move/trim/delete together. Requires 2+ selected segments.
+  const groupSelectedSegments = useCallback(() => {
+    if (!onSegmentsChange || selectedIds.length < 2) return
+    const newGroupId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? `grp-${crypto.randomUUID()}`
+      : `grp-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    onSegmentsChange((prev) => prev.map((seg) =>
+      selectedIds.includes(seg.id) ? { ...seg, groupId: newGroupId } : seg
+    ))
+  }, [onSegmentsChange, selectedIds])
+
+  // Ungroup: clear groupId from every segment in any group touched by the
+  // current selection (selecting one member ungroups the whole group).
+  const ungroupSelectedSegments = useCallback(() => {
+    if (!onSegmentsChange || selectedIds.length === 0) return
+    const groupIds = new Set(
+      segments.filter((s) => selectedIds.includes(s.id) && s.groupId).map((s) => s.groupId)
+    )
+    if (groupIds.size === 0) return
+    onSegmentsChange((prev) => prev.map((seg) =>
+      seg.groupId && groupIds.has(seg.groupId) ? { ...seg, groupId: undefined } : seg
+    ))
+  }, [onSegmentsChange, selectedIds, segments])
+
+  // True when any segment in the current selection already belongs to a group.
+  const selectionHasGroup = useMemo(
+    () => segments.some((s) => selectedIds.includes(s.id) && !!s.groupId),
+    [segments, selectedIds]
+  )
 
   const nudgeSelectedSegment = useCallback((dir: -1 | 1) => {
     if (!selectedSegmentId || !onSegmentsChange) return
@@ -2116,6 +2173,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                  style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
                                  className={`absolute top-1 bottom-1 rounded-lg flex flex-col justify-center px-3 cursor-pointer group/node transition-all overflow-hidden
                                    ${selectedIds.includes(s.id) ? 'z-30 ring-2 ring-blue-500 bg-blue-600' : 'z-20 bg-blue-900/80 hover:bg-blue-800'}
+                                   ${s.groupId ? 'border-l-4 border-l-fuchsia-400/80 shadow-[inset_0_0_0_1px_rgba(217,70,239,0.4)]' : ''}
                                    border border-blue-400/20
                                  `}
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(s.id, e.shiftKey || e.metaKey) }}
@@ -2252,6 +2310,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
                                className={`absolute top-1 bottom-1 rounded-lg flex items-center px-3 gap-2 cursor-pointer group/node transition-all overflow-hidden
                                  ${selectedIds.includes(s.id) ? 'z-30 ring-2 ring-amber-500 bg-amber-600' : 'z-20 bg-amber-900/80 hover:bg-amber-800'}
+                                 ${s.groupId ? 'border-l-4 border-l-fuchsia-400/80 shadow-[inset_0_0_0_1px_rgba(217,70,239,0.4)]' : ''}
                                  border border-amber-400/20
                                `}
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(s.id, e.shiftKey || e.metaKey) }}
@@ -2364,6 +2423,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
                                className={`absolute top-1 bottom-1 rounded-lg flex items-center px-3 gap-2 cursor-pointer group/node transition-all overflow-hidden
                                  ${selectedIds.includes(s.id) ? 'z-30 ring-2 ring-orange-500 bg-orange-600' : 'z-20 bg-orange-900/80 hover:bg-orange-800'}
+                                 ${s.groupId ? 'border-l-4 border-l-fuchsia-400/80 shadow-[inset_0_0_0_1px_rgba(217,70,239,0.4)]' : ''}
                                  border border-orange-400/20
                                `}
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(s.id, e.shiftKey || e.metaKey) }}
@@ -2663,6 +2723,30 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <span>Ripple</span>
                  </button>
 
+                 {selectionHasGroup ? (
+                   <button
+                      type="button"
+                      onClick={ungroupSelectedSegments}
+                      disabled={selectedIds.length === 0}
+                      className={`px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${selectedIds.length > 0 ? 'bg-fuchsia-500/20 border-fuchsia-500/30 text-fuchsia-300 hover:bg-fuchsia-500 hover:text-white shadow-[0_0_15px_rgba(217,70,239,0.2)]' : 'bg-white/5 border-white/5 text-slate-600'}`}
+                      title="Ungroup the selected segments"
+                   >
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                      <span>Ungroup</span>
+                   </button>
+                 ) : (
+                   <button
+                      type="button"
+                      onClick={groupSelectedSegments}
+                      disabled={selectedIds.length < 2}
+                      className={`px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${selectedIds.length >= 2 ? 'bg-fuchsia-500/20 border-fuchsia-500/30 text-fuchsia-300 hover:bg-fuchsia-500 hover:text-white shadow-[0_0_15px_rgba(217,70,239,0.2)]' : 'bg-white/5 border-white/5 text-slate-600'}`}
+                      title="Group the selected segments so they move and delete together"
+                   >
+                      <Link className="w-3.5 h-3.5" />
+                      <span>Group</span>
+                   </button>
+                 )}
+
                  <button
                     type="button"
                     onClick={handleDeleteSelected}
@@ -2749,6 +2833,26 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      <span>Duplicate Segment</span>
                      <Copy className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
                    </button>
+                   {selectionHasGroup ? (
+                     <button
+                       type="button"
+                       className="w-full text-left px-4 py-2 hover:bg-white/10 hover:text-white transition-colors flex items-center justify-between group"
+                       onClick={() => { ungroupSelectedSegments(); setContextMenu(null) }}
+                     >
+                       <span>Ungroup Segments</span>
+                       <ArrowLeftRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
+                     </button>
+                   ) : (
+                     <button
+                       type="button"
+                       disabled={selectedIds.length < 2}
+                       className={`w-full text-left px-4 py-2 transition-colors flex items-center justify-between group ${selectedIds.length >= 2 ? 'hover:bg-white/10 hover:text-white' : 'opacity-40 cursor-not-allowed'}`}
+                       onClick={() => { if (selectedIds.length >= 2) { groupSelectedSegments(); setContextMenu(null) } }}
+                     >
+                       <span>Group Segments</span>
+                       <Link className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
+                     </button>
+                   )}
                    <div className="h-px bg-white/10 my-1 mx-2" />
                    <button
                      type="button"

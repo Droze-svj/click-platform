@@ -5784,6 +5784,7 @@
     "beatSyncAligned": "✦ Neural Beat-Sync: Segments Aligned to Peaks",
     "assetFallbackName": "Asset",
     "assetDroppedToTimeline": "Asset dropped to timeline",
+    "trackLockedDropRejected": "Track is locked — drop rejected",
     "uploadedBroll": "Uploaded B-Roll",
     "uploadedMusic": "Uploaded Music",
     "magicBroll": "Magic B-Roll",

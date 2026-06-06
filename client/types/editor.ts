@@ -206,6 +206,9 @@ export interface TimelineSegment {
    *  Implemented as an apad/atrim on the segment's audio chain; video is
    *  unaffected. */
   audioTailOutSec?: number
+  /** Segment group id. Segments sharing a groupId move/trim/delete together
+   *  (linked). Assigned via the multi-select "Group" action; cleared on Ungroup. */
+  groupId?: string
 }
 
 /** Timeline marker (named position for quick navigation) */
