@@ -31,9 +31,15 @@ function initializeSocket(server) {
   io.on('connection', (socket) => {
     const logger = require('../utils/logger');
     const collaborationService = require('./collaborationService');
+    const realtimeCollaborationService = require('./realtimeCollaborationService');
     logger.info('Client connected', { socketId: socket.id });
 
     let currentUserId = null;
+    let currentUserName = null;
+    // Rooms this socket joined for editor collaboration, mapped to the
+    // contentId so disconnect/leave can release locks for the right content.
+    // editorRooms: Map<room, contentId>
+    const editorRooms = new Map();
 
     // Authenticate/assign user context
     socket.on('authenticate', ({ userId }) => {
@@ -57,14 +63,82 @@ function initializeSocket(server) {
     });
 
     // Join content room for collaboration
-    socket.on('join:room', async ({ room, contentId }) => {
+    socket.on('join:room', async ({ room, contentId, user }) => {
+      if (!room) return;
       socket.join(room);
+      // Track editor rooms (those scoped to a contentId) for lock cleanup.
+      if (contentId) editorRooms.set(room, contentId);
+      // Allow the joiner to thread a display name through the payload.
+      if (user && user.name) currentUserName = user.name;
       if (currentUserId) {
-        collaborationService.trackPresence(currentUserId, socket.id, room);
+        collaborationService.trackPresence(currentUserId, socket.id, room, null, currentUserName);
         const users = collaborationService.getRoomUsers(room);
         io.to(room).emit('presence:update', { users });
+        // Hydrate the freshly-joined client with the current lock state so it
+        // doesn't briefly think every segment is unlocked.
+        if (contentId) {
+          const locks = realtimeCollaborationService.getContentLocks(contentId);
+          for (const [segmentId, lockedBy] of Object.entries(locks)) {
+            socket.emit('segment:lock-state', { segmentId, lockedBy });
+          }
+        }
       }
       logger.info('User joined content room', { room, socketId: socket.id });
+    });
+
+    // ── Editor timeline collaboration ──────────────────────────────────
+    // Timeline operation (array-replace model). Broadcast to OTHER clients in
+    // the room only — never echo to the sender (the sender already applied it
+    // locally). version lets clients drop stale ops.
+    socket.on('timeline:op', ({ room, op, version }) => {
+      if (!room || !currentUserId) return;
+      socket.to(room).emit('timeline:op', { userId: currentUserId, op, version });
+    });
+
+    // Playhead position broadcast (scrub sync). Other clients only.
+    socket.on('playhead:update', ({ room, time }) => {
+      if (!room || !currentUserId) return;
+      socket.to(room).emit('playhead:update', { userId: currentUserId, time });
+    });
+
+    // Lock a segment for exclusive editing.
+    socket.on('segment:lock', ({ room, contentId, segmentId }) => {
+      if (!room || !contentId || !segmentId || !currentUserId) return;
+      const result = realtimeCollaborationService.lockSegment(contentId, currentUserId, segmentId);
+      if (result.success) {
+        io.to(room).emit('segment:lock-state', { segmentId, lockedBy: String(currentUserId) });
+      } else {
+        socket.emit('segment:lock-denied', { segmentId, lockedBy: result.lockedBy });
+      }
+    });
+
+    // Unlock a segment (only the owner can; service enforces it).
+    socket.on('segment:unlock', ({ room, contentId, segmentId }) => {
+      if (!room || !contentId || !segmentId || !currentUserId) return;
+      const result = realtimeCollaborationService.unlockSegment(contentId, currentUserId, segmentId);
+      if (result.success) {
+        io.to(room).emit('segment:lock-state', { segmentId, lockedBy: null });
+      }
+    });
+
+    // Add a live comment. Broadcast to the whole room (including sender so
+    // their own comment is confirmed). Best-effort persistence is attempted
+    // but never blocks the live broadcast.
+    socket.on('comment:add', ({ room, contentId, comment }) => {
+      if (!room || !comment || !currentUserId) return;
+      const enriched = {
+        ...comment,
+        userId: String(currentUserId),
+        userName: currentUserName || comment.userName || null,
+        createdAt: comment.createdAt || new Date().toISOString(),
+      };
+      io.to(room).emit('comment:add', { userId: String(currentUserId), comment: enriched });
+      // Best-effort persistence — failures are logged, not surfaced.
+      if (contentId) {
+        Promise.resolve()
+          .then(() => realtimeCollaborationService.sendRealtimeComment(contentId, currentUserId, comment))
+          .catch((error) => logger.error('Realtime comment persist failed', { error: error.message, contentId }));
+      }
     });
 
     // Join agency calendar room
@@ -97,7 +171,18 @@ function initializeSocket(server) {
 
     // Leave content room
     socket.on('leave:room', ({ room }) => {
+      if (!room) return;
       socket.leave(room);
+      // Release any segment locks this user held in the room's content and
+      // broadcast the freed lock-state to remaining peers.
+      const contentId = editorRooms.get(room);
+      editorRooms.delete(room);
+      if (currentUserId && contentId) {
+        const freed = realtimeCollaborationService.releaseUserLocks(contentId, currentUserId);
+        freed.forEach((segmentId) => {
+          io.to(room).emit('segment:lock-state', { segmentId, lockedBy: null });
+        });
+      }
       if (currentUserId) {
         collaborationService.removePresence(currentUserId, socket.id);
         const users = collaborationService.getRoomUsers(room);
@@ -217,9 +302,25 @@ function initializeSocket(server) {
 
     socket.on('disconnect', () => {
       if (currentUserId) {
+        // Release segment locks held in every editor room this socket joined,
+        // and notify the remaining peers in each room (so a closed tab never
+        // strands a lock).
+        for (const [room, contentId] of editorRooms.entries()) {
+          const freed = realtimeCollaborationService.releaseUserLocks(contentId, currentUserId);
+          freed.forEach((segmentId) => {
+            io.to(room).emit('segment:lock-state', { segmentId, lockedBy: null });
+          });
+          // Emit room-scoped presence update reflecting this user leaving.
+          const roomUsers = collaborationService.getRoomUsers(room);
+          io.to(room).emit('presence:update', {
+            users: roomUsers.filter(u => u.userId !== currentUserId),
+          });
+        }
+        editorRooms.clear();
+
         collaborationService.removePresence(currentUserId, socket.id);
 
-        // Broadcast presence update
+        // Broadcast global presence update
         const activeUsers = collaborationService.getActiveUsers();
         const onlineIds = activeUsers.map(u => u.userId);
         io.emit('presence-update', onlineIds);

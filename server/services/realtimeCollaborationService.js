@@ -350,6 +350,56 @@ function unlockSegment(contentId, userId, segmentId) {
   return { success: false };
 }
 
+/**
+ * Get a plain { segmentId: userId } map of all active locks for a content.
+ * Used to hydrate a freshly-joined client with current lock state.
+ */
+function getContentLocks(contentId) {
+  const contentLocks = activeLocks.get(contentId);
+  if (!contentLocks) return {};
+  return Object.fromEntries(contentLocks);
+}
+
+/**
+ * Release every lock a given user holds on a content. Returns the list of
+ * segmentIds that were freed so the caller can broadcast lock-state updates.
+ * Used on disconnect / leave so a crashed/closed tab never strands a lock.
+ */
+function releaseUserLocks(contentId, userId) {
+  const contentLocks = activeLocks.get(contentId);
+  if (!contentLocks) return [];
+  const freed = [];
+  const uid = String(userId);
+  for (const [segmentId, owner] of contentLocks.entries()) {
+    if (owner === uid) {
+      contentLocks.delete(segmentId);
+      freed.push(segmentId);
+    }
+  }
+  if (contentLocks.size === 0) activeLocks.delete(contentId);
+  return freed;
+}
+
+/**
+ * Release every lock a user holds across ALL contents (disconnect path where
+ * we may not know which content they were in). Returns
+ * [{ contentId, segmentId }] freed.
+ */
+function releaseAllUserLocks(userId) {
+  const uid = String(userId);
+  const freed = [];
+  for (const [contentId, contentLocks] of activeLocks.entries()) {
+    for (const [segmentId, owner] of contentLocks.entries()) {
+      if (owner === uid) {
+        contentLocks.delete(segmentId);
+        freed.push({ contentId, segmentId });
+      }
+    }
+    if (contentLocks.size === 0) activeLocks.delete(contentId);
+  }
+  return freed;
+}
+
 // Run cleanup every minute
 setInterval(cleanupInactiveSessions, 60 * 1000);
 
@@ -363,6 +413,9 @@ module.exports = {
   handleHeartbeat,
   lockSegment,
   unlockSegment,
+  getContentLocks,
+  releaseUserLocks,
+  releaseAllUserLocks,
 };
 
 
