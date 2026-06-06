@@ -83,6 +83,7 @@ import TextMotionStudioView from './editor/views/TextMotionStudioView'
 import { useStyleDNA } from '../hooks/useStyleDNA' // Added
 import { useTimelineActions } from '../hooks/useTimelineActions'
 import { useStyleProfile } from '../hooks/useStyleProfile'
+import { usePerformerInsights } from '../hooks/usePerformerInsights'
 import { useEditorShortcuts } from '../hooks/useEditorShortcuts'
 import { rippleDelete as rippleDeleteOp } from '../utils/timelineOps'
 import { PlatformInsights } from '../types/editor' // Added
@@ -391,6 +392,10 @@ const ModernVideoEditor: React.FC<{
   // Intelligence & Style DNA — order matters: styleProfile must initialize before
   // styleDNA so the DNA derivation can read the user's persisted picks.
   const styleProfile = useStyleProfile()
+  // Real "what's working for you" signals (GET /style-profile/insights).
+  // Drives performance-aware preset ordering in ColorGradingView. Cold-start
+  // users get empty arrays, so the view falls back to its authored order.
+  const performerInsights = usePerformerInsights()
   const styleDNA = useStyleDNA(
     timelineSegments,
     [...textOverlays, ...shapeOverlays, ...imageOverlays, ...svgOverlays, ...gradientOverlays],
@@ -556,26 +561,11 @@ const ModernVideoEditor: React.FC<{
 
   // ── Style Vault State ──
   const [styleVaultView, setStyleVaultView] = useState<'dashboard' | 'train' | 'tune'>('dashboard')
-  const [styleProfiles, setStyleProfiles] = useState<StyleProfile[]>([
-    {
-      id: 'style-1',
-      name: 'Tech Minimalism',
-      lastTrained: Date.now() - 86400000 * 2,
-      pacing: { medianClipLength: 4.5, jCutFrequency: 'high', lCutFrequency: 'medium', cutOnSentence: true },
-      visuals: { punchInFrequency: 8, punchInAmount: 15, defaultTransition: 'zoom' },
-      assets: { fontFamily: 'Inter, sans-serif', fontHex: '#ffffff', dropShadowHex: 'rgba(0,0,0,0.5)', bezierCurve: 'cubic-bezier(0.4, 0, 0.2, 1)' },
-      audio: { duckingDb: -18, masterDb: 0, voiceDb: -3 }
-    },
-    {
-      id: 'style-2',
-      name: 'Cinematic Vlog',
-      lastTrained: Date.now() - 86400000 * 5,
-      pacing: { medianClipLength: 8, jCutFrequency: 'low', lCutFrequency: 'high', cutOnSentence: false },
-      visuals: { punchInFrequency: 12, punchInAmount: 10, defaultTransition: 'crossfade' },
-      assets: { fontFamily: 'Georgia, serif', fontHex: '#fef3c7', dropShadowHex: 'rgba(0,0,0,0.3)', bezierCurve: 'ease-in-out' },
-      audio: { duckingDb: -22, masterDb: -1, voiceDb: -4 }
-    }
-  ])
+  // Saved style profiles start empty — we never seed fabricated "preset DNA"
+  // (the owner's #1 rule). Entries here are only ever profiles the user
+  // actually created/tuned. The dashboard surfaces the REAL learned style
+  // profile (counts/facets/performers) from /style-profile instead.
+  const [styleProfiles, setStyleProfiles] = useState<StyleProfile[]>([])
   const [tuningProfile, setTuningProfile] = useState<StyleProfile | null>(null)
 
   // Fetch User Assets for Neural Retrieval
@@ -1881,7 +1871,7 @@ const ModernVideoEditor: React.FC<{
         setTextOverlays={setTextOverlays}
         transcript={transcript}
       />
-      case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} onRecordPick={styleProfile.recordPick} />
+      case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} onRecordPick={styleProfile.recordPick} topPerformers={performerInsights.insights.colorGrades} insightsLoaded={performerInsights.loaded} />
       case 'timeline': return <AdvancedTimelineView useProfessionalTimeline={useProfessionalTimeline} setUseProfessionalTimeline={setUseProfessionalTimeline} videoState={videoState} setVideoState={setVideoState} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} selectedSegmentId={selectedSegmentId} onSegmentSelect={(id) => setSelectedSegmentIds(id ? [id] : [])} videoUrl={actualVideoUrl || ''} aiSuggestions={aiSuggestions} showAiPreviews={true} showToast={showToast} setActiveCategory={setActiveCategory} />
       case 'assets': return <AssetLibraryView currentTime={videoState.currentTime} videoDuration={videoState.duration} setTimelineSegments={setTimelineSegments} showToast={showToast} myBroll={userAssets.filter(a => a.type === 'broll')} myMusic={userAssets.filter(a => a.type === 'music')} />
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
@@ -1994,7 +1984,7 @@ const ModernVideoEditor: React.FC<{
         if (styleVaultView === 'train') {
           return <NeuralTrainingMatrixView
             onCancel={() => setStyleVaultView('dashboard')}
-            onComplete={() => setStyleVaultView('tune')}
+            onComplete={() => setStyleVaultView('dashboard')}
           />
         }
         if (styleVaultView === 'tune' && tuningProfile) {
