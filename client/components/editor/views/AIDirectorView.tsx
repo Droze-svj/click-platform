@@ -83,7 +83,7 @@ interface PlanResponse {
 
 // Step types the existing applySuggestion dispatcher can turn into a real
 // timeline edit. Everything else is preview-only.
-const APPLICABLE: Set<DirectorStepType> = new Set([
+const APPLICABLE: Set<DirectorStepType> = new Set<DirectorStepType>([
   'cut', 'broll', 'hook', 'transition', 'audio', 'effect',
 ])
 
