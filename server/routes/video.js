@@ -53,6 +53,29 @@ const { devVideoStore } = require('../utils/devStore');
 let activeProcessCount = 0;
 const MAX_CONCURRENT_LOCAL_JOBS = 10; // Increased from 2 to 10 for better dev experience
 
+// Safe socket emit. `emitToUser(userId, ...)` requires a string userId and the
+// payload often interpolates `content._id.toString()` — if either id is null
+// (e.g. a malformed doc) the bare `.toString()` throws, the surrounding catch
+// swallows it, and the client never receives the completion/failure event
+// (infinite spinner). Guard the ids, log when one is missing, and keep the
+// emit best-effort so a socket hiccup never breaks processing.
+function safeEmitToUser(userId, event, payload = {}) {
+  try {
+    if (userId === null || userId === undefined) {
+      logger.warn('safeEmitToUser skipped: missing userId', { event });
+      return;
+    }
+    emitToUser(String(userId), event, payload);
+  } catch (err) {
+    logger.warn('safeEmitToUser failed (non-blocking)', { event, error: err.message });
+  }
+}
+
+// Safe id stringify — returns null instead of throwing when the id is missing.
+function safeId(id) {
+  return (id === null || id === undefined) ? null : String(id);
+}
+
 // Configure multer for video uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -424,6 +447,43 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
 
       activeProcessCount++;
       const currentContentId = content._id.toString();
+      const watchdogUserId = safeId(req.user._id);
+
+      // Watchdog backstop. The in-process fallback below is fire-and-forget
+      // (setImmediate, not awaited). processVideo's own catch marks the doc
+      // 'failed' on a normal error — but a hard crash, OOM, or hang would
+      // leave the Content stuck on status:'processing' forever (infinite
+      // client spinner). This timer re-loads the doc after a generous window
+      // and, if it's STILL processing, marks it failed and emits the failure
+      // event. It's cleared on success/handled-failure so it never fires for
+      // a completed job.
+      const WATCHDOG_MS = 10 * 60 * 1000; // 10 minutes
+      let watchdogTimer = setTimeout(async () => {
+        watchdogTimer = null;
+        try {
+          const stuck = await Content.findById(currentContentId);
+          if (stuck && stuck.status === 'processing') {
+            logger.error('Video processing watchdog fired: job stuck in processing, marking failed', {
+              contentId: currentContentId,
+            });
+            stuck.status = 'failed';
+            await stuck.save();
+            safeEmitToUser(watchdogUserId, 'video-processed', {
+              contentId: safeId(stuck._id),
+              status: 'failed',
+              error: 'Processing timed out',
+            });
+          }
+        } catch (wdErr) {
+          logger.warn('Video processing watchdog check failed', {
+            error: wdErr.message,
+            contentId: currentContentId,
+          });
+        }
+      }, WATCHDOG_MS);
+      // Don't keep the event loop alive solely for the watchdog.
+      if (typeof watchdogTimer.unref === 'function') watchdogTimer.unref();
+
       setImmediate(async () => {
         try {
           await processVideo(currentContentId, req.file.path, {
@@ -438,6 +498,12 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
             userId: req.user._id.toString(),
           });
         } finally {
+          // Processing settled (success or handled failure) — cancel the
+          // watchdog so it can't later clobber a completed job's status.
+          if (watchdogTimer) {
+            clearTimeout(watchdogTimer);
+            watchdogTimer = null;
+          }
           activeProcessCount--;
           // Final safety cleanup of original file if still present, ONLY if it has been uploaded to cloud storage
           if (storageType !== 'local') {
@@ -522,6 +588,23 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
 // /api/video/ai-editing/auto-edit endpoint with their chosen options.
 async function processVideo(contentId, videoPath, user, options = {}) {
   const { generateClips = false } = options;
+  // Track every clip/thumbnail/intermediate file we write to disk during the
+  // loop. On partial failure these may not yet be recorded on the Content doc,
+  // so the catch handler can't rely on content.generatedContent alone — it
+  // cleans these tracked paths too. Stored as project-relative paths (the shape
+  // cleanupFailedContent expects, since it path.join()s against the repo root).
+  const generatedFilePaths = [];
+  const toRelative = (absOrRel) => {
+    if (!absOrRel) return null;
+    // Convert absolute paths under the repo root to repo-relative; pass through
+    // already-relative "/uploads/..." style paths unchanged.
+    const root = process.cwd();
+    return absOrRel.startsWith(root) ? path.relative(root, absOrRel) : absOrRel;
+  };
+  const trackFile = (p) => {
+    const rel = toRelative(p);
+    if (rel && !generatedFilePaths.includes(rel)) generatedFilePaths.push(rel);
+  };
   try {
     const content = await Content.findById(contentId);
     if (!content) {
@@ -572,14 +655,12 @@ async function processVideo(contentId, videoPath, user, options = {}) {
       }
       content.status = 'completed';
       await content.save();
-      try {
-        emitToUser(user._id.toString(), 'video-processed', {
-          contentId: content._id.toString(),
-          status: 'completed',
-          clips: 0,
-          ready: true
-        });
-      } catch (_) { /* socket optional */ }
+      safeEmitToUser(safeId(user._id), 'video-processed', {
+        contentId: safeId(content._id),
+        status: 'completed',
+        clips: 0,
+        ready: true
+      });
       return;
     }
 
@@ -615,6 +696,9 @@ async function processVideo(contentId, videoPath, user, options = {}) {
         }),
         { maxRetries: 2, initialDelay: 2000 }
       );
+      // Clip is now on disk — track it so a later failure in this iteration
+      // (caption/thumbnail/effects/upload) doesn't leave it orphaned.
+      trackFile(clipPath);
 
       // Generate caption for clip. Passing userId (5th arg) is what
       // unlocks the per-user personalisation path in aiService:
@@ -647,26 +731,35 @@ async function processVideo(contentId, videoPath, user, options = {}) {
         height: 720,
         quality: 90,
       });
+      // Thumbnail is on disk — track for orphan cleanup on later failure.
+      trackFile(thumbnailPath);
 
-      // Optimize thumbnail image (in background, don't block). Sharp
-      // refuses to read and write the same path in one pass, so optimise
-      // into a sibling file then atomically replace the original.
+      // Optimize thumbnail image. Sharp refuses to read and write the same
+      // path in one pass, so optimise into a sibling file then atomically
+      // replace the original. This MUST be awaited (it used to be fire-and-
+      // forget): otherwise the clip could be recorded with a half-written or
+      // not-yet-renamed thumbnail. On any optimise/rename failure we fall back
+      // to the already-generated original thumbnail and best-effort unlink the
+      // orphaned .opt.jpg temp file so it doesn't accumulate on disk.
       const { optimizeImage } = require('../utils/imageOptimizer');
       const optimizedThumbnailPath = thumbnailPath.replace(/\.jpg$/i, '.opt.jpg');
-      optimizeImage(thumbnailPath, optimizedThumbnailPath, {
-        width: 1280,
-        height: 720,
-        quality: 85,
-        format: 'jpeg'
-      }).then(async () => {
+      try {
+        await optimizeImage(thumbnailPath, optimizedThumbnailPath, {
+          width: 1280,
+          height: 720,
+          quality: 85,
+          format: 'jpeg'
+        });
         try {
           await fs.promises.rename(optimizedThumbnailPath, thumbnailPath);
         } catch (renameErr) {
           logger.warn('Thumbnail optimize rename failed, keeping original', { error: renameErr.message });
+          await fs.promises.unlink(optimizedThumbnailPath).catch(() => {});
         }
-      }).catch(err => {
-        logger.warn('Thumbnail optimization failed, using original', { error: err.message });
-      });
+      } catch (optErr) {
+        logger.warn('Thumbnail optimization failed, using original', { error: optErr.message });
+        await fs.promises.unlink(optimizedThumbnailPath).catch(() => {});
+      }
 
       // Apply effects if specified
       let processedClipPath = finalClipPath;
@@ -679,6 +772,7 @@ async function processVideo(contentId, videoPath, user, options = {}) {
         for (const effect of effects) {
           const effectPath = processedClipPath.replace('.mp4', `-${effect}.mp4`);
           await applyVideoEffect(processedClipPath, effectPath, effect);
+          trackFile(effectPath);
           // Delete intermediate file if it's not the original clip
           if (processedClipPath !== finalClipPath) {
             await fs.promises.unlink(processedClipPath).catch(() => {});
@@ -691,6 +785,7 @@ async function processVideo(contentId, videoPath, user, options = {}) {
       if (textOverlay && textOverlay.text) {
         const textPath = processedClipPath.replace('.mp4', '-text.mp4');
         await addTextOverlay(processedClipPath, textPath, textOverlay);
+        trackFile(textPath);
         if (processedClipPath !== finalClipPath) {
           await fs.promises.unlink(processedClipPath).catch(() => {});
         }
@@ -708,6 +803,7 @@ async function processVideo(contentId, videoPath, user, options = {}) {
           scale: 0.1,
           opacity: 0.7
         });
+        trackFile(watermarkOutputPath);
         if (processedClipPath !== finalClipPath) {
           await fs.promises.unlink(processedClipPath).catch(() => {});
         }
@@ -786,44 +882,45 @@ async function processVideo(contentId, videoPath, user, options = {}) {
     }
 
     // Emit real-time update
-    try {
-      emitToUser(user._id.toString(), 'video-processed', {
-        contentId: content._id.toString(),
-        status: 'completed',
-        clips: clips.length
-      });
-    } catch (error) {
-      // Socket not critical, continue
-    }
+    safeEmitToUser(safeId(user._id), 'video-processed', {
+      contentId: safeId(content._id),
+      status: 'completed',
+      clips: clips.length
+    });
   } catch (error) {
     logger.error('Video processing error:', error);
     const content = await Content.findById(contentId);
+
+    // Build the cleanup set. Start with every intermediate clip/thumbnail/
+    // effect file we tracked during the loop — on a partial failure these are
+    // already written to disk but NOT yet saved onto content.generatedContent
+    // (that assignment only runs after the whole loop succeeds), so relying on
+    // the doc alone would leave them orphaned.
+    const filesToClean = [...generatedFilePaths];
+    const pushUnique = (p) => { if (p && !filesToClean.includes(p)) filesToClean.push(p); };
+
     if (content) {
       content.status = 'failed';
       await content.save();
 
       // Emit real-time update
-      try {
-        emitToUser(user._id.toString(), 'video-processed', {
-          contentId: content._id.toString(),
-          status: 'failed'
-        });
-      } catch (socketError) {
-        // Socket not critical
-      }
+      safeEmitToUser(safeId(user._id), 'video-processed', {
+        contentId: safeId(content._id),
+        status: 'failed'
+      });
 
-      // Clean up uploaded files on failure
-      const filesToClean = [];
-      if (content.originalFile?.url) filesToClean.push(content.originalFile.url);
+      // Also clean anything already recorded on the doc.
+      if (content.originalFile?.url) pushUnique(content.originalFile.url);
       if (content.generatedContent?.shortVideos) {
         content.generatedContent.shortVideos.forEach(video => {
-          if (video.url) filesToClean.push(video.url);
-          if (video.thumbnail) filesToClean.push(video.thumbnail);
+          if (video.url) pushUnique(video.url);
+          if (video.thumbnail) pushUnique(video.thumbnail);
         });
       }
-      if (filesToClean.length > 0) {
-        await cleanupFailedContent(contentId, filesToClean);
-      }
+    }
+
+    if (filesToClean.length > 0) {
+      await cleanupFailedContent(contentId, filesToClean);
     }
   }
 }

@@ -12,6 +12,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTranslation } from '@/hooks/useTranslation'
+import { apiGet, apiPost } from '../../../lib/api'
 
 interface Workspace {
   id: string
@@ -27,13 +28,35 @@ interface Workspace {
 
 const STORAGE_KEY = 'click:active-workspace'
 
-function seedWorkspaces(userName?: string): Workspace[] {
-  const initial = (userName || 'Creator').charAt(0).toUpperCase()
-  return [
-    { id: 'primary', name: `${userName || 'Creator'}'s Studio`, handle: `@${(userName || 'creator').toLowerCase()}`, role: 'owner',  members: 1, plan: 'Pro',     niche: 'Personal Brand',     color: 'from-indigo-500 to-violet-700', active: true },
-    { id: 'demo-2',  name: 'Atlas Lifestyle',                   handle: '@atlas-lifestyle',                          role: 'admin',  members: 4, plan: 'Pro',     niche: 'Health & Wellness',  color: 'from-emerald-500 to-teal-700',  active: false },
-    { id: 'demo-3',  name: 'Nexus Finance',                     handle: '@nexus-finance',                            role: 'editor', members: 7, plan: 'Agency',  niche: 'Finance Education',  color: 'from-amber-500 to-rose-600',    active: false },
-  ]
+const WS_COLORS = [
+  'from-indigo-500 to-violet-700',
+  'from-emerald-500 to-teal-700',
+  'from-amber-500 to-rose-600',
+  'from-sky-500 to-indigo-700',
+  'from-rose-500 to-fuchsia-700',
+  'from-cyan-500 to-blue-700',
+]
+
+// Map a raw workspace document from GET /enterprise/workspaces into the
+// shape this page renders. No fabricated values — counts/role come straight
+// from the server record.
+function mapWorkspace(raw: any, idx: number): Workspace {
+  const name: string = raw?.name || 'Workspace'
+  const role = (raw?.userRole || raw?.role || 'viewer') as Workspace['role']
+  const memberCount = Array.isArray(raw?.members)
+    ? raw.members.length
+    : (typeof raw?.members === 'number' ? raw.members : 0)
+  return {
+    id: String(raw?._id || raw?.id || `ws-${idx}`),
+    name,
+    handle: raw?.handle || `@${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`,
+    role,
+    members: memberCount,
+    plan: raw?.plan || raw?.type || 'Free',
+    niche: raw?.niche || raw?.type || 'General',
+    color: WS_COLORS[idx % WS_COLORS.length],
+    active: false,
+  }
 }
 
 const ROLE_CFG: Record<string, { label: string; color: string }> = {
@@ -52,6 +75,7 @@ export default function WorkspacesPage() {
   const { showToast } = useToast()
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
   const [newNiche, setNewNiche] = useState('')
@@ -60,10 +84,28 @@ export default function WorkspacesPage() {
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
-    const seeded = seedWorkspaces(user?.name)
-    let activeId: string | null = null
-    try { activeId = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null } catch { activeId = null }
-    setWorkspaces(seeded.map(w => ({ ...w, active: activeId ? w.id === activeId : w.active })))
+
+    let cancelled = false
+    const loadWorkspaces = async () => {
+      setLoadingWorkspaces(true)
+      let activeId: string | null = null
+      try { activeId = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null } catch { activeId = null }
+      try {
+        const res = await apiGet<any>('/enterprise/workspaces')
+        const list: any[] = res?.workspaces || res?.data?.workspaces || []
+        const mapped = list.map(mapWorkspace)
+        if (cancelled) return
+        // Honor the persisted active selection; otherwise default to the first.
+        setWorkspaces(mapped.map((w, i) => ({ ...w, active: activeId ? w.id === activeId : i === 0 })))
+      } catch {
+        // On failure show an honest empty state rather than fabricated demos.
+        if (!cancelled) setWorkspaces([])
+      } finally {
+        if (!cancelled) setLoadingWorkspaces(false)
+      }
+    }
+    loadWorkspaces()
+    return () => { cancelled = true }
   }, [user, authLoading, router])
 
   const activeWs = useMemo(() => workspaces.find(w => w.active) || workspaces[0], [workspaces])
@@ -78,23 +120,20 @@ export default function WorkspacesPage() {
   const handleCreate = async () => {
     if (!newName.trim()) { showToast(t('workspacesPage.toastNameRequired'), 'error'); return }
     setCreating(true)
-    await new Promise(r => setTimeout(r, 600))
-    const id = `ws-${Date.now()}`
-    const newWs: Workspace = {
-      id,
-      name: newName.trim(),
-      handle: `@${newName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`,
-      role: 'owner',
-      members: 1,
-      plan: user?.subscription?.plan || 'Pro',
-      niche: newNiche.trim() || 'General',
-      color: 'from-rose-500 to-fuchsia-700',
-      active: false,
+    try {
+      const res = await apiPost<any>('/enterprise/workspaces', {
+        name: newName.trim(),
+        niche: newNiche.trim() || 'General',
+      })
+      const created = res?.data || res?.workspace || res
+      setWorkspaces(prev => [...prev, mapWorkspace(created, prev.length)])
+      setShowCreate(false); setNewName(''); setNewNiche('')
+      showToast(t('workspacesPage.toastInitialized', { name: newName.trim().toUpperCase() }), 'success')
+    } catch (err: any) {
+      showToast(t('workspacesPage.toastNameRequired'), 'error')
+    } finally {
+      setCreating(false)
     }
-    setWorkspaces(prev => [...prev, newWs])
-    setShowCreate(false); setNewName(''); setNewNiche('')
-    setCreating(false)
-    showToast(t('workspacesPage.toastInitialized', { name: newWs.name.toUpperCase() }), 'success')
   }
 
   if (authLoading || !user) return null
@@ -182,7 +221,14 @@ export default function WorkspacesPage() {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {workspaces.map(ws => (
+            {loadingWorkspaces && Array.from({ length: 3 }).map((_, i) => (
+              <div key={`ws-skeleton-${i}`} className={`${glassStyle} rounded-[2.5rem] p-7 min-h-[280px] animate-pulse`}>
+                <div className="w-14 h-14 rounded-[1.4rem] bg-white/[0.05] mb-6" />
+                <div className="h-6 w-2/3 bg-white/[0.05] rounded-full mb-3" />
+                <div className="h-3 w-1/2 bg-white/[0.04] rounded-full" />
+              </div>
+            ))}
+            {!loadingWorkspaces && workspaces.map(ws => (
               <motion.button
                 key={ws.id}
                 type="button"
@@ -209,6 +255,7 @@ export default function WorkspacesPage() {
                 </div>
               </motion.button>
             ))}
+            {!loadingWorkspaces && (
             <button type="button" onClick={() => setShowCreate(true)} className={`${glassStyle} rounded-[2.5rem] p-7 flex flex-col items-center justify-center gap-4 text-center border-dashed border-2 border-white/10 hover:border-violet-500/40 hover:bg-violet-500/[0.02] min-h-[280px]`}>
               <div className="w-16 h-16 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/20 flex items-center justify-center text-violet-400">
                 <Plus size={28} />
@@ -216,6 +263,7 @@ export default function WorkspacesPage() {
               <p className="text-xl font-black text-white italic uppercase tracking-tight">{t('workspacesPage.spawnInstance')}</p>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic max-w-[200px] leading-relaxed">{t('workspacesPage.spawnInstanceDesc')}</p>
             </button>
+            )}
           </div>
         </div>
       </div>

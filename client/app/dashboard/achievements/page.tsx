@@ -32,6 +32,15 @@ interface EngagementStats {
   level: number;
 }
 
+// Honest zero-state shown when the user has no engagement data (or the
+// stats endpoint is unavailable). No fabricated totals/streaks/levels.
+const EMPTY_STATS: EngagementStats = {
+  achievements: { total: 0, recent: [], all: [] },
+  streak: { currentStreak: 0, longestStreak: 0 },
+  stats: { totalContent: 0, totalVideos: 0, totalScripts: 0 },
+  level: 0,
+}
+
 const allMilestones = [
   { type: 'first_video', name: 'Genesis Rendition', emoji: '🎥', description: 'Deploy your first autonomous video rendition.' },
   { type: 'first_content', name: 'Logic Architect', emoji: '✨', description: 'Initialize your first logic synthesis payload.' },
@@ -60,35 +69,21 @@ export default function AscensionLedgerPage() {
 
   const loadMilestoneData = useCallback(async () => {
     try {
-      if (process.env.NODE_ENV === 'development') {
-        setStats({
-          achievements: {
-            total: 3,
-            recent: [
-              { _id: 'm1', achievementType: 'first_video', unlockedAt: new Date(Date.now() - 86400000).toISOString() },
-              { _id: 'm2', achievementType: 'first_content', unlockedAt: new Date(Date.now() - 172800000).toISOString() },
-              { _id: 'm3', achievementType: 'content_milestone_10', unlockedAt: new Date(Date.now() - 259200000).toISOString() }
-            ],
-            all: [
-              { _id: 'm1', achievementType: 'first_video', unlockedAt: new Date(Date.now() - 86400000).toISOString() },
-              { _id: 'm2', achievementType: 'first_content', unlockedAt: new Date(Date.now() - 172800000).toISOString() },
-              { _id: 'm3', achievementType: 'content_milestone_10', unlockedAt: new Date(Date.now() - 259200000).toISOString() }
-            ]
-          },
-          streak: { currentStreak: 5, longestStreak: 12 },
-          stats: { totalContent: 25, totalVideos: 8, totalScripts: 15 },
-          level: 3
-        })
-        setLoading(false)
-        return
-      }
-
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/engagement/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      if (response.data.success) setStats(response.data.data)
-    } catch { /* Silent */ } finally { setLoading(false) }
+      if (response.data.success && response.data.data) {
+        setStats(response.data.data)
+      } else {
+        // Honest zero-state when the user has no engagement data yet —
+        // never show fabricated totals/streaks/levels.
+        setStats(EMPTY_STATS)
+      }
+    } catch {
+      // On failure, fall back to an honest zero-state rather than fake numbers.
+      setStats(EMPTY_STATS)
+    } finally { setLoading(false) }
   }, [])
 
   useEffect(() => {

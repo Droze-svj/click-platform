@@ -69,6 +69,20 @@ export function useAuth() {
       cachedToken = null
       cachedUser = null
       lastAuthSuccess = 0
+    } else if (stale) {
+      // Proactively drop an expired access token on mount so we don't render
+      // stale UI or fire doomed authed requests before the first 401. Decode the
+      // JWT exp (best-effort; malformed tokens are left for the server to reject).
+      // The refresh token (separate) still lets the api layer re-auth on demand.
+      try {
+        const payload = JSON.parse(atob(stale.split('.')[1] || ''))
+        if (payload?.exp && payload.exp * 1000 < Date.now()) {
+          localStorage.removeItem('token')
+          cachedToken = null
+          cachedUser = null
+          lastAuthSuccess = 0
+        }
+      } catch { /* not a decodable JWT — leave it; server will 401 if invalid */ }
     }
   }
 

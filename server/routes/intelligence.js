@@ -13,6 +13,7 @@ const { authenticate } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const Script = require('../models/Script');
 const { generateContent } = require('../utils/googleAI');
+const { costGuard } = require('../middleware/costGuard');
 const {
   HOOK_FRAMEWORKS, NICHE_PLAYBOOKS, NICHE_POSTING_WINDOWS, CTA_LIBRARY,
   RETENTION_CURVES,
@@ -109,7 +110,7 @@ async function recordEmissions({ userId, kind, candidates }) {
  * exactly that way. Falls back to a single-call Gemini path if all
  * stages fail, so a degraded answer always reaches the user.
  */
-router.post('/factory/create', async (req, res) => {
+router.post('/factory/create', costGuard(), async (req, res) => {
   try {
     const topic = req.body.prompt || req.body.topic;
     const platform = req.body.targetPlatform || req.body.platform || 'tiktok';
@@ -134,6 +135,26 @@ router.post('/factory/create', async (req, res) => {
     });
 
     const ctx = `TOPIC: ${topic}\nPLATFORM: ${platform}\nCONTENT_TYPE: ${contentType}\nSTYLE: ${style}\nTONE: ${tone}\nKEYWORDS: ${(keywords || []).join(', ') || 'none'}`;
+
+    // Cost guard: this route fans out into ~4 creative/orchestration AI calls
+    // (maxTokens up to 900 each). Gate the worst-case spend up front so the
+    // 5-stage pipeline can't be used for unmetered/abusive AI consumption.
+    // Mirrors the pattern in routes/hookEnsemble.js.
+    if (typeof req.assertBudget === 'function') {
+      try {
+        await req.assertBudget({
+          provider: 'anthropic',
+          model: 'claude-3-haiku-20240307',
+          prompt: `${baseSystem}\n${ctx}`,
+          expectedOutputTokens: 3200, // 4 calls × ~800 output tokens worst case
+        });
+      } catch (e) {
+        if (e.statusCode === 402) {
+          return res.status(402).json({ success: false, error: e.message, ...e.payload });
+        }
+        throw e;
+      }
+    }
 
     // Stage 1 — intelligence: position the topic + identify hook angles.
     const r1 = await aiCall(
@@ -193,7 +214,9 @@ router.post('/factory/create', async (req, res) => {
       { systemPrompt: baseSystem, taskKind: 'orchestration', temperature: 0.5, maxTokens: 700, taskType: 'autonomous-blueprint' }
     );
     logger.info('[intelligence] STAGE 5 RAW:', { text: r5.text });
-    const blueprint = safeJsonParse(r5.text, { hashtags: [], ctaChain: [], thumbnailPrompt: '', postingWindow: '', resonanceScore: 75, totalDuration });
+    // On parse failure, resonanceScore is null (not a fabricated 75) so the
+    // client can render "analysis unavailable" instead of a fake number.
+    const blueprint = safeJsonParse(r5.text, { hashtags: [], ctaChain: [], thumbnailPrompt: '', postingWindow: '', resonanceScore: null, totalDuration });
 
     // Compose stage map the client expects. Also keep a flat manifest
     // for backwards compatibility with older consumers.
@@ -210,7 +233,10 @@ router.post('/factory/create', async (req, res) => {
       script: [refinery.polishedHook, ...(refinery.polishedBody || []), refinery.polishedCta].filter(Boolean).join('\n'),
       cta: refinery.polishedCta ? [refinery.polishedCta] : [],
       hashtags: blueprint.hashtags || [],
-      resonanceScore: blueprint.resonanceScore || 75,
+      // Preserve null (analysis unavailable) — don't coerce to a fabricated 75.
+      resonanceScore: (blueprint.resonanceScore === null || blueprint.resonanceScore === undefined)
+        ? null
+        : blueprint.resonanceScore,
     };
 
     logger.info('[intelligence] Autonomous manifest produced', {
