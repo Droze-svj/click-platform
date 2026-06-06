@@ -27,24 +27,31 @@ export default function OneClickForgePage() {
   const { t } = useTranslation()
   const [history, setHistory] = useState<ManifestHistory[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
+  const [historyError, setHistoryError] = useState(false)
 
   const fetchHistory = async () => {
     try {
       setLoadingHistory(true)
+      setHistoryError(false)
       const res = await apiGet('/intelligence/factory/history')
-      if (res.success) {
-        setHistory(res.data)
-      }
+      setHistory(res.success ? (res.data || []) : [])
     } catch (err) {
       console.error('Failed to fetch history:', err)
+      setHistoryError(true)
     } finally {
       setLoadingHistory(false)
     }
   }
 
   useEffect(() => {
-    document.title = t('forgePage.documentTitle')
     fetchHistory()
+    // Intentionally run once on mount — `t` is excluded so changing the UI
+    // language doesn't refetch history and flicker the panel.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    document.title = t('forgePage.documentTitle')
   }, [t])
 
   return (
@@ -84,11 +91,6 @@ export default function OneClickForgePage() {
                   <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
                   <span className="text-base font-black text-surface-900 dark:text-white uppercase italic tracking-tighter">{t('forgePage.allSystemsOptimal')}</span>
                 </div>
-              </div>
-              <div className="w-0.5 h-16 bg-surface-100 dark:bg-surface-800 rounded-full" />
-              <div className="bg-surface-card dark:bg-surface-900 backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 px-10 py-5 rounded-[2.5rem] shadow-2xl group hover:border-primary-500/20 transition-all">
-                <p className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] mb-3 italic leading-none group-hover:text-primary-500">{t('forgePage.globalLatency')}</p>
-                <p className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase tabular-nums">45.2 SEC</p>
               </div>
            </div>
         </header>
@@ -159,6 +161,18 @@ export default function OneClickForgePage() {
                     </div>
                     <p className="text-[11px] font-black text-surface-400 uppercase tracking-[0.6em] animate-pulse italic">{t('forgePage.decodingHistory')}</p>
                   </div>
+                ) : historyError ? (
+                  <div className="py-32 text-center space-y-10 border-4 border-dashed border-rose-500/20 rounded-[3rem] bg-rose-500/[0.03]">
+                    <Activity size={64} className="text-rose-500 mx-auto" />
+                    <p className="text-xl font-black uppercase tracking-[0.5em] italic leading-none text-rose-500">{t('common.error')}</p>
+                    <button
+                      type="button"
+                      onClick={fetchHistory}
+                      className="mx-auto px-8 py-4 bg-surface-page dark:bg-surface-950 border-2 border-rose-500/30 rounded-[1.5rem] text-[12px] font-black text-rose-500 uppercase tracking-[0.4em] italic hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center gap-4 active:scale-95"
+                    >
+                      <RefreshCw size={18} /> {t('common.retry')}
+                    </button>
+                  </div>
                 ) : history.length > 0 ? (
                   history.map((item, idx) => (
                     <motion.div 
@@ -206,48 +220,6 @@ export default function OneClickForgePage() {
               </button>
             </div>
 
-            {/* Engine Health HUD */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-10 relative z-10">
-               <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] p-10 shadow-2xl transition-all duration-700 hover:border-primary-500/30 group relative overflow-hidden">
-                 <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                 <div className="flex items-center justify-between mb-10 relative z-10">
-                   <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center"><CheckCircle2 className="text-emerald-500" size={24} /></div>
-                     <span className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">{t('forgePage.engineHealth')}</span>
-                   </div>
-                   <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
-                 </div>
-                 <div className="space-y-8 relative z-10">
-                   <div className="flex justify-between items-end">
-                     <span className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic">{t('forgePage.networkAvailability')}</span>
-                     <span className="text-4xl font-black text-surface-900 dark:text-white italic tabular-nums leading-none drop-shadow-2xl">99.9%</span>
-                   </div>
-                   <div className="h-3.5 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-full overflow-hidden shadow-inner relative">
-                     <motion.div initial={{ width: 0 }} animate={{ width: '99.9%' }} transition={{ duration: 2, ease: 'easeOut' }} className="h-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]" />
-                   </div>
-                 </div>
-               </div>
-
-               <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] p-10 shadow-2xl transition-all duration-700 hover:border-primary-500/30 group relative overflow-hidden">
-                 <div className="flex items-center gap-4 mb-10 relative z-10">
-                   <div className="w-12 h-12 rounded-xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center"><Activity className="text-primary-500" size={24} /></div>
-                   <span className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">{t('forgePage.livePulse')}</span>
-                 </div>
-                 <div className="flex items-end gap-3 h-16 relative z-10 px-2">
-                   {[...Array(20)].map((_, i) => (
-                     <motion.div 
-                       key={i} 
-                       initial={{ height: '20%' }}
-                       animate={{ height: [`${20 + Math.random() * 60}%`, `${40 + Math.random() * 60}%`, `${20 + Math.random() * 60}%`] }}
-                       transition={{ repeat: Infinity, duration: 1.5 + Math.random(), ease: 'easeInOut' }}
-                       className="flex-1 bg-primary-500/20 group-hover:bg-primary-500/50 rounded-full shadow-sm transition-colors border border-primary-500/10"
-                     />
-                   ))}
-                 </div>
-                 <div className="absolute inset-0 bg-gradient-to-t from-primary-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                 <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic mt-8 text-center relative z-10 group-hover:text-primary-500 transition-colors">{t('forgePage.neuralTrafficMonitorActive')}</p>
-               </div>
-            </section>
           </aside>
         </div>
 

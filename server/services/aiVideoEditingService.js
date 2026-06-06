@@ -41,6 +41,16 @@ const {
 } = require('./marketingKnowledge');
 
 /**
+ * True when the path is a remote http(s) URL. FFmpeg can read such URLs
+ * directly, so a missing-file (fs.existsSync) check must NOT be applied to
+ * them — doing so would silently drop valid remote inputs (e.g. the Pixabay
+ * "premium-fallback" music URL returned by autoSelectMusic).
+ */
+function isRemoteUrl(p) {
+  return typeof p === 'string' && /^https?:\/\//i.test(p);
+}
+
+/**
  * Compose an additional context block that biases AI prompts toward the
  * creator's niche, target platform, language, and recent style picks. Returns
  * an empty string when no usable context is provided so callers can safely
@@ -2795,10 +2805,18 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     // because select resets PTS before the trim segments can operate on them.
     if (!optimizePacing && (silencePeriods.length > 0 || sceneChanges.length > 0)) {
       const cuts = buildCutFilter(silencePeriods, sceneChanges, duration);
-      if (cuts) {
+      if (cuts && cuts.videoFilter && cuts.audioFilter) {
         videoFilters.push(cuts.videoFilter);
         audioFilters.push(cuts.audioFilter);
         appliedEdits.push('Precise Cut Removal');
+      } else {
+        // buildCutFilter returns null when it resolves to 0 (or 1) keep-segments
+        // — i.e. there is nothing to actually cut. Never push an empty
+        // select=''/aselect='' (ffmpeg silently drops or errors on it) and
+        // don't claim "Precise Cut Removal" when no cut was applied.
+        logger.warn('Silence/scene cut produced no keep-segments; skipping cut filter', {
+          videoId, silenceCount: silencePeriods.length, sceneCount: sceneChanges.length,
+        });
       }
     }
 
@@ -3168,20 +3186,23 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       });
 
       logger.info('AI Caption System applied', { count: captionsToRender.length, sources: [...new Set(captionsToRender.map(c => c.source))] });
+    }
 
-      // Word-level karaoke highlights — fires when Whisper word timestamps exist.
-      // Renders each spoken word in yellow at its precise timing window,
-      // making Click's captions visually identical to Submagic/Captions.ai.
-      // Guard: skip karaoke when styled Gemini/Smart captions are already rendered —
-      // both systems occupy the lower-third area and running both creates doubled subtitles.
-      if (transcriptWords && transcriptWords.length > 0 && captionsToRender.length === 0) {
-        const wordFilters = generateWordLevelCaptionFilters(transcriptWords, captionStyle, 0, duration);
-        wordFilters.forEach(f => videoFilters.push(f));
-        if (wordFilters.length > 0) {
-          creativeFeatures.push('Word-Level Karaoke Captions');
-          appliedEdits.push(`Karaoke Highlights (${wordFilters.length} word frames)`);
-          logger.info('Karaoke caption filters applied', { wordCount: transcriptWords.length, filterCount: wordFilters.length });
-        }
+    // Word-level karaoke highlights — fires when Whisper word timestamps exist
+    // AND no styled Gemini/Smart captions were rendered above. Both systems
+    // occupy the lower-third area, so running both creates doubled subtitles —
+    // karaoke is therefore the FALLBACK when there are no styled captions.
+    // (Previously this block lived inside `if (captionsToRender.length > 0)`
+    //  while requiring `=== 0`, so it could never execute — dead code.)
+    // Pass globalTimeOffset so word timings rebase correctly on extracted
+    // viral clips, matching the styled-caption path above.
+    if (transcriptWords && transcriptWords.length > 0 && captionsToRender.length === 0) {
+      const wordFilters = generateWordLevelCaptionFilters(transcriptWords, captionStyle, globalTimeOffset, globalDuration);
+      wordFilters.forEach(f => videoFilters.push(f));
+      if (wordFilters.length > 0) {
+        creativeFeatures.push('Word-Level Karaoke Captions');
+        appliedEdits.push(`Karaoke Highlights (${wordFilters.length} word frames)`);
+        logger.info('Karaoke caption filters applied', { wordCount: transcriptWords.length, filterCount: wordFilters.length });
       }
     }
 
@@ -3271,6 +3292,14 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     // Build FFmpeg command — Clean, Proven-Safe Complex Filtergraph
     let command = ffmpeg(inputPath);
 
+    // Hardware-accelerated DECODE of the MAIN input only. This must be set
+    // before any b-roll .input() calls — fluent-ffmpeg binds inputOptions to
+    // the most-recently-added input, so applying it later attached -hwaccel to
+    // a b-roll image input (with -loop 1), which is wrong and can break the
+    // software filtergraph. ffmpeg auto-downloads frames for software filters,
+    // so decode-only hwaccel on input 0 is safe with the complex filtergraph.
+    command.inputOptions(['-hwaccel', 'auto']);
+
     // 🛸 COMPOSITE B-ROLL & IMAGES AS NEW INPUTS
     if (bRollPlan && bRollPlan.length > 0) {
       let bRollInputIndex = 1; // 0 is main video
@@ -3305,6 +3334,29 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     const videoChain = videoFilters.filter(f => f && f.trim());
     const audioChain = audioFilters.filter(f => f && f.trim());
     const hasAudio = metadata.streams && metadata.streams.some(s => s.codec_type === 'audio');
+
+    // === Viral Clip Extraction (filtergraph-internal trim) ===
+    // When a viral sub-clip is being extracted (globalTimeOffset > 0) we MUST
+    // do the trim INSIDE the filtergraph rather than with an output-side
+    // -ss/-t. Output -ss resets PTS to 0 *after* the filters run, but the
+    // filter timeline still runs on the SOURCE clock — so caption/overlay
+    // `enable=between(t,...)` expressions (which we already rebased by
+    // subtracting globalTimeOffset) would land on the wrong frames and then
+    // get partially cut. Prepending trim+setpts (and atrim+asetpts) rebases
+    // the filter clock to 0 = the post-offset timeline, so the rebased
+    // enable/time math matches exactly. The non-extraction path
+    // (globalTimeOffset === 0) is untouched.
+    const useFiltergraphTrim = globalTimeOffset > 0;
+    if (useFiltergraphTrim) {
+      const trimStart = Number(globalTimeOffset).toFixed(3);
+      const trimEnd = Number(globalTimeOffset + globalDuration).toFixed(3);
+      // Unshift so the trim runs FIRST, before every visual/audio filter, so
+      // all downstream filters (captions, overlays, b-roll) see a 0-based clock.
+      videoChain.unshift(`trim=start=${trimStart}:end=${trimEnd},setpts=PTS-STARTPTS`);
+      if (hasAudio) {
+        audioChain.unshift(`atrim=start=${trimStart}:end=${trimEnd},asetpts=PTS-STARTPTS`);
+      }
+    }
 
     if (videoChain.length > 0 || (hasAudio && audioChain.length > 0)) {
       const filterSegments = [];
@@ -3356,8 +3408,13 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       command.outputOptions(['-c:v', 'copy', '-c:a', 'copy']);
     }
 
-    // Physically extract the viral clip from the source video if offset was activated
-    if (globalTimeOffset > 0) {
+    // Physically extract the viral clip from the source video if offset was
+    // activated. When we trimmed INSIDE the filtergraph (useFiltergraphTrim),
+    // the extraction is already handled on the correct timeline and adding an
+    // output-side -ss/-t here would double-cut and re-break caption timing —
+    // so only fall back to output-side trim when no filtergraph was built
+    // (defensive: useFiltergraphTrim always forces a non-empty videoChain).
+    if (globalTimeOffset > 0 && !useFiltergraphTrim) {
       command.setStartTime(globalTimeOffset);
       command.setDuration(globalDuration);
     }
@@ -3373,7 +3430,10 @@ Transcript: "${transcript.substring(0, 3500)}"`;
           ? path.join(__dirname, '../..', selectedMusic.file.url)
           : null);
 
-      if (musicPath && !musicPath.startsWith('http') && !fs.existsSync(musicPath)) {
+      // Only require the file to exist on disk for LOCAL paths. Remote
+      // http(s) URLs (e.g. the Pixabay "premium-fallback") are read directly
+      // by ffmpeg and must be allowed through.
+      if (musicPath && !isRemoteUrl(musicPath) && !fs.existsSync(musicPath)) {
         logger.warn('Music file not found, skipping music', { musicPath });
         musicPath = null;
       } else if (musicPath) {
@@ -3385,8 +3445,10 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       let finalCommand = command;
 
       emitProgress('rendering', 60, 'Rendering edited video...');
+      // NOTE: -hwaccel auto is set on the MAIN input at command-build time
+      // (see above). It is intentionally NOT re-applied here, where it would
+      // bind to the last-added (b-roll) input and break the filtergraph.
       finalCommand
-        .inputOptions(['-hwaccel', 'auto'])
         .output(outputPath)
         .outputOptions([
           '-c:v', 'libx264',
@@ -3452,9 +3514,14 @@ Transcript: "${transcript.substring(0, 3500)}"`;
 
             logger.info('Output video verified', { videoId, size: outputStats.size, path: outputPath });
 
-            // Mix music if selected
+            // Mix music if selected. Allow remote http(s) URLs through (ffmpeg
+            // reads them directly); only require on-disk existence for LOCAL
+            // paths. "Background Music Added" is pushed ONLY after the mix
+            // actually succeeds — never when audioService is unavailable or the
+            // mix throws — so appliedEdits can't claim an edit that didn't run.
             let finalVideoPath = outputPath;
-            if (musicPath && fs.existsSync(musicPath)) {
+            const musicPlayable = musicPath && (isRemoteUrl(musicPath) || fs.existsSync(musicPath));
+            if (musicPlayable) {
               emitProgress('post-processing', 92, 'Mixing background music...');
               const audioService = getAudioService();
               if (audioService) {
@@ -3474,7 +3541,11 @@ Transcript: "${transcript.substring(0, 3500)}"`;
                 } catch (musicError) {
                   logger.warn('Music mixing failed, using video without music', { error: musicError.message });
                 }
+              } else {
+                logger.warn('Audio service unavailable; skipping background music mix', { videoId });
               }
+            } else if (musicPath) {
+              logger.warn('Selected music path is not playable; skipping music mix', { videoId, musicPath });
             }
 
             // Get final duration
@@ -4481,10 +4552,24 @@ async function autoJumpcut(videoId, silenceThreshold = -30, minSilenceDuration =
     const silencePeriods = await detectSilencePeriods(inputPath, silenceThreshold, minSilenceDuration);
     const cutFilter = buildCutFilter(silencePeriods, [], content.originalFile.duration || 60);
 
+    // buildCutFilter returns an OBJECT { videoFilter, audioFilter } or null
+    // (when there is nothing to cut). Never feed an empty/placeholder string
+    // to .videoFilters() — passing the object directly or 'null' produced a
+    // broken/no-op select. When there are no cuts, fall back to a clean
+    // passthrough copy and log it, rather than emitting an invalid filter.
     return new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
-        .videoFilters([cutFilter || 'null'])
-        .audioFilters(['aresample=async=1'])
+      const cmd = ffmpeg(inputPath);
+      if (cutFilter && cutFilter.videoFilter && cutFilter.audioFilter) {
+        cmd
+          .videoFilters([cutFilter.videoFilter])
+          .audioFilters([cutFilter.audioFilter, 'aresample=async=1']);
+      } else {
+        logger.warn('Auto-jumpcut found no cuttable silence; copying source unchanged', {
+          videoId, silenceCount: silencePeriods.length,
+        });
+        cmd.outputOptions(['-c', 'copy']);
+      }
+      cmd
         .output(outputPath)
         .on('end', async () => {
           const uploadResult = await uploadFile(outputPath, `videos/${outputFilename}`, 'video/mp4', { videoId, type: 'jumpcut' });

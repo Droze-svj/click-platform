@@ -157,8 +157,17 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
       return
     }
 
-    if (!renderResult?.url) {
-      showToast('Please render the video first before broadcasting', 'error')
+    // Publishing to external platforms needs a real, fetchable URL — reject
+    // empty, relative, or mock (blob:) URLs so we never "broadcast" nothing.
+    const url = renderResult?.url || ''
+    const isPublishable = /^https?:\/\//i.test(url)
+    if (!isPublishable) {
+      showToast(
+        renderResult?.url
+          ? 'Export URL is not publicly reachable yet — re-render with cloud storage enabled.'
+          : 'Please render the video first before broadcasting',
+        'error'
+      )
       return
     }
 
@@ -171,15 +180,15 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
         let endpoint = `/oauth/${platform}/upload`
 
         if (platform === 'youtube') {
-          payload.videoFile = renderResult.url
+          payload.videoFile = url
           payload.title = projectName || 'Rendered with Neural Master'
           payload.description = 'Published from Click Video Editor'
         } else if (platform === 'instagram') {
           endpoint = `/oauth/${platform}/post`
-          payload.imageUrl = renderResult.url // Future: Add videoUrl support to IG backend
+          payload.imageUrl = url // Future: Add videoUrl support to IG backend
           payload.caption = projectName || 'Rendered with Neural Master'
         } else {
-          payload.videoFile = renderResult.url
+          payload.videoFile = url
           payload.caption = projectName || 'Rendered with Neural Master'
         }
 
@@ -938,8 +947,8 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                       whileHover={{ scale: 1.05, x: 10 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handlePublish}
-                      disabled={isPublishing}
-                      className="px-16 py-8 bg-black text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.5em] italic shadow-3xl transition-all flex items-center gap-6 group/pub"
+                      disabled={isPublishing || !/^https?:\/\//i.test(renderResult?.url || '')}
+                      className="px-16 py-8 bg-black text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.5em] italic shadow-3xl transition-all flex items-center gap-6 group/pub disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isPublishing ? (
                         <>

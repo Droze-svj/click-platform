@@ -56,13 +56,6 @@ const STATUS_CFG = {
   },
 }
 
-const MOCK_POSTS: Post[] = [
-  { id: 'p1', title: 'Neural Saturation: 10 Operational Hacks', content: '', excerpt: 'Optimizing payload resonance across stratified social meshes for maximum influence.', slug: 'neural-saturation', status: 'published', tags: ['neural','operational'], categories: ['STRATEGY','LOGIC'], published_at: new Date(Date.now()- 86400000).toISOString(), created_at: new Date(Date.now()-86400000).toISOString(), updated_at: new Date(Date.now()-86400000).toISOString() },
-  { id: 'p2', title: 'Lattice Sync Strategy: Deep Archive Audit', content: '', excerpt: 'An exhaustive tactical review of sovereign content trajectories and signal gain.', slug: 'lattice-sync', status: 'published', tags: ['lattice','audit'], categories: ['ANALYTICS','TRAJECTORY'], published_at: new Date(Date.now()-172800000).toISOString(), created_at: new Date(Date.now()-172800000).toISOString(), updated_at: new Date(Date.now()-172800000).toISOString() },
-  { id: 'p3', title: 'Spectral Signal Extraction Techniques', content: '', excerpt: 'Developing high-fidelity resonance triggers for autonomous audience induction.', slug: 'spectral-signal', status: 'draft', tags: ['spectral','induction'], categories: ['RESONANCE','SOCIAL'], created_at: new Date(Date.now()-259200000).toISOString(), updated_at: new Date(Date.now()-259200000).toISOString() },
-  { id: 'p4', title: 'Kinetic Motion Masterclass: Sovereign Edit', content: '', excerpt: 'Engineering high-velocity visual payloads for rapid synaptic engagement.', slug: 'kinetic-motion', status: 'scheduled', tags: ['kinetic','visual'], categories: ['OPERATIONS','KINETIC'], scheduled_at: new Date(Date.now()+172800000).toISOString(), created_at: new Date(Date.now()-345600000).toISOString(), updated_at: new Date(Date.now()-345600000).toISOString() },
-]
-
 export default function SignalDiffusionArchivePage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -73,23 +66,26 @@ export default function SignalDiffusionArchivePage() {
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedStatus, setSelectedStatus] = useState('all')
+  const [hasMore, setHasMore] = useState(false)
   const PAGE_SIZE = 24
 
   const loadLattice = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true)
     setError(null)
     try {
-      if (process.env.NODE_ENV === 'development') {
-        await new Promise(r => setTimeout(r, 800))
-        const p = selectedStatus === 'all' ? MOCK_POSTS : MOCK_POSTS.filter(p => p.status === selectedStatus)
-        setPosts(p)
+      const params = new URLSearchParams({ page: currentPage.toString(), limit: String(PAGE_SIZE) })
+      if (selectedStatus !== 'all') params.append('status', selectedStatus)
+      const res = await apiGet<{ posts: Post[]; pagination?: { page: number; limit: number; total: number; pages: number } }>(`/posts?${params}`)
+      const results = res.posts || []
+      setPosts(results)
+      // Drive pagination from the server's real totals when available;
+      // otherwise infer "has more" from a full page of results.
+      if (res.pagination && typeof res.pagination.total === 'number') {
+        setHasMore(currentPage * PAGE_SIZE < res.pagination.total)
       } else {
-        const params = new URLSearchParams({ page: currentPage.toString(), limit: String(PAGE_SIZE) })
-        if (selectedStatus !== 'all') params.append('status', selectedStatus)
-        const res = await apiGet<{ posts: Post[] }>(`/posts?${params}`)
-        setPosts(res.posts || [])
+        setHasMore(results.length === PAGE_SIZE)
       }
-    } catch (err: any) { setError(`ARCHIVE_DESYNC: ${err.message}`) }
+    } catch (err: any) { setError(`ARCHIVE_DESYNC: ${err.message}`); setHasMore(false) }
     finally { setLoading(false); setRefreshing(false) }
   }, [currentPage, selectedStatus])
 
@@ -200,7 +196,7 @@ export default function SignalDiffusionArchivePage() {
               
               <div className="flex items-center gap-8 p-3 bg-surface-page dark:bg-black/60 rounded-[3.5rem] border-2 border-surface-100 dark:border-white/10 shadow-inner relative z-10 overflow-x-auto max-w-full">
                  {['all','published','scheduled','draft'].map(s => (
-                   <button type="button" key={s} onClick={() => setSelectedStatus(s)}
+                   <button type="button" key={s} onClick={() => { setCurrentPage(1); setSelectedStatus(s) }}
                      className={`px-12 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.5em] transition-all duration-300 italic active:scale-95 border-2 shrink-0 ${selectedStatus === s ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-surface-900 dark:border-white shadow-xl scale-105' : 'text-surface-500 border-transparent hover:text-surface-900 dark:hover:text-white hover:bg-surface-page/50'}`}>
                      {s === 'all' ? t('postsPage.filterAll') : STATUS_LABELS[s]}
                    </button>
@@ -262,7 +258,7 @@ export default function SignalDiffusionArchivePage() {
                                   <div className="space-y-3">
                                      <p className="text-[10px] font-black text-surface-400 dark:text-slate-400 uppercase tracking-[0.6em] italic leading-none opacity-40">{t('postsPage.dateLabel')}</p>
                                      <p className="text-[14px] font-black text-surface-900 dark:text-white italic tabular-nums leading-none tracking-widest bg-surface-page dark:bg-white/[0.03] px-4 py-2 rounded-xl shadow-inner">
-                                        {post.status === 'published' ? new Date(post.published_at!).toLocaleDateString().toUpperCase() : post.status === 'scheduled' ? new Date(post.scheduled_at!).toLocaleDateString().toUpperCase() : t('postsPage.noDate')}
+                                        {post.status === 'published' && post.published_at ? new Date(post.published_at).toLocaleDateString().toUpperCase() : post.status === 'scheduled' && post.scheduled_at ? new Date(post.scheduled_at).toLocaleDateString().toUpperCase() : t('postsPage.noDate')}
                                      </p>
                                   </div>
                                   <div className="hidden sm:block h-16 w-1 bg-surface-100 dark:bg-white/5 rounded-full mx-2" />
@@ -289,7 +285,7 @@ export default function SignalDiffusionArchivePage() {
            </div>
 
            {/* Temporal Ledger Paging */}
-           {posts.length >= PAGE_SIZE && (
+           {(currentPage > 1 || hasMore) && (
              <div className="px-8 sm:px-16 py-12 border-t-2 border-surface-100 dark:border-white/5 bg-surface-card dark:bg-black/80 flex flex-col sm:flex-row items-center justify-between relative z-50 backdrop-blur-3xl gap-8">
                 <div className="flex items-center gap-8">
                    <span className="w-3 h-3 rounded-full bg-primary-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,1)]" />
@@ -298,7 +294,7 @@ export default function SignalDiffusionArchivePage() {
                 <div className="flex items-center gap-10 p-2 bg-surface-page dark:bg-black/40 rounded-[3rem] border-2 border-surface-100 dark:border-white/5 shadow-inner">
                    <button type="button" aria-label={t('postsPage.previousPage')} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-18 h-18 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-lg hover:border-primary-500/40"><ChevronLeft size={36}/></button>
                    <div className="w-1 h-8 bg-surface-100 dark:bg-white/5 rounded-full" />
-                   <button type="button" aria-label={t('postsPage.nextPage')} onClick={() => setCurrentPage(p => p + 1)} disabled={posts.length < PAGE_SIZE} className="w-18 h-18 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-lg hover:border-primary-500/40"><ChevronRight size={36}/></button>
+                   <button type="button" aria-label={t('postsPage.nextPage')} onClick={() => setCurrentPage(p => p + 1)} disabled={!hasMore} className="w-18 h-18 rounded-[1.8rem] bg-surface-card border-2 border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-lg hover:border-primary-500/40"><ChevronRight size={36}/></button>
                 </div>
              </div>
            )}
