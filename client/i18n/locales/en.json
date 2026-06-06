@@ -358,5 +358,51 @@
     "syncingPayloadProgress": "Syncing Payload...",
     "analysisComplete": "✓ ANALYSIS_COMPLETE: {count} CLIPS_GENERATED",
     "processingFailure": "PROCESSING_FAILURE: SEQUENCE_ABORTED"
+  },
+  "colorGrading": {
+    "rankedByPerformance": "Ranked by your performance",
+    "learningOrder": "Learning your order",
+    "yourTopPick": "Your top pick"
+  },
+  "neuralTraining": {
+    "title": "Neural Training",
+    "subtitle": "Click learns from the real picks and posts you publish",
+    "learningProgress": "Learning Progress",
+    "picksLearned": "{{count}} style picks learned",
+    "coldStartTitle": "No training data yet",
+    "coldStartBody": "Click learns as you make real choices in the editor and publish clips. Pick fonts, captions, color grades and animations — each choice trains your profile. There is no fake import; this matrix fills in from your actual activity.",
+    "learnedFacets": "Learned Style Facets",
+    "topPerformers": "Top Performers (by retention)",
+    "noPerformersYet": "Publish a few clips to see what is actually working — performance ranking needs at least 3 real data points per facet.",
+    "facetFonts": "Fonts",
+    "facetCaptionStyles": "Caption Styles",
+    "facetAnimations": "Animations",
+    "facetMotions": "Motions",
+    "facetColorGrades": "Color Grades",
+    "facetTransitions": "Transitions",
+    "facetHooks": "Hooks",
+    "totalPicks": "Total Picks",
+    "lastIngested": "Last Analytics Sync",
+    "never": "Never",
+    "importUnavailableTitle": "Style file import — not available yet",
+    "importUnavailableBody": "Extracting a profile from an uploaded .xml / .click timeline is not wired to a live backend yet. When it ships you will be able to drop a project here. For now, your profile trains from real in-editor picks and published-clip analytics.",
+    "refresh": "Refresh",
+    "done": "Done",
+    "samples": "{{count}} samples"
+  },
+  "styleVault": {
+    "title": "Style Profile",
+    "subtitle": "Your real, learned creative DNA",
+    "totalPicks": "Total Style Picks",
+    "learnedFacets": "Learned Facets",
+    "lastIngested": "Last Analytics Sync",
+    "never": "Never",
+    "emptyTitle": "Your Style Profile is empty",
+    "emptyBody": "Make picks in the editor and publish clips — Click builds your style profile from real activity. Nothing here is fabricated.",
+    "startTraining": "Open Neural Training",
+    "topPerformersTitle": "What is working for you",
+    "topPerformersEmpty": "Not enough published-clip data yet to rank performers.",
+    "mostUsed": "Most-used",
+    "uses": "{{count}} uses"
   }
 }

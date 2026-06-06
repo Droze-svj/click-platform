@@ -4,6 +4,7 @@ import React from 'react'
 import { Palette, Sparkles, Filter, Activity, Zap, Layers, RefreshCw, CircleDot } from 'lucide-react'
 import { VideoFilter } from '../../../types/editor'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 /** Color swatch hint for each preset (Tailwind gradient) */
 const COLOR_PRESETS: { id: string; label: string; f: Partial<VideoFilter>; desc: string; swatch?: string; group: string }[] = [
@@ -58,6 +59,13 @@ interface ColorGradingViewProps {
    * users — the grid then renders in its original authored order.
    */
   topPerformers?: Array<{ key: string; performanceScore?: number; sampleSize?: number }>
+  /**
+   * True once GET /style-profile/insights has resolved. Distinguishes
+   * "still loading" from a genuine cold-start (no learned performance
+   * data) so the UI shows an honest "learning" hint instead of implying
+   * a ranking exists when it doesn't.
+   */
+  insightsLoaded?: boolean
 }
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
@@ -160,10 +168,33 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ label, desc, colorClass, value,
 }
 
 const ColorGradingView: React.FC<ColorGradingViewProps> = ({
-  videoFilters, setVideoFilters, colorGradeSettings, setColorGradeSettings, showToast, onRecordPick, topPerformers
+  videoFilters, setVideoFilters, colorGradeSettings, setColorGradeSettings, showToast, onRecordPick, topPerformers, insightsLoaded
 }) => {
+  const { t } = useTranslation()
   const [isComparing, setIsComparing] = React.useState(false)
   const [preCompareFilters, setPreCompareFilters] = React.useState<VideoFilter | null>(null)
+
+  // A re-rank only happens when there's at least one learned color-grade
+  // performer that maps to a real preset. Anything else (loading, or a
+  // genuine cold start) leaves presets in their authored order — we never
+  // claim a personalised ranking we don't have.
+  const presetIds = React.useMemo(() => new Set(COLOR_PRESETS.map((p) => p.id)), [])
+  const rankedPerformers = React.useMemo(
+    () => (topPerformers || []).filter((p) => p?.key && presetIds.has(p.key) && (p.sampleSize || 0) > 0),
+    [topPerformers, presetIds]
+  )
+  const hasPerformanceData = rankedPerformers.length > 0
+
+  // Surface the re-rank exactly once per mount, and only when it's real.
+  // Honest "still learning" hint stays inline (below) rather than as a toast
+  // so we don't nag cold-start users on every visit.
+  const announcedRef = React.useRef(false)
+  React.useEffect(() => {
+    if (hasPerformanceData && !announcedRef.current) {
+      announcedRef.current = true
+      showToast(t('colorGrading.rankedByPerformance'), 'info')
+    }
+  }, [hasPerformanceData, showToast, t])
 
   const toggleComparison = () => {
     if (!isComparing) {
@@ -228,7 +259,19 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                <RefreshCw className={`w-3 h-3 ${isComparing ? 'animate-spin' : ''}`} />
                {isComparing ? 'Original Active' : 'Before / After'}
             </button>
-            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 italic">Validated</span>
+            {/* Real performance-ranking indicator. Only claims a ranking
+                when learned data actually re-ordered the grid; otherwise
+                shows an honest "learning" hint (or nothing while loading). */}
+            {hasPerformanceData ? (
+              <span className="flex items-center gap-1.5 text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 italic">
+                <Activity className="w-3 h-3" />
+                {t('colorGrading.rankedByPerformance')}
+              </span>
+            ) : insightsLoaded ? (
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10 italic">
+                {t('colorGrading.learningOrder')}
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -239,15 +282,15 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
               promoted ones. The first promoted tile gets a "Your top
               pick" badge so the user understands why the order changed. */}
           {(() => {
+            // No real data → authored order, untouched. This keeps the
+            // cold-start experience honest (no implied personalisation).
+            if (!hasPerformanceData) return COLOR_PRESETS
             const score = new Map<string, number>()
-            ;(topPerformers || []).forEach((t) => {
-              if (!t?.key) return
-              const s = (t.performanceScore || 0) * Math.log((t.sampleSize || 0) + 1)
-              score.set(t.key, s)
+            rankedPerformers.forEach((perf) => {
+              const s = (perf.performanceScore || 0) * Math.log((perf.sampleSize || 0) + 1)
+              score.set(perf.key, s)
             })
-            const topKey = (topPerformers && topPerformers[0]?.key) || null
-            const sorted = COLOR_PRESETS.slice().sort((a, b) => (score.get(b.id) || 0) - (score.get(a.id) || 0))
-            return sorted
+            return COLOR_PRESETS.slice().sort((a, b) => (score.get(b.id) || 0) - (score.get(a.id) || 0))
           })().map((p, idx) => (
             <motion.button
               key={p.id}
@@ -269,9 +312,9 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                    scoring preset (after re-rank). Quietly absent for
                    cold-start users so the editor never lies about what
                    it has learned. */}
-              {topPerformers && topPerformers[0]?.key === p.id && (
+              {hasPerformanceData && rankedPerformers[0]?.key === p.id && (
                 <span className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  Your top pick
+                  {t('colorGrading.yourTopPick')}
                 </span>
               )}
               <span className="block font-black text-xl text-white italic tracking-tight group-hover:text-indigo-400 transition-colors uppercase">{p.label}</span>
