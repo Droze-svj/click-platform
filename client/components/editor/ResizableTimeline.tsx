@@ -237,6 +237,93 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     }).join(' ')
     return `M 0 24 ${up} ${down} Z`
   }, [waveformPeaks])
+  // REAL clip thumbnails (filmstrip) for VIDEO/IMAGE segments. Fetched from the
+  // backend (ffmpeg-extracted JPEG frames), cached per source URL — mirrors the
+  // waveform-peaks pattern. No fabrication: while loading or on failure the
+  // segment keeps its solid color. Audio segments are never fetched.
+  const FILMSTRIP_COUNT = 8
+  const filmstripCacheRef = useRef<Map<string, string[]>>(new Map())
+  const [filmstrips, setFilmstrips] = useState<Record<string, string[]>>({})
+  const filmstripInFlightRef = useRef<Set<string>>(new Set())
+  const filmstripWarnedRef = useRef(false)
+
+  // Distinct source URLs for visual (video/image) segments currently in the
+  // timeline. Audio segments are excluded — thumbnails are meaningless there.
+  const filmstripSources = useMemo(() => {
+    const urls = new Set<string>()
+    for (const s of segments) {
+      const isVisual = s.type === 'video' || s.type === 'image' || s.type === 'broll' || s.type === 'gif'
+      if (!isVisual) continue
+      const url = s.sourceUrl || (s.track < 6 ? videoSrc : null)
+      if (url) urls.add(url)
+    }
+    return Array.from(urls)
+  }, [segments, videoSrc])
+
+  useEffect(() => {
+    let cancelled = false
+    for (const url of filmstripSources) {
+      // Serve from cache / skip if already loaded or being fetched.
+      if (filmstripCacheRef.current.has(url) || filmstripInFlightRef.current.has(url)) {
+        const cached = filmstripCacheRef.current.get(url)
+        if (cached && !filmstrips[url]) setFilmstrips((prev) => ({ ...prev, [url]: cached }))
+        continue
+      }
+      filmstripInFlightRef.current.add(url)
+      const params = new URLSearchParams({ videoUrl: url, count: String(FILMSTRIP_COUNT) })
+      apiGet<{ data?: { frames?: string[] } }>(
+        `/video/manual-editing/filmstrip?${params.toString()}`
+      )
+        .then((res) => {
+          if (cancelled) return
+          const payload = res?.data ?? (res as any)
+          const frames: string[] = Array.isArray(payload?.frames) ? payload.frames : []
+          filmstripCacheRef.current.set(url, frames)
+          if (frames.length) setFilmstrips((prev) => ({ ...prev, [url]: frames }))
+        })
+        .catch(() => {
+          if (cancelled) return
+          // Resilient: cache an empty strip so we don't retry; keep solid color.
+          filmstripCacheRef.current.set(url, [])
+          if (!filmstripWarnedRef.current) {
+            filmstripWarnedRef.current = true
+            console.warn('[ResizableTimeline] Failed to load clip filmstrip; keeping solid clip color.')
+          }
+        })
+        .finally(() => { filmstripInFlightRef.current.delete(url) })
+    }
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filmstripSources])
+
+  // Resolve the filmstrip frames for a given segment (null when none loaded).
+  const filmstripForSegment = useCallback((s: TimelineSegment): string[] | null => {
+    const url = s.sourceUrl || (s.track < 6 ? videoSrc : null)
+    if (!url) return null
+    const frames = filmstrips[url]
+    return frames && frames.length ? frames : null
+  }, [filmstrips, videoSrc])
+
+  // CSS background for a tiled filmstrip across a clip block. Frames are laid
+  // out as evenly-spaced cover-cropped slices via multiple background-images.
+  const filmstripStyle = useCallback((frames: string[]): React.CSSProperties => {
+    const n = frames.length
+    // Each frame occupies an even horizontal slice; `auto 100%` makes it cover
+    // the lane height and crop horizontally (object-fit: cover semantics).
+    return {
+      backgroundImage: frames.map((f) => `url(${f})`).join(', '),
+      backgroundRepeat: frames.map(() => 'no-repeat').join(', '),
+      backgroundSize: frames.map(() => 'auto 100%').join(', '),
+      backgroundPosition: frames.map((_, i) => `${n > 1 ? (i / (n - 1)) * 100 : 0}% center`).join(', '),
+    }
+  }, [])
+
+  // --- Dedicated KEYFRAME LANE state/handlers (for the selected segment) ---
+  // Currently-selected keyframe in the dedicated lane (for click-select + Delete).
+  const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(null)
+  // Drop the keyframe selection whenever the selected clip changes.
+  useEffect(() => { setSelectedKeyframeId(null) }, [selectedSegmentId])
+
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [rulerHoverTime, setRulerHoverTime] = useState<number | null>(null)
   const [draggingSegmentId, setDraggingSegmentId] = useState<string | null>(null)
@@ -287,6 +374,58 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     const seg = segments.find((s) => s.id === id)
     return seg ? isTrackLocked(seg.track) : false
   }, [segments, isTrackLocked])
+
+  // --- Dedicated KEYFRAME LANE handlers (operate on the selected segment) ---
+  // Clamp + retime a keyframe of the selected segment, routed through the
+  // existing onSegmentsChange path. The time is kept within the clip range.
+  const retimeSegmentKeyframe = useCallback((segId: string, kfId: string, newTime: number) => {
+    if (!onSegmentsChange) return
+    onSegmentsChange((prev) => prev.map((seg) => {
+      if (seg.id !== segId || !seg.transformKeyframes) return seg
+      if (isSegmentLocked(seg.id)) return seg // respect lock state
+      const clamped = Math.max(seg.startTime, Math.min(seg.endTime, newTime))
+      return {
+        ...seg,
+        transformKeyframes: seg.transformKeyframes
+          .map((k) => (k.id === kfId ? { ...k, time: clamped } : k))
+          .sort((a, b) => a.time - b.time),
+      }
+    }))
+  }, [onSegmentsChange, isSegmentLocked])
+
+  // Add a keyframe to the selected segment at the given absolute time. Snapshots
+  // the current transform (identity fallback) so the new keyframe is sensible.
+  const addSegmentKeyframe = useCallback((segId: string, atTime: number) => {
+    if (!onSegmentsChange) return
+    onSegmentsChange((prev) => prev.map((seg) => {
+      if (seg.id !== segId) return seg
+      if (isSegmentLocked(seg.id)) return seg // respect lock state
+      const clamped = Math.max(seg.startTime, Math.min(seg.endTime, atTime))
+      const tr = seg.transform || {}
+      const newKf: TransformKeyframe = {
+        id: `kf-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        time: clamped,
+        positionX: tr.positionX ?? 0,
+        positionY: tr.positionY ?? 0,
+        scale: tr.scale ?? 1,
+        rotation: tr.rotation ?? 0,
+        opacity: 1,
+        easing: 'ease-in-out',
+      }
+      const next = [...(seg.transformKeyframes || []), newKf].sort((a, b) => a.time - b.time)
+      return { ...seg, transformKeyframes: next }
+    }))
+  }, [onSegmentsChange, isSegmentLocked])
+
+  // Remove a keyframe from the selected segment.
+  const removeSegmentKeyframe = useCallback((segId: string, kfId: string) => {
+    if (!onSegmentsChange) return
+    onSegmentsChange((prev) => prev.map((seg) => {
+      if (seg.id !== segId || !seg.transformKeyframes) return seg
+      if (isSegmentLocked(seg.id)) return seg // respect lock state
+      return { ...seg, transformKeyframes: seg.transformKeyframes.filter((k) => k.id !== kfId) }
+    }))
+  }, [onSegmentsChange, isSegmentLocked])
 
   // --- Mock Stakeholder Comments ---
   const [mockComments, setMockComments] = useState([
@@ -1050,6 +1189,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       else if (e.key === 'End') { e.preventDefault(); userSeekRef.current = true; onTimeUpdate(maxDur) }
       else if (e.key === 'i' || e.key === 'I') { e.preventDefault(); setInPoint(currentTime) }
       else if (e.key === 'o' || e.key === 'O') { e.preventDefault(); setOutPoint(currentTime) }
+      else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedKeyframeId && selectedSegmentId) {
+        // A selected keyframe in the dedicated lane takes priority over deleting
+        // the whole clip, so Delete removes just that keyframe.
+        e.preventDefault(); removeSegmentKeyframe(selectedSegmentId, selectedKeyframeId); setSelectedKeyframeId(null)
+      }
       else if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedIds.length > 0 || selectedEffectId)) { e.preventDefault(); handleDeleteSelected() }
       else if (e.key === 'Escape') { setContextMenu(null); onSegmentSelect?.(null); onEffectSelect?.(null); setDraggingSegmentId(null) }
       else if (e.key === 's' || e.key === 'S') { e.preventDefault(); splitAtPlayhead() }
@@ -1060,7 +1204,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     }
     el.addEventListener('keydown', onKeyDown)
     return () => el.removeEventListener('keydown', onKeyDown)
-  }, [stepTime, selectedIds, selectedEffectId, handleDeleteSelected, onSegmentSelect, onEffectSelect, onTimeUpdate, onPlayPause, maxDur, currentTime, splitAtPlayhead, duplicateSelectedSegment, nudgeSelectedSegment, addMarkerAtPlayhead])
+  }, [stepTime, selectedIds, selectedEffectId, handleDeleteSelected, onSegmentSelect, onEffectSelect, onTimeUpdate, onPlayPause, maxDur, currentTime, splitAtPlayhead, duplicateSelectedSegment, nudgeSelectedSegment, addMarkerAtPlayhead, selectedKeyframeId, selectedSegmentId, removeSegmentKeyframe])
 
   const removeMarker = useCallback((id: string) => {
     setMarkersList((m) => m.filter((x) => x.id !== id))
@@ -1977,8 +2121,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(s.id, e.shiftKey || e.metaKey) }}
                                onMouseDown={(e) => handleSegmentBodyMouseDown(e, s)}
                              >
-                                {/* Simulated Filmstrip BG */}
-                                <div className="absolute inset-0 opacity-10 pointer-events-none flex timeline-stripe-vertical" />
+                                {/* Filmstrip BG: real ffmpeg thumbnails when loaded, else the
+                                    decorative stripe (no fabricated frames). */}
+                                {(() => {
+                                  const frames = filmstripForSegment(s)
+                                  return frames
+                                    ? <div className="absolute inset-0 opacity-40 pointer-events-none rounded-lg" style={filmstripStyle(frames)} />
+                                    : <div className="absolute inset-0 opacity-10 pointer-events-none flex timeline-stripe-vertical" />
+                                })()}
 
                                 {/* Cut indicators */}
                                 {s.startTime > 0 && <div className="absolute left-0 top-0 w-0 h-0 border-t-[8px] border-r-[8px] border-t-white/30 border-r-transparent pointer-events-none" title="Trimmed Start" />}
@@ -2107,8 +2257,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(s.id, e.shiftKey || e.metaKey) }}
                                onMouseDown={(e) => handleSegmentBodyMouseDown(e, s)}
                              >
-                                {/* Simulated BG */}
-                                <div className="absolute inset-0 opacity-10 pointer-events-none timeline-stripe-diagonal" />
+                                {/* Filmstrip BG: real ffmpeg thumbnails when loaded, else the
+                                    decorative stripe (no fabricated frames). */}
+                                {(() => {
+                                  const frames = filmstripForSegment(s)
+                                  return frames
+                                    ? <div className="absolute inset-0 opacity-40 pointer-events-none rounded-lg" style={filmstripStyle(frames)} />
+                                    : <div className="absolute inset-0 opacity-10 pointer-events-none timeline-stripe-diagonal" />
+                                })()}
 
                                 <div className="p-1.5 bg-black/40 rounded-lg backdrop-blur-md border border-white/10 group-hover/node:bg-amber-500/20 transition-colors z-10 shrink-0">
                                   <ImageIcon className="w-3.5 h-3.5 text-amber-300" />
@@ -2301,6 +2457,103 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                            })}
                         </div>
                       )}
+
+                      {/* LANE: KEYFRAMES — dedicated row for the selected clip's transform
+                          keyframes. Appears only when a keyframe-capable clip is selected.
+                          Diamonds are positioned by absolute time via timeToX (full zoomed
+                          content width, like every other lane). Drag = retime, dbl-click empty
+                          = add, click = select, Delete = remove. Lock state is respected. */}
+                      {(() => {
+                        if (!selectedSegment) return null
+                        const kfCapable = selectedSegment.type === 'video' || selectedSegment.type === 'image' || selectedSegment.type === 'broll' || selectedSegment.type === 'gif'
+                        const hasKeyframes = !!(selectedSegment.transformKeyframes && selectedSegment.transformKeyframes.length)
+                        if (!kfCapable && !hasKeyframes) return null
+                        const seg = selectedSegment
+                        const segLocked = isSegmentLocked(seg.id)
+                        const segLeft = timeToX(seg.startTime)
+                        const segWidth = Math.max(0, timeToX(seg.endTime) - timeToX(seg.startTime))
+                        const kfs = seg.transformKeyframes || []
+                        // Convert a pointer clientX to an absolute timeline time using the
+                        // inner zoomed content width (matches the keyframe drag math).
+                        const clientXToTime = (clientX: number): number | null => {
+                          const contentEl = contentRef.current
+                          if (!contentEl) return null
+                          const innerEl = (contentEl.firstElementChild as HTMLElement | null) ?? contentEl
+                          const rect = innerEl.getBoundingClientRect()
+                          if (rect.width <= 0) return null
+                          return ((clientX - rect.left) / rect.width) * maxDur
+                        }
+                        return (
+                          <div className="h-12 relative rounded-2xl border border-white/[0.03] bg-cyan-500/[0.04] overflow-hidden">
+                            {/* Lane label */}
+                            <div className="absolute inset-y-0 left-4 flex items-center z-20 pointer-events-none opacity-40">
+                              <Orbit className="w-3.5 h-3.5 text-cyan-400" />
+                              <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest ml-3">Keyframes</span>
+                            </div>
+                            {/* Selected clip range track + dbl-click-to-add zone */}
+                            <div
+                              className={`absolute top-0 bottom-0 ${segLocked ? 'cursor-not-allowed' : 'cursor-copy'}`}
+                              style={{ left: `${segLeft}%`, width: `${segWidth}%` }}
+                              onDoubleClick={(e) => {
+                                if (segLocked) return
+                                e.stopPropagation()
+                                const at = clientXToTime(e.clientX)
+                                if (at != null) addSegmentKeyframe(seg.id, at)
+                              }}
+                            >
+                              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-cyan-400/30" />
+                            </div>
+                            {/* Keyframe connector line */}
+                            {kfs.length > 1 && (() => {
+                              const sorted = [...kfs].sort((a, b) => a.time - b.time)
+                              const firstX = timeToX(sorted[0].time)
+                              const lastX = timeToX(sorted[sorted.length - 1].time)
+                              if (lastX <= firstX) return null
+                              return (
+                                <div className="absolute top-1/2 -translate-y-1/2 h-px bg-cyan-300/50 z-10 pointer-events-none shadow-[0_0_5px_rgba(34,211,238,0.5)]"
+                                  style={{ left: `${firstX}%`, width: `${lastX - firstX}%` }} />
+                              )
+                            })()}
+                            {/* Keyframe diamonds */}
+                            {kfs.map((kf) => {
+                              if (kf.time < seg.startTime - 1e-6 || kf.time > seg.endTime + 1e-6) return null
+                              const x = timeToX(kf.time)
+                              const isSel = selectedKeyframeId === kf.id
+                              return (
+                                <div
+                                  key={`kflane-${kf.id}`}
+                                  className={`absolute top-1/2 w-3 h-3 rotate-45 z-30 transition-transform hover:scale-150 ${segLocked ? 'cursor-not-allowed' : 'cursor-ew-resize'} ${isSel ? 'bg-white ring-2 ring-cyan-300 shadow-[0_0_12px_rgba(34,211,238,1)]' : 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]'}`}
+                                  style={{ '--kflane-left': `calc(${x}% - 6px)`, left: 'var(--kflane-left)', transform: 'translateY(-50%) rotate(45deg)' } as any}
+                                  title={`${displayTime(kf.time)}`}
+                                  onClick={(e) => { e.stopPropagation(); setSelectedKeyframeId(kf.id) }}
+                                  onMouseDown={(e) => {
+                                    if (segLocked) return
+                                    e.stopPropagation()
+                                    setSelectedKeyframeId(kf.id)
+                                    const startX = e.clientX
+                                    const startKfTime = kf.time
+                                    const onMove = (moveEvt: MouseEvent) => {
+                                      const contentEl = contentRef.current
+                                      if (!contentEl) return
+                                      const innerEl = contentEl.firstElementChild as HTMLElement | null
+                                      const cw = innerEl?.offsetWidth || contentEl.offsetWidth
+                                      if (!cw) return
+                                      const deltaTime = ((moveEvt.clientX - startX) / cw) * maxDur
+                                      retimeSegmentKeyframe(seg.id, kf.id, startKfTime + deltaTime)
+                                    }
+                                    const onUp = () => {
+                                      window.removeEventListener('mousemove', onMove)
+                                      window.removeEventListener('mouseup', onUp)
+                                    }
+                                    window.addEventListener('mousemove', onMove)
+                                    window.addEventListener('mouseup', onUp)
+                                  }}
+                                />
+                              )
+                            })}
+                          </div>
+                        )
+                      })()}
                    </div>
 
                    {/* Master Playhead (Neural Thread) */}
