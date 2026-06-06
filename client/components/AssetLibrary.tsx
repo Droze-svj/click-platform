@@ -124,8 +124,11 @@ export default function AssetLibrary({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, asset: Asset) => {
-    e.dataTransfer.setData('application/json', JSON.stringify(asset))
+    // Payload shape MUST match ResizableTimeline.handleTrackDrop, which reads
+    // `{ type: 'library-asset', asset }` off the `application/json` channel.
+    e.dataTransfer.setData('application/json', JSON.stringify({ type: 'library-asset', asset }))
     e.dataTransfer.setData('text/plain', asset.id || '')
+    e.dataTransfer.effectAllowed = 'copy'
   }
 
   useEffect(() => {

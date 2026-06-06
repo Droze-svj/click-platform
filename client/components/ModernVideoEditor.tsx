@@ -1795,6 +1795,11 @@ const ModernVideoEditor: React.FC<{
   }, [setActiveCategory, layoutPrefs.focusMode, updateLayout])
 
   const handleAssetDrop = useCallback((asset: any, trackIndex: number, time: number) => {
+    // Respect locked tracks: reject drops onto a lane the user has locked.
+    if (trackState[trackIndex]?.locked) {
+      showToast(t('modernVideoEditor.trackLockedDropRejected'), 'info')
+      return
+    }
     const isAudio = asset.type === 'music' || asset.type === 'sfx'
     const duration = isAudio ? asset.duration ?? (asset.type === 'sfx' ? 2 : 30) : (asset.type === 'broll' ? 10 : 5)
     const segment: TimelineSegment = {
@@ -1810,7 +1815,7 @@ const ModernVideoEditor: React.FC<{
     }
     setTimelineSegments((prev: TimelineSegment[]) => [...prev, segment] as any)
     showToast(t('modernVideoEditor.assetDroppedToTimeline'), 'success')
-  }, [setTimelineSegments, showToast, t])
+  }, [setTimelineSegments, showToast, t, trackState])
 
   const getCategoryContent = () => {
     switch (activeCategory) {
