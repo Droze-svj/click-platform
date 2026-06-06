@@ -552,27 +552,38 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                     { timeout: 180000 }
                   )
 
-                  if (res) {
-                    showToast('Neural Render Initialized - Routing to Clusters', 'success')
-                    setRenderProgress(0)
-                    const interval = setInterval(() => {
-                      setRenderProgress(prev => {
-                        if (prev >= 100) {
-                          clearInterval(interval)
-                          setIsRendering(false)
-                          showToast('Project Rendered: Assets Available in Repository', 'success')
+                  // The render is synchronous server-side: by the time apiPost
+                  // resolves, the MP4 is ready and the URL (if any) is in `res`.
+                  // Validate that a real download URL came back BEFORE declaring
+                  // success, so a 200-with-no-url response can't masquerade as a
+                  // completed export.
+                  const data = (res as any)?.data ?? res
+                  const url = data?.url ?? data?.downloadUrl
+                  const downloadUrl = data?.downloadUrl ?? url
 
-                          const data = (res as any)?.data ?? res
-                          const url = data?.url ?? data?.downloadUrl
-                          setRenderResult({ url, downloadUrl: data?.downloadUrl ?? url })
-                          setLastRenderExportPath(data?.url ?? (typeof url === 'string' && url.startsWith('/') ? url : null))
-                          onExportComplete?.()
-                          return 100
-                        }
-                        return prev + (Math.random() * 8)
-                      })
-                    }, 500)
+                  if (!url && !downloadUrl) {
+                    setIsRendering(false)
+                    showToast('Render finished but no output was returned. Please try again.', 'error')
+                    return
                   }
+
+                  showToast('Neural Render Initialized - Routing to Clusters', 'success')
+                  setRenderProgress(0)
+                  const interval = setInterval(() => {
+                    setRenderProgress(prev => {
+                      if (prev >= 100) {
+                        clearInterval(interval)
+                        setIsRendering(false)
+                        showToast('Project Rendered: Assets Available in Repository', 'success')
+
+                        setRenderResult({ url, downloadUrl })
+                        setLastRenderExportPath(data?.url ?? (typeof url === 'string' && url.startsWith('/') ? url : null))
+                        onExportComplete?.()
+                        return 100
+                      }
+                      return prev + (Math.random() * 8)
+                    })
+                  }, 500)
                 } catch (err: any) {
                   showToast(err?.response?.data?.error ?? err?.message ?? 'Synthesis failed', 'error')
                   setIsRendering(false)

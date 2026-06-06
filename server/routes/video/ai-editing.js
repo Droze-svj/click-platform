@@ -552,7 +552,12 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
         }
       });
     } else {
-      sendError(res, 'Auto-edit completed but may have issues', 200, result);
+      // Soft-failure path: the pipeline ran but reported success=false.
+      // `sendError` only accepts (res, error, statusCode) — a 4th `result`
+      // arg is silently dropped, so the client would lose the partial result
+      // entirely. Return the partial result as a 200 success-shaped payload
+      // with a clear flag so the editor can surface it instead of a bare error.
+      sendSuccess(res, 'Auto-edit completed but may have issues', 200, { ...result, partial: true });
     }
   } catch (error) {
     logger.error('Auto-edit video error', { error: error.message, videoId, stack: error.stack });
@@ -581,7 +586,17 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
       errorCode = 'OUT_OF_MEMORY';
       recoveryHint = 'Compress your video to under 100 MB before uploading.';
     }
-    sendError(res, userMessage, 500, { errorCode, recoveryHint });
+    // `sendError(res, error, statusCode)` ignores any 4th argument, so the
+    // errorCode/recoveryHint the client needs to render a helpful recovery UI
+    // were being dropped on the floor. Emit the structured error payload
+    // directly while preserving the `{ success:false, error }` shape that the
+    // rest of the API (and the client's error handling) already expects.
+    res.status(500).json({
+      success: false,
+      error: userMessage,
+      errorCode,
+      recoveryHint,
+    });
   }
 }));
 

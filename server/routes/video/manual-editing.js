@@ -705,10 +705,18 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       userId: req.user?._id || req.user?.id || null,
     });
 
+    // result.url may be a durable absolute URL (cloud storage) or a relative
+    // "/uploads/..." path (local disk). Only prefix the host for relative paths;
+    // an absolute http(s) URL is already directly downloadable.
+    const isAbsoluteUrl = typeof result.url === 'string' && /^https?:\/\//i.test(result.url);
+    const downloadUrl = result.url
+      ? (isAbsoluteUrl ? result.url : `${req.protocol}://${req.get('host')}${result.url}`)
+      : null;
+
     sendSuccess(res, 'Render completed', 200, {
       outputPath: result.outputPath,
       url: result.url,
-      downloadUrl: result.url ? `${req.protocol}://${req.get('host')}${result.url}` : null,
+      downloadUrl,
     });
   } catch (error) {
     logger.error('Render error', { error: error.message, videoId });

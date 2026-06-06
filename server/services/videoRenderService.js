@@ -217,14 +217,23 @@ function buildDrawBoxFilter(shape) {
 /**
  * Resolve input path from Content or videoUrl
  */
+function isRemoteUrl(p) {
+  return typeof p === 'string' && /^https?:\/\//i.test(p)
+}
+
 async function resolveInputPath(videoId, videoUrl) {
-  if (videoUrl) return toAbsolutePath(videoUrl);
+  // ffmpeg can read http(s) URLs directly (e.g. Cloudinary/S3). Pass them
+  // through untouched — toAbsolutePath() would otherwise mangle
+  // "https://host/x.mp4" into "<cwd>/https:/host/x.mp4" and the file would
+  // then look like a missing local path.
+  if (videoUrl) return isRemoteUrl(videoUrl) ? videoUrl : toAbsolutePath(videoUrl);
   if (!videoId) throw new Error('Video not found: provide videoId or videoUrl')
   const content = await Content.findById(videoId)
   if (!content || !content.originalFile?.url) {
     throw new Error('Video not found in database')
   }
-  return toAbsolutePath(content.originalFile.url);
+  const url = content.originalFile.url
+  return isRemoteUrl(url) ? url : toAbsolutePath(url);
 }
 
 /**
@@ -414,7 +423,14 @@ async function renderFromEditorState(options) {
 
     let command = ffmpeg(inputPath)
     if (hasMusic) {
-      command = command.input(firstMusic.sourceUrl)
+      // Resolve the music source the same way as the main input: pass remote
+      // http(s) URLs through untouched, but turn a relative "/uploads/..." URL
+      // into a real absolute filesystem path (raw "/uploads/x.mp3" would be read
+      // by ffmpeg as a non-existent absolute path).
+      const musicInput = isRemoteUrl(firstMusic.sourceUrl)
+        ? firstMusic.sourceUrl
+        : toAbsolutePath(firstMusic.sourceUrl)
+      command = command.input(musicInput)
     }
 
     const finalFilterList = [...allVideoFilters, ...enhancementFilters]
@@ -471,11 +487,20 @@ async function renderFromEditorState(options) {
 
     const finalFilterStr = finalFilterList.length > 0 ? finalFilterList.join(',') : null;
 
+    // When a complexFilter maps an explicit [vout], scaling is done INSIDE the
+    // filtergraph (scale=W:H prepended to the video chain). In that case we must
+    // NOT also call .size() (-s W:H) on the mapped output — applying -s on top of
+    // a filtergraph-mapped pad fails on some modern ffmpeg builds with
+    // "Error opening output file: Invalid argument" (exit 234). We track this so
+    // the size() call below only runs for the non-complexFilter branches.
+    let videoMappedViaFiltergraph = false
+
     if (hasMusic) {
       const musicVolume = firstMusic?.properties?.volume ?? 0.5
       const duckLevel = exportOptions.duckLevel ?? -12
       const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
       const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[vout]`
+      videoMappedViaFiltergraph = true
       const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
       if (hasAudio) {
@@ -498,18 +523,23 @@ async function renderFromEditorState(options) {
 
       if (hasAudio) {
         if (finalFilterStr) {
-          // Source has audio, no music, with video filters -> map with complex filter
-          command = command.complexFilter(`[0:v]${finalFilterStr}[vout];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`)
+          // Source has audio, no music, with video filters -> map with complex filter.
+          // Scale INSIDE the filtergraph (see videoMappedViaFiltergraph note) so we
+          // don't also need .size(), which would error on the mapped [vout] pad.
+          command = command.complexFilter(`[0:v]scale=${width}:${height},${finalFilterStr}[vout];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11[aout]`)
             .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+          videoMappedViaFiltergraph = true
         } else {
-          // Source has audio, no music, no video filters -> apply audioFilters directly
+          // Source has audio, no music, no video filters -> apply audioFilters directly.
+          // No complexFilter here, so .size() (-s W:H) below performs the scaling.
           command = command.audioFilters(`highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11`)
         }
       } else {
         // Source is completely silent and no background music added -> render as video only
         if (finalFilterStr) {
-          command = command.complexFilter(`[0:v]${finalFilterStr}[vout]`)
+          command = command.complexFilter(`[0:v]scale=${width}:${height},${finalFilterStr}[vout]`)
             .outputOptions(['-map', '[vout]'])
+          videoMappedViaFiltergraph = true
         }
         command = command.noAudio()
       }
@@ -520,9 +550,16 @@ async function renderFromEditorState(options) {
       : [`-b:v ${bitrateMbps}M`, `-preset ${preset}`, `-crf ${crf}`, '-movflags +faststart']
 
     const commandChain = command
-      .size(`${width}x${height}`)
       .videoCodec(codec)
       .outputOptions(videoOutputOptions)
+
+    // Only apply -s W:H when scaling was NOT already done inside a filtergraph that
+    // maps [vout]. Applying -s on a filtergraph-mapped output can fail on modern
+    // ffmpeg ("Invalid argument", exit 234); the complexFilter branches above
+    // already prepend scale=W:H to the video chain instead.
+    if (!videoMappedViaFiltergraph) {
+      commandChain.size(`${width}x${height}`)
+    }
 
     if (hasAudio || hasMusic) {
       commandChain
@@ -596,7 +633,37 @@ async function renderFromEditorState(options) {
                 logger.warn('[render] persistAuthenticity threw', { jobId: c2paJobId, error: err.message })
               })
 
-              const url = `/uploads/exports/${outputFilename}`
+              // Default to the local URL. On hosts with cloud storage configured
+              // (Cloudinary/S3) the local uploads dir is ephemeral, so push the
+              // export to cloud and hand back the durable URL instead. This is
+              // best-effort: any failure falls back to the local URL so the user
+              // can still download within the current process lifetime.
+              let url = `/uploads/exports/${outputFilename}`
+              try {
+                const storageService = require('./storageService')
+                if (storageService.isCloudStorageEnabled && storageService.isCloudStorageEnabled()) {
+                  const contentType = ext === 'mov' ? 'video/quicktime' : 'video/mp4'
+                  const uploaded = await storageService.uploadFile(
+                    outputPath,
+                    `exports/${outputFilename}`,
+                    contentType
+                  )
+                  if (uploaded?.url) {
+                    url = uploaded.url
+                    logger.info('[render] Export uploaded to cloud storage', {
+                      videoId,
+                      storage: uploaded.storage,
+                      url,
+                    })
+                  }
+                }
+              } catch (err) {
+                logger.warn('[render] Cloud upload of export failed; serving local URL', {
+                  error: err.message,
+                  videoId,
+                })
+              }
+
               logger.info('Neural Node Handoff: Render Complete', {
                 videoId,
                 url,
