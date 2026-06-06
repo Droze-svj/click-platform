@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Beeldverhouding bijgewerkt naar 9:16 verticaal",
     "clipRemoved": "Clip verwijderd",
     "textRemoved": "Tekst verwijderd",
-    "untitledProject": "Kinetische reeks zonder titel"
+    "untitledProject": "Kinetische reeks zonder titel",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Haken",

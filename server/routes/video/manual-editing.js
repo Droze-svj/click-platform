@@ -1189,6 +1189,45 @@ router.get('/filmstrip', auth, asyncHandler(async (req, res) => {
   }
 }));
 
+/**
+ * GET /api/video/manual-editing/beats
+ * Return REAL detected onsets/beats (seconds) for the timeline beat-sync tool
+ * — no fabricated data. Mirrors /waveform-peaks: the client passes the source
+ * it already has (videoUrl) or a contentId; we decode the audio with ffmpeg
+ * and detect energy-flux onsets above an adaptive threshold.
+ *
+ * Query: contentId? , videoUrl?
+ * Response data: { beats: number[], duration, hasAudio }
+ *   - hasAudio:false (with beats:[]) when the source has no audio stream.
+ */
+router.get('/beats', auth, asyncHandler(async (req, res) => {
+  const { contentId, videoUrl } = req.query;
+
+  if (!contentId && !videoUrl) {
+    return sendError(res, 'contentId or videoUrl is required', 400);
+  }
+
+  try {
+    // Resolve the source reference. An explicit videoUrl wins; otherwise look
+    // up the Content's original file URL (mirrors waveform-peaks).
+    let source = videoUrl || null;
+    if (!source && contentId) {
+      const Content = require('../../models/Content');
+      const content = await Content.findById(contentId);
+      source = content?.originalFile?.url || null;
+      if (!source) {
+        return sendError(res, 'No audio source found for contentId', 404);
+      }
+    }
+
+    const result = await waveformService.detectOnsets(source);
+    sendSuccess(res, 'Beats detected', 200, result);
+  } catch (error) {
+    logger.error('Beat detection error', { error: error.message });
+    sendError(res, error.message, error.statusCode || 500);
+  }
+}));
+
 router.post('/waveform/beats', auth, upload.single('video'), asyncHandler(async (req, res) => {
   if (!req.file) {
     return sendError(res, 'Video file is required', 400);

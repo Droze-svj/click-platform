@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "纵横比更新为 9:16 垂直",
     "clipRemoved": "剪辑已移除",
     "textRemoved": "文字已删除",
-    "untitledProject": "未命名的动力学序列"
+    "untitledProject": "未命名的动力学序列",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "挂钩",

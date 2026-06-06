@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "En boy oranı dikey olarak 9:16 olarak güncellendi",
     "clipRemoved": "Klip kaldırıldı",
     "textRemoved": "Metin kaldırıldı",
-    "untitledProject": "Başlıksız Kinetik Dizi"
+    "untitledProject": "Başlıksız Kinetik Dizi",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Kancalar",

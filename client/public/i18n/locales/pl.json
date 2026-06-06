@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Współczynnik proporcji zaktualizowano do 9:16 w pionie",
     "clipRemoved": "Klip usunięty",
     "textRemoved": "Tekst usunięty",
-    "untitledProject": "Niezatytułowana sekwencja kinetyczna"
+    "untitledProject": "Niezatytułowana sekwencja kinetyczna",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Haczyki",

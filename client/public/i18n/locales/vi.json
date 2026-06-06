@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Tỷ lệ khung hình được cập nhật thành 9:16 theo chiều dọc",
     "clipRemoved": "Đã xóa đoạn phim",
     "textRemoved": "Đã xóa văn bản",
-    "untitledProject": "Chuỗi động học không có tiêu đề"
+    "untitledProject": "Chuỗi động học không có tiêu đề",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "móc",

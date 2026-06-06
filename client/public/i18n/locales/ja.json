@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "アスペクト比が垂直 9:16 に更新されました",
     "clipRemoved": "クリップが削除されました",
     "textRemoved": "テキストが削除されました",
-    "untitledProject": "無題の運動シーケンス"
+    "untitledProject": "無題の運動シーケンス",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "フック",
