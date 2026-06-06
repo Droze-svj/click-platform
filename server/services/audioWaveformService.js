@@ -177,6 +177,145 @@ function cachePeaks(key, value) {
   PEAKS_CACHE.set(key, value);
 }
 
+// ---------------------------------------------------------------------------
+// REAL clip thumbnails (filmstrip) extraction — mirrors the waveform pattern.
+// ---------------------------------------------------------------------------
+
+// Default thumbnail width (px). Kept small so a strip of frames returned as
+// data-URLs stays a modest JSON payload.
+const FILMSTRIP_FRAME_WIDTH = 160;
+const DEFAULT_FILMSTRIP_COUNT = 8;
+const MAX_FILMSTRIP_COUNT = 24;
+
+// Lightweight in-memory cache keyed by `${input}::${count}` so repeated
+// timeline requests for the same source don't re-decode the video.
+const FILMSTRIP_CACHE = new Map();
+const FILMSTRIP_CACHE_MAX = 32;
+
+function cacheFilmstrip(key, value) {
+  if (FILMSTRIP_CACHE.size >= FILMSTRIP_CACHE_MAX) {
+    const oldest = FILMSTRIP_CACHE.keys().next().value;
+    if (oldest !== undefined) FILMSTRIP_CACHE.delete(oldest);
+  }
+  FILMSTRIP_CACHE.set(key, value);
+}
+
+/**
+ * Probe a source for its duration (any stream). Returns { duration } — 0 when
+ * unknown. Reused for filmstrip frame timing.
+ */
+function probeDuration(input) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(input, (err, metadata) => {
+      if (err || !metadata) {
+        resolve({ duration: 0 });
+        return;
+      }
+      const videoStream = (metadata.streams || []).find((s) => s.codec_type === 'video');
+      const duration = parseFloat(metadata.format?.duration) || parseFloat(videoStream?.duration) || 0;
+      resolve({ duration });
+    });
+  });
+}
+
+/**
+ * Extract a single JPEG frame at `seekTime` seconds, scaled to `width` px wide
+ * (height auto, preserving aspect), and return it as a base64 data-URL. Uses an
+ * input-side `-ss` seek for speed and `-frames:v 1` to grab exactly one frame.
+ * The JPEG bytes are streamed to stdout — no temp file is written.
+ */
+function extractFrameDataUrl(input, seekTime, width) {
+  return new Promise((resolve, reject) => {
+    const args = [
+      '-hide_banner',
+      '-loglevel', 'error',
+      '-ss', String(Math.max(0, seekTime)),
+      '-i', input,
+      '-frames:v', '1',
+      '-vf', `scale=${width}:-2:flags=fast_bilinear`,
+      '-f', 'image2',
+      '-vcodec', 'mjpeg',
+      '-q:v', '5',
+      '-',
+    ];
+
+    const proc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const chunks = [];
+    let stderr = '';
+
+    proc.stdout.on('data', (d) => chunks.push(d));
+    proc.stderr.on('data', (d) => { stderr += d.toString(); });
+    proc.on('error', (e) => reject(e));
+    proc.on('close', (code) => {
+      const buf = Buffer.concat(chunks);
+      if (buf.length === 0) {
+        reject(new Error(`ffmpeg frame extract failed (code ${code}): ${stderr.trim()}`));
+        return;
+      }
+      resolve(`data:image/jpeg;base64,${buf.toString('base64')}`);
+    });
+  });
+}
+
+/**
+ * Extract a filmstrip: `count` thumbnails sampled evenly across a video/image
+ * source's duration, each a small JPEG data-URL. Mirrors extractWaveformPeaks:
+ * resolves remote http(s) + local /uploads paths, caches by input+count, and
+ * never fabricates data (a source that yields no frames returns frames:[]).
+ *
+ * @param {string} input - remote http(s) URL or local /uploads path
+ * @param {object} [options]
+ * @param {number} [options.count=8] - number of frames to grab
+ * @returns {Promise<{ frames: string[], duration: number, count: number }>}
+ */
+async function extractFilmstrip(input, options = {}) {
+  const count = Math.max(1, Math.min(MAX_FILMSTRIP_COUNT, parseInt(options.count, 10) || DEFAULT_FILMSTRIP_COUNT));
+  const resolved = resolveAudioInputPath(input);
+  if (!resolved) {
+    return { frames: [], duration: 0, count: 0 };
+  }
+
+  if (!isRemoteUrl(resolved) && !fs.existsSync(resolved)) {
+    throw new Error('Video source not found');
+  }
+
+  const cacheKey = `${resolved}::${count}`;
+  if (FILMSTRIP_CACHE.has(cacheKey)) {
+    return FILMSTRIP_CACHE.get(cacheKey);
+  }
+
+  const { duration } = await probeDuration(resolved);
+
+  // Sample frame at the centre of each of `count` even slices so the first and
+  // last frames are representative rather than the very edges (which are often
+  // black/blank). When duration is unknown (e.g. a still image) we just grab
+  // frame 0 a single time.
+  const seekTimes = [];
+  if (duration > 0) {
+    for (let i = 0; i < count; i++) {
+      seekTimes.push((duration * (i + 0.5)) / count);
+    }
+  } else {
+    seekTimes.push(0);
+  }
+
+  const frames = [];
+  for (const t of seekTimes) {
+    try {
+      const dataUrl = await extractFrameDataUrl(resolved, t, FILMSTRIP_FRAME_WIDTH);
+      frames.push(dataUrl);
+    } catch (e) {
+      // Skip an individual frame that fails to decode rather than failing the
+      // whole strip; the client tolerates a partial strip.
+      logger.warn('Filmstrip frame extraction failed', { input: resolved, time: t, error: e.message });
+    }
+  }
+
+  const result = { frames, duration, count: frames.length };
+  cacheFilmstrip(cacheKey, result);
+  return result;
+}
+
 /**
  * Generate waveform data from audio using REAL decoded peaks.
  *
@@ -326,6 +465,7 @@ async function getFrequencySpectrum(audioPath, time = 0) {
 
 module.exports = {
   extractWaveformPeaks,
+  extractFilmstrip,
   generateWaveformData,
   generateWaveformImage,
   detectBeats,
