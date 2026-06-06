@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Proporção atualizada para 9:16 vertical",
     "clipRemoved": "Clipe removido",
     "textRemoved": "Texto removido",
-    "untitledProject": "Sequência cinética sem título"
+    "untitledProject": "Sequência cinética sem título",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Ganchos",

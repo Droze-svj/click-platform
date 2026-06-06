@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "पहलू अनुपात को 9:16 ऊर्ध्वाधर तक अद्यतन किया गया",
     "clipRemoved": "क्लिप हटा दी गई",
     "textRemoved": "पाठ हटा दिया गया",
-    "untitledProject": "शीर्षक रहित काइनेटिक अनुक्रम"
+    "untitledProject": "शीर्षक रहित काइनेटिक अनुक्रम",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "हुक्स",

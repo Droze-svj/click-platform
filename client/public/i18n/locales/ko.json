@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "가로 세로 비율이 세로 9:16으로 업데이트되었습니다.",
     "clipRemoved": "클립이 삭제되었습니다.",
     "textRemoved": "텍스트가 삭제되었습니다.",
-    "untitledProject": "제목 없는 키네틱 시퀀스"
+    "untitledProject": "제목 없는 키네틱 시퀀스",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "후크",

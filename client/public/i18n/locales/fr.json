@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Rapport d'aspect mis à jour à 9:16 vertical",
     "clipRemoved": "Clip supprimé",
     "textRemoved": "Texte supprimé",
-    "untitledProject": "Séquence cinétique sans titre"
+    "untitledProject": "Séquence cinétique sans titre",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Crochets",

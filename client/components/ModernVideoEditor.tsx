@@ -1521,34 +1521,71 @@ const ModernVideoEditor: React.FC<{
     }, 1000)
   }, [showToast, videoState.currentTime, t])
 
-  const handleBeatSync = useCallback(() => {
+  const handleBeatSync = useCallback(async () => {
     if (timelineSegments.length === 0) {
       showToast(t('modernVideoEditor.noSegmentsToSync'), 'error')
       return
     }
 
+    // Need a real source to analyze — no source, no (honest) beats.
+    if (!actualVideoUrl && !videoId) {
+      showToast(t('modernVideoEditor.beatSyncNoBeats'), 'error')
+      return
+    }
+
     showToast(t('modernVideoEditor.beatSyncAnalyzing'), 'info')
 
-    // Simulation of Transients/Beats (every 2.1s)
-    const beats = [0.1, 2.2, 4.3, 6.4, 8.5, 10.6, 12.7, 14.8, 16.9]
+    // Fetch REAL detected onsets/beats for the current source — no fabrication.
+    // Mirrors the waveform-peaks fetch: prefer the explicit URL, else contentId.
+    let beats: number[] = []
+    try {
+      const params = new URLSearchParams()
+      if (actualVideoUrl) params.set('videoUrl', actualVideoUrl)
+      else if (videoId) params.set('contentId', videoId)
 
-    setTimelineSegments((prev: TimelineSegment[]) => {
-      let currentTime = 0
-      return prev
-        .map((seg: TimelineSegment, i: number) => {
-        const beatTime = beats[i % beats.length]
-        const duration = seg.duration
-        const newSeg = {
+      const res = await apiGet<{ data?: { beats?: number[]; hasAudio?: boolean } }>(
+        `/video/manual-editing/beats?${params.toString()}`
+      )
+      const payload = (res?.data ?? (res as any)) || {}
+      const hasAudio = !!payload.hasAudio
+      beats = Array.isArray(payload.beats) ? payload.beats.filter((b: any) => typeof b === 'number') : []
+
+      // Honest empty states: no audio or no detected beats → do nothing.
+      if (!hasAudio || beats.length === 0) {
+        showToast(t('modernVideoEditor.beatSyncNoBeats'), 'info')
+        return
+      }
+    } catch {
+      showToast(t('modernVideoEditor.beatSyncFailed'), 'error')
+      return
+    }
+
+    const sortedBeats = [...beats].sort((a, b) => a - b)
+    const nearestBeat = (time: number): number => {
+      let best = sortedBeats[0]
+      let bestDist = Math.abs(time - best)
+      for (let i = 1; i < sortedBeats.length; i++) {
+        const d = Math.abs(time - sortedBeats[i])
+        if (d < bestDist) { bestDist = d; best = sortedBeats[i] }
+      }
+      return best
+    }
+
+    // Snap each segment's start to the nearest real beat, preserving its
+    // duration (keep current snapping behavior, now driven by real onsets).
+    setTimelineSegments((prev: TimelineSegment[]) =>
+      prev.map((seg: TimelineSegment) => {
+        const snappedStart = nearestBeat(seg.startTime)
+        return {
           ...seg,
-          startTime: beatTime,
-          endTime: beatTime + duration
+          startTime: snappedStart,
+          endTime: snappedStart + seg.duration,
         }
-        return newSeg
       })
-    })
+    )
 
     showToast(t('modernVideoEditor.beatSyncAligned'), 'success')
-  }, [timelineSegments, showToast, setTimelineSegments, t])
+  }, [timelineSegments, showToast, setTimelineSegments, actualVideoUrl, videoId, t])
 
   const handleUpdateOverlay = useCallback((type: string, id: string, updates: any) => {
     if (type === 'text') {
@@ -2745,6 +2782,12 @@ const ModernVideoEditor: React.FC<{
           {showPerformanceRail && (
             <div className="w-72 flex-shrink-0 px-3 py-3 hidden xl:block">
               <PerformanceRail
+                editorStats={{
+                  segmentCount: timelineSegments.length,
+                  overlayCount:
+                    textOverlays.length + imageOverlays.length + shapeOverlays.length +
+                    svgOverlays.length + gradientOverlays.length,
+                }}
                 onApplyFont={(fontKey) => {
                   if (textOverlays.length === 0) return
                   setTextOverlays(prev => prev.map((o, i) =>

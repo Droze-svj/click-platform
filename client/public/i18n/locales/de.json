@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Seitenverhältnis vertikal auf 9:16 aktualisiert",
     "clipRemoved": "Clip entfernt",
     "textRemoved": "Text entfernt",
-    "untitledProject": "Kinetische Sequenz ohne Titel"
+    "untitledProject": "Kinetische Sequenz ohne Titel",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Haken",

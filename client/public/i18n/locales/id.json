@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Rasio aspek diperbarui menjadi vertikal 9:16",
     "clipRemoved": "Klip dihapus",
     "textRemoved": "Teks dihapus",
-    "untitledProject": "Barisan Kinetik Tanpa Judul"
+    "untitledProject": "Barisan Kinetik Tanpa Judul",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Kait",

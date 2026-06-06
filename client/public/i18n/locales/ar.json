@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "تم تحديث نسبة العرض إلى الارتفاع إلى 9:16 عموديًا",
     "clipRemoved": "تمت إزالة المقطع",
     "textRemoved": "تمت إزالة النص",
-    "untitledProject": "تسلسل حركي بدون عنوان"
+    "untitledProject": "تسلسل حركي بدون عنوان",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "خطافات",

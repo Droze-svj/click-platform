@@ -377,31 +377,177 @@ async function generateWaveformImage(audioPath, outputPath, options = {}) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// REAL onset / beat detection (no fabricated data)
+// ---------------------------------------------------------------------------
+//
+// ffmpeg has no `beatdetect` audio filter, so the previous implementation
+// produced nothing. This computes genuine onsets from the decoded PCM:
+//
+//   1. Decode the source to mono s16le PCM (reusing decodePcm / probeAudio).
+//   2. Slide a short analysis window over the samples and compute the
+//      short-time energy of each frame.
+//   3. Compute the positive energy flux (frame energy minus previous frame
+//      energy, rectified) — the onset detection function. Energy *increases*
+//      mark note/percussion onsets.
+//   4. Pick local maxima of the flux that exceed an adaptive threshold
+//      (local mean + k·std over a sliding context), enforcing a minimum
+//      inter-onset spacing so a single transient isn't counted twice.
+//
+// Returns onset times in seconds. A source with no audio returns [].
+
+// Onset analysis parameters. A ~23ms hop at 8kHz (the PCM_SAMPLE_RATE the
+// decoder already uses) gives plenty of temporal resolution for music beats
+// while keeping the per-frame loop cheap.
+const ONSET_FRAME_SAMPLES = 256;          // ~32ms window @ 8kHz
+const ONSET_HOP_SAMPLES = 128;            // ~16ms hop @ 8kHz
+const ONSET_MIN_SPACING_SEC = 0.2;        // reject onsets closer than 200ms
+const ONSET_THRESHOLD_WINDOW = 16;        // frames of context for adaptive threshold
+const ONSET_THRESHOLD_K = 1.5;            // sensitivity: mean + k·std
+
 /**
- * Detect beats in audio
+ * Compute the short-time energy envelope of a mono s16le PCM buffer.
+ * Returns { energy: Float64Array, frameTimes: Float64Array, frameCount }.
+ * Each energy value is the mean squared (normalized) amplitude of one frame.
+ */
+function computeEnergyEnvelope(pcm, sampleRate) {
+  const sampleCount = Math.floor(pcm.length / 2);
+  if (sampleCount < ONSET_FRAME_SAMPLES) {
+    return { energy: new Float64Array(0), frameTimes: new Float64Array(0), frameCount: 0 };
+  }
+
+  const frameCount = 1 + Math.floor((sampleCount - ONSET_FRAME_SAMPLES) / ONSET_HOP_SAMPLES);
+  const energy = new Float64Array(frameCount);
+  const frameTimes = new Float64Array(frameCount);
+
+  for (let f = 0; f < frameCount; f++) {
+    const start = f * ONSET_HOP_SAMPLES;
+    let sumSq = 0;
+    for (let i = 0; i < ONSET_FRAME_SAMPLES; i++) {
+      const v = pcm.readInt16LE((start + i) * 2) / 32768; // normalize -1..1
+      sumSq += v * v;
+    }
+    energy[f] = sumSq / ONSET_FRAME_SAMPLES;
+    // Time at the centre of the frame.
+    frameTimes[f] = (start + ONSET_FRAME_SAMPLES / 2) / sampleRate;
+  }
+
+  return { energy, frameTimes, frameCount };
+}
+
+/**
+ * Detect onset times (seconds) from an energy envelope via rectified energy
+ * flux + adaptive-threshold local-maxima peak picking with a minimum
+ * inter-onset spacing.
+ */
+function pickOnsets(energy, frameTimes, sampleRate) {
+  const n = energy.length;
+  if (n < 3) return [];
+
+  // Positive energy flux (onset detection function).
+  const flux = new Float64Array(n);
+  for (let i = 1; i < n; i++) {
+    const d = energy[i] - energy[i - 1];
+    flux[i] = d > 0 ? d : 0;
+  }
+
+  const minSpacingFrames = Math.max(1, Math.round((ONSET_MIN_SPACING_SEC * sampleRate) / ONSET_HOP_SAMPLES));
+  const onsets = [];
+  let lastOnsetFrame = -Infinity;
+
+  for (let i = 1; i < n - 1; i++) {
+    // Must be a strict local maximum of the flux.
+    if (!(flux[i] > flux[i - 1] && flux[i] >= flux[i + 1]) || flux[i] <= 0) continue;
+
+    // Adaptive threshold from the local context window.
+    const lo = Math.max(0, i - ONSET_THRESHOLD_WINDOW);
+    const hi = Math.min(n - 1, i + ONSET_THRESHOLD_WINDOW);
+    let sum = 0;
+    let count = 0;
+    for (let j = lo; j <= hi; j++) { sum += flux[j]; count++; }
+    const mean = sum / count;
+    let varSum = 0;
+    for (let j = lo; j <= hi; j++) { const d = flux[j] - mean; varSum += d * d; }
+    const std = Math.sqrt(varSum / count);
+    const threshold = mean + ONSET_THRESHOLD_K * std;
+
+    if (flux[i] < threshold) continue;
+
+    // Enforce minimum inter-onset spacing.
+    if (i - lastOnsetFrame < minSpacingFrames) continue;
+
+    onsets.push(frameTimes[i]);
+    lastOnsetFrame = i;
+  }
+
+  return onsets;
+}
+
+/**
+ * Detect REAL onsets/beats from an audio/video source.
+ *
+ * @param {string} input - remote http(s) URL or local /uploads path
+ * @returns {Promise<{ beats: number[], duration: number, hasAudio: boolean }>}
+ *   beats: onset times in seconds (ascending). A source with no audio stream
+ *   returns { beats: [], hasAudio: false } — never fabricated data.
+ */
+async function detectOnsets(input) {
+  const resolved = resolveAudioInputPath(input);
+  if (!resolved) {
+    return { beats: [], duration: 0, hasAudio: false };
+  }
+
+  if (!isRemoteUrl(resolved) && !fs.existsSync(resolved)) {
+    throw new Error('Audio source not found');
+  }
+
+  const cacheKey = `onsets::${resolved}`;
+  if (ONSETS_CACHE.has(cacheKey)) {
+    return ONSETS_CACHE.get(cacheKey);
+  }
+
+  const { hasAudio, duration } = await probeAudio(resolved);
+  if (!hasAudio) {
+    const result = { beats: [], duration, hasAudio: false };
+    cacheOnsets(cacheKey, result);
+    return result;
+  }
+
+  const pcm = await decodePcm(resolved);
+  const { energy, frameTimes } = computeEnergyEnvelope(pcm, PCM_SAMPLE_RATE);
+
+  // No decodable audio frames → treat as no-audio rather than fabricating.
+  if (energy.length === 0) {
+    const result = { beats: [], duration, hasAudio: false };
+    cacheOnsets(cacheKey, result);
+    return result;
+  }
+
+  const beats = pickOnsets(energy, frameTimes, PCM_SAMPLE_RATE);
+  const result = { beats, duration, hasAudio: true };
+  cacheOnsets(cacheKey, result);
+  return result;
+}
+
+// Lightweight onset cache, mirroring the peaks cache.
+const ONSETS_CACHE = new Map();
+const ONSETS_CACHE_MAX = 64;
+function cacheOnsets(key, value) {
+  if (ONSETS_CACHE.size >= ONSETS_CACHE_MAX) {
+    const oldest = ONSETS_CACHE.keys().next().value;
+    if (oldest !== undefined) ONSETS_CACHE.delete(oldest);
+  }
+  ONSETS_CACHE.set(key, value);
+}
+
+/**
+ * Detect beats in audio. Backwards-compatible wrapper around the real
+ * detectOnsets implementation: accepts a local file path (the legacy
+ * /waveform/beats upload route) and returns just the ascending onset times.
  */
 async function detectBeats(audioPath) {
-  return new Promise((resolve, reject) => {
-    const beats = [];
-    
-    ffmpeg(audioPath)
-      .outputOptions([
-        '-af', 'beatdetect',
-        '-f', 'null'
-      ])
-      .on('stderr', (stderrLine) => {
-        const beatMatch = stderrLine.match(/beat at ([\d.]+)/i);
-        if (beatMatch) {
-          beats.push(parseFloat(beatMatch[1]));
-        }
-      })
-      .on('end', () => {
-        resolve(beats.sort((a, b) => a - b));
-      })
-      .on('error', reject)
-      .output('/dev/null')
-      .run();
-  });
+  const { beats } = await detectOnsets(audioPath);
+  return beats;
 }
 
 /**
@@ -469,6 +615,7 @@ module.exports = {
   generateWaveformData,
   generateWaveformImage,
   detectBeats,
+  detectOnsets,
   analyzeAudioLevels,
   getFrequencySpectrum,
 };

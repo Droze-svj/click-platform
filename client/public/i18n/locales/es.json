@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Relación de aspecto actualizada a 9:16 vertical",
     "clipRemoved": "Clip eliminado",
     "textRemoved": "Texto eliminado",
-    "untitledProject": "Secuencia cinética sin título"
+    "untitledProject": "Secuencia cinética sin título",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Manos",

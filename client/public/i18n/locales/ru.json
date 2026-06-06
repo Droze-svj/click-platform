@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Соотношение сторон обновлено до 9:16 по вертикали.",
     "clipRemoved": "Клип удален.",
     "textRemoved": "Текст удален",
-    "untitledProject": "Кинетическая последовательность без названия"
+    "untitledProject": "Кинетическая последовательность без названия",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Крючки",

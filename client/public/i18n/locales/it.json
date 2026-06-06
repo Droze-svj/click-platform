@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Proporzioni aggiornate a 9:16 verticale",
     "clipRemoved": "Clip rimossa",
     "textRemoved": "Testo rimosso",
-    "untitledProject": "Sequenza cinetica senza titolo"
+    "untitledProject": "Sequenza cinetica senza titolo",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Ganci",

@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "Aspect ratio updated to 9:16 vertical",
     "clipRemoved": "Clip removed",
     "textRemoved": "Text removed",
-    "untitledProject": "Untitled Kinetic Sequence"
+    "untitledProject": "Untitled Kinetic Sequence",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Hooks",

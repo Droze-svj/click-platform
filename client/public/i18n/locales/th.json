@@ -5857,7 +5857,9 @@
     "aspectRatioUpdated": "อัตราส่วนภาพได้รับการอัปเดตเป็นแนวตั้ง 9:16",
     "clipRemoved": "คลิปถูกลบออก",
     "textRemoved": "ลบข้อความแล้ว",
-    "untitledProject": "ลำดับ Kinetic ที่ไม่มีชื่อ"
+    "untitledProject": "ลำดับ Kinetic ที่ไม่มีชื่อ",
+    "beatSyncNoBeats": "No beats detected in this audio",
+    "beatSyncFailed": "Beat detection failed"
   },
   "nicheStrategyPanel": {
     "tabHooks": "ตะขอ",
