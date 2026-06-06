@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef, useEffect, useState } from 'react'
-import { Play, Pause, Eye, EyeOff, Circle, Activity, Crosshair, Fingerprint, Zap } from 'lucide-react'
+import { Play, Pause, Eye, EyeOff, Circle, Activity, Crosshair, Fingerprint } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './EditorComponents.css'
 import { 
@@ -1357,76 +1357,53 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         </div>
 
         {/* HUD Elements */}
-        <div className="absolute inset-0 pointer-events-none p-10 flex flex-col justify-between opacity-0 group-hover/preview:opacity-100 transition-opacity duration-500">
+        <div className="absolute inset-0 pointer-events-none p-10 flex flex-col justify-between opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
           <div className="flex justify-between items-start">
-            <div className="px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-4">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">Live Feed</span>
+            <div className="px-3 py-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg">
+              <span className="text-[11px] font-medium text-white/80">Preview</span>
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest font-mono">Res: {videoDimensions?.w ?? 0}x{videoDimensions?.h ?? 0}</span>
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest font-mono">Buffer: Stable</span>
+            <div className="px-3 py-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg">
+              <span className="text-[11px] text-white/50 font-mono tabular-nums">{videoDimensions?.w ?? 0}×{videoDimensions?.h ?? 0}</span>
             </div>
           </div>
 
           <div className="flex justify-between items-end">
-            <div className="flex items-center gap-6">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Latency</span>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-3 h-3 text-amber-500" />
-                  <span className="text-xs font-black text-white italic">{latency}ms</span>
-                </div>
-              </div>
-              <div className="w-px h-8 bg-white/10" />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Engine</span>
-                <span className="text-xs font-black text-white italic">Precision v3</span>
-              </div>
+            <div className="px-3 py-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-wide text-white/40">Latency</span>
+              <span className="text-[11px] font-mono tabular-nums text-white/80">{latency}ms</span>
             </div>
 
-            <div className="px-5 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-6 pointer-events-auto">
-              <button type="button" onClick={onPlayPause} className="text-white hover:text-indigo-400 transition-colors">
+            <div className="px-4 py-2.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-5 pointer-events-auto">
+              <button type="button" onClick={onPlayPause} aria-label={isPlaying ? 'Pause' : 'Play'} className="text-white hover:text-primary-400 transition-colors">
                 {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white" />}
               </button>
               <div className="w-px h-4 bg-white/10" />
-              <button type="button" onClick={handleBeforeAfterToggle} className={`transition-colors ${showAppliedFilters ? 'text-indigo-400' : 'text-white/40'}`}>
+              <button type="button" onClick={handleBeforeAfterToggle} aria-label="Toggle before/after" title="Before / after" className={`transition-colors ${showAppliedFilters ? 'text-primary-400' : 'text-white/40 hover:text-white/70'}`}>
                 {showAppliedFilters ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Framing Corners */}
-        <div className="absolute top-8 left-8 w-6 h-6 border-t-2 border-l-2 border-white/20 pointer-events-none" />
-        <div className="absolute top-8 right-8 w-6 h-6 border-t-2 border-r-2 border-white/20 pointer-events-none" />
-        <div className="absolute bottom-8 left-8 w-6 h-6 border-b-2 border-l-2 border-white/20 pointer-events-none" />
-        <div className="absolute bottom-8 right-8 w-6 h-6 border-b-2 border-r-2 border-white/20 pointer-events-none" />
+        {/* Framing Corners — subtle */}
+        <div className="absolute top-8 left-8 w-5 h-5 border-t border-l border-white/10 pointer-events-none" />
+        <div className="absolute top-8 right-8 w-5 h-5 border-t border-r border-white/10 pointer-events-none" />
+        <div className="absolute bottom-8 left-8 w-5 h-5 border-b border-l border-white/10 pointer-events-none" />
+        <div className="absolute bottom-8 right-8 w-5 h-5 border-b border-r border-white/10 pointer-events-none" />
 
-        {/* Neural DNA Active Overlay */}
+        {/* AI styling active — quiet, honest indicator (no fabricated metrics) */}
         <AnimatePresence>
           {isNeuralActive && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 pointer-events-none z-40 overflow-hidden"
+              transition={{ duration: 0.2 }}
+              className="absolute top-12 left-1/2 -translate-x-1/2 pointer-events-none z-40"
             >
-              {/* Scanline Effect */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(99,102,241,0.05)_50%)] bg-[length:100%_4px] pointer-events-none" />
-
-              {/* Top HUD Label */}
-              <div className="absolute top-12 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-indigo-500/20 backdrop-blur-md border border-indigo-500/40 rounded-full flex items-center gap-3">
-                <Fingerprint className="w-4 h-4 text-indigo-400 animate-pulse" />
-                <span className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic leading-none">Neural DNA Vault Active</span>
-              </div>
-
-              {/* Data Streams (Simplified) */}
-              <div className="absolute top-0 bottom-0 left-12 w-px bg-indigo-500/20" />
-              <div className="absolute top-1/4 left-14 space-y-2 opacity-50">
-                 <div className="text-[8px] font-mono text-indigo-300">SEG_ID: {Math.random().toString(16).slice(2,8)}</div>
-                 <div className="text-[8px] font-mono text-indigo-300">DNA_MATCH: 99.42%</div>
-                 <div className="text-[8px] font-mono text-indigo-300">FR_LATENCY: 0.12ms</div>
+              <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2">
+                <Fingerprint className="w-3.5 h-3.5 text-primary-400" />
+                <span className="text-[11px] font-medium text-white/80 leading-none">AI styling active</span>
               </div>
             </motion.div>
           )}
