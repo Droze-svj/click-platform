@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Users, MessageSquare, Send, Share2 } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { useCollaboration, PresenceUser } from '../../../hooks/useCollaboration'
+import { Panel, Button, EmptyState, Input } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 interface CollaborateViewProps {
     videoId: string
@@ -31,7 +33,6 @@ const formatTime = (iso: string): string => {
 
 const CollaborateView: React.FC<CollaborateViewProps> = ({ videoId, showToast }) => {
     const { t } = useTranslation()
-    const glassStyle = 'backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl'
 
     // Local-draft (no saved project) cannot collaborate — there's no shared room.
     const hasProject = Boolean(videoId)
@@ -58,18 +59,14 @@ const CollaborateView: React.FC<CollaborateViewProps> = ({ videoId, showToast })
     // Honest empty state: no saved project means no one to collaborate with.
     if (!hasProject) {
         return (
-            <div className="space-y-8">
-                <div className={`${glassStyle} rounded-[2rem] p-10 flex flex-col items-center justify-center text-center gap-4`}>
-                    <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                        <Share2 className="w-7 h-7 text-blue-400" />
-                    </div>
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-theme-primary">
-                        {t('modernVideoEditor.collabNoProjectTitle')}
-                    </h4>
-                    <p className="text-[10px] text-theme-muted font-medium italic max-w-xs leading-relaxed">
-                        {t('modernVideoEditor.collabNoProjectBody')}
-                    </p>
-                </div>
+            <div className="ds-anim-fade-in">
+                <Panel variant="glass" className="p-0">
+                    <EmptyState
+                        icon={Share2}
+                        title={t('modernVideoEditor.collabNoProjectTitle')}
+                        description={t('modernVideoEditor.collabNoProjectBody')}
+                    />
+                </Panel>
             </div>
         )
     }
@@ -77,19 +74,19 @@ const CollaborateView: React.FC<CollaborateViewProps> = ({ videoId, showToast })
     const onlineCount = presence.length
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 ds-anim-fade-in">
             {/* Real presence cluster */}
-            <div className={`${glassStyle} rounded-[2rem] p-6 flex items-center justify-between`}>
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                        <Users className="w-5 h-5 text-blue-400" />
+            <Panel variant="glass" className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                        <Users className="h-5 w-5" aria-hidden />
                     </div>
-                    <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-theme-primary">
+                    <div className="min-w-0">
+                        <h4 className="ds-text-label text-theme-primary truncate">
                             {t('modernVideoEditor.collabActiveTitle')}
                         </h4>
-                        <p className="text-[9px] text-theme-muted font-medium italic flex items-center gap-1.5">
-                            <span className={`inline-block w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-slate-600'}`} />
+                        <p className="ds-text-caption flex items-center gap-1.5">
+                            <span className={cn('inline-block h-1.5 w-1.5 rounded-full', connected ? 'bg-emerald-500' : 'bg-slate-500')} />
                             {peers.length === 0
                                 ? t('modernVideoEditor.collabSolo')
                                 : t('modernVideoEditor.collabOnlineCount', { count: onlineCount })}
@@ -97,90 +94,89 @@ const CollaborateView: React.FC<CollaborateViewProps> = ({ videoId, showToast })
                     </div>
                 </div>
                 {presence.length > 0 && (
-                    <div className="flex -space-x-3">
+                    <div className="flex -space-x-3 shrink-0">
                         {presence.slice(0, 5).map((u) => (
                             <div
                                 key={u.userId}
-                                className="w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center text-[10px] font-black text-white shadow-xl"
-                                style={{ backgroundColor: u.color || '#3b82f6' }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background text-[10px] font-semibold text-white ds-elev-1"
+                                style={{ backgroundColor: u.color || '#6366f1' }}
                                 title={u.name || u.userId}
                             >
                                 {initialsFor(u)}
                             </div>
                         ))}
                         {presence.length > 5 && (
-                            <div className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 shadow-xl">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-accent text-[10px] font-semibold text-theme-muted ds-elev-1">
                                 +{presence.length - 5}
                             </div>
                         )}
                     </div>
                 )}
-            </div>
+            </Panel>
 
-            <div className={`${glassStyle} rounded-[2rem] p-8 overflow-hidden relative group`}>
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <MessageSquare className="w-32 h-32 text-blue-500" />
-                </div>
-
-                <h3 className="text-sm font-black mb-8 uppercase text-slate-500 tracking-[0.4em] italic leading-none flex items-center gap-4">
+            <Panel variant="glass" className="relative overflow-hidden">
+                <h3 className="ds-text-h3 text-theme-primary mb-6 flex items-center gap-3">
+                    <MessageSquare className="h-5 w-5 text-theme-muted" aria-hidden />
                     {t('modernVideoEditor.collabFeedbackTitle')}
-                    <div className="h-px flex-1 bg-white/5" />
+                    <span className="h-px flex-1 bg-border" />
                 </h3>
 
-                <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                     {comments.length === 0 && (
-                        <p className="text-[10px] text-theme-muted font-medium italic text-center py-6">
+                        <p className="ds-text-caption text-center py-6">
                             {t('modernVideoEditor.collabNoComments')}
                         </p>
                     )}
                     {comments.map((c) => (
                         <div
                             key={c.id}
-                            className="flex gap-4 p-5 bg-black/40 rounded-[1.5rem] border border-white/5 hover:border-white/20 transition-all"
+                            className="flex gap-3 rounded-xl border border-border bg-background/40 p-4 transition-colors hover:border-primary/30"
                         >
-                            <div className="w-10 h-10 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-black text-xs border border-blue-500/20 shrink-0">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-xs font-semibold text-primary">
                                 {(c.userName || 'U').slice(0, 1).toUpperCase()}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-center mb-1 gap-2">
-                                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest truncate">
+                            <div className="min-w-0 flex-1">
+                                <div className="mb-1 flex items-center justify-between gap-2">
+                                    <p className="ds-text-label truncate text-primary">
                                         {c.userName || t('modernVideoEditor.collabAnonymous')}
                                     </p>
                                     {c.createdAt && (
-                                        <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic bg-white/5 px-2 py-0.5 rounded shrink-0">
+                                        <span className="ds-text-caption shrink-0">
                                             {formatTime(c.createdAt)}
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-xs font-medium text-slate-400 leading-relaxed italic pr-4 break-words">{c.text}</p>
+                                <p className="ds-text-body break-words text-theme-secondary">{c.text}</p>
                             </div>
                         </div>
                     ))}
                     <div ref={commentsEndRef} />
                 </div>
 
-                <div className="relative mt-8 group/input">
-                    <input
+                <div className="relative mt-6">
+                    <Input
                         type="text"
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleSend() }}
                         disabled={!connected}
                         placeholder={connected ? t('modernVideoEditor.collabInputPlaceholder') : t('modernVideoEditor.collabOffline')}
-                        className="w-full bg-black/60 border border-white/5 rounded-[1.5rem] px-6 py-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/30 transition-all text-white placeholder-slate-700 disabled:opacity-50"
+                        className="h-12 pr-14"
                         title={t('modernVideoEditor.collabInputPlaceholder')}
                     />
-                    <button
+                    <Button
                         type="button"
+                        size="sm"
                         onClick={handleSend}
                         disabled={!connected || !draft.trim()}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/40 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:hover:scale-100"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 p-0"
                         title={t('modernVideoEditor.collabSend')}
+                        aria-label={t('modernVideoEditor.collabSend')}
                     >
-                        <Send className="w-4 h-4" />
-                    </button>
+                        <Send className="h-4 w-4" aria-hidden />
+                    </Button>
                 </div>
-            </div>
+            </Panel>
         </div>
     )
 }

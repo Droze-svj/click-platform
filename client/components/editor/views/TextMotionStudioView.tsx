@@ -1,16 +1,18 @@
 'use client'
 
 import React, { useState, useMemo, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  Type, Sparkles, Wand2, Search, X, CheckCircle2, ArrowRight,
-  Flame, Coffee, Cpu, Heart, Zap, Mic, Brush, Layers, Palette,
-  Activity, Bold, Italic, Underline, Hash, Pin
+  Type, Sparkles, Wand2, Search, X, ArrowRight,
+  Flame, Coffee, Cpu, Heart, Zap, Brush, Layers,
+  Activity, Bold, Hash, Pin
 } from 'lucide-react'
 import type {
   TextOverlay, TextOverlayAnimationIn, TextOverlayAnimationOut,
   TextOverlayStyle, MotionGraphicPreset
 } from '../../../types/editor'
+import { Panel, Button, Badge, IconButton, SectionHeader, EmptyState } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'styles' | 'animations' | 'motion' | 'fonts'
@@ -126,8 +128,6 @@ const MOOD_ICONS: Record<string, any> = {
   Reveal: Sparkles, Direction: ArrowRight, Spring: Zap, Char: Type, Soft: Coffee,
   Heavy: Cpu, Burst: Flame, Impact: Flame,
 }
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.5)]'
 
 interface Props {
   showToast?: (m: string, t: 'success' | 'info' | 'error') => void
@@ -348,28 +348,24 @@ const TextMotionStudioView: React.FC<Props> = ({
     return ordered(filterFn(FONTS))
   }, [tab, search, moodFilter, styleBias])
 
-  const tabs: { id: Tab; label: string; icon: any; count: number; accent: string }[] = [
-    { id: 'styles',     label: 'Caption Styles',  icon: Type,    count: STYLES.length,     accent: 'from-fuchsia-500 to-rose-500' },
-    { id: 'animations', label: 'Text Animations', icon: Sparkles,count: ANIMATIONS.length, accent: 'from-amber-400 to-orange-500' },
-    { id: 'motion',     label: 'Motion Presets',  icon: Wand2,   count: MOTIONS.length,    accent: 'from-cyan-500 to-blue-600' },
-    { id: 'fonts',      label: 'Font Library',    icon: Bold,    count: FONTS.length,      accent: 'from-emerald-500 to-teal-600' },
+  const tabs: { id: Tab; label: string; icon: any; count: number }[] = [
+    { id: 'styles',     label: 'Caption Styles',  icon: Type,    count: STYLES.length },
+    { id: 'animations', label: 'Text Animations', icon: Sparkles,count: ANIMATIONS.length },
+    { id: 'motion',     label: 'Motion Presets',  icon: Wand2,   count: MOTIONS.length },
+    { id: 'fonts',      label: 'Font Library',    icon: Bold,    count: FONTS.length },
   ]
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0a0a14] via-[#0d0d18] to-[#080812] p-6 space-y-6">
+    <div className="h-full space-y-6 overflow-y-auto p-6 ds-bg-mesh-soft ds-anim-fade-in">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">Click · Text & Motion Studio</span>
-        </div>
-        <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-tight">Text, type & motion</h2>
-        <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
-          {STYLES.length} caption styles · {ANIMATIONS.length} text animations · {MOTIONS.length} motion presets · {FONTS.length} fonts. Click any item to apply it to the selected segment.
-        </p>
-      </div>
+      <SectionHeader
+        as="h1"
+        title="Text, Type & Motion"
+        description={`${STYLES.length} caption styles · ${ANIMATIONS.length} text animations · ${MOTIONS.length} motion presets · ${FONTS.length} fonts. Click any item to apply it to the selected segment.`}
+      />
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {tabs.map(t => {
           const Icon = t.icon
           const active = tab === t.id
@@ -377,66 +373,81 @@ const TextMotionStudioView: React.FC<Props> = ({
             <button type="button"
               key={t.id}
               onClick={() => { setTab(t.id); setMoodFilter('All'); setSearch('') }}
-              className={`flex items-center gap-3 px-5 py-3 rounded-2xl border-2 transition-colors ${
+              className={cn(
+                'flex items-center gap-2 rounded-lg border px-4 py-2.5 transition-colors',
                 active
-                  ? `bg-gradient-to-br ${t.accent} text-white border-transparent shadow-[0_8px_30px_rgba(0,0,0,0.4)]`
-                  : 'bg-white/[0.02] text-slate-300 border-white/10 hover:bg-white/[0.05] hover:border-white/20'
-              }`}
+                  ? 'border-transparent bg-primary text-primary-foreground'
+                  : 'border-border bg-background/40 text-theme-secondary hover:border-border/80 hover:text-theme-primary'
+              )}
             >
-              <Icon className="w-4 h-4" />
-              <span className="text-[12px] font-bold tracking-tight">{t.label}</span>
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${active ? 'bg-black/20' : 'bg-white/5'}`}>{t.count}</span>
+              <Icon className="h-4 w-4" aria-hidden />
+              <span className="text-sm font-medium">{t.label}</span>
+              <span className={cn('rounded-full px-2 py-0.5 text-xs', active ? 'bg-black/20' : 'bg-accent')}>{t.count}</span>
             </button>
           )
         })}
       </div>
 
       {/* Search + mood */}
-      <div className={`${glassStyle} rounded-2xl p-3 flex flex-col md:flex-row gap-3`}>
+      <Panel variant="glass" className="flex flex-col gap-3 p-3 md:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-muted" aria-hidden />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={`Search ${tabs.find(t => t.id === tab)?.label.toLowerCase()}…`}
-            className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-10 py-2.5 text-[13px] font-medium text-white focus:outline-none focus:border-fuchsia-500/50 placeholder:text-slate-500"
+            className="h-10 w-full rounded-lg border border-input bg-background pl-10 pr-10 text-sm text-theme-primary placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           {search && (
-            <button type="button" onClick={() => setSearch('')} title="Clear" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center">
-              <X className="w-3 h-3" />
-            </button>
+            <IconButton
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearch('')}
+              title="Clear"
+              aria-label="Clear search"
+              className="absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2"
+            >
+              <X className="h-3 w-3" aria-hidden />
+            </IconButton>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           {moods.slice(0, 8).map(m => {
             const Icon = MOOD_ICONS[m] || Type
             return (
               <button type="button"
                 key={m}
                 onClick={() => setMoodFilter(m)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
                   moodFilter === m
-                    ? 'bg-fuchsia-600 text-white border-transparent'
-                    : 'bg-white/[0.02] text-slate-300 border-white/10 hover:text-white hover:border-white/30'
-                }`}
+                    ? 'border-transparent bg-primary text-primary-foreground'
+                    : 'border-border bg-background/40 text-theme-secondary hover:text-theme-primary'
+                )}
               >
-                {m !== 'All' && <Icon className="w-3 h-3" />}
+                {m !== 'All' && <Icon className="h-3 w-3" aria-hidden />}
                 {m}
               </button>
             )
           })}
         </div>
-      </div>
+      </Panel>
 
       {/* Body */}
       {visible.length === 0 ? (
-        <div className={`${glassStyle} rounded-2xl p-12 text-center`}>
-          <Search className="w-10 h-10 text-slate-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-black text-[var(--text-main)] mb-2">No matches</h3>
-          <p className="text-[13px] text-slate-400 mb-5">Try a different search or mood.</p>
-          <button type="button" onClick={() => { setSearch(''); setMoodFilter('All') }} className="px-6 py-2.5 bg-white/5 border border-white/10 text-slate-300 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:text-white">Reset</button>
-        </div>
+        <Panel variant="glass" className="p-0">
+          <EmptyState
+            icon={Search}
+            title="No matches"
+            description="Try a different search or mood."
+            action={
+              <Button variant="secondary" onClick={() => { setSearch(''); setMoodFilter('All') }}>
+                Reset
+              </Button>
+            }
+          />
+        </Panel>
       ) : (
         <>
           {tab === 'styles'     && <StyleGrid     items={visible as CaptionStyle[]}    onApply={handleApplyStyle} />}
@@ -447,15 +458,15 @@ const TextMotionStudioView: React.FC<Props> = ({
       )}
 
       {/* Footer note */}
-      <div className="rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
-        <Layers className="w-4 h-4 text-fuchsia-400 flex-shrink-0 mt-0.5" />
+      <Panel variant="subtle" className="flex items-start gap-3 p-4">
+        <Layers className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
         <div>
-          <p className="text-[11px] font-bold text-fuchsia-300 leading-snug">Live-wired to the segment store.</p>
-          <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-            Each tile mutates the selected text overlay&apos;s <code className="text-fuchsia-300">style / animationIn / motionGraphic / fontFamily</code>. With nothing selected, a new overlay is seeded at the current playhead.
+          <p className="ds-text-label text-theme-primary">Live-wired to the segment store.</p>
+          <p className="ds-text-caption mt-1">
+            Each tile mutates the selected text overlay&apos;s <code className="text-primary">style / animationIn / motionGraphic / fontFamily</code>. With nothing selected, a new overlay is seeded at the current playhead.
           </p>
         </div>
-      </div>
+      </Panel>
     </div>
   )
 }
@@ -472,18 +483,18 @@ const StyleGrid: React.FC<{ items: CaptionStyle[]; onApply: (s: CaptionStyle) =>
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(s)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-fuchsia-500/40 transition-colors overflow-hidden text-left group"
+          className="group overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-colors hover:border-primary/40"
         >
           {/* Live preview */}
-          <div className="aspect-video bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.15),transparent_55%),radial-gradient(circle_at_80%_80%,rgba(217,70,239,0.18),transparent_55%)] flex items-center justify-center p-5 relative overflow-hidden">
+          <div className="ds-bg-mesh-soft relative flex aspect-video items-center justify-center overflow-hidden p-5">
             <CaptionPreview style={s} />
           </div>
-          <div className="px-4 py-3 flex items-center justify-between border-t border-white/5">
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
             <div className="min-w-0">
-              <p className="text-[12px] font-bold text-white truncate">{s.name}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mt-0.5"><MoodIcon className="w-2.5 h-2.5" />{s.mood}</p>
+              <p className="ds-text-label truncate text-theme-primary">{s.name}</p>
+              <p className="ds-text-caption mt-0.5 flex items-center gap-1.5"><MoodIcon className="h-2.5 w-2.5" aria-hidden />{s.mood}</p>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-fuchsia-600 text-white opacity-0 group-hover:opacity-100 transition-opacity">Apply</span>
+            <Badge className="opacity-0 transition-opacity group-hover:opacity-100">Apply</Badge>
           </div>
         </motion.button>
       )
@@ -525,17 +536,17 @@ const AnimationGrid: React.FC<{ items: TextAnimation[]; onApply: (a: TextAnimati
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(a)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-amber-500/40 transition-colors overflow-hidden text-left group"
+          className="group overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-colors hover:border-primary/40"
         >
-          <div className="aspect-video bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.12),transparent_60%)] flex items-center justify-center p-4 overflow-hidden">
+          <div className="ds-bg-mesh-soft flex aspect-video items-center justify-center overflow-hidden p-4">
             <AnimationPreview kind={a.preview} />
           </div>
-          <div className="px-3 py-2.5 flex items-center justify-between border-t border-white/5">
+          <div className="flex items-center justify-between border-t border-border px-3 py-2.5">
             <div className="min-w-0">
-              <p className="text-[12px] font-bold text-white truncate">{a.name}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mt-0.5"><MoodIcon className="w-2.5 h-2.5" />{a.tag}</p>
+              <p className="ds-text-label truncate text-theme-primary">{a.name}</p>
+              <p className="ds-text-caption mt-0.5 flex items-center gap-1.5"><MoodIcon className="h-2.5 w-2.5" aria-hidden />{a.tag}</p>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">+</span>
+            <Badge variant="secondary">+</Badge>
           </div>
         </motion.button>
       )
@@ -614,17 +625,17 @@ const MotionGrid: React.FC<{ items: MotionPreset[]; onApply: (m: MotionPreset) =
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(m)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-cyan-500/40 transition-colors overflow-hidden text-left group"
+          className="group overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-colors hover:border-primary/40"
         >
-          <div className="aspect-video bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.12),transparent_60%)] relative overflow-hidden">
+          <div className="ds-bg-mesh-soft relative aspect-video overflow-hidden">
             <MotionPreview kind={m.preview} />
           </div>
-          <div className="px-3 py-2.5 flex items-center justify-between border-t border-white/5">
+          <div className="flex items-center justify-between border-t border-border px-3 py-2.5">
             <div className="min-w-0">
-              <p className="text-[12px] font-bold text-white truncate">{m.name}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mt-0.5"><MoodIcon className="w-2.5 h-2.5" />{m.tag}</p>
+              <p className="ds-text-label truncate text-theme-primary">{m.name}</p>
+              <p className="ds-text-caption mt-0.5 flex items-center gap-1.5"><MoodIcon className="h-2.5 w-2.5" aria-hidden />{m.tag}</p>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">+</span>
+            <Badge variant="secondary">+</Badge>
           </div>
         </motion.button>
       )
@@ -684,17 +695,17 @@ const FontGrid: React.FC<{ items: FontEntry[]; onApply: (f: FontEntry) => void }
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(f)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-emerald-500/40 transition-colors p-5 text-left group"
+          className="group rounded-2xl border border-border bg-background/40 p-5 text-left transition-colors hover:border-primary/40"
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5"><MoodIcon className="w-3 h-3" />{f.mood}</span>
-            <span className="text-[9px] font-mono text-slate-500">{f.weights.join(' · ')}</span>
+          <div className="mb-3 flex items-center justify-between">
+            <span className="ds-text-caption flex items-center gap-1.5 text-primary"><MoodIcon className="h-3 w-3" aria-hidden />{f.mood}</span>
+            <span className="font-mono text-xs text-theme-muted">{f.weights.join(' · ')}</span>
           </div>
-          <p className="text-3xl text-white mb-2 leading-tight" style={{ fontFamily: f.family, fontWeight: f.weights[Math.floor(f.weights.length / 2)] }}>{f.name}</p>
-          <p className="text-[12px] text-slate-400 mb-3 leading-relaxed" style={{ fontFamily: f.family }}>The quick brown fox jumps over the lazy dog.</p>
+          <p className="mb-2 text-3xl leading-tight text-theme-primary" style={{ fontFamily: f.family, fontWeight: f.weights[Math.floor(f.weights.length / 2)] }}>{f.name}</p>
+          <p className="mb-3 text-sm leading-relaxed text-theme-muted" style={{ fontFamily: f.family }}>The quick brown fox jumps over the lazy dog.</p>
           <div className="flex flex-wrap gap-1.5">
             {f.bestFor.map(b => (
-              <span key={b} className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">{b}</span>
+              <Badge key={b} variant="outline">{b}</Badge>
             ))}
           </div>
         </motion.button>

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import {
-  Globe,
   Radio,
   Share2,
   Calendar,
@@ -22,6 +21,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 import { apiGet, apiPost } from '../../../lib/api'
+import { Panel, Button, Badge, SectionHeader, FormField, Input, Textarea } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 interface DistributionHubViewProps {
   videoId: string
@@ -32,9 +33,9 @@ interface DistributionHubViewProps {
 // Platforms this hub can publish to. The `endpoint`/`buildPayload` fields mirror
 // ExportView.handlePublish EXACTLY so behaviour stays consistent across views.
 const PLATFORMS = [
-  { id: 'tiktok', label: 'TIKTOK', icon: Smartphone, c: 'text-rose-500', bg: 'bg-rose-500/5', b: 'border-rose-500/20' },
-  { id: 'instagram', label: 'INSTAGRAM', icon: Instagram, c: 'text-fuchsia-500', bg: 'bg-fuchsia-500/5', b: 'border-fuchsia-500/20' },
-  { id: 'youtube', label: 'YOUTUBE', icon: Youtube, c: 'text-red-500', bg: 'bg-red-500/5', b: 'border-red-500/20' },
+  { id: 'tiktok', label: 'TikTok', icon: Smartphone, c: 'text-rose-500', bg: 'bg-rose-500/10', b: 'border-rose-500/20' },
+  { id: 'instagram', label: 'Instagram', icon: Instagram, c: 'text-fuchsia-500', bg: 'bg-fuchsia-500/10', b: 'border-fuchsia-500/20' },
+  { id: 'youtube', label: 'YouTube', icon: Youtube, c: 'text-red-500', bg: 'bg-red-500/10', b: 'border-red-500/20' },
 ] as const
 
 type PlatformId = typeof PLATFORMS[number]['id']
@@ -142,7 +143,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
       return
     }
 
-    setSwarmHUDTask('Commence Global Neural Broadcast')
+    setSwarmHUDTask('Commence Global Broadcast')
     setShowSwarmHUD(true)
     setIsSyncing(true)
 
@@ -173,7 +174,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
 
       const failures = results.filter(r => r.status === 'rejected').length
       if (failures === 0) {
-        showToast('Neural Broadcast Complete! Content live on selected platforms.', 'success')
+        showToast('Broadcast complete! Content live on selected platforms.', 'success')
         setSelectedPlatforms([])
       } else if (failures < targets.length) {
         showToast(`Broadcast partial: ${targets.length - failures}/${targets.length} platforms succeeded.`, 'info')
@@ -192,7 +193,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
   const handleSchedule = async () => {
     const targets = selectedPlatforms.filter(p => connected[p])
     if (targets.length === 0) {
-      showToast('Select at least one connected platform on the PUSH_MATRIX tab', 'error')
+      showToast('Select at least one connected platform on the Push Matrix tab', 'error')
       return
     }
     if (!scheduleTime) {
@@ -241,402 +242,369 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
     }
   }
 
-  return (
-    <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 p-2 sm:p-0">
-      {/* Elite Control Header */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-8 relative z-10">
-        <div className="space-y-4 text-center lg:text-left">
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-500/5 border-2 border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400 italic shadow-inner">
-                <Globe className="w-4 h-4 animate-pulse" />
-                {isLoadingAccounts
-                  ? 'SCANNING_TOPOLOGY…'
-                  : `${connectedCount}/${PLATFORMS.length}_NODES_CONNECTED`}
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-white italic tracking-tight uppercase leading-none drop-shadow-2xl">
-                DISTRIBUTION_<br className="hidden sm:block" />HUB
-            </h2>
-        </div>
+  const tabs = [
+    { id: 'matrix', label: 'Push Matrix', icon: Target },
+    { id: 'schedule', label: 'Schedule', icon: Calendar },
+    { id: 'platforms', label: 'Platforms', icon: Share2 },
+  ] as const
 
-        <div className="flex flex-wrap justify-center gap-3 p-2 bg-black/40 border-2 border-white/5 rounded-[2rem] backdrop-blur-3xl shadow-2xl">
-            {[
-                { id: 'matrix', label: 'PUSH_MATRIX', icon: Target },
-                { id: 'schedule', label: 'CHRONO_CORE', icon: Calendar },
-                { id: 'platforms', label: 'NODE_CLUSTER', icon: Share2 }
-            ].map(tab => (
-                <button
-                    type="button"
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    title={tab.label}
-                    className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all italic active:scale-95 ${
-                        activeTab === tab.id
-                        ? 'bg-emerald-600 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] border-none'
-                        : 'text-slate-500 hover:text-white hover:bg-white/5 border-2 border-transparent'
-                    }`}
-                >
-                    <tab.icon className="w-4 h-4" />
-                    {tab.label}
-                </button>
-            ))}
-        </div>
+  // Optimal posting windows — shared render (real data from /social/optimal-times)
+  const OptimalWindows = () =>
+    optimalTimes.length > 0 ? (
+      <div className="flex flex-col gap-2">
+        {optimalTimes.map((w, i) => (
+          <div key={i} className="flex items-center justify-between rounded-xl border border-border bg-background/40 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" aria-hidden />
+              <span className="ds-text-label text-theme-primary">
+                {formatHour(w.start)}–{formatHour(w.end)} {optimalTimezone}
+              </span>
+            </div>
+            <span className="ds-text-caption ml-3 truncate">{w.label}</span>
+          </div>
+        ))}
       </div>
+    ) : (
+      <div className="rounded-xl border border-border bg-background/40 px-4 py-6 text-center ds-text-caption">
+        No optimal-window data available.
+      </div>
+    )
+
+  return (
+    <div className="space-y-6 ds-anim-fade-in">
+      {/* Header */}
+      <SectionHeader
+        as="h1"
+        title="Distribution Hub"
+        description={
+          isLoadingAccounts
+            ? 'Scanning connected accounts…'
+            : `${connectedCount}/${PLATFORMS.length} platforms connected.`
+        }
+        actions={
+          <div className="flex flex-wrap gap-1 rounded-xl border border-border bg-background/40 p-1">
+            {tabs.map(tab => (
+              <button
+                type="button"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                title={tab.label}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                  activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-theme-secondary hover:bg-accent hover:text-theme-primary'
+                )}
+              >
+                <tab.icon className="h-4 w-4" aria-hidden />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       <AnimatePresence mode="wait">
         {activeTab === 'matrix' && (
           <motion.div
             key="matrix"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-8"
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
           >
-            {/* Social Push Metadata Matrix */}
-            <div className="backdrop-blur-3xl bg-black/40 border-2 border-white/5 rounded-[3rem] p-8 sm:p-12 relative overflow-hidden group shadow-[0_40px_100px_rgba(0,0,0,0.5)]">
-                <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-1000">
-                    <Globe className="w-64 h-64 text-emerald-500" />
+            <Panel variant="glass">
+              <div className="mb-8 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500">
+                  <Target className="h-5 w-5" aria-hidden />
                 </div>
-
-                <div className="flex items-center justify-between mb-12 relative z-10">
-                    <div className="flex items-center gap-6">
-                        <div className="p-4 rounded-[1.5rem] bg-emerald-500/10 border-2 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                            <Target className="w-7 h-7 text-emerald-400" />
-                        </div>
-                        <div>
-                          <h4 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter leading-none uppercase">SOCIAL_PUSH_MATRIX</h4>
-                          <span className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.4em] mt-2 block italic">NEURAL_METADATA_INJECTION</span>
-                        </div>
-                    </div>
+                <div>
+                  <h2 className="ds-text-h3 text-theme-primary">Social Push Matrix</h2>
+                  <p className="ds-text-caption">Compose and target your broadcast.</p>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-14 relative z-10">
-                    <div className="lg:col-span-7 space-y-10">
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">VIRAL_MANIFEST_TITLE</label>
-                            <input
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="THE_STRATEGY_THAT_CHANGED_EVERYTHING…"
-                                title="Viral Title"
-                                className="w-full bg-black/40 border-2 border-white/5 rounded-2xl px-8 py-5 text-sm font-black text-white outline-none focus:border-emerald-500/40 transition-all placeholder-slate-800 uppercase italic shadow-inner"
-                            />
-                        </div>
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">NEURAL_DESCRIPTION_BLOCK</label>
-                            <textarea
-                                rows={6}
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="CHECK_THE_LINK_IN_BIO_FOR_MORE_INSIGHT…"
-                                title="Description"
-                                className="w-full bg-black/40 border-2 border-white/5 rounded-[2.5rem] px-8 py-6 text-sm font-medium text-slate-300 outline-none focus:border-emerald-500/40 transition-all placeholder-slate-800 resize-none shadow-inner leading-relaxed"
-                            />
-                        </div>
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+                <div className="space-y-6 lg:col-span-7">
+                  <FormField label="Title / Caption" htmlFor="dist-title">
+                    <Input
+                      id="dist-title"
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="The strategy that changed everything…"
+                      title="Title"
+                    />
+                  </FormField>
+                  <FormField label="Description" htmlFor="dist-desc">
+                    <Textarea
+                      id="dist-desc"
+                      rows={6}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Check the link in bio for more insight…"
+                      title="Description"
+                    />
+                  </FormField>
 
-                        {/* Real platform target selection — only connected platforms are selectable */}
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">BROADCAST_TARGETS</label>
-                            <div className="flex flex-wrap gap-3">
-                                {PLATFORMS.map(p => {
-                                    const isConn = !!connected[p.id]
-                                    const isSel = selectedPlatforms.includes(p.id)
-                                    return (
-                                        <button
-                                            key={p.id}
-                                            type="button"
-                                            disabled={!isConn || isLoadingAccounts}
-                                            onClick={() => togglePlatform(p.id)}
-                                            title={isConn ? `Target ${p.label}` : `${p.label} not connected`}
-                                            className={`flex items-center gap-3 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest italic border-2 transition-all ${
-                                                !isConn
-                                                  ? 'bg-black/40 border-white/5 text-slate-700 cursor-not-allowed opacity-50'
-                                                  : isSel
-                                                    ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)]'
-                                                    : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:border-white/20'
-                                            }`}
-                                        >
-                                            <p.icon className="w-4 h-4" />
-                                            {p.label}
-                                            {!isConn && <span className="text-[8px] opacity-70">(OFFLINE)</span>}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="lg:col-span-5 space-y-12">
-                        {/* Real optimal posting windows from /social/optimal-times */}
-                        <div className="space-y-5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">OPTIMAL_POSTING_WINDOWS</label>
-                            {optimalTimes.length > 0 ? (
-                                <div className="flex flex-col gap-3">
-                                    {optimalTimes.map((w, i) => (
-                                        <div key={i} className="px-5 py-4 bg-emerald-500/5 border-2 border-emerald-500/20 rounded-2xl flex items-center justify-between shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <Clock className="w-4 h-4 text-emerald-400" />
-                                                <span className="text-[11px] font-black text-white italic uppercase tracking-wider">
-                                                    {formatHour(w.start)}–{formatHour(w.end)} {optimalTimezone}
-                                                </span>
-                                            </div>
-                                            <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest italic truncate ml-3">{w.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="px-5 py-6 bg-black/40 border-2 border-white/5 rounded-2xl text-[10px] font-black text-slate-600 uppercase tracking-widest italic text-center">
-                                    NO_OPTIMAL_WINDOW_DATA_AVAILABLE
-                                </div>
+                  {/* Real platform target selection — only connected platforms are selectable */}
+                  <FormField label="Broadcast Targets">
+                    <div className="flex flex-wrap gap-2">
+                      {PLATFORMS.map(p => {
+                        const isConn = !!connected[p.id]
+                        const isSel = selectedPlatforms.includes(p.id)
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={!isConn || isLoadingAccounts}
+                            onClick={() => togglePlatform(p.id)}
+                            title={isConn ? `Target ${p.label}` : `${p.label} not connected`}
+                            className={cn(
+                              'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors',
+                              !isConn
+                                ? 'cursor-not-allowed border-border bg-background/40 text-theme-muted opacity-50'
+                                : isSel
+                                  ? 'border-transparent bg-emerald-600 text-white'
+                                  : 'border-border bg-background/40 text-theme-secondary hover:text-theme-primary'
                             )}
-                        </div>
-
-                        <div className="p-8 sm:p-10 bg-emerald-500/5 border-2 border-emerald-500/10 rounded-[3rem] flex flex-col gap-6 shadow-2xl relative overflow-hidden">
-                            <div className="flex items-center justify-between relative z-10">
-                                <div className="space-y-2">
-                                    <span className="text-[10px] font-black text-emerald-500/60 uppercase tracking-widest italic">PUBLISH_READINESS</span>
-                                    <p className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">
-                                        {isPublishable ? 'VIDEO_READY' : 'AWAITING_RENDER'}
-                                    </p>
-                                </div>
-                                <div className="p-5 bg-emerald-500 text-white rounded-2xl shadow-[0_10px_30px_rgba(16,185,129,0.3)]">
-                                    <BarChart3 className="w-7 h-7" />
-                                </div>
-                            </div>
-                            <p className="text-[11px] text-slate-500 font-black italic leading-relaxed uppercase tracking-wider relative z-10">
-                                {isPublishable
-                                  ? `${selectedPlatforms.length}_TARGET(S)_SELECTED_OF_${connectedCount}_CONNECTED`
-                                  : 'RENDER_TO_A_REACHABLE_URL_TO_ENABLE_BROADCAST'}
-                            </p>
-                        </div>
+                          >
+                            <p.icon className="h-4 w-4" aria-hidden />
+                            {p.label}
+                            {!isConn && <span className="text-xs opacity-70">(offline)</span>}
+                          </button>
+                        )
+                      })}
                     </div>
+                  </FormField>
                 </div>
 
-                <div className="mt-14 pt-10 border-t-2 border-white/5 flex flex-col sm:flex-row items-center justify-between gap-10 relative z-10">
-                    <div className="flex items-center gap-5 text-slate-500 text-center sm:text-left">
-                        <AlertCircle className="w-6 h-6 text-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] italic">
-                            {connectedCount === 0
-                              ? 'NO_PLATFORMS_CONNECTED — LINK_AN_ACCOUNT_IN_NODE_CLUSTER'
-                              : `${selectedPlatforms.length}_OF_${connectedCount}_CONNECTED_NODES_TARGETED`}
-                        </span>
+                <div className="space-y-6 lg:col-span-5">
+                  {/* Real optimal posting windows from /social/optimal-times */}
+                  <FormField label="Optimal Posting Windows">
+                    <OptimalWindows />
+                  </FormField>
+
+                  <Panel variant="subtle" className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="ds-text-caption">Publish Readiness</span>
+                        <p className="ds-text-h3 text-theme-primary">
+                          {isPublishable ? 'Video ready' : 'Awaiting render'}
+                        </p>
+                      </div>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                        <BarChart3 className="h-6 w-6" aria-hidden />
+                      </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={handleBroadcast}
-                        disabled={isSyncing || isLoadingAccounts || selectedPlatforms.length === 0 || !isPublishable}
-                        title="Commence Broadcast"
-                        className="w-full sm:w-auto px-16 py-6 bg-emerald-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.4em] italic shadow-[0_20px_50px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-5 relative overflow-hidden group/btn disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    >
-                        {isSyncing
-                          ? <Loader2 className="w-6 h-6 relative z-10 animate-spin" />
-                          : <Radio className="w-6 h-6 relative z-10 group-hover:scale-125 transition-transform" />}
-                        <span className="relative z-10">{isSyncing ? 'BROADCASTING…' : 'COMMENCE_BROADCAST'}</span>
-                    </button>
+                    <p className="ds-text-caption">
+                      {isPublishable
+                        ? `${selectedPlatforms.length} target(s) selected of ${connectedCount} connected`
+                        : 'Render to a reachable URL to enable broadcast.'}
+                    </p>
+                  </Panel>
                 </div>
-            </div>
+              </div>
+
+              <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 sm:flex-row">
+                <div className="flex items-center gap-2 text-theme-muted">
+                  <AlertCircle className="h-5 w-5 text-emerald-500" aria-hidden />
+                  <span className="ds-text-caption">
+                    {connectedCount === 0
+                      ? 'No platforms connected — link an account in Platforms.'
+                      : `${selectedPlatforms.length} of ${connectedCount} connected nodes targeted`}
+                  </span>
+                </div>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handleBroadcast}
+                  loading={isSyncing}
+                  disabled={isSyncing || isLoadingAccounts || selectedPlatforms.length === 0 || !isPublishable}
+                  title="Commence broadcast"
+                  leftIcon={isSyncing ? undefined : <Radio className="h-5 w-5" aria-hidden />}
+                  className="w-full bg-emerald-600 hover:bg-emerald-600/90 sm:w-auto"
+                >
+                  {isSyncing ? 'Broadcasting…' : 'Commence Broadcast'}
+                </Button>
+              </div>
+            </Panel>
           </motion.div>
         )}
 
         {activeTab === 'schedule' && (
           <motion.div
             key="schedule"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-8"
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
           >
-            <div className="backdrop-blur-3xl bg-black/40 border-2 border-white/5 rounded-[3rem] p-8 sm:p-12 shadow-2xl">
-                <div className="flex flex-col sm:flex-row items-center justify-between mb-12 gap-8">
-                    <div className="flex items-center gap-6">
-                        <div className="p-4 rounded-[1.5rem] bg-primary-500/10 border-2 border-primary-500/20 shadow-xl">
-                            <Calendar className="w-7 h-7 text-primary-400" />
-                        </div>
-                        <div className="text-center sm:text-left">
-                            <h4 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter leading-none uppercase">CHRONO_CORE</h4>
-                            <span className="text-[10px] font-black text-primary-400/60 uppercase tracking-[0.4em] mt-2 block italic">TEMPORAL_DISPATCH_QUEUE</span>
-                        </div>
+            <Panel variant="glass">
+              <div className="mb-8 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <Calendar className="h-5 w-5" aria-hidden />
+                </div>
+                <div>
+                  <h2 className="ds-text-h3 text-theme-primary">Schedule</h2>
+                  <p className="ds-text-caption">Queue a dispatch for later.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <div className="space-y-6">
+                  <FormField label="Dispatch Time" htmlFor="dist-when">
+                    <Input
+                      id="dist-when"
+                      type="datetime-local"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      title="Scheduled time"
+                      className="[color-scheme:dark]"
+                    />
+                  </FormField>
+
+                  <FormField label="Target Nodes">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedPlatforms.filter(p => connected[p]).length > 0 ? (
+                        selectedPlatforms.filter(p => connected[p]).map(pid => {
+                          const p = PLATFORMS.find(x => x.id === pid)!
+                          return (
+                            <Badge key={pid} variant="secondary" className="gap-1.5">
+                              <p.icon className="h-3.5 w-3.5" aria-hidden />{p.label}
+                            </Badge>
+                          )
+                        })
+                      ) : (
+                        <span className="ds-text-caption">Select targets on the Push Matrix tab.</span>
+                      )}
                     </div>
+                  </FormField>
+
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={handleSchedule}
+                    loading={isScheduling}
+                    disabled={isScheduling || isLoadingAccounts || selectedPlatforms.filter(p => connected[p]).length === 0 || !scheduleTime}
+                    title="Schedule dispatch"
+                    leftIcon={isScheduling ? undefined : <Plus className="h-5 w-5" aria-hidden />}
+                    className="w-full"
+                  >
+                    {isScheduling ? 'Queuing…' : 'Schedule Dispatch'}
+                  </Button>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div className="space-y-8">
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">DISPATCH_TIMESTAMP</label>
-                            <input
-                                type="datetime-local"
-                                value={scheduleTime}
-                                onChange={(e) => setScheduleTime(e.target.value)}
-                                title="Scheduled time"
-                                className="w-full bg-black/40 border-2 border-white/5 rounded-2xl px-8 py-5 text-sm font-black text-white outline-none focus:border-primary-500/40 transition-all italic shadow-inner [color-scheme:dark]"
-                            />
-                        </div>
-
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">TARGET_NODES</label>
-                            <div className="flex flex-wrap gap-3">
-                                {selectedPlatforms.filter(p => connected[p]).length > 0 ? (
-                                    selectedPlatforms.filter(p => connected[p]).map(pid => {
-                                        const p = PLATFORMS.find(x => x.id === pid)!
-                                        return (
-                                            <span key={pid} className="flex items-center gap-2 px-5 py-2.5 bg-primary-500/5 border-2 border-primary-500/20 rounded-full text-[10px] font-black text-primary-400 italic uppercase">
-                                                <p.icon className="w-3.5 h-3.5" />{p.label}
-                                            </span>
-                                        )
-                                    })
-                                ) : (
-                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic">SELECT_TARGETS_ON_PUSH_MATRIX_TAB</span>
-                                )}
-                            </div>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={handleSchedule}
-                            disabled={isScheduling || isLoadingAccounts || selectedPlatforms.filter(p => connected[p]).length === 0 || !scheduleTime}
-                            title="Schedule Dispatch"
-                            className="w-full px-12 py-6 bg-primary-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.4em] italic shadow-[0_20px_50px_rgba(99,102,241,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-                        >
-                            {isScheduling
-                              ? <Loader2 className="w-6 h-6 animate-spin" />
-                              : <Plus className="w-6 h-6" />}
-                            {isScheduling ? 'QUEUING…' : 'SCHEDULE_DISPATCH'}
-                        </button>
-                    </div>
-
-                    <div className="space-y-5">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-2 italic">OPTIMAL_POSTING_WINDOWS</label>
-                        {optimalTimes.length > 0 ? (
-                            <div className="flex flex-col gap-3">
-                                {optimalTimes.map((w, i) => (
-                                    <div key={i} className="px-6 py-5 bg-primary-500/5 border-2 border-primary-500/20 rounded-[2rem] flex items-center justify-between shadow-inner">
-                                        <div className="flex items-center gap-3">
-                                            <Clock className="w-5 h-5 text-primary-400" />
-                                            <span className="text-[12px] font-black text-white italic uppercase tracking-wider">
-                                                {formatHour(w.start)}–{formatHour(w.end)} {optimalTimezone}
-                                            </span>
-                                        </div>
-                                        <span className="text-[9px] font-black text-primary-400/70 uppercase tracking-widest italic truncate ml-3">{w.label}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="px-6 py-10 bg-black/40 border-2 border-white/5 rounded-[2rem] text-[10px] font-black text-slate-600 uppercase tracking-widest italic text-center">
-                                NO_OPTIMAL_WINDOW_DATA_AVAILABLE
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+                <FormField label="Optimal Posting Windows">
+                  <OptimalWindows />
+                </FormField>
+              </div>
+            </Panel>
           </motion.div>
         )}
 
         {activeTab === 'platforms' && (
           <motion.div
             key="platforms"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-2"
           >
-             {/* Platform Connection Status (real) */}
-            <div className="backdrop-blur-3xl bg-black/40 border-2 border-white/5 rounded-[3rem] p-8 sm:p-12 space-y-10 shadow-2xl">
-                <div className="flex items-center gap-6">
-                    <div className="p-4 rounded-[1.5rem] bg-primary-500/10 border-2 border-primary-500/20 shadow-xl">
-                    <Share2 className="w-7 h-7 text-primary-400" />
-                    </div>
-                    <h4 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase leading-none">IDENTITY_<br />CLUSTERS</h4>
+            {/* Platform Connection Status (real) */}
+            <Panel variant="glass" className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <Share2 className="h-5 w-5" aria-hidden />
                 </div>
+                <h2 className="ds-text-h3 text-theme-primary">Identity Clusters</h2>
+              </div>
 
-                <div className="space-y-4">
-                    {isLoadingAccounts ? (
-                        <div className="p-10 flex items-center justify-center gap-4 text-slate-500">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] italic">SCANNING_TOPOLOGY…</span>
+              <div className="space-y-3">
+                {isLoadingAccounts ? (
+                  <div className="flex items-center justify-center gap-3 p-10 text-theme-muted">
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                    <span className="ds-text-label">Scanning accounts…</span>
+                  </div>
+                ) : (
+                  PLATFORMS.map(node => {
+                    const isConn = !!connected[node.id]
+                    return (
+                      <div key={node.id} className="flex items-center justify-between rounded-xl border border-border bg-background/40 p-4">
+                        <div className="flex items-center gap-3">
+                          <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl border', node.bg, node.b, node.c)}>
+                            <node.icon className="h-5 w-5" aria-hidden />
+                          </div>
+                          <div>
+                            <p className="ds-text-label text-theme-primary">{node.label}</p>
+                            <p className={cn('ds-text-caption mt-0.5 flex items-center gap-1.5', isConn ? 'text-emerald-500' : 'text-theme-muted')}>
+                              {isConn
+                                ? <><CheckCircle2 className="h-3 w-3" aria-hidden /> Connected</>
+                                : <><Link2 className="h-3 w-3" aria-hidden /> Not connected</>}
+                            </p>
+                          </div>
                         </div>
-                    ) : (
-                        PLATFORMS.map(node => {
-                            const isConn = !!connected[node.id]
-                            return (
-                                <div key={node.id} className="p-6 bg-black/40 border-2 border-white/5 rounded-3xl flex items-center justify-between group hover:border-white/20 transition-all shadow-inner">
-                                    <div className="flex items-center gap-6">
-                                        <div className={`p-4 ${node.bg} border-2 ${node.b} rounded-2xl ${node.c} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
-                                            <node.icon className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-base font-black text-white italic tracking-tighter uppercase leading-none">{node.label}</p>
-                                            <p className={`text-[10px] font-black mt-2 uppercase tracking-[0.2em] italic flex items-center gap-1.5 ${isConn ? 'text-emerald-400' : 'text-slate-500'}`}>
-                                                {isConn
-                                                  ? <><CheckCircle2 className="w-3 h-3" /> CONNECTED</>
-                                                  : <><Link2 className="w-3 h-3" /> NOT_CONNECTED</>}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    {isConn ? (
-                                        <span className="px-6 py-2.5 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-xl text-[10px] font-black text-emerald-400 uppercase italic">ACTIVE</span>
-                                    ) : (
-                                        <a
-                                            href="/dashboard/social"
-                                            className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border-2 border-white/5 rounded-xl text-[10px] font-black text-slate-400 hover:text-white transition-all uppercase italic"
-                                        >
-                                            CONNECT
-                                        </a>
-                                    )}
-                                </div>
-                            )
-                        })
-                    )}
-                </div>
-            </div>
+                        {isConn ? (
+                          <Badge className="bg-emerald-600">Active</Badge>
+                        ) : (
+                          <a
+                            href="/dashboard/social"
+                            className="inline-flex h-8 items-center rounded-lg border border-input bg-background px-3 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                          >
+                            Connect
+                          </a>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </Panel>
 
             {/* Connection Summary (real, derived from /oauth/accounts) */}
-            <div className="backdrop-blur-3xl bg-black/40 border-2 border-white/5 rounded-[3rem] p-8 sm:p-12 space-y-10 relative overflow-hidden group shadow-2xl">
-                <div className="flex items-center gap-6">
-                    <div className="p-4 rounded-[1.5rem] bg-emerald-500/10 border-2 border-emerald-500/20 shadow-xl">
-                        <Zap className="w-7 h-7 text-emerald-400" />
-                    </div>
-                    <h4 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase leading-none">UPLINK_<br />STATUS</h4>
+            <Panel variant="glass" className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500">
+                  <Zap className="h-5 w-5" aria-hidden />
                 </div>
+                <h2 className="ds-text-h3 text-theme-primary">Uplink Status</h2>
+              </div>
 
-                <div className="p-8 bg-emerald-500/5 border-2 border-emerald-500/10 rounded-[2.5rem] flex flex-col gap-6 shadow-2xl">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">CONNECTED_NODES</span>
-                        <span className="text-[11px] font-black text-white italic uppercase tracking-widest">
-                            {isLoadingAccounts ? '—' : `${connectedCount} / ${PLATFORMS.length}`}
-                        </span>
-                    </div>
-                    {/* Real per-platform connection bars (1 = connected, dim = not) — no random data */}
-                    <div className="flex gap-2">
-                        {PLATFORMS.map(p => (
-                            <div
-                                key={p.id}
-                                title={`${p.label}: ${connected[p.id] ? 'connected' : 'not connected'}`}
-                                className={`h-6 flex-1 rounded-full transition-colors ${
-                                    connected[p.id]
-                                      ? 'bg-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.4)]'
-                                      : 'bg-white/5'
-                                }`}
-                            />
-                        ))}
-                    </div>
+              <Panel variant="subtle" className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <span className="ds-text-caption">Connected nodes</span>
+                  <span className="ds-text-label text-theme-primary">
+                    {isLoadingAccounts ? '—' : `${connectedCount} / ${PLATFORMS.length}`}
+                  </span>
                 </div>
+                {/* Real per-platform connection bars (1 = connected, dim = not) — no random data */}
+                <div className="flex gap-2">
+                  {PLATFORMS.map(p => (
+                    <div
+                      key={p.id}
+                      title={`${p.label}: ${connected[p.id] ? 'connected' : 'not connected'}`}
+                      className={cn('h-5 flex-1 rounded-full transition-colors', connected[p.id] ? 'bg-emerald-500/60' : 'bg-accent')}
+                    />
+                  ))}
+                </div>
+              </Panel>
 
-                <div className="space-y-4">
-                    {PLATFORMS.map(p => (
-                        <div key={p.id} className={`p-5 bg-black/40 border-2 rounded-[2rem] flex items-center justify-between shadow-inner ${connected[p.id] ? 'border-emerald-500/20' : 'border-white/5'}`}>
-                            <span className="flex items-center gap-3 text-[11px] font-black text-white italic uppercase tracking-[0.25em]">
-                                <p.icon className={`w-4 h-4 ${p.c}`} />{p.label}
-                            </span>
-                            <span className={`text-[9px] font-black px-4 py-1.5 rounded-full border-2 uppercase tracking-widest italic shadow-sm ${
-                                connected[p.id]
-                                  ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
-                                  : 'bg-slate-500/5 border-slate-500/20 text-slate-500'
-                            }`}>
-                                {isLoadingAccounts ? 'SCANNING' : connected[p.id] ? 'ONLINE' : 'OFFLINE'}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
+              <div className="space-y-3">
+                {PLATFORMS.map(p => (
+                  <div key={p.id} className={cn('flex items-center justify-between rounded-xl border bg-background/40 p-4', connected[p.id] ? 'border-emerald-500/20' : 'border-border')}>
+                    <span className="ds-text-label flex items-center gap-2 text-theme-primary">
+                      <p.icon className={cn('h-4 w-4', p.c)} aria-hidden />{p.label}
+                    </span>
+                    <Badge variant={connected[p.id] ? 'default' : 'secondary'} className={connected[p.id] ? 'bg-emerald-600' : ''}>
+                      {isLoadingAccounts ? 'Scanning' : connected[p.id] ? 'Online' : 'Offline'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </Panel>
           </motion.div>
         )}
       </AnimatePresence>
