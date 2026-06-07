@@ -141,7 +141,15 @@ const userPreferencesSchema = new mongoose.Schema({
       avgRetentionRate: { type: Number, default: 0 },
       topPerformingHooks: [String],
       audienceDemographic: String,
-      clickThroughRate: { type: Number, default: 0 }
+      clickThroughRate: { type: Number, default: 0 },
+      // Populated by the continuous-learning loop from the creator's
+      // UserStyleProfile weighted-performance signal. `avgRetentionDelta` is
+      // the EMA retention delta vs. niche benchmark in [-1,1]; `sampleSize`
+      // is the total weighted-signal count; `hasRealData` flags whether the
+      // last sync had real performance history (vs. a cold-start blueprint).
+      avgRetentionDelta: { type: Number, default: 0 },
+      sampleSize: { type: Number, default: 0 },
+      hasRealData: { type: Boolean, default: false }
     },
     activeCreativeBlueprint: { type: mongoose.Schema.Types.Mixed, default: {} },
     competitorWatchlist: [String],
