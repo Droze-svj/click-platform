@@ -7,6 +7,8 @@ import { useAuth } from '../hooks/useAuth'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight,
+  // Zone headers
+  Clapperboard, Rocket, TrendingUp, SlidersHorizontal,
   // Studio
   LayoutDashboard, Video, Sparkles, FileText, BookOpen, Hammer, Film, Wand2,
   // Publish
@@ -17,22 +19,30 @@ import {
   FolderKanban, Users, Gem, Boxes, Plug, Compass, Share2,
   // Settings
   Settings, LogOut, Sun, Moon, Eye, EyeOff,
-  Search
+  Search,
+  type LucideIcon,
 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
 import { useLayoutPreferences } from '../contexts/LayoutPreferencesContext'
+import { Badge } from './ui'
+import { cn } from '../lib/utils'
 import ClickLogo from './ClickLogo'
 import { useTranslation } from '../hooks/useTranslation'
 
 // ── Zone definitions ───────────────────────────────────────────────────────
-const getZones = (t: (k: string) => string) => [
+// `icon` is a lucide component (emoji zone headers were replaced for the 2026
+// system). `accent` drives the active item color; it stays per-zone so each
+// section keeps a subtle, calm identity.
+type NavItem = { path: string; label: string; icon: LucideIcon; badge: string | null }
+type Zone = { id: string; label: string; icon: LucideIcon; accent: string; activeBg: string; items: NavItem[] }
+
+const getZones = (t: (k: string) => string): Zone[] => [
   {
     id: 'studio',
     label: t('nav.studio') || 'Studio',
-    emoji: '🎬',
-    gradient: 'from-primary-500/10 to-indigo-600/10',
+    icon: Clapperboard,
     accent: 'text-primary-600 dark:text-primary-400',
-    activeBg: 'bg-primary-500/5 dark:bg-primary-500/10 border-primary-500/10 dark:border-primary-500/20',
+    activeBg: 'bg-primary-500/10 border-primary-500/20',
     items: [
       { path: '/dashboard',             label: t('nav.dashboard') || 'Home',         icon: LayoutDashboard, badge: null },
       { path: '/dashboard/onboarding',  label: t('nav.onboarding') || 'Get Started', icon: Compass,         badge: 'Start' },
@@ -48,10 +58,9 @@ const getZones = (t: (k: string) => string) => [
   {
     id: 'publish',
     label: t('nav.publish') || 'Publish',
-    emoji: '🚀',
-    gradient: 'from-amber-500/10 to-orange-500/10',
+    icon: Rocket,
     accent: 'text-amber-600 dark:text-amber-400',
-    activeBg: 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/10 dark:border-amber-500/20',
+    activeBg: 'bg-amber-500/10 border-amber-500/20',
     items: [
       { path: '/dashboard/social',        label: t('nav.connectAccounts') || 'Connect Accounts', icon: Share2,    badge: 'Setup' },
       { path: '/dashboard/scheduler',     label: t('nav.scheduler') || 'Scheduler',    icon: Send,         badge: null },
@@ -63,10 +72,9 @@ const getZones = (t: (k: string) => string) => [
   {
     id: 'grow',
     label: t('nav.grow') || 'Grow',
-    emoji: '📈',
-    gradient: 'from-emerald-500/10 to-teal-500/10',
+    icon: TrendingUp,
     accent: 'text-emerald-600 dark:text-emerald-400',
-    activeBg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20',
+    activeBg: 'bg-emerald-500/10 border-emerald-500/20',
     items: [
       { path: '/dashboard/analytics',            label: t('nav.analytics') || 'Analytics',         icon: BarChart3,  badge: null },
       { path: '/dashboard/analytics/creator',    label: t('nav.creatorStats') || 'Creator Stats',     icon: Flame,      badge: 'AI' },
@@ -79,10 +87,9 @@ const getZones = (t: (k: string) => string) => [
   {
     id: 'manage',
     label: t('nav.manage') || 'Manage',
-    emoji: '⚙️',
-    gradient: 'from-sky-500/10 to-blue-600/10',
+    icon: SlidersHorizontal,
     accent: 'text-sky-600 dark:text-sky-400',
-    activeBg: 'bg-sky-500/5 dark:bg-sky-500/10 border-sky-500/10 dark:border-sky-500/20',
+    activeBg: 'bg-sky-500/10 border-sky-500/20',
     items: [
       { path: '/dashboard/workspaces',   label: t('nav.workspaces') || 'Workspaces',    icon: Boxes,        badge: 'New' },
       { path: '/dashboard/projects',     label: t('nav.projects') || 'Projects',      icon: FolderKanban, badge: null },
@@ -124,10 +131,10 @@ export default function SidebarNav() {
     <motion.aside
       animate={{ width: collapsed ? 84 : 280 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className="relative hidden lg:flex flex-shrink-0 h-screen flex-col bg-surface-card/95 dark:bg-surface-900/95 backdrop-blur-xl border-r border-surface-200/50 dark:border-surface-800/50 overflow-hidden z-40 transition-all duration-500 shadow-2xl"
+      className="relative hidden lg:flex flex-shrink-0 h-screen flex-col ds-surface-card !rounded-none border-y-0 border-l-0 border-r border-[var(--glass-border)] backdrop-blur-xl overflow-hidden z-40"
     >
       {/* ── Logo + Toggle ── */}
-      <div className="flex items-center justify-between px-7 py-8 border-b border-surface-100 dark:border-white/5 bg-surface-page/50 dark:bg-black/20 backdrop-blur-3xl">
+      <div className="flex items-center justify-between px-6 h-16 border-b border-[var(--glass-border)]">
         <AnimatePresence mode="wait">
           {!collapsed && (
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
@@ -135,81 +142,100 @@ export default function SidebarNav() {
             </motion.div>
           )}
         </AnimatePresence>
-        {collapsed && <div className="mx-auto"><ClickLogo size={36} /></div>}
+        {collapsed && <div className="mx-auto"><ClickLogo size={32} /></div>}
         {!collapsed && (
-          <button type="button" onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" className="w-10 h-10 rounded-2xl bg-surface-page dark:bg-white/5 hover:bg-surface-card dark:hover:bg-white/10 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all ml-auto group active:scale-90">
-            <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+          <button type="button" onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" className="w-9 h-9 rounded-lg ds-surface-subtle flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:border-[var(--glass-border-strong)] transition-colors ml-auto group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+            <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
           </button>
         )}
       </div>
 
       {collapsed && (
-        <button type="button" onClick={() => setCollapsed(false)} title="Expand sidebar" aria-label="Expand sidebar" className="absolute -right-4 top-20 z-50 w-9 h-9 rounded-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 shadow-2xl transition-all active:scale-90">
-          <ChevronRight size={18} />
+        <button type="button" onClick={() => setCollapsed(false)} title="Expand sidebar" aria-label="Expand sidebar" className="absolute -right-3 top-[4.5rem] z-50 w-7 h-7 rounded-full ds-surface-elevated ds-elev-2 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-strong)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          <ChevronRight size={15} />
         </button>
       )}
 
       {/* ── Search Trigger ── */}
       {!collapsed && (
-        <div className="px-5 pt-8 pb-4">
-          <button 
+        <div className="px-4 pt-4 pb-2">
+          <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('click-cmdk-open'))}
-            className="w-full flex items-center gap-4 px-5 py-3.5 rounded-[1.5rem] bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/5 text-surface-400 hover:bg-surface-card dark:hover:bg-white/10 hover:border-primary-500/20 transition-all text-xs font-bold group shadow-inner"
+            aria-label={`${t('common.search')} (⌘K)`}
+            className="w-full flex items-center gap-2.5 px-3.5 h-10 rounded-xl ds-surface-subtle text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:border-[var(--glass-border-strong)] transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Search size={16} className="group-hover:scale-110 transition-transform group-hover:text-primary-500" />
-            <span className="flex-1 text-left italic uppercase tracking-widest opacity-60">{t('common.search')}...</span>
-            <span className="text-[10px] font-black bg-surface-card dark:bg-white/10 px-2 py-1 rounded-lg opacity-40 group-hover:opacity-100 transition-opacity">⌘K</span>
+            <Search size={16} className="flex-shrink-0" aria-hidden="true" />
+            <span className="flex-1 text-left ds-text-label truncate">{t('common.search')}…</span>
+            <kbd className="ds-text-caption font-mono px-1.5 py-0.5 rounded-md bg-[var(--glass-surface-heavy)] border border-[var(--glass-border)]">⌘K</kbd>
           </button>
         </div>
       )}
 
       {/* ── Zone Navigation ── */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-6 space-y-3 px-4 custom-scrollbar scroll-smooth">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1.5 px-3 custom-scrollbar scroll-smooth">
         {ZONES.map(zone => {
           const isExpanded = expandedZone === zone.id && !collapsed
           const zoneActive = zone.items.some(i => isActive(i.path))
+          const ZoneIcon = zone.icon
 
           return (
-            <div key={zone.id} className="space-y-2">
+            <div key={zone.id} className="space-y-1">
               <button
                 type="button"
                 onClick={() => {
                   if (collapsed) { setCollapsed(false); setExpandedZone(zone.id) }
                   else setExpandedZone(isExpanded ? null : zone.id)
                 }}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-[1.8rem] transition-all duration-300 ease-out group relative overflow-hidden ${
-                  zoneActive ? 'bg-surface-page dark:bg-white/10 border-2 border-surface-200 dark:border-white/20 text-surface-900 dark:text-white shadow-md ring-1 ring-primary-500/20 scale-[1.02] z-10' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-page dark:hover:bg-white/[0.04]'
-                } ${collapsed ? 'justify-center' : ''}`}
+                title={zone.label}
+                aria-label={zone.label}
+                aria-expanded={isExpanded}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors group',
+                  collapsed && 'justify-center',
+                  zoneActive
+                    ? 'bg-[var(--glass-surface-heavy)] text-[var(--text-strong)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--glass-surface-heavy)]'
+                )}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${zone.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none`} />
-                <span className="text-xl relative z-10 group-hover:scale-110 transition-transform">{zone.emoji}</span>
+                <ZoneIcon size={18} className={cn('flex-shrink-0', zoneActive && zone.accent)} aria-hidden="true" />
                 {!collapsed && (
                   <>
-                    <span className="text-[11px] font-black uppercase tracking-[0.2em] italic flex-1 text-left relative z-10">{zone.label}</span>
-                    <ChevronRight size={14} className={`transition-transform duration-500 relative z-10 ${isExpanded ? 'rotate-90' : 'opacity-40 group-hover:opacity-100'}`} />
+                    <span className="ds-text-label flex-1 text-left">{zone.label}</span>
+                    <ChevronRight size={14} className={cn('transition-transform duration-300 opacity-50', isExpanded && 'rotate-90 opacity-100')} aria-hidden="true" />
                   </>
                 )}
               </button>
 
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {isExpanded && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }} 
-                    animate={{ height: 'auto', opacity: 1 }} 
-                    exit={{ height: 0, opacity: 0 }} 
-                    className="overflow-hidden space-y-1.5 pl-4"
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                    className="overflow-hidden space-y-0.5 pl-3"
                   >
                     {zone.items.map(item => {
                       const active = isActive(item.path)
+                      const ItemIcon = item.icon
                       return (
-                        <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} 
+                        <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined}
                           title={item.label} aria-label={item.label}
-                          className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest italic transition-all border-2 group/item ${active ? `${zone.activeBg} ${zone.accent} shadow-inner` : 'text-surface-400 border-transparent hover:text-surface-900 dark:hover:text-white hover:bg-surface-page'}`}
+                          className={cn(
+                            'relative flex items-center gap-3 px-3 py-2 rounded-lg ds-text-label transition-colors group/item',
+                            active
+                              ? cn(zone.activeBg, zone.accent, 'border')
+                              : 'text-[var(--text-muted)] border border-transparent hover:text-[var(--text-strong)] hover:bg-[var(--glass-surface-heavy)]'
+                          )}
                         >
-                          <item.icon size={16} className={`transition-all duration-500 ${active ? `${zone.accent} scale-110` : 'text-surface-300 dark:text-slate-800 group-hover/item:scale-110 group-hover/item:text-primary-500'}`} aria-hidden="true" />
+                          <ItemIcon size={16} className={cn('flex-shrink-0', active ? zone.accent : 'opacity-70 group-hover/item:opacity-100')} aria-hidden="true" />
                           <span className="flex-1 truncate">{item.label}</span>
-                          {item.badge && <span className="px-2 py-0.5 rounded-lg bg-primary-500/10 text-primary-500 text-[8px] font-black uppercase tracking-tighter border border-primary-500/20">{item.badge}</span>}
+                          {item.badge && (
+                            <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide">
+                              {item.badge}
+                            </Badge>
+                          )}
                         </Link>
                       )
                     })}
@@ -222,20 +248,19 @@ export default function SidebarNav() {
       </nav>
 
       {/* ── Theme Toggle, Focus Mode & User ── */}
-      <div className="p-7 space-y-5 border-t border-surface-100 dark:border-white/5 bg-surface-page/50 dark:bg-black/20 backdrop-blur-3xl">
-        <div className="grid grid-cols-2 gap-4">
-          <button 
-            type="button" 
-            onClick={toggle} 
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'} 
-            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} 
-            className="flex items-center justify-center p-3.5 rounded-2xl bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 text-surface-400 hover:text-primary-500 hover:border-primary-500/20 hover:bg-white dark:hover:bg-white/10 transition-all shadow-inner active:scale-95 group relative overflow-hidden"
+      <div className="p-3 space-y-2 border-t border-[var(--glass-border)]">
+        <div className={cn('grid gap-2', collapsed ? 'grid-cols-1' : 'grid-cols-2')}>
+          <button
+            type="button"
+            onClick={toggle}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="flex items-center justify-center h-10 rounded-xl ds-surface-subtle text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:border-[var(--glass-border-strong)] transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             {isDark ? (
-              <Sun size={18} className="relative z-10 group-hover:rotate-45 transition-transform duration-500" />
+              <Sun size={18} className="group-hover:rotate-45 transition-transform duration-500" aria-hidden="true" />
             ) : (
-              <Moon size={18} className="relative z-10 group-hover:-rotate-12 transition-transform duration-500" />
+              <Moon size={18} className="group-hover:-rotate-12 transition-transform duration-500" aria-hidden="true" />
             )}
           </button>
 
@@ -244,35 +269,36 @@ export default function SidebarNav() {
             onClick={toggleFocusMode}
             title={focusMode ? 'Focus mode on — click to disable' : 'Focus mode off — click to enable'}
             aria-label={focusMode ? 'Focus mode on — click to disable' : 'Focus mode off — click to enable'}
-            className={`flex items-center justify-center p-3.5 rounded-2xl border-2 transition-all active:scale-90 shadow-inner ${focusMode ? 'bg-primary-500/10 border-primary-500/30 text-primary-500 animate-pulse' : 'bg-surface-page dark:bg-white/5 border-surface-100 dark:border-white/10 text-surface-400 hover:text-primary-500 hover:border-primary-500/20'}`}
+            aria-pressed={focusMode}
+            className={cn(
+              'flex items-center justify-center h-10 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              focusMode
+                ? 'bg-primary-500/10 border border-primary-500/30 text-primary-600 dark:text-primary-400'
+                : 'ds-surface-subtle text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:border-[var(--glass-border-strong)]'
+            )}
           >
-            {focusMode ? <Eye size={18} /> : <EyeOff size={18} />}
+            {focusMode ? <Eye size={18} aria-hidden="true" /> : <EyeOff size={18} aria-hidden="true" />}
           </button>
         </div>
 
-        <div className={`flex items-center gap-4 px-4 py-4 rounded-[2rem] bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 shadow-inner ${collapsed ? 'justify-center' : ''}`}>
+        <div className={cn('flex items-center gap-3 px-2.5 py-2.5 rounded-xl ds-surface-subtle', collapsed && 'justify-center px-0')}>
           <div className="relative flex-shrink-0">
-            <div className="w-12 h-12 rounded-[1.2rem] bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-xl shadow-primary-500/20 ring-2 ring-white/10">{user?.name?.charAt(0) || 'U'}</div>
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</div>
             {user?.email_verified && (
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-surface-card dark:border-surface-900 flex items-center justify-center shadow-lg" title="Email verified">
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[var(--glass-surface)] flex items-center justify-center" title="Email verified">
+                <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
             )}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-black text-surface-900 dark:text-white truncate leading-none mb-1.5 italic uppercase tracking-tighter">{user?.name || 'Creator'}</p>
-              <div className="flex items-center gap-2">
-                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,1)]" />
-                 <p className="text-[9px] font-black text-emerald-500 truncate uppercase tracking-widest italic leading-none">
-                   {user?.subscription?.plan || 'Creator'}
-                 </p>
-              </div>
+              <p className="ds-text-label text-[var(--text-strong)] truncate leading-tight">{user?.name || 'Creator'}</p>
+              <p className="ds-text-caption truncate leading-tight">{user?.subscription?.plan || 'Creator'}</p>
             </div>
           )}
           {!collapsed && (
-            <button type="button" onClick={logout} title="Log out" aria-label="Log out" className="w-10 h-10 flex items-center justify-center text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all active:scale-90">
-              <LogOut size={18} />
+            <button type="button" onClick={logout} title="Log out" aria-label="Log out" className="w-9 h-9 flex items-center justify-center text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+              <LogOut size={17} aria-hidden="true" />
             </button>
           )}
         </div>
@@ -286,14 +312,20 @@ export default function SidebarNav() {
       `}</style>
     </motion.aside>
 
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-card/80 backdrop-blur-3xl border-t border-surface-100 dark:border-surface-800 flex items-center justify-around px-4 py-4 safe-area-pb transition-all duration-500 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 ds-surface-card !rounded-none border-x-0 border-b-0 border-t border-[var(--glass-border)] backdrop-blur-xl flex items-center justify-around px-3 py-2.5 safe-area-pb">
       {MOBILE_TABS.map(item => {
         const active = isActive(item.path)
+        const TabIcon = item.icon
         return (
-          <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} 
-            className={`flex flex-col items-center gap-2 px-6 py-2.5 rounded-[1.5rem] transition-all ${active ? 'bg-primary-500/10 text-primary-500 shadow-inner border border-primary-500/20' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}>
-            <item.icon size={22} className={active ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-black uppercase tracking-widest italic">{item.label}</span>
+          <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined}
+            className={cn(
+              'flex flex-col items-center gap-1 px-5 py-1.5 rounded-xl transition-colors',
+              active
+                ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20'
+                : 'text-[var(--text-muted)] border border-transparent hover:text-[var(--text-strong)]'
+            )}>
+            <TabIcon size={20} aria-hidden="true" />
+            <span className="ds-text-caption font-semibold">{item.label}</span>
           </Link>
         )
       })}
