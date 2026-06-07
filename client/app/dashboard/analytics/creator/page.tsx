@@ -1,18 +1,29 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
-  TrendingUp, Eye, Heart, Share2, Zap, Target, Award,
-  ChevronRight, Clock, Play, RefreshCw, Flame, ArrowLeft,
-  ArrowUp, ArrowDown, Minus, Brain, Sparkles, Video,
-  Calendar, BarChart3, Lightbulb, AlertTriangle, CheckCircle2,
-  MessageSquare, Users, TrendingDown, Activity, ArrowRight, Shield, Radio, Cpu,
-  Monitor, Network, Fingerprint, Terminal, Boxes, Lock, X, Globe, ActivitySquare, Trash2
+  Eye, Heart, Share2, Zap, Target, Play, RefreshCw, ArrowLeft,
+  ArrowUp, ArrowDown, Minus, Brain, Sparkles,
+  Lightbulb, AlertTriangle, MessageSquare, TrendingDown, Radio,
+  Network, Fingerprint, Boxes, X, Music, Instagram, Youtube, Video as VideoIcon,
+  type LucideIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 import ToastContainer from '../../../../components/ToastContainer'
+import { apiGet, apiPost } from '../../../../lib/api'
+import { StatsCardSkeleton, ContentSkeleton } from '../../../../components/LoadingSkeleton'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useContainerWidth } from '@/hooks/useContainerWidth'
+import { cn } from '@/lib/utils'
+import {
+  Panel,
+  StatCard,
+  SectionHeader,
+  EmptyState,
+  Button,
+  IconButton,
+} from '@/components/ui'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface VideoStat {
@@ -23,51 +34,30 @@ interface VideoStat {
   engagementRate: number;
 }
 
-const PLATFORM_COLORS: Record<string, string> = {
-  tiktok: 'from-slate-800 to-black', instagram: 'from-pink-500 to-purple-600', youtube: 'from-red-600 to-red-900', other: 'from-slate-600 to-slate-900'
+/** Verified lucide@0.294.0 icons for the common platforms. */
+function platformIcon(platform: string): LucideIcon {
+  const p = (platform || '').toLowerCase()
+  if (p === 'tiktok') return Music
+  if (p === 'instagram') return Instagram
+  if (p === 'youtube') return Youtube
+  return VideoIcon
 }
-
-const PLATFORM_ICON: Record<string, string> = {
-  tiktok: '♪', instagram: '◈', youtube: '▶', other: '○'
-}
-
-const CONTENT_DNA = [
-  { trait: 'Neural Hook Strength',    score: 88 },
-  { trait: 'Kinetic Rhythm',    score: 76 },
-  { trait: 'Inference Precision',      score: 62 },
-  { trait: 'Sonic Saturation',      score: 91 },
-  { trait: 'Trend Divergence',  score: 84 },
-  { trait: 'Signal Retention',   score: 73 },
-]
-
-const FORECAST_SLOTS = [
-  { day: 'MON_CYCLE', time: '22:00', platform: 'tiktok',    score: 94, hot: true  },
-  { day: 'WED_CYCLE', time: '19:00',  platform: 'instagram', score: 82, hot: false },
-  { day: 'THU_CYCLE', time: '20:00',  platform: 'tiktok',    score: 91, hot: true  },
-  { day: 'SAT_CYCLE', time: '09:00',  platform: 'youtube',   score: 76, hot: false },
-]
 
 // ── Utils ──────────────────────────────────────────────────────────────────────
 const fmt = (n: number) => n >= 1_000_000 ? `${(n/1_000_000).toFixed(1)}M` : n >= 1000 ? `${(n/1000).toFixed(0)}K` : n.toString()
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
-const scoreColor = (s: number) => s >= 85 ? 'text-emerald-400' : s >= 65 ? 'text-amber-400' : 'text-rose-400'
-const scoreBorder = (s: number) => s >= 85 ? 'border-emerald-500/30' : s >= 65 ? 'border-amber-500/30' : 'border-rose-500/30'
-const scoreBg = (s: number) => s >= 85 ? 'bg-emerald-500/10' : s >= 65 ? 'bg-amber-500/10' : 'bg-rose-500/10'
-
-import { apiGet, apiPost } from '../../../../lib/api'
-import { StatsCardSkeleton, ContentSkeleton } from '../../../../components/LoadingSkeleton'
-import { useTranslation } from '@/hooks/useTranslation'
+const scoreTone = (s: number) =>
+  s >= 80 ? 'bg-emerald-500/10 text-emerald-500' : s >= 60 ? 'bg-amber-500/10 text-amber-500' : 'bg-rose-500/10 text-rose-500'
 
 export default function HeuristicMatrixPage() {
   const router = useRouter()
   const { t } = useTranslation()
+  const { ref: shellRef, width } = useContainerWidth<HTMLDivElement>()
   const [videos, setVideos] = useState<VideoStat[]>([])
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'views' | 'viralScore' | 'completionRate' | 'engagementRate'>('views')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<VideoStat | null>(null)
-  const [insightTab, setInsightTab] = useState<'ai' | 'hooks' | 'forecast'>('ai')
 
   // useCallback so the reference is stable across renders + the
   // useEffect below can declare the dep without re-firing on every
@@ -177,435 +167,286 @@ export default function HeuristicMatrixPage() {
     }
   }, [videos, bestEditStyle, totals.views, t])
 
+  // Narrow content: hide the per-row views column so nothing overflows.
+  const compact = width > 0 && width < 640
+
   if (loading) return (
-     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label={t('analyticsCreatorPage.loading')}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+     <div className="min-h-screen ds-bg-mesh-soft px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('analyticsCreatorPage.loading')}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
         <ContentSkeleton />
      </div>
   )
 
+  const hasVideos = videos.length > 0
+
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 sm:pb-48 px-4 sm:px-10 pt-16 max-w-[1750px] mx-auto space-y-12 sm:space-y-24 text-white bg-black">
+      <div
+        ref={shellRef}
+        className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary"
+      >
         <ToastContainer />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
-        </div>
 
-        {/* Matrix Header */}
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
-           <div className="flex items-center gap-12">
-              <button type="button" onClick={() => router.push('/dashboard/analytics')} 
-                title={t('analyticsCreatorPage.backToMatrix')} aria-label={t('analyticsCreatorPage.backToMatrix')}
-                className="w-16 h-16 rounded-2xl bg-black/40 border-2 border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-2xl active:scale-95 group flex-shrink-0">
-                <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
-              </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.4)] relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Brain size={44} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300" />
-              </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-3">
-                    <div className="flex items-center gap-3">
-                       <Shield size={16} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('analyticsCreatorPage.versionLabel')}</span>
-                    </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 shadow-inner">
-                       <ActivitySquare size={12} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('analyticsCreatorPage.diagnosticReady')}</span>
-                   </div>
-                 </div>
-                   <h1 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{t('analyticsCreatorPage.title')}</h1>
-                  <p className="text-slate-400 text-[11px] sm:text-[14px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">{t('analyticsCreatorPage.subtitle')}</p>
-               </div>
-            </div>
-
-           <div className="flex flex-wrap items-center gap-6">
-               <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border-2 border-white/5 shadow-inner">
-                 {['all', 'tiktok', 'instagram', 'youtube'].map(p => (
-                   <button key={p} onClick={() => setSelectedPlatform(p)}
-                     title={t('analyticsCreatorPage.filterBy', { platform: p === 'all' ? t('analyticsCreatorPage.cluster') : p.toUpperCase() })}
-                     aria-label={t('analyticsCreatorPage.filterBy', { platform: p === 'all' ? t('analyticsCreatorPage.cluster') : p.toUpperCase() })}
-                     className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${
-                       selectedPlatform === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
-                     }`}
-                   >
-                    {p === 'all' ? t('analyticsCreatorPage.clusterUpper') : p.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={fetchStats}
-                disabled={refreshing}
-                title={t('analyticsCreatorPage.refreshNodes')}
-                aria-label={t('analyticsCreatorPage.refreshMatrixStats')}
-                className="p-6 rounded-[2.5rem] bg-white text-black hover:bg-indigo-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center"
+        <SectionHeader
+          as="h1"
+          title={t('analyticsCreatorPage.title')}
+          description={t('analyticsCreatorPage.subtitle')}
+          className="mb-6"
+          actions={
+            <>
+              <Button
+                variant="secondary"
+                size="md"
+                leftIcon={<ArrowLeft size={16} aria-hidden />}
+                onClick={() => router.push('/dashboard/analytics')}
+                aria-label={t('analyticsCreatorPage.backToMatrix')}
               >
-                <RefreshCw size={24} className={refreshing ? 'animate-spin' : ''} />
-              </button>
-           </div>
-        </header>
+                {t('analyticsCreatorPage.backToMatrix')}
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={fetchStats}
+                loading={refreshing}
+                leftIcon={!refreshing ? <RefreshCw size={16} aria-hidden /> : undefined}
+                aria-label={t('analyticsCreatorPage.refreshMatrixStats')}
+              >
+                {t('analyticsCreatorPage.refreshNodes')}
+              </Button>
+            </>
+          }
+        />
 
-        {/* Neural Potency & Heuristic Inference HUD */}
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-          className={`${glassStyle} p-10 sm:p-20 rounded-[3rem] sm:rounded-[6rem] relative overflow-hidden bg-black/40 border-2 border-white/5 shadow-[0_80px_150px_rgba(0,0,0,0.6)]`}
-        >
-          <div className="absolute right-0 top-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[150px] rounded-full pointer-events-none" />
-          <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] gap-24 items-center relative z-10">
-
-            {/* Neural Potency Ring */}
-            <div className="flex flex-col items-center gap-8">
-              <div className={`w-56 h-56 rounded-full border-[12px] ${scoreBorder(totals.avgViralScore)} flex flex-col items-center justify-center bg-black/40 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] relative group`}>
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className={`text-6xl font-black italic tracking-tighter ${scoreColor(totals.avgViralScore)} tabular-nums leading-none`}>{totals.avgViralScore}</span>
-                <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] mt-2">{t('analyticsCreatorPage.potency')}</span>
-              </div>
-              <div className="px-6 py-2 rounded-full bg-black/40 border border-white/5">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">{t('analyticsCreatorPage.neuralAffinityMaster')}</span>
-              </div>
-            </div>
-
-            {/* Heuristic Inference Data */}
-            <div className="space-y-12">
-              <div className="flex items-center gap-6">
-                <Sparkles className="text-indigo-400 animate-pulse" size={24} />
-                <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">{t('analyticsCreatorPage.engineSynthesis')}</span>
-              </div>
-               <h2 className="text-3xl sm:text-6xl font-black italic text-white leading-[1.1] uppercase tracking-tighter max-w-3xl">
-                &ldquo;{aiSummary.headline}&rdquo;
-              </h2>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-                <div className="flex items-start gap-8 p-10 rounded-[4rem] bg-rose-500/5 border border-rose-500/20 shadow-2xl group transition-all duration-700 hover:bg-rose-500/10">
-                  <div className="w-16 h-16 rounded-[2rem] bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-inner group-hover:rotate-12 transition-all">
-                    <AlertTriangle size={32} className="text-rose-400" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">{t('analyticsCreatorPage.protocolTermination')}</div>
-                    <p className="text-[16px] text-white font-black leading-relaxed uppercase tracking-tight italic opacity-80 group-hover:opacity-100 transition-opacity">{aiSummary.action}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-8 p-10 rounded-[4rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl group transition-all duration-700 hover:bg-emerald-500/10">
-                  <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-inner group-hover:rotate-[-12deg] transition-all">
-                    <Lightbulb size={32} className="text-emerald-400" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">{t('analyticsCreatorPage.heuristicExpansion')}</div>
-                    <p className="text-[16px] text-white font-black leading-relaxed uppercase tracking-tight italic opacity-80 group-hover:opacity-100 transition-opacity">{aiSummary.opportunity}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Logic Snapshots */}
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-6 min-w-[240px]">
-              {[
-                { label: t('analyticsCreatorPage.snapSpectralSync'), value: `${totals.avgCompletion}%`, color: 'text-amber-400', icon: ActivitySquare },
-                { label: t('analyticsCreatorPage.snapSignalGain'), value: `${totals.avgEngagement}%`, color: 'text-rose-400', icon: Zap },
-                { label: t('analyticsCreatorPage.snapPeakLogic'), value: t('analyticsCreatorPage.snapPeakLogicValue'), color: 'text-indigo-400', icon: Target },
-                { label: t('analyticsCreatorPage.snapBestTopology'), value: bestEditStyle.split(' ')[0], color: 'text-emerald-400', icon: Cpu },
-              ].map(k => (
-                <div key={k.label} className="bg-black/40 rounded-[2.5rem] p-6 border border-white/5 flex items-center justify-between group hover:bg-white/5 transition-all shadow-inner border-l-4 border-l-white/10 hover:border-l-indigo-500">
-                  <k.icon size={24} className={`${k.color} opacity-60 group-hover:scale-110 transition-transform`} />
-                  <div className="text-right">
-                    <div className={`text-2xl font-black italic uppercase ${k.color} tracking-tighter leading-none`}>{k.value}</div>
-                    <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1 italic">{k.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Global Resonance Strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-10">
-          {[
-            { label: t('analyticsCreatorPage.stripSpectralViews'), value: fmt(totals.views), icon: Eye, color: 'text-indigo-400' },
-            { label: t('analyticsCreatorPage.stripAffinityLikes'), value: fmt(totals.likes), icon: Heart, color: 'text-rose-400' },
-            { label: t('analyticsCreatorPage.stripSignalShares'), value: fmt(totals.shares), icon: Share2, color: 'text-emerald-400' },
-            { label: t('analyticsCreatorPage.stripResonanceComms'), value: fmt(totals.comments), icon: MessageSquare, color: 'text-amber-400' },
-            { label: t('analyticsCreatorPage.stripLogicSync'), value: `${totals.avgCompletion}%`, icon: Play, color: 'text-violet-400' },
-          ].map(({ label, value, icon: Icon, color }, i) => (
-            <motion.div key={label} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -10, backgroundColor: 'rgba(255,255,255,0.06)' }}
-              role="status" aria-label={`${label}: ${value}`}
-              className={`${glassStyle} rounded-[4rem] p-12 flex flex-col items-center text-center group cursor-default border-white/5`}
+        {/* Platform filter */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          {['all', 'tiktok', 'instagram', 'youtube'].map(p => (
+            <Button
+              key={p}
+              variant={selectedPlatform === p ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setSelectedPlatform(p)}
+              aria-label={t('analyticsCreatorPage.filterBy', { platform: p === 'all' ? t('analyticsCreatorPage.cluster') : p.toUpperCase() })}
             >
-              <div className={`w-14 h-14 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform shadow-2xl shadow-black/80`} aria-hidden="true">
-                <Icon size={24} className={color} />
-              </div>
-              <div className={`text-5xl font-black italic tracking-tighter tabular-nums leading-none mb-3 ${color} drop-shadow-2xl`}>{value}</div>
-              <div className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 italic">{label}</div>
-            </motion.div>
+              {p === 'all' ? t('analyticsCreatorPage.clusterUpper') : p.toUpperCase()}
+            </Button>
           ))}
         </div>
 
-        {/* Operational Node Repository & Heuristic Auditor */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_500px] gap-16">
-
-          {/* Operational Clusters */}
-          <div className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] overflow-hidden flex flex-col bg-black/40 border-2 border-white/5 shadow-[0_80px_150px_rgba(0,0,0,0.5)] relative`}>
-             <div className="absolute top-0 right-0 p-32 opacity-[0.01] pointer-events-none"><Monitor size={500} /></div>
-             <div className="flex flex-col md:flex-row items-center justify-between px-8 sm:px-16 py-8 sm:py-12 border-b border-white/5 bg-white/5 gap-8 relative z-10">
-                <div className="flex items-center gap-8 text-white">
-                   <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20"><Boxes size={32} className="text-indigo-400" /></div>
-                   <div>
-                      <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">{t('analyticsCreatorPage.operationalNodes')}</h3>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{t('analyticsCreatorPage.operationalNodesSubtitle')}</p>
-                   </div>
-                </div>
-                <div className="flex gap-3 bg-black/60 p-2 rounded-[2.5rem] border border-white/5">
-                  {(['views', 'viralScore', 'completionRate', 'engagementRate'] as const).map(s => (
-                    <button key={s} onClick={() => setSortBy(s)}
-                      className={`px-6 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${sortBy === s ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'}`}
-                    >
-                      {s === 'views' ? t('analyticsCreatorPage.sortViews') : s === 'viralScore' ? t('analyticsCreatorPage.sortPotency') : s === 'completionRate' ? t('analyticsCreatorPage.sortSync') : t('analyticsCreatorPage.sortSignal')}
-                    </button>
-                  ))}
-                </div>
-             </div>
-
-             <div className="divide-y divide-white/[0.02] max-h-[1000px] overflow-y-auto no-scrollbar relative z-10">
-               {filtered.map((video, idx) => (
-                 <motion.div key={video.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                   onClick={() => setSelectedVideo(video === selectedVideo ? null : video)}
-                   title={t('analyticsCreatorPage.viewDiagnosticFor', { title: video.title })}
-                   aria-label={t('analyticsCreatorPage.viewDiagnosticFor', { title: video.title })}
-                   role="button"
-                   tabIndex={0}
-                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedVideo(video === selectedVideo ? null : video); }}
-                   className={`flex items-center gap-6 sm:gap-10 px-8 sm:px-16 py-6 sm:py-10 cursor-pointer group transition-all duration-700 relative ${selectedVideo?.id === video.id ? 'bg-indigo-500/10 border-l-[8px] sm:border-l-[12px] border-l-indigo-500' : 'hover:bg-white/5 border-l-[8px] sm:border-l-[12px] border-l-transparent'}`}
-                 >
-                   <div className="text-[16px] font-black text-slate-500 w-8 tabular-nums italic">{String(idx + 1).padStart(2, '0')}</div>
-
-                   <div className={`w-16 h-16 rounded-[2rem] bg-gradient-to-br ${PLATFORM_COLORS[video.platform]} flex items-center justify-center text-white text-3xl shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.5)] group-hover:rotate-12 transition-transform duration-300 border border-white/10`}>
-                     {PLATFORM_ICON[video.platform]}
-                   </div>
-
-                   <div className="flex-1 min-w-0">
-                     <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-700">{video.title}</p>
-                     <div className="flex items-center gap-6 mt-3 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none">
-                        <div className="flex items-center gap-2"><Cpu size={14} /> <span>{t('analyticsCreatorPage.nodeSubstrate', { value: video.editStyle })}</span></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                        <div className="flex items-center gap-2"><Target size={14} /> <span>{t('analyticsCreatorPage.nodeSignal', { value: video.hookType.replace(/-/g, '_') })}</span></div>
-                     </div>
-                   </div>
-
-                   <div className="flex items-center gap-12 shrink-0">
-                     <div className="text-right hidden sm:block">
-                       <div className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{fmt(video.views)}</div>
-                       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">{t('analyticsCreatorPage.veSaturation')}</div>
-                     </div>
-                     <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-2xl font-black border-2 shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${scoreBorder(video.viralScore)} ${scoreColor(video.viralScore)} ${scoreBg(video.viralScore)}`}>
-                       {video.viralScore}
-                     </div>
-                     <div className="flex flex-col items-center gap-1">
-                        {video.trend === 'up'   && <ArrowUp   size={24} className="text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />}
-                        {video.trend === 'down' && <ArrowDown  size={24} className="text-rose-400 drop-shadow-[0_0_10px_rgba(225,29,72,0.5)]" />}
-                        {video.trend === 'flat' && <Minus      size={24} className="text-slate-400" />}
-                     </div>
-                   </div>
-
-                   {video.hookDropOff > 30 && (
-                     <div className="px-6 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest rounded-full ml-6 shrink-0 shadow-[0_0_30px_rgba(225,29,72,0.2)] animate-pulse">
-                       {t('analyticsCreatorPage.diffraction')}
-                     </div>
-                   )}
-                 </motion.div>
-               ))}
-             </div>
-          </div>
-
-          {/* Right Pillar: Matrix Auditors */}
-          <div className="space-y-12">
-            <div className="flex gap-3 p-2 rounded-[3rem] bg-black/40 border border-white/10 shadow-inner">
-              {(['ai', 'hooks', 'forecast'] as const).map(tab => (
-                <button key={tab} onClick={() => setInsightTab(tab)}
-                  title={t('analyticsCreatorPage.viewDiagnostics', { kind: tab === 'ai' ? t('analyticsCreatorPage.kindNeural') : tab === 'hooks' ? t('analyticsCreatorPage.kindPulse') : t('analyticsCreatorPage.kindCycle') })}
-                  aria-label={t('analyticsCreatorPage.viewDiagnostics', { kind: tab === 'ai' ? t('analyticsCreatorPage.kindNeural') : tab === 'hooks' ? t('analyticsCreatorPage.kindPulse') : t('analyticsCreatorPage.kindCycle') })}
-                  className={`flex-1 py-5 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] italic transition-all duration-300 ${insightTab === tab ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'}`}
-                >
-                  {tab === 'ai' ? t('analyticsCreatorPage.tabNeural') : tab === 'hooks' ? t('analyticsCreatorPage.tabPulse') : t('analyticsCreatorPage.tabCycle')}
-                </button>
-              ))}
-            </div>
-
-            <AnimatePresence mode="wait">
-              {insightTab === 'ai' && (
-                <motion.div key="ai" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}
-                  className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] p-8 sm:p-16 space-y-8 sm:space-y-12 border-2 border-white/5 shadow-[0_80px_150px_rgba(0,0,0,0.6)] relative overflow-hidden`}
-                >
-                  <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none border-none"><Terminal size={300} /></div>
-                  <div className="flex items-center gap-6 relative z-10">
-                    <Brain className="text-indigo-400" size={32} />
-                     <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">{t('analyticsCreatorPage.geneticContentDna')}</h4>
-                  </div>
-                  <div className="space-y-10 relative z-10">
-                    {CONTENT_DNA.map(({ trait, score }, i) => (
-                      <div key={trait}>
-                        <div className="flex items-center justify-between mb-3 border-l-2 border-indigo-500/20 pl-4">
-                          <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{t(`analyticsCreatorPage.dnaTrait.${trait.replace(/\s+/g, '')}`)}</span>
-                          <span className={`text-[16px] font-black italic tabular-nums ${scoreColor(score)}`}>{t('analyticsCreatorPage.potencySuffix', { score })}</span>
-                        </div>
-                        <div className="h-3 bg-black/40 rounded-full overflow-hidden shadow-inner border border-white/5">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ delay: i * 0.1, duration: 1 }}
-                            className={`h-full rounded-full bg-gradient-to-r from-indigo-600 to-indigo-400 shadow-[0_0_20px_rgba(79,70,229,0.4)]`}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-12 border-t border-white/5 space-y-8 relative z-10">
-                    <div className="flex items-center gap-4">
-                       <Target className="text-indigo-400" size={24} />
-                       <span className="text-[12px] font-black uppercase text-slate-400 italic tracking-[0.4em]">{t('analyticsCreatorPage.substrateSyncVelocity')}</span>
-                    </div>
-                    {styleAttribution.map(({ style, avg }, i) => (
-                      <div key={style} className="flex items-center gap-6 group">
-                        <span className="text-[11px] font-bold text-white w-32 truncate uppercase italic tracking-tighter opacity-60 group-hover:opacity-100 transition-opacity">{style}</span>
-                        <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${avg}%` }} transition={{ delay: i * 0.1, duration: 1 }}
-                            className="h-full bg-indigo-500/40 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.2)]"
-                          />
-                        </div>
-                        <span className="text-[12px] font-black text-indigo-400 tabular-nums italic">{avg}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {insightTab === 'hooks' && (
-                <motion.div key="hooks" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}
-                  className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] p-8 sm:p-16 space-y-6 sm:space-y-10 border-2 border-white/5 shadow-[0_80px_150px_rgba(0,0,0,0.6)] relative overflow-hidden`}
-                >
-                  <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none"><Fingerprint size={300} /></div>
-                  <div className="flex items-center gap-6 relative z-10">
-                    <Flame className="text-rose-400 animate-pulse" size={32} />
-                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">{t('analyticsCreatorPage.signalPulseAuditor')}</h4>
-                  </div>
-                  <div className="space-y-6 relative z-10">
-                    {[
-                      { type: 'pattern_interrupt', score: 97, label: t('analyticsCreatorPage.hookLabelOptimalResonance'), emoji: '🎯' },
-                      { type: 'question',          score: 84, label: t('analyticsCreatorPage.hookLabelHighInduction'),       emoji: '❓' },
-                      { type: 'curiosity_gap',     score: 81, label: t('analyticsCreatorPage.hookLabelSignalTrap'),           emoji: '🧲' },
-                      { type: 'stat',              score: 72, label: t('analyticsCreatorPage.hookLabelLogicalAnchor'),        emoji: '📊' },
-                      { type: 'story',             score: 58, label: t('analyticsCreatorPage.hookLabelSlowInduction'),     emoji: '📖' },
-                    ].map(({ type, score, label, emoji }) => (
-                      <div key={type} className={`flex items-center justify-between p-8 rounded-[3rem] border shadow-2xl transition-all duration-700 hover:scale-105 ${scoreBg(score)} ${scoreBorder(score)} bg-gradient-to-br from-white/[0.05] to-transparent`}>
-                        <div className="flex items-center gap-6">
-                          <span className="text-4xl opacity-40 grayscale">{emoji}</span>
-                          <div>
-                            <div className="text-[16px] font-black text-white uppercase tracking-tighter italic">{t(`analyticsCreatorPage.hookType.${type}`)}</div>
-                            <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1 italic">{label}</div>
-                          </div>
-                        </div>
-                        <div className={`text-4xl font-black italic ${scoreColor(score)} tabular-nums drop-shadow-2xl`}>{score}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-10 rounded-[3rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl relative z-10 pointer-events-none">
-                    <p className="text-[14px] text-indigo-300 font-black leading-relaxed uppercase italic tracking-tight">
-                       &ldquo;{t('analyticsCreatorPage.pulseQuote')}&rdquo;
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {insightTab === 'forecast' && (
-                <motion.div key="forecast" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}
-                  className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] p-8 sm:p-16 space-y-6 sm:space-y-10 border-2 border-white/5 shadow-[0_80px_150px_rgba(0,0,0,0.6)] relative overflow-hidden`}
-                >
-                  <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none"><Globe size={300} /></div>
-                  <div className="flex items-center gap-6 relative z-10">
-                    <Calendar className="text-emerald-400" size={32} />
-                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">{t('analyticsCreatorPage.temporalProjections')}</h4>
-                  </div>
-                  <div className="space-y-6 relative z-10">
-                    {FORECAST_SLOTS.map(slot => (
-                      <div key={`${slot.day}-${slot.time}`}
-                        className={`flex items-center gap-10 p-8 rounded-[3.5rem] border transition-all duration-300 group ${slot.hot ? 'bg-indigo-500/10 border-indigo-500/30 shadow-[0_30px_60px_rgba(79,70,229,0.2)]' : 'bg-black/40 border-white/5 shadow-inner'}`}
-                      >
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl transition-all duration-300 group-hover:rotate-12 ${slot.hot ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-400'}`}>
-                           {slot.hot ? <ActivitySquare size={24} /> : <Clock size={24} />}
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-[18px] font-black text-white italic uppercase tracking-tighter leading-none mb-1">{slot.day} · {slot.time}</div>
-                          <div className={`text-[11px] font-black uppercase tracking-[0.4em] italic text-slate-400`}>
-                             {t('analyticsCreatorPage.nodeSlot', { platform: slot.platform.toUpperCase() })}
-                          </div>
-                        </div>
-                        <div className={`text-5xl font-black italic tracking-tighter tabular-nums ${scoreColor(slot.score)} drop-shadow-2xl`}>{slot.score}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <button className="w-full py-8 rounded-[3.5rem] bg-white text-black text-[14px] font-black uppercase tracking-[0.4em] italic hover:bg-emerald-500 hover:text-white transition-all duration-300 border-none shadow-[0_50px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center justify-center gap-6 group">
-                    {t('analyticsCreatorPage.syncTemporalNodes')} <ArrowRight size={24} className="group-hover:translate-x-4 transition-transform duration-700" />
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Selected Node Deep Diagnostic */}
-            <AnimatePresence>
-              {selectedVideo && (
-                <motion.div initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 50 }}
-                  className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] p-8 sm:p-16 bg-black/40 border-2 border-indigo-500/30 shadow-[0_100px_200px_rgba(0,0,0,0.8)] relative overflow-hidden`}
-                >
-                  <div className="absolute top-0 right-0 p-16 opacity-[0.05] pointer-events-none"><Lock size={200} /></div>
-                  <div className="flex items-center gap-6 mb-12">
-                    <Target className="text-indigo-400" size={32} />
-                    <span className="text-[14px] font-black uppercase tracking-[0.6em] text-indigo-400 italic">{t('analyticsCreatorPage.nodeSpectrumDetail')}</span>
-                  </div>
-                  <h4 className="text-4xl font-black text-white mb-12 leading-none uppercase italic tracking-tighter drop-shadow-2xl">{selectedVideo.title}</h4>
-
-                  <div className="grid grid-cols-2 gap-8 mb-12">
-                    {[
-                      { label: t('analyticsCreatorPage.metricSignalLoss'), value: `${selectedVideo.hookDropOff}%`, bad: selectedVideo.hookDropOff > 20, icon: TrendingDown },
-                      { label: t('analyticsCreatorPage.metricSyncRate'),    value: `${selectedVideo.completionRate}%`, good: selectedVideo.completionRate > 65, icon: Radio },
-                      { label: t('analyticsCreatorPage.metricSignalAffinity'), value: `${selectedVideo.engagementRate}%`, good: selectedVideo.engagementRate > 8, icon: Network },
-                      { label: t('analyticsCreatorPage.metricNeuralPotency'),  value: `${selectedVideo.viralScore}`, good: selectedVideo.viralScore >= 75, icon: Fingerprint },
-                    ].map(m => (
-                      <div key={m.label} className={`rounded-[2rem] sm:rounded-[3.5rem] p-6 sm:p-8 border-2 flex flex-col justify-between min-h-[140px] sm:min-h-[160px] transition-all duration-700 shadow-2xl ${m.good ? 'bg-emerald-500/10 border-emerald-500/20' : m.bad ? 'bg-rose-500/10 border-rose-500/20' : 'bg-white/5 border-white/10'}`}>
-                        <div className="flex items-center justify-between">
-                           <div className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic">{m.label}</div>
-                           <m.icon size={20} className={m.good ? 'text-emerald-400' : m.bad ? 'text-rose-400' : 'text-slate-400'} />
-                        </div>
-                        <div className={`text-6xl font-black italic tracking-tighter tabular-nums leading-none ${(m.good || (!m.bad && !m.good)) ? 'text-white' : 'text-rose-500'} drop-shadow-2xl`}>{m.value}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-10 rounded-[3rem] bg-black/60 border border-white/5 shadow-inner mb-12 border-l-8 border-l-indigo-500/40">
-                     <p className="text-[14px] text-slate-400 font-black leading-relaxed uppercase italic tracking-wide">
-                        {t('analyticsCreatorPage.auditResult', { dropOff: selectedVideo.hookDropOff })}
-                     </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedVideo(null)}
-                    title={t('analyticsCreatorPage.dismissDiagnostic')} aria-label={t('analyticsCreatorPage.dismissDiagnostic')}
-                    className="w-full py-8 rounded-[3.5rem] bg-indigo-600 text-white text-[15px] font-black uppercase tracking-[0.4em] italic hover:bg-rose-600 transition-all duration-300 flex items-center justify-center gap-6 shadow-[0_40px_80px_rgba(79,70,229,0.3)] border-none active:scale-95"
-                  >
-                    {t('analyticsCreatorPage.dismissDiagnosticLabel')} <X size={24} aria-hidden="true" />
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        {/* ── Real aggregate metrics (from /analytics/creator/stats) ─────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsCreatorPage.stripSpectralViews')} value={fmt(totals.views)} icon={Eye} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsCreatorPage.stripAffinityLikes')} value={fmt(totals.likes)} icon={Heart} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsCreatorPage.stripSignalShares')} value={fmt(totals.shares)} icon={Share2} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsCreatorPage.stripResonanceComms')} value={fmt(totals.comments)} icon={MessageSquare} />
+          <StatCard className="ds-hover-lift ds-anim-rise col-span-2 lg:col-span-1" label={t('analyticsCreatorPage.stripLogicSync')} value={`${totals.avgCompletion}%`} icon={Play} />
         </div>
 
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          html.dark body { font-family: 'Inter', sans-serif; background: black; color: white; overflow-x: hidden; }
-          ::-webkit-scrollbar { width: 6px; }
-          ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-          ::-webkit-scrollbar-thumb { background: rgba(79, 70, 229, 0.2); border-radius: 10px; }
-        `}</style>
+        {/* ── AI synthesis (real aiSummary derived from real metrics) ────── */}
+        {hasVideos && (
+          <Panel variant="bento" className="ds-anim-rise mb-6 p-6">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-indigo-500" aria-hidden />
+              <span className="ds-text-label text-theme-primary">{t('analyticsCreatorPage.engineSynthesis')}</span>
+              <div className={cn('ml-auto flex h-10 items-center gap-2 rounded-xl px-3', scoreTone(totals.avgViralScore))}>
+                <span className="text-lg font-bold tabular-nums leading-none">{totals.avgViralScore}</span>
+                <span className="ds-text-caption">{t('analyticsCreatorPage.potency')}</span>
+              </div>
+            </div>
+            <p className="ds-text-h3 text-theme-primary mt-3 [overflow-wrap:anywhere]">
+              &ldquo;{aiSummary.headline}&rdquo;
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              <div className="flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-4">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500">
+                  <AlertTriangle size={18} aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <div className="ds-text-label text-rose-500">{t('analyticsCreatorPage.protocolTermination')}</div>
+                  <p className="ds-text-body text-theme-secondary mt-1">{aiSummary.action}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+                  <Lightbulb size={18} aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <div className="ds-text-label text-emerald-500">{t('analyticsCreatorPage.heuristicExpansion')}</div>
+                  <p className="ds-text-body text-theme-secondary mt-1">{aiSummary.opportunity}</p>
+                </div>
+              </div>
+            </div>
+          </Panel>
+        )}
+
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_minmax(0,420px)] gap-6">
+          {/* ── Operational nodes (real node list) ──────────────────────── */}
+          <Panel variant="bento" className="ds-anim-rise overflow-hidden p-0">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-5 border-b border-[var(--border-subtle)]">
+              <SectionHeader
+                as="h2"
+                title={t('analyticsCreatorPage.operationalNodes')}
+                description={t('analyticsCreatorPage.operationalNodesSubtitle')}
+                className="min-w-0"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                {(['views', 'viralScore', 'completionRate', 'engagementRate'] as const).map(s => (
+                  <Button
+                    key={s}
+                    variant={sortBy === s ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setSortBy(s)}
+                  >
+                    {s === 'views' ? t('analyticsCreatorPage.sortViews') : s === 'viralScore' ? t('analyticsCreatorPage.sortPotency') : s === 'completionRate' ? t('analyticsCreatorPage.sortSync') : t('analyticsCreatorPage.sortSignal')}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto">
+              {filtered.length === 0 ? (
+                <EmptyState icon={Boxes} title={t('analyticsCreatorPage.operationalNodes')} className="py-16" />
+              ) : (
+                <ul className="divide-y divide-[var(--border-subtle)]">
+                  {filtered.map((video, idx) => {
+                    const PIcon = platformIcon(video.platform)
+                    const isSelected = selectedVideo?.id === video.id
+                    return (
+                      <li key={video.id}>
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          aria-label={t('analyticsCreatorPage.viewDiagnosticFor', { title: video.title })}
+                          onClick={() => setSelectedVideo(isSelected ? null : video)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedVideo(isSelected ? null : video) }}
+                          className={cn(
+                            'flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 cursor-pointer transition-colors group',
+                            isSelected ? 'bg-primary/10' : 'hover:bg-accent'
+                          )}
+                        >
+                          <span className="ds-text-caption tabular-nums w-6 flex-shrink-0 text-theme-muted">{String(idx + 1).padStart(2, '0')}</span>
+                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                            <PIcon size={18} aria-hidden />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="ds-text-label text-theme-primary truncate">{video.title}</p>
+                            <p className="ds-text-caption flex items-center gap-2 flex-wrap">
+                              <span className="inline-flex items-center gap-1"><Target size={11} aria-hidden /> {t('analyticsCreatorPage.nodeSignal', { value: video.hookType.replace(/-/g, '_') })}</span>
+                              <span aria-hidden>·</span>
+                              <span>{t('analyticsCreatorPage.nodeSubstrate', { value: video.editStyle })}</span>
+                            </p>
+                          </div>
+                          {!compact && (
+                            <div className="text-right flex-shrink-0">
+                              <div className="ds-text-h3 text-theme-primary tabular-nums leading-none">{fmt(video.views)}</div>
+                              <div className="ds-text-caption mt-0.5">{t('analyticsCreatorPage.veSaturation')}</div>
+                            </div>
+                          )}
+                          <div className={cn('flex h-11 w-11 flex-shrink-0 flex-col items-center justify-center rounded-xl', scoreTone(video.viralScore))}>
+                            <span className="text-sm font-bold leading-none tabular-nums">{video.viralScore}</span>
+                            <span className="text-[8px] font-semibold mt-0.5 uppercase tracking-wide">{t('analyticsCreatorPage.sortPotency')}</span>
+                          </div>
+                          <span className="flex-shrink-0">
+                            {video.trend === 'up'   && <ArrowUp   size={18} className="text-emerald-500" aria-hidden />}
+                            {video.trend === 'down' && <ArrowDown size={18} className="text-rose-500" aria-hidden />}
+                            {video.trend === 'flat' && <Minus     size={18} className="text-theme-muted" aria-hidden />}
+                          </span>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-[var(--border-subtle)]">
+              <span className="ds-text-caption">{t('analyticsCreatorPage.operationalNodesSubtitle')}</span>
+              <span className="ds-text-caption text-theme-secondary tabular-nums">{filtered.length}</span>
+            </div>
+          </Panel>
+
+          {/* ── Right column: real style attribution + selected diagnostic ─ */}
+          <div className="space-y-6">
+            <Panel variant="bento" className="ds-anim-rise p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Brain size={18} className="text-indigo-500" aria-hidden />
+                <span className="ds-text-label text-theme-primary">{t('analyticsCreatorPage.substrateSyncVelocity')}</span>
+              </div>
+              {styleAttribution.length === 0 ? (
+                <p className="ds-text-caption">{t('analyticsCreatorPage.geneticContentDna')}</p>
+              ) : (
+                <div className="space-y-4">
+                  {styleAttribution.map(({ style, avg }) => (
+                    <div key={style}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="ds-text-label text-theme-secondary truncate pr-3">{style}</span>
+                        <span className="ds-text-label text-indigo-500 tabular-nums">{avg}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-accent overflow-hidden">
+                        <div className="h-full rounded-full bg-indigo-500/60" style={{ width: `${Math.min(100, avg)}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            {selectedVideo && (
+              <Panel variant="elevated" className="ds-anim-rise p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target size={18} className="text-indigo-500" aria-hidden />
+                  <span className="ds-text-label text-theme-primary">{t('analyticsCreatorPage.nodeSpectrumDetail')}</span>
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t('analyticsCreatorPage.dismissDiagnostic')}
+                    onClick={() => setSelectedVideo(null)}
+                    className="ml-auto"
+                  >
+                    <X size={16} aria-hidden />
+                  </IconButton>
+                </div>
+                <h3 className="ds-text-h3 text-theme-primary mb-4 [overflow-wrap:anywhere]">{selectedVideo.title}</h3>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {[
+                    { label: t('analyticsCreatorPage.metricSignalLoss'), value: `${selectedVideo.hookDropOff}%`, bad: selectedVideo.hookDropOff > 20, icon: TrendingDown },
+                    { label: t('analyticsCreatorPage.metricSyncRate'), value: `${selectedVideo.completionRate}%`, good: selectedVideo.completionRate > 65, icon: Radio },
+                    { label: t('analyticsCreatorPage.metricSignalAffinity'), value: `${selectedVideo.engagementRate}%`, good: selectedVideo.engagementRate > 8, icon: Network },
+                    { label: t('analyticsCreatorPage.metricNeuralPotency'), value: `${selectedVideo.viralScore}`, good: selectedVideo.viralScore >= 75, icon: Fingerprint },
+                  ].map(m => (
+                    <div
+                      key={m.label}
+                      className={cn(
+                        'rounded-xl border p-4',
+                        m.good ? 'border-emerald-500/20 bg-emerald-500/[0.06]' : m.bad ? 'border-rose-500/20 bg-rose-500/[0.06]' : 'border-[var(--border-subtle)] bg-accent'
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="ds-text-caption">{m.label}</span>
+                        <m.icon size={16} className={m.good ? 'text-emerald-500' : m.bad ? 'text-rose-500' : 'text-theme-muted'} aria-hidden />
+                      </div>
+                      <div className="ds-text-h2 text-theme-primary tabular-nums mt-1">{m.value}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="ds-text-body text-theme-muted rounded-xl bg-accent p-4 border-l-2 border-l-indigo-500">
+                  {t('analyticsCreatorPage.auditResult', { dropOff: selectedVideo.hookDropOff })}
+                </p>
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full mt-4"
+                  onClick={() => setSelectedVideo(null)}
+                  rightIcon={<X size={16} aria-hidden />}
+                  aria-label={t('analyticsCreatorPage.dismissDiagnostic')}
+                >
+                  {t('analyticsCreatorPage.dismissDiagnosticLabel')}
+                </Button>
+              </Panel>
+            )}
+          </div>
+        </div>
       </div>
     </ErrorBoundary>
   )

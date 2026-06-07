@@ -2,21 +2,19 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  TrendingUp, Calendar, BarChart3, RefreshCw, ArrowLeft, 
-  Activity, Zap, Eye, Share2, MessageSquare, Target, 
-  Cpu, Layers, Shield, Terminal, ArrowRight, Boxes,
-  ChevronRight, Gauge, ActivitySquare, Monitor, Network
+import {
+  TrendingUp, RefreshCw, ArrowLeft, Activity,
+  Eye, Zap, Boxes, Target,
 } from 'lucide-react'
 import { apiGet } from '../../../../lib/api'
-import { useAuth } from '../../../../hooks/useAuth'
 import { StatsCardSkeleton, ContentSkeleton } from '../../../../components/LoadingSkeleton'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 import { useTranslation } from '@/hooks/useTranslation'
-
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
+import { cn } from '@/lib/utils'
+import {
+  Panel, StatCard, SectionHeader, EmptyState, Button, IconButton,
+} from '@/components/ui'
 
 interface PerformanceData {
   date: string
@@ -35,12 +33,9 @@ interface PerformanceResponse {
 
 export default function FluxForecastingMatrixPage() {
   const router = useRouter()
-  const { user } = useAuth()
   const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [pulseMode, setPulseMode] = useState(false)
-  const [lastSynced, setLastSynced] = useState<Date | null>(new Date())
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<PerformanceData[]>([])
   const [period, setPeriod] = useState('30')
@@ -49,11 +44,9 @@ export default function FluxForecastingMatrixPage() {
     try {
       if (isRefresh) setRefreshing(true); else setLoading(true)
       setError(null)
-
       const syncFlag = triggerSync ? '&sync=true' : ''
       const response = await apiGet<PerformanceResponse>(`/analytics/performance?period=${period}${syncFlag}`)
       setData(response.performance_data || [])
-      if (triggerSync) setLastSynced(new Date())
     } catch (err: any) {
       setError(err.message || 'FLUX_SYNC_INTERFACE_FAILURE')
     } finally {
@@ -62,7 +55,6 @@ export default function FluxForecastingMatrixPage() {
     }
   }, [period])
 
-  // Removed Spectral Pulse: Sticking to manual/on-load sync as per Sovereign Protocol
   useEffect(() => {
     loadFluxPerformance()
   }, [loadFluxPerformance])
@@ -82,234 +74,180 @@ export default function FluxForecastingMatrixPage() {
   }
 
   if (loading) return (
-     <div className="min-h-screen bg-surface-page transition-colors duration-500 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto" aria-busy="true" aria-label={t('analyticsPerformancePage.loading')}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-           {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
-        </div>
-        <ContentSkeleton />
-     </div>
-  );
+    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('analyticsPerformancePage.loading')}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
+      </div>
+      <ContentSkeleton />
+    </div>
+  )
 
   const stats = getTotalResonance()
   const engageRate = stats.views > 0 ? (stats.engage / stats.views * 100).toFixed(1) : '0'
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 sm:pb-48 px-4 sm:px-10 pt-16 max-w-[1750px] mx-auto space-y-12 sm:space-y-24 bg-black text-white">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
         <ToastContainer />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <Activity size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
-        </div>
 
-        {/* Matrix Header */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
-           <div className="flex items-center gap-10">
-               <button type="button" onClick={() => router.push('/dashboard/analytics')} 
-                title={t('analyticsPerformancePage.backToAnalytics')} aria-label={t('analyticsPerformancePage.backToAnalytics')}
-                className="w-16 h-16 rounded-[1.8rem] bg-white/5 border-2 border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
-                <ArrowLeft size={32} />
-              </button>
-              <div className="w-20 h-20 bg-emerald-500/5 border border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent opacity-100" />
-                <TrendingUp size={40} className="text-emerald-400 relative z-10 group-hover:scale-125 transition-transform duration-700" />
-              </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-3">
-                   <div className="flex items-center gap-3">
-                      <Gauge size={14} className="text-emerald-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-emerald-400 italic leading-none">{t('analyticsPerformancePage.versionLabel')}</span>
-                   </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <Activity size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{t('analyticsPerformancePage.trajectorySynced')}</span>
-                   </div>
-                 </div>
-                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{t('analyticsPerformancePage.title')}</h1>
-                  <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">{t('analyticsPerformancePage.subtitle')}</p>
-              </div>
-           </div>
-
-           <div className="flex items-center gap-8">
-              {/* Pulse Toggle */}
-              <div className="flex flex-col items-end gap-2 mr-4">
-                 <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${pulseMode ? 'bg-emerald-500 animate-ping' : 'bg-slate-800'}`} />
-                    <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic">{t('analyticsPerformancePage.pulseMode')}</span>
-                    <button
-                      type="button"
-                      onClick={() => setPulseMode(!pulseMode)}
-                      title={pulseMode ? t('analyticsPerformancePage.disablePulseSync') : t('analyticsPerformancePage.enablePulseSync')}
-                      aria-label={t('analyticsPerformancePage.togglePulseMode')}
-                      className={`w-10 h-5 rounded-full p-1 transition-colors duration-500 ${pulseMode ? 'bg-emerald-500/20 border border-emerald-500/50' : 'bg-black/40 border border-white/5'}`}
-                    >
-                       <div className={`w-3 h-3 rounded-full transition-transform duration-500 ${pulseMode ? 'translate-x-5 bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'translate-x-0 bg-slate-700'}`} />
-                    </button>
-                 </div>
-                 {lastSynced && (
-                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic opacity-50">
-                       {t('analyticsPerformancePage.lastSync', { time: lastSynced.toLocaleTimeString() })}
-                    </span>
-                 )}
-              </div>
-
-               <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border-2 border-white/5 shadow-inner">
-                {['7', '30', '90'].map(p => (
-                  <button type="button" key={p} onClick={() => setPeriod(p)}
-                    title={t('analyticsPerformancePage.viewCycles', { count: p })} aria-label={t('analyticsPerformancePage.viewCycles', { count: p })}
-                    className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${
-                      period === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {t('analyticsPerformancePage.cyclesLabel', { count: p })}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => loadFluxPerformance(true, true)} 
-                disabled={refreshing}
-                className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.4em] italic rounded-[3rem] hover:bg-emerald-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-6 group"
+        <SectionHeader
+          as="h1"
+          title={t('analyticsPerformancePage.title')}
+          description={t('analyticsPerformancePage.subtitle')}
+          className="mb-6"
+          actions={
+            <>
+              <IconButton
+                variant="secondary"
+                size="md"
+                aria-label={t('analyticsPerformancePage.backToAnalytics')}
+                onClick={() => router.push('/dashboard/analytics')}
               >
-                <RefreshCw size={24} className={`${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+                <ArrowLeft size={18} aria-hidden />
+              </IconButton>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => loadFluxPerformance(true, true)}
+                loading={refreshing}
+                leftIcon={!refreshing ? <RefreshCw size={16} aria-hidden /> : undefined}
+              >
                 {refreshing ? t('analyticsPerformancePage.interpreting') : t('analyticsPerformancePage.forceSync')}
-              </button>
-           </div>
+              </Button>
+            </>
+          }
+        />
+
+        {/* Period selector */}
+        <div className="flex items-center gap-1 mb-6 ds-surface-subtle p-1 w-fit rounded-xl">
+          {['7', '30', '90'].map(p => (
+            <button
+              type="button"
+              key={p}
+              onClick={() => setPeriod(p)}
+              aria-pressed={period === p ? 'true' : 'false'}
+              aria-label={t('analyticsPerformancePage.viewCycles', { count: p })}
+              className={cn(
+                'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                period === p ? 'bg-primary/10 text-primary' : 'text-theme-secondary hover:text-theme-primary hover:bg-accent'
+              )}
+            >
+              {t('analyticsPerformancePage.cyclesLabel', { count: p })}
+            </button>
+          ))}
         </div>
 
-        {/* Summary Kinetic HUD */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-           <KineticCard label={t('analyticsPerformancePage.cardTotalSaturation')} value={formatFmt(stats.views)} icon={Eye} color="text-emerald-400" trend={t('analyticsPerformancePage.trendSpectralReach')} />
-           <KineticCard label={t('analyticsPerformancePage.cardTotalResonance')} value={formatFmt(stats.engage)} icon={Zap} color="text-amber-400" trend={t('analyticsPerformancePage.trendSignalAffinity')} />
-           <KineticCard label={t('analyticsPerformancePage.cardNodeDensity')} value={(stats.posts / parseInt(period)).toFixed(1)} icon={Boxes} color="text-indigo-400" trend={t('analyticsPerformancePage.trendDailyPhantoms')} />
-           <KineticCard label={t('analyticsPerformancePage.cardKineticRate')} value={`${engageRate}%`} icon={Activity} color="text-rose-400" trend={t('analyticsPerformancePage.trendMomentumHz')} />
+        {error && (
+          <Panel variant="subtle" className="ds-anim-fade-in mb-6 border-rose-500/30 flex flex-col sm:flex-row items-center gap-4 p-5">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
+              <Activity size={24} aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1 text-center sm:text-left">
+              <h3 className="ds-text-h3 text-theme-primary">{t('analyticsPerformancePage.errorTitle')}</h3>
+              <p className="ds-text-caption mt-1">{error}</p>
+            </div>
+            <Button variant="secondary" size="md" onClick={() => loadFluxPerformance(true, true)}>
+              {t('analyticsPerformancePage.retry')}
+            </Button>
+          </Panel>
+        )}
+
+        {/* Real totals */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsPerformancePage.cardTotalSaturation')} value={formatFmt(stats.views)} icon={Eye} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsPerformancePage.cardTotalResonance')} value={formatFmt(stats.engage)} icon={Zap} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsPerformancePage.cardNodeDensity')} value={(stats.posts / parseInt(period)).toFixed(1)} icon={Boxes} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={t('analyticsPerformancePage.cardKineticRate')} value={`${engageRate}%`} icon={Activity} />
         </div>
 
-        {/* Temporal Velocity Matrix */}
-        <div className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] p-8 sm:p-24 relative overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]`}>
-           <div className="absolute top-0 right-0 p-32 opacity-[0.015] pointer-events-none"><Terminal size={600} className="text-white" /></div>
-           <div className="flex items-center gap-8 mb-20 relative z-10">
-              <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl"><ActivitySquare size={40} className="text-emerald-400" /></div>
-               <div>
-                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{t('analyticsPerformancePage.temporalVelocity')}</h2>
-                  <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">{t('analyticsPerformancePage.temporalVelocitySubtitle')}</p>
-               </div>
-           </div>
+        {/* Temporal velocity bars */}
+        <Panel variant="bento" className="ds-anim-rise mb-6 p-6">
+          <SectionHeader
+            as="h2"
+            title={t('analyticsPerformancePage.temporalVelocity')}
+            description={t('analyticsPerformancePage.temporalVelocitySubtitle')}
+            className="mb-6"
+          />
+          {data.length > 0 ? (
+            <div className="space-y-4">
+              {data.slice(-parseInt(period)).map((day) => {
+                const engagement = day.likes + day.shares + day.comments
+                const maxEngage = Math.max(...data.map(d => d.likes + d.shares + d.comments))
+                const maxViews = Math.max(...data.map(d => d.views))
+                const engWidth = maxEngage > 0 ? (engagement / maxEngage) * 100 : 0
+                const viewWidth = maxViews > 0 ? (day.views / maxViews) * 100 : 0
+                return (
+                  <div key={day.date} className="flex items-center gap-4">
+                    <div className="w-20 flex-shrink-0 ds-text-caption tabular-nums">
+                      {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 bg-accent rounded-full flex-1 overflow-hidden">
+                          <div className="h-full bg-emerald-500" style={{ width: `${viewWidth}%` }} />
+                        </div>
+                        <span className="w-16 text-right ds-text-caption tabular-nums">{formatFmt(day.views)}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 bg-accent rounded-full flex-1 overflow-hidden">
+                          <div className="h-full bg-amber-500" style={{ width: `${engWidth}%` }} />
+                        </div>
+                        <span className="w-16 text-right ds-text-caption text-amber-500 tabular-nums">{formatFmt(engagement)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <EmptyState icon={Target} title={t('analyticsPerformancePage.nullFluxSignature')} description={t('analyticsPerformancePage.noResonanceData')} className="py-12" />
+          )}
+        </Panel>
 
-           <div className="space-y-12 relative z-10">
-              {data.length > 0 ? (
-                <div className="space-y-10">
-                   {data.slice(-parseInt(period)).map((day, idx) => {
-                     const engagement = day.likes + day.shares + day.comments
-                     const maxEngage = Math.max(...data.map(d => d.likes + d.shares + d.comments))
-                     const maxViews = Math.max(...data.map(d => d.views))
-                     const engWidth = maxEngage > 0 ? (engagement / maxEngage) * 100 : 0
-                     const viewWidth = maxViews > 0 ? (day.views / maxViews) * 100 : 0
-
-                     return (
-                       <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
-                         key={day.date} className="flex items-center gap-12 group"
-                       >
-                          <div className="w-48 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none group-hover:text-emerald-400 transition-colors">
-                             {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
-                          </div>
-                          <div className="flex-1 space-y-3">
-                             <div className="flex items-center gap-6">
-                                <div className="h-2 bg-black/60 rounded-full flex-1 overflow-hidden shadow-inner border border-white/5">
-                                   <div className="h-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)]" style={{ '--view-width': `${viewWidth}%`, width: 'var(--view-width)' } as any} />
-                                </div>
-                                <span className="w-24 text-right text-[11px] font-black text-white uppercase italic tracking-widest tabular-nums">{formatFmt(day.views)}</span>
-                             </div>
-                             <div className="flex items-center gap-6">
-                                <div className="h-2 bg-black/60 rounded-full flex-1 overflow-hidden shadow-inner border border-white/5">
-                                   <div className="h-full bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.6)]" style={{ '--eng-width': `${engWidth}%`, width: 'var(--eng-width)' } as any} />
-                                </div>
-                                <span className="w-24 text-right text-[11px] font-black text-amber-500 uppercase italic tracking-widest tabular-nums">{formatFmt(engagement)}</span>
-                             </div>
-                          </div>
-                       </motion.div>
-                     )
-                   })}
-                </div>
-               ) : (
-                <div className="py-48 flex flex-col items-center justify-center text-center space-y-8 opacity-10">
-                   <Target size={120} className="text-white animate-pulse" />
-                   <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">{t('analyticsPerformancePage.nullFluxSignature')}</h3>
-                   <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic">{t('analyticsPerformancePage.noResonanceData')}</p>
-                </div>
-               )}
-           </div>
-        </div>
-
-        {/* Resonance Ledger */}
-        <div className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] overflow-hidden relative z-10 border-white/5 shadow-2xl`}>
-           <div className="px-8 sm:px-20 py-8 sm:py-12 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row items-center justify-between gap-6">
-               <div className="flex items-center gap-6">
-                  <div className="w-12 h-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-inner"><Monitor size={20} className="text-emerald-400" /></div>
-                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">{t('analyticsPerformancePage.resonanceLedger')}</h3>
-               </div>
-              <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
-                 {t('analyticsPerformancePage.signalLogsBadge')}
-              </div>
-           </div>
-           
-           <div className="overflow-x-auto">
+        {/* Resonance ledger table */}
+        <Panel variant="bento" className="ds-anim-rise overflow-hidden p-0">
+          <div className="flex items-center justify-between gap-4 p-5 border-b border-[var(--border-subtle)]">
+            <SectionHeader as="h2" title={t('analyticsPerformancePage.resonanceLedger')} className="min-w-0" />
+          </div>
+          {data.length > 0 ? (
+            <div className="overflow-x-auto">
               <table className="w-full text-left">
-                 <thead className="bg-black/60 border-b border-white/5">
-                    <tr>
-                       {['Temporal_Coord', 'Saturation', 'Affinities', 'Signal_Resonance', 'Active_Nodes', 'Kinetic_Flux'].map(h => (
-                         <th key={h} className="px-12 py-8 text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{t(`analyticsPerformancePage.tableHeader.${h}`)}</th>
-                       ))}
-                    </tr>
-                 </thead>
-                 <tbody className="divide-y divide-white/[0.02] bg-white/[0.01]">
-                    {data.slice().reverse().map((day, idx) => {
-                       const engage = day.likes + day.shares + day.comments
-                       const rate = day.views > 0 ? (engage / day.views * 100).toFixed(1) : '0'
-                       return (
-                         <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.02 }}
-                           key={day.date} className="group hover:bg-white/[0.04] transition-all duration-700 font-bold"
-                         >
-                            <td className="px-12 py-8 whitespace-nowrap text-[14px] text-white italic font-black uppercase tracking-widest">
-                               {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
-                            </td>
-                            <td className="px-12 py-8 text-emerald-400 font-black italic tracking-tighter text-xl tabular-nums">{formatFmt(day.views)}</td>
-                            <td className="px-12 py-8 text-amber-400 font-black italic tracking-widest text-[14px]">
-                               {t('analyticsPerformancePage.likesShares', { likes: formatFmt(day.likes), shares: formatFmt(day.shares) })}
-                            </td>
-                            <td className="px-12 py-8 text-white font-black italic tracking-tighter text-xl tabular-nums">{formatFmt(engage)}</td>
-                            <td className="px-12 py-8 text-indigo-400 font-black italic tracking-widest text-[14px]">{t('analyticsPerformancePage.phantoms', { count: day.posts_count })}</td>
-                            <td className="px-12 py-8">
-                               <span className="px-6 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xl font-black italic tabular-nums tracking-tighter">
-                                  {rate}%
-                               </span>
-                            </td>
-                         </motion.tr>
-                       )
-                    })}
-                 </tbody>
+                <thead className="border-b border-[var(--border-subtle)]">
+                  <tr>
+                    {['Temporal_Coord', 'Saturation', 'Affinities', 'Signal_Resonance', 'Active_Nodes', 'Kinetic_Flux'].map(h => (
+                      <th key={h} className="px-5 py-3 ds-text-caption font-semibold whitespace-nowrap">{t(`analyticsPerformancePage.tableHeader.${h}`)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-subtle)]">
+                  {data.slice().reverse().map((day) => {
+                    const engage = day.likes + day.shares + day.comments
+                    const rate = day.views > 0 ? (engage / day.views * 100).toFixed(1) : '0'
+                    return (
+                      <tr key={day.date} className="hover:bg-accent transition-colors">
+                        <td className="px-5 py-4 whitespace-nowrap ds-text-label text-theme-primary">
+                          {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </td>
+                        <td className="px-5 py-4 ds-text-body text-emerald-500 tabular-nums">{formatFmt(day.views)}</td>
+                        <td className="px-5 py-4 ds-text-caption text-amber-500">
+                          {t('analyticsPerformancePage.likesShares', { likes: formatFmt(day.likes), shares: formatFmt(day.shares) })}
+                        </td>
+                        <td className="px-5 py-4 ds-text-body text-theme-primary tabular-nums">{formatFmt(engage)}</td>
+                        <td className="px-5 py-4 ds-text-caption text-indigo-500">{t('analyticsPerformancePage.phantoms', { count: day.posts_count })}</td>
+                        <td className="px-5 py-4">
+                          <span className="inline-flex rounded-lg bg-emerald-500/10 px-2.5 py-1 ds-text-caption font-semibold text-emerald-500 tabular-nums">{rate}%</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
               </table>
-           </div>
-        </div>
+            </div>
+          ) : (
+            <EmptyState icon={TrendingUp} title={t('analyticsPerformancePage.noResonanceData')} className="py-12" />
+          )}
+        </Panel>
       </div>
-
     </ErrorBoundary>
-  )
-}
-
-function KineticCard({ label, value, icon: Icon, color, trend }: { label: string; value: string; icon: any; color: string; trend: string }) {
-  return (
-    <motion.div whileHover={{ y: -15, backgroundColor: 'rgba(255,255,255,0.06)' }}
-      className={`${glassStyle} p-8 sm:p-12 rounded-[3rem] sm:rounded-[5rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden`}
-    >
-       <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none"><Boxes size={120} className="text-white" /></div>
-       <div className={`w-24 h-24 rounded-[3rem] bg-white/[0.02] border border-white/10 flex items-center justify-center mb-8 shadow-2xl group-hover:rotate-12 group-hover:scale-110 transition-all duration-700`}>
-          <Icon size={44} className={color} />
-       </div>
-       <div className="text-7xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-6 drop-shadow-2xl">{value}</div>
-       <div className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{label}</div>
-       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5 group-hover:text-emerald-400 transition-colors">
-          {trend}
-       </div>
-    </motion.div>
   )
 }

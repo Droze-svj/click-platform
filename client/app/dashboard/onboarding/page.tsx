@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import {
-  Compass, ArrowLeft, ArrowRight, CheckCircle, Circle, Lock,
-  Activity, Sparkles, Zap, Target, RefreshCw, SkipForward,
-  Plug, Video, Calendar, Users, Palette, FileText, Hammer
+  Compass, ArrowRight, CheckCircle, Circle, Lock,
+  Sparkles, Zap, Target, RefreshCw, SkipForward,
+  Plug, Video, Calendar, Users, Palette, FileText, Hammer,
+  type LucideIcon,
+  Dumbbell, BarChart3, BookOpen, Cpu, Briefcase, Drama, Globe,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { ListItemSkeleton } from '../../../components/LoadingSkeleton'
@@ -17,6 +18,8 @@ import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { cn } from '@/lib/utils'
+import { Panel, SectionHeader, Button } from '@/components/ui'
 
 interface OnboardingStep {
   id: string
@@ -48,19 +51,17 @@ const FALLBACK_STEPS: OnboardingStep[] = [
   { id: 'schedule',    title: 'Schedule First Post',    description: 'Lock a post to the calendar to test the publish loop.',     cta: 'OPEN_CALENDAR',     href: '/dashboard/calendar',    icon: Calendar },
 ]
 
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.6)] transition-all duration-300'
-
 // Niche catalogue — matches NICHE_PLAYBOOKS in server/services/marketingKnowledge.js
 // so the user's pick maps 1:1 to a real Gemini playbook on the strategist endpoint.
-const NICHE_OPTIONS = [
-  { value: 'health',        label: 'Health & Wellness',      icon: '💪', accent: 'emerald' as const },
-  { value: 'finance',       label: 'Finance & Investing',    icon: '📊', accent: 'sky' as const },
-  { value: 'education',     label: 'Education & Learning',   icon: '📚', accent: 'indigo' as const },
-  { value: 'technology',    label: 'Technology & Software',  icon: '⚡', accent: 'cyan' as const },
-  { value: 'lifestyle',     label: 'Lifestyle & Aesthetics', icon: '✨', accent: 'fuchsia' as const },
-  { value: 'business',      label: 'Business & Operators',   icon: '🏛', accent: 'amber' as const },
-  { value: 'entertainment', label: 'Entertainment & Comedy', icon: '🎭', accent: 'rose' as const },
-  { value: 'other',         label: 'Other / Generalist',     icon: '🌐', accent: 'violet' as const },
+const NICHE_OPTIONS: { value: string; icon: LucideIcon }[] = [
+  { value: 'health',        icon: Dumbbell },
+  { value: 'finance',       icon: BarChart3 },
+  { value: 'education',     icon: BookOpen },
+  { value: 'technology',    icon: Cpu },
+  { value: 'lifestyle',     icon: Sparkles },
+  { value: 'business',      icon: Briefcase },
+  { value: 'entertainment', icon: Drama },
+  { value: 'other',         icon: Globe },
 ]
 
 export default function OnboardingPage() {
@@ -115,15 +116,11 @@ export default function OnboardingPage() {
   }
 
   // Wire niche picks straight into WorkflowContext (persists to localStorage)
-  // and auto-mark the 'profile' onboarding step complete on the server. The
-  // strategist + every Gemini call downstream reads from the same context, so
-  // a single click here cascades through the whole AI surface.
+  // and auto-mark the 'profile' onboarding step complete on the server.
   const handlePickNiche = async (value: string) => {
     setNiche(value)
     setEditingNiche(false)
     showToast(t('onboardingPage.toastNicheLocked', { niche: value.toUpperCase() }), 'success')
-    // Persist niche to server User model so AI services (strategist, Gemini
-    // playbooks, marketing intelligence) can read it without a client context.
     try {
       await apiPut('/niche/select', { niche: value })
     } catch {
@@ -150,183 +147,193 @@ export default function OnboardingPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1400px] mx-auto space-y-16 bg-[var(--page-bg)]" aria-busy="true" aria-label={t('onboardingPage.loading')}>
-      <div className="space-y-3">
-        {Array.from({ length: 6 }).map((_, i) => <ListItemSkeleton key={i} />)}
-      </div>
+    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1400px] mx-auto space-y-3" aria-busy="true" aria-label={t('onboardingPage.loading')}>
+      {Array.from({ length: 6 }).map((_, i) => <ListItemSkeleton key={i} />)}
     </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1400px] mx-auto space-y-16 bg-[var(--page-bg)]">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1400px] mx-auto overflow-x-hidden text-theme-primary">
         <ToastContainer />
 
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-          <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title={t('onboardingPage.backToDashboard')} aria-label={t('onboardingPage.backToDashboard')} className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
-              <ArrowLeft size={28} />
-            </button>
-            <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
-              <Compass size={40} className="text-emerald-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-4 mb-3">
-                <Activity size={14} className="text-emerald-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400 italic leading-none">{t('onboardingPage.activationSequence')}</span>
-              </div>
-              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{t('onboardingPage.getStarted')}</h1>
-              <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">{t('onboardingPage.subtitle')}</p>
-            </div>
-          </div>
-          {!isComplete && (
-            <button type="button" disabled={skipping} onClick={handleSkipAll} className="px-8 py-4 bg-white/5 border-2 border-white/10 text-slate-400 rounded-full text-[11px] font-black uppercase tracking-[0.5em] hover:text-white italic flex items-center gap-3 transition-colors disabled:opacity-40">
-              <SkipForward size={14} /> {t('onboardingPage.skipSequence')}
-            </button>
-          )}
-        </div>
+        <SectionHeader
+          as="h1"
+          title={t('onboardingPage.getStarted')}
+          description={t('onboardingPage.subtitle')}
+          className="mb-6"
+          actions={
+            !isComplete && (
+              <Button
+                variant="secondary"
+                size="md"
+                disabled={skipping}
+                onClick={handleSkipAll}
+                leftIcon={<SkipForward size={16} aria-hidden />}
+              >
+                {t('onboardingPage.skipSequence')}
+              </Button>
+            )
+          }
+        />
 
-        {/* Niche Picker — written before the steps because every downstream
-            AI surface reads from WorkflowContext.niche. Without it the
-            strategist defaults to 'general' and Gemini gets no niche playbook. */}
+        {/* Niche picker — every downstream AI surface reads WorkflowContext.niche */}
         {(!workflow.niche || editingNiche) ? (
-          <div className={`${glassStyle} rounded-[3rem] p-10 border-indigo-500/20 shadow-[0_0_120px_rgba(99,102,241,0.10)]`}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-[1.4rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] flex items-center justify-center shadow-xl">
-                  <Target size={26} />
-                </div>
+          <Panel variant="bento" className="ds-anim-rise mb-6 p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                  <Target size={20} aria-hidden />
+                </span>
                 <div>
-                  <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">{t('onboardingPage.nicheCalibrationKicker')}</p>
-                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-none">{t('onboardingPage.pickYourCategory')}</h3>
-                  <p className="text-[11px] text-slate-400 mt-2 max-w-xl">{t('onboardingPage.nicheCalibrationDescription')}</p>
+                  <h3 className="ds-text-h3 text-theme-primary">{t('onboardingPage.pickYourCategory')}</h3>
+                  <p className="ds-text-caption mt-1">{t('onboardingPage.nicheCalibrationDescription')}</p>
                 </div>
               </div>
               {workflow.niche && (
-                <button type="button" onClick={() => setEditingNiche(false)} className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
+                <Button variant="ghost" size="sm" onClick={() => setEditingNiche(false)}>
                   {t('onboardingPage.cancel')}
-                </button>
+                </Button>
               )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {NICHE_OPTIONS.map(opt => {
                 const selected = workflow.niche === opt.value
+                const OptIcon = opt.icon
                 return (
-                  <button type="button"
+                  <button
+                    type="button"
                     key={opt.value}
                     onClick={() => handlePickNiche(opt.value)}
                     aria-label={selected ? t('onboardingPage.nicheSelectedAria', { niche: opt.value }) : t('onboardingPage.nicheSelectAria', { niche: opt.value })}
-                    className={`group p-5 rounded-2xl border transition-all text-left flex flex-col gap-2 ${
+                    className={cn(
+                      'flex flex-col gap-2 rounded-xl border p-4 text-left transition-colors',
                       selected
-                        ? `bg-[var(--tint-${opt.accent}-bg)] border-[var(--tint-${opt.accent}-edge)] text-[var(--tint-${opt.accent}-fg)] shadow-lg`
-                        : 'bg-white/[0.02] border-white/10 text-slate-300 hover:border-white/20 hover:bg-white/[0.04]'
-                    }`}
+                        ? 'border-primary/40 bg-primary/10 text-primary'
+                        : 'border-[var(--border-subtle)] bg-transparent text-theme-secondary hover:bg-accent hover:text-theme-primary'
+                    )}
                   >
-                    <span className="text-2xl leading-none">{opt.icon}</span>
-                    <span className="text-[11px] font-black uppercase tracking-widest leading-tight">{t(`onboardingPage.niche_${opt.value}`)}</span>
+                    <OptIcon size={22} aria-hidden />
+                    <span className="ds-text-label">{t(`onboardingPage.niche_${opt.value}`)}</span>
                   </button>
                 )
               })}
             </div>
-          </div>
+          </Panel>
         ) : (
-          <div className={`${glassStyle} rounded-[2.5rem] p-6 border-emerald-500/15 flex items-center justify-between gap-6`}>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
-                <CheckCircle size={18} />
-              </div>
+          <Panel variant="bento" className="ds-anim-rise mb-6 p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                <CheckCircle size={18} aria-hidden />
+              </span>
               <div>
-                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.4em] italic mb-1 leading-none">{t('onboardingPage.nicheLockedLabel')}</p>
-                <p className="text-lg font-black text-white capitalize leading-none">{workflow.niche}</p>
+                <p className="ds-text-caption">{t('onboardingPage.nicheLockedLabel')}</p>
+                <p className="ds-text-label text-theme-primary capitalize">{workflow.niche}</p>
               </div>
             </div>
-            <button type="button" onClick={() => setEditingNiche(true)} title={t('onboardingPage.changeNiche')} aria-label={t('onboardingPage.changeNiche')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
+            <Button variant="ghost" size="sm" onClick={() => setEditingNiche(true)}>
               {t('onboardingPage.change')}
-            </button>
-          </div>
+            </Button>
+          </Panel>
         )}
 
-        {/* Progress Strip */}
-        <div className={`${glassStyle} rounded-[3rem] p-10 ${isComplete ? 'border-emerald-500/30 shadow-[0_0_120px_rgba(16,185,129,0.15)]' : 'border-emerald-500/10'}`}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-5">
-              <div className={`w-14 h-14 rounded-[1.4rem] ${isComplete ? 'bg-emerald-500 text-black' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'} flex items-center justify-center shadow-xl`}>
-                {isComplete ? <CheckCircle size={26} /> : <Zap size={26} />}
-              </div>
+        {/* Progress strip */}
+        <Panel variant="bento" className="ds-anim-rise mb-6 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className={cn(
+                'flex h-10 w-10 items-center justify-center rounded-xl',
+                isComplete ? 'bg-emerald-500/10 text-emerald-500' : 'bg-indigo-500/10 text-indigo-500'
+              )}>
+                {isComplete ? <CheckCircle size={20} aria-hidden /> : <Zap size={20} aria-hidden />}
+              </span>
               <div>
-                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{isComplete ? t('onboardingPage.sequenceComplete') : t('onboardingPage.progress')}</p>
-                <p className="text-3xl font-black text-white italic uppercase tracking-tight leading-none">{t('onboardingPage.stepsCount', { completed: completedCount, total: totalCount })}</p>
+                <p className="ds-text-caption">{isComplete ? t('onboardingPage.sequenceComplete') : t('onboardingPage.progress')}</p>
+                <p className="ds-text-label text-theme-primary">{t('onboardingPage.stepsCount', { completed: completedCount, total: totalCount })}</p>
               </div>
             </div>
-            <p className="text-6xl font-black text-white italic tabular-nums tracking-tighter leading-none">{pct}<span className="text-2xl text-slate-500">%</span></p>
+            <p className="ds-text-h1 text-theme-primary tabular-nums">{pct}<span className="ds-text-h3 text-theme-muted">%</span></p>
           </div>
-          <div className="h-3 rounded-full bg-white/5 overflow-hidden">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} className={`h-full ${isComplete ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-indigo-500'}`} />
+          <div className="h-2 rounded-full bg-accent overflow-hidden">
+            <div
+              className={cn('h-full transition-[width] duration-500', isComplete ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-indigo-500')}
+              style={{ width: `${pct}%` }}
+            />
           </div>
-        </div>
+        </Panel>
 
-        {/* Steps Ladder */}
-        <div className="space-y-5">
+        {/* Steps ladder */}
+        <div className="space-y-3">
           {steps.map((step, idx) => {
             const Icon = step.icon || Circle
             const isLocked = idx > 0 && !steps[idx - 1].completed && !step.completed
             const isCompleting = completing === step.id
             return (
-              <motion.div
+              <Panel
                 key={step.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`${glassStyle} rounded-[2.5rem] p-8 flex flex-col lg:flex-row items-center gap-6 ${step.completed ? 'border-emerald-500/30 bg-emerald-500/[0.02]' : isLocked ? 'opacity-50' : 'hover:border-emerald-500/20'}`}
+                variant="bento"
+                className={cn(
+                  'ds-anim-rise p-5 flex flex-col lg:flex-row items-center gap-4',
+                  isLocked && 'opacity-50'
+                )}
               >
-                <div className="flex items-center gap-5 flex-1 w-full">
-                  <div className="relative flex-shrink-0">
-                    <div className={`w-14 h-14 rounded-[1.4rem] flex items-center justify-center shadow-xl ${step.completed ? 'bg-emerald-500 text-black' : isLocked ? 'bg-white/5 text-slate-600 border border-white/10' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'}`}>
-                      {step.completed ? <CheckCircle size={26} /> : isLocked ? <Lock size={22} /> : <Icon size={26} />}
-                    </div>
-                    <div className={`absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[var(--page-bg)] border ${step.completed ? 'border-emerald-500/40 text-emerald-400' : 'border-white/10 text-slate-500'} flex items-center justify-center text-[10px] font-black italic tabular-nums`}>{idx + 1}</div>
-                  </div>
+                <div className="flex items-center gap-4 flex-1 w-full min-w-0">
+                  <span className={cn(
+                    'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl',
+                    step.completed ? 'bg-emerald-500/10 text-emerald-500' : isLocked ? 'bg-accent text-theme-muted' : 'bg-indigo-500/10 text-indigo-500'
+                  )}>
+                    {step.completed ? <CheckCircle size={22} aria-hidden /> : isLocked ? <Lock size={20} aria-hidden /> : <Icon size={22} aria-hidden />}
+                  </span>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h3 className={`text-2xl font-black italic uppercase tracking-tight leading-tight ${step.completed ? 'text-emerald-400 line-through decoration-emerald-500/40' : 'text-white'}`}>{step.title}</h3>
-                      {step.completed && <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-[0.3em] italic">{t('onboardingPage.done')}</span>}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="ds-text-label text-theme-primary">{step.title}</h3>
+                      {step.completed && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 ds-text-caption">{t('onboardingPage.done')}</span>
+                      )}
                     </div>
-                    {step.description && <p className="text-[12px] text-slate-400 leading-relaxed font-medium">{step.description}</p>}
+                    {step.description && <p className="ds-text-caption mt-1">{step.description}</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 w-full lg:w-auto">
+                <div className="flex items-center gap-2 w-full lg:w-auto">
                   {step.href && !step.completed && (
-                    <Link href={step.href} className="flex-1 lg:flex-none px-7 py-3.5 bg-white text-black rounded-full text-[11px] font-black uppercase tracking-[0.4em] italic hover:bg-indigo-500 hover:text-white transition-colors flex items-center justify-center gap-3 whitespace-nowrap">
-                      {step.cta || t('onboardingPage.open')} <ArrowRight size={14} />
+                    <Link href={step.href} className="flex-1 lg:flex-none">
+                      <Button variant="primary" size="md" rightIcon={<ArrowRight size={14} aria-hidden />} className="w-full">
+                        {step.cta || t('onboardingPage.open')}
+                      </Button>
                     </Link>
                   )}
                   {!step.completed && (
-                    <button type="button" disabled={isCompleting} onClick={() => handleComplete(step.id)} title={t('onboardingPage.markComplete', { title: step.title || '' })} aria-label={t('onboardingPage.markComplete', { title: step.title || '' })} className="w-12 h-12 rounded-full bg-white/5 border-2 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0">
-                      {isCompleting ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                    </button>
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      disabled={isCompleting}
+                      onClick={() => handleComplete(step.id)}
+                      aria-label={t('onboardingPage.markComplete', { title: step.title || '' })}
+                      leftIcon={isCompleting ? <RefreshCw size={16} className="animate-spin" aria-hidden /> : <CheckCircle size={16} aria-hidden />}
+                    />
                   )}
                 </div>
-              </motion.div>
+              </Panel>
             )
           })}
         </div>
 
         {/* Completion banner */}
         {isComplete && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[3rem] p-12 border-emerald-500/30 text-center flex flex-col items-center gap-6 shadow-[0_0_120px_rgba(16,185,129,0.15)]`}>
-            <div className="w-20 h-20 rounded-[2rem] bg-emerald-500 text-black flex items-center justify-center shadow-[0_30px_80px_rgba(16,185,129,0.4)]">
-              <Sparkles size={40} />
-            </div>
+          <Panel variant="bento" className="ds-anim-rise mt-6 p-8 border-emerald-500/30 text-center flex flex-col items-center gap-4">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
+              <Sparkles size={28} aria-hidden />
+            </span>
             <div>
-              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-3 leading-none">{t('onboardingPage.instanceActivated')}</p>
-              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-tight mb-3">{t('onboardingPage.fullyWiredIn')}</h2>
-              <p className="text-[12px] text-slate-400 uppercase font-black tracking-[0.4em] italic">{t('onboardingPage.fullCapacity')}</p>
+              <h2 className="ds-text-h2 text-theme-primary">{t('onboardingPage.fullyWiredIn')}</h2>
+              <p className="ds-text-caption mt-1">{t('onboardingPage.fullCapacity')}</p>
             </div>
-            <Link href="/dashboard" className="px-10 py-4 bg-white text-black rounded-full text-[12px] font-black uppercase tracking-[0.5em] italic hover:bg-emerald-500 hover:text-white transition-colors flex items-center gap-3">
-              {t('onboardingPage.enterDashboard')} <ArrowRight size={16} />
+            <Link href="/dashboard">
+              <Button variant="primary" size="md" rightIcon={<ArrowRight size={16} aria-hidden />}>
+                {t('onboardingPage.enterDashboard')}
+              </Button>
             </Link>
-          </motion.div>
+          </Panel>
         )}
       </div>
     </ErrorBoundary>

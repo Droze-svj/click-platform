@@ -2,21 +2,18 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Brain, Zap, Target, TrendingUp, Shield, Cpu, 
-  ArrowLeft, RefreshCw, Sparkles, Network, Fingerprint,
-  ActivitySquare, Terminal, Monitor, MessageSquare, 
-  Flame, Globe, BarChart3, AlertCircle
+import {
+  Brain, Target, TrendingUp, Cpu, ArrowLeft, RefreshCw,
+  Flame, AlertCircle,
 } from 'lucide-react'
-import { apiPost, apiGet } from '../../../../../lib/api'
+import { apiPost } from '../../../../../lib/api'
 import { ErrorBoundary } from '../../../../../components/ErrorBoundary'
 import ToastContainer from '../../../../../components/ToastContainer'
 import SpectralLoader from '../../../../../components/SpectralLoader'
 import { useTranslation } from '@/hooks/useTranslation'
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
-const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[4rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
+import {
+  Panel, StatCard, SectionHeader, EmptyState, Button, IconButton,
+} from '@/components/ui'
 
 interface InsightMatrix {
   potencyScore: number;
@@ -42,14 +39,13 @@ export default function StrategicSynthesisHub() {
     try {
       const res = await apiPost(`/analytics/process-insights/${params.id}`, {})
       if (res.success) {
-        // Extract matrix from wrapped response
         const data = res.matrix.metadata || res.matrix;
         setMatrix(data)
       } else {
         throw new Error(res.error || 'SCAN_INTERRUPTED')
       }
     } catch (err: any) {
-      console.error('Neural Scan Failure:', err)
+      console.error('Insight scan failed:', err)
       setError(err.message || 'NEURAL_LINK_ERROR')
     } finally {
       setLoading(false)
@@ -63,175 +59,159 @@ export default function StrategicSynthesisHub() {
   if (loading) return <SpectralLoader message={t('analyticsInsightPage.loaderMessage')} subMessage={t('analyticsInsightPage.loaderSubMessage')} />
 
   if (error) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-12 text-center">
-      <AlertCircle size={80} className="text-rose-500 mb-8 animate-pulse" />
-      <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-6">{t('analyticsInsightPage.linkError')}</h1>
-      <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] mb-12">{error}</p>
-      <button type="button" onClick={() => router.back()}
-        title={t('analyticsInsightPage.returnToMatrix')} aria-label={t('analyticsInsightPage.returnToMatrix')}
-        className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all hover:bg-rose-500 hover:text-white shadow-2xl">
-        {t('analyticsInsightPage.returnToMatrix')}
-      </button>
+    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto text-theme-primary">
+      <EmptyState
+        icon={AlertCircle}
+        title={t('analyticsInsightPage.linkError')}
+        description={error}
+        className="py-24"
+        action={
+          <Button variant="primary" size="md" onClick={() => router.back()}>
+            {t('analyticsInsightPage.returnToMatrix')}
+          </Button>
+        }
+      />
     </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 sm:pb-48 px-4 sm:px-10 pt-16 max-w-[1750px] mx-auto space-y-12 sm:space-y-24 bg-black text-white">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
         <ToastContainer />
-        
-        {/* Spectral Background Layers */}
-        <div className="fixed inset-0 pointer-events-none">
-           <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-violet-600/10 blur-[250px] rounded-full animate-pulse" />
-           <div className="absolute bottom-[-5%] left-[-5%] w-[50%] h-[50%] bg-indigo-600/10 blur-[200px] rounded-full" />
-           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.03] mix-blend-overlay" />
-           <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12 opacity-[0.03]" />
-        </div>
 
-        {/* Synthesis Header */}
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
-           <div className="flex items-center gap-12">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                title={t('analyticsInsightPage.goBack')}
+        <SectionHeader
+          as="h1"
+          title={t('analyticsInsightPage.title')}
+          description={t('analyticsInsightPage.subtitle')}
+          className="mb-6"
+          actions={
+            <>
+              <IconButton
+                variant="secondary"
+                size="md"
                 aria-label={t('analyticsInsightPage.goBack')}
-                className="w-24 h-24 bg-white/5 border border-white/10 rounded-[3rem] flex items-center justify-center hover:bg-white/10 transition-all group"
+                onClick={() => router.back()}
               >
-                <ArrowLeft size={32} className="text-white group-hover:-translate-x-2 transition-transform" />
-              </button>
+                <ArrowLeft size={18} aria-hidden />
+              </IconButton>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={initiateScan}
+                leftIcon={<RefreshCw size={16} aria-hidden />}
+              >
+                {t('analyticsInsightPage.reInitializeScan')}
+              </Button>
+            </>
+          }
+        />
+
+        {matrix?.headline && (
+          <Panel variant="bento" className="ds-anim-rise mb-6 p-6">
+            <p className="ds-text-h3 text-theme-primary [overflow-wrap:anywhere]">
+              &ldquo;{matrix.headline}&rdquo;
+            </p>
+          </Panel>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Primary yield + ROI modeling */}
+          <div className="lg:col-span-2 space-y-4">
+            <Panel variant="bento" className="ds-anim-rise p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">
+                  <TrendingUp size={20} aria-hidden />
+                </span>
+                <SectionHeader
+                  as="h2"
+                  title={t('analyticsInsightPage.roiTitle')}
+                  description={t('analyticsInsightPage.roiSubtitle')}
+                />
+              </div>
+
+              <div className="flex flex-col items-center justify-center py-6">
+                <div className="ds-text-display text-theme-primary tabular-nums">
+                  +{matrix?.predictiveROI || 0}%
+                </div>
+                <div className="ds-text-caption mt-2">{t('analyticsInsightPage.growthResonance')}</div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                {matrix?.specificAdvice && (
+                  <Panel variant="subtle" className="p-5 flex items-start gap-4">
+                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                      <Target size={20} aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="ds-text-label text-indigo-500 mb-1">{t('analyticsInsightPage.strategicDirective')}</div>
+                      <p className="ds-text-body text-theme-primary [overflow-wrap:anywhere]">{matrix.specificAdvice}</p>
+                    </div>
+                  </Panel>
+                )}
+                {matrix?.kineticResonance && (
+                  <Panel variant="subtle" className="p-5 flex items-start gap-4">
+                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
+                      <Flame size={20} aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="ds-text-label text-rose-500 mb-1">{t('analyticsInsightPage.kineticFlow')}</div>
+                      <p className="ds-text-body text-theme-primary [overflow-wrap:anywhere]">{matrix.kineticResonance}</p>
+                    </div>
+                  </Panel>
+                )}
+              </div>
+            </Panel>
+          </div>
+
+          {/* Signal diagnostic */}
+          <Panel variant="bento" className="ds-anim-rise p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                <Brain size={20} aria-hidden />
+              </span>
+              <SectionHeader
+                as="h2"
+                title={t('analyticsInsightPage.signalDiagnostic')}
+                description={t('analyticsInsightPage.signalDiagnosticSubtitle')}
+              />
+            </div>
+
+            <div className="space-y-6">
               <div>
-                 <div className="flex items-center gap-6 mb-3">
-                   <div className="flex items-center gap-3">
-                      <Zap size={16} className="text-violet-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-violet-400 italic leading-none">{t('analyticsInsightPage.versionLabel')}</span>
-                   </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <Sparkles size={12} className="text-white animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{matrix?.headline || t('analyticsInsightPage.manifesting')}</span>
-                   </div>
-                 </div>
-                 <h1 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{t('analyticsInsightPage.title')}</h1>
-                 <p className="text-slate-400 text-[10px] sm:text-[14px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">{t('analyticsInsightPage.subtitle')}</p>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="ds-text-label text-theme-secondary">{t('analyticsInsightPage.potencyScore')}</span>
+                  <span className="ds-text-h3 text-theme-primary tabular-nums">{matrix?.potencyScore || 0}/100</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-accent overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-violet-500 to-indigo-500"
+                    style={{ width: `${matrix?.potencyScore || 0}%` }}
+                  />
+                </div>
               </div>
-           </div>
-        </header>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-16 relative z-10">
-           {/* Primary Yield & ROI Modeling */}
-           <div className="xl:col-span-2 space-y-12">
-              <div className={`${premiumCard} p-20 relative overflow-hidden h-full flex flex-col min-h-[600px]`}>
-                 <div className="absolute top-0 right-0 p-32 opacity-[0.02] pointer-events-none"><Network size={600} className="text-white" /></div>
-                 
-                 <div className="flex items-center gap-8 mb-16 relative z-10 px-8">
-                    <div className="p-6 rounded-[2.5rem] bg-violet-500/5 border border-violet-500/20 shadow-2xl"><TrendingUp size={40} className="text-violet-400" /></div>
-                    <div>
-                       <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">{t('analyticsInsightPage.roiTitle')}</h3>
-                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{t('analyticsInsightPage.roiSubtitle')}</p>
-                    </div>
-                 </div>
-
-                 <div className="flex-1 flex flex-col justify-center items-center gap-12 relative z-10">
-                    <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                      className="w-96 h-96 rounded-full border-[20px] border-violet-500/20 flex flex-col items-center justify-center bg-black/40 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] relative"
-                    >
-                       <div className="absolute inset-0 rounded-full border border-violet-500/50 animate-ping opacity-20" />
-                       <div className="text-[120px] font-black italic text-white tracking-tighter tabular-nums leading-none">
-                          +{matrix?.predictiveROI || 0}%
-                       </div>
-                       <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] mt-4">{t('analyticsInsightPage.growthResonance')}</div>
-                    </motion.div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-                       <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 flex items-start gap-8 group hover:bg-white/[0.05] transition-all">
-                          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20 group-hover:scale-110 transition-transform"><Target size={32} className="text-indigo-400" /></div>
-                          <div>
-                             <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-2 italic">{t('analyticsInsightPage.strategicDirective')}</div>
-                             <p className="text-[18px] font-black text-white italic leading-tight uppercase tracking-tight">{matrix?.specificAdvice}</p>
-                          </div>
-                       </div>
-                       <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 flex items-start gap-8 group hover:bg-white/[0.05] transition-all">
-                          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20 group-hover:scale-110 transition-transform"><Flame size={32} className="text-rose-400" /></div>
-                          <div>
-                             <div className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] mb-2 italic">{t('analyticsInsightPage.kineticFlow')}</div>
-                             <p className="text-[18px] font-black text-white italic leading-tight uppercase tracking-tight">{matrix?.kineticResonance}</p>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
+              <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)]">
+                <span className="ds-text-label text-theme-secondary">{t('analyticsInsightPage.signalGapsDetected')}</span>
+                <div className="flex flex-wrap gap-2">
+                  {(matrix?.signalGaps || [t('analyticsInsightPage.dataMissing')]).map(gap => (
+                    <span key={gap} className="px-3 py-1.5 rounded-lg bg-accent ds-text-caption text-theme-secondary">
+                      {gap}
+                    </span>
+                  ))}
+                </div>
               </div>
-           </div>
 
-           {/* Heuristic Gaps & Node Identity */}
-           <div className="xl:col-span-1 space-y-12 h-full">
-              <div className={`${premiumCard} p-24 h-full relative overflow-hidden flex flex-col`}>
-                 <div className="absolute top-0 right-0 p-24 opacity-0.02 pointer-events-none border-none"><Cpu size={400} className="text-white opacity-[0.02]" /></div>
-                 
-                 <div className="flex items-center gap-6 mb-16 relative z-10">
-                    <div className="p-5 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/20"><Brain size={32} className="text-indigo-400" /></div>
-                    <div>
-                       <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">{t('analyticsInsightPage.signalDiagnostic')}</h3>
-                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{t('analyticsInsightPage.signalDiagnosticSubtitle')}</p>
-                    </div>
-                 </div>
-
-                 <div className="space-y-10 flex-1 relative z-10">
-                    <div className="space-y-6">
-                       <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic">{t('analyticsInsightPage.potencyScore')}</span>
-                       <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
-                          <motion.div 
-                             initial={{ width: 0 }}
-                             animate={{ width: `${matrix?.potencyScore || 0}%` }}
-                             transition={{ duration: 1.5, ease: "easeOut" }}
-                             className="h-full bg-gradient-to-r from-violet-600 to-indigo-500 shadow-[0_0_20px_rgba(139,92,246,0.5)]"
-                          />
-                       </div>
-                       <div className="flex justify-between items-center text-[14px] font-black text-slate-400 italic uppercase">
-                          <span>{t('analyticsInsightPage.neutral')}</span>
-                          <span className="text-white text-3xl tracking-tighter">{matrix?.potencyScore || 0}/100</span>
-                          <span>{t('analyticsInsightPage.overdrive')}</span>
-                       </div>
-                    </div>
-
-                    <div className="space-y-6 pt-10 border-t border-white/5">
-                       <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic">{t('analyticsInsightPage.signalGapsDetected')}</span>
-                       <div className="flex flex-wrap gap-4">
-                          {(matrix?.signalGaps || [t('analyticsInsightPage.dataMissing')]).map(gap => (
-                            <div key={gap} className="px-8 py-4 rounded-[2rem] bg-black/60 border border-white/10 flex items-center gap-4 group hover:border-indigo-500/40 transition-all">
-                               <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,1)]" />
-                               <span className="text-[14px] font-black text-white uppercase tracking-tight italic">{gap}</span>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-
-                    <div className="mt-12 p-8 rounded-[3rem] bg-white/[0.01] border border-white/5 space-y-4">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] italic">{t('analyticsInsightPage.manifestPlatform')}</span>
-                       <div className="flex items-center gap-6">
-                          <div className={`w-14 h-14 rounded-2xl bg-black/80 border border-white/10 flex items-center justify-center text-white text-2xl uppercase font-black italic`}>
-                             {matrix?.platform_context === 'tiktok' ? '♪' : matrix?.platform_context === 'instagram' ? '◈' : '▶'}
-                          </div>
-                          <span className="text-[20px] font-black text-white uppercase italic tracking-widest">{t('analyticsInsightPage.platformSynced', { platform: matrix?.platform_context?.toUpperCase() || '' })}</span>
-                       </div>
-                    </div>
-                 </div>
-
-                 <button
-                  type="button"
-                  onClick={initiateScan}
-                  className="w-full mt-16 py-8 bg-white text-black hover:bg-violet-600 hover:text-white font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-6 group relative z-10"
-                 >
-                    <RefreshCw size={24} className="group-hover:rotate-180 transition-transform duration-300" />
-                    {t('analyticsInsightPage.reInitializeScan')}
-                 </button>
-              </div>
-           </div>
+              {matrix?.platform_context && (
+                <StatCard
+                  className="ds-hover-lift"
+                  label={t('analyticsInsightPage.manifestPlatform')}
+                  value={t('analyticsInsightPage.platformSynced', { platform: matrix.platform_context.toUpperCase() })}
+                  icon={Cpu}
+                />
+              )}
+            </div>
+          </Panel>
         </div>
-
-         <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          html.dark body { font-family: 'Inter', sans-serif; background: black; color: white; overflow-x: hidden; }
-        `}</style>
       </div>
     </ErrorBoundary>
   )
