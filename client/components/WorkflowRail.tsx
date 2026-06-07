@@ -133,7 +133,7 @@ export default function WorkflowRail() {
   const cop = STAGE_COPILOTS[activeStage]
 
   return (
-    <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-surface-200/50 dark:border-white/10 transition-all duration-500 shadow-sm flex flex-col">
+    <div className="sticky top-16 z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-surface-200/50 dark:border-white/10 transition-all duration-500 shadow-sm flex flex-col">
       <div className="px-4 lg:px-8 py-3 flex items-center gap-4 lg:gap-6 overflow-x-auto custom-scrollbar w-full scroll-smooth"
            style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
         {/* Niche pill */}

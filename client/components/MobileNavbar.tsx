@@ -2,8 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import {
+  Menu, X, LayoutDashboard, Video, Sparkles, BookOpen, FileText, Workflow,
+  Zap, FolderKanban, Quote, CalendarDays, Repeat, CalendarRange, BarChart3,
+  Trophy, Users, CheckSquare, Globe, TrendingUp, Gem, LayoutTemplate, Bell,
+  Settings, type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '../hooks/useTranslation'
+import { cn } from '../lib/utils'
 import DarkModeToggle from './DarkModeToggle'
 import NotificationBell from './NotificationBell'
 import AdvancedSearch from './AdvancedSearch'
@@ -19,29 +26,29 @@ export default function MobileNavbar() {
     return null
   }
 
-  const navItems: Array<{ path: string; labelKey: string; icon: string }> = [
-    { path: '/dashboard', labelKey: 'nav.dashboard', icon: '🏠' },
-    { path: '/dashboard/video', labelKey: 'nav.videos', icon: '🎥' },
-    { path: '/dashboard/content', labelKey: 'nav.content', icon: '✨' },
-    { path: '/dashboard/library', labelKey: 'nav.library', icon: '📚' },
-    { path: '/dashboard/scripts', labelKey: 'nav.scripts', icon: '📝' },
-    { path: '/dashboard/workflows', labelKey: 'nav.workflows', icon: '🤖' },
-    { path: '/dashboard/jobs', labelKey: 'nav.jobs', icon: '⚡' },
-    { path: '/dashboard/projects', labelKey: 'nav.projects', icon: '📋' },
-    { path: '/dashboard/quotes', labelKey: 'nav.quotes', icon: '💬' },
-    { path: '/dashboard/scheduler', labelKey: 'nav.scheduler', icon: '📅' },
-    { path: '/dashboard/recurring', labelKey: 'nav.recurring', icon: '🔁' },
-    { path: '/dashboard/calendar', labelKey: 'nav.calendar', icon: '📆' },
-    { path: '/dashboard/analytics', labelKey: 'nav.analytics', icon: '📊' },
-    { path: '/dashboard/achievements', labelKey: 'nav.achievements', icon: '🏆' },
-    { path: '/dashboard/teams', labelKey: 'nav.teams', icon: '👥' },
-    { path: '/dashboard/approvals', labelKey: 'nav.approvals', icon: '✅' },
-    { path: '/dashboard/social', labelKey: 'nav.social', icon: '🌐' },
-    { path: '/dashboard/insights', labelKey: 'nav.insights', icon: '📈' },
-    { path: '/dashboard/membership', labelKey: 'nav.membership', icon: '💎' },
-    { path: '/dashboard/templates', labelKey: 'nav.templates', icon: '📋' },
-    { path: '/dashboard/notifications', labelKey: 'nav.notifications', icon: '🔔' },
-    { path: '/dashboard/settings', labelKey: 'nav.settings', icon: '⚙️' }
+  const navItems: Array<{ path: string; labelKey: string; icon: LucideIcon }> = [
+    { path: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+    { path: '/dashboard/video', labelKey: 'nav.videos', icon: Video },
+    { path: '/dashboard/content', labelKey: 'nav.content', icon: Sparkles },
+    { path: '/dashboard/library', labelKey: 'nav.library', icon: BookOpen },
+    { path: '/dashboard/scripts', labelKey: 'nav.scripts', icon: FileText },
+    { path: '/dashboard/workflows', labelKey: 'nav.workflows', icon: Workflow },
+    { path: '/dashboard/jobs', labelKey: 'nav.jobs', icon: Zap },
+    { path: '/dashboard/projects', labelKey: 'nav.projects', icon: FolderKanban },
+    { path: '/dashboard/quotes', labelKey: 'nav.quotes', icon: Quote },
+    { path: '/dashboard/scheduler', labelKey: 'nav.scheduler', icon: CalendarDays },
+    { path: '/dashboard/recurring', labelKey: 'nav.recurring', icon: Repeat },
+    { path: '/dashboard/calendar', labelKey: 'nav.calendar', icon: CalendarRange },
+    { path: '/dashboard/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
+    { path: '/dashboard/achievements', labelKey: 'nav.achievements', icon: Trophy },
+    { path: '/dashboard/teams', labelKey: 'nav.teams', icon: Users },
+    { path: '/dashboard/approvals', labelKey: 'nav.approvals', icon: CheckSquare },
+    { path: '/dashboard/social', labelKey: 'nav.social', icon: Globe },
+    { path: '/dashboard/insights', labelKey: 'nav.insights', icon: TrendingUp },
+    { path: '/dashboard/membership', labelKey: 'nav.membership', icon: Gem },
+    { path: '/dashboard/templates', labelKey: 'nav.templates', icon: LayoutTemplate },
+    { path: '/dashboard/notifications', labelKey: 'nav.notifications', icon: Bell },
+    { path: '/dashboard/settings', labelKey: 'nav.settings', icon: Settings }
   ]
 
   const isActive = (path: string) => pathname === path
@@ -58,9 +65,7 @@ export default function MobileNavbar() {
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Menu className="w-6 h-6" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -104,9 +109,7 @@ export default function MobileNavbar() {
                   aria-label="Close Menu"
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
               {user && (
@@ -119,22 +122,27 @@ export default function MobileNavbar() {
             <nav className="p-2">
               {navItems.map((item) => {
                 const label = t(item.labelKey)
+                const active = isActive(item.path)
+                const ItemIcon = item.icon
                 return (
                   <button
                     type="button"
                     key={item.path}
                     title={label}
                     aria-label={label}
+                    aria-current={active ? 'page' : undefined}
                     onClick={() => {
                       router.push(item.path)
                       setIsOpen(false)
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive(item.path)
-                      ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                      }`}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors',
+                      active
+                        ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20'
+                        : 'text-gray-700 dark:text-gray-300 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                    )}
                   >
-                    <span className="text-xl">{item.icon}</span>
+                    <ItemIcon size={20} className="flex-shrink-0" aria-hidden="true" />
                     <span className="font-medium">{label}</span>
                   </button>
                 )
