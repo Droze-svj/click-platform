@@ -3,11 +3,18 @@
 
 const axios = require('axios');
 const logger = require('../utils/logger');
+const cache = require('../utils/cache');
 const MusicLicense = require('../models/MusicLicense');
 const { uploadFile } = require('./storageService');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+
+// External AI music APIs (Mubert/Soundraw) have no built-in ceiling, so a
+// hung request would block a generation job forever. Bound every call.
+const MUSIC_API_TIMEOUT_MS = parseInt(process.env.MUSIC_API_TIMEOUT_MS || '30000', 10);
+// Streaming download of the finished track can be larger — give it longer.
+const MUSIC_DOWNLOAD_TIMEOUT_MS = parseInt(process.env.MUSIC_DOWNLOAD_TIMEOUT_MS || '120000', 10);
 
 /**
  * Base AI Music Provider class
@@ -94,7 +101,8 @@ class MubertProvider extends AIMusicProvider {
         {
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: MUSIC_API_TIMEOUT_MS
         }
       );
 
@@ -122,7 +130,8 @@ class MubertProvider extends AIMusicProvider {
         params: {
           api_key: this.apiKey,
           job_id: jobId
-        }
+        },
+        timeout: MUSIC_API_TIMEOUT_MS
       });
 
       return {
@@ -148,7 +157,8 @@ class MubertProvider extends AIMusicProvider {
           api_key: this.apiKey,
           track_id: trackId
         },
-        responseType: 'stream'
+        responseType: 'stream',
+        timeout: MUSIC_DOWNLOAD_TIMEOUT_MS
       });
 
       return response.data;
@@ -226,7 +236,8 @@ class SoundrawProvider extends AIMusicProvider {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: MUSIC_API_TIMEOUT_MS
         }
       );
 
@@ -254,7 +265,8 @@ class SoundrawProvider extends AIMusicProvider {
       const response = await axios.get(`${this.apiBaseUrl}/music/status/${jobId}`, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`
-        }
+        },
+        timeout: MUSIC_API_TIMEOUT_MS
       });
 
       return {
@@ -279,7 +291,8 @@ class SoundrawProvider extends AIMusicProvider {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`
         },
-        responseType: 'stream'
+        responseType: 'stream',
+        timeout: MUSIC_DOWNLOAD_TIMEOUT_MS
       });
 
       return response.data;
@@ -314,7 +327,8 @@ class SoundrawProvider extends AIMusicProvider {
       const response = await axios.get(`${this.apiBaseUrl}/styles`, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`
-        }
+        },
+        timeout: MUSIC_API_TIMEOUT_MS
       });
 
       return response.data;
@@ -328,6 +342,26 @@ class SoundrawProvider extends AIMusicProvider {
     }
   }
 }
+
+/**
+ * Stable dedup key for a generation request. Same (user + provider + params)
+ * should not spawn two concurrent jobs. Params are normalized (sorted keys) so
+ * key order doesn't produce a different hash. Pure helper — exported for tests.
+ */
+function buildJobDedupKey(userId, providerName, params = {}) {
+  const norm = {};
+  for (const k of Object.keys(params).sort()) {
+    const v = params[k];
+    if (v === undefined || v === null) continue;
+    norm[k] = v;
+  }
+  const crypto = require('crypto');
+  const hash = crypto.createHash('sha1').update(JSON.stringify(norm)).digest('hex').slice(0, 16);
+  return `music:job:${String(userId)}:${providerName}:${hash}`;
+}
+
+// How recently a job must have started to count as a duplicate (default 10 min).
+const MUSIC_DEDUP_WINDOW_MS = parseInt(process.env.MUSIC_DEDUP_WINDOW_MS || '600000', 10);
 
 /**
  * Provider factory
@@ -358,6 +392,39 @@ async function generateMusicTrack(providerName, params, userId) {
 
   if (!config) {
     throw new Error(`AI music provider ${providerName} not configured or disabled`);
+  }
+
+  // Dedup guard: if an identical (user + provider + params) job is already
+  // pending/processing or was started very recently, return it instead of
+  // double-spawning a paid generation. Best-effort — a lookup failure must not
+  // block a legitimate new job.
+  const dedupKey = buildJobDedupKey(userId, providerName, params);
+  try {
+    const MusicGeneration = require('../models/MusicGeneration');
+    const since = new Date(Date.now() - MUSIC_DEDUP_WINDOW_MS);
+    const existing = await MusicGeneration.findOne({
+      userId,
+      provider: providerName,
+      status: { $in: ['processing', 'pending', 'completed'] },
+      createdAt: { $gte: since },
+    }).sort({ createdAt: -1 }).lean();
+
+    if (existing && buildJobDedupKey(userId, providerName, existing.params || {}) === dedupKey) {
+      logger.info('Music generation dedup hit — returning existing job', {
+        generationId: String(existing._id), provider: providerName, status: existing.status,
+      });
+      return {
+        generationId: existing._id,
+        jobId: existing.jobId,
+        trackId: existing.trackId,
+        status: existing.status,
+        estimatedTime: existing.metadata?.estimatedTime,
+        licenseInfo: existing.licenseInfo,
+        deduped: true,
+      };
+    }
+  } catch (err) {
+    logger.warn('Music generation dedup check failed (continuing)', { error: err.message });
   }
 
   const provider = createAIProvider(providerName, config);
@@ -572,6 +639,7 @@ module.exports = {
   generateMusicTrack,
   checkGenerationStatus,
   downloadAndStoreTrack,
-  getAvailableStyles
+  getAvailableStyles,
+  buildJobDedupKey
 };
 

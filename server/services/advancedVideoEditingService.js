@@ -83,9 +83,20 @@ async function detectFillerWords(transcript) {
     }
 
     const fullPrompt = `Analyze this transcript and identify filler words and pauses (um, uh, er, ah, like, you know, so, well, actually). Return valid JSON only with "fillerWords" array of objects: {word: string, startTime: number, endTime: number, type: 'filler'|'pause'}. Estimate timestamps based on word position.\n\nTranscript:\n${transcript}`;
-    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1024 });
-    const analysis = JSON.parse(raw || '{}');
-    return analysis.fillerWords || [];
+    let raw;
+    try {
+      raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1024 });
+    } catch (genErr) {
+      // Upstream/LLM failure must not throw out of this helper — callers
+      // treat an empty filler list as "nothing to cut".
+      logger.warn('Filler-word Gemini call failed', { error: genErr.message });
+      return [];
+    }
+    // Defensive parse: a malformed/non-JSON response must degrade to [], never
+    // throw. safeJsonParse strips fences/preamble and returns the fallback.
+    const { safeJsonParse } = require('../utils/aiRouter');
+    const analysis = safeJsonParse(raw, {}) || {};
+    return Array.isArray(analysis.fillerWords) ? analysis.fillerWords : [];
   } catch (error) {
     logger.error('Error detecting filler words', { error: error.message });
     return [];

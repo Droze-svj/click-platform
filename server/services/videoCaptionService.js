@@ -2,9 +2,17 @@
 
 const OpenAI = require('openai');
 const logger = require('../utils/logger');
+const cache = require('../utils/cache');
 const { toAbsolutePath } = require('../utils/pathUtils');
 const { captureException } = require('../utils/sentry');
 const Content = require('../models/Content');
+
+// Whisper transcription can legitimately take a while for long videos, but
+// "forever" is never right. 120s per request, overridable.
+const WHISPER_TIMEOUT_MS = parseInt(process.env.WHISPER_TIMEOUT_MS || '120000', 10);
+// Transcripts are deterministic for a given file — cache by contentId so
+// re-captioning (format changes, retries) doesn't re-run Whisper. 7 days.
+const TRANSCRIPT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const { resolveContent } = require('../utils/devStore');
 const {
   smartSentenceSplit,
@@ -48,14 +56,15 @@ async function generateTranscript(videoFilePath, language = null) {
     const { createReadStream } = require('fs');
     const fileStream = createReadStream(toAbsolutePath(videoFilePath));
 
-    // Call Whisper API
+    // Call Whisper API. `{ timeout }` bounds a single request so a stuck
+    // upstream can't hang the caption pipeline indefinitely.
     const response = await client.audio.transcriptions.create({
       file: fileStream,
       model: 'whisper-1',
       language: language || undefined, // Auto-detect if not provided
       response_format: 'verbose_json', // Get detailed response with segments
       timestamp_granularities: ['segment', 'word'], // Get both segment and word-level timestamps
-    });
+    }, { timeout: WHISPER_TIMEOUT_MS });
 
     logger.info('Transcript generated successfully', {
       textLength: response.text?.length || 0,
@@ -93,8 +102,17 @@ async function generateCaptionsForContent(contentId, videoFilePath, options = {}
   try {
     const { language, format = 'srt' } = options;
 
-    // Generate transcript
-    const transcript = await generateTranscript(videoFilePath, language);
+    // Cache the (expensive) transcript by contentId+language so re-captioning
+    // — e.g. requesting a different output format — never re-runs Whisper.
+    const transcriptCacheKey = `caption:transcript:${contentId}:${language || 'auto'}`;
+    let transcript = cache.get(transcriptCacheKey);
+    if (transcript) {
+      logger.info('Reusing cached transcript', { contentId });
+    } else {
+      // Generate transcript
+      transcript = await generateTranscript(videoFilePath, language);
+      cache.set(transcriptCacheKey, transcript, TRANSCRIPT_TTL_MS);
+    }
 
     // Format captions based on requested format
     const formattedCaptions = formatCaptions(transcript, format);

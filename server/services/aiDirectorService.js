@@ -25,6 +25,14 @@ const EditPlanMemory = require('../models/EditPlanMemory');
 const { getActiveBlueprint } = require('./continuousLearningService');
 const anthropicAI = require('../utils/anthropicAI');
 const logger = require('../utils/logger');
+const { assertPromptSize } = require('../utils/aiRouter');
+
+let Sentry = null;
+try {
+  Sentry = require('@sentry/node');
+} catch (_) {
+  // Optional dependency in some local environments.
+}
 
 const MODEL = 'claude-opus-4-8';
 const MAX_DIRECTIONS = 3;
@@ -434,6 +442,7 @@ async function generateEditPlan({ contentId, userId, goals = {}, constraints = {
     || null;
 
   if (!transcript || !String(transcript).trim()) {
+    logger.info('[AIDirector] no transcript available — cannot generate plan', { contentId: String(contentId) });
     return { ok: false, error: 'Add a transcript first — transcribe the video before running the AI Director.' };
   }
 
@@ -479,6 +488,15 @@ async function generateEditPlan({ contentId, userId, goals = {}, constraints = {
   const recentSet = new Set(recent.map((r) => r.fingerprint).filter(Boolean));
   const avoidSection = buildAvoidSection(recent);
 
+  // Observability: surface cold-start cases (no learned style / no blueprint)
+  // so we can tell "thin plan because new creator" apart from a real bug.
+  if (!styleSection) {
+    logger.info('[AIDirector] no learned style profile (cold start)', { contentId: String(contentId), userId: String(userId || '') });
+  }
+  if (!blueprintSection) {
+    logger.info('[AIDirector] no active performance blueprint (cold start)', { contentId: String(contentId), userId: String(userId || '') });
+  }
+
   // c. Build prompts.
   const { system, userPrompt } = buildPrompts({
     duration, resolution, niche, platform, language,
@@ -486,9 +504,33 @@ async function generateEditPlan({ contentId, userId, goals = {}, constraints = {
     styleSection, blueprintSection, avoidSection, goals, constraints,
   });
 
+  // Prompt-size guard: refuse an oversized prompt with an honest error rather
+  // than burning a full Claude round-trip on a 400. Inputs are already bounded
+  // (transcript excerpt capped, goals/constraints whitelisted), so exceeding
+  // the ceiling here signals something abnormal.
+  try {
+    assertPromptSize(`${system}\n${userPrompt}`, { label: 'AIDirector prompt', throwOnExceed: true });
+  } catch (sizeErr) {
+    logger.warn('[AIDirector] prompt-size guard tripped', { contentId: String(contentId), error: sizeErr.message });
+    return { ok: false, error: 'This video has too much context to plan in one pass. Try a shorter clip or trim the transcript.' };
+  }
+
   // d. Call Claude.
-  const result = await anthropicAI.generateJSON(userPrompt, { system, model: MODEL, maxTokens: 16000 });
+  let result;
+  try {
+    result = await anthropicAI.generateJSON(userPrompt, { system, model: MODEL, maxTokens: 16000 });
+  } catch (err) {
+    logger.error('[AIDirector] Claude generate threw', { contentId: String(contentId), error: err?.message });
+    if (Sentry && typeof Sentry.captureException === 'function') {
+      try { Sentry.captureException(err, { tags: { service: 'aiDirectorService', action: 'generateEditPlan' } }); } catch (_) { /* ignore */ }
+    }
+    return { ok: false, error: 'The AI Director hit an unexpected error. Please try again.' };
+  }
   if (!result.ok) {
+    logger.warn('[AIDirector] Claude returned an error', { contentId: String(contentId), error: result.error });
+    if (Sentry && typeof Sentry.captureMessage === 'function') {
+      try { Sentry.captureMessage(`AIDirector generate failed: ${String(result.error).slice(0, 120)}`, 'warning'); } catch (_) { /* ignore */ }
+    }
     return { ok: false, error: result.error };
   }
 

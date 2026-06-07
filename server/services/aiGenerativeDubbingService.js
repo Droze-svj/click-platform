@@ -9,9 +9,47 @@
  */
 
 const crypto = require('crypto')
+const logger = require('../utils/logger')
+
+let Sentry = null
+try {
+  Sentry = require('@sentry/node')
+} catch (_) {
+  // Optional dependency in some local environments.
+}
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
 const ELEVENLABS_BASE = 'https://api.elevenlabs.io/v1'
+
+// Bound every ElevenLabs HTTP call so a stuck upstream can't hang a dub job.
+const DUBBING_TIMEOUT_MS = parseInt(process.env.DUBBING_TIMEOUT_MS || '120000', 10)
+
+function isProduction() {
+  return process.env.NODE_ENV === 'production'
+}
+
+/**
+ * fetch() with an AbortController timeout. Throws on timeout/transport error so
+ * callers' try/catch can map it to an honest failure.
+ */
+async function fetchWithTimeout(url, opts = {}, timeoutMs = DUBBING_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...opts, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+function captureDubbingError(err, context = {}) {
+  try {
+    logger.error('[dubbing] error', { error: err?.message, ...context })
+  } catch (_) { /* logger optional */ }
+  if (Sentry && typeof Sentry.captureException === 'function') {
+    try { Sentry.captureException(err, { tags: { service: 'aiGenerativeDubbingService', ...context } }) } catch (_) { /* ignore */ }
+  }
+}
 
 /**
  * Clone caller's voice and generate a dubbed track.
@@ -26,7 +64,18 @@ const ELEVENLABS_BASE = 'https://api.elevenlabs.io/v1'
  */
 async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEnabled = false, audioSampleUrl }) {
   if (!ELEVENLABS_API_KEY) {
-    
+    // PRODUCTION: never hand back mock audio URLs that 404 — return an honest
+    // "not configured" result so the client shows a real message (owner's #1
+    // rule: no fake-as-real). Dev keeps the mock but flags it clearly.
+    if (isProduction()) {
+      logger.warn('[dubbing] ELEVENLABS_API_KEY missing in production — returning unconfigured result', { videoId, targetLanguage })
+      return {
+        ok: false,
+        configured: false,
+        error: 'Dubbing is not configured. Set ELEVENLABS_API_KEY to enable voice dubbing.',
+      }
+    }
+    logger.info('[dubbing] dev mock response (no ELEVENLABS_API_KEY)', { videoId, targetLanguage })
     return buildMockResponse(videoId, targetLanguage, lipSyncEnabled)
   }
 
@@ -45,7 +94,7 @@ async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEn
     formData.append('num_speakers', '1')
     if (activeVoiceId) formData.append('voice_id', activeVoiceId)
 
-    const dubRes = await fetch(`${ELEVENLABS_BASE}/dubbing`, {
+    const dubRes = await fetchWithTimeout(`${ELEVENLABS_BASE}/dubbing`, {
       method: 'POST',
       headers: { 'xi-api-key': ELEVENLABS_API_KEY },
       body: formData,
@@ -64,7 +113,16 @@ async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEn
       lipSyncDataUrl: lipSyncEnabled ? `https://api.clickapp.io/lipsync/${dub.dubbing_id}` : null,
     }
   } catch (err) {
-    
+    captureDubbingError(err, { action: 'generateDubbedTrack', videoId, targetLanguage })
+    // PRODUCTION: surface the real failure instead of a mock URL that 404s.
+    if (isProduction()) {
+      return {
+        ok: false,
+        configured: true,
+        error: `Dubbing failed: ${String(err?.message || err).slice(0, 160)}`,
+      }
+    }
+    logger.info('[dubbing] dev mock response after error', { videoId, targetLanguage })
     return buildMockResponse(videoId, targetLanguage, lipSyncEnabled)
   }
 }
@@ -79,10 +137,10 @@ async function cloneVoice(audioSampleUrl, name) {
   const formData = new FormData()
   formData.append('name', name)
   // Fetch the audio as a blob and attach
-  const audioBlob = await fetch(audioSampleUrl).then(r => r.blob())
+  const audioBlob = await fetchWithTimeout(audioSampleUrl).then(r => r.blob())
   formData.append('files', audioBlob, 'sample.mp3')
 
-  const res = await fetch(`${ELEVENLABS_BASE}/voices/add`, {
+  const res = await fetchWithTimeout(`${ELEVENLABS_BASE}/voices/add`, {
     method: 'POST',
     headers: { 'xi-api-key': ELEVENLABS_API_KEY },
     body: formData,
@@ -100,10 +158,14 @@ async function cloneVoice(audioSampleUrl, name) {
  */
 async function getDubbingStatus(dubbingId) {
   if (!ELEVENLABS_API_KEY) {
-    return { status: 'dubbed', progress: 100 }
+    // PRODUCTION: don't claim a job is "dubbed" when dubbing isn't configured.
+    if (isProduction()) {
+      return { ok: false, configured: false, status: 'not_configured', progress: 0, error: 'Dubbing is not configured.' }
+    }
+    return { mock: true, status: 'dubbed', progress: 100 }
   }
 
-  const res = await fetch(`${ELEVENLABS_BASE}/dubbing/${dubbingId}`, {
+  const res = await fetchWithTimeout(`${ELEVENLABS_BASE}/dubbing/${dubbingId}`, {
     headers: { 'xi-api-key': ELEVENLABS_API_KEY },
   })
 
@@ -136,6 +198,8 @@ async function lipSyncWarp(videoId, phonemeData) {
 function buildMockResponse(videoId, targetLanguage, lipSyncEnabled) {
   const mockId = crypto.randomUUID()
   return {
+    // Clearly flagged so no caller mistakes dev mock URLs for real audio.
+    mock: true,
     jobId: mockId,
     audioUrl: `/api/mock/audio/${mockId}-${targetLanguage}.mp3`,
     lipSyncDataUrl: lipSyncEnabled ? `/api/mock/lipsync/${mockId}` : null,
