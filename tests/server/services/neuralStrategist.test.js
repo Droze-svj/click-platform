@@ -5,23 +5,33 @@ const { isConfigured: geminiConfigured } = require('../../../server/utils/google
 describe('Neural Strategist Suite', () => {
 
   describe('Live Trend Service', () => {
-    it('should fetch simulate trends for March 2026', async () => {
+    it('should return structured live trends (honest empty when unconfigured)', async () => {
+      // New shape: real, web-grounded structured trends
+      // { platform, niche, sounds[], hashtags[], topics[], citations[], source }.
+      // No provider configured (CI) → honest source:'unavailable' with empty arrays;
+      // never the old hardcoded mock presented as real.
       const trends = await liveTrendService.getLatestTrends('tiktok');
       expect(trends).toBeDefined();
-      expect(Array.isArray(trends)).toBe(true);
-      if (trends.length > 0) {
-        expect(trends[0].tag || trends[0].topic || trends[0].trend).toBeDefined();
-      }
+      expect(Array.isArray(trends.sounds)).toBe(true);
+      expect(Array.isArray(trends.hashtags)).toBe(true);
+      expect(Array.isArray(trends.topics)).toBe(true);
+      expect(trends.source).toBeDefined();
     });
 
-    it('should generate a trend strategy mold', async () => {
+    it('should generate a real trend strategy mold, or honestly report none', async () => {
       const trends = await liveTrendService.getLatestTrends('tiktok');
       const strategy = await liveTrendService.getTrendStrategy(trends);
 
       expect(strategy).toBeDefined();
-      expect(strategy.mold).toBeDefined();
-      if (geminiConfigured) {
-        expect(strategy.pacing).toBeDefined();
+      // No fabrication: when neither Claude nor Gemini is configured, an honest
+      // { ok:false, error } is returned instead of a fake mold.
+      if (strategy.ok === false) {
+        expect(strategy.error).toBeDefined();
+      } else {
+        expect(strategy.mold).toBeDefined();
+        if (geminiConfigured) {
+          expect(strategy.pacing).toBeDefined();
+        }
       }
     });
   });
