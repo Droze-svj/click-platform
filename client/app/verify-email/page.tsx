@@ -19,9 +19,9 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { ShieldCheck, AlertCircle, Loader2, ArrowRight, RefreshCw } from 'lucide-react'
+import { ShieldCheck, AlertCircle, Loader2, ArrowRight, RefreshCw, AlertTriangle } from 'lucide-react'
 import { apiPost, setTokens } from '@/lib/api'
+import { Button, Card, Icon } from '@/components/ui'
 import ClickLogo from '@/components/ClickLogo'
 import { clickVoice } from '@/lib/clickVoice'
 
@@ -71,106 +71,93 @@ function VerifyEmailInner() {
   }, [token, router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-page text-surface-900 dark:text-white px-4 relative overflow-hidden">
-      {/* Ambient backdrop — matches /login + /register so the moment feels continuous. */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-[10%] -right-[10%] w-[60%] h-[60%] bg-primary-600/10 blur-[160px] rounded-full mix-blend-screen" />
-        <div className="absolute bottom-[20%] -left-[10%] w-[50%] h-[60%] bg-fuchsia-600/10 blur-[180px] rounded-full mix-blend-screen" />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 w-full max-w-lg bg-surface-card backdrop-blur-[60px] border-2 border-surface-100 dark:border-white/5 rounded-[3rem] p-10 sm:p-14 shadow-[0_80px_150px_rgba(0,0,0,0.6)] text-center space-y-8"
+    <div className="min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12">
+      <Card
+        variant="elevated"
+        className="relative z-10 w-full max-w-lg p-8 sm:p-12 text-center space-y-7 ds-anim-rise"
       >
-        <div className="mx-auto w-20 h-20 rounded-[2rem] bg-surface-page dark:bg-black/40 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center shadow-2xl">
+        <div className="mx-auto w-20 h-20 rounded-2xl ds-surface-subtle flex items-center justify-center">
           <ClickLogo size={48} />
         </div>
 
         {phase === 'verifying' && (
-          <>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 text-[10px] font-black uppercase tracking-widest text-primary-500">
-              <Loader2 className="w-3 h-3 animate-spin" /> Click is verifying you
+          <div role="status" aria-live="polite" className="space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 ds-text-label text-primary">
+              <Loader2 className="w-4 h-4 animate-spin" /> Verifying you
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black italic tracking-tighter">Confirming your account…</h1>
-            <p className="text-sm text-surface-500 dark:text-slate-500 leading-relaxed max-w-sm mx-auto">
+            <h1 className="ds-text-h1 text-theme-primary">Confirming your account…</h1>
+            <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
               {clickVoice('loading.thinking')}
             </p>
-          </>
+          </div>
         )}
 
         {phase === 'verified' && (
-          <>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-400">
-              <ShieldCheck className="w-3 h-3" /> Verified
+          <div role="status" aria-live="polite" className="space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 ds-text-label text-emerald-500">
+              <Icon icon={ShieldCheck} size="sm" /> Verified
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black italic tracking-tighter">You&apos;re in.</h1>
-            <p className="text-sm text-surface-500 dark:text-slate-500 leading-relaxed max-w-sm mx-auto">
+            <h1 className="ds-text-h1 text-theme-primary">You&apos;re in.</h1>
+            <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
               Click recognised your email. Taking you to the dashboard…
             </p>
-            <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-400">
-              <RefreshCw className="w-3 h-3 animate-spin" />
+            <div className="flex items-center justify-center gap-2 ds-text-label text-emerald-500">
+              <RefreshCw className="w-4 h-4 animate-spin" />
               Redirecting
             </div>
-          </>
+          </div>
         )}
 
         {phase === 'error' && (
-          <>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] font-black uppercase tracking-widest text-rose-400">
-              <AlertCircle className="w-3 h-3" /> Verification failed
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 ds-text-label text-rose-500">
+              <Icon icon={AlertCircle} size="sm" /> Verification failed
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black italic tracking-tighter">
+            <h1 className="ds-text-h1 text-theme-primary">
               Click couldn&apos;t verify this link.
             </h1>
-            <p className="text-sm text-surface-500 dark:text-slate-500 leading-relaxed max-w-sm mx-auto">
+            <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
               The token may have expired or already been used. Sign in and we&apos;ll resend a fresh verification email.
             </p>
             {errorMessage && process.env.NODE_ENV === 'development' && (
-              <p className="text-[10px] font-mono text-slate-700 break-all">{errorMessage}</p>
+              <p className="text-xs font-mono text-theme-muted break-all">{errorMessage}</p>
             )}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-white text-black text-[11px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
-              >
-                Sign in
-                <ArrowRight className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
+              <Link href="/login" className="block">
+                <Button variant="primary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />} className="w-full">
+                  Sign in
+                </Button>
               </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-[11px] font-black uppercase tracking-widest hover:bg-white/[0.08] transition-all"
-              >
-                Create a new account
+              <Link href="/register" className="block">
+                <Button variant="secondary" size="lg" className="w-full">
+                  Create a new account
+                </Button>
               </Link>
             </div>
-          </>
+          </div>
         )}
 
         {phase === 'missing-token' && (
-          <>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-400">
-              <AlertCircle className="w-3 h-3" /> No token in link
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 ds-text-label text-amber-500">
+              <Icon icon={AlertTriangle} size="sm" /> No token in link
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black italic tracking-tighter">
+            <h1 className="ds-text-h1 text-theme-primary">
               That link is incomplete.
             </h1>
-            <p className="text-sm text-surface-500 dark:text-slate-500 leading-relaxed max-w-sm mx-auto">
+            <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
               Your email link is missing the verification token. Try opening the email again, or sign in and request a fresh one.
             </p>
-            <div className="pt-2">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-black text-[11px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
-              >
-                Go to sign in
-                <ArrowRight className="w-4 h-4" />
+            <div className="pt-1">
+              <Link href="/login" className="inline-block">
+                <Button variant="primary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
+                  Go to sign in
+                </Button>
               </Link>
             </div>
-          </>
+          </div>
         )}
-      </motion.div>
+      </Card>
     </div>
   )
 }

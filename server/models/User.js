@@ -49,7 +49,16 @@ const userSchema = new mongoose.Schema({
   },
   niche: {
     type: String,
-    enum: ['health', 'finance', 'education', 'technology', 'lifestyle', 'business', 'entertainment', 'other'],
+    // Canonical niche list — kept 1:1 with NICHE_PLAYBOOKS in
+    // server/services/marketingKnowledge.js so a user's pick maps directly to a
+    // real Gemini playbook. The original 8 values stay first for backward
+    // compatibility; the expansion niches (crypto…gaming) were added so signup
+    // personalization can offer the full catalogue. 'other' stays the default.
+    enum: [
+      'health', 'finance', 'education', 'technology', 'lifestyle', 'business', 'entertainment',
+      'crypto', 'parenting', 'beauty', 'wellness', 'science', 'gaming',
+      'other'
+    ],
     default: 'other'
   },
   brandSettings: {
