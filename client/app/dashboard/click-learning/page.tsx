@@ -18,10 +18,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import {
   Sparkles,
-  ArrowLeft,
   TrendingUp,
   Brain,
   Layers,
@@ -36,6 +34,7 @@ import { useTranslation } from '../../../hooks/useTranslation'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
 import ClickEmptyState from '@/components/click/ClickEmptyState'
 import { clickVoice } from '@/lib/clickVoice'
+import { Button } from '../../../components/ui/button'
 
 interface Counter {
   key: string
@@ -127,7 +126,7 @@ export default function ClickLearningPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#07070f] flex items-center justify-center">
+      <div className="min-h-screen ds-bg-mesh-soft flex items-center justify-center">
         <ClickLoadingState intent="loading.analyzing" />
       </div>
     )
@@ -145,19 +144,15 @@ export default function ClickLearningPage() {
   // they start publishing.
   if (totalPicks === 0) {
     return (
-      <div className="min-h-screen bg-[#07070f] text-white pb-32">
-        <PageHeader />
-        <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="min-h-screen ds-bg-mesh-soft text-theme-primary pb-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-12">
           <ClickEmptyState
             intent="empty.analytics"
             title={t('clickLearningPage.emptyTitle')}
-            icon={<Brain className="w-7 h-7 text-indigo-400" />}
+            icon={<Brain className="w-7 h-7 text-primary" />}
             action={
-              <Link
-                href="/dashboard/clips/hub"
-                className="px-6 py-3 rounded-2xl bg-white text-black text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
-              >
-                {t('clickLearningPage.publishFirstClip')}
+              <Link href="/dashboard/clips/hub">
+                <Button variant="primary">{t('clickLearningPage.publishFirstClip')}</Button>
               </Link>
             }
           />
@@ -173,26 +168,20 @@ export default function ClickLearningPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#07070f] text-white pb-32">
-      <PageHeader />
-
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
+    <div className="min-h-screen ds-bg-mesh-soft text-theme-primary pb-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 space-y-8 ds-anim-fade-in">
         {/* Headline */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-3"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-300">
+        <div className="space-y-3">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
             <Sparkles className="w-3 h-3" /> {t('clickLearningPage.tasteGraphBadge')}
-          </div>
-          <h1 className="text-4xl font-black italic tracking-tighter">
-            {t('clickLearningPage.headlineBefore')} <span className="text-indigo-400">{totalPicks}</span> {t('clickLearningPage.headlineAfter')}
+          </span>
+          <h1 className="ds-text-h1 text-theme-primary">
+            {t('clickLearningPage.headlineBefore')} <span className="text-primary">{totalPicks}</span> {t('clickLearningPage.headlineAfter')}
           </h1>
-          <p className="text-slate-400 max-w-2xl">
+          <p className="text-theme-secondary max-w-2xl">
             {clickVoice('success.learned')} {t('clickLearningPage.refineCopy')}
           </p>
-        </motion.div>
+        </div>
 
         {/* Top picks by facet */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,20 +191,15 @@ export default function ClickLearningPage() {
             const facetTotal = totalCount(counters)
             const resolved = insight?.topPicks?.[facet] || null
             return (
-              <motion.div
-                key={facet}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-3xl bg-white/[0.03] border border-white/[0.08] p-5"
-              >
+              <div key={facet} className="ds-surface-card p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-slate-300">
+                  <div className="flex items-center gap-2 text-theme-secondary">
                     {meta.icon}
-                    <span className="text-[10px] font-black uppercase tracking-widest">
+                    <span className="ds-text-label">
                       {t(`clickLearningPage.facets.${facet}`)}
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-500">
+                  <span className="ds-text-caption">
                     {t('clickLearningPage.picksCount', { count: facetTotal })}
                   </span>
                 </div>
@@ -224,30 +208,23 @@ export default function ClickLearningPage() {
                     const isResolvedTop = resolved === c.key
                     const pct = facetTotal > 0 ? Math.round((c.count / facetTotal) * 100) : 0
                     return (
-                      <li
-                        key={c.key}
-                        className="flex items-center justify-between gap-3"
-                      >
-                        <span
-                          className={`text-sm ${
-                            isResolvedTop ? 'text-indigo-300 font-bold' : 'text-slate-300'
-                          }`}
-                        >
+                      <li key={c.key} className="flex items-center justify-between gap-3">
+                        <span className={isResolvedTop ? 'text-sm text-primary font-semibold' : 'text-sm text-theme-secondary'}>
                           {c.key}
                           {isResolvedTop && (
-                            <span className="ml-1.5 text-[8px] font-black uppercase tracking-widest text-indigo-400">
+                            <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                               {t('clickLearningPage.topBadge')}
                             </span>
                           )}
                         </span>
-                        <span className="text-xs text-slate-500 tabular-nums">
+                        <span className="text-xs text-theme-muted tabular-nums">
                           {c.count} ({pct}%)
                         </span>
                       </li>
                     )
                   })}
                 </ul>
-              </motion.div>
+              </div>
             )
           })}
         </section>
@@ -262,45 +239,23 @@ export default function ClickLearningPage() {
 
         {/* Caption length signal */}
         {profile?.averages?.avgCaptionLength != null && (
-          <div className="rounded-3xl bg-white/[0.03] border border-white/[0.08] p-5">
-            <div className="flex items-center gap-2 mb-2 text-slate-300">
+          <div className="ds-surface-card p-5">
+            <div className="flex items-center gap-2 mb-2 text-theme-secondary">
               <Type className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">
+              <span className="ds-text-label">
                 {t('clickLearningPage.avgCaptionLength')}
               </span>
             </div>
-            <p className="text-2xl font-black text-white tabular-nums">
+            <p className="ds-text-h2 text-theme-primary tabular-nums">
               {t('clickLearningPage.chars', { count: Math.round(profile.averages.avgCaptionLength) })}
             </p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="ds-text-caption mt-1">
               {t('clickLearningPage.captionLengthDesc')}
             </p>
           </div>
         )}
       </div>
     </div>
-  )
-}
-
-function PageHeader() {
-  const { t } = useTranslation()
-  return (
-    <header className="border-b border-white/[0.05] bg-[#07070f]/80 backdrop-blur-sm sticky top-0 z-10">
-      <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> {t('clickLearningPage.dashboardLink')}
-        </Link>
-        <div className="flex items-center gap-2">
-          <Brain className="w-4 h-4 text-indigo-400" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-            {t('clickLearningPage.headerLabel')}
-          </span>
-        </div>
-      </div>
-    </header>
   )
 }
 
@@ -318,16 +273,16 @@ function PublishTiming({
   const dayLabel = topDay ? DAY_LABELS[Number(topDay.key) % 7] : null
 
   return (
-    <section className="rounded-3xl bg-white/[0.03] border border-white/[0.08] p-5">
-      <div className="flex items-center gap-2 mb-4 text-slate-300">
+    <section className="ds-surface-card p-5">
+      <div className="flex items-center gap-2 mb-4 text-theme-secondary">
         <Clock className="w-4 h-4" />
-        <span className="text-[10px] font-black uppercase tracking-widest">
+        <span className="ds-text-label">
           {t('clickLearningPage.publishingRhythm')}
         </span>
       </div>
-      <p className="text-slate-300 leading-relaxed">
-        {t('clickLearningPage.rhythmBefore')} <span className="font-bold text-white">{dayLabel}</span>{' '}
-        {t('clickLearningPage.rhythmMiddle')} <span className="font-bold text-white">{hourLabel}</span>{t('clickLearningPage.rhythmAfter')}
+      <p className="text-theme-secondary leading-relaxed">
+        {t('clickLearningPage.rhythmBefore')} <span className="font-semibold text-theme-primary">{dayLabel}</span>{' '}
+        {t('clickLearningPage.rhythmMiddle')} <span className="font-semibold text-theme-primary">{hourLabel}</span>{t('clickLearningPage.rhythmAfter')}
       </p>
     </section>
   )

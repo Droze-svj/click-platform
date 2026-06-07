@@ -7,9 +7,10 @@ import { TableSkeleton } from '@/components/LoadingSkeleton'
 import ToastContainer from '@/components/ToastContainer'
 import { useToast } from '@/contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
-import { Skull, RefreshCw, RotateCw, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
-
-const glass = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl'
+import { Skull, RefreshCw, RotateCw, Trash2, ShieldAlert, Inbox } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SectionHeader } from '@/components/ui/section-header'
 
 interface DeadLetterJob {
   _id: string
@@ -75,83 +76,91 @@ export default function DeadLetterQueuePage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[var(--page-bg)] text-[var(--text-main)] px-4 sm:px-6 lg:px-12 pt-8 pb-24 max-w-[1600px] mx-auto">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1600px] mx-auto text-theme-primary">
         <ToastContainer />
 
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-8 border-b-2 border-white/5 mb-10">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-[2rem] bg-rose-500/10 border-2 border-rose-500/20 flex items-center justify-center">
-              <Skull size={32} className="text-rose-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter leading-none">{t('deadLetterPage.title')}</h1>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-black uppercase tracking-[0.4em] italic mt-2">{t('deadLetterPage.subtitle')}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={queueFilter}
-              onChange={(e) => setQueueFilter(e.target.value)}
-              title={t('deadLetterPage.filterByQueue')}
-              className="px-4 py-3 rounded-xl bg-black/40 border-2 border-white/10 text-[11px] font-black uppercase tracking-widest italic focus:outline-none focus:border-rose-500"
-            >
-              <option value="all">{t('deadLetterPage.allQueues')}</option>
-              {queues.map(q => <option key={q} value={q}>{q}</option>)}
-            </select>
-            <button type="button" onClick={load} title={t('deadLetterPage.refresh')} className="w-12 h-12 rounded-xl bg-black/40 border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90">
-              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-            </button>
-            <button type="button" onClick={cleanup} className="px-5 py-3 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-300 text-[11px] font-black uppercase tracking-widest italic hover:bg-rose-500/20 transition-all flex items-center gap-2">
-              <Trash2 size={16} /> {t('deadLetterPage.cleanup30d')}
-            </button>
-          </div>
-        </header>
+        <SectionHeader
+          as="h1"
+          title={
+            <span className="inline-flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
+                <Skull size={20} aria-hidden />
+              </span>
+              {t('deadLetterPage.title')}
+            </span>
+          }
+          description={t('deadLetterPage.subtitle')}
+          className="mb-6"
+          actions={
+            <>
+              <label className="sr-only" htmlFor="dlq-queue">{t('deadLetterPage.filterByQueue')}</label>
+              <select
+                id="dlq-queue"
+                value={queueFilter}
+                onChange={(e) => setQueueFilter(e.target.value)}
+                title={t('deadLetterPage.filterByQueue')}
+                className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="all">{t('deadLetterPage.allQueues')}</option>
+                {queues.map(q => <option key={q} value={q}>{q}</option>)}
+              </select>
+              <Button variant="secondary" size="md" onClick={load} title={t('deadLetterPage.refresh')} aria-label={t('deadLetterPage.refresh')}>
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} aria-hidden />
+              </Button>
+              <Button variant="destructive" size="md" onClick={cleanup} leftIcon={<Trash2 size={16} aria-hidden />}>
+                {t('deadLetterPage.cleanup30d')}
+              </Button>
+            </>
+          }
+        />
 
         {loading ? (
           <TableSkeleton rows={6} />
         ) : error ? (
-          <div className={`${glass} p-16 rounded-[3rem] border-rose-500/20 text-center`}>
-            <ShieldAlert size={56} className="text-rose-500 mx-auto mb-6" />
-            <p className="text-[13px] font-black uppercase tracking-widest italic text-slate-300">{error}</p>
+          <div className="ds-surface-card p-6">
+            <EmptyState icon={ShieldAlert} title={error} />
           </div>
         ) : jobs.length === 0 ? (
-          <div className={`${glass} p-20 rounded-[3rem] text-center`}>
-            <AlertTriangle size={56} className="text-emerald-500/40 mx-auto mb-6" />
-            <p className="text-2xl font-black uppercase tracking-widest italic text-slate-600">{t('deadLetterPage.emptyTitle')}</p>
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] italic text-slate-700 mt-3">{t('deadLetterPage.emptySubtitle')}</p>
+          <div className="ds-surface-card p-6">
+            <EmptyState
+              icon={Inbox}
+              title={t('deadLetterPage.emptyTitle')}
+              description={t('deadLetterPage.emptySubtitle')}
+            />
           </div>
         ) : (
-          <div className={`${glass} rounded-[2.5rem] overflow-hidden`}>
+          <div className="ds-surface-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b-2 border-white/5 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                    <th className="px-6 py-5">{t('deadLetterPage.colQueue')}</th>
-                    <th className="px-6 py-5">{t('deadLetterPage.colJob')}</th>
-                    <th className="px-6 py-5">{t('deadLetterPage.colReason')}</th>
-                    <th className="px-6 py-5 text-center">{t('deadLetterPage.colAttempts')}</th>
-                    <th className="px-6 py-5">{t('deadLetterPage.colMoved')}</th>
-                    <th className="px-6 py-5 text-right">{t('deadLetterPage.colAction')}</th>
+                  <tr className="border-b border-[var(--border-subtle)] ds-text-label text-theme-muted">
+                    <th className="px-5 py-3 font-medium">{t('deadLetterPage.colQueue')}</th>
+                    <th className="px-5 py-3 font-medium">{t('deadLetterPage.colJob')}</th>
+                    <th className="px-5 py-3 font-medium">{t('deadLetterPage.colReason')}</th>
+                    <th className="px-5 py-3 font-medium text-center">{t('deadLetterPage.colAttempts')}</th>
+                    <th className="px-5 py-3 font-medium">{t('deadLetterPage.colMoved')}</th>
+                    <th className="px-5 py-3 font-medium text-right">{t('deadLetterPage.colAction')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {jobs.map(job => (
-                    <tr key={job._id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-6 py-5"><span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 italic">{job.originalQueueName}</span></td>
-                      <td className="px-6 py-5"><span className="text-[12px] font-bold text-white italic">{job.jobName || job.originalJobId}</span></td>
-                      <td className="px-6 py-5 max-w-[360px]"><span className="text-[11px] text-rose-300/80 font-mono line-clamp-2">{job.failedReason || '—'}</span></td>
-                      <td className="px-6 py-5 text-center"><span className="text-[12px] font-black tabular-nums text-slate-400">{job.attemptsMade ?? '—'}</span></td>
-                      <td className="px-6 py-5"><span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">{job.movedAt ? new Date(job.movedAt).toLocaleString() : '—'}</span></td>
-                      <td className="px-6 py-5 text-right">
-                        <button
-                          type="button"
+                    <tr key={job._id} className="hover:bg-accent/40 transition-colors">
+                      <td className="px-5 py-4"><span className="text-xs font-medium text-primary">{job.originalQueueName}</span></td>
+                      <td className="px-5 py-4"><span className="text-sm font-medium text-theme-primary">{job.jobName || job.originalJobId}</span></td>
+                      <td className="px-5 py-4 max-w-[360px]"><span className="text-xs text-rose-500/90 font-mono line-clamp-2">{job.failedReason || '—'}</span></td>
+                      <td className="px-5 py-4 text-center"><span className="text-sm tabular-nums text-theme-secondary">{job.attemptsMade ?? '—'}</span></td>
+                      <td className="px-5 py-4"><span className="text-xs text-theme-muted">{job.movedAt ? new Date(job.movedAt).toLocaleString() : '—'}</span></td>
+                      <td className="px-5 py-4 text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => retry(job)}
                           disabled={busyId === job._id || job.retried}
-                          className="px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-black uppercase tracking-widest italic hover:bg-emerald-500/20 transition-all disabled:opacity-40 inline-flex items-center gap-2"
+                          loading={busyId === job._id}
+                          leftIcon={busyId !== job._id ? <RotateCw size={14} aria-hidden /> : undefined}
                         >
-                          <RotateCw size={14} className={busyId === job._id ? 'animate-spin' : ''} />
                           {job.retried ? t('deadLetterPage.retried') : t('deadLetterPage.retry')}
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}

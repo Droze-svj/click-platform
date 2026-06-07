@@ -3,26 +3,23 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPut, apiDelete } from '../../../lib/api'
-import LoadingSkeleton from '../../../components/LoadingSkeleton'
 import ToastContainer from '../../../components/ToastContainer'
 import NotificationPreferences from '../../../components/NotificationPreferences'
 import { useToast } from '../../../contexts/ToastContext'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { useSocket } from '../../../hooks/useSocket'
-import { 
-  Search, Settings, CheckCircle2, Trash2, Activity, Zap, 
-  Wifi, Radio, Terminal, Sliders, Eye, Archive, 
-  ShieldAlert, ArrowLeft, ChevronRight, Check, X,
-  AlertTriangle, Info, Bell, Trash, RefreshCw, Cpu,
-  Fingerprint, Compass, Boxes, Layout, Layers, Timer, Box, ArrowRight,
-  ActivitySquare, Signal, Ghost, Network, Target, Wind, Sparkles, MonitorCheck,
-  ZapOff, Lock, Unlock, ShieldCheck, Database
+import {
+  Search, CheckCircle2, Trash2, Zap, Sliders, Eye, X,
+  AlertTriangle, Bell, RefreshCw, Cpu, Compass,
+  ArrowRight, Signal, ShieldCheck, ShieldAlert, Timer,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/form-field'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SectionHeader } from '@/components/ui/section-header'
+import { cn } from '@/lib/utils'
 
 interface Notification {
   _id: string; type: 'info' | 'success' | 'warning' | 'error';
@@ -44,13 +41,14 @@ interface LiveStatusState {
 
 const CATEGORIES = ['TASK_OPS', 'PROJECT_VINE', 'CONTENT_FORGE', 'APPROVAL_NODE', 'MENTION_SIGNAL', 'SYSTEM_CORE', 'WORKFLOW_LATTICE'] as const
 
-export default function SignalDiffusionLedgerPage() {
+export default function NotificationsPage() {
   const router = useRouter()
   const { t } = useTranslation()
   const { user } = useAuth()
   const { socket } = useSocket(user?.id ?? null)
   const { showToast } = useToast()
-  
+  void showToast
+
   const [loading, setLoading] = useState(true)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -61,11 +59,7 @@ export default function SignalDiffusionLedgerPage() {
   const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set())
   const [liveStatus, setLiveStatus] = useState<LiveStatusState>({ tasks: [], jobs: [], lastUpdated: null })
   const [refreshing, setRefreshing] = useState(false)
-  // Disables the bulk action buttons while a mark-read / purge round-trip is
-  // in flight. Was referenced by the bulk action onClick handlers but never
-  // declared, which would have ReferenceError'd the moment a user clicked.
   const [busy, setBusy] = useState(false)
-  void busy
 
   const loadSignals = useCallback(async () => {
     setRefreshing(true)
@@ -117,19 +111,10 @@ export default function SignalDiffusionLedgerPage() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'success': return <ShieldCheck className="text-emerald-400" size={32} />
-      case 'warning': return <AlertTriangle className="text-amber-400" size={32} />
-      case 'error': return <ShieldAlert className="text-rose-400" size={32} />
-      default: return <Signal className="text-indigo-400" size={32} />
-    }
-  }
-
-  const getTypeStyle = (type: string) => {
-    switch (type) {
-      case 'success': return 'border-emerald-500/20 bg-emerald-500/5 shadow-[0_0_50px_rgba(16,185,129,0.1)]'
-      case 'warning': return 'border-amber-500/20 bg-amber-500/5 shadow-[0_0_50px_rgba(245,158,11,0.1)]'
-      case 'error': return 'border-rose-500/20 bg-rose-500/5 shadow-[0_0_80px_rgba(225,29,72,0.2)]'
-      default: return 'border-indigo-500/20 bg-indigo-500/5 shadow-[0_0_50px_rgba(99,102,241,0.1)]'
+      case 'success': return <ShieldCheck className="text-emerald-500" size={18} aria-hidden />
+      case 'warning': return <AlertTriangle className="text-amber-500" size={18} aria-hidden />
+      case 'error': return <ShieldAlert className="text-rose-500" size={18} aria-hidden />
+      default: return <Signal className="text-primary" size={18} aria-hidden />
     }
   }
 
@@ -138,322 +123,272 @@ export default function SignalDiffusionLedgerPage() {
     return s
   })
 
+  const selectClass = 'h-10 rounded-lg border border-input bg-background px-3 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
-        <Radio size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
-        <span className="text-[16px] font-black text-[var(--text-dim)] uppercase tracking-[1em] animate-pulse italic">{t('notificationsPage.decodingSignalSpectrum')}</span>
-     </div>
+    <div className="ds-bg-mesh-soft min-h-screen flex flex-col items-center justify-center py-48" aria-busy="true">
+      <Bell size={40} className="text-theme-muted animate-pulse mb-4" aria-hidden />
+      <span className="ds-text-caption">{t('notificationsPage.decodingSignalSpectrum')}</span>
+    </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1750px] mx-auto text-theme-primary space-y-6">
         <ToastContainer />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <Bell size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
-        </div>
 
-        {/* Diffusion Header */}
-        <header className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
-           <div className="flex items-center gap-12">
-              <button type="button" onClick={() => router.push('/dashboard')} title={t('notificationsPage.backToDashboard')} aria-label={t('notificationsPage.backToDashboard')}
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
-                <ArrowLeft size={36} />
-              </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Bell size={48} className="text-indigo-400 relative z-10 group-hover:rotate-12 transition-transform duration-300 animate-pulse" />
-              </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-3">
-                   <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('notificationsPage.signalFeedVersion')}</span>
-                   </div>
-                   {unreadCount > 0 && (
-                      <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.3)]">
-                          <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,1)]" />
-                          <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">{t('notificationsPage.activeSignalsDetected', { count: unreadCount })}</span>
-                      </div>
-                   )}
-                 </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">{t('notificationsPage.title')}</h1>
-                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl">{t('notificationsPage.subtitle')}</p>
-              </div>
-           </div>
-
-           <div className="flex items-center gap-8">
-               <button type="button" onClick={loadSignals} title={t('notificationsPage.refreshSignals')} aria-label={t('notificationsPage.refreshSignals')} className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group shadow-2xl active:scale-95 border-none bg-white/[0.02]`}>
-                  <RefreshCw size={36} className={`text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
-               </button>
-              <button type="button" onClick={() => setShowPreferences(!showPreferences)} 
-                className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(0,0,0,0.4)] transition-all duration-300 flex items-center gap-8 italic border-2 active:scale-95 ${showPreferences ? 'bg-white text-black border-white' : 'bg-white/[0.02] border-white/10 text-[var(--text-dim)] hover:text-white'}`}
-              >
-                <Sliders size={28} className={showPreferences ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} /> {t('notificationsPage.sensorFusionCalibration')}
-              </button>
-           </div>
-        </header>
-
-        {/* Mission Telemetry HUD (Live Tracking) */}
-        <AnimatePresence>
-           {(liveStatus.tasks.length > 0 || liveStatus.jobs.length > 0) && (
-             <motion.section initial={{ opacity: 0, scale: 0.95, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-               className={`${glassStyle} p-20 rounded-[6rem] border-indigo-500/30 shadow-[0_100px_250px_rgba(0,0,0,0.8)] relative overflow-hidden z-20 bg-black/40`}
-             >
-                <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none border-none group-hover:rotate-6 transition-transform"><MonitorCheck size={600} className="text-white" /></div>
-                <div className="flex flex-col md:flex-row items-center justify-between mb-20 relative z-10 border-b border-white/5 pb-16 gap-10">
-                   <div className="flex items-center gap-12">
-                      <div className="w-24 h-24 rounded-[3rem] bg-indigo-500/10 border-2 border-indigo-500/30 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.3)] animate-pulse">
-                         <ActivitySquare size={48} className="text-indigo-400" />
-                      </div>
-                      <div>
-                         <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">{t('notificationsPage.missionTelemetry')}</h2>
-                         <p className="text-[14px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">{t('notificationsPage.missionTelemetryDesc')}</p>
-                      </div>
-                   </div>
-                   {liveStatus.lastUpdated && <div className="px-10 py-5 rounded-[2.5rem] bg-black/60 border-2 border-white/5 text-[12px] font-black text-indigo-400 uppercase tracking-widest italic shadow-inner">{t('notificationsPage.lastSignalBurst', { time: new Date(liveStatus.lastUpdated).toLocaleTimeString().toUpperCase() })}</div>}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 relative z-10">
-                   <div className="space-y-12">
-                      <div className="flex items-center gap-6 pl-10 border-l-[6px] border-indigo-500/40"><span className="text-[16px] font-black text-indigo-400 uppercase tracking-[1em] italic leading-none">{t('notificationsPage.activeOperationsResonance')}</span></div>
-                      <div className="space-y-8">
-                         {liveStatus.tasks.map(task => (
-                            <motion.div whileHover={{ x: 30, scale: 1.02 }} key={task.id} className="flex items-center justify-between p-12 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 hover:bg-white/[0.04] transition-all duration-300 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
-                               <div className="flex items-center gap-10">
-                                  <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors duration-300"><Zap size={32} className="text-amber-500 animate-pulse" /></div>
-                                  <div>
-                                     <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-300 leading-none mb-3">{task.title}</p>
-                                     <div className="flex items-center gap-4">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]" />
-                                        <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] font-mono leading-none">{t('notificationsPage.taskStatusDirective', { status: task.status.toUpperCase() })}</span>
-                                     </div>
-                                  </div>
-                               </div>
-                               <button type="button" onClick={() => router.push(`/dashboard/tasks?open=${task.id}`)} title={t('notificationsPage.viewTask', { title: task.title })} aria-label={t('notificationsPage.viewTask', { title: task.title })} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20"><Eye size={28}/></button>
-                            </motion.div>
-                         ))}
-                         {liveStatus.tasks.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Ghost size={48} className="text-[var(--text-dim)] mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic">{t('notificationsPage.noKineticTrajectories')}</p></div>}
-                      </div>
-                   </div>
-                   <div className="space-y-12">
-                      <div className="flex items-center gap-6 pl-10 border-l-[6px] border-purple-500/40"><span className="text-[16px] font-black text-purple-400 uppercase tracking-[1em] italic leading-none">{t('notificationsPage.backgroundAsyncCycles')}</span></div>
-                      <div className="space-y-8">
-                         {liveStatus.jobs.map(j => (
-                            <motion.div whileHover={{ x: 30, scale: 1.02 }} key={j.id} className="flex items-center justify-between p-12 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-purple-500/50 hover:bg-white/[0.04] transition-all duration-300 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
-                               <div className="flex items-center gap-10">
-                                  <div className="w-16 h-16 rounded-[2rem] bg-purple-500/5 border-2 border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300"><RefreshCw size={32} className="text-purple-500 animate-spin" style={{ '--spin-duration': '6s' } as any} /></div>
-                                  <div>
-                                     <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-purple-400 transition-colors duration-300 leading-none mb-3">{j.title}</p>
-                                     <div className="flex items-center gap-4">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-                                        <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] font-mono leading-none">{t('notificationsPage.jobStatusQueue', { status: j.status.toUpperCase(), queue: j.queue?.toUpperCase() ?? '' })}</span>
-                                     </div>
-                                  </div>
-                               </div>
-                               <button type="button" onClick={() => router.push('/dashboard/jobs')} title={t('notificationsPage.viewJob', { title: j.title })} aria-label={t('notificationsPage.viewJob', { title: j.title })} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-purple-500/50 group-hover:bg-purple-500/20"><Cpu size={28}/></button>
-                            </motion.div>
-                         ))}
-                         {liveStatus.jobs.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Wind size={48} className="text-[var(--text-dim)] mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic">{t('notificationsPage.asyncLatticeQuiescent')}</p></div>}
-                      </div>
-                   </div>
-                </div>
-             </motion.section>
-           )}
-        </AnimatePresence>
-
-        {/* Preferences Injector */}
-        <AnimatePresence>
-           {showPreferences && (
-             <motion.div initial={{ opacity: 0, height: 0, y: -20 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0, y: -20 }} className="relative z-30">
-                <div className={`${glassStyle} p-20 rounded-[6rem] border-white/10 shadow-[0_80px_200px_rgba(0,0,0,0.6)] bg-black/60`}>
-                   <NotificationPreferences onUpdate={loadSignals} />
-                </div>
-             </motion.div>
-           )}
-        </AnimatePresence>
-
-        {/* Global Signal Matrix (Main Feed) */}
-        <div className={`${glassStyle} rounded-[7rem] p-24 border-white/5 relative overflow-hidden flex flex-col min-h-[1200px] shadow-[0_100px_300px_rgba(0,0,0,0.9)] bg-black/40`}>
-           <div className="absolute top-0 right-0 p-32 opacity-[0.03] pointer-events-none group-hover/matrix:scale-110 transition-transform duration-300 group/matrix"><Terminal size={800} className="text-white" /></div>
-           
-           <header className="flex flex-col xl:flex-row items-center justify-between gap-20 mb-32 relative z-10 border-b border-white/5 pb-20">
-              <div className="flex items-center gap-12 flex-1 w-full relative group/search">
-                 <div className="absolute left-12 top-1/2 -translate-y-1/2 flex items-center gap-6 pointer-events-none">
-                    <Search className="text-[var(--text-dim)] group-focus-within/search:text-indigo-400 transition-all duration-300" size={40} />
-                    <div className="w-1 h-10 bg-white/5 rounded-full" />
-                 </div>
-                 <input type="text" aria-label={t('notificationsPage.scanMatrixAria')} placeholder={t('notificationsPage.scanMatrixPlaceholder')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                   className="w-full bg-black/80 border-4 border-white/5 rounded-[5.5rem] pl-32 pr-16 py-12 text-5xl font-black text-white uppercase italic tracking-tighter focus:outline-none focus:border-indigo-500/50 transition-all duration-300 shadow-inner placeholder:text-[var(--text-dim)] font-mono"
-                 />
-              </div>
-              
-              <nav className="flex items-center gap-8 bg-black/60 p-6 rounded-[4.5rem] border-2 border-white/5 shadow-inner">
-                 {(['all', 'unread', 'read'] as const).map(f => (
-                   <button type="button" key={f} onClick={() => setFilter(f)}
-                     className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic ${filter === f ? 'bg-white text-black shadow-2xl scale-110' : 'bg-transparent text-[var(--text-dim)] hover:text-white hover:bg-white/5'}`}
-                   >
-                     {t(`notificationsPage.filter_${f}`)}
-                   </button>
-                 ))}
-                 <div className="w-[2px] h-20 bg-white/10 mx-6 rounded-full" />
-                 <div className="relative group/sector">
-                    <select aria-label={t('notificationsPage.signalSectorCategory')} value={category} onChange={(e) => setCategory(e.target.value)}
-                      className="appearance-none bg-black/80 border-2 border-white/10 px-20 py-8 rounded-[4rem] text-[14px] font-black uppercase tracking-[0.8em] text-indigo-400 focus:outline-none cursor-pointer italic pr-32 shadow-inner hover:border-indigo-500/50 transition-all"
-                    >
-                      <option value="">{t('notificationsPage.allSignalSectors')}</option>
-                      {CATEGORIES.map(c => <option key={c} value={c} className="bg-[var(--page-bg)]">{c}</option>)}
-                    </select>
-                    <ChevronRight size={32} className="absolute right-12 top-1/2 -translate-y-1/2 text-indigo-400 rotate-90 pointer-events-none opacity-40 group-hover/sector:opacity-100 transition-opacity" />
-                 </div>
-              </nav>
-           </header>
-
-           {/* Batch Command Terminal */}
-           <AnimatePresence>
-             {selectedNotifications.size > 0 && (
-                <motion.div initial={{ y: 50, opacity: 0, scale: 0.9 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.9 }}
-                  className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-6xl p-10 rounded-[6rem] bg-indigo-500/20 border-4 border-indigo-500/40 shadow-[0_100px_300px_rgba(0,0,0,1)] ring-[20px] ring-black/60 backdrop-blur-3xl z-[100] flex items-center justify-between"
-                >
-                   <div className="flex items-center gap-16 px-16 border-r-4 border-white/10 h-28">
-                      <div className="relative">
-                         <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-80 animate-pulse" />
-                         <div className="relative w-28 h-28 bg-white text-black rounded-[4rem] flex items-center justify-center font-black text-5xl shadow-[0_0_80px_rgba(255,255,255,0.4)] italic scale-125 border-8 border-black/40">{selectedNotifications.size}</div>
-                      </div>
-                      <div className="space-y-4">
-                         <p className="text-2xl font-black text-white uppercase tracking-[0.5em] leading-none">{t('notificationsPage.burstsBuffered')}</p>
-                         <div className="flex items-center gap-4">
-                            <span className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
-                            <p className="text-[12px] font-black text-indigo-400 uppercase tracking-[1em] italic leading-none">{t('notificationsPage.massAckProtocolReady')}</p>
-                         </div>
-                      </div>
-                   </div>
-                   <div className="flex-1 flex items-center justify-center gap-12 px-16">
-                      <button type="button" disabled={busy} onClick={async () => { if (busy) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiPut(`/notifications/${id}/read`, {}).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
-                        className="px-20 py-10 bg-white text-black rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-wait group/ack"
-                      >
-                         <CheckCircle2 size={40} className="group-hover/ack:scale-125 transition-transform" /> {t('notificationsPage.synchronizeSignals')}
-                      </button>
-                      <button type="button" disabled={busy} onClick={async () => { if (busy) return; if (!confirm(t('notificationsPage.confirmPurgeSelected'))) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiDelete(`/notifications/${id}`).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
-                        className="px-20 py-10 bg-rose-600 text-white rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-rose-500 transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-wait group/purge"
-                      >
-                         <Trash2 size={40} className="group-hover/purge:rotate-12 transition-transform" /> {t('notificationsPage.purgeLedgerData')}
-                      </button>
-                   </div>
-                   <button type="button" onClick={() => setSelectedNotifications(new Set())} title={t('notificationsPage.cancelSelection')} aria-label={t('notificationsPage.cancelSelection')} className="w-24 h-24 rounded-[3rem] bg-white/5 border-2 border-white/10 text-[var(--text-dim)] hover:text-white hover:bg-rose-500/20 transition-all duration-300 flex items-center justify-center border-none mr-12 hover:scale-110 active:scale-90 shadow-2xl"><X size={48}/></button>
-                </motion.div>
-             )}
-           </AnimatePresence>
-
-           <div className="flex-1 overflow-y-auto space-y-12 pr-12 custom-scrollbar relative z-10">
-              {filteredNotifications.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center opacity-[0.05] gap-20 py-80">
-                   <div className="w-80 h-80 bg-white/5 rounded-[12rem] border-4 border-white/5 flex items-center justify-center animate-pulse shadow-inner"><Bell size={160} className="text-white opacity-40" /></div>
-                   <div className="space-y-10 max-w-4xl">
-                      <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-6">{t('notificationsPage.signalSpectrumVoid')}</h3>
-                      <p className="text-3xl font-black text-[var(--text-dim)] uppercase tracking-[1em] italic leading-relaxed">{t('notificationsPage.signalSpectrumVoidDesc')}</p>
-                   </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-12">
-                   {filteredNotifications.map((n, idx) => (
-                     <motion.div layout key={n._id} initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05, duration: 1 }}
-                       className={`group relative p-16 rounded-[6rem] border-2 transition-all duration-300 overflow-hidden shadow-[0_60px_150px_rgba(0,0,0,0.6)] ${
-                         !n.read ? 'bg-indigo-500/[0.04] border-indigo-500/20 shadow-[0_0_150px_rgba(99,102,241,0.08)] ring-4 ring-indigo-500/10' : 'bg-black/60 border-white/[0.03] hover:border-white/10 hover:bg-white/[0.02]'
-                       } ${selectedNotifications.has(n._id) ? 'bg-indigo-500/20 border-indigo-500 shadow-[0_0_200px_rgba(99,102,241,0.3)] ring-[10px] ring-indigo-500/10' : ''}`}
-                     >
-                        <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-300 pointer-events-none scale-150 group-hover:rotate-12"><Radio size={400} className="text-white" /></div>
-                        
-                        <div className="flex items-start gap-16 relative z-10">
-                           <div className="pt-8">
-                              <input type="checkbox" checked={selectedNotifications.has(n._id)}
-                                aria-label={t('notificationsPage.selectSignal', { title: n.title })}
-                                onChange={() => setSelectedNotifications(prev => { const nS = new Set(prev); nS.has(n._id) ? nS.delete(n._id) : nS.add(n._id); return nS })}
-                                className="w-14 h-14 rounded-[1.8rem] bg-black/80 border-2 border-white/10 text-indigo-500 focus:ring-16 focus:ring-indigo-500/20 cursor-pointer appearance-none checked:bg-indigo-500 checked:border-white transition-all shadow-inner active:scale-90"
-                              />
-                           </div>
-                           
-                           <div className={`w-32 h-32 rounded-[3.5rem] flex items-center justify-center shadow-inner flex-shrink-0 border-2 group-hover:scale-110 transition-transform duration-300 relative overflow-hidden ${getTypeStyle(n.type)}`}>
-                               <div className="absolute inset-0 bg-white/[0.02] group-hover:opacity-100 opacity-0 transition-opacity" />
-                               {getTypeIcon(n.type)}
-                           </div>
-
-                           <div className="flex-1 min-w-0 space-y-10 group/content">
-                              <div className="flex items-center justify-between border-b border-white/5 pb-8 mb-4">
-                                 <div className="flex items-center gap-10">
-                                    {n.category && <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] italic bg-indigo-500/10 px-10 py-3 rounded-[2.5rem] border-2 border-indigo-500/20 shadow-inner group-hover:bg-indigo-500/20 transition-all duration-300">{n.category.replace('_', ' ')}</span>}
-                                    <div className="flex items-center gap-4 text-[var(--text-dim)]">
-                                       <Timer size={16} className="text-[var(--text-dim)]" />
-                                       <span className="text-[12px] font-black uppercase tracking-[0.4em] italic font-mono">{new Date(n.createdAt).toLocaleString().toUpperCase()}</span>
-                                    </div>
-                                 </div>
-                                 {!n.read && <div className="flex items-center gap-4 px-8 py-3 bg-indigo-500/10 border-2 border-indigo-500/30 rounded-full shadow-[0_0_40px_rgba(99,102,241,0.3)] animate-pulse"><span className="w-3 h-3 bg-indigo-500 rounded-full" /><span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">{t('notificationsPage.activeResonance')}</span></div>}
-                              </div>
-
-                              <div className="space-y-10">
-                                 <h3 className="text-7xl font-black text-[var(--text-main)] uppercase italic tracking-tighter leading-none mb-10 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{n.title}</h3>
-                                 <p className="text-[var(--text-dim)] font-black text-3xl uppercase tracking-tighter italic leading-tight max-w-5xl opacity-80 group-hover:opacity-100 transition-opacity duration-300 group-hover:text-slate-200">{n.message || n.aiSummary || t('notificationsPage.nullSignalPayload')}</p>
-                                 
-                                 <AnimatePresence>
-                                   {n.suggestion && (
-                                     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} 
-                                       className="mt-12 flex items-start gap-10 p-10 rounded-[4rem] bg-indigo-500/10 border-2 border-indigo-500/20 w-fit shadow-2xl group-hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden"
-                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent animate-shimmer" />
-                                        <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/20 flex items-center justify-center relative z-10"><Zap size={36} className="text-indigo-400 animate-pulse" /></div>
-                                        <div className="relative z-10 pr-10">
-                                           <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[1em] italic mb-3">{t('notificationsPage.directiveResynthesisAdvice')}</p>
-                                           <p className="text-2xl font-black text-white uppercase tracking-tighter italic leading-none">{n.suggestion}</p>
-                                        </div>
-                                     </motion.div>
-                                   )}
-                                 </AnimatePresence>
-                              </div>
-
-                              <footer className="flex items-center gap-16 pt-12 border-t border-white/5 bg-white/[0.01] -mx-16 -mb-16 px-16 py-12 mt-12 transition-colors duration-300 group-hover:bg-white/[0.03]">
-                                 {n.link && (
-                                   <button type="button" onClick={() => { if (!n.read) apiPut(`/notifications/${n._id}/read`, {}); router.push(n.link!) }}
-                                     className="text-[18px] font-black text-indigo-400 hover:text-white uppercase tracking-[0.8em] flex items-center gap-10 transition-all group/link italic border-none outline-none group-link:scale-110"
-                                   >
-                                     <Compass className="group-hover/link:rotate-180 transition-transform duration-300" size={32} /> {t('notificationsPage.accessOriginNode')} <ArrowRight size={32} className="group-hover/link:translate-x-6 transition-all duration-700" />
-                                   </button>
-                                 )}
-                                 <div className="flex items-center gap-10 ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
-                                    {!n.read && (
-                                      <button type="button" onClick={() => { apiPut(`/notifications/${n._id}/read`, {}); loadSignals() }} 
-                                        className="px-16 py-8 bg-indigo-500 text-white rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] italic shadow-2xl hover:bg-white hover:text-indigo-600 transition-all duration-300 border-none scale-105 active:scale-95"
-                                      >
-                                        {t('notificationsPage.resonanceAck')}
-                                      </button>
-                                    )}
-                                    <button type="button" onClick={() => { if (confirm(t('notificationsPage.confirmPurgeSignal'))) { apiDelete(`/notifications/${n._id}`); loadSignals() } }}
-                                      title={t('notificationsPage.purgeSignal')} aria-label={t('notificationsPage.purgeSignal')}
-                                      className="w-20 h-20 bg-rose-600/10 border-2 border-rose-500/20 text-rose-950 hover:text-rose-400 hover:bg-rose-600/20 rounded-[2.5rem] flex items-center justify-center transition-all duration-700 active:scale-75 shadow-2xl border-none"
-                                    >
-                                      <Trash2 size={36}/>
-                                    </button>
-                                 </div>
-                              </footer>
-                           </div>
-                        </div>
-                     </motion.div>
-                   ))}
-                </div>
+        <SectionHeader
+          as="h1"
+          title={
+            <span className="inline-flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Bell size={20} aria-hidden />
+              </span>
+              {t('notificationsPage.title')}
+              {unreadCount > 0 && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium">
+                  {t('notificationsPage.activeSignalsDetected', { count: unreadCount })}
+                </span>
               )}
-           </div>
-        </div>
+            </span>
+          }
+          description={t('notificationsPage.subtitle')}
+          actions={
+            <>
+              <Button variant="secondary" size="md" onClick={loadSignals} title={t('notificationsPage.refreshSignals')} aria-label={t('notificationsPage.refreshSignals')}>
+                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} aria-hidden />
+              </Button>
+              <Button
+                variant={showPreferences ? 'primary' : 'secondary'}
+                size="md"
+                onClick={() => setShowPreferences(!showPreferences)}
+                leftIcon={<Sliders size={16} aria-hidden />}
+              >
+                {t('notificationsPage.sensorFusionCalibration')}
+              </Button>
+            </>
+          }
+        />
 
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
-          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
-          select { -webkit-appearance: none; appearance: none; cursor: pointer; }
-          @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-          .animate-shimmer { animation: shimmer 3s infinite; }
-        `}</style>
+        {/* Live status (real data from /notifications/live-status) */}
+        {(liveStatus.tasks.length > 0 || liveStatus.jobs.length > 0) && (
+          <section className="ds-surface-card p-5">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="ds-text-h3 text-theme-primary">{t('notificationsPage.missionTelemetry')}</h2>
+              {liveStatus.lastUpdated && (
+                <span className="ds-text-caption">{t('notificationsPage.lastSignalBurst', { time: new Date(liveStatus.lastUpdated).toLocaleTimeString() })}</span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <p className="ds-text-label text-theme-muted">{t('notificationsPage.activeOperationsResonance')}</p>
+                <div className="space-y-2">
+                  {liveStatus.tasks.length === 0 ? (
+                    <p className="ds-text-caption">{t('notificationsPage.noKineticTrajectories')}</p>
+                  ) : liveStatus.tasks.map(task => (
+                    <div key={task.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] p-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Zap size={16} className="text-amber-500 shrink-0" aria-hidden />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-theme-primary truncate">{task.title}</p>
+                          <p className="ds-text-caption">{t('notificationsPage.taskStatusDirective', { status: task.status })}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/tasks?open=${task.id}`)} title={t('notificationsPage.viewTask', { title: task.title })} aria-label={t('notificationsPage.viewTask', { title: task.title })}>
+                        <Eye size={16} aria-hidden />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="ds-text-label text-theme-muted">{t('notificationsPage.backgroundAsyncCycles')}</p>
+                <div className="space-y-2">
+                  {liveStatus.jobs.length === 0 ? (
+                    <p className="ds-text-caption">{t('notificationsPage.asyncLatticeQuiescent')}</p>
+                  ) : liveStatus.jobs.map(j => (
+                    <div key={j.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] p-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <RefreshCw size={16} className="text-primary shrink-0" aria-hidden />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-theme-primary truncate">{j.title}</p>
+                          <p className="ds-text-caption">{t('notificationsPage.jobStatusQueue', { status: j.status, queue: j.queue ?? '' })}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/jobs')} title={t('notificationsPage.viewJob', { title: j.title })} aria-label={t('notificationsPage.viewJob', { title: j.title })}>
+                        <Cpu size={16} aria-hidden />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Preferences */}
+        {showPreferences && (
+          <section className="ds-surface-card p-5 ds-anim-fade-in">
+            <NotificationPreferences onUpdate={loadSignals} />
+          </section>
+        )}
+
+        {/* Feed */}
+        <section className="ds-surface-card p-4 sm:p-5">
+          <header className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 mb-5">
+            <div className="flex-1 relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted pointer-events-none" aria-hidden />
+              <Input
+                type="text"
+                aria-label={t('notificationsPage.scanMatrixAria')}
+                placeholder={t('notificationsPage.scanMatrixPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 p-1 rounded-lg ds-surface-subtle">
+                {(['all', 'unread', 'read'] as const).map(f => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setFilter(f)}
+                    className={cn(
+                      'rounded-md px-3 h-8 text-xs font-medium transition-colors',
+                      filter === f ? 'bg-primary text-primary-foreground' : 'text-theme-secondary hover:text-theme-primary'
+                    )}
+                  >
+                    {t(`notificationsPage.filter_${f}`)}
+                  </button>
+                ))}
+              </div>
+              <select aria-label={t('notificationsPage.signalSectorCategory')} value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
+                <option value="">{t('notificationsPage.allSignalSectors')}</option>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </header>
+
+          {/* Bulk actions */}
+          {selectedNotifications.size > 0 && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3 mb-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-primary px-2 text-xs font-semibold text-primary-foreground">{selectedNotifications.size}</span>
+                <p className="text-sm text-theme-secondary truncate">{t('notificationsPage.burstsBuffered')}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="primary" size="sm" loading={busy}
+                  leftIcon={!busy ? <CheckCircle2 size={16} aria-hidden /> : undefined}
+                  onClick={async () => { if (busy) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiPut(`/notifications/${id}/read`, {}).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
+                >
+                  {t('notificationsPage.synchronizeSignals')}
+                </Button>
+                <Button
+                  variant="destructive" size="sm" loading={busy}
+                  leftIcon={!busy ? <Trash2 size={16} aria-hidden /> : undefined}
+                  onClick={async () => { if (busy) return; if (!confirm(t('notificationsPage.confirmPurgeSelected'))) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiDelete(`/notifications/${id}`).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
+                >
+                  {t('notificationsPage.purgeLedgerData')}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedNotifications(new Set())} title={t('notificationsPage.cancelSelection')} aria-label={t('notificationsPage.cancelSelection')}>
+                  <X size={16} aria-hidden />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {filteredNotifications.length === 0 ? (
+            <EmptyState
+              icon={Bell}
+              title={t('notificationsPage.signalSpectrumVoid')}
+              description={t('notificationsPage.signalSpectrumVoidDesc')}
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredNotifications.map((n) => (
+                <div
+                  key={n._id}
+                  className={cn(
+                    'rounded-xl border p-4 transition-colors',
+                    !n.read ? 'border-primary/30 bg-primary/[0.03]' : 'border-[var(--border-subtle)]',
+                    selectedNotifications.has(n._id) && 'border-primary bg-primary/10'
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedNotifications.has(n._id)}
+                      aria-label={t('notificationsPage.selectSignal', { title: n.title })}
+                      onChange={() => setSelectedNotifications(prev => { const nS = new Set(prev); nS.has(n._id) ? nS.delete(n._id) : nS.add(n._id); return nS })}
+                      className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring cursor-pointer"
+                    />
+                    <div className="h-9 w-9 rounded-lg bg-accent inline-flex items-center justify-center shrink-0">
+                      {getTypeIcon(n.type)}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {n.category && (
+                          <span className="inline-block rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">{n.category.replace('_', ' ')}</span>
+                        )}
+                        <span className="inline-flex items-center gap-1 ds-text-caption">
+                          <Timer size={12} aria-hidden /> {new Date(n.createdAt).toLocaleString()}
+                        </span>
+                        {!n.read && <span className="h-2 w-2 rounded-full bg-primary" aria-label={t('notificationsPage.activeResonance')} />}
+                      </div>
+
+                      <h3 className="text-sm font-semibold text-theme-primary">{n.title}</h3>
+                      <p className="text-sm text-theme-secondary mt-0.5">{n.message || n.aiSummary || t('notificationsPage.nullSignalPayload')}</p>
+
+                      {n.suggestion && (
+                        <div className="mt-2 flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 p-2.5">
+                          <Zap size={14} className="text-primary shrink-0 mt-0.5" aria-hidden />
+                          <div className="min-w-0">
+                            <p className="ds-text-caption text-primary">{t('notificationsPage.directiveResynthesisAdvice')}</p>
+                            <p className="text-sm text-theme-primary">{n.suggestion}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--border-subtle)]">
+                        {n.link && (
+                          <Button
+                            variant="ghost" size="sm"
+                            leftIcon={<Compass size={14} aria-hidden />}
+                            rightIcon={<ArrowRight size={14} aria-hidden />}
+                            onClick={() => { if (!n.read) apiPut(`/notifications/${n._id}/read`, {}); router.push(n.link!) }}
+                          >
+                            {t('notificationsPage.accessOriginNode')}
+                          </Button>
+                        )}
+                        <div className="ml-auto flex items-center gap-2">
+                          {!n.read && (
+                            <Button variant="secondary" size="sm" onClick={() => { apiPut(`/notifications/${n._id}/read`, {}); loadSignals() }}>
+                              {t('notificationsPage.resonanceAck')}
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost" size="sm"
+                            className="text-rose-500 hover:text-rose-600"
+                            title={t('notificationsPage.purgeSignal')} aria-label={t('notificationsPage.purgeSignal')}
+                            onClick={() => { if (confirm(t('notificationsPage.confirmPurgeSignal'))) { apiDelete(`/notifications/${n._id}`); loadSignals() } }}
+                          >
+                            <Trash2 size={16} aria-hidden />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </ErrorBoundary>
   )

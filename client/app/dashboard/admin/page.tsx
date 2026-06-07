@@ -2,62 +2,34 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
-import LoadingSkeleton from '@/components/LoadingSkeleton'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import ToastContainer from '@/components/ToastContainer'
 import {
   Users,
   FileText,
-  TrendingUp,
-  Shield,
   BarChart3,
+  Shield,
   UserCheck,
-  UserX,
-  Eye,
-  Heart,
-  Activity,
-  Zap,
-  Cpu,
-  Database,
-  Globe,
-  Lock,
   RefreshCw,
-  Search,
-  Filter,
-  ArrowUpRight,
   ShieldAlert,
-  ShieldCheck,
-  HardDrive,
-  ActivityIcon,
-  Fingerprint,
-  Radio,
-  Network,
+  Database,
   Orbit,
-  Binary,
-  Scan,
-  MoreHorizontal
+  Activity,
+  ChevronRight,
 } from 'lucide-react'
-
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
+import { Button } from '@/components/ui/button'
+import { StatCard } from '@/components/ui/stat-card'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SectionHeader } from '@/components/ui/section-header'
+import { cn } from '@/lib/utils'
 
 interface AdminOverview {
-  users: {
-    total: number
-    verified: number
-    unverified: number
-  }
-  posts: {
-    total: number
-    published: number
-    drafts: number
-  }
-  social: {
-    connected_accounts: number
-  }
+  users: { total: number; verified: number; unverified: number }
+  posts: { total: number; published: number; drafts: number }
+  social: { connected_accounts: number }
 }
 
 interface RecentUser {
@@ -74,9 +46,7 @@ interface RecentPost {
   status: string
   author_id: string
   created_at: string
-  users: {
-    email: string
-  }
+  users: { email: string }
 }
 
 interface SystemHealth {
@@ -88,14 +58,11 @@ interface SystemHealth {
 
 interface DashboardData {
   overview: AdminOverview
-  recent_activity: {
-    users: RecentUser[]
-    posts: RecentPost[]
-  }
+  recent_activity: { users: RecentUser[]; posts: RecentPost[] }
   system_health: SystemHealth
 }
 
-export default function SovereignOversightTerminalPage() {
+export default function AdminDashboardPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { t } = useTranslation()
@@ -127,242 +94,226 @@ export default function SovereignOversightTerminalPage() {
     return `${hours}h ${minutes}m`
   }
 
-  const formatMemory = (bytes: number) => {
-    return `${Math.round(bytes / 1024 / 1024)}MB`
-  }
+  const formatMemory = (bytes: number) => `${Math.round(bytes / 1024 / 1024)}MB`
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
-       <Fingerprint size={64} className="text-amber-500 animate-pulse mb-8" />
-       <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] animate-pulse italic">{t('adminPage.loading')}</span>
+    <div className="ds-bg-mesh-soft min-h-screen flex flex-col items-center justify-center py-48" aria-busy="true">
+      <Shield size={40} className="text-theme-muted animate-pulse mb-4" aria-hidden />
+      <span className="ds-text-caption">{t('adminPage.loading')}</span>
     </div>
   )
 
   if (error || !data) return (
-    <div className="min-h-screen bg-[var(--page-bg)] flex items-center justify-center p-10">
-       <div className={`${glassStyle} p-12 rounded-[3rem] border-rose-500/20 text-center max-w-xl`}>
-          <ShieldAlert size={64} className="text-rose-500 mx-auto mb-8 animate-bounce" />
-          <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4">{t('adminPage.errorTitle')}</h2>
-          <p className="text-[var(--text-dim)] text-[13px] font-black uppercase tracking-widest italic mb-10">{error || t('adminPage.unauthorized')}</p>
-          <button type="button" onClick={loadDashboard} className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-widest italic rounded-2xl hover:bg-rose-500 hover:text-white transition-all">{t('adminPage.retrySync')}</button>
-       </div>
+    <div className="ds-bg-mesh-soft min-h-screen flex items-center justify-center p-6">
+      <div className="ds-surface-card p-8 max-w-lg w-full">
+        <EmptyState
+          icon={ShieldAlert}
+          title={t('adminPage.errorTitle')}
+          description={error || t('adminPage.unauthorized')}
+          action={
+            <Button variant="primary" leftIcon={<RefreshCw size={16} aria-hidden />} onClick={loadDashboard}>
+              {t('adminPage.retrySync')}
+            </Button>
+          }
+        />
+      </div>
     </div>
   )
 
+  const isHealthy = data.system_health.database === 'healthy'
+  const memUsed = data.system_health.memory?.heapUsed ?? 0
+  const memTotal = data.system_health.memory?.heapTotal ?? 0
+  const memPct = memTotal > 0 ? Math.min(100, (memUsed / memTotal) * 100) : 0
+
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1700px] mx-auto space-y-12 md:space-y-24 font-inter">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto text-theme-primary space-y-8">
         <ToastContainer />
-        
-        {/* Persistent Watermark */}
-        <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
-           <Shield size={1000} className="text-white absolute -top-40 -left-60 -rotate-12" />
+
+        <SectionHeader
+          as="h1"
+          title={
+            <span className="inline-flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Shield size={20} aria-hidden />
+              </span>
+              {t('adminPage.title')}
+            </span>
+          }
+          description={t('adminPage.subtitle')}
+          actions={
+            <Button variant="secondary" size="md" onClick={loadDashboard} leftIcon={<RefreshCw size={16} aria-hidden />}>
+              {t('adminPage.refreshLattice')}
+            </Button>
+          }
+        />
+
+        {/* Real overview metrics from /admin/dashboard */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            icon={Users}
+            label={t('adminPage.nodeOperatives')}
+            value={data.overview.users.total}
+            delta={t('adminPage.verifiedCount', { count: data.overview.users.verified })}
+            direction="neutral"
+          />
+          <StatCard
+            icon={FileText}
+            label={t('adminPage.contentPayloads')}
+            value={data.overview.posts.total}
+            delta={t('adminPage.publishedCount', { count: data.overview.posts.published })}
+            direction="neutral"
+          />
+          <StatCard
+            icon={Orbit}
+            label={t('adminPage.neuralSyncNodes')}
+            value={data.overview.social.connected_accounts}
+            delta={t('adminPage.latticeActive')}
+            direction="neutral"
+          />
+          <StatCard
+            icon={Activity}
+            label={t('adminPage.latticeVitality')}
+            value={isHealthy ? t('adminPage.optimal') : t('adminPage.anomaly')}
+            delta={t('adminPage.uptimeTrend', { uptime: formatUptime(data.system_health.uptime) })}
+            direction={isHealthy ? 'up' : 'down'}
+          />
         </div>
 
-        {/* Global Oversight Header */}
-        <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
-           <div className="flex items-center gap-10">
-              <div className="w-20 h-20 bg-amber-500/5 border border-amber-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent opacity-100" />
-                <Shield size={40} className="text-amber-400 relative z-10 group-hover:scale-110 transition-transform duration-700" />
-              </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-3">
-                   <div className="flex items-center gap-3">
-                      <Binary size={14} className="text-amber-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-amber-400 italic leading-none">{t('adminPage.oversightMatrix')}</span>
-                   </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <ShieldCheck size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">{t('adminPage.authorizedRoot')}</span>
-                   </div>
-                 </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-2">{t('adminPage.title')}</h1>
-                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">{t('adminPage.subtitle')}</p>
-              </div>
-           </div>
-
-           <div className="flex items-center gap-6">
-              <button type="button" onClick={loadDashboard}
-                className="px-10 py-5 bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white hover:bg-white/[0.05] font-black uppercase text-[11px] tracking-[0.4em] italic rounded-2xl transition-all flex items-center gap-4 group shadow-xl">
-                 <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-700" /> {t('adminPage.refreshLattice')}
-              </button>
-              <button title={t('adminPage.scanMatrix')} className="p-5 bg-white text-black hover:bg-amber-500 hover:text-white transition-all rounded-2xl shadow-2xl group active:scale-90">
-                 <Scan size={24} className="group-hover:scale-110 transition-transform" />
-              </button>
-           </div>
-        </header>
-
-        {/* Global Vitality Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-           <VitalityCard icon={Users} label={t('adminPage.nodeOperatives')} value={data.overview.users.total} trend={t('adminPage.verifiedCount', { count: data.overview.users.verified })} color="text-indigo-400" bg="bg-indigo-500/10" />
-           <VitalityCard icon={FileText} label={t('adminPage.contentPayloads')} value={data.overview.posts.total} trend={t('adminPage.publishedCount', { count: data.overview.posts.published })} color="text-emerald-400" bg="bg-emerald-500/10" />
-           <VitalityCard icon={Orbit} label={t('adminPage.neuralSyncNodes')} value={data.overview.social.connected_accounts} trend={t('adminPage.latticeActive')} color="text-fuchsia-400" bg="bg-fuchsia-500/10" />
-           <VitalityCard icon={Activity} label={t('adminPage.latticeVitality')} value={data.system_health.database === 'healthy' ? t('adminPage.optimal') : t('adminPage.anomaly')} trend={t('adminPage.uptimeTrend', { uptime: formatUptime(data.system_health.uptime) })} color="text-amber-400" bg="bg-amber-500/10" isHealthy={data.system_health.database === 'healthy'} />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 relative z-10">
-           {/* Recent Lattice Resonance (Activity Logs) */}
-           <div className="lg:col-span-2 space-y-12">
-              <div className={`${glassStyle} p-12 rounded-[5rem] border-white/5 shadow-inner`}>
-                 <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 mb-8">
-                    <div className="flex items-center gap-6">
-                       <Scan size={24} className="text-amber-400" />
-                       <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">{t('adminPage.resonanceFeed')}</h3>
-                    </div>
-                    <button className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest hover:text-white transition-colors italic">{t('adminPage.viewAllLogs')}</button>
-                 </div>
-                 
-                 <div className="space-y-12 p-4">
-                    <div className="space-y-6">
-                       <label className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic pl-6">{t('adminPage.newOperativeSignatures')}</label>
-                       <div className="grid grid-cols-1 gap-4">
-                          {data.recent_activity.users.slice(0, 4).map((user) => (
-                            <div key={user.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-indigo-500/30 transition-all duration-700 flex items-center justify-between shadow-inner">
-                               <div className="flex items-center gap-6">
-                                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
-                                     <UserCheck size={24} />
-                                  </div>
-                                  <div>
-                                     <p className="text-[15px] font-black text-white uppercase italic tracking-widest leading-none mb-2">{user.first_name} {user.last_name}</p>
-                                     <p className="text-[11px] font-black text-[var(--text-dim)] uppercase italic tracking-[0.2em] leading-none">{user.email}</p>
-                                  </div>
-                               </div>
-                               <div className="text-right">
-                                  <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic opacity-40">{new Date(user.created_at).toLocaleTimeString()}</span>
-                                  <p className="text-[9px] font-black text-indigo-500/60 uppercase tracking-tighter italic mt-1 font-mono">{t('adminPage.nodeInitCompleted')}</p>
-                               </div>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-
-                    <div className="space-y-6">
-                       <label className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.6em] italic pl-6">{t('adminPage.pendingContentPayloads')}</label>
-                       <div className="grid grid-cols-1 gap-4">
-                          {data.recent_activity.posts.slice(0, 4).map((post) => (
-                            <div key={post.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex items-center justify-between shadow-inner">
-                               <div className="flex items-center gap-6 max-w-[70%]">
-                                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                                     <FileText size={24} />
-                                  </div>
-                                  <div className="truncate">
-                                     <p className="text-[15px] font-black text-white uppercase italic tracking-widest leading-none mb-2 truncate">{post.title || t('adminPage.nullTitle')}</p>
-                                     <p className="text-[11px] font-black text-[var(--text-dim)] uppercase italic tracking-[0.2em] leading-none">{post.users.email}</p>
-                                  </div>
-                               </div>
-                               <div className="text-right">
-                                  <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest italic ${
-                                     post.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  }`}>
-                                     {t(`adminPage.status_${post.status}`)}
-                                  </span>
-                                  <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-tighter italic mt-2 opacity-40">{new Date(post.created_at).toLocaleDateString()}</p>
-                               </div>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-                 </div>
-              </div>
-           </div>
-
-           {/* Core Lattice Health & Quick Operations */}
-           <div className="space-y-16">
-              <div className={`${glassStyle} p-12 rounded-[5rem] border-white/5 shadow-[inset_0_0_80px_rgba(0,0,0,0.5)] bg-black/40`}>
-                 <div className="flex items-center gap-6 border-b border-white/5 pb-8 mb-10 px-4">
-                    <Database size={20} className="text-amber-400" />
-                    <h3 className="text-[13px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">{t('adminPage.coreVitality')}</h3>
-                 </div>
-                 
-                 <div className="space-y-10 p-4">
-                    <HealthRow label={t('adminPage.coreLedger')} status={data.system_health.database} />
-                    <HealthRow label={t('adminPage.uplinkApi')} status={data.system_health.api} />
-                    
-                    <div className="pt-6 border-t border-white/5">
-                       <div className="flex justify-between items-center mb-4 px-2">
-                          <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">{t('adminPage.cognitiveBuffer')}</label>
-                          <span className="text-[11px] font-mono text-indigo-400 font-bold">
-                             {formatMemory(data.system_health.memory.heapUsed)}/ {formatMemory(data.system_health.memory.heapTotal)}
-                          </span>
-                       </div>
-                       <div className="w-full h-3 bg-white/[0.02] border border-white/5 rounded-full overflow-hidden p-0.5">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${(data.system_health.memory.heapUsed / data.system_health.memory.heapTotal) * 100}%` }} transition={{ duration: 2 }} 
-                            className="h-full bg-indigo-500 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
-                       </div>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-8 border-t border-white/5 px-2">
-                       <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">{t('adminPage.totalUptime')}</label>
-                       <span className="text-[13px] font-black text-white italic tracking-widest">{formatUptime(data.system_health.uptime).toUpperCase()}</span>
-                    </div>
-                 </div>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent activity */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="ds-surface-card p-5 sm:p-6">
+              <SectionHeader as="h3" title={t('adminPage.resonanceFeed')} className="mb-5" />
 
               <div className="space-y-6">
-                 <h4 className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic pl-8">{t('adminPage.quickOversightCommands')}</h4>
-                 <div className="grid grid-cols-1 gap-6">
-                    <CommandButton icon={Users} label={t('adminPage.cmdManageOperatives')} desc={t('adminPage.cmdManageOperativesDesc')} color="text-indigo-400" onClick={() => router.push('/dashboard/admin/users')} />
-                    <CommandButton icon={FileText} label={t('adminPage.cmdModeratePayloads')} desc={t('adminPage.cmdModeratePayloadsDesc')} color="text-emerald-400" onClick={() => router.push('/dashboard/admin/posts')} />
-                    <CommandButton icon={BarChart3} label={t('adminPage.cmdGlobalAnalytics')} desc={t('adminPage.cmdGlobalAnalyticsDesc')} color="text-fuchsia-400" onClick={() => router.push('/dashboard/admin/analytics')} />
-                 </div>
-              </div>
-           </div>
-        </div>
+                <div>
+                  <p className="ds-text-label text-theme-muted mb-3">{t('adminPage.newOperativeSignatures')}</p>
+                  <div className="space-y-2">
+                    {data.recent_activity.users.slice(0, 4).map((u) => (
+                      <div key={u.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] p-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary inline-flex items-center justify-center shrink-0">
+                            <UserCheck size={16} aria-hidden />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-theme-primary truncate">{u.first_name} {u.last_name}</p>
+                            <p className="ds-text-caption truncate">{u.email}</p>
+                          </div>
+                        </div>
+                        <span className="ds-text-caption shrink-0">{new Date(u.created_at).toLocaleTimeString()}</span>
+                      </div>
+                    ))}
+                    {data.recent_activity.users.length === 0 && (
+                      <p className="ds-text-caption px-1 py-2">—</p>
+                    )}
+                  </div>
+                </div>
 
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
-        `}</style>
+                <div>
+                  <p className="ds-text-label text-theme-muted mb-3">{t('adminPage.pendingContentPayloads')}</p>
+                  <div className="space-y-2">
+                    {data.recent_activity.posts.slice(0, 4).map((post) => (
+                      <div key={post.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] p-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary inline-flex items-center justify-center shrink-0">
+                            <FileText size={16} aria-hidden />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-theme-primary truncate">{post.title || t('adminPage.nullTitle')}</p>
+                            <p className="ds-text-caption truncate">{post.users.email}</p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={cn(
+                            'inline-block rounded-full px-2.5 py-0.5 text-xs font-medium',
+                            post.status === 'published'
+                              ? 'bg-emerald-500/10 text-emerald-500'
+                              : 'bg-amber-500/10 text-amber-500'
+                          )}>
+                            {t(`adminPage.status_${post.status}`)}
+                          </span>
+                          <p className="ds-text-caption mt-1">{new Date(post.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {data.recent_activity.posts.length === 0 && (
+                      <p className="ds-text-caption px-1 py-2">—</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* System health (real) + quick commands */}
+          <div className="space-y-6">
+            <div className="ds-surface-card p-5 sm:p-6">
+              <SectionHeader as="h3" title={t('adminPage.coreVitality')} className="mb-5" />
+              <div className="space-y-3">
+                <HealthRow label={t('adminPage.coreLedger')} status={data.system_health.database} />
+                <HealthRow label={t('adminPage.uplinkApi')} status={data.system_health.api} />
+
+                <div className="pt-3 border-t border-[var(--border-subtle)]">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-theme-secondary">{t('adminPage.cognitiveBuffer')}</span>
+                    <span className="text-sm font-mono text-theme-primary tabular-nums">
+                      {formatMemory(memUsed)} / {formatMemory(memTotal)}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-accent rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${memPct}%` }} />
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-3 border-t border-[var(--border-subtle)]">
+                  <span className="text-sm text-theme-secondary">{t('adminPage.totalUptime')}</span>
+                  <span className="text-sm font-medium text-theme-primary">{formatUptime(data.system_health.uptime)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="ds-text-label text-theme-muted px-1">{t('adminPage.quickOversightCommands')}</p>
+              <CommandButton icon={Users} label={t('adminPage.cmdManageOperatives')} desc={t('adminPage.cmdManageOperativesDesc')} onClick={() => router.push('/dashboard/admin/users')} />
+              <CommandButton icon={FileText} label={t('adminPage.cmdModeratePayloads')} desc={t('adminPage.cmdModeratePayloadsDesc')} onClick={() => router.push('/dashboard/admin/posts')} />
+              <CommandButton icon={BarChart3} label={t('adminPage.cmdGlobalAnalytics')} desc={t('adminPage.cmdGlobalAnalyticsDesc')} onClick={() => router.push('/dashboard/admin/analytics')} />
+            </div>
+          </div>
+        </div>
       </div>
     </ErrorBoundary>
-  )
-}
-
-function VitalityCard({ icon: Icon, label, value, trend, color, bg, isHealthy = true }: { icon: any; label: string; value: string | number; trend: string; color: string; bg: string; isHealthy?: boolean }) {
-  return (
-    <motion.div whileHover={{ y: -10 }} className={`${glassStyle} p-12 rounded-[4rem] group hover:bg-white/[0.05] transition-all relative overflow-hidden flex flex-col items-center text-center`}>
-       <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-300 -rotate-12 scale-150 pointer-events-none"><Icon size={120} /></div>
-       <div className={`w-20 h-20 rounded-[2.5rem] ${bg} border border-white/5 flex items-center justify-center mb-8 shadow-2xl group-hover:rotate-12 transition-all`}>
-          <Icon className={color} size={36} />
-       </div>
-       <p className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.5em] mb-4 italic leading-none">{label}</p>
-       <h3 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter leading-none mb-6">{value}</h3>
-       <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/40 border border-white/5">
-          <div className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
-          <span className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">{trend}</span>
-       </div>
-    </motion.div>
   )
 }
 
 function HealthRow({ label, status }: { label: string; status: string }) {
   const isHealthy = status === 'healthy' || status === 'up' || status === 'ok'
   return (
-    <div className="group flex items-center justify-between p-6 rounded-[2rem] bg-black/40 border border-white/5 hover:border-white/10 transition-all shadow-inner">
-       <span className="text-[12px] font-black text-white uppercase italic tracking-[0.3em]">{label}</span>
-       <div className="flex items-center gap-4">
-          <div className={`w-3 h-3 rounded-full ${isHealthy ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-rose-500 animate-pulse outline outline-rose-500/30'}`} />
-          <span className={`text-[11px] font-black uppercase italic tracking-widest ${isHealthy ? 'text-emerald-400' : 'text-rose-500'}`}>{status.toUpperCase()}</span>
-       </div>
+    <div className="flex items-center justify-between rounded-xl border border-[var(--border-subtle)] p-3">
+      <span className="text-sm text-theme-primary">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className={cn('h-2 w-2 rounded-full', isHealthy ? 'bg-emerald-500' : 'bg-rose-500')} />
+        <span className={cn('text-xs font-medium', isHealthy ? 'text-emerald-500' : 'text-rose-500')}>{status}</span>
+      </div>
     </div>
   )
 }
 
-function CommandButton({ icon: Icon, label, desc, color, onClick }: { icon: any; label: string; desc: string; color: string; onClick: () => void }) {
+function CommandButton({ icon: Icon, label, desc, onClick }: { icon: any; label: string; desc: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={`${glassStyle} group p-8 rounded-[3rem] hover:bg-white/[0.04] text-left transition-all duration-700 flex items-center gap-8 shadow-inner overflow-hidden relative`}>
-       <div className="absolute inset-x-0 bottom-0 h-1 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-700 opacity-20" />
-       <div className={`w-20 h-20 rounded-[2.2rem] bg-black/60 border border-white/5 flex items-center justify-center ${color} group-hover:scale-110 group-hover:rotate-12 transition-all shadow-2xl flex-shrink-0`}>
-          <Icon size={32} />
-       </div>
-       <div className="flex-1">
-          <p className="text-[15px] font-black text-white uppercase italic tracking-[0.4em] mb-2 leading-none group-hover:translate-x-2 transition-transform duration-700">{label}</p>
-          <p className="text-[10px] font-black text-[var(--text-dim)] uppercase italic tracking-widest leading-none opacity-60">{desc}</p>
-       </div>
-       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-[var(--text-dim)] group-hover:text-white group-hover:bg-white/10 transition-all">
-          <ArrowUpRight size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-       </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="ds-surface-card ds-hover-lift w-full p-4 text-left flex items-center gap-4"
+    >
+      <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary inline-flex items-center justify-center shrink-0">
+        <Icon size={18} aria-hidden />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-theme-primary">{label}</p>
+        <p className="ds-text-caption truncate">{desc}</p>
+      </div>
+      <ChevronRight size={16} className="text-theme-muted shrink-0" aria-hidden />
     </button>
   )
 }

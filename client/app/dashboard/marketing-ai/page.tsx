@@ -2,27 +2,25 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
-  TrendingUp, Brain, RefreshCw, Sparkles, Zap, Globe, Target,
-  ChevronRight, ArrowRight, Clock, AlertTriangle, CheckCircle2,
-  BarChart3, Lightbulb, Flame, Activity, Star, Shield, Layers,
-  MessageCircle, Heart, BookOpen, Compass, Rocket, Users
+  Brain, RefreshCw, Sparkles, Zap, Globe, Target,
+  ArrowRight, Clock, AlertTriangle, CheckCircle2,
+  BarChart3, Lightbulb, Flame, Activity, Star,
+  MessageCircle, Heart, BookOpen, Compass, Rocket, Users, Shield,
 } from 'lucide-react'
-import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
+import { cn } from '../../../lib/utils'
+import { Button } from '../../../components/ui/button'
+import { FormField, Input, Textarea } from '../../../components/ui/form-field'
+import { EmptyState } from '../../../components/ui/empty-state'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api')
-
-const glass = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
-const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[3rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
 
 type Panel = 'trends' | 'retention' | 'creativity' | 'engagement' | 'optimizer'
 
 export default function MarketingOraclePage() {
   const { t } = useTranslation()
-  const { user } = useAuth()
   const [activePanel, setActivePanel] = useState<Panel>('trends')
   const [niche, setNiche] = useState('general')
   const [platform, setPlatform] = useState('instagram')
@@ -31,7 +29,6 @@ export default function MarketingOraclePage() {
   const [data, setData] = useState<Record<string, any>>({})
   const [error, setError] = useState<Record<string, string>>({})
 
-  const [syncStatus, setSyncStatus] = useState<any>(null)
   const [syncing, setSyncing] = useState(false)
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
@@ -70,7 +67,6 @@ export default function MarketingOraclePage() {
     try {
       const res = await apiFetch('/sync-signals', { method: 'POST' })
       if (res.success) {
-        setSyncStatus(res.data)
         // Refresh dashboard data after sync
         load('dashboard', `/dashboard?niche=${niche}&platform=${platform}`)
       }
@@ -81,197 +77,134 @@ export default function MarketingOraclePage() {
     }
   }
 
-  const panels: { id: Panel; label: string; icon: any; color: string; bg: string }[] = [
-    { id: 'trends',     label: t('marketingAiPage.panelTrends'),     icon: Globe,       color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-    { id: 'retention',  label: t('marketingAiPage.panelRetention'),  icon: RefreshCw,   color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { id: 'creativity', label: t('marketingAiPage.panelCreativity'), icon: Sparkles,    color: 'text-amber-400',  bg: 'bg-amber-500/10' },
-    { id: 'engagement', label: t('marketingAiPage.panelEngagement'), icon: MessageCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    { id: 'optimizer',  label: t('marketingAiPage.panelOptimizer'),  icon: Target,      color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
+  const panels: { id: Panel; label: string; icon: any }[] = [
+    { id: 'trends',     label: t('marketingAiPage.panelTrends'),     icon: Globe },
+    { id: 'retention',  label: t('marketingAiPage.panelRetention'),  icon: RefreshCw },
+    { id: 'creativity', label: t('marketingAiPage.panelCreativity'), icon: Sparkles },
+    { id: 'engagement', label: t('marketingAiPage.panelEngagement'), icon: MessageCircle },
+    { id: 'optimizer',  label: t('marketingAiPage.panelOptimizer'),  icon: Target },
   ]
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-white pb-40 px-8 pt-12 max-w-[1700px] mx-auto space-y-16">
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        html.dark body { font-family: 'Outfit', sans-serif; background: #020205; }
-        @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
-        .shimmer { animation: shimmer 2s infinite linear; }
-      `}</style>
-
+    <div className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1500px] mx-auto space-y-8">
       {/* ── Header ── */}
-      <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+      <header className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
         <div>
-          <div className="flex items-center gap-4 mb-6">
-            <Link href="/dashboard" className="flex items-center gap-3 text-[var(--text-dim)] hover:text-white text-sm font-bold uppercase tracking-widest transition-colors">
-              <ChevronRight size={14} className="rotate-180" /> {t('marketingAiPage.backToCommand')}
-            </Link>
+          <div className="flex items-center gap-2 mb-4">
             <Link
               href="/dashboard/forge"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 hover:bg-fuchsia-500/20 hover:border-fuchsia-500/50 transition-all text-[10px] font-black uppercase tracking-[0.18em]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold"
             >
-              <Sparkles size={11} /> {t('marketingAiPage.applyInEditor')}
+              <Sparkles size={12} /> {t('marketingAiPage.applyInEditor')}
             </Link>
           </div>
-          <div className="flex items-center gap-6 mb-4">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-[0_0_80px_rgba(99,102,241,0.5)]">
-              <Brain size={36} className="text-white" />
+          <div className="flex items-center gap-4">
+            <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 inline-flex items-center justify-center text-primary">
+              <Brain size={22} />
             </div>
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.8em] text-indigo-400 mb-1">{t('marketingAiPage.eyebrow')}</p>
-              <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">{t('marketingAiPage.title')}</h1>
+            <div className="min-w-0">
+              <h1 className="ds-text-h1 text-theme-primary leading-none">{t('marketingAiPage.title')}</h1>
+              <p className="ds-text-caption mt-1 max-w-xl">{t('marketingAiPage.subtitle')}</p>
             </div>
           </div>
-          <p className="text-[var(--text-dim)] text-sm font-bold uppercase tracking-widest max-w-xl">
-            {t('marketingAiPage.subtitle')}
-          </p>
         </div>
 
         {/* Controls & Sync */}
-        <div className="flex flex-col xl:flex-row gap-8 items-center lg:items-end w-full lg:w-auto">
-          <div className={`${glass} rounded-[3rem] p-8 flex flex-col sm:flex-row gap-6 min-w-[340px] border-indigo-500/10`}>
-            <div className="space-y-3 flex-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-700 italic">{t('marketingAiPage.targetNicheLabel')}</label>
-              <input
-                value={niche}
-                onChange={(e) => setNiche(e.target.value)}
-                placeholder={t('marketingAiPage.nichePlaceholder')}
-                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-900 font-black italic focus:outline-none focus:border-indigo-500/40 uppercase transition-all"
-              />
-            </div>
-            <div className="space-y-3 flex-1">
-              <label className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-700 italic">{t('marketingAiPage.activeMatrixLabel')}</label>
-              <select
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value)}
-                title={t('marketingAiPage.selectPlatform')}
-                aria-label={t('marketingAiPage.selectPlatform')}
-                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white font-black italic focus:outline-none focus:border-indigo-500/40 uppercase transition-all"
-              >
-                {['instagram','tiktok','linkedin','twitter','youtube','facebook'].map((p) => (
-                  <option key={p} value={p} className="bg-black">{p.toUpperCase()}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="button"
+        <div className="ds-surface-card p-4 flex flex-col sm:flex-row gap-4 items-end w-full lg:w-auto">
+          <FormField label={t('marketingAiPage.targetNicheLabel')} className="flex-1 min-w-[160px]">
+            <Input
+              value={niche}
+              onChange={(e) => setNiche(e.target.value)}
+              placeholder={t('marketingAiPage.nichePlaceholder')}
+            />
+          </FormField>
+          <FormField label={t('marketingAiPage.activeMatrixLabel')} className="flex-1 min-w-[160px]">
+            <select
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+              title={t('marketingAiPage.selectPlatform')}
+              aria-label={t('marketingAiPage.selectPlatform')}
+              className="w-full rounded-lg border border-input bg-background px-3 h-10 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {['instagram','tiktok','linkedin','twitter','youtube','facebook'].map((p) => (
+                <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+              ))}
+            </select>
+          </FormField>
+          <Button
+            variant="primary"
             onClick={syncSignals}
-            disabled={syncing}
-            className={`group relative flex items-center gap-6 px-12 py-8 rounded-[3rem] font-black uppercase tracking-[0.4em] italic text-sm transition-all duration-300 overflow-hidden ${
-              syncing 
-              ? 'bg-indigo-600/30 text-indigo-300 cursor-wait' 
-              : 'bg-white text-black hover:bg-slate-100 shadow-[0_40px_100px_rgba(255,255,255,0.2)]'
-            }`}
+            loading={syncing}
+            leftIcon={!syncing ? <Activity size={16} /> : undefined}
           >
-            <div className={`absolute inset-0 bg-indigo-600/20 translate-x-[-100%] ${syncing ? 'animate-shimmer' : 'group-hover:translate-x-[100%] transition-transform duration-500'}`} />
-            {syncing ? (
-              <>
-                <RefreshCw size={24} className="animate-spin" />
-                {t('marketingAiPage.synkFluxInProgress')}
-              </>
-            ) : (
-              <>
-                <Activity size={24} className="group-hover:animate-pulse" />
-                {t('marketingAiPage.triggerSynkFlux')}
-              </>
-            )}
-          </button>
+            {syncing ? t('marketingAiPage.synkFluxInProgress') : t('marketingAiPage.triggerSynkFlux')}
+          </Button>
         </div>
       </header>
 
-      {/* ── Operational Indicators ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-        {[
-          { label: t('marketingAiPage.statNeuralFidelity'), value: '99.9%', sub: t('marketingAiPage.statActiveLink'), color: 'text-indigo-400' },
-          { label: t('marketingAiPage.statSignalSync'), value: syncStatus ? t('marketingAiPage.statCalibrated') : t('marketingAiPage.statStable'), sub: syncStatus ? syncStatus.timestamp.split('T')[1].slice(0,5) : t('marketingAiPage.statCoreOnly'), color: 'text-emerald-400' },
-          { label: t('marketingAiPage.statMatrixDrift'), value: '0.002', sub: t('marketingAiPage.statMilliradians'), color: 'text-amber-400' },
-          { label: t('marketingAiPage.statQuantumLoad'), value: t('marketingAiPage.statMinimal'), sub: '42.1_PFLOPS', color: 'text-rose-400' },
-        ].map((stat, i) => (
-          <div key={i} className={`${glass} p-8 rounded-[2.5rem] border-white/5 space-y-3 group hover:border-white/20 transition-all`}>
-             <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic group-hover:text-white transition-colors">{stat.label}</p>
-             <div className="flex items-end justify-between">
-                <span className={`text-4xl font-black italic tracking-tighter ${stat.color}`}>{stat.value}</span>
-                <span className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1">{stat.sub}</span>
-             </div>
-          </div>
-        ))}
-      </div>
-
       {/* ── Panel Navigation ── */}
-      <nav className="flex flex-wrap gap-4">
+      <nav className="flex flex-wrap gap-2">
         {panels.map((p) => (
-          <button key={p.id} onClick={() => setActivePanel(p.id)}
-            className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-500 border-2 ${
+          <button key={p.id} type="button" onClick={() => setActivePanel(p.id)}
+            aria-pressed={activePanel === p.id ? 'true' : 'false'}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors border',
               activePanel === p.id
-                ? 'bg-white text-black border-white shadow-[0_20px_60px_rgba(255,255,255,0.15)] scale-105'
-                : `${glass} border-white/5 text-[var(--text-dim)] hover:text-white hover:border-white/20`
-            }`}
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'ds-surface-card text-theme-secondary hover:text-theme-primary border-transparent'
+            )}
           >
-            <p.icon size={18} />
+            <p.icon size={16} />
             {p.label}
           </button>
         ))}
       </nav>
 
       {/* ── Panel Content ── */}
-      <AnimatePresence mode="wait">
+      <div className="ds-anim-fade-in" key={activePanel}>
         {activePanel === 'trends' && (
-          <motion.div key="trends" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
-            <TrendsPanel niche={niche} load={load} data={data} loading={loading} error={error} />
-          </motion.div>
+          <TrendsPanel niche={niche} load={load} data={data} loading={loading} error={error} />
         )}
         {activePanel === 'retention' && (
-          <motion.div key="retention" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
-            <RetentionPanel niche={niche} platform={platform} load={load} data={data} loading={loading} error={error} />
-          </motion.div>
+          <RetentionPanel niche={niche} platform={platform} load={load} data={data} loading={loading} error={error} />
         )}
         {activePanel === 'creativity' && (
-          <motion.div key="creativity" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
-            <CreativityPanel niche={niche} topic={topic} setTopic={setTopic} load={load} data={data} loading={loading} error={error} />
-          </motion.div>
+          <CreativityPanel niche={niche} topic={topic} setTopic={setTopic} load={load} data={data} loading={loading} error={error} />
         )}
         {activePanel === 'engagement' && (
-          <motion.div key="engagement" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
-            <EngagementPanel niche={niche} platform={platform} load={load} data={data} loading={loading} error={error} />
-          </motion.div>
+          <EngagementPanel niche={niche} platform={platform} load={load} data={data} loading={loading} error={error} />
         )}
         {activePanel === 'optimizer' && (
-          <motion.div key="optimizer" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-10">
-            <OptimizerPanel niche={niche} platform={platform} load={load} data={data} loading={loading} error={error} />
-          </motion.div>
+          <OptimizerPanel niche={niche} platform={platform} load={load} data={data} loading={loading} error={error} />
         )}
-      </AnimatePresence>
+      </div>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PANEL COMPONENTS
+// SHARED HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-
-function Spinner() {
-  return <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-}
 
 function ErrorBlock({ msg }: { msg: string }) {
   return (
-    <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-bold">
+    <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 text-sm font-medium">
       <AlertTriangle size={16} /> {msg}
     </div>
   )
 }
 
-function ActionButton({ label, icon: Icon, onClick, loading: isLoading, color = 'bg-white text-black' }: any) {
+function PanelHead({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle?: string }) {
   return (
-    <motion.button
-      whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-      onClick={onClick} disabled={isLoading}
-      className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all ${color} disabled:opacity-50 relative overflow-hidden`}
-    >
-      {isLoading ? <Spinner /> : <Icon size={16} />}
-      {label}
-    </motion.button>
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 text-primary inline-flex items-center justify-center shrink-0">
+        <Icon size={20} />
+      </div>
+      <div className="min-w-0">
+        <h2 className="ds-text-h3 text-theme-primary">{title}</h2>
+        {subtitle && <p className="ds-text-caption mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
   )
 }
 
@@ -282,73 +215,63 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
   const knowledge = data.knowledge || data.dashboard?.knowledgeInsights
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Trend Report */}
-      <div className={`xl:col-span-2 ${glass} rounded-[2.5rem] p-10 space-y-8`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                <Globe size={20} className="text-indigo-400" />
-              </div>
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter">{t('marketingAiPage.globalTrendRadar')}</h2>
-            </div>
-            <p className="text-[var(--text-dim)] text-xs font-bold uppercase tracking-widest">{t('marketingAiPage.liveIntelForNiche')}</p>
-          </div>
-          <ActionButton label={t('marketingAiPage.scanNow')} icon={RefreshCw} loading={loading.trendReport}
-            onClick={() => load('trendReport', `/trend-report?niche=${niche}`)} />
+      <div className="xl:col-span-2 ds-surface-card p-5 sm:p-6 space-y-6">
+        <div className="flex items-start justify-between gap-4">
+          <PanelHead icon={Globe} title={t('marketingAiPage.globalTrendRadar')} subtitle={t('marketingAiPage.liveIntelForNiche')} />
+          <Button variant="secondary" size="sm" loading={loading.trendReport}
+            leftIcon={!loading.trendReport ? <RefreshCw size={14} /> : undefined}
+            onClick={() => load('trendReport', `/trend-report?niche=${niche}`)}>
+            {t('marketingAiPage.scanNow')}
+          </Button>
         </div>
 
         {error.trendReport && <ErrorBlock msg={error.trendReport} />}
 
         {report && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Confidence score */}
-            <div className="flex items-center gap-6">
-              <div className="flex-1 h-3 bg-black/60 rounded-full overflow-hidden border border-white/5">
-                <motion.div
-                  initial={{ width: 0 }} animate={{ width: `${report.confidenceScore || 80}%` }}
-                  transition={{ duration: 1.5, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-indigo-600 to-violet-500 rounded-full"
-                />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-2.5 bg-accent rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${report.confidenceScore || 80}%` }} />
               </div>
-              <span className="text-2xl font-black text-indigo-400 tabular-nums">{report.confidenceScore || 80}%</span>
-              <span className="text-xs font-black uppercase tracking-widest text-[var(--text-dim)]">{t('marketingAiPage.confidence')}</span>
+              <span className="ds-text-h3 text-primary tabular-nums">{report.confidenceScore || 80}%</span>
+              <span className="ds-text-caption">{t('marketingAiPage.confidence')}</span>
             </div>
 
             {/* Niche opportunities */}
             {report.niching?.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.nicheOpportunities')}</p>
+              <div className="space-y-2">
+                <p className="ds-text-label text-theme-muted">{t('marketingAiPage.nicheOpportunities')}</p>
                 {report.niching.slice(0, 4).map((opp: any, i: number) => (
-                  <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                    className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-indigo-500/30 transition-all">
+                  <div key={i} className="p-4 rounded-xl border border-input">
                     <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="font-black text-white text-sm mb-1">{opp.title || opp}</p>
-                        {opp.description && <p className="text-[var(--text-dim)] text-xs leading-relaxed">{opp.description}</p>}
+                      <div className="min-w-0">
+                        <p className="font-medium text-theme-primary text-sm mb-1">{opp.title || opp}</p>
+                        {opp.description && <p className="text-theme-muted text-xs leading-relaxed">{opp.description}</p>}
                       </div>
                       {opp.urgency && (
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shrink-0 ${
-                          opp.urgency === 'high' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                          opp.urgency === 'medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                          'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        }`}>{opp.urgency}</span>
+                        <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0 border',
+                          opp.urgency === 'high' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                          opp.urgency === 'medium' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' :
+                          'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                        )}>{opp.urgency}</span>
                       )}
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}
 
             {/* Actionable insights */}
             {report.actionableInsights?.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.actionableInsights')}</p>
+              <div className="space-y-2">
+                <p className="ds-text-label text-theme-muted">{t('marketingAiPage.actionableInsights')}</p>
                 {report.actionableInsights.slice(0, 3).map((insight: string, i: number) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
-                    <Zap size={14} className="text-indigo-400 mt-0.5 shrink-0" />
-                    <p className="text-sm text-slate-300 font-bold">{insight}</p>
+                  <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <Zap size={14} className="text-primary mt-0.5 shrink-0" />
+                    <p className="text-sm text-theme-secondary">{insight}</p>
                   </div>
                 ))}
               </div>
@@ -357,10 +280,10 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
             {/* 2026 Macro Trends */}
             {report.globalTrends2026 && (
               <div className="space-y-2">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.globalMacroTrends')}</p>
+                <p className="ds-text-label text-theme-muted">{t('marketingAiPage.globalMacroTrends')}</p>
                 <div className="flex flex-wrap gap-2">
                   {report.globalTrends2026.slice(0, 6).map((trend: string, i: number) => (
-                    <span key={i} className="px-3 py-1 rounded-full bg-black/60 border border-white/5 text-xs font-bold text-[var(--text-dim)]">{trend}</span>
+                    <span key={i} className="px-3 py-1 rounded-full border border-input text-xs text-theme-secondary">{trend}</span>
                   ))}
                 </div>
               </div>
@@ -369,46 +292,41 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
         )}
 
         {!report && !loading.trendReport && (
-          <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
-            <Globe size={48} className="text-indigo-400/30" />
-            <p className="text-[var(--text-dim)] font-bold">{t('marketingAiPage.trendsEmptyState')}</p>
-          </div>
+          <EmptyState icon={Globe} title={t('marketingAiPage.trendsEmptyState')} />
         )}
       </div>
 
       {/* Knowledge Base */}
-      <div className={`${glass} rounded-[2.5rem] p-8 space-y-6`}>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <BookOpen size={20} className="text-amber-400" />
-          </div>
-          <h3 className="text-lg font-black italic uppercase tracking-tighter">{t('marketingAiPage.knowledgeBase')}</h3>
-        </div>
-        <ActionButton label={t('marketingAiPage.getInsights')} icon={Lightbulb} loading={loading.knowledge} color="bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
-          onClick={() => load('knowledge', `/knowledge-insights?niche=${niche}&format=video`)} />
+      <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+        <PanelHead icon={BookOpen} title={t('marketingAiPage.knowledgeBase')} />
+        <Button variant="secondary" size="sm" loading={loading.knowledge}
+          leftIcon={!loading.knowledge ? <Lightbulb size={14} /> : undefined}
+          onClick={() => load('knowledge', `/knowledge-insights?niche=${niche}&format=video`)}>
+          {t('marketingAiPage.getInsights')}
+        </Button>
 
         {knowledge && (
           <div className="space-y-5">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)] mb-3">{t('marketingAiPage.recommendedFrameworks')}</p>
+              <p className="ds-text-label text-theme-muted mb-3">{t('marketingAiPage.recommendedFrameworks')}</p>
               {knowledge.recommendedFrameworks?.map((f: any, i: number) => (
-                <div key={i} className="p-4 rounded-2xl bg-black/40 border border-white/5 mb-3 space-y-1">
-                  <p className="font-black text-amber-400 text-sm">{f.name}</p>
-                  <p className="text-xs text-[var(--text-dim)] leading-relaxed">{f.description}</p>
+                <div key={i} className="p-4 rounded-xl border border-input mb-3 space-y-1">
+                  <p className="font-medium text-theme-primary text-sm">{f.name}</p>
+                  <p className="text-xs text-theme-muted leading-relaxed">{f.description}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {f.bestFor?.map((tag: string) => (
-                      <span key={tag} className="px-2 py-0.5 rounded-full bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-400 font-bold">{tag}</span>
+                      <span key={tag} className="px-2 py-0.5 rounded-full bg-accent text-[10px] text-theme-secondary font-medium">{tag}</span>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)] mb-3">{t('marketingAiPage.quickWins')}</p>
+              <p className="ds-text-label text-theme-muted mb-3">{t('marketingAiPage.quickWins')}</p>
               {knowledge.quickWins?.map((win: string, i: number) => (
                 <div key={i} className="flex items-start gap-2 mb-2">
-                  <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 shrink-0" />
-                  <p className="text-xs text-[var(--text-dim)] font-bold">{win}</p>
+                  <CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-theme-secondary">{win}</p>
                 </div>
               ))}
             </div>
@@ -427,62 +345,47 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
   const campaign = data.retentionCampaign
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       {/* Score Card */}
-      <div className={`${glass} rounded-[2.5rem] p-10 space-y-8`}>
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-            <Activity size={20} className="text-emerald-400" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter">{t('marketingAiPage.retentionHealth')}</h2>
-            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">{t('marketingAiPage.audienceLoyaltyScore')}</p>
-          </div>
-        </div>
+      <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+        <PanelHead icon={Activity} title={t('marketingAiPage.retentionHealth')} subtitle={t('marketingAiPage.audienceLoyaltyScore')} />
 
-        <ActionButton label={t('marketingAiPage.calculateScore')} icon={Target} loading={loading.retentionScore}
-          color="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
-          onClick={() => load('retentionScore', '/retention-score')} />
+        <Button variant="secondary" size="sm" loading={loading.retentionScore}
+          leftIcon={!loading.retentionScore ? <Target size={14} /> : undefined}
+          onClick={() => load('retentionScore', '/retention-score')}>
+          {t('marketingAiPage.calculateScore')}
+        </Button>
 
         {error.retentionScore && <ErrorBlock msg={error.retentionScore} />}
 
         {score && (
-          <div className="space-y-6">
-            {/* Big score display */}
-            <div className="relative flex items-center justify-center py-8">
-              <div className="w-40 h-40 rounded-full border-8 border-white/5 flex items-center justify-center relative shadow-[0_0_80px_rgba(16,185,129,0.2)]">
-                <motion.div 
-                  className="absolute inset-0 rounded-full border-8 border-emerald-500/40" 
-                  initial={false}
-                  animate={{ clipPath: `inset(${100 - score.score}% 0 0 0)` }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                />
-                <div className="text-center">
-                  <p className="text-5xl font-black text-emerald-400 tabular-nums leading-none">{score.score}</p>
-                  <p className="text-xs font-black uppercase tracking-widest text-[var(--text-dim)] mt-1">/100</p>
-                </div>
+          <div className="space-y-5">
+            <div className="flex items-center justify-center py-6">
+              <div className="text-center">
+                <p className="text-5xl font-bold text-primary tabular-nums leading-none">{score.score}</p>
+                <p className="ds-text-caption mt-1">/100</p>
               </div>
             </div>
-            <p className="text-center text-sm font-black text-white">{score.verdict}</p>
+            <p className="text-center text-sm font-medium text-theme-primary">{score.verdict}</p>
 
             {/* Risk badge */}
-            <div className={`px-5 py-3 rounded-2xl text-center text-sm font-black uppercase tracking-widest border ${
-              score.riskLevel === 'critical' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-              score.riskLevel === 'high'     ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-              score.riskLevel === 'medium'   ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-              'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-            }`}>
+            <div className={cn('px-4 py-2.5 rounded-lg text-center text-sm font-semibold border',
+              score.riskLevel === 'critical' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+              score.riskLevel === 'high'     ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' :
+              score.riskLevel === 'medium'   ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20' :
+              'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+            )}>
               {t('marketingAiPage.riskLevel', { level: score.riskLevel?.toUpperCase() })}
             </div>
 
             {/* Improvements */}
             {score.improvements?.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.improvementSteps')}</p>
+              <div className="space-y-2">
+                <p className="ds-text-label text-theme-muted">{t('marketingAiPage.improvementSteps')}</p>
                 {score.improvements.map((imp: string, i: number) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-black/40 border border-white/5">
-                    <ArrowRight size={14} className="text-emerald-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-slate-300 font-bold">{imp}</p>
+                  <div key={i} className="flex items-start gap-2 p-3 rounded-lg border border-input">
+                    <ArrowRight size={14} className="text-emerald-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-theme-secondary">{imp}</p>
                   </div>
                 ))}
               </div>
@@ -492,53 +395,48 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
       </div>
 
       {/* Re-engagement Sequence */}
-      <div className={`${glass} rounded-[2.5rem] p-10 space-y-6`}>
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-            <RefreshCw size={20} className="text-violet-400" />
-          </div>
-          <div>
-            <h2 className="text-xl font-black italic uppercase tracking-tighter">{t('marketingAiPage.reEngagementSequence')}</h2>
-            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">{t('marketingAiPage.dripCampaignSubtitle')}</p>
-          </div>
-        </div>
+      <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+        <PanelHead icon={RefreshCw} title={t('marketingAiPage.reEngagementSequence')} subtitle={t('marketingAiPage.dripCampaignSubtitle')} />
 
-        <div className="flex gap-3 flex-wrap">
-          <ActionButton label={t('marketingAiPage.generateSequence')} icon={Rocket} loading={loading.retentionSequence}
-            color="bg-violet-500/20 text-violet-400 border border-violet-500/30"
-            onClick={() => load('retentionSequence', `/retention-sequence?niche=${niche}&platform=${platform}`)} />
-          <ActionButton label={t('marketingAiPage.buildCampaign')} icon={Star} loading={loading.retentionCampaign}
-            color="bg-white text-black"
-            onClick={() => load('retentionCampaign', '/retention-campaign', { method: 'POST', body: JSON.stringify({ niche, platform }) })} />
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="secondary" size="sm" loading={loading.retentionSequence}
+            leftIcon={!loading.retentionSequence ? <Rocket size={14} /> : undefined}
+            onClick={() => load('retentionSequence', `/retention-sequence?niche=${niche}&platform=${platform}`)}>
+            {t('marketingAiPage.generateSequence')}
+          </Button>
+          <Button variant="primary" size="sm" loading={loading.retentionCampaign}
+            leftIcon={!loading.retentionCampaign ? <Star size={14} /> : undefined}
+            onClick={() => load('retentionCampaign', '/retention-campaign', { method: 'POST', body: JSON.stringify({ niche, platform }) })}>
+            {t('marketingAiPage.buildCampaign')}
+          </Button>
         </div>
 
         {(error.retentionSequence || error.retentionCampaign) && <ErrorBlock msg={error.retentionSequence || error.retentionCampaign} />}
 
         {sequence && (
-          <div className="space-y-4">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">
+          <div className="space-y-3">
+            <p className="ds-text-label text-theme-muted">
               {sequence.sequenceName} · {sequence.estimatedReachRate}
             </p>
             {sequence.posts?.slice(0, 5).map((post: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-                className="p-4 rounded-2xl bg-black/60 border border-white/5 space-y-2">
+              <div key={i} className="p-4 rounded-xl border border-input space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-violet-400 uppercase tracking-widest">{t('marketingAiPage.postDayLabel', { post: post.postNumber, day: post.dayOffset })}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-black text-violet-400 uppercase">{post.psychTrigger}</span>
+                  <span className="ds-text-caption font-semibold text-primary">{t('marketingAiPage.postDayLabel', { post: post.postNumber, day: post.dayOffset })}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary">{post.psychTrigger}</span>
                 </div>
-                <p className="text-sm text-white font-bold leading-relaxed">{post.hook}</p>
-                <p className="text-xs text-[var(--text-dim)]">{post.cta}</p>
-              </motion.div>
+                <p className="text-sm text-theme-primary font-medium leading-relaxed">{post.hook}</p>
+                <p className="text-xs text-theme-muted">{post.cta}</p>
+              </div>
             ))}
           </div>
         )}
 
         {campaign && (
-          <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-2">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-emerald-400">{t('marketingAiPage.campaignPlanGenerated')}</p>
-            <p className="text-sm font-black text-white">{campaign.campaignName}</p>
-            <p className="text-xs text-[var(--text-dim)]">{t('marketingAiPage.campaignPostsScheduled', { posts: campaign.totalPosts, days: campaign.campaignDurationDays })}</p>
-            <p className="text-xs text-emerald-400 font-bold">{campaign.expectedOutcome}</p>
+          <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-1.5">
+            <p className="ds-text-label text-emerald-600 dark:text-emerald-400">{t('marketingAiPage.campaignPlanGenerated')}</p>
+            <p className="text-sm font-medium text-theme-primary">{campaign.campaignName}</p>
+            <p className="text-xs text-theme-muted">{t('marketingAiPage.campaignPostsScheduled', { posts: campaign.totalPosts, days: campaign.campaignDurationDays })}</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{campaign.expectedOutcome}</p>
           </div>
         )}
       </div>
@@ -553,89 +451,76 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
   const inspiration = data.inspiration || data.dashboard?.inspirationDrop
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-      <div className={`${glass} rounded-[2.5rem] p-10 space-y-8`}>
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <Sparkles size={20} className="text-amber-400" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter">{t('marketingAiPage.freshAnglesGenerator')}</h2>
-            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">{t('marketingAiPage.freshAnglesSubtitle')}</p>
-          </div>
-        </div>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+        <PanelHead icon={Sparkles} title={t('marketingAiPage.freshAnglesGenerator')} subtitle={t('marketingAiPage.freshAnglesSubtitle')} />
 
         <div className="space-y-3">
-          <label className="text-[10px] font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.topicOrIdea')}</label>
-          <input
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder={t('marketingAiPage.topicPlaceholder')}
-            className="w-full bg-black/60 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-700 font-bold focus:outline-none focus:border-amber-500/50"
-          />
-          <ActionButton label={t('marketingAiPage.generateFreshAngles')} icon={Lightbulb} loading={loading.freshAngles}
-            color="bg-amber-500 text-black hover:bg-amber-400"
-            onClick={() => load('freshAngles', `/fresh-angles?topic=${encodeURIComponent(topic || 'content creation')}&niche=${niche}`)} />
+          <FormField label={t('marketingAiPage.topicOrIdea')}>
+            <Input
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder={t('marketingAiPage.topicPlaceholder')}
+            />
+          </FormField>
+          <Button variant="primary" size="sm" loading={loading.freshAngles}
+            leftIcon={!loading.freshAngles ? <Lightbulb size={14} /> : undefined}
+            onClick={() => load('freshAngles', `/fresh-angles?topic=${encodeURIComponent(topic || 'content creation')}&niche=${niche}`)}>
+            {t('marketingAiPage.generateFreshAngles')}
+          </Button>
         </div>
 
         {error.freshAngles && <ErrorBlock msg={error.freshAngles} />}
 
         {freshAngles?.angles?.length > 0 && (
-          <div className="space-y-4">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.yourNovelAngles')}</p>
+          <div className="space-y-3">
+            <p className="ds-text-label text-theme-muted">{t('marketingAiPage.yourNovelAngles')}</p>
             {freshAngles.angles.map((angle: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                className="p-5 rounded-2xl bg-black/60 border border-amber-500/10 hover:border-amber-500/30 transition-all group">
+              <div key={i} className="p-4 rounded-xl border border-input">
                 <div className="flex items-start justify-between gap-4 mb-2">
-                  <span className="text-xs font-black text-amber-400 uppercase tracking-widest">{t('marketingAiPage.angleLabel', { num: i + 1, format: angle.format })}</span>
+                  <span className="ds-text-caption font-semibold text-primary">{t('marketingAiPage.angleLabel', { num: i + 1, format: angle.format })}</span>
                   {angle.originalityScore && (
-                    <span className="text-xs font-black text-[var(--text-dim)]">{t('marketingAiPage.originalityScore', { score: angle.originalityScore })}</span>
+                    <span className="ds-text-caption">{t('marketingAiPage.originalityScore', { score: angle.originalityScore })}</span>
                   )}
                 </div>
-                <p className="text-sm text-white font-bold leading-relaxed mb-2">{angle.angle}</p>
-                <p className="text-xs text-amber-300/70 italic">🎣 {angle.hook}</p>
-              </motion.div>
+                <p className="text-sm text-theme-primary font-medium leading-relaxed mb-2">{angle.angle}</p>
+                <p className="text-xs text-theme-muted">{angle.hook}</p>
+              </div>
             ))}
           </div>
         )}
       </div>
 
       {/* Inspiration Drop */}
-      <div className={`${glass} rounded-[2.5rem] p-10 space-y-6`}>
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-            <Flame size={20} className="text-rose-400" />
-          </div>
-          <div>
-            <h2 className="text-xl font-black italic uppercase tracking-tighter">{t('marketingAiPage.inspirationDrop')}</h2>
-            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">{t('marketingAiPage.inspirationSubtitle')}</p>
-          </div>
-        </div>
+      <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+        <PanelHead icon={Flame} title={t('marketingAiPage.inspirationDrop')} subtitle={t('marketingAiPage.inspirationSubtitle')} />
 
-        <ActionButton label={t('marketingAiPage.getNewDrop')} icon={Compass} loading={loading.inspiration}
-          color="bg-rose-500/20 text-rose-400 border border-rose-500/30"
-          onClick={() => load('inspiration', `/inspiration-drop?niche=${niche}&format=video`)} />
+        <Button variant="secondary" size="sm" loading={loading.inspiration}
+          leftIcon={!loading.inspiration ? <Compass size={14} /> : undefined}
+          onClick={() => load('inspiration', `/inspiration-drop?niche=${niche}&format=video`)}>
+          {t('marketingAiPage.getNewDrop')}
+        </Button>
 
         {(inspiration || data.dashboard?.inspirationDrop) && (() => {
           const drop = inspiration || data.dashboard?.inspirationDrop
           return (
-            <div className="space-y-5">
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-500/10 to-violet-500/10 border border-white/10 space-y-4">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-rose-400">{t('marketingAiPage.framework')}</p>
-                <p className="text-xl font-black text-white">{drop.framework}</p>
-                <p className="text-sm text-[var(--text-dim)] italic leading-relaxed">&ldquo;{drop.principle}&rdquo;</p>
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2">
+                <p className="ds-text-label text-primary">{t('marketingAiPage.framework')}</p>
+                <p className="text-lg font-semibold text-theme-primary">{drop.framework}</p>
+                <p className="text-sm text-theme-muted leading-relaxed">&ldquo;{drop.principle}&rdquo;</p>
               </div>
-              <div className="space-y-2">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.howToExecute')}</p>
-                <p className="text-sm text-slate-300 leading-relaxed font-bold">{drop.adaptedExecution || drop.execution}</p>
+              <div className="space-y-1.5">
+                <p className="ds-text-label text-theme-muted">{t('marketingAiPage.howToExecute')}</p>
+                <p className="text-sm text-theme-secondary leading-relaxed">{drop.adaptedExecution || drop.execution}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-black/60 border border-white/5 space-y-2">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.example')}</p>
-                <p className="text-sm text-[var(--text-dim)] leading-relaxed">{drop.example}</p>
+              <div className="p-4 rounded-xl border border-input space-y-1.5">
+                <p className="ds-text-label text-theme-muted">{t('marketingAiPage.example')}</p>
+                <p className="text-sm text-theme-muted leading-relaxed">{drop.example}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-amber-400 mb-2">{t('marketingAiPage.challengeToday')}</p>
-                <p className="text-sm text-white font-bold">{drop.challengeForToday}</p>
+              <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                <p className="ds-text-label text-amber-600 dark:text-amber-400 mb-2">{t('marketingAiPage.challengeToday')}</p>
+                <p className="text-sm text-theme-primary font-medium">{drop.challengeForToday}</p>
               </div>
             </div>
           )
@@ -652,99 +537,86 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
   const benchmarks = data.benchmarks || data.dashboard?.engagementBenchmarks
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-      <div className={`${glass} rounded-[2.5rem] p-10 space-y-8`}>
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-            <MessageCircle size={20} className="text-rose-400" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter">{t('marketingAiPage.engagementPrompts')}</h2>
-            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">{t('marketingAiPage.engagementPromptsSubtitle')}</p>
-          </div>
-        </div>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+        <PanelHead icon={MessageCircle} title={t('marketingAiPage.engagementPrompts')} subtitle={t('marketingAiPage.engagementPromptsSubtitle')} />
 
-        <ActionButton label={t('marketingAiPage.generatePrompts')} icon={Zap} loading={loading.engagementPrompts}
-          color="bg-rose-500 text-white hover:bg-rose-400"
-          onClick={() => load('engagementPrompts', `/engagement-prompts?platform=${platform}&niche=${niche}`)} />
+        <Button variant="primary" size="sm" loading={loading.engagementPrompts}
+          leftIcon={!loading.engagementPrompts ? <Zap size={14} /> : undefined}
+          onClick={() => load('engagementPrompts', `/engagement-prompts?platform=${platform}&niche=${niche}`)}>
+          {t('marketingAiPage.generatePrompts')}
+        </Button>
 
         {error.engagementPrompts && <ErrorBlock msg={error.engagementPrompts} />}
 
         {prompts?.prompts?.length > 0 && (
-          <div className="space-y-4">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.readyToUsePrompts')}</p>
+          <div className="space-y-3">
+            <p className="ds-text-label text-theme-muted">{t('marketingAiPage.readyToUsePrompts')}</p>
             {prompts.prompts.map((p: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                className="p-5 rounded-2xl bg-black/60 border border-rose-500/10 hover:border-rose-500/30 transition-all group">
+              <div key={i} className="p-4 rounded-xl border border-input">
                 <div className="flex items-center justify-between mb-2">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                    p.type === 'question' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                    p.type === 'poll' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                    p.type === 'challenge' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                    'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                  }`}>{p.type || 'cta'}</span>
+                  <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-semibold border',
+                    p.type === 'question' ? 'bg-primary/10 text-primary border-primary/20' :
+                    p.type === 'poll' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' :
+                    p.type === 'challenge' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
+                    'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                  )}>{p.type || 'cta'}</span>
                   {(p.estimatedLift || p.estimated_engagement_lift) && (
-                    <span className="text-xs font-black text-emerald-400">↑ {p.estimatedLift || p.estimated_engagement_lift}</span>
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">↑ {p.estimatedLift || p.estimated_engagement_lift}</span>
                   )}
                 </div>
-                <p className="text-sm text-white font-bold leading-relaxed">{p.text || p.prompt}</p>
-                {p.psychTrigger && <p className="text-xs text-[var(--text-dim)] mt-2">{t('marketingAiPage.triggerLabel', { trigger: p.psychTrigger })}</p>}
-              </motion.div>
+                <p className="text-sm text-theme-primary font-medium leading-relaxed">{p.text || p.prompt}</p>
+                {p.psychTrigger && <p className="text-xs text-theme-muted mt-2">{t('marketingAiPage.triggerLabel', { trigger: p.psychTrigger })}</p>}
+              </div>
             ))}
           </div>
         )}
       </div>
 
       {/* Benchmarks */}
-      <div className={`${glass} rounded-[2.5rem] p-10 space-y-6`}>
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-            <BarChart3 size={20} className="text-indigo-400" />
-          </div>
-          <div>
-            <h2 className="text-xl font-black italic uppercase tracking-tighter">{t('marketingAiPage.benchmarksTitle')}</h2>
-            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">{t('marketingAiPage.benchmarksSubtitle', { platform })}</p>
-          </div>
-        </div>
+      <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+        <PanelHead icon={BarChart3} title={t('marketingAiPage.benchmarksTitle')} subtitle={t('marketingAiPage.benchmarksSubtitle', { platform })} />
 
-        <ActionButton label={t('marketingAiPage.loadBenchmarks')} icon={Target} loading={loading.benchmarks}
-          color="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-          onClick={() => load('benchmarks', `/benchmarks?platform=${platform}`)} />
+        <Button variant="secondary" size="sm" loading={loading.benchmarks}
+          leftIcon={!loading.benchmarks ? <Target size={14} /> : undefined}
+          onClick={() => load('benchmarks', `/benchmarks?platform=${platform}`)}>
+          {t('marketingAiPage.loadBenchmarks')}
+        </Button>
 
         {(benchmarks) && (() => {
           const b = benchmarks.benchmarks || (benchmarks.data?.benchmarks)
           if (!b) return null
           const tiers = [
-            { label: 'Excellent', labelKey: 'tierExcellent', value: b.excellent, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-            { label: 'Good', labelKey: 'tierGood', value: b.good, color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
-            { label: 'Average', labelKey: 'tierAverage', value: b.average, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-            { label: 'Poor', labelKey: 'tierPoor', value: b.poor, color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20' },
+            { label: 'Excellent', labelKey: 'tierExcellent', value: b.excellent, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+            { label: 'Good', labelKey: 'tierGood', value: b.good, color: 'text-primary', bg: 'bg-primary/10 border-primary/20' },
+            { label: 'Average', labelKey: 'tierAverage', value: b.average, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+            { label: 'Poor', labelKey: 'tierPoor', value: b.poor, color: 'text-rose-500', bg: 'bg-rose-500/10 border-rose-500/20' },
           ]
           return (
-            <div className="space-y-4">
-              <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.engagementRateBenchmarks', { platform: platform.charAt(0).toUpperCase() + platform.slice(1) })}</p>
+            <div className="space-y-2">
+              <p className="ds-text-label text-theme-muted">{t('marketingAiPage.engagementRateBenchmarks', { platform: platform.charAt(0).toUpperCase() + platform.slice(1) })}</p>
               {tiers.map((tier) => (
-                <div key={tier.label} className={`flex items-center justify-between p-4 rounded-2xl border ${tier.bg}`}>
-                  <span className="text-sm font-black text-white uppercase tracking-widest">{t(`marketingAiPage.${tier.labelKey}`)}</span>
-                  <span className={`text-2xl font-black tabular-nums ${tier.color}`}>{tier.value}%+</span>
+                <div key={tier.label} className={cn('flex items-center justify-between p-3.5 rounded-lg border', tier.bg)}>
+                  <span className="text-sm font-medium text-theme-primary">{t(`marketingAiPage.${tier.labelKey}`)}</span>
+                  <span className={cn('text-xl font-bold tabular-nums', tier.color)}>{tier.value}%+</span>
                 </div>
               ))}
-              <p className="text-xs text-[var(--text-dim)] font-bold">{t('marketingAiPage.sourceLabel', { source: benchmarks.note || t('marketingAiPage.industryStandards') })}</p>
+              <p className="ds-text-caption">{t('marketingAiPage.sourceLabel', { source: benchmarks.note || t('marketingAiPage.industryStandards') })}</p>
             </div>
           )
         })()}
 
         {/* Quick engagement tips */}
-        <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
-          <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{t('marketingAiPage.activateYourAudience')}</p>
+        <div className="p-4 rounded-xl border border-input space-y-3">
+          <p className="ds-text-label text-theme-muted">{t('marketingAiPage.activateYourAudience')}</p>
           {[
-            { icon: Heart, text: t('marketingAiPage.engagementTip1'), color: 'text-rose-400' },
-            { icon: Users, text: t('marketingAiPage.engagementTip2'), color: 'text-indigo-400' },
-            { icon: Shield, text: t('marketingAiPage.engagementTip3'), color: 'text-emerald-400' },
+            { icon: Heart, text: t('marketingAiPage.engagementTip1') },
+            { icon: Users, text: t('marketingAiPage.engagementTip2') },
+            { icon: Shield, text: t('marketingAiPage.engagementTip3') },
           ].map((tip, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <tip.icon size={14} className={`${tip.color} mt-0.5 shrink-0`} />
-              <p className="text-xs text-[var(--text-dim)] font-bold leading-relaxed">{tip.text}</p>
+            <div key={i} className="flex items-start gap-2">
+              <tip.icon size={14} className="text-theme-muted mt-0.5 shrink-0" />
+              <p className="text-xs text-theme-secondary leading-relaxed">{tip.text}</p>
             </div>
           ))}
         </div>
@@ -753,7 +625,7 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
   )
 }
 
-// ── 5. OPTIMIZER PANEL ──
+// ── Optimizer Panel ──
 function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
   const { t } = useTranslation()
   const ld = loading['optimizer']
@@ -762,144 +634,129 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
   const [content, setContent] = useState('')
 
   return (
-    <div className="space-y-6">
-      <div className={`${glass} rounded-3xl p-8`}>
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/20 flex items-center justify-center">
-            <Target className="text-fuchsia-400" size={24} />
-          </div>
-          <div>
-            <h2 className="text-3xl font-black uppercase tracking-wide">{t('marketingAiPage.prePublishAnalyzer')}</h2>
-            <p className="text-[var(--text-dim)] font-medium">{t('marketingAiPage.prePublishSubtitle')}</p>
-          </div>
-        </div>
+    <div className="ds-surface-card p-5 sm:p-6 space-y-5">
+      <PanelHead icon={Target} title={t('marketingAiPage.prePublishAnalyzer')} subtitle={t('marketingAiPage.prePublishSubtitle')} />
 
-        <div className="space-y-4">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={t('marketingAiPage.contentPlaceholder')}
-            className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-white min-h-[160px] font-medium leading-relaxed focus:outline-none focus:border-fuchsia-500/50"
-          />
-          
-          <button
-            type="button"
-            onClick={() => load('optimizer', '/pre-publish-report', { method: 'POST', body: JSON.stringify({ contentText: content, platform, niche, format: 'post' }) })}
-            disabled={ld || !content.trim()}
-            className="w-full relative overflow-hidden group bg-white text-black font-black uppercase tracking-widest py-4 px-8 rounded-2xl hover:bg-slate-200 transition-colors disabled:opacity-50"
-          >
-            {ld ? (
-              <span className="flex items-center justify-center gap-3">
-                <RefreshCw className="animate-spin" size={18} /> {t('marketingAiPage.analyzingContent')}
-              </span>
-            ) : t('marketingAiPage.analyzeContent')}
-          </button>
-          {err && <p className="text-red-400 text-sm font-bold bg-red-500/10 p-4 rounded-xl">{err}</p>}
-        </div>
+      <div className="space-y-3">
+        <Textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={t('marketingAiPage.contentPlaceholder')}
+          className="min-h-[160px]"
+        />
+        <Button
+          variant="primary"
+          onClick={() => load('optimizer', '/pre-publish-report', { method: 'POST', body: JSON.stringify({ contentText: content, platform, niche, format: 'post' }) })}
+          disabled={!content.trim()}
+          loading={ld}
+          className="w-full"
+        >
+          {ld ? t('marketingAiPage.analyzingContent') : t('marketingAiPage.analyzeContent')}
+        </Button>
+        {err && <ErrorBlock msg={err} />}
+      </div>
 
-        {report && (
-          <div className="mt-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Verdict Header */}
-            <div className={`p-6 rounded-2xl border ${report.overallScore >= 75 ? 'bg-emerald-500/10 border-emerald-500/30' : report.overallScore >= 55 ? 'bg-amber-500/10 border-amber-500/30' : 'bg-rose-500/10 border-rose-500/30'} flex items-center justify-between`}>
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-dim)]">{t('marketingAiPage.preFlightVerdict')}</p>
-                <h3 className="text-2xl font-black mt-1">{report.verdict}</h3>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-dim)]">{t('marketingAiPage.score')}</p>
-                <div className={`text-4xl font-black ${report.overallScore >= 75 ? 'text-emerald-400' : report.overallScore >= 55 ? 'text-amber-400' : 'text-rose-400'}`}>
-                  {report.overallScore}/100
-                </div>
+      {report && (
+        <div className="space-y-6 ds-anim-fade-in">
+          {/* Verdict Header */}
+          <div className={cn('p-5 rounded-xl border flex items-center justify-between',
+            report.overallScore >= 75 ? 'bg-emerald-500/10 border-emerald-500/20' : report.overallScore >= 55 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-rose-500/10 border-rose-500/20')}>
+            <div>
+              <p className="ds-text-label text-theme-muted">{t('marketingAiPage.preFlightVerdict')}</p>
+              <h3 className="ds-text-h3 text-theme-primary mt-1">{report.verdict}</h3>
+            </div>
+            <div className="text-right">
+              <p className="ds-text-label text-theme-muted">{t('marketingAiPage.score')}</p>
+              <div className={cn('text-3xl font-bold', report.overallScore >= 75 ? 'text-emerald-600 dark:text-emerald-400' : report.overallScore >= 55 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-500')}>
+                {report.overallScore}/100
               </div>
             </div>
+          </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Hook Strength */}
-              <div className="bg-black/40 border border-white/5 p-6 rounded-2xl space-y-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-black uppercase tracking-wide flex items-center gap-2"><Flame size={18} className="text-orange-400"/> {t('marketingAiPage.hookAnalysis')}</h4>
-                  <span className="text-orange-400 font-bold">{report.hookAnalysis.score}/100</span>
-                </div>
-                <div className="space-y-2">
-                  {report.hookAnalysis.signals.map((s: any, i: number) => (
-                    <div key={i} className="flex gap-2 text-sm text-emerald-400 bg-emerald-500/5 p-2 rounded-lg">
-                      <CheckCircle2 size={16} className="shrink-0 mt-0.5" /> <span>{s.signal}</span>
-                    </div>
-                  ))}
-                  {report.hookAnalysis.weaknesses.map((w: string, i: number) => (
-                    <div key={i} className="flex gap-2 text-sm text-rose-400 bg-rose-500/5 p-2 rounded-lg">
-                      <AlertTriangle size={16} className="shrink-0 mt-0.5" /> <span>{w}</span>
-                    </div>
-                  ))}
-                </div>
-                {report.hookAnalysis.rewrites?.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <p className="text-xs font-bold uppercase text-[var(--text-dim)] mb-3">{t('marketingAiPage.aiRewritesToTest')}</p>
-                    <div className="space-y-3">
-                      {report.hookAnalysis.rewrites.map((r: any, i: number) => (
-                        <div key={i} className="bg-white/5 p-3 rounded-xl border border-white/5">
-                          <p className="text-xs text-orange-400 font-bold mb-1">{r.label}</p>
-                          <p className="text-sm">&quot;{r.text}&quot;</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Hook Strength */}
+            <div className="border border-input p-5 rounded-xl space-y-3">
+              <div className="flex justify-between items-center">
+                <h4 className="font-semibold text-theme-primary flex items-center gap-2"><Flame size={16} className="text-amber-500"/> {t('marketingAiPage.hookAnalysis')}</h4>
+                <span className="text-amber-600 dark:text-amber-400 font-semibold">{report.hookAnalysis.score}/100</span>
               </div>
-
-              {/* Platform Fit & Emotion */}
-              <div className="space-y-6">
-                <div className="bg-black/40 border border-white/5 p-6 rounded-2xl space-y-4">
-                  <h4 className="font-black uppercase tracking-wide flex items-center gap-2"><Activity size={18} className="text-blue-400"/> {t('marketingAiPage.algorithmFit', { platform })}</h4>
-                  <div className="space-y-2">
-                    {report.platformFit.risksDetected.length > 0 ? (
-                      report.platformFit.risksDetected.map((r: any, i: number) => (
-                        <div key={i} className="text-sm bg-rose-500/10 border border-rose-500/20 text-rose-300 p-3 rounded-xl">
-                          <strong>{t('marketingAiPage.riskPrefix')}</strong> {r.issue} <br/>
-                          <span className="text-white">{t('marketingAiPage.fixPrefix', { fix: r.fix })}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl flex items-center gap-2">
-                        <CheckCircle2 size={16} /> {t('marketingAiPage.cleanlyAligned')}
+              <div className="space-y-2">
+                {report.hookAnalysis.signals.map((s: any, i: number) => (
+                  <div key={i} className="flex gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 p-2 rounded-lg">
+                    <CheckCircle2 size={16} className="shrink-0 mt-0.5" /> <span>{s.signal}</span>
+                  </div>
+                ))}
+                {report.hookAnalysis.weaknesses.map((w: string, i: number) => (
+                  <div key={i} className="flex gap-2 text-sm text-rose-500 bg-rose-500/5 p-2 rounded-lg">
+                    <AlertTriangle size={16} className="shrink-0 mt-0.5" /> <span>{w}</span>
+                  </div>
+                ))}
+              </div>
+              {report.hookAnalysis.rewrites?.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-[var(--border-subtle)]">
+                  <p className="ds-text-label text-theme-muted mb-3">{t('marketingAiPage.aiRewritesToTest')}</p>
+                  <div className="space-y-3">
+                    {report.hookAnalysis.rewrites.map((r: any, i: number) => (
+                      <div key={i} className="bg-accent p-3 rounded-lg">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mb-1">{r.label}</p>
+                        <p className="text-sm text-theme-secondary">&quot;{r.text}&quot;</p>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div className="bg-black/40 border border-white/5 p-6 rounded-2xl space-y-4">
-                  <h4 className="font-black uppercase tracking-wide flex items-center gap-2"><Heart size={18} className="text-pink-400"/> {t('marketingAiPage.emotionalResonance')}</h4>
-                  <div className="flex gap-2 mb-3">
-                    <span className="px-3 py-1 bg-pink-500/20 text-pink-300 text-xs font-bold rounded-full uppercase tracking-wider">
-                      {t('marketingAiPage.dominantLabel', { emotion: report.emotionalResonance.dominantEmotion })}
-                    </span>
-                  </div>
-                  {report.emotionalResonance.missingHighImpactTriggers?.[0] && (
-                    <div className="text-sm bg-white/5 p-3 rounded-xl">
-                      <p className="text-[var(--text-dim)] mb-1">{t('marketingAiPage.missingTriggerLabel')} <strong>{report.emotionalResonance.missingHighImpactTriggers[0].trigger}</strong></p>
-                      <p className="text-white italic">&quot;{report.emotionalResonance.missingHighImpactTriggers[0].suggestion}&quot;</p>
+            {/* Platform Fit & Emotion */}
+            <div className="space-y-5">
+              <div className="border border-input p-5 rounded-xl space-y-3">
+                <h4 className="font-semibold text-theme-primary flex items-center gap-2"><Activity size={16} className="text-primary"/> {t('marketingAiPage.algorithmFit', { platform })}</h4>
+                <div className="space-y-2">
+                  {report.platformFit.risksDetected.length > 0 ? (
+                    report.platformFit.risksDetected.map((r: any, i: number) => (
+                      <div key={i} className="text-sm bg-rose-500/10 border border-rose-500/20 text-rose-500 p-3 rounded-lg">
+                        <strong>{t('marketingAiPage.riskPrefix')}</strong> {r.issue} <br/>
+                        <span className="text-theme-primary">{t('marketingAiPage.fixPrefix', { fix: r.fix })}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-3 rounded-lg flex items-center gap-2">
+                      <CheckCircle2 size={16} /> {t('marketingAiPage.cleanlyAligned')}
                     </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* Timings */}
-            <div className="bg-black/40 border border-white/5 p-6 rounded-2xl">
-              <h4 className="font-black uppercase tracking-wide mb-4 flex items-center gap-2"><Clock size={18} className="text-indigo-400"/> {t('marketingAiPage.optimalPostingWindows')}</h4>
-              <div className="flex flex-wrap gap-3">
-                {report.optimalPostingTimes.optimalWindows.map((tw: any, i: number) => (
-                  <div key={i} className="px-4 py-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-sm">
-                    <strong className="text-indigo-300">{tw.day}</strong> <span className="text-[var(--text-dim)]">@ {tw.time}</span>
+              <div className="border border-input p-5 rounded-xl space-y-3">
+                <h4 className="font-semibold text-theme-primary flex items-center gap-2"><Heart size={16} className="text-rose-500"/> {t('marketingAiPage.emotionalResonance')}</h4>
+                <div className="flex gap-2">
+                  <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                    {t('marketingAiPage.dominantLabel', { emotion: report.emotionalResonance.dominantEmotion })}
+                  </span>
+                </div>
+                {report.emotionalResonance.missingHighImpactTriggers?.[0] && (
+                  <div className="text-sm bg-accent p-3 rounded-lg">
+                    <p className="text-theme-muted mb-1">{t('marketingAiPage.missingTriggerLabel')} <strong>{report.emotionalResonance.missingHighImpactTriggers[0].trigger}</strong></p>
+                    <p className="text-theme-primary">&quot;{report.emotionalResonance.missingHighImpactTriggers[0].suggestion}&quot;</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
-            
           </div>
-        )}
-      </div>
+
+          {/* Timings */}
+          <div className="border border-input p-5 rounded-xl">
+            <h4 className="font-semibold text-theme-primary mb-3 flex items-center gap-2"><Clock size={16} className="text-primary"/> {t('marketingAiPage.optimalPostingWindows')}</h4>
+            <div className="flex flex-wrap gap-2">
+              {report.optimalPostingTimes.optimalWindows.map((tw: any, i: number) => (
+                <div key={i} className="px-3.5 py-2.5 bg-primary/10 border border-primary/20 rounded-lg text-sm">
+                  <strong className="text-primary">{tw.day}</strong> <span className="text-theme-muted">@ {tw.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-
