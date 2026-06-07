@@ -66,7 +66,9 @@ export interface AIDirectorSuggestion {
   id: string
   time: number
   duration?: number
-  type: 'cut' | 'broll' | 'hook' | 'transition' | 'audio' | 'effect'
+  // caption + cta are real overlay patches (see applySuggestion); color + pacing
+  // are global editor settings routed through dedicated callbacks, not this shape.
+  type: 'cut' | 'broll' | 'hook' | 'transition' | 'audio' | 'effect' | 'caption' | 'cta'
   label: string
   description: string
   confidence: number

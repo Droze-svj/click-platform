@@ -66,6 +66,8 @@ const editPlanMemorySchema = new mongoose.Schema({
 
 editPlanMemorySchema.index({ userId: 1, createdAt: -1 });
 editPlanMemorySchema.index({ userId: 1, fingerprint: 1 });
+// M5: TTL — rows self-expire 90 days after creation so memory can't grow without bound.
+editPlanMemorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 });
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -204,10 +206,11 @@ editPlanMemorySchema.statics.recordGenerated = async function recordGenerated(us
         directionId: typeof direction.id === 'string' ? direction.id : '',
         title: typeof direction.title === 'string' ? direction.title : '',
         vibe: typeof direction.vibe === 'string' ? direction.vibe : '',
-        status: 'generated',
         updatedAt: now,
       },
-      $setOnInsert: { userId, fingerprint, createdAt: now },
+      // M4: only set status on INSERT. Re-generating the same creative signature
+      // must NOT reset an existing chosen/dismissed/applied row back to 'generated'.
+      $setOnInsert: { userId, fingerprint, status: 'generated', createdAt: now },
     },
     { new: true, upsert: true, setDefaultsOnInsert: true },
   );

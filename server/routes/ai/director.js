@@ -4,6 +4,7 @@
 // powered by Claude Opus 4.8 and grounded in the creator's real learned style.
 
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 
 const auth = require('../../middleware/auth');
@@ -15,6 +16,17 @@ const { generateEditPlan } = require('../../services/aiDirectorService');
 const UserStyleProfile = require('../../models/UserStyleProfile');
 const SuggestionFeedback = require('../../models/SuggestionFeedback');
 const EditPlanMemory = require('../../models/EditPlanMemory');
+
+// M6: resolve a single canonical user id and cast to ObjectId once when it's a
+// valid ObjectId string, so every handler + downstream query (aiDirectorService,
+// EditPlanMemory) keys off the same value/type.
+function resolveUserId(req) {
+  const raw = req.user?._id || req.user?.id;
+  if (!raw) return raw;
+  if (raw instanceof mongoose.Types.ObjectId) return raw;
+  const str = String(raw);
+  return mongoose.Types.ObjectId.isValid(str) ? new mongoose.Types.ObjectId(str) : raw;
+}
 
 // ── POST /api/ai/director/plan ────────────────────────────────────────────
 // Body: { contentId, goals?, constraints? }
@@ -32,7 +44,7 @@ router.post('/plan', auth, asyncHandler(async (req, res) => {
   const owned = await guardOwnership(req, res, contentId);
   if (!owned) return;
 
-  const userId = req.user?._id || req.user?.id;
+  const userId = resolveUserId(req);
 
   try {
     const result = await generateEditPlan({ contentId, userId, goals, constraints });
@@ -57,13 +69,17 @@ router.post('/plan', auth, asyncHandler(async (req, res) => {
 // ── POST /api/ai/director/feedback ────────────────────────────────────────
 // Body: { contentId, directionId, action, step? }
 //   action ∈ choose_direction | apply_step | skip_step | dismiss_direction | tweak_step
-//   step   = { type, key?, facet? }  (optional; describes the acted-on step)
+//   step   = { type, value? }  (optional; describes the acted-on step)
+//     value = the CATEGORICAL value used for learning (transition style, color
+//             grade, caption style, pacing strategy, hook style). NEVER a param
+//             NAME, NEVER freeform hook copy. Omitted when there's no categorical
+//             value.
 //
 // Drives the learning loop: always logs a SuggestionFeedback row, nudges the
 // creator's UserStyleProfile weighted facets, and flips the EditPlanMemory
 // status. Every side-effect is best-effort and isolated so one failure can't
 // 500 the others — but we never fabricate: if a step has no resolvable
-// facet+key, we simply skip the profile nudge rather than invent one.
+// facet+value, we simply skip the profile nudge rather than invent one.
 
 // action → SuggestionFeedback.signal. (tweak counts as positive intent —
 // the creator engaged with the step — with the tweak noted in metadata.)
@@ -102,6 +118,22 @@ const STEP_STYLE_FACET = {
 const POSITIVE_NUDGE = 0.3;
 const NEGATIVE_NUDGE = -0.2;
 
+// H3 guard: tokens that are param NAMES (or generic noise), never categorical
+// learning values. If step.value matches one of these it's client garbage —
+// we must NOT learn it as a style key.
+const PARAM_NAME_TOKENS = new Set([
+  'text', 'keyword', 'duration', 'time', 'grade', 'style', 'strategy', 'speed',
+  'start', 'end', 'name', 'action', 'reason',
+]);
+
+// A usable categorical learning value: a non-empty string that isn't a param-name token.
+function categoricalValue(step) {
+  const v = step && typeof step.value === 'string' ? step.value.trim() : '';
+  if (!v) return null;
+  if (PARAM_NAME_TOKENS.has(v.toLowerCase())) return null;
+  return v;
+}
+
 router.post('/feedback', auth, asyncHandler(async (req, res) => {
   const { contentId, directionId, action, step } = req.body || {};
 
@@ -115,10 +147,13 @@ router.post('/feedback', auth, asyncHandler(async (req, res) => {
   const owned = await guardOwnership(req, res, contentId);
   if (!owned) return;
 
-  const userId = req.user?._id || req.user?.id;
+  const userId = resolveUserId(req); // M6
   const signal = ACTION_SIGNAL[action];
   const stepType = step && typeof step.type === 'string' ? step.type : null;
-  const stepKey = step && typeof step.key === 'string' && step.key ? step.key : null;
+  // H3: the learning key is the CATEGORICAL value (transition style / color
+  // grade / caption style / pacing strategy / hook style) — NOT a param name,
+  // NOT freeform hook copy. categoricalValue() drops empty + param-name garbage.
+  const stepValue = categoricalValue(step);
 
   // 1. Always log a SuggestionFeedback row (best-effort).
   try {
@@ -129,7 +164,8 @@ router.post('/feedback', auth, asyncHandler(async (req, res) => {
       userId,
       suggestionId: directionId,
       facet,
-      key: stepKey || directionId, // key is required; fall back to directionId
+      // key is required; use the categorical value, fall back to directionId.
+      key: stepValue || directionId,
       signal,
       contentId,
       metadata: { action, directionId, step: step || null },
@@ -139,19 +175,21 @@ router.post('/feedback', auth, asyncHandler(async (req, res) => {
   }
 
   // 2. Nudge the creator's UserStyleProfile when the step maps to a known
-  //    style facet + key. Positive actions upweight; skip/dismiss downweight.
-  if (stepType && stepKey && STEP_STYLE_FACET[stepType]) {
+  //    style facet AND carries a real categorical value. Positive actions
+  //    upweight; skip/dismiss downweight. The PARAM_NAME_TOKENS guard inside
+  //    categoricalValue() ensures a param-name can never become a learned key.
+  if (stepType && stepValue && STEP_STYLE_FACET[stepType]) {
     const { facet, weighted } = STEP_STYLE_FACET[stepType];
     const positive = action === 'apply_step' || action === 'choose_direction' || action === 'tweak_step';
     const isDown = action === 'skip_step' || action === 'dismiss_direction';
     try {
       if (positive && facet) {
-        await UserStyleProfile.recordPick(userId, facet, stepKey);
+        await UserStyleProfile.recordPick(userId, facet, stepValue);
       }
       if (positive) {
-        await UserStyleProfile.recordPerformance(userId, weighted, stepKey, POSITIVE_NUDGE);
+        await UserStyleProfile.recordPerformance(userId, weighted, stepValue, POSITIVE_NUDGE);
       } else if (isDown) {
-        await UserStyleProfile.recordPerformance(userId, weighted, stepKey, NEGATIVE_NUDGE);
+        await UserStyleProfile.recordPerformance(userId, weighted, stepValue, NEGATIVE_NUDGE);
       }
     } catch (err) {
       logger.warn('[AIDirector] style profile nudge failed', { error: err.message });
