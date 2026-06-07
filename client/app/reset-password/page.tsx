@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiPost, handleApiError } from '../../lib/api'
-import FormField from '../../components/FormField'
+import { Button, Card, FormField, Input, Icon } from '../../components/ui'
 import { CheckCircle2, ArrowLeft, Lock } from 'lucide-react'
 import ClickLogo from '../../components/ClickLogo'
 
@@ -53,24 +53,24 @@ function ResetPasswordInner() {
   }
 
   return (
-    <main className="min-h-screen bg-surface-page flex items-center justify-center px-4 font-inter">
-      <div className="w-full max-w-md space-y-8">
+    <main className="min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md space-y-6 ds-anim-rise">
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 text-xs font-bold text-surface-500 dark:text-slate-400 hover:text-primary-500 transition-colors"
+          className="inline-flex items-center gap-2 ds-text-label text-theme-muted hover:text-theme-primary transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to sign in
+          <Icon icon={ArrowLeft} size="sm" /> Back to sign in
         </Link>
 
-        <div className="bg-surface-card border-2 border-surface-100 dark:border-white/5 rounded-[3rem] p-10 shadow-2xl space-y-8">
+        <Card variant="elevated" className="p-8 sm:p-10 space-y-8">
           <div className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-surface-page dark:bg-black/40 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center">
+            <div className="mx-auto w-16 h-16 rounded-2xl ds-surface-subtle flex items-center justify-center">
               <ClickLogo size={36} />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-white tracking-tight">
+            <h1 className="ds-text-h1 text-theme-primary">
               {done ? 'Password updated' : 'Set a new password'}
             </h1>
-            <p className="text-sm text-surface-500 dark:text-slate-400 leading-relaxed">
+            <p className="ds-text-body text-theme-secondary">
               {done
                 ? 'Your password has been reset. Redirecting you to sign in…'
                 : 'Choose a new password for your Click account.'}
@@ -79,60 +79,82 @@ function ResetPasswordInner() {
 
           {done ? (
             <div className="space-y-6">
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
+              <div
+                role="status"
+                className="flex items-start gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
+              >
+                <Icon icon={CheckCircle2} size="md" className="text-emerald-500 mt-0.5 shrink-0" />
                 <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
                   All set — you can now sign in with your new password.
                 </p>
               </div>
-              <Link
-                href="/login"
-                className="block w-full text-center py-3.5 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-black text-sm font-bold hover:bg-primary-500 hover:text-white transition-colors"
-              >
-                Go to sign in
+              <Link href="/login" className="block">
+                <Button variant="primary" size="lg" className="w-full">
+                  Go to sign in
+                </Button>
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
               {error && (
-                <div className="px-4 py-3 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 text-xs">
+                <div
+                  role="alert"
+                  className="px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-sm font-medium text-rose-500"
+                >
                   {error}
                 </div>
               )}
-              <FormField
-                label="New password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={setPassword}
-                placeholder="At least 8 characters"
-                required
-                autoFocus
-              />
-              <FormField
-                label="Confirm new password"
-                name="confirm"
-                type="password"
-                value={confirm}
-                onChange={setConfirm}
-                placeholder="Re-enter your new password"
-                required
-              />
-              <button
+              <FormField label="New password" htmlFor="password" required>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  required
+                  autoFocus
+                  error={!!error}
+                  aria-invalid={!!error}
+                />
+              </FormField>
+              <FormField label="Confirm new password" htmlFor="confirm" required>
+                <Input
+                  id="confirm"
+                  name="confirm"
+                  type="password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="Re-enter your new password"
+                  autoComplete="new-password"
+                  required
+                  error={!!error}
+                  aria-invalid={!!error}
+                />
+              </FormField>
+              <Button
                 type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold disabled:opacity-50 transition-colors"
+                variant="primary"
+                size="lg"
+                loading={loading}
+                leftIcon={<Lock className="h-4 w-4" />}
+                className="w-full"
               >
-                <Lock className="w-4 h-4" />
                 {loading ? 'Updating…' : 'Update password'}
-              </button>
-              <p className="text-center text-xs text-surface-400 dark:text-slate-500">
+              </Button>
+              <p className="text-center text-sm text-theme-muted">
                 Need a new link?{' '}
-                <Link href="/forgot-password" className="text-primary-500 hover:underline">Request reset</Link>
+                <Link
+                  href="/forgot-password"
+                  className="font-medium text-primary hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Request reset
+                </Link>
               </p>
             </form>
           )}
-        </div>
+        </Card>
       </div>
     </main>
   )
@@ -140,7 +162,7 @@ function ResetPasswordInner() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-surface-page" />}>
+    <Suspense fallback={<main className="min-h-screen ds-bg-mesh" />}>
       <ResetPasswordInner />
     </Suspense>
   )

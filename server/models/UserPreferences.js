@@ -130,6 +130,13 @@ const userPreferencesSchema = new mongoose.Schema({
   // V6 Autonomous Marketing Intelligence & Continuous Learning
   marketingIntelligence: {
     niche: { type: String, default: 'General' },
+    // Captured at signup (2-step personalization). `goals` is the creator's
+    // primary objective(s); `platformFocus` is where they publish. Both feed
+    // the marketing brain so generations are tuned from the very first session.
+    // Stored as plain string arrays (whitelisted at the API boundary) to stay
+    // flexible as the catalogue grows.
+    goals: { type: [String], default: [] },
+    platformFocus: { type: [String], default: [] },
     historicalPerformanceMetrics: {
       avgRetentionRate: { type: Number, default: 0 },
       topPerformingHooks: [String],

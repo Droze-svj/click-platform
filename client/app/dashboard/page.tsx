@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   Hammer, Video, FileText, Send, Flame, Plug,
   Eye, Heart, Megaphone, Signal,
   Sparkles, ArrowRight, ArrowUpRight, Rocket, Clock,
-  LayoutGrid, RefreshCw, Target, Fingerprint, Link2,
+  LayoutGrid, RefreshCw, Target, Fingerprint, Link2, X,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { apiGet } from '../../lib/api'
@@ -74,6 +75,17 @@ interface StyleInsight {
   hint?: string | null
 }
 
+// Human-friendly labels for the niches Click supports — kept 1:1 with the
+// register page + NICHE_PLAYBOOKS. Used by the post-signup welcome banner to
+// greet the user with their real, chosen workspace (no fabricated copy).
+const NICHE_LABELS: Record<string, string> = {
+  health: 'Health & Fitness', finance: 'Finance & Money', education: 'Education',
+  technology: 'Technology', lifestyle: 'Lifestyle', business: 'Business',
+  entertainment: 'Entertainment', crypto: 'Crypto & Web3', parenting: 'Parenting',
+  beauty: 'Beauty & Skincare', wellness: 'Wellness', science: 'Science',
+  gaming: 'Gaming', other: 'creator',
+}
+
 function timeAgo(iso?: string | null): string {
   if (!iso) return ''
   const then = new Date(iso).getTime()
@@ -92,6 +104,15 @@ export default function DashboardHome() {
   const { user } = useAuth() as any
   const { t } = useTranslation()
   const { ref: gridRef, width } = useContainerWidth<HTMLDivElement>()
+  const searchParams = useSearchParams()
+
+  // Post-signup welcome banner — additive, dismissible. Shows only when the
+  // register flow routes here with ?welcome=1. The niche (when present) is the
+  // real one the user picked at signup, so we greet their actual workspace.
+  const isWelcome = searchParams?.get('welcome') === '1'
+  const welcomeNiche = (searchParams?.get('niche') || '').toLowerCase()
+  const welcomeNicheLabel = welcomeNiche && NICHE_LABELS[welcomeNiche] ? NICHE_LABELS[welcomeNiche] : ''
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false)
 
   const [loading, setLoading] = useState(true)
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null)
@@ -168,6 +189,49 @@ export default function DashboardHome() {
       <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden">
         {/* The layout already renders DashboardHeader (page title + breadcrumb),
             so we start straight into the greeting hero and bento content. */}
+
+        {/* Post-signup welcome — additive, dismissible. Reflects the real niche
+            the user chose at signup; falls back to honest generic copy when
+            niche is absent (e.g. the user skipped personalization). */}
+        {isWelcome && !welcomeDismissed && (
+          <Panel variant="bento" className="ds-anim-rise mb-6 p-5 sm:p-6 border-indigo-500/30 flex items-start gap-4">
+            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+              <Sparkles size={22} aria-hidden />
+            </span>
+            <div className="flex-1 min-w-0">
+              <h3 className="ds-text-h3 text-theme-primary">
+                {welcomeNicheLabel
+                  ? `Your ${welcomeNicheLabel} workspace is ready`
+                  : 'Welcome to Click'}
+              </h3>
+              <p className="ds-text-caption text-theme-muted mt-1">
+                {welcomeNicheLabel
+                  ? 'Click is tuned to your niche playbook. Finish setup or forge your first clip.'
+                  : 'Pick your niche to tune Click to your style, or jump straight into your first clip.'}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link href="/dashboard/onboarding">
+                  <Button variant="primary" size="md" rightIcon={<ArrowRight size={16} aria-hidden />}>
+                    {welcomeNicheLabel ? 'Open your playbook' : 'Finish setup'}
+                  </Button>
+                </Link>
+                <Link href="/dashboard/forge">
+                  <Button variant="secondary" size="md" leftIcon={<Hammer size={16} aria-hidden />}>
+                    Forge a clip
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWelcomeDismissed(true)}
+              aria-label="Dismiss welcome"
+              className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-theme-muted hover:bg-accent hover:text-theme-primary transition-colors"
+            >
+              <X size={18} aria-hidden />
+            </button>
+          </Panel>
+        )}
 
         <div ref={gridRef} className="ds-bento-grid">
 

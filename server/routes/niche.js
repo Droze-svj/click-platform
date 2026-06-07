@@ -1,8 +1,20 @@
 const express = require('express');
 const User = require('../models/User');
+const UserPreferences = require('../models/UserPreferences');
 const auth = require('../middleware/auth');
 const logger = require('../utils/logger');
+const { NICHE_PLAYBOOKS } = require('../services/marketingKnowledge');
 const router = express.Router();
+
+// Canonical niche list — derived directly from the marketing playbooks so the
+// API never drifts from the AI knowledge base. Every accepted niche maps 1:1
+// to a real Gemini playbook.
+const VALID_NICHES = Object.keys(NICHE_PLAYBOOKS);
+
+// Primary-goal + platform whitelists for signup personalization. Kept small and
+// fixed; anything outside the list is dropped rather than rejecting the signup.
+const VALID_GOALS = ['grow_audience', 'more_views', 'monetize', 'save_time', 'build_brand'];
+const VALID_PLATFORMS = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin', 'facebook'];
 
 // Get niche packs
 router.get('/packs', auth, async (req, res) => {
@@ -98,8 +110,7 @@ router.put('/select', auth, async (req, res) => {
       return res.status(400).json({ error: 'Niche is required' });
     }
 
-    const validNiches = ['health', 'finance', 'education', 'technology', 'lifestyle', 'business', 'entertainment', 'other'];
-    if (!validNiches.includes(niche)) {
+    if (!VALID_NICHES.includes(niche)) {
       return res.status(400).json({ error: 'Invalid niche' });
     }
 
@@ -228,6 +239,78 @@ router.put('/brand', auth, async (req, res) => {
       brandSettings: req.user.brandSettings
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Signup personalization ────────────────────────────────────────────────
+// Called by the register page's step 2 (immediately after the user is signed
+// in) to persist niche + primary goal(s) + platform focus in ONE authenticated
+// request. Niche becomes a single canonical source: it is written to BOTH
+// User.niche (used across the product) AND
+// UserPreferences.marketingIntelligence.niche (the canonical marketing-brain
+// niche) so generations are tuned from the very first session. Inputs are
+// whitelisted; unknown values are dropped rather than failing the request.
+router.put('/personalize', auth, async (req, res) => {
+  try {
+    const { niche, goals, platformFocus } = req.body || {};
+
+    // Niche is the one field we validate strictly — it drives the playbook.
+    const cleanNiche = typeof niche === 'string' && VALID_NICHES.includes(niche.toLowerCase().trim())
+      ? niche.toLowerCase().trim()
+      : null;
+
+    const cleanGoals = Array.isArray(goals)
+      ? [...new Set(goals.filter((g) => VALID_GOALS.includes(g)))]
+      : [];
+    const cleanPlatforms = Array.isArray(platformFocus)
+      ? [...new Set(platformFocus.filter((p) => VALID_PLATFORMS.includes(p)))]
+      : [];
+
+    if (!cleanNiche && cleanGoals.length === 0 && cleanPlatforms.length === 0) {
+      return res.status(400).json({ error: 'Nothing to personalize (provide a valid niche, goals, or platformFocus).' });
+    }
+
+    const userId = req.userId || req.user?._id || req.user?.id;
+
+    // 1) Persist niche to the User doc (the product-wide niche).
+    if (cleanNiche) {
+      if (req.user && typeof req.user.save === 'function') {
+        req.user.niche = cleanNiche;
+        await req.user.save();
+      } else {
+        const userDoc = await User.findById(userId);
+        if (userDoc) {
+          userDoc.niche = cleanNiche;
+          await userDoc.save();
+        }
+        if (req.user) req.user.niche = cleanNiche;
+      }
+    }
+
+    // 2) Mirror into UserPreferences.marketingIntelligence — the CANONICAL
+    //    marketing niche the AI strategist reads — and store goals + platforms.
+    const prefsUpdate = {};
+    if (cleanNiche) prefsUpdate['marketingIntelligence.niche'] = cleanNiche;
+    if (cleanGoals.length) prefsUpdate['marketingIntelligence.goals'] = cleanGoals;
+    if (cleanPlatforms.length) prefsUpdate['marketingIntelligence.platformFocus'] = cleanPlatforms;
+
+    if (Object.keys(prefsUpdate).length && userId) {
+      await UserPreferences.findOneAndUpdate(
+        { userId },
+        { $set: prefsUpdate, $setOnInsert: { userId } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    res.json({
+      message: 'Personalization saved',
+      niche: cleanNiche || req.user?.niche || null,
+      goals: cleanGoals,
+      platformFocus: cleanPlatforms,
+    });
+  } catch (error) {
+    logger.error('Failed to persist signup personalization', error);
     res.status(500).json({ error: error.message });
   }
 });

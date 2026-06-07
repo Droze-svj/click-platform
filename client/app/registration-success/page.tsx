@@ -3,6 +3,9 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, handleApiError } from '@/lib/api'
+import { Button, Card, Icon } from '@/components/ui'
+import { CheckCircle2, MailCheck, AlertCircle, Loader2, ArrowRight, User } from 'lucide-react'
+import ClickLogo from '@/components/ClickLogo'
 
 function RegistrationSuccessContent() {
   const router = useRouter()
@@ -31,14 +34,14 @@ function RegistrationSuccessContent() {
         setLoading(false)
         return
       }
-      
+
       const response = await apiGet<any>('/auth/me')
       setUser(response?.user || response?.data?.user)
       setError('')
     } catch (err: any) {
       const errorMessage = handleApiError(err)
       setError(`Failed to verify authentication: ${errorMessage}`)
-      
+
       if (process.env.NODE_ENV === 'development') {
         console.error('Auth check failed:', err)
       }
@@ -51,140 +54,154 @@ function RegistrationSuccessContent() {
     router.push('/dashboard')
   }
 
+  const Shell = ({ children }: { children: React.ReactNode }) => (
+    <main className="min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md ds-anim-rise">
+        <Card variant="elevated" className="p-8 sm:p-10 space-y-8">{children}</Card>
+      </div>
+    </main>
+  )
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="text-xl mb-4">Verifying your account...</div>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+      <Shell>
+        <div role="status" aria-live="polite" className="text-center space-y-5 py-6">
+          <div className="mx-auto w-16 h-16 rounded-2xl ds-surface-subtle flex items-center justify-center">
+            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+          </div>
+          <h1 className="ds-text-h2 text-theme-primary">Verifying your account…</h1>
+          <p className="ds-text-body text-theme-secondary">Hold tight while we confirm everything.</p>
         </div>
-      </div>
+      </Shell>
     )
   }
 
   // Show email verification message if required
   if (verificationRequired) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-          <div className="text-center mb-6">
-            <div className="text-6xl mb-4">📧</div>
-            <h1 className="text-3xl font-bold mb-2 text-purple-600">Check Your Email!</h1>
-            <p className="text-gray-600 mb-4">
-              We've sent a verification link to <strong>{email}</strong>
-            </p>
-            <p className="text-sm text-gray-500">
-              Please click the link in the email to verify your account and complete registration.
-            </p>
+      <Shell>
+        <div className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-2xl ds-surface-subtle flex items-center justify-center">
+            <Icon icon={MailCheck} size="xl" className="text-primary" />
           </div>
-
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-purple-800">
-              <strong>Didn't receive the email?</strong>
-            </p>
-            <ul className="text-xs text-purple-700 mt-2 space-y-1 list-disc list-inside">
-              <li>Check your spam/junk folder</li>
-              <li>Wait a few minutes for delivery</li>
-              <li>Make sure you entered the correct email address</li>
-            </ul>
-          </div>
-
-          <div className="space-y-3">
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 font-semibold text-lg"
-            >
-              Go to Login
-            </button>
-            <button
-              onClick={() => router.push('/register')}
-              className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300"
-            >
-              Back to Registration
-            </button>
-          </div>
+          <h1 className="ds-text-h1 text-theme-primary">Check your email</h1>
+          <p className="ds-text-body text-theme-secondary">
+            We&apos;ve sent a verification link to <strong>{email}</strong>
+          </p>
+          <p className="text-sm text-theme-muted">
+            Click the link in the email to verify your account and complete registration.
+          </p>
         </div>
-      </div>
+
+        <div className="rounded-xl ds-surface-subtle p-4 space-y-2">
+          <p className="text-sm font-semibold text-theme-primary">Didn&apos;t receive the email?</p>
+          <ul className="text-sm text-theme-secondary space-y-1 list-disc list-inside">
+            <li>Check your spam/junk folder</li>
+            <li>Wait a few minutes for delivery</li>
+            <li>Make sure you entered the correct email address</li>
+          </ul>
+        </div>
+
+        <div className="space-y-3">
+          <Button variant="primary" size="lg" className="w-full" onClick={() => router.push('/login')}>
+            Go to login
+          </Button>
+          <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/register')}>
+            Back to registration
+          </Button>
+        </div>
+      </Shell>
     )
   }
 
   if (error && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-          <h1 className="text-2xl font-bold mb-4 text-red-600">Registration Issue</h1>
-          <p className="text-gray-700 mb-4">{error}</p>
-          <div className="space-y-2">
-            <button
-              onClick={() => router.push('/register')}
-              className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
-            >
-              Try Registering Again
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
-            >
-              Go to Login
-            </button>
+      <Shell>
+        <div className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+            <Icon icon={AlertCircle} size="xl" className="text-rose-500" />
           </div>
+          <h1 className="ds-text-h1 text-theme-primary">Registration issue</h1>
+          <p className="ds-text-body text-theme-secondary">{error}</p>
         </div>
-      </div>
+        <div className="space-y-3">
+          <Button variant="primary" size="lg" className="w-full" onClick={() => router.push('/register')}>
+            Try registering again
+          </Button>
+          <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/login')}>
+            Go to login
+          </Button>
+        </div>
+      </Shell>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <div className="text-center mb-6">
-          <div className="text-6xl mb-4">✅</div>
-          <h1 className="text-3xl font-bold mb-2 text-green-600">Registration Successful!</h1>
-          <p className="text-gray-600">Your account has been created.</p>
+    <Shell>
+      <div className="text-center space-y-4">
+        <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+          <Icon icon={CheckCircle2} size="xl" className="text-emerald-500" />
         </div>
-
-        {user && (
-          <div className="bg-gray-50 p-4 rounded mb-6">
-            <h2 className="font-semibold mb-2">Account Details:</h2>
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>User ID:</strong> {user.id}</p>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <button
-            onClick={goToDashboard}
-            className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 font-semibold text-lg"
-          >
-            Go to Dashboard
-          </button>
-          <button
-            onClick={() => router.push('/login')}
-            className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300"
-          >
-            Go to Login Instead
-          </button>
-        </div>
-
-        <div className="mt-6 text-sm text-gray-500 text-center">
-          <p>Token stored in localStorage: ✅</p>
-          <p className="mt-2">If dashboard doesn't work, try logging in with your email and password.</p>
-        </div>
+        <h1 className="ds-text-h1 text-theme-primary">Registration successful</h1>
+        <p className="ds-text-body text-theme-secondary">Your account has been created.</p>
       </div>
-    </div>
+
+      {user && (
+        <div className="rounded-xl ds-surface-subtle p-4 space-y-2">
+          <div className="flex items-center gap-2 text-sm font-semibold text-theme-primary">
+            <Icon icon={User} size="sm" className="text-theme-muted" /> Account details
+          </div>
+          <dl className="space-y-1 text-sm text-theme-secondary">
+            <div className="flex justify-between gap-4">
+              <dt className="text-theme-muted">Name</dt>
+              <dd className="text-theme-primary font-medium truncate">{user.name}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-theme-muted">Email</dt>
+              <dd className="text-theme-primary font-medium truncate">{user.email}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-theme-muted">User ID</dt>
+              <dd className="text-theme-primary font-medium truncate">{user.id}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full"
+          onClick={goToDashboard}
+          rightIcon={<ArrowRight className="h-4 w-4" />}
+        >
+          Go to dashboard
+        </Button>
+        <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/login')}>
+          Go to login instead
+        </Button>
+      </div>
+
+      <p className="text-center text-sm text-theme-muted">
+        If the dashboard doesn&apos;t load, try signing in with your email and password.
+      </p>
+    </Shell>
   )
 }
 
 export default function RegistrationSuccess() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="text-xl mb-4">Loading...</div>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-        </div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <main className="min-h-screen ds-bg-mesh flex items-center justify-center px-4">
+          <div className="flex flex-col items-center gap-4 text-theme-secondary">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="ds-text-body">Loading…</span>
+          </div>
+        </main>
+      }
+    >
       <RegistrationSuccessContent />
     </Suspense>
   )
