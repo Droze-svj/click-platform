@@ -16,8 +16,10 @@
  */
 
 import Link from 'next/link'
-import { Compass, CheckCircle, Loader2, Calendar, Lightbulb, Sparkles, ArrowRight, ExternalLink } from 'lucide-react'
+import { CheckCircle, Loader2, Calendar, Lightbulb, Sparkles, ExternalLink, type LucideIcon } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { Panel, SectionHeader, Badge } from '../../../components/ui'
+import { cn } from '../../../lib/utils'
 
 type Status = 'shipped' | 'in-progress' | 'next-up' | 'exploring'
 
@@ -55,7 +57,7 @@ const ROADMAP: RoadmapItem[] = [
   { id: 'mobileCapture', title: 'Native mobile capture app', description: 'Record + auto-cut + queue from phone, sync to the desktop editor. Unlocks "1-tap publish from where you film."', status: 'exploring', category: 'platform' },
 ]
 
-const STATUS_META: Record<Status, { label: string; icon: any; classes: string }> = {
+const STATUS_META: Record<Status, { label: string; icon: LucideIcon; classes: string }> = {
   'shipped':      { label: 'Shipped',      icon: CheckCircle, classes: 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]' },
   'in-progress':  { label: 'In progress',  icon: Loader2,     classes: 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]' },
   'next-up':      { label: 'Next up',      icon: Calendar,    classes: 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]' },
@@ -76,75 +78,58 @@ export default function RoadmapPage() {
   const grouped = sections.map(s => ({ status: s, items: ROADMAP.filter(r => r.status === s) }))
 
   return (
-    <div className="min-h-screen relative z-10 pb-32 px-4 sm:px-6 lg:px-12 pt-12 max-w-[1400px] mx-auto space-y-12 font-inter bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--tint-fuchsia-bg)] border-2 border-[var(--tint-fuchsia-edge)] flex items-center justify-center">
-            <Compass size={28} className="text-[var(--tint-fuchsia-fg)]" />
-          </div>
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-fuchsia-fg)] italic">{t('roadmapPage.kicker')}</span>
-            <h1 className="text-3xl sm:text-4xl font-black text-[var(--text-main)] tracking-tight leading-tight mt-1">
-              {t('roadmapPage.title')}
-            </h1>
-            <p className="text-sm text-[var(--text-dim)] mt-1 max-w-xl">
-              {t('roadmapPage.subtitle')}
-            </p>
-          </div>
-        </div>
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] text-xs font-bold uppercase tracking-widest transition-colors"
-        >
-          {t('roadmapPage.backToDashboard')} <ArrowRight size={14} />
-        </Link>
-      </header>
+    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1400px] mx-auto overflow-x-hidden text-theme-primary">
+      <SectionHeader
+        as="h1"
+        title={t('roadmapPage.title')}
+        description={t('roadmapPage.subtitle')}
+        className="mb-10"
+      />
 
-      {grouped.map(group => {
-        if (group.items.length === 0) return null
-        const meta = STATUS_META[group.status]
-        const StatusIcon = meta.icon
-        return (
-          <section key={group.status}>
-            <h2 className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.4em] text-[var(--text-dim)] italic mb-5">
-              <span className={`px-3 py-1 rounded-full border text-[10px] flex items-center gap-2 ${meta.classes}`}>
-                <StatusIcon size={12} className={group.status === 'in-progress' ? 'animate-spin' : ''} />
-                {t(`roadmapPage.status_${group.status}`) || meta.label}
-              </span>
-              <span className="text-[var(--text-dim)]">· {group.items.length}</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {group.items.map(item => (
-                <article
-                  key={item.id}
-                  className="p-6 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:border-[var(--glass-border-strong)] transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="text-base font-bold text-[var(--text-main)] leading-tight">{t(`roadmapPage.item_${item.id}_title`) || item.title}</h3>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-dim)] flex-shrink-0">
-                      {t(`roadmapPage.category_${item.category}`) || CATEGORY_LABEL[item.category]}
-                    </span>
-                  </div>
-                  <p className="text-sm text-[var(--text-dim)] leading-relaxed">{t(`roadmapPage.item_${item.id}_description`) || item.description}</p>
-                  {item.href && (
-                    <Link
-                      href={item.href}
-                      className="inline-flex items-center gap-2 mt-4 text-[11px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-widest hover:text-[var(--text-main)] transition-colors"
-                    >
-                      {t('roadmapPage.open')} <ExternalLink size={11} />
-                    </Link>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
-        )
-      })}
+      <div className="space-y-12">
+        {grouped.map(group => {
+          if (group.items.length === 0) return null
+          const meta = STATUS_META[group.status]
+          const StatusIcon = meta.icon
+          return (
+            <section key={group.status}>
+              <div className="flex items-center gap-3 mb-5">
+                <span className={cn('inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold', meta.classes)}>
+                  <StatusIcon size={12} className={group.status === 'in-progress' ? 'animate-spin' : ''} aria-hidden />
+                  {t(`roadmapPage.status_${group.status}`) || meta.label}
+                </span>
+                <span className="ds-text-caption text-theme-muted tabular-nums">{group.items.length}</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {group.items.map(item => (
+                  <Panel key={item.id} variant="bento" className="flex flex-col">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h3 className="ds-text-h3 text-theme-primary leading-tight">{t(`roadmapPage.item_${item.id}_title`) || item.title}</h3>
+                      <Badge variant="secondary" className="flex-shrink-0">
+                        {t(`roadmapPage.category_${item.category}`) || CATEGORY_LABEL[item.category]}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-theme-muted leading-relaxed">{t(`roadmapPage.item_${item.id}_description`) || item.description}</p>
+                    {item.href && (
+                      <Link
+                        href={item.href}
+                        className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-primary hover:underline"
+                      >
+                        {t('roadmapPage.open')} <ExternalLink size={14} aria-hidden />
+                      </Link>
+                    )}
+                  </Panel>
+                ))}
+              </div>
+            </section>
+          )
+        })}
+      </div>
 
-      <footer className="pt-8 border-t border-[var(--glass-border)]">
-        <p className="text-xs text-[var(--text-dim)] flex items-center gap-2">
-          <Sparkles size={12} className="text-[var(--tint-indigo-fg)]" />
-          {t('roadmapPage.feedbackPrompt')} <a href="mailto:hello@click.example" className="text-[var(--tint-indigo-fg)] hover:underline">hello@click.example</a>.
+      <footer className="mt-12 pt-8 border-t border-[var(--border-subtle)]">
+        <p className="text-sm text-theme-muted flex items-center gap-2">
+          <Sparkles size={14} className="text-primary" aria-hidden />
+          {t('roadmapPage.feedbackPrompt')} <a href="mailto:hello@click.example" className="text-primary hover:underline">hello@click.example</a>.
         </p>
       </footer>
     </div>
