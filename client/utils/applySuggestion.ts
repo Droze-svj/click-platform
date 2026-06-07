@@ -135,6 +135,79 @@ function applyHook(
   }
 }
 
+function applyCaption(
+  s: AIDirectorSuggestion,
+  ctx: ApplySuggestionContext,
+): ApplySuggestionResult {
+  // A caption is a timed text overlay anchored at the suggestion's time,
+  // sitting in the mid-lower third (distinct from a hook, which lives at the
+  // very top in the first 3s). Mirrors applyHook's overlay shape exactly.
+  const text = s.description?.trim() || s.label?.trim() || 'Caption'
+  const dur = ctx.duration > 0 ? ctx.duration : 0
+  const start = dur > 0 ? Math.min(Math.max(0, s.time), dur) : Math.max(0, s.time)
+  const len = s.duration && s.duration > 0 ? s.duration : 2.5
+  const end = dur > 0 ? Math.min(start + len, dur) : start + len
+  const overlay: TextOverlay = {
+    id: genId('caption'),
+    text,
+    x: 50,
+    y: 72,
+    fontSize: 36,
+    color: '#ffffff',
+    fontFamily: 'Inter, sans-serif',
+    startTime: start,
+    endTime: end,
+    style: 'shadow' as any,
+    animationIn: 'fade' as any,
+    animationOut: 'fade' as any,
+    animationInDuration: 0.3,
+    animationOutDuration: 0.3,
+    layer: 9,
+  }
+  return {
+    segments: ctx.segments,
+    textOverlays: [...ctx.textOverlays, overlay],
+    changed: true,
+    description: `Added caption: "${text.slice(0, 40)}${text.length > 40 ? '…' : ''}"`,
+  }
+}
+
+function applyCta(
+  s: AIDirectorSuggestion,
+  ctx: ApplySuggestionContext,
+): ApplySuggestionResult {
+  // A CTA is a closing call-to-action overlay near the END of the video.
+  // Mirrors applyHook's overlay shape exactly.
+  const text = s.description?.trim() || s.label?.trim() || 'Follow for more'
+  const dur = ctx.duration > 0 ? ctx.duration : 0
+  const len = s.duration && s.duration > 0 ? s.duration : 3
+  const start = dur > 0 ? Math.max(0, dur - len) : Math.max(0, s.time)
+  const end = dur > 0 ? dur : start + len
+  const overlay: TextOverlay = {
+    id: genId('cta'),
+    text,
+    x: 50,
+    y: 50,
+    fontSize: 48,
+    color: '#ffffff',
+    fontFamily: 'Inter, sans-serif',
+    startTime: start,
+    endTime: end,
+    style: 'shadow' as any,
+    animationIn: 'pop' as any,
+    animationOut: 'fade' as any,
+    animationInDuration: 0.4,
+    animationOutDuration: 0.3,
+    layer: 10,
+  }
+  return {
+    segments: ctx.segments,
+    textOverlays: [...ctx.textOverlays, overlay],
+    changed: true,
+    description: `Added CTA: "${text.slice(0, 40)}${text.length > 40 ? '…' : ''}"`,
+  }
+}
+
 function applyTransition(
   s: AIDirectorSuggestion,
   ctx: ApplySuggestionContext,
@@ -223,6 +296,8 @@ export function applySuggestion(
   case 'cut': return applyCut(suggestion, ctx)
   case 'broll': return applyBroll(suggestion, ctx)
   case 'hook': return applyHook(suggestion, ctx)
+  case 'caption': return applyCaption(suggestion, ctx)
+  case 'cta': return applyCta(suggestion, ctx)
   case 'transition': return applyTransition(suggestion, ctx)
   case 'audio': return applyAudio(suggestion, ctx)
   case 'effect': return applyEffect(suggestion, ctx)

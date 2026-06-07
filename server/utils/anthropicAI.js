@@ -34,7 +34,9 @@ function getClient() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
   try {
-    client = new Anthropic({ apiKey });
+    // M1: explicit request timeout + a single retry so a stuck call can't hang
+    // for the SDK default (~10 min) × default retries. 90s per attempt, 1 retry.
+    client = new Anthropic({ apiKey, timeout: 90_000, maxRetries: 1 });
     logger.info(`🛰️ [AnthropicAI] Claude client initialized (Key: ${apiKey.substring(0, 6)}...${apiKey.slice(-4)})`);
   } catch (err) {
     logger.error('[AnthropicAI] Client init failed', { error: err?.message });
@@ -102,11 +104,17 @@ function robustParseJSON(text) {
  * One streaming Claude call. Returns the final message object (with
  * .content blocks) or throws on transport/API error.
  */
-async function streamMessage({ system, messages, model, maxTokens }) {
+async function streamMessage({ system, messages, model, maxTokens, timeout }) {
   const c = getClient();
   if (!c) throw new Error('Anthropic client unavailable');
 
-  const stream = c.messages.stream({
+  // M1: allow a per-call timeout override so the parse-retry shares the budget
+  // (it gets a tighter ceiling) rather than getting a fresh full 90s allowance.
+  const caller = (typeof timeout === 'number' && typeof c.withOptions === 'function')
+    ? c.withOptions({ timeout })
+    : c;
+
+  const stream = caller.messages.stream({
     model,
     max_tokens: maxTokens,
     system,
@@ -162,7 +170,9 @@ async function generateJSON(prompt, opts = {}) {
           'valid JSON — no prose, no markdown fences, no commentary. Same schema as requested.',
       },
     ];
-    const retryMsg = await streamMessage({ system, messages: retryMessages, model, maxTokens });
+    // Share the budget: the parse-retry gets a tighter ceiling (45s) so one
+    // request can't consume ~3 minutes across two full-budget attempts.
+    const retryMsg = await streamMessage({ system, messages: retryMessages, model, maxTokens, timeout: 45_000 });
     const retryText = extractText(retryMsg);
     const retryParsed = robustParseJSON(retryText);
     if (retryParsed) return { ok: true, data: retryParsed };

@@ -62,6 +62,8 @@ const SUGGESTION_ICON: Record<AIDirectorSuggestion['type'], React.ComponentType<
   transition: ArrowDownToLine,
   audio: Volume2,
   effect: Wand2,
+  caption: Type,
+  cta: Sparkles,
 }
 
 const IMPACT_TONE: Record<AIDirectorSuggestion['impact'], { bar: string; text: string; bg: string }> = {

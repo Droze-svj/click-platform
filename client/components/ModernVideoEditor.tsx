@@ -1332,6 +1332,56 @@ const ModernVideoEditor: React.FC<{
     )
   }, [setVideoFilters, setCaptionStyle, showToast, t])
 
+  /**
+   * AI Director — apply a color GRADE for real via the editor's global
+   * videoFilters setter. Maps the director's small grade set
+   * (cinematic|warm|cool|vibrant|moody|bw) onto the same VideoFilter presets
+   * the rest of the editor uses, so the preview matches.
+   */
+  const handleApplyColorGrade = useCallback((grade: string) => {
+    const g = (grade || '').toString().trim().toLowerCase()
+    // Director grade set → existing editor VideoFilter presets.
+    const GRADE_PRESETS: Record<string, Partial<VideoFilter>> = {
+      cinematic: { contrast: 120, brightness: 95, saturation: 90, temperature: 95 },
+      warm:      { contrast: 110, brightness: 102, saturation: 110, temperature: 120 },
+      cool:      { contrast: 110, brightness: 100, saturation: 105, temperature: 80 },
+      vibrant:   { contrast: 115, brightness: 102, saturation: 125 },
+      moody:     { contrast: 118, brightness: 90, saturation: 85, temperature: 92, vignette: 25 },
+      bw:        { contrast: 115, brightness: 100, saturation: 0 },
+    }
+    const preset = GRADE_PRESETS[g]
+    if (!preset) {
+      showToast(t('modernVideoEditor.aiDirector.gradeUnknown', { grade: g || '—' }), 'info')
+      return false
+    }
+    setVideoFilters((prev) => ({ ...prev, ...preset }))
+    showToast(t('modernVideoEditor.gradeLabel', { grade: g }), 'success')
+    return true
+  }, [setVideoFilters, showToast, t])
+
+  /**
+   * AI Director — apply a PACING strategy for real via the editor's global
+   * playbackSpeed setter. Maps strategy → speed (punchy≈1.1, dynamic≈1.05,
+   * steady≈1.0), or uses an explicit speed when the director provides one.
+   */
+  const handleApplyPacing = useCallback((strategy: string, speed?: number) => {
+    const s = (strategy || '').toString().trim().toLowerCase()
+    let next: number | null = null
+    if (typeof speed === 'number' && Number.isFinite(speed) && speed > 0) {
+      next = Math.min(2, Math.max(0.5, speed))
+    } else {
+      const STRATEGY_SPEED: Record<string, number> = { punchy: 1.1, dynamic: 1.05, steady: 1.0 }
+      if (s in STRATEGY_SPEED) next = STRATEGY_SPEED[s]
+    }
+    if (next == null) {
+      showToast(t('modernVideoEditor.aiDirector.pacingUnknown', { strategy: s || '—' }), 'info')
+      return false
+    }
+    setPlaybackSpeed(next)
+    showToast(t('modernVideoEditor.aiDirector.pacingApplied', { strategy: s || 'custom', speed: next }), 'success')
+    return true
+  }, [setPlaybackSpeed, showToast, t])
+
 
 
   const handleGenerateClips = useCallback(async () => {
@@ -1830,6 +1880,8 @@ const ModernVideoEditor: React.FC<{
         platform={'tiktok'}
         targetLanguage={targetLanguage}
         autoGenerate={aiDirectorAutoGen > 0}
+        onApplyColorGrade={handleApplyColorGrade}
+        onApplyPacing={handleApplyPacing}
         key={`director-${aiDirectorAutoGen}`}
       />
       case 'scripts': return <ScriptGeneratorView

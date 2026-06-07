@@ -35,6 +35,36 @@ const STEP_TYPES = new Set([
   'cut', 'broll', 'hook', 'transition', 'audio', 'effect', 'caption', 'color', 'pacing', 'cta',
 ]);
 
+// Allowed color grades + pacing strategies — kept in sync with the prompt
+// schema and client. The model is told to pick from these sets.
+const COLOR_GRADES = ['cinematic', 'warm', 'cool', 'vibrant', 'moody', 'bw'];
+const PACING_STRATEGIES = ['punchy', 'steady', 'dynamic'];
+
+/**
+ * M3: clamp a free-form object (req.body goals/constraints) down to a
+ * whitelisted set of keys, coercing each value to a short string. Prevents
+ * prompt-injection / token blowup from arbitrary client payloads.
+ */
+function sanitizeMap(obj, allowedKeys, maxLen = 120) {
+  const out = {};
+  if (!obj || typeof obj !== 'object') return out;
+  for (const key of allowedKeys) {
+    const v = obj[key];
+    if (v === undefined || v === null) continue;
+    // Numbers stay numbers (e.g. lengthTargetSeconds); everything else → string.
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      out[key] = v;
+    } else {
+      const s = String(v).slice(0, maxLen);
+      if (s.trim()) out[key] = s;
+    }
+  }
+  return out;
+}
+
+const GOAL_KEYS = ['goal', 'primary', 'vibe', 'lengthTargetSeconds', 'emphasis'];
+const CONSTRAINT_KEYS = ['niche', 'platform', 'targetLanguage'];
+
 /**
  * Summarize a creator's top-performing picks for one weighted facet into a
  * short human-readable line. Returns '' when there's nothing to report.
@@ -248,25 +278,25 @@ function buildPrompts({
     '',
     'HARD RULES:',
     hasSilence
-      ? '  - Any "cut" step MUST fall within one of the DETECTED SILENCE RANGES above.'
+      ? '  - Any "cut" step MUST use a { start, end } window taken from ONE of the DETECTED SILENCE RANGES above (both within [0, duration], start < end).'
       : '  - No silence data is available, so do NOT propose any silence-based "cut" steps.',
-    `  - Never use a "time" beyond the video duration (${duration.toFixed(2)}s) or below 0.`,
+    `  - Never use a "time", "start", or "end" beyond the video duration (${duration.toFixed(2)}s) or below 0.`,
     '  - The 2–3 directions must be MEANINGFULLY DIFFERENT from each other (different vibe, pacing, and step mix).',
     styleSection ? '  - Bias toward the creator\'s top-performing style shown above.' : '',
     blueprintSection ? '  - Strictly AVOID the blueprint\'s failing patterns.' : '',
     '',
     'STEP "type" must be one of: cut | broll | hook | transition | audio | effect | caption | color | pacing | cta.',
-    'STEP "params" must match the type:',
-    '  - hook: { "text": string, "fontSize"?: number }',
-    '  - broll: { "keyword": string, "track"?: number }',
+    'STEP "params" must match the type EXACTLY:',
+    '  - cut: { "start": number, "end": number, "reason"?: string }  (a silence window; both within [0,duration], start < end)',
+    '  - hook: { "text": string, "style"?: string }',
+    '  - broll: { "keyword": string }',
     '  - transition: { "style": string, "duration"?: number }',
-    '  - cut: { "reason": string }',
-    '  - audio: { "action": string }',
-    '  - effect: { "name": string, "intensity"?: number }',
-    '  - caption: { "style": string }',
-    '  - color: { "grade": string }',
-    '  - pacing: { "strategy": string }',
-    '  - cta: { "text": string }',
+    '  - audio: { "action"?: string }',
+    '  - effect: { "name"?: string }',
+    '  - caption: { "text": string, "style"?: string, "duration"?: number }',
+    `  - color: { "grade": string }  (grade MUST be one of: ${COLOR_GRADES.join(' | ')})`,
+    `  - pacing: { "strategy": string, "speed"?: number }  (strategy MUST be one of: ${PACING_STRATEGIES.join(' | ')}; speed optional 0.5–2)`,
+    '  - cta: { "text": string, "duration"?: number }',
     '',
     'Return EXACTLY this JSON shape (2–3 directions):',
     JSON.stringify({
@@ -306,8 +336,35 @@ function validateDirections(raw, duration) {
     steps.forEach((step, si) => {
       if (!step || typeof step !== 'object') return;
       if (!STEP_TYPES.has(step.type)) return;
-      let time = Number(step.time);
-      if (!Number.isFinite(time)) return; // drop steps with non-finite time
+      const rawParams = (step.params && typeof step.params === 'object') ? step.params : {};
+      const params = { ...rawParams };
+
+      // H1 (server): cut steps must carry a valid { start, end } silence window.
+      // Clamp into [0, duration]; drop the cut entirely if start>=end or window invalid.
+      if (step.type === 'cut') {
+        let start = Number(params.start);
+        let end = Number(params.end);
+        if (!Number.isFinite(start) || !Number.isFinite(end)) return; // no usable window → drop
+        if (start < 0) start = 0;
+        if (end < 0) end = 0;
+        if (duration > 0) {
+          if (start > duration) start = duration;
+          if (end > duration) end = duration;
+        }
+        if (!(start < end)) return; // empty/inverted window → drop
+        params.start = start;
+        params.end = end;
+      }
+
+      // "time" — derive from cut start when present, else from step.time.
+      let time = Number(step.type === 'cut' ? params.start : step.time);
+      if (!Number.isFinite(time)) {
+        if (step.type === 'cut') {
+          time = params.start; // already finite & clamped above
+        } else {
+          return; // drop non-cut steps with non-finite time
+        }
+      }
       // Clamp into [0, duration].
       if (time < 0) time = 0;
       if (duration > 0 && time > duration) time = duration;
@@ -322,7 +379,7 @@ function validateDirections(raw, duration) {
         id: typeof step.id === 'string' && step.id ? step.id : `dir-${di + 1}-step-${si + 1}`,
         type: step.type,
         time,
-        params: (step.params && typeof step.params === 'object') ? step.params : {},
+        params,
         reasoning: typeof step.reasoning === 'string' ? step.reasoning : '',
         confidence,
         impact,
@@ -358,6 +415,11 @@ async function generateEditPlan({ contentId, userId, goals = {}, constraints = {
   if (!contentId) {
     return { ok: false, error: 'contentId is required.' };
   }
+
+  // M3: clamp goals/constraints to whitelisted, length-capped values before they
+  // ever reach the prompt. Never pass arbitrary req.body through to Claude.
+  goals = sanitizeMap(goals, GOAL_KEYS);
+  constraints = sanitizeMap(constraints, CONSTRAINT_KEYS);
 
   // a. Load the Content doc. Not found → throw (per spec).
   const content = await Content.findById(contentId);

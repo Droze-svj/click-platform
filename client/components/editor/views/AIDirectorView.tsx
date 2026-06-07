@@ -15,9 +15,10 @@
  *  - Backend error strings (needs-config / no-transcript) are shown
  *    verbatim with a retry.
  *  - Step types the dispatcher supports (cut/broll/hook/transition/audio/
- *    effect) apply for real. caption/color/pacing/cta have no trivially
- *    correct setter wired here, so they are marked "preview only" with a
- *    disabled Apply and an honest note — we do NOT pretend they applied.
+ *    effect/caption/cta) apply for real via the timeline dispatcher.
+ *    color/pacing apply for real via the onApplyColorGrade/onApplyPacing
+ *    callbacks (global editor settings). A step is only "preview only" if its
+ *    real apply path isn't available — we never pretend something applied.
  */
 
 import React, { useCallback, useMemo, useRef, useState } from 'react'
@@ -82,9 +83,11 @@ interface PlanResponse {
 }
 
 // Step types the existing applySuggestion dispatcher can turn into a real
-// timeline edit. Everything else is preview-only.
-const APPLICABLE: Set<DirectorStepType> = new Set<DirectorStepType>([
-  'cut', 'broll', 'hook', 'transition', 'audio', 'effect',
+// timeline edit (now including caption + cta as real overlay patches).
+// color/pacing are NOT here — they route through onApplyColorGrade/onApplyPacing
+// and become applicable only when those callbacks are provided (see APPLICABLE).
+const TIMELINE_APPLICABLE: Set<DirectorStepType> = new Set<DirectorStepType>([
+  'cut', 'broll', 'hook', 'transition', 'audio', 'effect', 'caption', 'cta',
 ])
 
 const STEP_ICON: Record<DirectorStepType, React.ComponentType<{ className?: string }>> = {
@@ -120,6 +123,10 @@ export interface AIDirectorViewProps {
   targetLanguage?: string
   /** When true, auto-run Generate on mount (set by Make Viral button). */
   autoGenerate?: boolean
+  /** Apply a color grade globally (cinematic|warm|cool|vibrant|moody|bw). Returns whether it applied. */
+  onApplyColorGrade?: (grade: string) => boolean | void
+  /** Apply a pacing strategy globally (punchy|steady|dynamic). Returns whether it applied. */
+  onApplyPacing?: (strategy: string, speed?: number) => boolean | void
 }
 
 const GOALS = ['retention', 'shares', 'saves', 'watchTime'] as const
@@ -140,52 +147,97 @@ function stepToSuggestion(
   dirId: string,
   idx: number,
   edited: Record<string, any>,
+  genId: number,
 ): AIDirectorSuggestion {
   const p = { ...(step.params || {}), ...edited }
   // Pull a human description from the most relevant editable param so the
-  // dispatcher's text-derivation (hook copy, broll keyword) gets the user's
-  // edits. Falls back to reasoning.
+  // dispatcher's text-derivation (hook copy, broll keyword, caption/cta text)
+  // gets the user's edits. Falls back to reasoning.
   const desc =
     p.text ?? p.copy ?? p.keyword ?? p.query ?? p.label ?? step.reasoning ?? ''
-  const time = typeof (edited.time ?? step.time) === 'number' ? (edited.time ?? step.time) : 0
-  const duration =
-    typeof p.duration === 'number' ? p.duration : undefined
+
+  // H1 (client): a cut carries a { start, end } silence window. time = start,
+  // duration = end - start (>= 0.1). H2: guard every numeric with isFinite —
+  // NaN passes `typeof x === 'number'`, so never trust typeof for numbers.
+  let time = 0
+  let duration: number | undefined
+  if (step.type === 'cut') {
+    const start = Number(p.start)
+    const end = Number(p.end)
+    if (Number.isFinite(start)) time = start
+    if (Number.isFinite(start) && Number.isFinite(end)) {
+      duration = Math.max(0.1, end - start)
+    }
+  } else {
+    const t = Number(step.time)
+    time = Number.isFinite(t) ? t : 0
+    const d = Number(p.duration)
+    duration = Number.isFinite(d) ? d : undefined
+  }
+
   return {
-    id: `${dirId}-${step.type}-${idx}`,
-    time: Number(time) || 0,
+    // H4: a per-generation nonce keeps ids unique across regenerations, which
+    // reuse stable dir-1/dir-2 direction ids — otherwise the apply dedup would
+    // false-skip freshly-generated steps as "already applied".
+    id: `${dirId}-${step.type}-${idx}-g${genId}`,
+    time,
     duration,
     type: step.type as AIDirectorSuggestion['type'],
     label: step.type.toUpperCase(),
     description: String(desc),
-    confidence: typeof step.confidence === 'number' ? step.confidence : 0.8,
+    confidence: Number.isFinite(step.confidence as number) ? (step.confidence as number) : 0.8,
     impact: (step.impact as any) || 'medium',
   }
 }
 
-// Which single param is the "obvious" editable field for a given step type,
-// and whether it's a number. Used to render one inline editor per step.
+// L4: which single param is the "obvious" editable field for a given step type,
+// aligned with the backend schema (color→grade, pacing→strategy, caption→text,
+// cta→text, hook→text, transition→style/duration). `cut` is intentionally NOT
+// inline-editable — its { start, end } window comes from detected silence and an
+// inline single-field editor can't safely edit it (H1).
 function primaryParam(step: DirectorStep): { key: string; numeric: boolean } | null {
-  const p = step.params || {}
   switch (step.type) {
     case 'hook':
-      return { key: 'text' in p ? 'text' : 'copy' in p ? 'copy' : 'text', numeric: false }
+      return { key: 'text', numeric: false }
     case 'broll':
-      return { key: 'keyword' in p ? 'keyword' : 'query' in p ? 'query' : 'keyword', numeric: false }
+      return { key: 'keyword', numeric: false }
     case 'transition':
-      return { key: 'duration', numeric: true }
-    case 'cut':
-      return { key: 'time', numeric: true }
+      return { key: 'style', numeric: false }
     case 'caption':
-      return { key: 'text' in p ? 'text' : 'caption', numeric: false }
+      return { key: 'text', numeric: false }
     case 'cta':
-      return { key: 'text' in p ? 'text' : 'copy', numeric: false }
+      return { key: 'text', numeric: false }
     case 'color':
-      return { key: 'preset' in p ? 'preset' : 'look', numeric: false }
+      return { key: 'grade', numeric: false }
     case 'pacing':
-      return { key: 'cutFrequencySeconds' in p ? 'cutFrequencySeconds' : 'speed', numeric: true }
+      return { key: 'strategy', numeric: false }
+    case 'cut':
     default:
       return null
   }
+}
+
+// H3 (client): the CATEGORICAL value to send for learning per the feedback
+// contract — transition style, color grade, caption style, pacing strategy,
+// hook style. NOT a param name, NOT raw hook/cta copy. Returns undefined when
+// there is no categorical value (so the client omits `value`).
+function categoricalValue(
+  step: DirectorStep,
+  edited: Record<string, any>,
+): string | undefined {
+  const p = { ...(step.params || {}), ...edited }
+  let raw: any
+  switch (step.type) {
+    case 'transition': raw = p.style; break
+    case 'color': raw = p.grade; break
+    case 'pacing': raw = p.strategy; break
+    case 'caption': raw = p.style; break       // caption STYLE, not the text
+    case 'hook': raw = p.style; break          // hook STYLE, not the copy
+    default: return undefined                  // cut/broll/audio/effect/cta: no categorical value
+  }
+  if (typeof raw !== 'string') return undefined
+  const v = raw.trim()
+  return v ? v : undefined
 }
 
 const AIDirectorView: React.FC<AIDirectorViewProps> = ({
@@ -196,8 +248,25 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
   platform,
   targetLanguage,
   autoGenerate,
+  onApplyColorGrade,
+  onApplyPacing,
 }) => {
   const { t } = useTranslation()
+
+  // A step is applicable if the dispatcher handles it, OR it's a color/pacing
+  // step AND the corresponding global callback exists. color/pacing without a
+  // callback stay honestly preview-only.
+  const isApplicable = useCallback((type: DirectorStepType): boolean => {
+    if (TIMELINE_APPLICABLE.has(type)) return true
+    if (type === 'color') return !!onApplyColorGrade
+    if (type === 'pacing') return !!onApplyPacing
+    return false
+  }, [onApplyColorGrade, onApplyPacing])
+
+  // H4: per-generation nonce, bumped on each runGenerate so freshly-generated
+  // directions (which reuse stable dir-1/dir-2 ids) get unique suggestion ids
+  // and aren't false-skipped by the apply dedup.
+  const genIdRef = useRef(0)
 
   const [goal, setGoal] = useState<Goal>('retention')
   const [vibe, setVibe] = useState<Vibe>('balanced')
@@ -218,7 +287,9 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
   const stageTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const sendFeedback = useCallback(
-    async (directionId: string, action: string, step?: { type: string; key?: string; facet?: string }) => {
+    // H3: `step.value` is the CATEGORICAL learning value (never a param name,
+    // never raw copy). Omitted when there's no categorical value.
+    async (directionId: string, action: string, step?: { type: string; value?: string }) => {
       try {
         await apiPost('/ai/director/feedback', { contentId: videoId, directionId, action, step })
       } catch {
@@ -233,6 +304,12 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
       showToast(t('modernVideoEditor.noVideoLoaded'), 'error')
       return
     }
+    // H4: bump the per-generation nonce and clear the dispatcher's apply dedup
+    // so newly-generated directions (reusing stable dir-1/dir-2 ids) aren't
+    // false-skipped as "already applied".
+    genIdRef.current += 1
+    timelineActions.reset?.()
+
     setLoading(true)
     setError(null)
     setStageIdx(0)
@@ -250,7 +327,12 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
     }, 1400)
 
     const goals: Record<string, any> = { primary: goal, vibe }
-    if (lengthTarget.trim()) goals.lengthTargetSeconds = Number(lengthTarget) || undefined
+    // L2: allow an explicit numeric value (including 0). Only truly empty/NaN
+    // is treated as "no target" — `Number('0')||undefined` would have dropped 0.
+    if (lengthTarget.trim()) {
+      const n = Number(lengthTarget)
+      if (Number.isFinite(n)) goals.lengthTargetSeconds = n
+    }
     const constraints: Record<string, any> = {}
     if (niche) constraints.niche = niche
     if (platform) constraints.platform = platform
@@ -277,7 +359,7 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
       if (stageTimer.current) { clearInterval(stageTimer.current); stageTimer.current = null }
       setLoading(false)
     }
-  }, [videoId, goal, vibe, lengthTarget, niche, platform, targetLanguage, showToast, t])
+  }, [videoId, goal, vibe, lengthTarget, niche, platform, targetLanguage, showToast, t, timelineActions])
 
   // Auto-trigger when opened from Make Viral.
   const autoFired = useRef(false)
@@ -298,51 +380,98 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
 
   const handleApplyStep = useCallback((dir: DirectorDirection, step: DirectorStep, idx: number) => {
     const key = `${dir.id}::${idx}`
-    if (!APPLICABLE.has(step.type)) return
+    if (!isApplicable(step.type)) return
     const edited = edits[key] || {}
-    const suggestion = stepToSuggestion(step, dir.id, idx, edited)
-    const ok = timelineActions.apply(suggestion)
+    const value = categoricalValue(step, edited)
+
+    let ok = false
+    if (step.type === 'color' && onApplyColorGrade) {
+      // color is a GLOBAL setting — route through the callback, not the dispatcher.
+      const grade = String((edited.grade ?? step.params?.grade) ?? '')
+      ok = onApplyColorGrade(grade) !== false
+    } else if (step.type === 'pacing' && onApplyPacing) {
+      const strategy = String((edited.strategy ?? step.params?.strategy) ?? '')
+      const speedRaw = Number(edited.speed ?? step.params?.speed)
+      const speed = Number.isFinite(speedRaw) ? speedRaw : undefined
+      ok = onApplyPacing(strategy, speed) !== false
+    } else {
+      const suggestion = stepToSuggestion(step, dir.id, idx, edited, genIdRef.current)
+      ok = timelineActions.apply(suggestion)
+    }
+
     if (ok) {
       setDoneSteps((prev) => new Set(prev).add(key))
       const wasEdited = Object.keys(edited).length > 0
-      sendFeedback(dir.id, wasEdited ? 'tweak_step' : 'apply_step', {
-        type: step.type,
-        key: primaryParam(step)?.key,
-      })
+      // H3: send the categorical value (omit when none) — never a param name.
+      sendFeedback(dir.id, wasEdited ? 'tweak_step' : 'apply_step', { type: step.type, value })
     }
-    // If !ok the dispatcher already toasted an honest "nothing to apply" info.
-  }, [edits, timelineActions, sendFeedback])
+    // If !ok the dispatcher/callback already toasted an honest message.
+  }, [edits, timelineActions, sendFeedback, isApplicable, onApplyColorGrade, onApplyPacing])
 
   const handleSkipStep = useCallback((dir: DirectorDirection, step: DirectorStep, idx: number) => {
     const key = `${dir.id}::${idx}`
     setSkippedSteps((prev) => new Set(prev).add(key))
-    sendFeedback(dir.id, 'skip_step', { type: step.type })
-  }, [sendFeedback])
+    sendFeedback(dir.id, 'skip_step', { type: step.type, value: categoricalValue(step, edits[key] || {}) })
+  }, [sendFeedback, edits])
 
   const handleApplyAll = useCallback((dir: DirectorDirection) => {
     const list: AIDirectorSuggestion[] = []
-    const appliedKeys: string[] = []
+    const timelineKeys: string[] = []
+    // Global (color/pacing) steps apply directly via their callbacks, not the
+    // timeline dispatcher.
+    const globalApplied: string[] = []
+
     dir.steps.forEach((step, idx) => {
       const key = `${dir.id}::${idx}`
-      if (!APPLICABLE.has(step.type)) return
+      if (!isApplicable(step.type)) return
       if (doneSteps.has(key) || skippedSteps.has(key)) return
-      list.push(stepToSuggestion(step, dir.id, idx, edits[key] || {}))
-      appliedKeys.push(key)
+      const edited = edits[key] || {}
+
+      if (step.type === 'color' && onApplyColorGrade) {
+        const grade = String((edited.grade ?? step.params?.grade) ?? '')
+        if (onApplyColorGrade(grade) !== false) globalApplied.push(key)
+      } else if (step.type === 'pacing' && onApplyPacing) {
+        const strategy = String((edited.strategy ?? step.params?.strategy) ?? '')
+        const speedRaw = Number(edited.speed ?? step.params?.speed)
+        const speed = Number.isFinite(speedRaw) ? speedRaw : undefined
+        if (onApplyPacing(strategy, speed) !== false) globalApplied.push(key)
+      } else {
+        list.push(stepToSuggestion(step, dir.id, idx, edited, genIdRef.current))
+        timelineKeys.push(key)
+      }
     })
-    if (list.length === 0) {
+
+    if (list.length === 0 && globalApplied.length === 0) {
       showToast(t('modernVideoEditor.aiDirector.nothingToApply'), 'info')
       return
     }
-    const result = timelineActions.applyAll(list)
-    if (result.applied > 0) {
+
+    let timelineApplied = 0
+    if (list.length > 0) {
+      const result = timelineActions.applyAll(list)
+      timelineApplied = result.applied
+      if (result.applied > 0) {
+        setDoneSteps((prev) => {
+          const n = new Set(prev)
+          timelineKeys.forEach((k) => n.add(k))
+          return n
+        })
+      }
+    }
+    if (globalApplied.length > 0) {
       setDoneSteps((prev) => {
         const n = new Set(prev)
-        appliedKeys.forEach((k) => n.add(k))
+        globalApplied.forEach((k) => n.add(k))
         return n
       })
     }
-    sendFeedback(dir.id, 'choose_direction')
-  }, [doneSteps, skippedSteps, edits, timelineActions, showToast, t, sendFeedback])
+
+    // L1: don't double-count choose_direction (the header click already fires
+    // it). Apply-all records a distinct apply_step action gated on actual work.
+    if (timelineApplied > 0 || globalApplied.length > 0) {
+      sendFeedback(dir.id, 'apply_step', { type: 'direction' })
+    }
+  }, [doneSteps, skippedSteps, edits, timelineActions, showToast, t, sendFeedback, isApplicable, onApplyColorGrade, onApplyPacing])
 
   const handleDismiss = useCallback((dir: DirectorDirection) => {
     sendFeedback(dir.id, 'dismiss_direction')
@@ -351,7 +480,15 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
   }, [sendFeedback])
 
   const setEdit = useCallback((key: string, field: string, value: any) => {
-    setEdits((prev) => ({ ...prev, [key]: { ...(prev[key] || {}), [field]: value } }))
+    setEdits((prev) => {
+      const next = { ...(prev[key] || {}) }
+      // H2: undefined means "drop this edit" — remove the key so the merge in
+      // stepToSuggestion falls back to the original param value rather than
+      // overriding it with undefined/NaN.
+      if (value === undefined) delete next[field]
+      else next[field] = value
+      return { ...prev, [key]: next }
+    })
   }, [])
 
   const contextChips = useMemo(() => {
@@ -515,7 +652,7 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
         <div className="space-y-4">
           {directions.map((dir) => {
             const expanded = selectedDir === dir.id
-            const applicableCount = dir.steps.filter((s) => APPLICABLE.has(s.type)).length
+            const applicableCount = dir.steps.filter((s) => isApplicable(s.type)).length
             return (
               <div key={dir.id} className={`${glassStyle} rounded-3xl overflow-hidden`}>
                 {/* Direction header */}
@@ -579,13 +716,13 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
                           const key = `${dir.id}::${idx}`
                           const Icon = STEP_ICON[step.type] || Sparkles
                           const tone = IMPACT_TONE[step.impact || 'medium']
-                          const applicable = APPLICABLE.has(step.type)
+                          const applicable = isApplicable(step.type)
                           const done = doneSteps.has(key)
                           const skipped = skippedSteps.has(key)
                           const pp = primaryParam(step)
                           const editVal = edits[key]?.[pp?.key || ''] ??
-                            (pp ? (step.params?.[pp.key] ?? (pp.key === 'time' ? step.time : '')) : '')
-                          const conf = typeof step.confidence === 'number' ? step.confidence : 0.8
+                            (pp ? (step.params?.[pp.key] ?? '') : '')
+                          const conf = Number.isFinite(step.confidence as number) ? (step.confidence as number) : 0.8
 
                           return (
                             <div
@@ -649,9 +786,17 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
                                         value={editVal as any}
                                         title={t(`modernVideoEditor.aiDirector.param.${pp.key}`)}
                                         placeholder={t(`modernVideoEditor.aiDirector.param.${pp.key}`)}
-                                        onChange={(e) =>
-                                          setEdit(key, pp.key, pp.numeric ? Number(e.target.value) : e.target.value)
-                                        }
+                                        onChange={(e) => {
+                                          if (pp.numeric) {
+                                            // H2: never let NaN/empty corrupt a numeric edit.
+                                            // Drop the edit when it isn't finite (keeps the original value).
+                                            const n = Number(e.target.value)
+                                            if (Number.isFinite(n)) setEdit(key, pp.key, n)
+                                            else setEdit(key, pp.key, undefined)
+                                          } else {
+                                            setEdit(key, pp.key, e.target.value)
+                                          }
+                                        }}
                                         className="flex-1 min-w-0 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-fuchsia-500/50"
                                       />
                                     </div>
