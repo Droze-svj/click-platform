@@ -3066,3 +3066,234 @@ html {
     overflow-wrap: anywhere;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Click 2026 design system
+   ──────────────────────────────────────────────────────────────────────────
+   ADDITIVE foundation layer for the 2026 redesign (PR 1). Nothing above this
+   comment is modified. All classes here are namespaced with `ds-` to avoid
+   colliding with the pre-existing `.text-display`, `.bg-mesh`, `.hover-lift`,
+   etc. Built on the existing `--glass-*`, `--text-*` and accent tokens so
+   light/dark themes are inherited for free. Aesthetic target: expressive
+   glassmorphism, gradient-mesh depth, bento layouts and tasteful micro-motion.
+   Honors prefers-reduced-motion (block at the end of this section).
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ── Type scale ─────────────────────────────────────────────────────────────
+   Calm, readable, modern. Sizes use clamp() for fluid responsiveness. */
+.ds-text-display {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.ds-text-h1 {
+  font-size: clamp(1.875rem, 4vw, 2.5rem);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+.ds-text-h2 {
+  font-size: clamp(1.5rem, 3vw, 1.875rem);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+}
+.ds-text-h3 {
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.ds-text-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.ds-text-label {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+}
+.ds-text-caption {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+}
+
+/* ── Elevation / depth ──────────────────────────────────────────────────────
+   Layered soft shadows tuned for glass surfaces. */
+.ds-elev-1 {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 2px 8px rgba(15, 23, 42, 0.05);
+}
+.ds-elev-2 {
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.07),
+    0 8px 24px rgba(15, 23, 42, 0.08);
+}
+.ds-elev-3 {
+  box-shadow:
+    0 4px 8px rgba(15, 23, 42, 0.08),
+    0 18px 48px rgba(15, 23, 42, 0.12);
+}
+.dark .ds-elev-1 {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.dark .ds-elev-2 {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.dark .ds-elev-3 {
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Glass surfaces ─────────────────────────────────────────────────────────
+   Built on the existing --glass-* vars so they theme automatically. */
+.ds-surface-card {
+  background: var(--glass-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-2xl);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 2px 8px rgba(15, 23, 42, 0.05);
+}
+.dark .ds-surface-card {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.ds-surface-elevated {
+  background: var(--glass-surface-heavy);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-2xl);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.07),
+    0 8px 24px rgba(15, 23, 42, 0.08);
+}
+.dark .ds-surface-elevated {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.ds-surface-subtle {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+}
+
+/* ── Gradient mesh backgrounds ──────────────────────────────────────────────
+   Tasteful multi-radial using primary indigo + fuchsia at low alpha. */
+.ds-bg-mesh {
+  background-image:
+    radial-gradient(at 18% 22%, rgba(99, 102, 241, 0.16) 0px, transparent 55%),
+    radial-gradient(at 82% 18%, rgba(217, 70, 239, 0.13) 0px, transparent 55%),
+    radial-gradient(at 50% 92%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+    radial-gradient(at 88% 78%, rgba(99, 102, 241, 0.10) 0px, transparent 50%);
+}
+.ds-bg-mesh-soft {
+  background-image:
+    radial-gradient(at 20% 25%, rgba(99, 102, 241, 0.08) 0px, transparent 55%),
+    radial-gradient(at 80% 30%, rgba(217, 70, 239, 0.06) 0px, transparent 55%),
+    radial-gradient(at 55% 88%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+}
+
+/* ── Bento layout helpers ───────────────────────────────────────────────────
+   Auto-fitting grid; item spans collapse gracefully on narrow widths. */
+.ds-bento-grid {
+  display: grid;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-auto-rows: minmax(140px, auto);
+  grid-auto-flow: dense;
+}
+.ds-bento-2x1 {
+  grid-column: span 2;
+}
+.ds-bento-2x2 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.ds-bento-1x2 {
+  grid-row: span 2;
+}
+/* Collapse multi-column spans when there isn't room for two tracks. */
+@media (max-width: 600px) {
+  .ds-bento-2x1,
+  .ds-bento-2x2 {
+    grid-column: span 1;
+  }
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────────────
+   Short, purposeful entrance + hover utilities. */
+@keyframes ds-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes ds-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.ds-anim-rise {
+  animation: ds-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ds-anim-fade-in {
+  animation: ds-fade-in 0.4s ease both;
+}
+.ds-hover-lift {
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.ds-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 4px 8px rgba(15, 23, 42, 0.08),
+    0 18px 48px rgba(15, 23, 42, 0.12);
+}
+.dark .ds-hover-lift:hover {
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Reduced-motion: neutralize the new animations/transitions ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ds-anim-rise,
+  .ds-anim-fade-in {
+    animation: none !important;
+  }
+  .ds-hover-lift {
+    transition: none !important;
+  }
+  .ds-hover-lift:hover {
+    transform: none !important;
+  }
+}
+/* ── end Click 2026 design system ──────────────────────────────────────────── */
