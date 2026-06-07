@@ -38,6 +38,26 @@ const socialConnectionSchema = new mongoose.Schema({
   lastUsed: {
     type: Date
   },
+  // ── Account-level insight cache (populated by accountInsightsService) ──
+  // A lightweight, fast-read snapshot of the most recent account insights so
+  // the marketing brain/recommendations can read follower/audience signals
+  // without re-querying every platform. The authoritative time-series lives in
+  // the AudienceGrowth collection; these fields are just the latest values.
+  followerCount: {
+    type: Number,
+    default: null // null = never synced / unavailable (NOT zero)
+  },
+  // Most recent audience signals (e.g. demographics) where the platform API
+  // returns them. Mixed so each platform can store what it actually exposes;
+  // absent/unavailable platforms simply leave this null rather than fabricate.
+  audience: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  lastInsightsSync: {
+    type: Date,
+    default: null
+  },
   metadata: {
     type: mongoose.Schema.Types.Mixed
   },

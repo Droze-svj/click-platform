@@ -3,6 +3,7 @@
  * Handles posting videos to TikTok via the Content Posting API
  */
 
+const axios = require('axios');
 const logger = require('../utils/logger');
 
 // Surfaced to the cron + drawer so the UI can render a clear "coming
@@ -47,7 +48,66 @@ function getTikTokStatus() {
   };
 }
 
+/**
+ * Fetch account-level profile insights (follower count, profile stats).
+ *
+ * Uses the real TikTok Display API `user/info` endpoint. This requires the
+ * `user.info.stats` (and `user.info.profile`) scopes, which TikTok only grants
+ * after app review — sandbox/unapproved apps get a scope error here.
+ *
+ * Honesty contract: on ANY failure (missing token, missing scope, network)
+ * we return `{ available: false, reason }` with NO fabricated numbers, so the
+ * insights sync records "TikTok data unavailable" rather than fake followers.
+ * On success we return the real, normalized stats.
+ */
+async function getProfileInsights(authData) {
+  const accessToken = authData?.accessToken;
+  if (!accessToken || accessToken === 'dev-token') {
+    return { available: false, platform: 'tiktok', reason: 'No TikTok access token available' };
+  }
+
+  try {
+    const response = await axios.get('https://open.tiktokapis.com/v2/user/info/', {
+      params: {
+        fields: 'follower_count,following_count,likes_count,video_count',
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 10000,
+    });
+
+    const user = response.data?.data?.user || {};
+    // Guard: if the API responded but returned no usable stats, stay honest.
+    if (user.follower_count == null) {
+      return {
+        available: false,
+        platform: 'tiktok',
+        reason: 'TikTok returned no profile stats (likely missing user.info.stats scope)',
+      };
+    }
+
+    return {
+      available: true,
+      platform: 'tiktok',
+      followerCount: user.follower_count || 0,
+      followingCount: user.following_count || 0,
+      likesCount: user.likes_count || 0,
+      videoCount: user.video_count || 0,
+      // TikTok's Display API does not expose audience demographics; omit
+      // rather than invent.
+      fetchedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    const reason = error.response?.data?.error?.message || error.message;
+    logger.warn('[TikTok] getProfileInsights unavailable', { reason });
+    return { available: false, platform: 'tiktok', reason };
+  }
+}
+
 module.exports = {
   postToTikTok,
   getTikTokStatus,
+  getProfileInsights,
 };
