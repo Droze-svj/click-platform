@@ -1,28 +1,34 @@
 'use client'
 
 import React, { useEffect, useState, useCallback, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useSearchParams } from 'next/navigation'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
 import { useSocket } from '../../../hooks/useSocket'
 import { apiGet, apiPost, apiPut, apiDelete, clearApiCache } from '../../../lib/api'
 import {
-  LayoutList, LayoutGrid, BarChart3, Plus, GripVertical, ChevronDown, 
-  ChevronRight, Calendar, Zap, Trash2, CheckCircle2, ClipboardList, 
-  MessageSquare, Video, PhoneOff, Copy, Shield, Activity, Target, 
-  Cpu, Radio, Clock, Terminal, Network, Globe, Database, ArrowRight,
-  RefreshCw, X, Eye, Check, AlertTriangle, Info, ArrowLeft,
-  Fingerprint, Compass, Boxes, Layout, Layers, Timer, Monitor,
-  Accessibility, Box, Workflow, Share2, Scan, Link2, ZapOff, Anchor,
-  Wind, Ghost, ShieldCheck, ShieldAlert, ActivitySquare, Binary,
-  Orbit, GitBranch, Lock, Search
+  LayoutList, LayoutGrid, BarChart3, Plus, GripVertical, ChevronDown,
+  ChevronRight, Zap, Trash2, ClipboardList,
+  MessageSquare, Clock, Target, RefreshCw, X, Inbox,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
 import ToastContainer from '../../../components/ToastContainer'
-import { useTheme } from '../../../components/ThemeProvider'
 import { useToast } from '../../../contexts/ToastContext'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { cn } from '../../../lib/utils'
+import {
+  Panel,
+  Button,
+  IconButton,
+  Input,
+  Textarea,
+  Modal,
+  StatCard,
+  EmptyState,
+  SectionHeader,
+  Badge,
+} from '../../../components/ui'
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -57,13 +63,12 @@ interface TaskMessage {
 }
 
 export default function TasksPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id ?? null)
-  const { resolvedTheme } = useTheme()
   const { showToast } = useToast()
   const { t } = useTranslation()
+  const reduceMotion = useReducedMotion()
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
@@ -123,8 +128,8 @@ export default function TasksPage() {
   }
 
   if (loading) return (
-     <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page transition-colors duration-500" aria-busy="true" aria-label={t('tasksPage.loading')}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+     <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto space-y-6" aria-busy="true" aria-label={t('tasksPage.loading')}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
         <div className="space-y-3">
@@ -138,262 +143,220 @@ export default function TasksPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-36 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
         <ToastContainer />
-        
-        {/* Header */}
-        <header className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-surface-200 dark:border-surface-800 relative z-50">
-           <div className="flex items-center gap-5 w-full md:w-auto min-w-0">
-              <button type="button" onClick={() => router.push('/dashboard')} title={t('tasksPage.backToDashboard')} aria-label={t('tasksPage.backToDashboard')} className="w-12 h-12 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm">
-                <ArrowLeft size={20} />
-              </button>
-              <div className="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center shadow-sm flex-shrink-0">
-                <Target size={32} className="text-primary-600 dark:text-primary-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                 <div className="flex items-center gap-3 mb-1 flex-wrap">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                      {t('tasksPage.workflowHub')}
-                    </span>
-                    <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1.5 ${connected ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
-                        {connected ? t('tasksPage.statusStable') : t('tasksPage.statusDisconnected')}
-                    </div>
-                 </div>
-                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight mt-2 truncate text-surface-900 dark:text-white uppercase italic">{t('tasksPage.title')}</h1>
-              </div>
-           </div>
 
-           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-              <div className="flex items-center p-1.5 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 shadow-sm">
-                 {[
-                   { id: 'list', icon: LayoutList, label: t('tasksPage.viewList') },
-                   { id: 'kanban', icon: LayoutGrid, label: t('tasksPage.viewKanban') },
-                   { id: 'gantt', icon: BarChart3, label: t('tasksPage.viewTimeline') }
-                 ].map(m => (
-                   <button type="button" key={m.id} onClick={() => setView(m.id as ViewMode)}
-                     className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${view === m.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 shadow-md scale-105' : 'text-surface-500 hover:text-surface-900 dark:hover:text-surface-100'}`}
-                   >
-                     <m.icon size={14} /> <span className="hidden sm:inline">{m.label}</span>
-                   </button>
-                 ))}
+        {/* ── Header (global DashboardHeader provides the breadcrumb) ── */}
+        <SectionHeader
+          as="h1"
+          title={t('tasksPage.title')}
+          className="mb-6"
+          actions={
+            <>
+              <div className="flex items-center gap-1 p-1 rounded-lg ds-surface-subtle">
+                {[
+                  { id: 'list', icon: LayoutList, label: t('tasksPage.viewList') },
+                  { id: 'kanban', icon: LayoutGrid, label: t('tasksPage.viewKanban') },
+                  { id: 'gantt', icon: BarChart3, label: t('tasksPage.viewTimeline') }
+                ].map(m => {
+                  const MIcon = m.icon
+                  return (
+                    <button type="button" key={m.id} onClick={() => setView(m.id as ViewMode)}
+                      title={m.label}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-medium transition-colors',
+                        view === m.id ? 'bg-primary text-primary-foreground' : 'text-theme-secondary hover:text-theme-primary'
+                      )}
+                    >
+                      <MIcon size={14} aria-hidden /> <span className="hidden sm:inline">{m.label}</span>
+                    </button>
+                  )
+                })}
               </div>
-              
-              <button type="button" onClick={() => setSortByUrgency(!sortByUrgency)} 
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${sortByUrgency ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50 scale-105' : 'bg-surface-card border-surface-200 dark:border-surface-800 text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800'}`}
+              <Button
+                variant={sortByUrgency ? 'primary' : 'secondary'}
+                size="md"
+                leftIcon={<Zap size={16} aria-hidden />}
+                onClick={() => setSortByUrgency(!sortByUrgency)}
               >
-                 <Zap size={16} className={sortByUrgency ? 'animate-pulse' : ''} />
-                 <span>{t('tasksPage.urgencySort')}</span>
-              </button>
+                {t('tasksPage.urgencySort')}
+              </Button>
+              <IconButton variant="secondary" size="md" onClick={loadTasks} title={t('tasksPage.refreshTasks')} aria-label={t('tasksPage.refreshTasks')}>
+                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} aria-hidden />
+              </IconButton>
+            </>
+          }
+        />
 
-              <button type="button" onClick={loadTasks} title={t('tasksPage.refreshTasks')} aria-label={t('tasksPage.refreshTasks')} className="w-12 h-12 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 flex items-center justify-center hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-90 border-none">
-                <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
-              </button>
-           </div>
-        </header>
-
-        {/* Stats HUD */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-           {STATUSES.map((s, i) => (
-             <div key={s} className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 p-6 rounded-[2rem] shadow-xl relative overflow-hidden group hover:border-primary-500/40 transition-all duration-500">
-                <div className="flex items-center gap-3 mb-4">
-                   <div className={`w-2 h-2 rounded-full ${s === 'done' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`} />
-                   <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] italic">{t(`tasksPage.statusLabels.${s}`)}</p>
-                </div>
-                <div className="flex items-end justify-between">
-                   <h4 className="text-4xl font-black text-surface-900 dark:text-white tracking-tight italic">{byStatus(s).length}</h4>
-                   <div className="w-12 h-12 rounded-2xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                      <Target size={20} className="text-surface-400 group-hover:text-primary-500 transition-colors" />
-                   </div>
-                </div>
-                <div className="h-1.5 w-full bg-surface-page dark:bg-surface-800 mt-6 rounded-full overflow-hidden shadow-inner">
-                   <motion.div initial={{ width: 0 }} animate={{ width: `${(byStatus(s).length / Math.max(tasks.length, 1)) * 100}%` }} transition={{ duration: 1 }} className={`h-full ${s === 'done' ? 'bg-emerald-500' : 'bg-primary-500'}`} />
-                </div>
-             </div>
-           ))}
+        {/* ── Stats (real counts per status) ── */}
+        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          {STATUSES.map((s) => (
+            <StatCard
+              key={s}
+              label={t(`tasksPage.statusLabels.${s}`)}
+              value={byStatus(s).length}
+              icon={Target}
+            />
+          ))}
         </section>
 
-        {/* Main Workspace */}
-        <main className="relative z-10 min-h-[60vh]">
-           <AnimatePresence mode="wait">
-              {view === 'kanban' && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
-                   {STATUSES.map((s, idx) => (
-                     <div key={s} onDragOver={e => { e.preventDefault(); setDragOverStatus(s) }} onDragLeave={() => setDragOverStatus(null)} onDrop={e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (id) updateTask(id, { status: s }); setDragOverStatus(null) }}
-                       className={`flex flex-col rounded-[2.5rem] border transition-all duration-500 min-h-[700px] shadow-xl relative group/lane ${dragOverStatus === s ? 'bg-primary-500/5 border-primary-500/30' : 'bg-surface-card/40 border-surface-200 dark:border-surface-800'}`}
-                     >
-                        <header className="p-8 border-b border-surface-200 dark:border-surface-800 bg-surface-card/60 rounded-t-[2.5rem] backdrop-blur-3xl shadow-sm">
-                           <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                 <div className={`w-3 h-3 rounded-full ${s === 'done' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`} />
-                                 <h3 className="text-xs font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic">{t(`tasksPage.statusLabels.${s}`)}</h3>
-                              </div>
-                              <span className="px-3 py-1 rounded-lg bg-surface-page dark:bg-surface-900 border border-surface-100 dark:border-surface-800 text-[11px] font-black text-surface-500 dark:text-surface-400 tabular-nums shadow-inner">{byStatus(s).length}</span>
-                           </div>
-                        </header>
-                        <div className="p-6 flex-1 space-y-6 overflow-y-auto custom-scrollbar bg-surface-page/5">
-                           {byStatus(s).map(task => (
-                             <TaskCard key={task._id} task={task} onSelect={() => setSelectedTask(task)} onDragStart={() => setDraggedTaskId(task._id)} />
-                           ))}
-                           {byStatus(s).length === 0 && (
-                             <div className="h-full flex flex-col items-center justify-center py-32 opacity-10">
-                               <Ghost size={64} className="mb-6" />
-                               <p className="text-xs font-black uppercase tracking-[0.4em] italic">{t('tasksPage.emptyNode')}</p>
-                             </div>
-                           )}
-                        </div>
-                     </div>
-                   ))}
-                </motion.div>
-              )}
-
-              {view === 'list' && (
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3rem] p-8 shadow-2xl transition-all duration-500">
-                   <header className="hidden md:flex items-center gap-8 px-6 py-4 mb-6 border-b border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic">
-                      <div className="w-10" />
-                      <div className="flex-1">{t('tasksPage.colTaskMatrix')}</div>
-                      <div className="w-48">{t('tasksPage.colTemporalLimit')}</div>
-                      <div className="w-48 text-right">{t('tasksPage.colActions')}</div>
-                   </header>
-                   <div className="space-y-3 max-h-[800px] overflow-y-auto pr-4 custom-scrollbar">
-                      {rootNodes.map(task => (
-                        <TaskRow key={task._id} task={task} expanded={expandedTasks.has(task._id)} expandedTasks={expandedTasks} expandToggle={(id: string) => setExpandedTasks(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelect={setSelectedTask} onAddSub={(p: string) => setAddingForParent(p)} onDelete={deleteTask} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} depth={0} />
-                      ))}
-                      {rootNodes.length === 0 && (
-                        <div className="py-48 text-center opacity-10 flex flex-col items-center gap-8">
-                          <Wind size={80} />
-                          <h3 className="text-4xl font-black uppercase italic tracking-[0.2em]">{t('tasksPage.nullArchive')}</h3>
-                        </div>
-                      )}
-                   </div>
-                </motion.div>
-              )}
-
-              {view === 'gantt' && (
-                <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3rem] p-10 shadow-2xl overflow-x-auto transition-all duration-500">
-                   <div className="min-w-[1400px] space-y-10">
-                      <header className="flex items-center gap-10 mb-10 border-b border-surface-100 dark:border-surface-800 pb-8 px-6">
-                         <div className="w-96 text-xs font-black text-surface-400 uppercase tracking-[0.4em] italic">{t('tasksPage.latticeAnchorNode')}</div>
-                         <div className="flex-1 flex justify-between text-[11px] font-black text-surface-300 dark:text-surface-500 uppercase tracking-[0.6em] italic px-16 relative">
-                            <span>{t('tasksPage.pastStrata')}</span>
-                            <div className="flex flex-col items-center relative z-10">
-                               <div className="w-0.5 h-10 bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,1)]" />
-                               <span className="mt-2 text-primary-500 font-black tracking-widest scale-110">{t('tasksPage.presentPulse')}</span>
-                            </div>
-                            <span>{t('tasksPage.futureTrajectory')}</span>
-                            <div className="absolute top-5 left-0 right-0 h-px bg-surface-100 dark:bg-surface-800/50 -z-0" />
-                         </div>
-                      </header>
-                      <div className="space-y-4 max-h-[800px] overflow-y-auto pr-6 custom-scrollbar">
-                         {rootNodes.slice(0, 50).map((task, idx) => {
-                           const now = new Date(), min = new Date(now.getFullYear(), now.getMonth(), -20), max = new Date(now.getFullYear(), now.getMonth() + 2, 20)
-                           const start = task.startDate ? new Date(task.startDate) : new Date(task.createdAt), end = task.dueDate ? new Date(task.dueDate) : new Date(start.getTime() + 7 * 86400000)
-                           const left = ((start.getTime() - min.getTime()) / (max.getTime() - min.getTime())) * 100
-                           const width = Math.max(2, ((end.getTime() - start.getTime()) / (max.getTime() - min.getTime())) * 100)
-                           return (
-                             <div key={task._id} className="flex items-center gap-10 group h-14 hover:bg-surface-page dark:hover:bg-primary-500/5 rounded-2xl transition-all duration-500 px-6 border border-transparent hover:border-surface-100 dark:hover:border-primary-500/10">
-                                <div className="w-96 truncate text-[13px] font-black text-surface-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-all flex items-center gap-4 italic uppercase tracking-tight">
-                                   <div className={`w-3 h-3 rounded-full ${task.priority === 'urgent' ? 'bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`} />
-                                   {task.title}
-                                </div>
-                                <div className="flex-1 h-10 bg-surface-page dark:bg-surface-950/50 rounded-full relative overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner group-hover:bg-surface-card transition-colors">
-                                   <div 
-                                     className={`absolute h-4 top-3 rounded-full shadow-lg border border-white/10 group/bar transition-all duration-500 hover:h-6 hover:top-2 hover:brightness-110 ${task.status === 'done' ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]'}`} 
-                                     style={{ left: `${Math.max(0, left)}%`, width: `${Math.min(width, 100 - left)}%` }} 
-                                   />
-                                </div>
-                             </div>
-                           )
-                         })}
+        {/* ── Main Workspace ── */}
+        <main className="min-h-[60vh]">
+          {view === 'kanban' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              {STATUSES.map((s) => (
+                <div key={s}
+                  onDragOver={e => { e.preventDefault(); setDragOverStatus(s) }}
+                  onDragLeave={() => setDragOverStatus(null)}
+                  onDrop={e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (id) updateTask(id, { status: s }); setDragOverStatus(null) }}
+                  className={cn(
+                    'flex flex-col rounded-2xl border transition-colors min-h-[500px]',
+                    dragOverStatus === s ? 'border-primary bg-primary/5' : 'border-[var(--border-subtle)] ds-surface-subtle'
+                  )}
+                >
+                  <header className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+                    <div className="flex items-center gap-2">
+                      <span className={cn('h-2 w-2 rounded-full', s === 'done' ? 'bg-emerald-500' : 'bg-primary')} />
+                      <h3 className="ds-text-label text-theme-primary">{t(`tasksPage.statusLabels.${s}`)}</h3>
+                    </div>
+                    <Badge variant="secondary" className="tabular-nums">{byStatus(s).length}</Badge>
+                  </header>
+                  <div className="p-3 flex-1 space-y-3 overflow-y-auto">
+                    {byStatus(s).map(task => (
+                      <TaskCard key={task._id} task={task} onSelect={() => setSelectedTask(task)} onDragStart={() => setDraggedTaskId(task._id)} reduceMotion={reduceMotion} />
+                    ))}
+                    {byStatus(s).length === 0 && (
+                      <div className="h-full flex flex-col items-center justify-center py-16 text-theme-muted opacity-50">
+                        <Inbox size={28} className="mb-2" aria-hidden />
+                        <p className="ds-text-caption">{t('tasksPage.emptyNode')}</p>
                       </div>
-                   </div>
-                </motion.div>
-              )}
-           </AnimatePresence>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {view === 'list' && (
+            <Panel variant="bento">
+              <header className="hidden md:flex items-center gap-6 px-4 py-3 mb-3 border-b border-[var(--border-subtle)] ds-text-label text-theme-muted">
+                <div className="w-10" />
+                <div className="flex-1">{t('tasksPage.colTaskMatrix')}</div>
+                <div className="w-48">{t('tasksPage.colTemporalLimit')}</div>
+                <div className="w-48 text-right">{t('tasksPage.colActions')}</div>
+              </header>
+              <div className="space-y-2 max-h-[700px] overflow-y-auto pr-2">
+                {rootNodes.map(task => (
+                  <TaskRow key={task._id} task={task} expanded={expandedTasks.has(task._id)} expandedTasks={expandedTasks} expandToggle={(id: string) => setExpandedTasks(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelect={setSelectedTask} onAddSub={(p: string) => setAddingForParent(p)} onDelete={deleteTask} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} depth={0} />
+                ))}
+                {rootNodes.length === 0 && (
+                  <EmptyState icon={Inbox} title={t('tasksPage.nullArchive')} />
+                )}
+              </div>
+            </Panel>
+          )}
+
+          {view === 'gantt' && (
+            <Panel variant="bento" className="overflow-x-auto">
+              <div className="min-w-[900px] space-y-6">
+                <header className="flex items-center gap-6 mb-4 border-b border-[var(--border-subtle)] pb-4 px-2">
+                  <div className="w-72 ds-text-label text-theme-muted">{t('tasksPage.latticeAnchorNode')}</div>
+                  <div className="flex-1 flex justify-between ds-text-caption px-8">
+                    <span>{t('tasksPage.pastStrata')}</span>
+                    <span className="text-primary font-semibold">{t('tasksPage.presentPulse')}</span>
+                    <span>{t('tasksPage.futureTrajectory')}</span>
+                  </div>
+                </header>
+                <div className="space-y-2 max-h-[700px] overflow-y-auto pr-3">
+                  {rootNodes.slice(0, 50).map((task) => {
+                    const now = new Date(), min = new Date(now.getFullYear(), now.getMonth(), -20), max = new Date(now.getFullYear(), now.getMonth() + 2, 20)
+                    const start = task.startDate ? new Date(task.startDate) : new Date(task.createdAt), end = task.dueDate ? new Date(task.dueDate) : new Date(start.getTime() + 7 * 86400000)
+                    const left = ((start.getTime() - min.getTime()) / (max.getTime() - min.getTime())) * 100
+                    const width = Math.max(2, ((end.getTime() - start.getTime()) / (max.getTime() - min.getTime())) * 100)
+                    return (
+                      <div key={task._id} className="flex items-center gap-6 group h-12 hover:ds-surface-subtle rounded-lg transition-colors px-2">
+                        <div className="w-72 truncate text-sm font-medium text-theme-primary flex items-center gap-2.5">
+                          <span className={cn('h-2.5 w-2.5 rounded-full', task.priority === 'urgent' ? 'bg-rose-500' : 'bg-primary')} />
+                          {task.title}
+                        </div>
+                        <div className="flex-1 h-8 ds-surface-subtle rounded-lg relative overflow-hidden">
+                          <div
+                            className={cn('absolute h-3 top-2.5 rounded-full', task.status === 'done' ? 'bg-emerald-500' : 'bg-primary')}
+                            style={{ left: `${Math.max(0, left)}%`, width: `${Math.min(width, 100 - left)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </Panel>
+          )}
         </main>
 
-        {/* Floating Action HUD */}
-        <footer className="fixed bottom-12 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[100]">
-           <div className="bg-surface-card/70 backdrop-blur-3xl border-2 border-primary-500/20 p-4 rounded-[2.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.4)] flex items-center gap-6 transition-all duration-500 hover:border-primary-500/40">
-              <div className="w-14 h-14 rounded-2xl bg-primary-600 text-white flex items-center justify-center flex-shrink-0 shadow-xl shadow-primary-500/30 group cursor-pointer hover:rotate-90 transition-transform duration-500" onClick={() => createTask(addingForParent)}>
-                <Plus size={28} />
-              </div>
-              <div className="flex-1 relative">
-                 <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && createTask(addingForParent)} 
-                   placeholder={addingForParent ? t('tasksPage.placeholderSubParticle') : t('tasksPage.placeholderNewParticle')}
-                   className="w-full bg-transparent border-none focus:ring-0 text-xl font-black text-surface-900 dark:text-white placeholder:text-surface-400 italic uppercase tracking-tighter py-3" 
-                 />
-              </div>
-              <div className="flex items-center gap-3">
-                 <button type="button" onClick={() => createTask(addingForParent)} 
-                    className="px-8 py-4 bg-surface-900 dark:bg-white text-white dark:text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-95 border-none"
-                 >
-                    {t('tasksPage.initialize')}
-                 </button>
-                 {addingForParent && (
-                    <button type="button" onClick={() => setAddingForParent(null)} aria-label={t('tasksPage.cancelNewTask')} title={t('tasksPage.cancelNewTask')} className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center border border-rose-500/20 active:scale-90">
-                       <X size={20}/>
-                    </button>
-                 )}
-              </div>
-           </div>
+        {/* ── Floating Quick-Add ── */}
+        <footer className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-[90]">
+          <div className="ds-surface-elevated flex items-center gap-3 p-2.5">
+            <IconButton variant="primary" size="md" onClick={() => createTask(addingForParent)} aria-label={t('tasksPage.initialize')}>
+              <Plus size={18} aria-hidden />
+            </IconButton>
+            <Input
+              type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && createTask(addingForParent)}
+              placeholder={addingForParent ? t('tasksPage.placeholderSubParticle') : t('tasksPage.placeholderNewParticle')}
+              className="flex-1 border-none bg-transparent focus-visible:ring-0"
+            />
+            <Button variant="primary" size="md" onClick={() => createTask(addingForParent)}>{t('tasksPage.initialize')}</Button>
+            {addingForParent && (
+              <IconButton variant="ghost" size="md" onClick={() => setAddingForParent(null)} aria-label={t('tasksPage.cancelNewTask')} title={t('tasksPage.cancelNewTask')} className="text-rose-500">
+                <X size={18} aria-hidden />
+              </IconButton>
+            )}
+          </div>
         </footer>
 
-        {/* Task Modal Overlay */}
-        <AnimatePresence>
-           {selectedTask && (
-             <TaskModal task={selectedTask} onClose={() => { setSelectedTask(null); setAddingForParent(null) }} onUpdate={(u: any) => updateTask(selectedTask._id, u)} onDelete={() => deleteTask(selectedTask._id)} onAddSub={() => { setAddingForParent(selectedTask._id); setSelectedTask(null) }} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} socket={socket} userId={user?.id} />
-           )}
-        </AnimatePresence>
-
-        <style jsx global>{`
-          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--color-primary-500), 0.1); border-radius: 10px; }
-          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
-        `}</style>
+        {/* ── Task Modal ── */}
+        {selectedTask && (
+          <TaskModal task={selectedTask} onClose={() => { setSelectedTask(null); setAddingForParent(null) }} onUpdate={(u: any) => updateTask(selectedTask._id, u)} onDelete={() => deleteTask(selectedTask._id)} onAddSub={() => { setAddingForParent(selectedTask._id); setSelectedTask(null) }} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} socket={socket} userId={user?.id} />
+        )}
       </div>
     </ErrorBoundary>
   )
 }
 
-function TaskCard({ task, onSelect, onDragStart }: any) {
+function TaskCard({ task, onSelect, onDragStart, reduceMotion }: any) {
   const { t } = useTranslation()
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date()
   const priorityColors: Record<string, string> = {
-    urgent: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50',
-    high: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
-    medium: 'bg-primary-50 text-primary-700 border-primary-200 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
-    low: 'bg-surface-100 text-surface-600 border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50'
+    urgent: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+    high: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    medium: 'bg-primary/10 text-primary',
+    low: 'ds-surface-subtle text-theme-muted'
   }
-  
-  return (
-    <motion.div 
-      layout draggable onDragStart={(e: any) => { e.dataTransfer?.setData('text/plain', task._id); onDragStart() }} onClick={onSelect}
-      whileHover={{ y: -6, scale: 1.02 }} 
-      className="p-6 rounded-[2rem] border border-surface-200 dark:border-surface-800 bg-surface-card hover:border-primary-500/50 transition-all duration-500 cursor-grab active:cursor-grabbing shadow-lg group overflow-hidden relative"
-    >
-      <div className="absolute top-0 right-0 p-4 opacity-[0.02] group-hover:opacity-10 transition-opacity"><ClipboardList size={80} /></div>
-      <div className="flex justify-between items-start mb-6 relative z-10">
-         <div className="flex-1 mr-4">
-            <h4 className="text-[15px] font-black text-surface-900 dark:text-white group-hover:text-primary-500 transition-all leading-tight mb-2 italic uppercase tracking-tight">{task.title}</h4>
-            <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest bg-surface-page dark:bg-surface-950 px-2 py-0.5 rounded-md shadow-inner">{t('tasksPage.taskIdLabel', { id: task._id.slice(-6).toUpperCase() })}</span>
-         </div>
-         {task.urgencyScore != null && (
-           <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 shadow-sm">
-              <Zap size={12} className="text-amber-500 animate-pulse" />
-              <span className="text-[11px] font-black text-amber-700 dark:text-amber-400 tabular-nums">{task.urgencyScore}</span>
-           </div>
-         )}
-      </div>
 
-      <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-surface-100 dark:border-surface-800 relative z-10">
-         <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border flex items-center gap-2 shadow-inner transition-all ${isOverdue ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50' : 'bg-surface-page text-surface-500 border-surface-200 dark:bg-surface-800/50 dark:border-surface-700/50'}`}>
-            <Clock size={12} className={isOverdue ? 'animate-pulse' : ''} /> {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : t('tasksPage.noDeadline')}
-         </div>
-         <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shadow-inner transition-all ${priorityColors[task.priority]}`}>
-            {t(`tasksPage.priorityLabels.${task.priority}`)}
-         </div>
+  return (
+    <motion.div
+      layout draggable
+      onDragStart={(e: any) => { e.dataTransfer?.setData('text/plain', task._id); onDragStart() }}
+      onClick={onSelect}
+      whileHover={reduceMotion ? undefined : { y: -3 }}
+      className="ds-surface-card ds-hover-lift cursor-grab active:cursor-grabbing p-4"
+    >
+      <div className="flex justify-between items-start mb-3 gap-2">
+        <div className="flex-1 min-w-0">
+          <h4 className="ds-text-label text-theme-primary leading-snug">{task.title}</h4>
+          <span className="ds-text-caption">{t('tasksPage.taskIdLabel', { id: task._id.slice(-6).toUpperCase() })}</span>
+        </div>
+        {task.urgencyScore != null && (
+          <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 tabular-nums">
+            <Zap size={11} aria-hidden /> {task.urgencyScore}
+          </Badge>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-[var(--border-subtle)]">
+        <Badge className={cn('gap-1', isOverdue ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' : 'ds-surface-subtle text-theme-muted')}>
+          <Clock size={11} aria-hidden /> {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : t('tasksPage.noDeadline')}
+        </Badge>
+        <Badge className={priorityColors[task.priority]}>{t(`tasksPage.priorityLabels.${task.priority}`)}</Badge>
       </div>
     </motion.div>
   )
@@ -404,34 +367,30 @@ function TaskRow({ task, expanded, expandedTasks, expandToggle, onSelect, onAddS
   const sub = getSubtasks(task._id), hasSub = sub.length > 0
   return (
     <section>
-      <motion.div layout 
-        className="flex items-center gap-6 py-4 px-6 rounded-2xl bg-surface-page/30 hover:bg-surface-card border border-transparent hover:border-surface-200 dark:hover:border-primary-500/20 transition-all duration-500 group mb-2 shadow-sm" 
-        style={{ '--task-depth': `${depth * 32}px`, marginLeft: 'var(--task-depth)' } as any}
+      <div
+        className="flex items-center gap-3 py-3 px-3 rounded-lg ds-surface-subtle hover:bg-accent transition-colors group mb-1.5"
+        style={{ marginLeft: `${depth * 24}px` }}
       >
-        <button type="button" onClick={() => expandToggle(task._id)} className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 hover:scale-110 transition-all shadow-sm">
-          {hasSub ? (expanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />) : <div className="w-2 h-2 rounded-full bg-surface-300 dark:bg-surface-700" />}
-        </button>
-        <GripVertical className="text-surface-300 dark:text-surface-700 opacity-0 group-hover:opacity-100 transition-opacity cursor-ns-resize" size={18} />
-        
-        <button type="button" onClick={() => onSelect(task)} className={`flex-1 text-[15px] font-black text-left truncate transition-all italic uppercase tracking-tight ${task.status === 'done' ? 'text-surface-400 dark:text-surface-600 line-through opacity-50' : 'text-surface-900 dark:text-white'}`}>
+        <IconButton variant="ghost" size="sm" onClick={() => expandToggle(task._id)} aria-label={hasSub ? (expanded ? t('tasksPage.colTaskMatrix') : t('tasksPage.colTaskMatrix')) : t('tasksPage.colTaskMatrix')}>
+          {hasSub ? (expanded ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />) : <span className="h-1.5 w-1.5 rounded-full bg-theme-muted" />}
+        </IconButton>
+        <GripVertical className="text-theme-muted opacity-0 group-hover:opacity-100 transition-opacity cursor-ns-resize" size={16} aria-hidden />
+
+        <button type="button" onClick={() => onSelect(task)} className={cn('flex-1 text-sm font-medium text-left truncate transition-colors', task.status === 'done' ? 'text-theme-muted line-through' : 'text-theme-primary')}>
           {task.title}
         </button>
 
-        <div className="flex items-center gap-6 opacity-0 group-hover:opacity-100 transition-all duration-500">
-           {task.dueDate && <div className="flex items-center gap-2 text-[10px] font-black text-surface-400 uppercase tracking-widest italic leading-none"><Clock size={14} className="text-primary-500" /> {new Date(task.dueDate).toLocaleDateString()}</div>}
-           <div className="flex items-center gap-3">
-              <button type="button" onClick={() => onAddSub(task._id)} aria-label={t('tasksPage.addSubtask')} title={t('tasksPage.addSubtask')} className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500/40 transition-all shadow-lg active:scale-90"><Plus size={18} /></button>
-              <button type="button" onClick={() => onDelete(task._id)} aria-label={t('tasksPage.deleteTask')} title={t('tasksPage.deleteTask')} className="w-10 h-10 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-lg active:scale-90"><Trash2 size={18} /></button>
-           </div>
+        <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          {task.dueDate && <span className="ds-text-caption inline-flex items-center gap-1.5"><Clock size={13} className="text-primary" aria-hidden /> {new Date(task.dueDate).toLocaleDateString()}</span>}
+          <IconButton variant="ghost" size="sm" onClick={() => onAddSub(task._id)} aria-label={t('tasksPage.addSubtask')} title={t('tasksPage.addSubtask')}><Plus size={16} aria-hidden /></IconButton>
+          <IconButton variant="ghost" size="sm" onClick={() => onDelete(task._id)} aria-label={t('tasksPage.deleteTask')} title={t('tasksPage.deleteTask')} className="text-rose-500"><Trash2 size={16} aria-hidden /></IconButton>
         </div>
-      </motion.div>
-      <AnimatePresence>
-         {expanded && hasSub && (
-           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              {sub.map((s: any) => <TaskRow key={s._id} task={s} expanded={expandedTasks.has(s._id)} expandedTasks={expandedTasks} expandToggle={expandToggle} onSelect={onSelect} onAddSub={onAddSub} onDelete={onDelete} getSubtasks={getSubtasks} depth={depth + 1} />)}
-           </motion.div>
-         )}
-      </AnimatePresence>
+      </div>
+      {expanded && hasSub && (
+        <div>
+          {sub.map((s: any) => <TaskRow key={s._id} task={s} expanded={expandedTasks.has(s._id)} expandedTasks={expandedTasks} expandToggle={expandToggle} onSelect={onSelect} onAddSub={onAddSub} onDelete={onDelete} getSubtasks={getSubtasks} depth={depth + 1} />)}
+        </div>
+      )}
     </section>
   )
 }
@@ -439,7 +398,7 @@ function TaskRow({ task, expanded, expandedTasks, expandToggle, onSelect, onAddS
 function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, socket, userId }: any) {
   const { showToast: modalToast } = useToast()
   const { t } = useTranslation()
-  const sub = getSubtasks(task._id), [msg, setMsg] = useState(''), [messages, setMessages] = useState<TaskMessage[]>([]), chatEndRef = useRef<any>(null), [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState(''), [messages, setMessages] = useState<TaskMessage[]>([]), chatEndRef = useRef<any>(null), [busy, setBusy] = useState(false)
 
   const fetchMessages = useCallback(async () => { try { const res: any = await apiGet(`/tasks/${task._id}/messages`); setMessages(res?.data?.messages ?? []) } catch { /* silent — messages are non-critical */ } }, [task._id])
   useEffect(() => { fetchMessages(); if (socket) { socket.emit('join:task', { taskId: task._id }); socket.on('task:message', fetchMessages); return () => { socket.off('task:message'); socket.emit('leave:task', { taskId: task._id }) } } }, [task._id, socket, fetchMessages])
@@ -455,128 +414,93 @@ function TaskModal({ task, onClose, onUpdate, onDelete, onAddSub, getSubtasks, s
   }
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-12 bg-surface-950/60 backdrop-blur-3xl" onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.9, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 40 }} transition={{ duration: 0.5, type: 'spring' }}
-        className="bg-surface-card rounded-[3.5rem] p-10 max-w-5xl w-full border-2 border-primary-500/20 max-h-[90vh] overflow-y-auto custom-scrollbar relative shadow-[0_100px_300px_rgba(0,0,0,0.8)]" 
-        onClick={e => e.stopPropagation()}
-      >
-         <header className="flex items-center justify-between mb-12 pb-8 border-b border-surface-100 dark:border-surface-800">
-            <div className="flex items-center gap-8">
-               <div className="w-16 h-16 rounded-[1.8rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-xl">
-                  <Target size={32} className="text-primary-500" />
-               </div>
-               <div>
-                  <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-2">{t('tasksPage.taskProtocol')}</h2>
-                  <div className="flex items-center gap-3">
-                     <span className="text-[11px] font-black text-primary-500 uppercase tracking-widest bg-primary-500/10 px-3 py-1 rounded-xl border border-primary-500/20 shadow-inner">{t('tasksPage.uidLabel', { id: task._id.toUpperCase() })}</span>
-                  </div>
-               </div>
+    <Modal open onClose={onClose} title={t('tasksPage.taskProtocol')} className="max-w-3xl">
+      <div className="space-y-6">
+        <div className="space-y-1.5">
+          <label className="ds-text-label text-theme-secondary">{t('tasksPage.operationalDescriptor')}</label>
+          <Input
+            type="text" defaultValue={task.title} onBlur={e => e.target.value !== task.title && onUpdate({ title: e.target.value })}
+            aria-label={t('tasksPage.taskTitle')} title={t('tasksPage.taskTitle')} placeholder={t('tasksPage.taskTitle')}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="ds-text-label text-theme-secondary">{t('tasksPage.intelligenceBrief')}</label>
+          <Textarea
+            defaultValue={task.description} onBlur={e => e.target.value !== task.description && onUpdate({ description: e.target.value })} rows={4}
+            placeholder={t('tasksPage.briefPlaceholder')}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="ds-text-label text-theme-secondary">{t('tasksPage.systemStatus')}</label>
+            <div className="relative">
+              <select value={task.status} onChange={e => onUpdate({ status: e.target.value })}
+                aria-label={t('tasksPage.taskStatus')} title={t('tasksPage.taskStatus')}
+                className="w-full appearance-none rounded-lg border border-input bg-background px-3 h-10 pr-9 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              >
+                {STATUSES.map(s => <option key={s} value={s}>{t(`tasksPage.statusLabels.${s}`)}</option>)}
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-theme-muted" aria-hidden />
             </div>
-            <button type="button" onClick={onClose} aria-label={t('tasksPage.closeModal')} title={t('tasksPage.closeModal')} className="w-12 h-12 rounded-2xl bg-surface-page dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90"><X size={24} /></button>
-         </header>
-
-         <main className="space-y-12">
-            <div className="space-y-4">
-               <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.operationalDescriptor')}</label>
-               <input type="text" defaultValue={task.title} onBlur={e => e.target.value !== task.title && onUpdate({ title: e.target.value })}
-                 aria-label={t('tasksPage.taskTitle')}
-                 title={t('tasksPage.taskTitle')}
-                 placeholder={t('tasksPage.taskTitle')}
-                 className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-5 text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
-               />
+          </div>
+          <div className="space-y-1.5">
+            <label className="ds-text-label text-theme-secondary">{t('tasksPage.operationalUrgency')}</label>
+            <div className="relative">
+              <select value={task.priority} onChange={e => onUpdate({ priority: e.target.value })}
+                aria-label={t('tasksPage.taskPriority')} title={t('tasksPage.taskPriority')}
+                className="w-full appearance-none rounded-lg border border-input bg-background px-3 h-10 pr-9 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              >
+                {PRIORITIES.map(p => <option key={p} value={p}>{t(`tasksPage.priorityLabels.${p}`)}</option>)}
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-theme-muted" aria-hidden />
             </div>
+          </div>
+        </div>
 
-            <div className="space-y-4">
-               <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.intelligenceBrief')}</label>
-               <textarea defaultValue={task.description} onBlur={e => e.target.value !== task.description && onUpdate({ description: e.target.value })} rows={5}
-                 className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-8 py-6 text-[15px] font-extrabold text-surface-600 dark:text-slate-300 focus:border-primary-500 outline-none transition-all shadow-inner custom-scrollbar italic uppercase tracking-tight backdrop-blur-xl"
-                 placeholder={t('tasksPage.briefPlaceholder')}
-               />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-               <div className="space-y-4">
-                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.systemStatus')}</label>
-                  <div className="relative group">
-                     <select value={task.status} onChange={e => onUpdate({ status: e.target.value })}
-                       aria-label={t('tasksPage.taskStatus')}
-                       title={t('tasksPage.taskStatus')}
-                       className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-4 text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-xl group-hover:bg-surface-card transition-all"
-                     >
-                        {STATUSES.map(s => <option key={s} value={s}>{t(`tasksPage.statusLabels.${s}`).toUpperCase()}</option>)}
-                     </select>
-                     <ChevronDown size={20} className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400 group-hover:text-primary-500 transition-colors" />
-                  </div>
-               </div>
-               <div className="space-y-4">
-                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">{t('tasksPage.operationalUrgency')}</label>
-                  <div className="relative group">
-                     <select value={task.priority} onChange={e => onUpdate({ priority: e.target.value })}
-                       aria-label={t('tasksPage.taskPriority')}
-                       title={t('tasksPage.taskPriority')}
-                       className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-4 text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-xl group-hover:bg-surface-card transition-all"
-                     >
-                        {PRIORITIES.map(p => <option key={p} value={p}>{t(`tasksPage.priorityLabels.${p}`).toUpperCase()}</option>)}
-                     </select>
-                     <ChevronDown size={20} className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400 group-hover:text-primary-500 transition-colors" />
-                  </div>
-               </div>
-            </div>
+        {/* Chat / Messages */}
+        <section className="space-y-3 pt-5 border-t border-[var(--border-subtle)]">
+          <h3 className="ds-text-label text-theme-secondary flex items-center gap-2">
+            <MessageSquare size={15} aria-hidden /> {t('tasksPage.teamUplinkMatrix')}
+          </h3>
+          <div className="h-72 rounded-xl ds-surface-subtle overflow-y-auto p-4 space-y-4">
+            {messages.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-theme-muted opacity-50 gap-2">
+                <MessageSquare size={28} aria-hidden />
+                <p className="ds-text-caption">{t('tasksPage.nullChannel')}</p>
+              </div>
+            )}
+            {messages.map((m, i) => (
+              <div key={i} className={cn('flex flex-col gap-1', m.userId === userId ? 'items-end' : 'items-start')}>
+                <div className="flex items-center gap-2">
+                  <span className={cn('ds-text-caption font-semibold', m.userId === userId ? 'text-primary' : 'text-theme-muted')}>{m.userId === userId ? t('tasksPage.userProximity') : t('tasksPage.teamUplink')}</span>
+                  <span className="ds-text-caption tabular-nums">{new Date(m.createdAt).toLocaleTimeString()}</span>
+                </div>
+                <div className={cn('max-w-[85%] p-3 rounded-xl text-sm', m.userId === userId ? 'bg-primary text-primary-foreground rounded-tr-none' : 'ds-surface-card rounded-tl-none')}>
+                  {m.body}
+                </div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="text" value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+              placeholder={t('tasksPage.chatPlaceholder')}
+              className="flex-1"
+            />
+            <Button variant="primary" size="md" onClick={handleSendMessage} loading={busy}>
+              {busy ? t('tasksPage.transmitting') : t('tasksPage.transmit')}
+            </Button>
+          </div>
+        </section>
 
-            {/* Chat/Messages */}
-            <section className="space-y-6 pt-12 border-t-2 border-surface-100 dark:border-surface-800">
-               <div className="flex flex-col sm:flex-row items-center justify-between px-2 gap-4">
-                  <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-2xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 flex items-center justify-center shadow-inner"><MessageSquare size={22} className="text-surface-400" /></div>
-                     <h3 className="text-sm font-black text-surface-900 dark:text-white uppercase tracking-[0.5em] italic">{t('tasksPage.teamUplinkMatrix')}</h3>
-                  </div>
-                  <div className="flex items-center gap-3 text-[10px] font-black text-primary-500 uppercase tracking-[0.3em] bg-primary-500/10 px-4 py-2 rounded-full border border-primary-500/20 italic shadow-sm">
-                     <Radio size={14} className="animate-pulse" /> {t('tasksPage.forgeSyncActive')}
-                  </div>
-               </div>
-               
-               <div className="h-[400px] rounded-[3rem] bg-surface-page dark:bg-black/60 border-2 border-surface-100 dark:border-surface-800 overflow-y-auto p-8 space-y-8 custom-scrollbar shadow-inner relative backdrop-blur-xl">
-                  {messages.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center opacity-10 gap-8">
-                       <Ghost size={100} />
-                       <p className="text-xl font-black uppercase tracking-[1em] italic">{t('tasksPage.nullChannel')}</p>
-                    </div>
-                  )}
-                  {messages.map((m, i) => (
-                    <div key={i} className={`flex flex-col gap-2 ${m.userId === userId ? 'items-end' : 'items-start'}`}>
-                       <div className="flex items-center gap-4 px-4">
-                          <span className={`text-[10px] font-black uppercase tracking-[0.4em] italic ${m.userId === userId ? 'text-primary-500' : 'text-surface-400'}`}>{m.userId === userId ? t('tasksPage.userProximity') : t('tasksPage.teamUplink')}</span>
-                          <span className="text-[9px] font-black text-surface-300 dark:text-slate-600 uppercase italic tabular-nums">{new Date(m.createdAt).toLocaleTimeString()}</span>
-                       </div>
-                       <div className={`max-w-[85%] p-6 rounded-[2.5rem] text-[15px] font-extrabold italic uppercase tracking-tight shadow-xl ${m.userId === userId ? 'bg-primary-600 text-white rounded-tr-none border border-primary-500' : 'bg-surface-card border-2 border-surface-200 dark:border-surface-800 text-surface-900 dark:text-white rounded-tl-none'}`}>
-                          {m.body}
-                       </div>
-                    </div>
-                  ))}
-                  <div ref={chatEndRef} />
-               </div>
-
-               <div className="flex gap-4 p-3 bg-surface-card border-2 border-surface-200 dark:border-surface-800 rounded-[2.5rem] focus-within:border-primary-500/50 shadow-2xl transition-all duration-500 group/chat">
-                  <input type="text" value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                    placeholder={t('tasksPage.chatPlaceholder')}
-                    className="flex-1 bg-transparent border-none focus:ring-0 px-6 text-[15px] font-black text-surface-900 dark:text-white uppercase italic tracking-tighter h-14" 
-                  />
-                  <button type="button" onClick={handleSendMessage} disabled={busy}
-                    className="px-10 py-4 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[1.8rem] text-[11px] font-black uppercase tracking-[0.4em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-95 h-14 border-none"
-                  >
-                    {busy ? t('tasksPage.transmitting') : t('tasksPage.transmit')}
-                  </button>
-               </div>
-            </section>
-
-            <footer className="flex flex-col sm:flex-row items-center justify-between gap-8 pt-16 border-t-2 border-surface-100 dark:border-surface-800 pb-4">
-               <button type="button" onClick={onDelete} className="text-xs font-black text-rose-500 hover:text-rose-600 uppercase tracking-[0.6em] italic transition-all hover:scale-110 active:scale-90 border-none bg-transparent">{t('tasksPage.terminateProtocol')}</button>
-               <button type="button" onClick={onClose} className="px-16 py-6 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-xs font-black uppercase tracking-[0.8em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all duration-300 border-none">
-                  {t('tasksPage.secureAndLeave')}
-               </button>
-            </footer>
-         </main>
-      </motion.div>
-    </div>
+        <footer className="flex items-center justify-between gap-3 pt-5 border-t border-[var(--border-subtle)]">
+          <Button variant="ghost" size="md" onClick={onDelete} className="text-rose-500" leftIcon={<Trash2 size={16} aria-hidden />}>{t('tasksPage.terminateProtocol')}</Button>
+          <Button variant="primary" size="md" onClick={onClose}>{t('tasksPage.secureAndLeave')}</Button>
+        </footer>
+      </div>
+    </Modal>
   )
 }
