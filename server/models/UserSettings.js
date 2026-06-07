@@ -49,6 +49,29 @@ const userSettingsSchema = new mongoose.Schema({
     heygenApiKey: { type: String, default: '' },
     soraApiKey: { type: String, default: '' }
   },
+  // Appearance / display preferences (2026 settings overhaul)
+  appearance: {
+    theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'auto' },
+    density: { type: String, enum: ['comfortable', 'compact'], default: 'comfortable' },
+    reducedMotion: { type: Boolean, default: false },
+    accent: { type: String, default: '' }
+  },
+  // User-level AI provider preference (2026 settings overhaul)
+  ai: {
+    provider: { type: String, enum: ['auto', 'claude', 'gemini'], default: 'auto' },
+    creativity: { type: Number, default: 0.5 }, // 0..1
+    autoApply: { type: Boolean, default: false }
+  },
+  // Third-party integration API keys. The raw key is NEVER stored in plaintext
+  // and NEVER returned to the client — only last4/label/provider are surfaced.
+  // keyCiphertext holds the AES-256-GCM payload from utils/dataEncryption.
+  integrations: [{
+    provider: { type: String, required: true },
+    label: { type: String, default: '' },
+    keyCiphertext: { type: mongoose.Schema.Types.Mixed }, // { encrypted, iv, tag }
+    last4: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now }
+  }],
   // Default AI Video Editing preferences
   videoEditing: {
     preferredVoiceTone: { type: String, default: 'Hype' },
