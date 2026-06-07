@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import {
-  Boxes, Plus, ArrowLeft, ArrowRight, Crown, Activity, Users,
-  Check, X, RefreshCw, Layers, Database, Globe, Sparkles
+  Boxes, Plus, Crown, Users, Check, Layers, Database, Globe, Sparkles,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useAuth } from '../../../hooks/useAuth'
@@ -13,6 +12,16 @@ import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTranslation } from '@/hooks/useTranslation'
 import { apiGet, apiPost } from '../../../lib/api'
+import { cn } from '../../../lib/utils'
+import {
+  Panel,
+  Button,
+  Input,
+  Modal,
+  StatCard,
+  SectionHeader,
+  Badge,
+} from '../../../components/ui'
 
 interface Workspace {
   id: string
@@ -59,20 +68,19 @@ function mapWorkspace(raw: any, idx: number): Workspace {
   }
 }
 
-const ROLE_CFG: Record<string, { label: string; color: string }> = {
-  owner:  { label: 'OWNER',  color: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
-  admin:  { label: 'ADMIN',  color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' },
-  editor: { label: 'EDITOR', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
-  viewer: { label: 'VIEWER', color: 'bg-slate-500/10 text-slate-400 border-slate-500/30' },
+const ROLE_CFG: Record<string, string> = {
+  owner:  'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  admin:  'bg-primary/10 text-primary',
+  editor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  viewer: 'ds-surface-subtle text-theme-muted',
 }
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.6)] transition-all duration-300'
 
 export default function WorkspacesPage() {
   const { t } = useTranslation()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
+  const reduceMotion = useReducedMotion()
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
   const [loadingWorkspaces, setLoadingWorkspaces] = useState(true)
@@ -136,171 +144,131 @@ export default function WorkspacesPage() {
     }
   }
 
+  const roleBadge = (role: Workspace['role']) => (
+    <Badge className={cn('gap-1', ROLE_CFG[role] || ROLE_CFG.viewer)}>{t(`workspacesPage.roleLabel_${role}`)}</Badge>
+  )
+
   if (authLoading || !user) return null
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1500px] mx-auto space-y-16 bg-[var(--page-bg)]">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
         <ToastContainer />
 
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-          <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title={t('workspacesPage.back')} className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
-              <ArrowLeft size={28} />
-            </button>
-            <div className="w-20 h-20 bg-violet-500/10 border-2 border-violet-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
-              <Boxes size={40} className="text-violet-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-4 mb-3">
-                <Activity size={14} className="text-violet-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-violet-400 italic leading-none">{t('workspacesPage.eyebrow')}</span>
-              </div>
-              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{t('workspacesPage.title')}</h1>
-              <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">{t('workspacesPage.subtitle')}</p>
-            </div>
-          </div>
-          <button type="button" onClick={() => setShowCreate(true)} className="px-12 py-6 bg-white text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.5em] italic flex items-center gap-5 hover:bg-violet-500 hover:text-white transition-colors">
-            <Plus size={22} /> {t('workspacesPage.spawnWorkspace')}
-          </button>
-        </div>
+        <SectionHeader
+          as="h1"
+          title={t('workspacesPage.title')}
+          description={t('workspacesPage.subtitle')}
+          actions={
+            <Button variant="primary" size="md" leftIcon={<Plus size={16} aria-hidden />} onClick={() => setShowCreate(true)}>
+              {t('workspacesPage.spawnWorkspace')}
+            </Button>
+          }
+        />
 
         {/* Active Workspace Banner */}
         {activeWs && (
-          <div className={`${glassStyle} rounded-[3rem] p-10 border-violet-500/20 relative overflow-hidden`}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${activeWs.color} opacity-[0.05] pointer-events-none`} />
-            <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8">
-              <div className={`w-24 h-24 rounded-[2rem] bg-gradient-to-br ${activeWs.color} flex items-center justify-center text-white font-black text-5xl italic shadow-[0_30px_80px_rgba(0,0,0,0.4)] flex-shrink-0`}>
+          <Panel variant="elevated" className="relative overflow-hidden">
+            <div className={cn('absolute inset-0 bg-gradient-to-br opacity-[0.06] pointer-events-none', activeWs.color)} aria-hidden />
+            <div className="relative flex flex-col sm:flex-row items-center gap-5">
+              <div className={cn('h-16 w-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white font-semibold text-3xl shrink-0', activeWs.color)}>
                 {activeWs.name.charAt(0).toUpperCase()}
               </div>
-              <div className="flex-1 min-w-0 text-center lg:text-left">
-                <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{t('workspacesPage.activeInstance')}</p>
-                <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-tight mb-3 truncate">{activeWs.name}</h2>
-                <div className="flex flex-wrap items-center gap-3 justify-center lg:justify-start">
-                  <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">{activeWs.handle}</span>
-                  <span className="opacity-30 text-slate-500">·</span>
-                  <span className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.4em] italic ${ROLE_CFG[activeWs.role].color}`}>{t(`workspacesPage.roleLabel_${activeWs.role}`)}</span>
-                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-[0.4em] italic flex items-center gap-2"><Users size={11} /> {activeWs.members}</span>
-                  <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase tracking-[0.4em] italic flex items-center gap-2"><Crown size={11} /> {activeWs.plan}</span>
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <p className="ds-text-caption text-primary mb-1">{t('workspacesPage.activeInstance')}</p>
+                <h2 className="ds-text-h2 text-theme-primary truncate">{activeWs.name}</h2>
+                <div className="flex flex-wrap items-center gap-2 mt-2 justify-center sm:justify-start">
+                  <span className="ds-text-caption">{activeWs.handle}</span>
+                  {roleBadge(activeWs.role)}
+                  <Badge variant="secondary" className="gap-1"><Users size={11} aria-hidden /> {activeWs.members}</Badge>
+                  <Badge className="gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400"><Crown size={11} aria-hidden /> {activeWs.plan}</Badge>
                 </div>
               </div>
             </div>
-          </div>
+          </Panel>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { label: t('workspacesPage.statTotalWorkspaces'), value: workspaces.length, icon: Layers, color: 'text-white' },
-            { label: t('workspacesPage.statOwned'),            value: workspaces.filter(w => w.role === 'owner').length, icon: Crown, color: 'text-amber-400' },
-            { label: t('workspacesPage.statJoined'),           value: workspaces.filter(w => w.role !== 'owner').length, icon: Users, color: 'text-indigo-400' },
-            { label: t('workspacesPage.statTotalMembers'),    value: workspaces.reduce((s, w) => s + w.members, 0), icon: Database, color: 'text-violet-400' },
-          ].map(s => (
-            <div key={s.label} className={`${glassStyle} rounded-[2.5rem] p-8 flex items-center gap-6`}>
-              <div className="w-14 h-14 rounded-[1.4rem] bg-white/[0.03] border border-white/10 flex items-center justify-center">
-                <s.icon size={26} className={s.color} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mb-1 leading-none">{s.label}</p>
-                <p className={`text-4xl font-black italic tabular-nums tracking-tighter leading-none ${s.color}`}>{s.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Stats (real metrics) */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label={t('workspacesPage.statTotalWorkspaces')} value={workspaces.length} icon={Layers} />
+          <StatCard label={t('workspacesPage.statOwned')} value={workspaces.filter(w => w.role === 'owner').length} icon={Crown} />
+          <StatCard label={t('workspacesPage.statJoined')} value={workspaces.filter(w => w.role !== 'owner').length} icon={Users} />
+          <StatCard label={t('workspacesPage.statTotalMembers')} value={workspaces.reduce((s, w) => s + w.members, 0)} icon={Database} />
+        </section>
 
         {/* Workspace Grid */}
-        <div>
-          <div className="flex items-center gap-5 mb-8">
-            <div className="w-12 h-12 rounded-[1.2rem] bg-white/[0.03] border border-white/10 flex items-center justify-center">
-              <Globe size={22} className="text-slate-400" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('workspacesPage.allInstances')}</h3>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{t('workspacesPage.clickToSwitch')}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="space-y-4">
+          <SectionHeader as="h2" title={t('workspacesPage.allInstances')} description={t('workspacesPage.clickToSwitch')} />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {loadingWorkspaces && Array.from({ length: 3 }).map((_, i) => (
-              <div key={`ws-skeleton-${i}`} className={`${glassStyle} rounded-[2.5rem] p-7 min-h-[280px] animate-pulse`}>
-                <div className="w-14 h-14 rounded-[1.4rem] bg-white/[0.05] mb-6" />
-                <div className="h-6 w-2/3 bg-white/[0.05] rounded-full mb-3" />
-                <div className="h-3 w-1/2 bg-white/[0.04] rounded-full" />
+              <div key={`ws-skeleton-${i}`} className="ds-surface-card p-6 min-h-[240px] animate-pulse">
+                <div className="h-12 w-12 rounded-xl bg-accent mb-5" />
+                <div className="h-5 w-2/3 bg-accent rounded-full mb-3" />
+                <div className="h-3 w-1/2 bg-accent rounded-full" />
               </div>
             ))}
             {!loadingWorkspaces && workspaces.map(ws => (
               <motion.button
                 key={ws.id}
                 type="button"
-                whileHover={{ y: -6 }}
+                whileHover={reduceMotion ? undefined : { y: -4 }}
                 onClick={() => handleSwitch(ws.id)}
-                className={`${glassStyle} rounded-[2.5rem] p-7 flex flex-col gap-5 text-left relative overflow-hidden ${ws.active ? 'border-violet-500/40 ring-2 ring-violet-500/20 shadow-[0_0_80px_rgba(139,92,246,0.15)]' : 'hover:border-white/20'}`}
+                className={cn(
+                  'ds-surface-card ds-hover-lift p-6 flex flex-col gap-4 text-left relative overflow-hidden min-h-[240px]',
+                  ws.active && 'ring-2 ring-primary/40'
+                )}
               >
-                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br ${ws.color} opacity-[0.06] blur-2xl pointer-events-none`} />
-                <div className="flex items-start justify-between relative z-10">
-                  <div className={`w-14 h-14 rounded-[1.4rem] bg-gradient-to-br ${ws.color} flex items-center justify-center text-white font-black text-2xl italic shadow-xl`}>
+                <div className={cn('absolute top-0 right-0 h-28 w-28 rounded-full bg-gradient-to-br opacity-[0.08] blur-2xl pointer-events-none', ws.color)} aria-hidden />
+                <div className="flex items-start justify-between relative">
+                  <div className={cn('h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-white font-semibold text-xl', ws.color)}>
                     {ws.name.charAt(0).toUpperCase()}
                   </div>
-                  {ws.active && <span className="px-2.5 py-1 rounded-full bg-violet-500 text-white text-[8px] font-black uppercase tracking-[0.4em] italic flex items-center gap-1.5"><Check size={10} /> {t('workspacesPage.activeBadge')}</span>}
+                  {ws.active && <Badge className="gap-1"><Check size={11} aria-hidden /> {t('workspacesPage.activeBadge')}</Badge>}
                 </div>
-                <div className="flex-1 min-w-0 relative z-10">
-                  <p className="text-2xl font-black text-white italic uppercase tracking-tight leading-tight mb-1.5 truncate">{ws.name}</p>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mb-3 truncate">{ws.handle}</p>
-                  <p className="text-[11px] text-slate-400 font-medium leading-relaxed">{ws.niche}</p>
+                <div className="flex-1 min-w-0 relative">
+                  <p className="ds-text-h3 text-theme-primary truncate">{ws.name}</p>
+                  <p className="ds-text-caption truncate mb-2">{ws.handle}</p>
+                  <p className="ds-text-body text-theme-muted">{ws.niche}</p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap relative z-10">
-                  <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.3em] italic ${ROLE_CFG[ws.role].color}`}>{t(`workspacesPage.roleLabel_${ws.role}`)}</span>
-                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-[0.3em] italic flex items-center gap-1.5"><Users size={10} /> {ws.members}</span>
-                  <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-[0.3em] italic">{ws.plan}</span>
+                <div className="flex items-center gap-1.5 flex-wrap relative">
+                  {roleBadge(ws.role)}
+                  <Badge variant="secondary" className="gap-1"><Users size={11} aria-hidden /> {ws.members}</Badge>
+                  <Badge variant="secondary">{ws.plan}</Badge>
                 </div>
               </motion.button>
             ))}
             {!loadingWorkspaces && (
-            <button type="button" onClick={() => setShowCreate(true)} className={`${glassStyle} rounded-[2.5rem] p-7 flex flex-col items-center justify-center gap-4 text-center border-dashed border-2 border-white/10 hover:border-violet-500/40 hover:bg-violet-500/[0.02] min-h-[280px]`}>
-              <div className="w-16 h-16 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/20 flex items-center justify-center text-violet-400">
-                <Plus size={28} />
-              </div>
-              <p className="text-xl font-black text-white italic uppercase tracking-tight">{t('workspacesPage.spawnInstance')}</p>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic max-w-[200px] leading-relaxed">{t('workspacesPage.spawnInstanceDesc')}</p>
-            </button>
+              <button type="button" onClick={() => setShowCreate(true)} className="ds-surface-subtle ds-hover-lift rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-center border border-dashed border-[var(--border-subtle)] hover:border-primary/40 min-h-[240px]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-accent text-primary">
+                  <Plus size={26} aria-hidden />
+                </div>
+                <p className="ds-text-h3 text-theme-primary">{t('workspacesPage.spawnInstance')}</p>
+                <p className="ds-text-body text-theme-muted max-w-[220px]">{t('workspacesPage.spawnInstanceDesc')}</p>
+              </button>
             )}
           </div>
         </div>
       </div>
 
       {/* Create modal */}
-      <AnimatePresence>
-        {showCreate && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-8 bg-[var(--page-bg)]/90 backdrop-blur-2xl" onClick={() => !creating && setShowCreate(false)}>
-            <motion.div initial={{ opacity: 0, scale: 0.92, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: 24 }} transition={{ type: 'spring', damping: 22, stiffness: 240 }} onClick={e => e.stopPropagation()} className={`${glassStyle} rounded-[3rem] p-12 max-w-2xl w-full border-violet-500/20`}>
-              <div className="flex items-center gap-6 mb-10">
-                <div className="w-14 h-14 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/30 flex items-center justify-center"><Sparkles size={26} className="text-violet-400" /></div>
-                <div>
-                  <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{t('workspacesPage.spawnProtocol')}</p>
-                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-tight">{t('workspacesPage.modalTitle')}</h3>
-                </div>
-              </div>
-              <div className="space-y-6 mb-10">
-                <div className="space-y-3">
-                  <label htmlFor="ws-name" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic block">{t('workspacesPage.brandDesignation')}</label>
-                  <input id="ws-name" autoFocus value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('workspacesPage.namePlaceholder')} className="w-full bg-black/60 border-2 border-white/5 rounded-[1.5rem] px-6 py-4 text-xl font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" />
-                </div>
-                <div className="space-y-3">
-                  <label htmlFor="ws-niche" className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic block">{t('workspacesPage.nicheLabel')}</label>
-                  <input id="ws-niche" value={newNiche} onChange={e => setNewNiche(e.target.value)} placeholder={t('workspacesPage.nichePlaceholder')} className="w-full bg-black/60 border-2 border-white/5 rounded-[1.5rem] px-6 py-4 text-base font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" />
-                </div>
-              </div>
-              <div className="flex items-center gap-4 justify-end">
-                <button type="button" disabled={creating} onClick={() => { setShowCreate(false); setNewName(''); setNewNiche('') }} className="px-7 py-3 bg-white/5 border-2 border-white/10 text-slate-300 rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:text-white hover:bg-white/10 italic disabled:opacity-40">{t('workspacesPage.cancel')}</button>
-                <button type="button" disabled={creating || !newName.trim()} onClick={handleCreate} className="px-9 py-3 bg-white text-black rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:bg-violet-500 hover:text-white italic disabled:opacity-40 flex items-center gap-3 transition-colors">
-                  {creating ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
-                  {creating ? t('workspacesPage.spawning') : t('workspacesPage.initialize')}
-                </button>
-              </div>
-            </motion.div>
+      <Modal open={showCreate} onClose={() => { if (!creating) { setShowCreate(false); setNewName(''); setNewNiche('') } }} title={t('workspacesPage.modalTitle')} description={t('workspacesPage.spawnProtocol')} className="max-w-lg">
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <label htmlFor="ws-name" className="ds-text-label text-theme-secondary">{t('workspacesPage.brandDesignation')}</label>
+            <Input id="ws-name" autoFocus value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('workspacesPage.namePlaceholder')} />
           </div>
-        )}
-      </AnimatePresence>
+          <div className="space-y-1.5">
+            <label htmlFor="ws-niche" className="ds-text-label text-theme-secondary">{t('workspacesPage.nicheLabel')}</label>
+            <Input id="ws-niche" value={newNiche} onChange={e => setNewNiche(e.target.value)} placeholder={t('workspacesPage.nichePlaceholder')} />
+          </div>
+          <footer className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" size="md" disabled={creating} onClick={() => { setShowCreate(false); setNewName(''); setNewNiche('') }}>{t('workspacesPage.cancel')}</Button>
+            <Button variant="primary" size="md" disabled={creating || !newName.trim()} loading={creating} onClick={handleCreate} leftIcon={!creating ? <Sparkles size={16} aria-hidden /> : undefined}>
+              {creating ? t('workspacesPage.spawning') : t('workspacesPage.initialize')}
+            </Button>
+          </footer>
+        </div>
+      </Modal>
     </ErrorBoundary>
   )
 }

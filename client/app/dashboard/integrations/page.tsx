@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
-  Plug, Plus, RefreshCw, Trash2, ArrowLeft, Search, X,
-  Zap, Globe, Radio, Settings, Link2, Unlink, ExternalLink, ShieldCheck, Cpu, Network, AlertTriangle
+  Plus, RefreshCw, Trash2, Search, X,
+  Zap, Globe, Radio, Link2, Unlink, AlertTriangle, Network,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { apiGet, apiPost, apiDelete } from '../../../lib/api'
@@ -14,6 +14,18 @@ import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
+import { cn } from '../../../lib/utils'
+import {
+  Panel,
+  Button,
+  IconButton,
+  Input,
+  Modal,
+  StatCard,
+  EmptyState,
+  SectionHeader,
+  Badge,
+} from '../../../components/ui'
 
 interface Integration {
   _id: string
@@ -38,23 +50,26 @@ interface MarketplaceItem {
 }
 
 const PROVIDER_GRADIENT: Record<string, string> = {
-  tiktok:    'from-surface-900 to-black',
+  tiktok:    'from-slate-800 to-black',
   instagram: 'from-pink-500 via-rose-500 to-amber-500',
   youtube:   'from-rose-500 to-rose-700',
-  twitter:   'from-surface-700 to-surface-900',
-  x:         'from-surface-700 to-surface-900',
+  twitter:   'from-slate-700 to-slate-900',
+  x:         'from-slate-700 to-slate-900',
   linkedin:  'from-blue-500 to-blue-700',
   facebook:  'from-indigo-500 to-indigo-700',
-  threads:   'from-surface-800 to-black',
+  threads:   'from-slate-800 to-black',
   pinterest: 'from-rose-500 to-rose-800',
-  default:   'from-primary-500 to-primary-700',
+  default:   'from-primary to-primary/70',
 }
 
-const STATUS_CFG: Record<string, { label: string; color: string; dot: string; bg: string }> = {
-  active:   { label: 'Connected', color: 'text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800/50' },
-  inactive: { label: 'Inactive',  color: 'text-surface-600 dark:text-surface-400',  dot: 'bg-surface-400',  bg: 'bg-surface-50 dark:bg-surface-800 border-surface-200 dark:border-surface-700' },
-  error:    { label: 'Auth Failed', color: 'text-rose-700 dark:text-rose-400',   dot: 'bg-rose-500',   bg: 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800/50' },
-  pending:  { label: 'Connecting', color: 'text-amber-700 dark:text-amber-400',  dot: 'bg-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50' },
+const STATUS_CFG: Record<string, string> = {
+  active:   'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  inactive: 'ds-surface-subtle text-theme-muted',
+  error:    'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+  pending:  'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+}
+const STATUS_DOT: Record<string, string> = {
+  active: 'bg-emerald-500', inactive: 'bg-theme-muted', error: 'bg-rose-500', pending: 'bg-amber-500',
 }
 
 export default function IntegrationsPage() {
@@ -62,6 +77,7 @@ export default function IntegrationsPage() {
   const { t } = useTranslation()
   const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
+  const reduceMotion = useReducedMotion()
 
   const [installed, setInstalled] = useState<Integration[]>([])
   const [marketplace, setMarketplace] = useState<MarketplaceItem[]>([])
@@ -139,7 +155,7 @@ export default function IntegrationsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 min-h-screen bg-surface-page">
+      <div className="ds-bg-mesh-soft min-h-screen flex items-center justify-center py-24">
         <ClickLoadingState intent="loading" />
       </div>
     )
@@ -147,212 +163,168 @@ export default function IntegrationsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter pb-32">
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
         <ToastContainer />
 
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10 space-y-10">
-          {/* Header */}
-          <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-surface-200 dark:border-surface-800 pb-8">
-            <div className="flex items-center gap-6">
-              <button type="button" onClick={() => router.push('/dashboard')} title={t('integrationsPage.backToDashboard')} aria-label={t('integrationsPage.backToDashboard')} className="w-12 h-12 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors shadow-sm">
-                <ArrowLeft size={20} />
-              </button>
-              <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
-                <Network size={32} className="text-primary-600 dark:text-primary-400" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                    {t('integrationsPage.ecosystem')}
-                  </span>
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">{t('integrationsPage.title')}</h1>
-                <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg">{t('integrationsPage.subtitle')}</p>
-              </div>
-            </div>
-            <button type="button" onClick={() => setShowMarketplace(s => !s)} className={`px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm border-none ${showMarketplace ? 'bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-300 dark:hover:bg-surface-700' : 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white'}`}>
-              {showMarketplace ? <X size={16} /> : <Plus size={16} />}
+        <SectionHeader
+          as="h1"
+          title={t('integrationsPage.title')}
+          description={t('integrationsPage.subtitle')}
+          actions={
+            <Button
+              variant={showMarketplace ? 'secondary' : 'primary'}
+              size="md"
+              leftIcon={showMarketplace ? <X size={16} aria-hidden /> : <Plus size={16} aria-hidden />}
+              onClick={() => setShowMarketplace(s => !s)}
+            >
               {showMarketplace ? t('integrationsPage.closeCatalog') : t('integrationsPage.browsePlatforms')}
-            </button>
-          </header>
+            </Button>
+          }
+        />
 
-          {/* Stats Section */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { label: t('integrationsPage.statConnected'), value: installed.length, icon: Link2 },
-              { label: t('integrationsPage.statActiveSync'),  value: installed.filter(i => i.status === 'active').length, icon: Zap },
-              { label: t('integrationsPage.statIssuesFound'),   value: installed.filter(i => i.status === 'error').length, icon: AlertTriangle },
-              { label: t('integrationsPage.statSupportedApps'),value: marketplace.length, icon: Globe },
-            ].map((s, i) => (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={i} className="bg-surface-card border border-surface-200 dark:border-surface-800 rounded-3xl p-6 flex items-center gap-4 shadow-sm">
-                <div className="w-12 h-12 rounded-xl bg-surface-page border border-surface-200 dark:border-surface-800 flex items-center justify-center">
-                  <s.icon size={20} className="text-surface-600 dark:text-surface-400" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mb-1 leading-none">{s.label}</p>
-                  <p className="text-2xl font-black text-surface-900 dark:text-white tabular-nums leading-none">{s.value}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+        {/* Stats (real counts) */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label={t('integrationsPage.statConnected')} value={installed.length} icon={Link2} />
+          <StatCard label={t('integrationsPage.statActiveSync')} value={installed.filter(i => i.status === 'active').length} icon={Zap} />
+          <StatCard label={t('integrationsPage.statIssuesFound')} value={installed.filter(i => i.status === 'error').length} icon={AlertTriangle} />
+          <StatCard label={t('integrationsPage.statSupportedApps')} value={marketplace.length} icon={Globe} />
+        </section>
 
-          {/* Marketplace Section */}
-          <AnimatePresence>
-            {showMarketplace && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                <div className="bg-surface-card border border-surface-200 dark:border-surface-800 rounded-3xl p-8 lg:p-10 shadow-sm">
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center">
-                        <Globe size={24} className="text-primary-600 dark:text-primary-400" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">{t('integrationsPage.catalogTitle')}</h2>
-                        <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">{t('integrationsPage.catalogSubtitle')}</p>
-                      </div>
-                    </div>
-                    <div className="relative w-full md:w-80">
-                      <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-                      <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('integrationsPage.searchPlaceholder')} className="w-full bg-surface-page border border-surface-200 dark:border-surface-800 rounded-xl pl-10 pr-4 py-3 text-sm font-medium text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow shadow-inner" />
-                    </div>
+        {/* Marketplace */}
+        <AnimatePresence initial={false}>
+          {showMarketplace && (
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <Panel variant="bento" className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <SectionHeader as="h2" title={t('integrationsPage.catalogTitle')} description={t('integrationsPage.catalogSubtitle')} className="flex-1" />
+                  <div className="relative w-full md:w-72">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted pointer-events-none" aria-hidden />
+                    <Input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('integrationsPage.searchPlaceholder')} aria-label={t('integrationsPage.searchPlaceholder')} className="pl-9" />
                   </div>
+                </div>
 
-                  {visibleMarketplace.length === 0 ? (
-                    <div className="py-20 text-center space-y-4">
-                      <Search size={32} className="text-surface-300 dark:text-surface-700 mx-auto" />
-                      <p className="text-sm font-bold text-surface-500">{t('integrationsPage.noPlatformsMatch')}</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {visibleMarketplace.map(m => {
-                        const id = m._id || m.id || m.provider!
-                        const isInstalling = installingId === id
-                        return (
-                          <div key={id} className="bg-surface-page border border-surface-200 dark:border-surface-800 rounded-2xl p-6 flex flex-col gap-5 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group shadow-inner">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradientFor(m.provider)} flex items-center justify-center text-white font-black text-xl shadow-sm border border-black/10`}>
-                                  {(m.icon || m.name?.charAt(0) || '?').toUpperCase()}
-                                </div>
-                                <div className="min-w-0">
-                                  <h4 className="text-base font-black text-surface-900 dark:text-white tracking-tight mb-1 truncate">{m.name}</h4>
-                                  <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">{m.category || t('integrationsPage.categorySocial')}</p>
-                                </div>
+                {visibleMarketplace.length === 0 ? (
+                  <EmptyState icon={Search} title={t('integrationsPage.noPlatformsMatch')} className="ds-surface-subtle" />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {visibleMarketplace.map(m => {
+                      const id = m._id || m.id || m.provider!
+                      const isInstalling = installingId === id
+                      return (
+                        <div key={id} className="ds-surface-subtle ds-hover-lift rounded-2xl p-5 flex flex-col gap-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={cn('h-11 w-11 rounded-xl bg-gradient-to-br flex items-center justify-center text-white font-semibold text-lg shrink-0', gradientFor(m.provider))}>
+                                {(m.icon || m.name?.charAt(0) || '?').toUpperCase()}
                               </div>
-                              {m.popular && <span className="px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[9px] font-bold uppercase tracking-wider shrink-0">{t('integrationsPage.popular')}</span>}
+                              <div className="min-w-0">
+                                <h4 className="ds-text-label text-theme-primary truncate">{m.name}</h4>
+                                <p className="ds-text-caption">{m.category || t('integrationsPage.categorySocial')}</p>
+                              </div>
                             </div>
-                            <p className="text-sm text-surface-500 dark:text-surface-400 font-medium leading-relaxed line-clamp-2">{m.description}</p>
-                            <button type="button" onClick={() => handleInstall(m)} disabled={isInstalling} className="mt-auto w-full py-3 bg-surface-card border border-surface-200 dark:border-surface-800 text-surface-900 dark:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm">
-                              {isInstalling ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
-                              {isInstalling ? t('integrationsPage.authorizing') : t('integrationsPage.connect')}
-                            </button>
+                            {m.popular && <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">{t('integrationsPage.popular')}</Badge>}
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                          {m.description && <p className="ds-text-body text-theme-muted line-clamp-2">{m.description}</p>}
+                          <Button variant="secondary" size="md" loading={isInstalling} disabled={isInstalling} onClick={() => handleInstall(m)} leftIcon={!isInstalling ? <Plus size={16} aria-hidden /> : undefined} className="mt-auto w-full">
+                            {isInstalling ? t('integrationsPage.authorizing') : t('integrationsPage.connect')}
+                          </Button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </Panel>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* Connected Platforms */}
-          <div className="bg-surface-card border border-surface-200 dark:border-surface-800 rounded-3xl overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between gap-6 px-8 py-6 border-b border-surface-200 dark:border-surface-800 bg-surface-page/30 dark:bg-white/[0.01]">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-surface-page dark:bg-surface-800 flex items-center justify-center border border-surface-100 dark:border-surface-700">
-                  <Radio size={24} className="text-surface-600 dark:text-surface-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">{t('integrationsPage.activeIntegrations')}</h2>
-                  <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">{t('integrationsPage.manageConnections')}</p>
-                </div>
-              </div>
+        {/* Connected Platforms */}
+        <Panel variant="bento" className="p-0 overflow-hidden">
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-[var(--border-subtle)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-theme-muted">
+              <Radio size={22} aria-hidden />
             </div>
-
-            {installed.length === 0 ? (
-              <div className="py-24 flex flex-col items-center text-center gap-6 px-8 bg-surface-page/10">
-                <div className="w-16 h-16 rounded-2xl bg-surface-page dark:bg-surface-800 border border-surface-200 dark:border-surface-700 flex items-center justify-center">
-                  <Unlink size={32} className="text-surface-400" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-surface-900 dark:text-white">{t('integrationsPage.noPlatformsConnected')}</h3>
-                  <p className="text-surface-500 text-sm max-w-sm mx-auto">{t('integrationsPage.noPlatformsConnectedDesc')}</p>
-                </div>
-                <button type="button" onClick={() => setShowMarketplace(true)} className="px-6 py-3 bg-primary-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-primary-700 transition-colors shadow-lg flex items-center gap-2 border-none">
-                  <Plus size={16} /> {t('integrationsPage.connectPlatform')}
-                </button>
-              </div>
-            ) : (
-              <div className="divide-y divide-surface-200 dark:divide-surface-800">
-                {installed.map(intg => {
-                  const statusKey = STATUS_CFG[intg.status] ? intg.status : 'inactive'
-                  const cfg = STATUS_CFG[statusKey]
-                  const isSyncing = syncingId === intg._id
-                  return (
-                    <div key={intg._id} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 sm:p-8 hover:bg-surface-page dark:hover:bg-white/[0.02] transition-colors group">
-                      <div className="flex items-center gap-6">
-                         <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradientFor(intg.provider || intg.type)} flex items-center justify-center text-white font-black text-xl shadow-sm border border-black/10 shrink-0`}>
-                           {(intg.name?.charAt(0) || '?').toUpperCase()}
-                         </div>
-                         <div>
-                           <h4 className="text-lg font-black text-surface-900 dark:text-white tracking-tight mb-2">{intg.name}</h4>
-                           <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
-                             <span className="text-surface-700 dark:text-surface-300">{intg.provider || intg.type}</span>
-                             <span>•</span>
-                             <span>{t('integrationsPage.lastSync', { time: intg.lastSyncAt ? new Date(intg.lastSyncAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : t('integrationsPage.never') })}</span>
-                           </div>
-                         </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${cfg.bg} ${cfg.color}`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                          {t(`integrationsPage.status_${statusKey}`)}
-                        </div>
-                        
-                        <div className="flex items-center gap-2 ml-auto md:ml-0">
-                          <button type="button" disabled={isSyncing} onClick={() => handleSync(intg._id)} title={t('integrationsPage.syncPlatform')} aria-label={t('integrationsPage.syncPlatform')} className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white flex items-center justify-center transition-colors shadow-sm">
-                            <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
-                          </button>
-                          <button type="button" onClick={() => setRemoveTargetId(intg._id)} title={t('integrationsPage.disconnectPlatform')} aria-label={t('integrationsPage.disconnectPlatform')} className="w-10 h-10 rounded-xl bg-surface-card dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center transition-colors shadow-sm">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+            <div>
+              <h2 className="ds-text-h3 text-theme-primary">{t('integrationsPage.activeIntegrations')}</h2>
+              <p className="ds-text-caption">{t('integrationsPage.manageConnections')}</p>
+            </div>
           </div>
 
-          {/* Disconnect Modal */}
-          <AnimatePresence>
-            {removeTarget && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/50 backdrop-blur-sm" onClick={() => !removing && setRemoveTargetId(null)}>
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={e => e.stopPropagation()} className="bg-surface-card dark:bg-surface-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-surface-200 dark:border-surface-800">
-                  <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 flex items-center justify-center mb-6">
-                    <Unlink size={24} className="text-rose-600 dark:text-rose-400" />
+          {installed.length === 0 ? (
+            <EmptyState
+              icon={Unlink}
+              title={t('integrationsPage.noPlatformsConnected')}
+              description={t('integrationsPage.noPlatformsConnectedDesc')}
+              action={
+                <Button variant="primary" size="md" leftIcon={<Plus size={16} aria-hidden />} onClick={() => setShowMarketplace(true)}>
+                  {t('integrationsPage.connectPlatform')}
+                </Button>
+              }
+            />
+          ) : (
+            <div className="divide-y divide-[var(--border-subtle)]">
+              {installed.map(intg => {
+                const statusKey = STATUS_CFG[intg.status] ? intg.status : 'inactive'
+                const isSyncing = syncingId === intg._id
+                return (
+                  <div key={intg._id} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 hover:bg-accent/40 transition-colors">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={cn('h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-white font-semibold text-lg shrink-0', gradientFor(intg.provider || intg.type))}>
+                        {(intg.name?.charAt(0) || '?').toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="ds-text-label text-theme-primary truncate">{intg.name}</h4>
+                        <div className="flex flex-wrap items-center gap-2 ds-text-caption">
+                          <span className="text-theme-secondary">{intg.provider || intg.type}</span>
+                          <span aria-hidden>·</span>
+                          <span>{t('integrationsPage.lastSync', { time: intg.lastSyncAt ? new Date(intg.lastSyncAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : t('integrationsPage.never') })}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                      <Badge className={cn('gap-1.5', STATUS_CFG[statusKey])}>
+                        <span className={cn('h-1.5 w-1.5 rounded-full', STATUS_DOT[statusKey])} aria-hidden />
+                        {t(`integrationsPage.status_${statusKey}`)}
+                      </Badge>
+                      <div className="flex items-center gap-1.5 ml-auto md:ml-0">
+                        <IconButton variant="secondary" size="md" disabled={isSyncing} onClick={() => handleSync(intg._id)} title={t('integrationsPage.syncPlatform')} aria-label={t('integrationsPage.syncPlatform')}>
+                          <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} aria-hidden />
+                        </IconButton>
+                        <IconButton variant="secondary" size="md" onClick={() => setRemoveTargetId(intg._id)} title={t('integrationsPage.disconnectPlatform')} aria-label={t('integrationsPage.disconnectPlatform')} className="text-rose-500">
+                          <Trash2 size={16} aria-hidden />
+                        </IconButton>
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-2">{t('integrationsPage.disconnectModalTitle', { name: removeTarget.name })}</h3>
-                  <p className="text-sm font-medium text-surface-500 dark:text-surface-400 mb-8 leading-relaxed">
-                    {t('integrationsPage.disconnectModalBody', { name: removeTarget.name })}
-                  </p>
-                  <div className="flex items-center justify-end gap-3">
-                    <button disabled={removing} onClick={() => setRemoveTargetId(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors border-none">
-                      {t('integrationsPage.cancel')}
-                    </button>
-                    <button disabled={removing} onClick={() => handleRemove(removeTarget._id)} className="px-5 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-rose-700 transition-colors shadow-lg flex items-center gap-2 border-none">
-                      {removing ? <RefreshCw size={14} className="animate-spin" /> : <Unlink size={14} />}
-                      {removing ? t('integrationsPage.disconnecting') : t('integrationsPage.disconnect')}
-                    </button>
-                  </div>
-                </motion.div>
+                )
+              })}
+            </div>
+          )}
+        </Panel>
+
+        {/* Disconnect Modal */}
+        <Modal open={!!removeTarget} onClose={() => { if (!removing) setRemoveTargetId(null) }} title={removeTarget ? t('integrationsPage.disconnectModalTitle', { name: removeTarget.name }) : ''} className="max-w-md">
+          {removeTarget && (
+            <div className="space-y-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
+                <Unlink size={24} aria-hidden />
               </div>
-            )}
-          </AnimatePresence>
-        </div>
+              <p className="ds-text-body text-theme-muted">{t('integrationsPage.disconnectModalBody', { name: removeTarget.name })}</p>
+              <footer className="flex items-center justify-end gap-3">
+                <Button variant="ghost" size="md" disabled={removing} onClick={() => setRemoveTargetId(null)}>{t('integrationsPage.cancel')}</Button>
+                <Button variant="destructive" size="md" disabled={removing} loading={removing} onClick={() => handleRemove(removeTarget._id)} leftIcon={!removing ? <Unlink size={16} aria-hidden /> : undefined}>
+                  {removing ? t('integrationsPage.disconnecting') : t('integrationsPage.disconnect')}
+                </Button>
+              </footer>
+            </div>
+          )}
+        </Modal>
       </div>
     </ErrorBoundary>
   )
