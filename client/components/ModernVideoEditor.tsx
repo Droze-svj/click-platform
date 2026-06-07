@@ -67,7 +67,8 @@ import ThumbnailGeneratorView from './editor/views/ThumbnailGeneratorView'
 import SchedulingView from './editor/views/SchedulingView'
 import ShortClipsView from './editor/views/ShortClipsView'
 import { ChromaKeySettings } from './editor/views/ChromakeyView'
-import AIAssistView from './editor/views/AIAssistView'
+// AIAssistView retained on disk; the AI tab now renders AIDirectorView.
+import AIDirectorView from './editor/views/AIDirectorView'
 import Inspector, { deriveSelection } from './editor/Inspector'
 import PerformanceRail from './editor/PerformanceRail'
 import { useCreatorPipeline, type PipelineStage } from '../hooks/useCreatorPipeline'
@@ -300,35 +301,10 @@ const ModernVideoEditor: React.FC<{
 
   // ── Consolidated Video & Media State ──
   const [isTranscribing, setIsTranscribing] = useState(false)
-  const [transcript, setTranscript] = useState<Transcript | null>({
-    fullText: "Welcome to the future of AI video editing. This is the Object-Based Semantic Timeline where words drive your creative flow.",
-    words: [
-      { text: "Welcome", start: 0.2, end: 0.8 },
-      { text: "to", start: 0.8, end: 1.0 },
-      { text: "the", start: 1.0, end: 1.2 },
-      { text: "future", start: 1.2, end: 1.8 },
-      { text: "of", start: 1.8, end: 2.0 },
-      { text: "AI", start: 2.0, end: 2.5 },
-      { text: "video", start: 2.5, end: 3.0 },
-      { text: "editing.", start: 3.0, end: 3.8 },
-      { text: "This", start: 4.5, end: 4.8 },
-      { text: "is", start: 4.8, end: 5.0 },
-      { text: "the", start: 5.0, end: 5.2 },
-      { text: "Object-Based", start: 5.2, end: 6.2 },
-      { text: "Semantic", start: 6.2, end: 7.0 },
-      { text: "Timeline", start: 7.0, end: 7.8 },
-      { text: "where", start: 8.0, end: 8.4 },
-      { text: "words", start: 8.4, end: 9.0 },
-      { text: "drive", start: 9.0, end: 9.5 },
-      { text: "your", start: 9.5, end: 9.8 },
-      { text: "creative", start: 9.8, end: 10.5 },
-      { text: "flow.", start: 10.5, end: 11.2 }
-    ],
-    scenes: [
-      { id: 'scene-1', startTime: 0, endTime: 4, title: 'Introduction', index: 1 },
-      { id: 'scene-2', startTime: 4, endTime: 12, title: 'Concept Deep-Dive', index: 2 }
-    ]
-  })
+  // Honest default: no fabricated transcript. Real transcript is populated
+  // by transcription; views that need words/scenes gate behind an empty
+  // state rather than showing fake content as real.
+  const [transcript, setTranscript] = useState<Transcript | null>(null)
   const [editingWords, setEditingWords] = useState<any[]>([])
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([])
   const [videoState, setVideoState] = useState({ currentTime: 0, duration: 0, isPlaying: false, volume: 1, isMuted: false })
@@ -413,11 +389,9 @@ const ModernVideoEditor: React.FC<{
   })
   const [autoEditClips, setAutoEditClips] = useState<AutoEditClip[]>([])
   const [generatedMetadata, setGeneratedMetadata] = useState<VideoMetadata | null>(null)
-  const [aiDirectorSuggestions, setAiDirectorSuggestions] = useState<AIDirectorSuggestion[]>([
-    { id: 'suggest-1', time: 2.0, type: 'hook', label: 'Hook Alert', description: 'Strong opening statement. Add motion graphic here?', confidence: 0.95, impact: 'high' },
-    { id: 'suggest-2', time: 8.5, type: 'broll', label: 'B-Roll Suggestion', description: 'Context: "creative flow". Overlay whiteboard animation?', confidence: 0.88, impact: 'medium' },
-    { id: 'suggest-3', time: 4.2, type: 'cut', label: 'Silence Detected', description: '0.7s gap. Auto-cut to improve pacing?', confidence: 0.92, impact: 'medium' }
-  ])
+  // Honest default: no fabricated suggestions. The AI Director generates
+  // real, transcript-grounded directions on demand via /api/ai/director/plan.
+  const [aiDirectorSuggestions, setAiDirectorSuggestions] = useState<AIDirectorSuggestion[]>([])
 
   // Fetch Advanced Analytics Insights
   useEffect(() => {
@@ -433,20 +407,6 @@ const ModernVideoEditor: React.FC<{
             hookStrength: insights.editing.cutFrequencySeconds < 2 ? 95 : 85,
             viralPotential: insights.scheduling.accuracyScore > 0.9 ? 92 : 78
           }))
-
-          // Push data-driven AI suggestions into the pipeline
-          setAiDirectorSuggestions(prev => [
-            {
-              id: 'analytics-pacing',
-              time: 0.5,
-              type: 'hook',
-              label: 'Data-Driven Pacing',
-              description: `Analytics show ${insights.editing.recommendedPace} pacing retains ${insights.captions.reason}. Recommend cut frequency: ${insights.editing.cutFrequencySeconds}s.`,
-              confidence: 0.98,
-              impact: 'high'
-            },
-            ...prev
-          ])
         }
       } catch (err) {
         console.error('Failed to load advanced editor insights:', err)
@@ -456,40 +416,20 @@ const ModernVideoEditor: React.FC<{
   }, [])
 
   const [isMakingViral, setIsMakingViral] = useState(false)
+  // Bumped by Make Viral to tell AIDirectorView to auto-run Generate when
+  // the AI tab opens. A counter (not a bool) so repeat clicks re-trigger.
+  const [aiDirectorAutoGen, setAiDirectorAutoGen] = useState(0)
 
-  // POST /api/video/viral/one-click — hits oneClickViralService which
-  // chains hook → pattern interrupts → b-roll → beat sync → CTA in one
-  // call, then maps the response into AIDirectorSuggestion records and
-  // pushes them straight into the AI tab's apply pile via the dispatcher
-  // we already own. Single button = full edit recipe.
-  const handleMakeItViral = useCallback(async () => {
+  // Make Viral now opens the interactive AI Director instead of running a
+  // blind one-click recipe. It switches to the AI tab and bumps the
+  // autoGen counter so AIDirectorView auto-runs Generate (POST
+  // /api/ai/director/plan) with the editor's niche/platform/language — the
+  // user then reviews/edits/applies proposed directions step by step.
+  const handleMakeItViral = useCallback(() => {
     if (!videoId) { showToast(t('modernVideoEditor.noVideoLoaded'), 'error'); return }
-    if (isMakingViral) return
-    setIsMakingViral(true)
-    try {
-      showToast(t('modernVideoEditor.composingViralRecipe', { language: targetLanguage }), 'info')
-      const res = await apiPost<{ data: { suggestions: AIDirectorSuggestion[]; stages: any[] } }>(
-        '/video/viral/one-click',
-        { contentId: videoId, niche: contentNiche, platform: 'tiktok', targetLanguage },
-      )
-      const suggestions = (res as any)?.data?.suggestions || (res as any)?.suggestions || []
-      if (!Array.isArray(suggestions) || suggestions.length === 0) {
-        showToast(t('modernVideoEditor.noSuggestionsReturned'), 'info')
-        return
-      }
-      // Replace director suggestions with the fresh batch and route the
-      // user to the AI tab so they see the apply pile. New suggestion IDs
-      // are distinct from any prior batch, so the apply Set doesn't need
-      // to be reset — old applied marks naturally don't overlap.
-      setAiDirectorSuggestions(suggestions)
-      setActiveCategory('ai-analysis' as any)
-      showToast(t('modernVideoEditor.suggestionsReadyApplyAll', { count: suggestions.length }), 'success')
-    } catch (err: any) {
-      showToast(err?.message || t('modernVideoEditor.makeItViralFailed'), 'error')
-    } finally {
-      setIsMakingViral(false)
-    }
-  }, [videoId, isMakingViral, contentNiche, showToast, setActiveCategory, targetLanguage, t])
+    setActiveCategory('ai-analysis' as any)
+    setAiDirectorAutoGen((n) => n + 1)
+  }, [videoId, showToast, setActiveCategory, t])
 
   // Wired ahead of declaration so the dispatcher passes the freshest
   // segments/overlays into applySuggestion. Defined right after
@@ -1882,19 +1822,15 @@ const ModernVideoEditor: React.FC<{
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
       case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} selectedSegmentId={selectedSegmentId} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))} />
       case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} videoFilters={videoFilters} videoTransform={videoTransform} videoTransformKeyframes={videoTransformKeyframes} videoCrop={videoCrop} chromaKey={chromaKey} playbackSpeed={playbackSpeed} videoDuration={videoState.duration} showToast={showToast} setActiveCategory={setActiveCategory} projectName={projectName} />
-      case 'ai-analysis': return <AIAssistView
+      case 'ai-analysis': return <AIDirectorView
         videoId={videoId || ''}
-        transcript={transcript}
-        aiSuggestions={aiSuggestions}
-        setAiSuggestions={setAiSuggestions}
-        directorSuggestions={aiDirectorSuggestions}
-        appliedIds={timelineActions.appliedIds}
-        onApplyOne={timelineActions.apply}
-        onApplyAll={timelineActions.applyAll}
-        onUndoLast={timelineActions.undoLastApply}
-        canUndo={timelineActions.canUndo}
-        setActiveCategory={setActiveCategory}
         showToast={showToast}
+        timelineActions={timelineActions}
+        niche={contentNiche}
+        platform={'tiktok'}
+        targetLanguage={targetLanguage}
+        autoGenerate={aiDirectorAutoGen > 0}
+        key={`director-${aiDirectorAutoGen}`}
       />
       case 'scripts': return <ScriptGeneratorView
         showToast={showToast}
