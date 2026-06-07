@@ -32,21 +32,30 @@ async function fetchSocialInsights(userId, platforms = ['tiktok', 'instagram', '
         : 50,
     };
 
-    // 2. Global Trends (simulated 2026 data layer)
-    const globalTrends = [
-      { topic: 'Neural Aesthetics', velocity: 0.95, platform: 'tiktok' },
-      { topic: 'Sovereign Editing', velocity: 0.88, platform: 'instagram' },
-      { topic: 'Gemini Orchestration', velocity: 0.92, platform: 'youtube' }
-    ];
+    // 2. Global Trends — REAL, web-grounded (Claude web search via
+    //    liveTrendService). We pull for the primary requested platform. If no
+    //    verifiable trends come back, we OMIT the trends line entirely rather
+    //    than inject fabricated "live" data (owner's #1 rule).
+    let trendsLine = '';
+    try {
+      const liveTrendService = require('./liveTrendService');
+      const primaryPlatform = platforms[0] || 'tiktok';
+      const live = await liveTrendService.getLatestTrends(primaryPlatform);
+      const realTrends = [...(live?.topics || []), ...(live?.hashtags || []), ...(live?.sounds || [])];
+      if (realTrends.length > 0) {
+        trendsLine = `\n    GLOBAL TRENDS (verified live, ${primaryPlatform}): ${JSON.stringify(realTrends.slice(0, 8))}`;
+      }
+    } catch (trendErr) {
+      logger.warn('[socialInsight] live trends unavailable; proceeding without trends', { error: trendErr.message });
+    }
 
     const systemPrompt = `Analyze these social signals and user performance data.
-    
+
     ${getClickPersonalityRules(userId)}
-    
-    USER PERFORMANCE: ${JSON.stringify(userPerformance)}
-    GLOBAL TRENDS: ${JSON.stringify(globalTrends)}
-    
-    The user is a content creator. You must provide a "Sovereign Intelligence Brief" that identifies 
+
+    USER PERFORMANCE: ${JSON.stringify(userPerformance)}${trendsLine}
+
+    The user is a content creator. You must provide a "Sovereign Intelligence Brief" that identifies
     how they should adjust their content style, VFX, and narratives based on what is WORKING for them 
     and what is TRENDING globally.
     

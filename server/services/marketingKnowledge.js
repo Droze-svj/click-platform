@@ -526,14 +526,17 @@ function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage =
       const frameworks = Array.isArray(insights?.recommendedFrameworks) ? insights.recommendedFrameworks.slice(0, 3) : [];
       if (trends.length > 0 || frameworks.length > 0) {
         trendBlock = [
-          '── Current 2026 trends + frameworks ──',
+          // Labeled as a STATIC strategic baseline — NOT live/current trends.
+          // Real-time trends come from the marketing brain's web search; these
+          // are evergreen principles, so we never present them as "right now".
+          '── Strategic baseline (evergreen principles, NOT live trends) ──',
           ...(trends.length > 0
-            ? [`Trends in motion right now: ${trends.join(' · ')}.`]
+            ? [`Durable macro shifts to design around: ${trends.join(' · ')}.`]
             : []),
           ...(frameworks.length > 0
             ? [`High-leverage frameworks: ${frameworks.map(f => f.name || f.title).filter(Boolean).join(' · ')}.`]
             : []),
-          'Reference one trend or framework only if it organically fits the clip — never force it. Generic gestures toward "trending now" are worse than ignoring trends entirely.',
+          'These are timeless baselines, not current/live trends. Do not claim any of them is "trending now". Reference one only if it organically fits the clip.',
           '',
         ];
       }
