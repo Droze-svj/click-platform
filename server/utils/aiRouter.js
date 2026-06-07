@@ -115,6 +115,39 @@ const MODEL_DEFAULTS = {
 // publishes Retry-After but a flat 4s is close enough for our purposes.
 const PROVIDER_RETRY_MS = { gemini: 2000, openai: 4000, anthropic: 4000 };
 
+/**
+ * Cheap token estimator (~chars/4). Not exact — it's a guard rail, not a
+ * billing meter. Lets callers refuse / log oversized prompts before they
+ * blow past a model's context window and waste a full round-trip on a 400.
+ */
+function estimateTokens(text) {
+  if (text == null) return 0;
+  const s = typeof text === 'string' ? text : JSON.stringify(text);
+  return Math.ceil(s.length / 4);
+}
+
+/**
+ * Prompt-size guard. Estimates tokens (~chars/4) and, if over `ceiling`,
+ * either logs a warning (default) or throws an honest error (`throwOnExceed`).
+ * Never truncates silently — callers should clamp their own inputs where
+ * there's an obvious bound, else surface the error.
+ *
+ * @returns {{ tokens:number, exceeded:boolean, ceiling:number }}
+ */
+function assertPromptSize(text, { ceiling = 100_000, label = 'prompt', throwOnExceed = false } = {}) {
+  const tokens = estimateTokens(text);
+  const exceeded = tokens > ceiling;
+  if (exceeded) {
+    logger.warn('aiRouter: prompt-size guard tripped', { label, tokens, ceiling });
+    if (throwOnExceed) {
+      const e = new Error(`${label} too large: ~${tokens} tokens exceeds ${ceiling} ceiling`);
+      e.code = 'PROMPT_TOO_LARGE';
+      throw e;
+    }
+  }
+  return { tokens, exceeded, ceiling };
+}
+
 function isQuotaOrRateLimit(err) {
   const msg = String(err?.message || err || '');
   const status = err?.status || err?.statusCode;
@@ -399,6 +432,8 @@ module.exports = {
   aiCallJsonValidated,
   validateShape,
   safeJsonParse,
+  estimateTokens,
+  assertPromptSize,
   isProviderAvailable,
   // Useful for tests + telemetry.
   PROVIDER_ORDER,

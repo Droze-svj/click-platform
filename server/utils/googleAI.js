@@ -15,6 +15,11 @@ try {
   // Optional dependency in some local environments
 }
 
+// Per-call request timeout for Gemini. The SDK's default has no ceiling, so a
+// stuck upstream can hang an editor request for minutes. 60s is generous for
+// flash-tier text generation. Override with GEMINI_TIMEOUT_MS.
+const GEMINI_TIMEOUT_MS = parseInt(process.env.GEMINI_TIMEOUT_MS || '60000', 10);
+
 const safetySettings = [
   { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
   { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
@@ -241,7 +246,7 @@ async function generateContent(prompt, options = {}) {
           responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
         },
         safetySettings,
-      });
+      }, { timeout: GEMINI_TIMEOUT_MS });
       const response = result.response;
       if (!response || !response.text) return null;
       return response.text().trim();
@@ -289,7 +294,7 @@ async function generateContent(prompt, options = {}) {
               responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
             },
             safetySettings,
-          });
+          }, { timeout: GEMINI_TIMEOUT_MS });
 
           const response = result.response;
           if (!response || !response.text) return null;
@@ -329,7 +334,7 @@ async function generateContent(prompt, options = {}) {
 async function generateEmbeddings(text) {
   if (!embeddingModel) return null;
   try {
-    const result = await embeddingModel.embedContent(text);
+    const result = await embeddingModel.embedContent(text, { timeout: GEMINI_TIMEOUT_MS });
     return result.embedding.values;
   } catch (err) {
     try {

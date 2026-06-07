@@ -1,7 +1,7 @@
 // AI Recommendations Engine
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
-const { safeJsonParse } = require('../utils/aiRouter');
+const { safeJsonParse, assertPromptSize } = require('../utils/aiRouter');
 const Content = require('../models/Content');
 const User = require('../models/User');
 const UserPreferences = require('../models/UserPreferences');
@@ -102,6 +102,8 @@ Format as JSON array with fields: title, description, platform, reasoning, keyPo
     }
 
     const fullPrompt = `You are a content recommendation engine. Provide personalized, data-driven recommendations.\n\n${prompt}`;
+    // Prompt-size guard before the LLM call — warn on oversized context.
+    assertPromptSize(fullPrompt, { label: 'recommendations prompt', ceiling: 100_000 });
     const recommendationsText = await geminiGenerate(fullPrompt, { maxTokens: 2000, temperature: 0.7 });
     if (!recommendationsText) {
       throw new Error('No response from AI recommendations');

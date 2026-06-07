@@ -210,6 +210,7 @@ const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = requ
 const editCache = new Map(); // Cache for edit analysis results
 
 const { safeJsonParse: parseGeminiJson } = require('../utils/aiHelper');
+const { assertPromptSize } = require('../utils/aiRouter');
 
 /**
  * Analysis result cache — 10-minute TTL per videoId
@@ -4155,6 +4156,11 @@ CREATIVE DIVERGENCE PROTOCOL:
 - Look for non-obvious emotional spikes or subtle logic shifts in the transcript.
 - Your hook rewrites should be visceral, scroll-stopping, and unique.
 - Each suggested caption should have a distinct "vibe" (e.g., mysterious, authoritative, punchy).`;
+
+    // Prompt-size guard: the transcript excerpt + creator context can grow
+    // large. Warn (don't throw) — the existing parse fallback below already
+    // keeps the pipeline alive, and Gemini's own timeout bounds a too-big call.
+    assertPromptSize(fullPrompt, { label: 'aiVideoEditing analysis prompt', ceiling: 100_000 });
 
     const analysisText = await geminiGenerate(fullPrompt, { temperature: 0.85, maxTokens: 6000 });
     let analysis = parseGeminiJson(analysisText);
