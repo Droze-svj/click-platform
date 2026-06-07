@@ -1,23 +1,23 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Wand2, Flame, Coffee, Cpu, Heart, Sparkles, Zap, Music, Type, Palette,
-  Wand, Loader2, CheckCircle2, Lock, Sliders, BookOpen,
-  TrendingUp, Award, Target, Rocket, Mic
+  Wand, CheckCircle2, Lock, Sliders, BookOpen,
+  TrendingUp, Award, Target, Rocket, Mic, type LucideIcon,
 } from 'lucide-react'
+import { Panel, Button, Badge, SectionHeader } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 interface CreativePack {
   id: string
   name: string
   tagline: string
   description: string
-  icon: any
+  icon: LucideIcon
   gradient: string
   ringColor: string
   bestFor: string[]            // niches
-  expectedLift?: string        // engagement bump
   premium?: boolean
   sample: {
     music?: string             // e.g. "Hype Energy Drop · 128 BPM"
@@ -40,7 +40,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-rose-500 via-orange-500 to-amber-400',
     ringColor: 'ring-rose-500/30',
     bestFor: ['Fitness', 'Tech', 'Product launches', 'Lifestyle'],
-    expectedLift: '+24% retention',
     sample: {
       music: 'Hype Energy Drop · 128 BPM',
       captionStyle: 'Bold yellow karaoke pop',
@@ -59,7 +58,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-amber-300 via-orange-300 to-rose-300',
     ringColor: 'ring-amber-400/30',
     bestFor: ['Lifestyle', 'Food', 'Wellness', 'Beauty'],
-    expectedLift: '+18% saves',
     sample: {
       music: 'Lo-fi Study Loop · 88 BPM',
       captionStyle: 'Subtle serif · cream',
@@ -78,7 +76,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-cyan-400 via-blue-500 to-violet-600',
     ringColor: 'ring-cyan-400/30',
     bestFor: ['Tech', 'AI', 'Coding', 'Crypto'],
-    expectedLift: '+22% completion',
     sample: {
       music: 'Neon Synthwave · 116 BPM',
       captionStyle: 'Monospace · cyan glow',
@@ -97,7 +94,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-slate-400 via-indigo-500 to-violet-700',
     ringColor: 'ring-violet-500/30',
     bestFor: ['Storytelling', 'Personal Brand', 'Documentary', 'Travel'],
-    expectedLift: '+31% completion',
     sample: {
       music: 'Cinematic Build · 95 BPM',
       captionStyle: 'Lower-third · serif italic',
@@ -117,7 +113,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
     ringColor: 'ring-emerald-500/30',
     bestFor: ['Ads', 'Product', 'Coaching', 'SaaS'],
-    expectedLift: '+38% CTR',
     sample: {
       music: 'Corporate Inspire · 110 BPM',
       captionStyle: 'Bold sans · white outline',
@@ -137,7 +132,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-pink-400 via-rose-400 to-orange-300',
     ringColor: 'ring-pink-400/30',
     bestFor: ['Vlog', 'Lifestyle', 'POV', 'Personal Brand'],
-    expectedLift: '+19% retention',
     sample: {
       music: 'Acoustic Vlog Folk · 100 BPM',
       captionStyle: 'Handwritten · pastel',
@@ -156,7 +150,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-blue-500 via-indigo-500 to-violet-600',
     ringColor: 'ring-blue-500/30',
     bestFor: ['Education', 'Finance', 'Tutorial', 'How-to'],
-    expectedLift: '+27% saves',
     sample: {
       music: 'Quiet Reflection · 65 BPM',
       captionStyle: 'Clean sans · highlight key terms',
@@ -175,7 +168,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-amber-400 via-orange-500 to-rose-500',
     ringColor: 'ring-amber-500/30',
     bestFor: ['Motivation', 'Sports', 'Mindset', 'Faith'],
-    expectedLift: '+33% shares',
     sample: {
       music: 'Cinematic Build · 95 BPM',
       captionStyle: 'Bold serif · gradient fill',
@@ -194,7 +186,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-fuchsia-500 via-purple-500 to-indigo-600',
     ringColor: 'ring-fuchsia-500/30',
     bestFor: ['Comedy', 'Reaction', 'Stitch', 'Skit'],
-    expectedLift: '+38% remixes',
     sample: {
       music: 'Trap Bass Drop · 140 BPM',
       captionStyle: 'Oversized impact · meme',
@@ -213,7 +204,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-violet-300 via-pink-300 to-rose-400',
     ringColor: 'ring-violet-300/30',
     bestFor: ['Aesthetic', 'Beauty', 'Travel', 'Mood'],
-    expectedLift: '+21% saves',
     sample: {
       music: 'Dreamy Synth Pad · 72 BPM',
       captionStyle: 'Thin handwritten · cream',
@@ -232,7 +222,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-emerald-400 via-green-500 to-teal-600',
     ringColor: 'ring-emerald-400/30',
     bestFor: ['Finance', 'Trading', 'Crypto', 'Investing'],
-    expectedLift: '+25% completion',
     sample: {
       music: 'Funky Groove Bass · 112 BPM',
       captionStyle: 'Mono numbers · color-coded',
@@ -252,7 +241,6 @@ const PACKS: CreativePack[] = [
     gradient: 'from-indigo-500 via-blue-500 to-cyan-500',
     ringColor: 'ring-indigo-500/30',
     bestFor: ['Podcast', 'Interview', 'Talk show', 'Solo VO'],
-    expectedLift: '+29% retention',
     sample: {
       music: 'Subtle bed · -24dB ambient',
       captionStyle: 'Bold sans · word-by-word pop',
@@ -263,8 +251,6 @@ const PACKS: CreativePack[] = [
     }
   },
 ]
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.5)]'
 
 interface CreativePacksViewProps {
   showToast?: (m: string, t: 'success' | 'info' | 'error') => void
@@ -287,37 +273,34 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
     setApplying(null)
     setAppliedId(pack.id)
     onApplyPack?.(pack)
-    showToast?.(`✓ Applied ${pack.name} — captions, music, color, transitions queued.`, 'success')
+    showToast?.(`Applied ${pack.name} — captions, music, color, transitions queued.`, 'success')
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0a0a14] via-[#0d0d18] to-[#080812] p-6 space-y-6">
+    <div className="h-full space-y-6 overflow-y-auto p-6 ds-anim-rise">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-[0_20px_60px_rgba(245,158,11,0.3)]">
-            <Wand2 className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400">Click · Creative Packs</span>
-            </div>
-            <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-tight">One-click style bundles</h2>
-            <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
-              Apply music + transitions + color grade + caption style + pacing in one tap. {PACKS.length} curated packs across niches.
-            </p>
-          </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-3">
+          <Badge variant="outline" className="gap-2 border-amber-500/30 text-amber-500">
+            <Wand2 className="h-3.5 w-3.5" aria-hidden />
+            Creative Packs
+          </Badge>
+          <SectionHeader
+            as="h1"
+            title="One-click style bundles"
+            description={`Apply music, transitions, color grade, caption style and pacing in one tap. ${PACKS.length} curated packs across niches.`}
+          />
         </div>
         {appliedId && (
-          <div className={`${glassStyle} rounded-2xl px-4 py-2.5 flex items-center gap-3 border-emerald-500/30`}>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-[0.2em]">{PACKS.find(p => p.id === appliedId)?.name} applied</span>
-          </div>
+          <Panel variant="subtle" className="flex items-center gap-2 px-4 py-2.5">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden />
+            <span className="ds-text-label text-emerald-500">{PACKS.find(p => p.id === appliedId)?.name} applied</span>
+          </Panel>
         )}
       </div>
 
       {/* Pack grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         {PACKS.map(pack => {
           const Icon = pack.icon
           const isApplied = appliedId === pack.id
@@ -325,121 +308,100 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
           const isPreviewing = previewId === pack.id
 
           return (
-            <motion.div
+            <Panel
               key={pack.id}
-              layout
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`${glassStyle} rounded-2xl overflow-hidden flex flex-col group hover:bg-white/[0.05] transition-colors ${isApplied ? `ring-2 ${pack.ringColor}` : ''}`}
+              variant="glass"
+              className={cn('flex flex-col overflow-hidden p-0', isApplied && `ring-2 ${pack.ringColor}`)}
             >
               {/* Cover */}
-              <div className={`relative h-36 bg-gradient-to-br ${pack.gradient} flex items-center justify-center overflow-hidden`}>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_60%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(0,0,0,0.4),transparent_60%)]" />
-                <Icon className="w-16 h-16 text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform" />
+              <div className={cn('relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br', pack.gradient)}>
+                <Icon className="h-14 w-14 text-white drop-shadow" aria-hidden />
                 {pack.premium && (
-                  <span className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-black/40 text-amber-300 border border-amber-300/30 flex items-center gap-1">
-                    <Lock className="w-2.5 h-2.5" /> Pro
-                  </span>
-                )}
-                {pack.expectedLift && (
-                  <span className="absolute top-3 left-3 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-black/40 text-white border border-white/30 flex items-center gap-1">
-                    <TrendingUp className="w-2.5 h-2.5" /> {pack.expectedLift}
+                  <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full border border-amber-300/30 bg-black/40 px-2.5 py-1 text-[10px] font-semibold text-amber-300">
+                    <Lock className="h-3 w-3" aria-hidden /> Pro
                   </span>
                 )}
                 {isApplied && (
-                  <span className="absolute bottom-3 left-3 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-500 text-white flex items-center gap-1">
-                    <CheckCircle2 className="w-2.5 h-2.5" /> Applied
+                  <span className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-semibold text-white">
+                    <CheckCircle2 className="h-3 w-3" aria-hidden /> Applied
                   </span>
                 )}
               </div>
 
               {/* Body */}
-              <div className="p-5 flex-1 flex flex-col">
-                <h3 className="text-xl font-black text-[var(--text-main)] tracking-tight leading-tight mb-1">{pack.name}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-3">{pack.tagline}</p>
-                <p className="text-[12px] text-slate-300 leading-relaxed mb-4">{pack.description}</p>
+              <div className="flex flex-1 flex-col p-5">
+                <h3 className="ds-text-h3 text-theme-primary">{pack.name}</h3>
+                <p className="ds-text-caption mb-3 text-theme-muted">{pack.tagline}</p>
+                <p className="mb-4 text-sm leading-relaxed text-theme-secondary">{pack.description}</p>
 
-                <div className="flex flex-wrap gap-1.5 mb-4">
+                <div className="mb-4 flex flex-wrap gap-1.5">
                   {pack.bestFor.slice(0, 4).map(n => (
-                    <span key={n} className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">
-                      {n}
-                    </span>
+                    <Badge key={n} variant="outline">{n}</Badge>
                   ))}
                 </div>
 
                 {/* Reveal sample on click */}
-                <AnimatePresence initial={false}>
-                  {isPreviewing && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden mb-4"
-                    >
-                      <div className="rounded-xl bg-black/40 border border-white/5 p-4 space-y-2.5">
-                        {pack.sample.music && <SampleRow icon={Music}    label="Music"       value={pack.sample.music} />}
-                        {pack.sample.captionStyle && <SampleRow icon={Type} label="Captions"  value={pack.sample.captionStyle} />}
-                        {pack.sample.transitions && <SampleRow icon={Sliders} label="Transitions" value={pack.sample.transitions} />}
-                        {pack.sample.color && <SampleRow icon={Palette}  label="Color grade" value={pack.sample.color} />}
-                        {pack.sample.pacing && <SampleRow icon={Zap}      label="Pacing"      value={pack.sample.pacing} />}
-                        {pack.sample.overlays && <SampleRow icon={Sparkles} label="Overlays" value={pack.sample.overlays} />}
-                        {pack.sample.voiceTone && <SampleRow icon={Mic}    label="Voice tone"  value={pack.sample.voiceTone} />}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {isPreviewing && (
+                  <div className="mb-4 space-y-2.5 rounded-xl border border-subtle ds-surface-subtle p-4 ds-anim-fade-in">
+                    {pack.sample.music && <SampleRow icon={Music} label="Music" value={pack.sample.music} />}
+                    {pack.sample.captionStyle && <SampleRow icon={Type} label="Captions" value={pack.sample.captionStyle} />}
+                    {pack.sample.transitions && <SampleRow icon={Sliders} label="Transitions" value={pack.sample.transitions} />}
+                    {pack.sample.color && <SampleRow icon={Palette} label="Color grade" value={pack.sample.color} />}
+                    {pack.sample.pacing && <SampleRow icon={Zap} label="Pacing" value={pack.sample.pacing} />}
+                    {pack.sample.overlays && <SampleRow icon={Sparkles} label="Overlays" value={pack.sample.overlays} />}
+                    {pack.sample.voiceTone && <SampleRow icon={Mic} label="Voice tone" value={pack.sample.voiceTone} />}
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="mt-auto flex items-center gap-2">
-                  <button
-                   type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1"
                     onClick={() => setPreviewId(isPreviewing ? null : pack.id)}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-[11px] font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white transition-colors"
                   >
                     {isPreviewing ? 'Hide details' : 'View details'}
-                  </button>
-                  <button
-                   type="button"
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1"
                     onClick={() => handleApply(pack)}
                     disabled={!!applying}
-                    className={`flex-1 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
-                      isApplied ? 'bg-emerald-600 hover:bg-emerald-500' : `bg-gradient-to-r ${pack.gradient} hover:brightness-110`
-                    }`}
+                    loading={isApplying}
+                    leftIcon={!isApplying ? (isApplied ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <Rocket className="h-3.5 w-3.5" aria-hidden />) : undefined}
                   >
-                    {isApplying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isApplied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Rocket className="w-3.5 h-3.5" />}
                     {isApplying ? 'Applying…' : isApplied ? 'Applied' : 'Apply pack'}
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </motion.div>
+            </Panel>
           )
         })}
       </div>
 
       {/* Footer */}
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4 flex items-start gap-3">
-        <Wand className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+      <Panel variant="subtle" className="flex items-start gap-3 p-4">
+        <Wand className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden />
         <div>
-          <p className="text-[11px] font-bold text-amber-300 leading-snug">Packs apply locally; backend pipeline is forward-compatible.</p>
-          <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-            Each pack toasts the bundle name and (when wired) sets caption style, music, transitions, color preset, and pacing on the timeline. Pro packs unlock 4K stock + extended licensing.
+          <p className="ds-text-label text-theme-primary">Packs apply locally; backend pipeline is forward-compatible.</p>
+          <p className="ds-text-caption mt-1 leading-relaxed text-theme-muted">
+            Each pack toasts the bundle name and (when wired) sets caption style, music, transitions, color preset and pacing on the timeline. Pro packs unlock 4K stock + extended licensing.
           </p>
         </div>
-      </div>
+      </Panel>
     </div>
   )
 }
 
-const SampleRow: React.FC<{ icon: any; label: string; value: string }> = ({ icon: Icon, label, value }) => (
+const SampleRow: React.FC<{ icon: LucideIcon; label: string; value: string }> = ({ icon: Icon, label, value }) => (
   <div className="flex items-start gap-3">
-    <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-      <Icon className="w-3.5 h-3.5 text-slate-300" />
+    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent">
+      <Icon className="h-3.5 w-3.5 text-theme-secondary" aria-hidden />
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-0.5">{label}</p>
-      <p className="text-[11px] text-white font-medium leading-tight">{value}</p>
+    <div className="min-w-0 flex-1">
+      <p className="ds-text-caption text-theme-muted">{label}</p>
+      <p className="text-sm font-medium leading-tight text-theme-primary">{value}</p>
     </div>
   </div>
 )

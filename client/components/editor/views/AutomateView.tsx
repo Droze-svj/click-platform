@@ -2,14 +2,13 @@
 
 import React, { useRef, useEffect } from 'react'
 import {
-  Mic, Zap, Loader2, Scissors, Split, Type, Sparkles, ChevronRight,
-  CheckCircle2, AlertCircle, Cpu, Volume2, VolumeX, Wand2, ArrowRight, Bot,
-  Activity, Brain, Pen, TrendingUp, Clock, Eye, Target, ArrowUpRight, Globe2,
-  ShoppingCart, DollarSign, Rocket, LineChart, Share2, RefreshCw, Layers
+  Mic, Zap, Scissors, Type, Wand2, ArrowRight, Globe2,
+  ShoppingCart, Rocket, TrendingUp, Activity, Layers, type LucideIcon,
 } from 'lucide-react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
 import { apiPost, apiGet, handleApiError } from '../../../lib/api'
+import { Panel, Button, Badge, SectionHeader, StatCard, Textarea, Slider } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 interface AutomateViewProps {
   voiceoverText: string
@@ -34,8 +33,6 @@ const SILENCE_THRESHOLDS = [
 ]
 
 type PipelineStep = 'idle' | 'silence' | 'transcribing' | 'scoring' | 'captioning' | 'distribution' | 'roi-forecasting' | 'sourcing' | 'monetization' | 'done' | 'error'
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl'
 
 const AutomateView: React.FC<AutomateViewProps> = ({
   voiceoverText,
@@ -203,19 +200,19 @@ const AutomateView: React.FC<AutomateViewProps> = ({
       setPipelineStep('monetization')
       setStepProgress(0)
       showToast('Step 8/8 — Whop Monetization Bridge…', 'info')
-      const monetRes = await apiPost('/video/advanced/monetization-plan', { 
+      const monetRes = await apiPost('/video/advanced/monetization-plan', {
         transcript: transcriptText,
-        videoId: videoId 
+        videoId: videoId
       }) as any
       const monetizationPlan = monetRes?.data ?? monetRes
       setStepProgress(100)
 
-      // Task 8.3: Direct-to-Ads Integration Logic
+      // Direct-to-Ads gating logic (derived from real hook + sales scores)
       const adPotential = {
         isHighPotential: hookScore >= 85 && (roiData?.salesScore ?? 0) >= 70,
         recommendedBudget: 5,
         reason: (hookScore >= 85) ? 'Exceptional hook velocity detected.' : 'Testing required.',
-        thumbnail: viralThumbnailUrl // Assuming viralThumbnailUrl can be used for ad thumbnail
+        thumbnail: viralThumbnailUrl
       }
 
       setPipelineStep('done')
@@ -243,7 +240,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
         monetizationPlan,
         adPotential
       })
-      showToast('✦ Pipeline Complete!', 'success')
+      showToast('Pipeline complete!', 'success')
     } catch (err: any) {
       setPipelineError(err.message || 'Pipeline failed')
       setPipelineStep('error')
@@ -253,9 +250,9 @@ const AutomateView: React.FC<AutomateViewProps> = ({
 
   const handleLaunchAds = async () => {
     try {
-      showToast('Launching Low-CAC Ad Campaign...', 'info')
+      showToast('Launching low-CAC ad campaign…', 'info')
       await apiPost('/video/advanced/launch-test-ad', { videoId, platform: 'tiktok', budget: 5 })
-      showToast('Ad Live! Monitoring ROI in Style Vault...', 'success')
+      showToast('Ad live! Monitoring ROI in Style Vault…', 'success')
     } catch (err) {
       showToast('Ad launch failed', 'error')
     }
@@ -281,7 +278,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
     }
   }
 
-  const steps: { key: PipelineStep; label: string; icon: React.ElementType }[] = [
+  const steps: { key: PipelineStep; label: string; icon: LucideIcon }[] = [
     { key: 'silence', label: 'Cut', icon: Scissors },
     { key: 'transcribing', label: 'Text', icon: Mic },
     { key: 'scoring', label: 'Score', icon: Zap },
@@ -292,183 +289,193 @@ const AutomateView: React.FC<AutomateViewProps> = ({
     { key: 'monetization', label: 'Sell', icon: ShoppingCart }
   ]
 
-  return (
-    <div className="space-y-8 max-w-6xl mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row items-start justify-between gap-8">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-3 px-5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400">
-            <Zap className="w-3.5 h-3.5 animate-pulse" />
-            Neural Automations
-          </div>
-          <h1 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">AUTO<br />PILOT</h1>
-        </div>
-      </div>
+  const running = pipelineStep !== 'idle' && pipelineStep !== 'done' && pipelineStep !== 'error'
 
-      <motion.div className={`${glassStyle} rounded-[3rem] p-8 border-indigo-500/20 overflow-hidden relative group`}>
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center gap-8">
-          <div className="flex items-center gap-5 flex-1">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg"><Wand2 className="w-7 h-7 text-white" /></div>
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 ds-anim-rise">
+      {/* Header */}
+      <Badge variant="outline" className="gap-2 border-indigo-500/30 text-indigo-500">
+        <Zap className="h-3.5 w-3.5" aria-hidden />
+        Automations
+      </Badge>
+      <SectionHeader
+        as="h1"
+        title="Autopilot"
+        description="Run the full viral pipeline in one click, or trigger individual automations."
+      />
+
+      {/* Viral One-Click */}
+      <Panel variant="glass" className="space-y-6 p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
+          <div className="flex flex-1 items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600">
+              <Wand2 className="h-6 w-6 text-white" aria-hidden />
+            </div>
             <div>
-              <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">The Viral One-Click</h2>
+              <h2 className="ds-text-h3 text-theme-primary">The Viral One-Click</h2>
+              <p className="ds-text-caption text-theme-muted">8-step pipeline: cut, caption, score, distribute, monetize</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+
+          <div className="flex flex-wrap items-center gap-1">
             {steps.map((step, i) => {
               const active = step.key === pipelineStep
-              const Icon = step.icon
+              const StepIcon = step.icon
               return (
                 <React.Fragment key={step.key}>
-                  <div className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all ${active ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-600'}`}>
-                    <Icon className="w-4 h-4" />
-                    <span className="text-[8px] font-black uppercase tracking-widest">{step.label}</span>
+                  <div className={cn(
+                    'flex flex-col items-center gap-1 rounded-lg px-2.5 py-1 transition-colors',
+                    active ? 'bg-indigo-500/15 text-indigo-500' : 'text-theme-muted'
+                  )}>
+                    <StepIcon className="h-4 w-4" aria-hidden />
+                    <span className="ds-text-caption">{step.label}</span>
                   </div>
-                  {i < steps.length - 1 && <ArrowRight className="w-3 h-3 text-slate-700" />}
+                  {i < steps.length - 1 && <ArrowRight className="h-3 w-3 text-theme-muted" aria-hidden />}
                 </React.Fragment>
               )
             })}
           </div>
-          <button type="button" onClick={handleViralOneClick} className="px-8 py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-[11px]">Run Pipeline</button>
+
+          <Button onClick={handleViralOneClick} loading={running} leftIcon={!running ? <Zap className="h-4 w-4" aria-hidden /> : undefined}>
+            {running ? 'Running…' : 'Run pipeline'}
+          </Button>
         </div>
 
-        <AnimatePresence>
-          {pipelineStep === 'done' && pipelineResult && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-8 space-y-6">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-center">
-                  <p className="text-[8px] font-black text-indigo-400 uppercase mb-1">Hook Score</p>
-                  <p className="text-3xl font-black text-white italic">{pipelineResult.hookScore}%</p>
+        {pipelineError && (
+          <p className="text-sm text-rose-500">{pipelineError}</p>
+        )}
+
+        {pipelineStep === 'done' && pipelineResult && (
+          <div className="space-y-6 ds-anim-rise">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <StatCard label="Hook score" value={`${pipelineResult.hookScore ?? 0}%`} />
+              {pipelineResult.roiData?.salesScore != null && (
+                <StatCard label="Sales score" value={`${pipelineResult.roiData.salesScore}%`} />
+              )}
+              {pipelineResult.roiData?.estimatedROI != null && (
+                <StatCard label="Estimated ROI" value={`$${pipelineResult.roiData.estimatedROI.toLocaleString()}`} />
+              )}
+            </div>
+
+            {/* Ad Scaling */}
+            {pipelineResult.adPotential?.isHighPotential && (
+              <Panel variant="subtle" className="flex flex-col items-center justify-between gap-4 p-5 md:flex-row">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15">
+                    <Rocket className="h-5 w-5 text-indigo-500" aria-hidden />
+                  </div>
+                  <div>
+                    <p className="ds-text-label text-theme-primary">Low-CAC auto-scaling available</p>
+                    <p className="ds-text-caption text-theme-muted">{pipelineResult.adPotential.reason}</p>
+                  </div>
                 </div>
-                <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-center">
-                  <p className="text-[8px] font-black text-emerald-400 uppercase mb-1">Sales Score</p>
-                  <p className="text-3xl font-black text-white italic">{pipelineResult.roiData?.salesScore}%</p>
+                <Button onClick={handleLaunchAds} leftIcon={<Rocket className="h-4 w-4" aria-hidden />}>
+                  Launch ${pipelineResult.adPotential.recommendedBudget}/day test ad
+                </Button>
+              </Panel>
+            )}
+
+            {/* Asset Sourcing Gallery */}
+            {pipelineResult.sourcedAssets && (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="ds-text-label text-theme-primary">Sourced assets</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {pipelineResult.sourcedAssets.keywords.slice(0, 3).map(kw => (
+                      <Badge key={kw} variant="outline">{kw}</Badge>
+                    ))}
+                  </div>
                 </div>
-                <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-center">
-                  <p className="text-[8px] font-black text-amber-400 uppercase mb-1">Estimated ROI</p>
-                  <p className="text-2xl font-black text-white italic">${pipelineResult.roiData?.estimatedROI.toLocaleString()}</p>
+                <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
+                  {pipelineResult.sourcedAssets.suggestedAssets.slice(0, 6).map((asset, i) => (
+                    <div key={asset.id} className="group relative aspect-video overflow-hidden rounded-xl border border-subtle">
+                      <Image src={asset.url} alt={asset.matchedKeyword || ''} width={400} height={225} className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity group-hover:opacity-100" />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                        <p className="truncate text-[10px] font-semibold text-white">{asset.matchedKeyword}</p>
+                      </div>
+                      {i === 0 && <Badge variant="outline" className="absolute left-1.5 top-1.5 border-emerald-500/40 bg-black/40 text-emerald-400">Top pick</Badge>}
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* Ad Scaling Hub */}
-              {pipelineResult.adPotential?.isHighPotential && (
-                <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="p-6 rounded-[2rem] bg-indigo-600/10 border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-indigo-500/50 shadow-lg">
-                      <Rocket className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[12px] font-black text-white uppercase italic tracking-widest">Low-CAC Auto-Scaling Available</p>
-                      <p className="text-[9px] text-slate-400 italic">"{pipelineResult.adPotential.reason}"</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                       <p className="text-[8px] font-black text-indigo-400 uppercase">Est. Test CPC</p>
-                       <p className="text-lg font-black text-white italic">$0.12</p>
-                    </div>
-                    <button type="button" onClick={handleLaunchAds} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-600/20">Launch $5/Day Test Ad</button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Asset Sourcing Gallery */}
-              {pipelineResult.sourcedAssets && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between px-2">
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest italic">Autonomous Sourcing Gallery</p>
-                    <div className="flex gap-2">
-                      {pipelineResult.sourcedAssets.keywords.slice(0, 3).map(kw => (
-                        <span key={kw} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[7px] font-black text-slate-400 uppercase tracking-widest">{kw}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-                    {pipelineResult.sourcedAssets.suggestedAssets.slice(0, 6).map((asset, i) => (
-                      <motion.div
-                        key={asset.id}
-                        whileHover={{ scale: 1.05 }}
-                        className="relative aspect-video rounded-xl overflow-hidden border border-white/10 group cursor-pointer shadow-lg"
-                      >
-                          <Image src={asset.url} alt="" width={400} height={225} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-110 transition-transform duration-1000" />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-                           <p className="text-[7px] font-black text-white uppercase tracking-tighter truncate">{asset.matchedKeyword}</p>
-                           <button className="mt-1 w-full bg-indigo-600 text-white text-[6px] font-black uppercase py-1 rounded-md">One-Click Swap</button>
-                         </div>
-                         {i === 0 && <div className="absolute top-1 left-1 bg-emerald-500 text-white text-[6px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest">AI Top Pick</div>}
-                      </motion.div>
-                    ))}
-                  </div>
+            {/* Monetization Bridge */}
+            {pipelineResult.monetizationPlan && (
+              <Panel variant="subtle" className="space-y-4 p-5">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-emerald-500" aria-hidden />
+                  <p className="ds-text-label text-theme-primary">Conversion-triggered overlays</p>
                 </div>
-              )}
-
-              {/* Whop Monetization Bridge */}
-              {pipelineResult.monetizationPlan && (
-                <div className="p-6 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/20 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <ShoppingCart className="w-5 h-5 text-emerald-400" />
-                      <p className="text-[11px] font-black text-white uppercase tracking-widest italic">Conversion-Triggered Overlays</p>
-                    </div>
-                    <span className="text-[8px] font-black text-emerald-400/60 uppercase tracking-widest">Whop Sync Active</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {(((pipelineResult.monetizationPlan as any).triggers) || []).map((step: any, idx: number) => (
-                      <div key={idx} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8px] font-black text-indigo-400 uppercase px-2 py-0.5 bg-indigo-500/10 rounded-md">@{step.startTime}s</span>
-                          <div className="flex items-center gap-1">
-                             <TrendingUp className="w-3 h-3 text-emerald-400" />
-                             <span className="text-[8px] font-black text-emerald-400 uppercase">{(step.intentScore * 100).toFixed(0)}% Intent</span>
-                          </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {(((pipelineResult.monetizationPlan as any).triggers) || []).map((step: any, idx: number) => (
+                    <div key={idx} className="space-y-2 rounded-xl border border-subtle ds-surface-card p-4">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="border-indigo-500/30 text-indigo-500">@{step.startTime}s</Badge>
+                        <div className="flex items-center gap-1 text-emerald-500">
+                          <TrendingUp className="h-3 w-3" aria-hidden />
+                          <span className="ds-text-caption">{(step.intentScore * 100).toFixed(0)}% intent</span>
                         </div>
-                        <p className="text-[10px] font-black text-white uppercase truncate">{step.productName}</p>
-                              <p className="text-[7px] text-slate-400 line-clamp-2 italic">&quot;{step.reason}&quot;</p>
-                        <button className="w-full mt-2 py-2 bg-emerald-600 text-white text-[8px] font-black uppercase rounded-lg">Apply Checkout QR</button>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {pipelineResult.viralThumbnailUrl && (
-                <div className="p-4 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Image src={pipelineResult.adPotential?.thumbnail || pipelineResult.viralThumbnailUrl} alt="Viral Frame" width={400} height={225} className="w-20 h-12 rounded-lg object-cover border border-white/10" />
-                    <div>
-                      <p className="text-[10px] font-black text-white uppercase tracking-widest italic">Viral Asset Ready</p>
-                      <p className="text-[8px] text-slate-400 uppercase tracking-widest">Emotion-Cued Framing Applied</p>
+                      <p className="ds-text-label truncate text-theme-primary">{step.productName}</p>
+                      <p className="ds-text-caption line-clamp-2 text-theme-muted">&quot;{step.reason}&quot;</p>
                     </div>
-                  </div>
-                  <button type="button" onClick={() => showToast('Blasting to TikTok, IG & YouTube...', 'success')} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-black text-[9px] uppercase tracking-widest">Publish All</button>
+                  ))}
                 </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+              </Panel>
+            )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className={`${glassStyle} p-8 rounded-[2.5rem] space-y-6`}>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center"><Mic className="w-6 h-6 text-white" /></div>
-            <h3 className="font-black text-[var(--text-main)] uppercase italic">AI Voiceover</h3>
+            {/* Viral asset */}
+            {pipelineResult.viralThumbnailUrl && (
+              <Panel variant="subtle" className="flex items-center justify-between gap-4 p-5">
+                <div className="flex items-center gap-4">
+                  <Image src={pipelineResult.adPotential?.thumbnail || pipelineResult.viralThumbnailUrl} alt="Viral frame" width={400} height={225} className="h-12 w-20 rounded-lg border border-subtle object-cover" />
+                  <div>
+                    <p className="ds-text-label text-theme-primary">Viral asset ready</p>
+                    <p className="ds-text-caption text-theme-muted">Emotion-cued framing applied</p>
+                  </div>
+                </div>
+                <Button variant="secondary" onClick={() => showToast('Publishing to TikTok, IG & YouTube…', 'success')}>
+                  Publish all
+                </Button>
+              </Panel>
+            )}
           </div>
-          <textarea
-            className="w-full h-32 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-white outline-none"
-            placeholder="Type script..."
+        )}
+      </Panel>
+
+      {/* Individual automations */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* AI Voiceover */}
+        <Panel variant="glass" className="space-y-4 p-6">
+          <div className="flex items-center gap-2">
+            <Mic className="h-4 w-4 text-orange-500" aria-hidden />
+            <span className="ds-text-label text-theme-primary">AI Voiceover</span>
+          </div>
+          <Textarea
+            className="h-32"
+            placeholder="Type script…"
             aria-label="Voiceover Script"
             title="Voiceover Script"
             value={voiceoverText}
             onChange={e => setVoiceoverText(e.target.value)}
           />
-          <button className="w-full py-4 bg-orange-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Generate Voice</button>
-        </div>
+          <Button variant="secondary" className="w-full" loading={isGeneratingVoiceover} disabled={!voiceoverText.trim()}>
+            Generate voice
+          </Button>
+        </Panel>
 
-        <div className={`${glassStyle} p-8 rounded-[2.5rem] space-y-6`}>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-violet-600 flex items-center justify-center"><Scissors className="w-6 h-6 text-white" /></div>
-            <h3 className="font-black text-[var(--text-main)] uppercase italic">Auto-Jumpcut</h3>
+        {/* Auto-Jumpcut */}
+        <Panel variant="glass" className="space-y-4 p-6">
+          <div className="flex items-center gap-2">
+            <Scissors className="h-4 w-4 text-violet-500" aria-hidden />
+            <span className="ds-text-label text-theme-primary">Auto-Jumpcut</span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="ds-text-caption text-theme-muted">Min silence</span>
+              <span className="ds-text-caption tabular-nums text-theme-secondary">{minSilenceDuration.toFixed(1)}s</span>
+            </div>
             <input
               type="range"
               min={0.2}
@@ -478,19 +485,27 @@ const AutomateView: React.FC<AutomateViewProps> = ({
               title="Jumpcut Sensitivity"
               value={minSilenceDuration}
               onChange={e => setMinSilenceDuration(parseFloat(e.target.value))}
-              className="w-full accent-violet-600"
+              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-input accent-violet-500"
             />
-            <button type="button" onClick={handleRemoveSilence} className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Cut Silence</button>
           </div>
-        </div>
+          <Button variant="secondary" className="w-full" onClick={handleRemoveSilence} loading={silenceLoading} disabled={!videoUrl}>
+            Cut silence
+          </Button>
+          {silenceResult && (
+            <p className="ds-text-caption text-theme-muted">
+              Kept {silenceResult.segmentsKept} segments · removed {silenceResult.silenceRemoved.toFixed(1)}s
+            </p>
+          )}
+        </Panel>
 
-        <div className={`${glassStyle} p-8 rounded-[2.5rem] space-y-6`}>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center"><Type className="w-6 h-6 text-white" /></div>
-            <h3 className="font-black text-[var(--text-main)] uppercase italic">Auto-Caps</h3>
+        {/* Auto-Caps */}
+        <Panel variant="glass" className="space-y-4 p-6">
+          <div className="flex items-center gap-2">
+            <Type className="h-4 w-4 text-blue-500" aria-hidden />
+            <span className="ds-text-label text-theme-primary">Auto-Captions</span>
           </div>
-          <p className="text-slate-400 text-sm">Styles & positions available in text tab.</p>
-        </div>
+          <p className="text-sm text-theme-secondary">Caption styles and positions are available in the Text tab.</p>
+        </Panel>
       </div>
     </div>
   )

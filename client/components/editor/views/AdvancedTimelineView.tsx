@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import styles from './AdvancedTimelineView.module.css'
 
-import { Stage, Layer, Rect, Text as KonvaText, Line, Group, Circle } from 'react-konva'
+import { Stage, Layer, Rect, Text as KonvaText, Line, Group } from 'react-konva'
 import {
   Clock, Scissors, Compass, Magnet, ZoomIn, ZoomOut,
   Layers, Music2, Film, Type, Ghost
@@ -14,6 +14,7 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 import { Text } from 'react-konva'
 import { useLocalVAD } from '../../../hooks/useLocalVAD'
 import { useCompetitorGhosting } from '../../../hooks/useCompetitorGhosting'
+import { cn } from '../../../lib/utils'
 
 // ── Types & constants ─────────────────────────────────────────────────────────
 
@@ -285,60 +286,69 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
     : timelineSegments
 
   return (
-    <div className="flex flex-col h-full bg-[#080d14] rounded-2xl border border-white/[0.07] overflow-hidden shadow-2xl relative">
+    <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-subtle ds-surface-card">
 
       {/* ── Top Control Bar ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white/[0.025] border-b border-white/5 shrink-0">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-subtle px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-500/15 rounded-xl border border-indigo-500/20">
-            <Compass className="w-4 h-4 text-indigo-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15">
+            <Compass className="h-4 w-4 text-indigo-500" aria-hidden />
           </div>
-          <div>
-            <h3 className="font-black text-[var(--text-main)] italic uppercase tracking-wide text-[11px]">Advanced Spatial Timeline</h3>
-            <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Konva Hardware Canvas — {timelineSegments.length} segments</span>
+          <div className="min-w-0">
+            <h3 className="ds-text-label text-theme-primary">Advanced Timeline</h3>
+            <span className="ds-text-caption text-theme-muted">{timelineSegments.length} segments</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Track filter pills */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden items-center gap-1 md:flex">
             <button
               type="button"
               onClick={() => setSelectedTrackFilter(null)}
-              className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === null ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500 hover:text-white'}`}
+              className={cn(
+                'rounded-lg px-2 py-1 text-[10px] font-medium transition-colors',
+                selectedTrackFilter === null ? 'bg-indigo-500 text-white' : 'ds-surface-subtle text-theme-muted hover:text-theme-primary'
+              )}
             >All</button>
             {DYNAMIC_TRACKS.map(t => (
               <button
                 type="button"
                 key={t.id}
                 onClick={() => setSelectedTrackFilter(selectedTrackFilter === t.id ? null : t.id)}
-                className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === t.id ? 'text-white border border-white/10' : 'bg-white/5 text-slate-500 hover:text-white border border-transparent'}`}
+                className={cn(
+                  'rounded-lg border px-2 py-1 text-[10px] font-medium transition-colors',
+                  selectedTrackFilter === t.id ? 'border-border text-theme-primary' : 'border-transparent ds-surface-subtle text-theme-muted hover:text-theme-primary'
+                )}
                 style={selectedTrackFilter === t.id ? { backgroundColor: t.color + '33' } : undefined}
               >{t.label}</button>
             ))}
           </div>
 
-          <div className="h-4 w-px bg-white/10" />
+          <div className="h-4 w-px bg-border" />
 
-          {/* Magnetic + Zoom */}
+          {/* Local VAD */}
           <button
             type="button"
             onClick={handleRunVAD}
             disabled={!vadReady || vadProcessing}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${vadProcessing ? 'bg-sky-500/20 text-sky-400 animate-pulse' : 'bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10'}`}
+            className={cn(
+              'rounded-lg border px-3 py-1.5 text-[10px] font-medium transition-colors disabled:opacity-50',
+              vadProcessing ? 'border-sky-500/30 bg-sky-500/15 text-sky-500' : 'border-subtle ds-surface-subtle text-theme-secondary hover:text-theme-primary'
+            )}
             title="Run Local Edge VAD"
           >
-            {vadProcessing ? 'Processing Edge AI...' : 'Run VAD Matrix'}
+            {vadProcessing ? 'Processing…' : 'Run VAD'}
           </button>
 
-          <div className="h-4 w-px bg-white/10" />
+          <div className="h-4 w-px bg-border" />
 
           {/* Ghosting Overlay Selector */}
-          <div className="flex items-center gap-1 bg-white/5 rounded-lg border border-white/10 px-1.5 py-1">
+          <div className="flex items-center gap-1 rounded-lg border border-subtle ds-surface-subtle px-1.5 py-1">
             <button
-               type="button"
-               onClick={() => clearGhostCurve()}
-               className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter ${!activeProfile ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
+              type="button"
+              onClick={() => clearGhostCurve()}
+              className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-colors', !activeProfile ? 'bg-indigo-500/15 text-indigo-500' : 'text-theme-muted hover:text-theme-primary')}
             >
               Raw
             </button>
@@ -347,33 +357,33 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                 type="button"
                 key={p.id}
                 onClick={() => loadGhostCurve(p.id)}
-                className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all ${activeProfile?.id === p.id ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
+                className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-colors', activeProfile?.id === p.id ? 'bg-indigo-500/15 text-indigo-500' : 'text-theme-muted hover:text-theme-primary')}
               >
                 {p.name.split(' ')[0]}
               </button>
             ))}
-            <Ghost className={`w-3 h-3 ml-1 ${activeProfile ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
+            <Ghost className={cn('ml-1 h-3 w-3', activeProfile ? 'text-indigo-500' : 'text-theme-muted')} aria-hidden />
           </div>
 
-          <div className="h-4 w-px bg-white/10" />
+          <div className="h-4 w-px bg-border" />
 
           <button
             type="button"
             onClick={() => setIsMagnetic(v => !v)}
-            className={`p-1.5 rounded-lg border transition-all ${isMagnetic ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-white/5 border-white/10 text-slate-500'}`}
+            className={cn('rounded-lg border p-1.5 transition-colors', isMagnetic ? 'border-indigo-500/30 bg-indigo-500/15 text-indigo-500' : 'border-subtle ds-surface-subtle text-theme-muted')}
             title="Magnetic snap"
           >
-            <Magnet className="w-3.5 h-3.5" />
+            <Magnet className="h-3.5 w-3.5" aria-hidden />
           </button>
-          <button type="button" onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.5))} title="Zoom Out" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
-            <ZoomOut className="w-3.5 h-3.5" />
+          <button type="button" onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.5))} title="Zoom Out" className="rounded-lg border border-subtle ds-surface-subtle p-1.5 text-theme-secondary hover:text-theme-primary">
+            <ZoomOut className="h-3.5 w-3.5" aria-hidden />
           </button>
-          <span className="text-[9px] font-mono text-slate-600 w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
-          <button type="button" onClick={() => setZoomLevel(z => Math.min(10, z + 0.5))} title="Zoom In" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
-            <ZoomIn className="w-3.5 h-3.5" />
+          <span className="w-8 text-center font-mono text-[10px] text-theme-muted">{Math.round(zoomLevel * 100)}%</span>
+          <button type="button" onClick={() => setZoomLevel(z => Math.min(10, z + 0.5))} title="Zoom In" className="rounded-lg border border-subtle ds-surface-subtle p-1.5 text-theme-secondary hover:text-theme-primary">
+            <ZoomIn className="h-3.5 w-3.5" aria-hidden />
           </button>
 
-          <div className="h-4 w-px bg-white/10" />
+          <div className="h-4 w-px bg-border" />
 
           {/* Scroll to playhead */}
           <button
@@ -383,17 +393,17 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
               if (el) el.scrollLeft = Math.max(0, timeToX(playheadTime) - 100)
             }}
             title="Jump to playhead"
-            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"
+            className="rounded-lg border border-subtle ds-surface-subtle p-1.5 text-theme-secondary hover:text-theme-primary"
           >
-            <Clock className="w-3.5 h-3.5" />
+            <Clock className="h-3.5 w-3.5" aria-hidden />
           </button>
 
           <button
             type="button"
             onClick={() => setUseProfessionalTimeline(false)}
-            className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase italic tracking-wider transition-all bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"
+            className="rounded-lg border border-subtle ds-surface-subtle px-3 py-1.5 text-[10px] font-medium text-theme-secondary transition-colors hover:text-theme-primary"
           >
-            Basic Mode
+            Basic mode
           </button>
         </div>
       </div>
@@ -402,17 +412,17 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
       <div className="flex flex-1 overflow-hidden">
 
         {/* Track label sidebar */}
-        <div className="w-20 shrink-0 bg-black/40 border-r border-white/5 flex flex-col pt-[28px]">
+        <div className="flex w-20 shrink-0 flex-col border-r border-subtle ds-surface-subtle pt-[28px]">
           {/* Ruler spacer */}
           <div className="h-[28px] shrink-0" />
           {DYNAMIC_TRACKS.map(track => (
             <div
               key={track.id}
-              className={`flex items-center justify-center gap-1.5 px-2 group cursor-pointer ${styles.trackRow}`}
+              className={`group flex cursor-pointer items-center justify-center gap-1.5 px-2 ${styles.trackRow}`}
               style={{ height: `${TRACK_HEIGHT + TRACK_GAP}px`, opacity: selectedTrackFilter === null || selectedTrackFilter === track.id ? 1 : 0.25 }}
             >
-              <div className="w-1 h-5 rounded-full" style={{ backgroundColor: track.color + '88' }} />
-              <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider group-hover:text-white transition-colors">{track.label}</span>
+              <div className="h-5 w-1 rounded-full" style={{ backgroundColor: track.color + '88' }} />
+              <span className="text-[10px] font-medium text-theme-muted transition-colors group-hover:text-theme-primary">{track.label}</span>
             </div>
           ))}
           {/* Add Layer Button */}
@@ -423,7 +433,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
               showToast(`Added new Layer ${newLayerId - 4}`, 'success');
               // To actually force layer render, we would need to add an empty segment or track state
             }}
-            className="mt-2 mx-2 p-1.5 border border-dashed border-white/10 rounded-lg text-[8px] text-slate-500 hover:text-white hover:bg-white/5 transition-all uppercase font-black"
+            className="mx-2 mt-2 rounded-lg border border-dashed border-subtle p-1.5 text-[10px] font-medium text-theme-muted transition-colors hover:text-theme-primary"
           >
             + Add Layer
           </button>
@@ -503,31 +513,6 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                 </Layer>
               )}
 
-              {/* ── Saliency / Eye-Tracking Overlay (Task 4.3) ───────────── */}
-              {showAiPreviews && (
-                <Layer y={RULER_HEIGHT}>
-                  {/* Mock Saliency Point */}
-                  <Circle
-                    x={timeToX(playheadTime)}
-                    y={totalTrackHeight / 2}
-                    radius={20}
-                    fillLinearGradientStartPoint={{ x: -20, y: -20 }}
-                    fillLinearGradientEndPoint={{ x: 20, y: 20 }}
-                    fillLinearGradientColorStops={[0, 'rgba(244, 63, 94, 0.4)', 1, 'rgba(244, 63, 94, 0)']}
-                    listening={false}
-                  />
-                  <Text
-                    x={timeToX(playheadTime) + 25}
-                    y={totalTrackHeight / 2 - 5}
-                    text="Eye Track Focus"
-                    fill="#f43f5e"
-                    fontSize={8}
-                    fontStyle="bold"
-                    opacity={0.8}
-                  />
-                </Layer>
-              )}
-
               {/* ── Ruler layer ──────────────────────────────────────────── */}
               <Layer>
                 {/* Ruler background */}
@@ -559,7 +544,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                   return (
                     <Group key={i} x={x}>
                       <Line points={[0, 0, 0, totalTrackHeight]} stroke="#F59E0B" strokeWidth={1} dash={[3, 4]} opacity={0.5} />
-                      <KonvaText x={4} y={4} text="✦" fontSize={8} fill="#F59E0B" />
+                      <KonvaText x={4} y={4} text="◆" fontSize={8} fill="#F59E0B" />
                     </Group>
                   )
                 })}
@@ -655,26 +640,27 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
       {/* ── Right-click Context Menu ─────────────────────────────────────────── */}
       {ctxMenu && (
         <div
-          className={`fixed z-[9999] rounded-2xl border border-white/10 bg-black/95 backdrop-blur-3xl shadow-2xl overflow-hidden ${styles.contextMenu}`}
+          className={`fixed z-[9999] overflow-hidden rounded-xl border border-subtle ds-surface-elevated ${styles.contextMenu}`}
           style={{ left: ctxMenu.x, top: ctxMenu.y }}
         >
           {[
-            { action: 'split',     label: '✂ Split at midpoint',  color: 'text-white' },
-            { action: 'duplicate', label: '⧉ Duplicate',           color: 'text-white' },
-            { action: 'ai-cutout', label: '🪄 AI Remove Background',color: 'text-indigo-400' },
-            { action: 'ai-enhance',label: '✨ Auto-Enhance Audio',  color: 'text-emerald-400' },
-            { action: 'delete',    label: '✕ Delete segment',      color: 'text-rose-400' },
-          ].map(item => (
-            <button
-              type="button"
-              key={item.action}
-              onClick={() => handleContextAction(item.action)}
-              className={`w-full px-4 py-3 text-left text-[11px] font-black uppercase tracking-wider hover:bg-white/10 transition-all ${item.color}`}
-            >
-              {item.label}
-            </button>
-          ))}
-          <button type="button" onClick={() => setCtxMenu(null)} className="w-full px-4 py-2 text-[9px] text-slate-600 hover:bg-white/5 transition-all text-left">
+            { action: 'split',     label: 'Split at midpoint', icon: Scissors, color: 'text-theme-secondary' },
+            { action: 'duplicate', label: 'Duplicate',          icon: Layers,   color: 'text-theme-secondary' },
+            { action: 'delete',    label: 'Delete segment',     icon: Scissors, color: 'text-rose-500' },
+          ].map(item => {
+            const ItemIcon = item.icon
+            return (
+              <button
+                type="button"
+                key={item.action}
+                onClick={() => handleContextAction(item.action)}
+                className={cn('flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent', item.color)}
+              >
+                <ItemIcon className="h-3.5 w-3.5" aria-hidden /> {item.label}
+              </button>
+            )
+          })}
+          <button type="button" onClick={() => setCtxMenu(null)} className="w-full px-4 py-2 text-left text-xs text-theme-muted transition-colors hover:bg-accent">
             Cancel
           </button>
         </div>

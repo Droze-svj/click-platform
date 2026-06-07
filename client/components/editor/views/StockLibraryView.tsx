@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useMemo, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Film, Music, Volume2, Image as ImageIcon, Sticker, Wand2, Search, X,
-  Play, Pause, Plus, Heart, Download, Filter, Clock, Tag,
+  Play, Pause, Plus, Heart, Filter, Clock, Tag,
   Sparkles, Flame, Zap, Coffee, Cpu, Rocket, Globe, Heart as HeartIcon,
-  TrendingUp, Layers, ChevronRight, Volume1
+  TrendingUp, Layers, ChevronRight, type LucideIcon,
 } from 'lucide-react'
+import { Panel, Badge, SectionHeader, EmptyState, Button } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type StockCategory = 'broll' | 'music' | 'sfx' | 'gif' | 'sticker' | 'transition'
@@ -182,7 +183,7 @@ const ALL_DATA: Record<StockCategory, StockItem[]> = {
   transition: TRANSITIONS,
 }
 
-const CATEGORY_META: Record<StockCategory, { label: string; icon: any; color: string; accent: string; total: number }> = {
+const CATEGORY_META: Record<StockCategory, { label: string; icon: LucideIcon; color: string; accent: string; total: number }> = {
   broll:      { label: 'B-Roll',      icon: Film,      color: 'from-rose-500 to-orange-500',     accent: 'text-rose-400',     total: BROLL.length },
   music:      { label: 'Music',       icon: Music,     color: 'from-fuchsia-500 to-purple-600',  accent: 'text-fuchsia-400',  total: MUSIC.length },
   sfx:        { label: 'Sound FX',    icon: Volume2,   color: 'from-amber-500 to-orange-600',    accent: 'text-amber-400',    total: SFX.length },
@@ -191,7 +192,7 @@ const CATEGORY_META: Record<StockCategory, { label: string; icon: any; color: st
   transition: { label: 'Transitions', icon: Wand2,     color: 'from-violet-500 to-indigo-600',   accent: 'text-violet-400',   total: TRANSITIONS.length },
 }
 
-const MOOD_ICONS: Record<string, any> = {
+const MOOD_ICONS: Record<string, LucideIcon> = {
   Energy: Flame, Cozy: Coffee, Cinematic: Sparkles, Tech: Cpu, Lifestyle: HeartIcon,
   Reaction: Sparkles, Aesthetic: Sparkles, Finance: TrendingUp, Strategy: Layers,
   Celebration: Sparkles, CTA: ChevronRight, Music: Music, Corporate: Globe,
@@ -199,8 +200,6 @@ const MOOD_ICONS: Record<string, any> = {
   Abstract: Sparkles, Build: Zap, Trigger: Zap, Impact: Zap, Transition: Wand2,
   Tension: Flame, Modern: Rocket, Brand: Sparkles,
 }
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.5)]'
 
 // ── Component ───────────────────────────────────────────────────────────────
 const StockLibraryView: React.FC<StockLibraryViewProps> = ({
@@ -301,134 +300,136 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-[#0a0a14] via-[#0d0d18] to-[#080812] p-6 space-y-6">
+    <div className="h-full space-y-6 overflow-y-auto p-6 ds-anim-rise">
       <audio ref={audioRef} onEnded={() => setPreviewId(null)} className="hidden" />
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">Click · Stock Library</span>
-          </div>
-          <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-tight">Stock & Creative Assets</h2>
-          <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
-            {Object.values(CATEGORY_META).reduce((s, m) => s + m.total, 0)} curated assets across {Object.keys(CATEGORY_META).length} categories. Click any item to add to your timeline.
-          </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-3">
+          <Badge variant="outline" className="gap-2 border-fuchsia-500/30 text-fuchsia-500">
+            <Layers className="h-3.5 w-3.5" aria-hidden />
+            Stock Library
+          </Badge>
+          <SectionHeader
+            as="h1"
+            title="Stock & Creative Assets"
+            description={`${Object.values(CATEGORY_META).reduce((s, m) => s + m.total, 0)} curated assets across ${Object.keys(CATEGORY_META).length} categories. Click any item to add to your timeline.`}
+          />
         </div>
         {favorites.size > 0 && (
-          <div className={`${glassStyle} rounded-2xl px-5 py-3 flex items-center gap-3`}>
-            <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
-            <span className="text-[11px] font-bold text-slate-300 uppercase tracking-[0.2em]">{favorites.size} saved</span>
-          </div>
+          <Panel variant="subtle" className="flex items-center gap-2 px-4 py-2.5">
+            <Heart className="h-4 w-4 fill-rose-500 text-rose-500" aria-hidden />
+            <span className="ds-text-label text-theme-secondary">{favorites.size} saved</span>
+          </Panel>
         )}
       </div>
 
       {/* Category tabs */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {(Object.keys(CATEGORY_META) as StockCategory[]).map(cat => {
           const meta = CATEGORY_META[cat]
-          const Icon = meta.icon
+          const TabIcon = meta.icon
           const isActive = active === cat
           return (
             <button type="button"
               key={cat}
               onClick={() => { setActive(cat); setMoodFilter('All'); setPreviewId(null) }}
-              className={`flex items-center gap-3 px-5 py-3 rounded-2xl border-2 transition-colors ${
+              className={cn(
+                'flex items-center gap-2 rounded-xl border px-4 py-2.5 transition-colors',
                 isActive
-                  ? `bg-gradient-to-br ${meta.color} text-white border-transparent shadow-[0_8px_30px_rgba(0,0,0,0.4)]`
-                  : `bg-white/[0.02] ${meta.accent} border-white/10 hover:bg-white/[0.05] hover:border-white/20`
-              }`}
+                  ? `border-transparent bg-gradient-to-br ${meta.color} text-white`
+                  : 'border-subtle ds-surface-subtle text-theme-secondary hover:border-border hover:text-theme-primary'
+              )}
             >
-              <Icon className="w-4 h-4" />
-              <span className="text-[12px] font-bold tracking-tight">{meta.label}</span>
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isActive ? 'bg-black/20' : 'bg-white/5'}`}>{meta.total}</span>
+              <TabIcon className="h-4 w-4" aria-hidden />
+              <span className="text-sm font-medium">{meta.label}</span>
+              <span className={cn('rounded-full px-1.5 py-0.5 font-mono text-[10px]', isActive ? 'bg-black/20' : 'bg-accent')}>{meta.total}</span>
             </button>
           )
         })}
       </div>
 
       {/* Search + mood filter */}
-      <div className={`${glassStyle} rounded-2xl p-4 flex flex-col md:flex-row gap-3`}>
+      <Panel variant="glass" className="flex flex-col gap-3 p-4 md:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-muted" aria-hidden />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={`Search ${CATEGORY_META[active].label.toLowerCase()}…`}
-            className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-[13px] font-medium text-white focus:outline-none focus:border-fuchsia-500/50 transition-colors placeholder:text-slate-500"
+            className="w-full rounded-lg border border-subtle ds-surface-subtle py-2.5 pl-10 pr-10 text-sm text-theme-primary outline-none transition-colors placeholder:text-theme-muted focus:border-fuchsia-500/50"
           />
           {search && (
-            <button type="button" onClick={() => setSearch('')} title="Clear" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center">
-              <X className="w-3 h-3" />
+            <button type="button" onClick={() => setSearch('')} title="Clear" className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-theme-muted hover:text-theme-primary">
+              <X className="h-3.5 w-3.5" aria-hidden />
             </button>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-slate-500" />
+        <div className="flex flex-wrap items-center gap-2">
+          <Filter className="h-4 w-4 text-theme-muted" aria-hidden />
           {moods.slice(0, 8).map(m => {
-            const Icon = MOOD_ICONS[m] || Tag
+            const MIcon = MOOD_ICONS[m] || Tag
             return (
               <button type="button"
                 key={m}
                 onClick={() => setMoodFilter(m)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
                   moodFilter === m
-                    ? 'bg-fuchsia-600 text-white border-transparent'
-                    : 'bg-white/[0.02] text-slate-300 border-white/10 hover:text-white hover:border-white/30'
-                }`}
+                    ? 'border-transparent bg-fuchsia-600 text-white'
+                    : 'border-subtle ds-surface-subtle text-theme-secondary hover:text-theme-primary'
+                )}
               >
-                {m !== 'All' && <Icon className="w-3 h-3" />}
+                {m !== 'All' && <MIcon className="h-3 w-3" aria-hidden />}
                 {m}
               </button>
             )
           })}
         </div>
-      </div>
+      </Panel>
 
       {/* Asset grid */}
       {visible.length === 0 ? (
-        <div className={`${glassStyle} rounded-2xl p-12 text-center`}>
-          <Search className="w-10 h-10 text-slate-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-black text-[var(--text-main)] mb-2">No matches</h3>
-          <p className="text-[13px] text-slate-400 mb-5">Try a different search term or mood filter.</p>
-          <button type="button" onClick={() => { setSearch(''); setMoodFilter('All') }} className="px-6 py-2.5 bg-white/5 border border-white/10 text-slate-300 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:text-white">Reset filters</button>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="No matches"
+          description="Try a different search term or mood filter."
+          action={<Button variant="secondary" onClick={() => { setSearch(''); setMoodFilter('All') }}>Reset filters</Button>}
+        />
       ) : (
         <div className={
-          active === 'sticker' ? 'grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3' :
-          active === 'gif' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' :
-          active === 'broll' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' :
-          active === 'transition' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' :
-          'grid grid-cols-1 lg:grid-cols-2 gap-3'
+          active === 'sticker' ? 'grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8' :
+          active === 'gif' ? 'grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4' :
+          active === 'broll' ? 'grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3' :
+          active === 'transition' ? 'grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4' :
+          'grid grid-cols-1 gap-3 lg:grid-cols-2'
         }>
-          <AnimatePresence mode="popLayout">
-            {visible.map(item => (
-              <StockTile
-                key={item.id}
-                item={item}
-                isPlaying={isPlaying(item.id)}
-                isFav={favorites.has(item.id)}
-                onPreview={() => handlePreview(item)}
-                onAdd={() => handleAdd(item)}
-                onFav={() => toggleFav(item.id)}
-              />
-            ))}
-          </AnimatePresence>
+          {visible.map(item => (
+            <StockTile
+              key={item.id}
+              item={item}
+              isPlaying={isPlaying(item.id)}
+              isFav={favorites.has(item.id)}
+              onPreview={() => handlePreview(item)}
+              onAdd={() => handleAdd(item)}
+              onFav={() => toggleFav(item.id)}
+            />
+          ))}
         </div>
       )}
 
       {/* Footer note */}
-      <div className="rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
-        <Sparkles className="w-4 h-4 text-fuchsia-400 flex-shrink-0 mt-0.5" />
+      <Panel variant="subtle" className="flex items-start gap-3 p-4">
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-500" aria-hidden />
         <div>
-          <p className="text-[11px] font-bold text-fuchsia-300 leading-snug">Curated stock library — hand-picked for short-form content.</p>
-          <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+          <p className="ds-text-label text-theme-primary">Curated stock library — hand-picked for short-form content.</p>
+          <p className="ds-text-caption mt-1 leading-relaxed text-theme-muted">
             All assets are royalty-free for personal use. Premium assets (marked) ship in the Pro tier and unlock 4K + extended licensing.
-            Live Pexels / Pixabay / Mixkit / Freesound integrations land once <code className="text-fuchsia-300">/api/stock</code> is wired.
+            Live Pexels / Pixabay / Mixkit / Freesound integrations land once <code className="text-fuchsia-500">/api/stock</code> is wired.
           </p>
         </div>
-      </div>
+      </Panel>
     </div>
   )
 }
@@ -454,62 +455,48 @@ const StockTile = React.forwardRef<
 
   if (item.category === 'sticker') {
     return (
-      <motion.button
+      <button
         ref={ref}
         type="button"
-        layout
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        whileHover={{ scale: 1.1, y: -4 }}
-        whileTap={{ scale: 0.95 }}
         onClick={onAdd}
         title={`${item.title} · ${item.mood}`}
-        className="aspect-square rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.06] flex items-center justify-center text-4xl transition-colors relative group"
+        className="group relative flex aspect-square items-center justify-center rounded-2xl border border-subtle ds-surface-subtle text-4xl transition-colors hover:border-emerald-500/40"
       >
         <span>{item.url}</span>
-        <span className="absolute bottom-1 left-0 right-0 text-center text-[8px] font-bold text-slate-400 truncate px-1 opacity-0 group-hover:opacity-100 transition-opacity">{item.title.slice(2)}</span>
-      </motion.button>
+        <span className="absolute inset-x-0 bottom-1 truncate px-1 text-center text-[10px] font-medium text-theme-muted opacity-0 transition-opacity group-hover:opacity-100">{item.title.slice(2)}</span>
+      </button>
     )
   }
 
   if (item.category === 'transition') {
     return (
-      <motion.div
+      <div
         ref={ref}
-        layout
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-violet-500/40 transition-colors overflow-hidden group"
+        className="group overflow-hidden rounded-2xl border border-subtle ds-surface-card transition-colors hover:border-violet-500/40"
       >
-        <div className="aspect-video bg-gradient-to-br from-violet-600/30 to-indigo-700/40 relative flex items-center justify-center">
-          <Wand2 className="w-8 h-8 text-violet-300/60 group-hover:scale-110 group-hover:rotate-12 transition-transform" />
-          <span className="absolute top-2 right-2 text-[8px] font-mono text-white/60 bg-black/40 px-2 py-0.5 rounded-full">{item.duration?.toFixed(1)}s</span>
+        <div className="relative flex aspect-video items-center justify-center bg-gradient-to-br from-violet-600/30 to-indigo-700/40">
+          <Wand2 className="h-8 w-8 text-violet-300/60 transition-transform group-hover:scale-110" aria-hidden />
+          <span className="absolute right-2 top-2 rounded-full bg-black/40 px-2 py-0.5 font-mono text-[10px] text-white/70">{item.duration?.toFixed(1)}s</span>
         </div>
         <div className="p-3">
-          <p className="text-[12px] font-bold text-white truncate mb-1">{item.title}</p>
+          <p className="mb-1 truncate text-sm font-medium text-theme-primary">{item.title}</p>
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-violet-400 flex items-center gap-1.5"><Icon className="w-2.5 h-2.5" />{item.mood}</span>
-            <button type="button" onClick={onAdd} title="Add to timeline" className="text-[10px] font-bold text-white px-2.5 py-1 rounded-full bg-violet-600 hover:bg-violet-500 transition-colors uppercase tracking-wider">Add</button>
+            <span className="flex items-center gap-1.5 text-[10px] font-medium text-violet-500"><Icon className="h-3 w-3" aria-hidden />{item.mood}</span>
+            <button type="button" onClick={onAdd} title="Add to timeline" className="rounded-full bg-violet-600 px-2.5 py-1 text-[10px] font-semibold text-white transition-colors hover:bg-violet-500">Add</button>
           </div>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   if (item.category === 'gif') {
     return (
-      <motion.div
+      <div
         ref={ref}
-        layout
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-500/40 transition-colors overflow-hidden group cursor-pointer"
+        className="group cursor-pointer overflow-hidden rounded-2xl border border-subtle ds-surface-card transition-colors hover:border-cyan-500/40"
         onClick={onAdd}
       >
-        <div className="aspect-square bg-black relative">
+        <div className="relative aspect-square bg-black">
           {item.thumb && (
             // eslint-disable-next-line @next/next/no-img-element
             <img 
@@ -523,33 +510,29 @@ const StockTile = React.forwardRef<
            type="button"
             onClick={(e) => { e.stopPropagation(); onFav() }}
             title={isFav ? 'Unfavorite' : 'Favorite'}
-            className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isFav ? 'bg-rose-500 text-white' : 'bg-black/60 text-white/70 hover:text-white'}`}
+            className={cn('absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full transition-colors', isFav ? 'bg-rose-500 text-white' : 'bg-black/60 text-white/70 hover:text-white')}
           >
-            <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-white' : ''}`} />
+            <Heart className={cn('h-3.5 w-3.5', isFav && 'fill-white')} aria-hidden />
           </button>
-          <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-300 bg-black/60 px-2 py-1 rounded-full flex items-center gap-1.5"><Icon className="w-2.5 h-2.5" />{item.mood}</span>
-            <span className="text-[10px] font-bold text-white bg-cyan-600 px-2.5 py-1 rounded-full">+ Add</span>
+          <div className="absolute inset-x-2 bottom-2 flex items-end justify-between opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-1 text-[10px] font-medium text-cyan-300"><Icon className="h-3 w-3" aria-hidden />{item.mood}</span>
+            <span className="rounded-full bg-cyan-600 px-2.5 py-1 text-[10px] font-semibold text-white">+ Add</span>
           </div>
         </div>
         <div className="px-3 py-2">
-          <p className="text-[11px] font-medium text-white truncate">{item.title}</p>
+          <p className="truncate text-xs font-medium text-theme-primary">{item.title}</p>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   if (item.category === 'broll') {
     return (
-      <motion.div
+      <div
         ref={ref}
-        layout
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-rose-500/40 transition-colors overflow-hidden group"
+        className="group overflow-hidden rounded-2xl border border-subtle ds-surface-card transition-colors hover:border-rose-500/40"
       >
-        <div className="aspect-video bg-black relative">
+        <div className="relative aspect-video bg-black">
           {item.thumb && (
             // eslint-disable-next-line @next/next/no-img-element
             <img 
@@ -561,110 +544,109 @@ const StockTile = React.forwardRef<
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
           {item.premium && (
-            <span className="absolute top-2 left-2 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-amber-500 text-black flex items-center gap-1"><Sparkles className="w-2.5 h-2.5" /> Pro</span>
+            <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-amber-500 px-2 py-1 text-[10px] font-semibold text-black"><Sparkles className="h-3 w-3" aria-hidden /> Pro</span>
           )}
           <button
            type="button"
             onClick={onFav}
             title={isFav ? 'Unfavorite' : 'Favorite'}
-            className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isFav ? 'bg-rose-500 text-white' : 'bg-black/60 text-white/70 hover:text-white hover:bg-black/80'}`}
+            className={cn('absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors', isFav ? 'bg-rose-500 text-white' : 'bg-black/60 text-white/70 hover:text-white')}
           >
-            <Heart className={`w-4 h-4 ${isFav ? 'fill-white' : ''}`} />
+            <Heart className={cn('h-4 w-4', isFav && 'fill-white')} aria-hidden />
           </button>
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+          <div className="absolute inset-x-3 bottom-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button
                type="button"
                 onClick={onPreview}
                 title={isPlaying ? 'Pause' : 'Preview'}
-                className="w-9 h-9 rounded-full bg-white/90 text-black hover:bg-white flex items-center justify-center transition-colors shadow-xl"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-black shadow transition-colors hover:bg-white"
               >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                {isPlaying ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="ml-0.5 h-4 w-4" aria-hidden />}
               </button>
-              <span className="text-[10px] font-bold text-white bg-black/60 px-2 py-1 rounded-full flex items-center gap-1.5"><Clock className="w-2.5 h-2.5" /> {item.duration}s</span>
+              <span className="flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-1 text-[10px] font-medium text-white"><Clock className="h-3 w-3" aria-hidden /> {item.duration}s</span>
             </div>
             <button
              type="button"
               onClick={onAdd}
               title="Add to timeline"
-              className="px-4 py-1.5 bg-rose-500 hover:bg-rose-400 text-white text-[11px] font-bold uppercase tracking-wider rounded-full transition-colors flex items-center gap-1.5 shadow-xl"
+              className="flex items-center gap-1.5 rounded-full bg-rose-500 px-4 py-1.5 text-xs font-semibold text-white shadow transition-colors hover:bg-rose-400"
             >
-              <Plus className="w-3 h-3" /> Add
+              <Plus className="h-3 w-3" aria-hidden /> Add
             </button>
           </div>
         </div>
         <div className="p-3">
-          <p className="text-[13px] font-bold text-white truncate">{item.title}</p>
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-rose-400 flex items-center gap-1.5"><Icon className="w-2.5 h-2.5" />{item.mood}</span>
+          <p className="truncate text-sm font-medium text-theme-primary">{item.title}</p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-medium text-rose-500"><Icon className="h-3 w-3" aria-hidden />{item.mood}</span>
             {item.tags.slice(0, 2).map(t => (
-              <span key={t} className="text-[9px] font-mono text-slate-500">#{t}</span>
+              <span key={t} className="font-mono text-[10px] text-theme-muted">#{t}</span>
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   // music + sfx — list-style row
   const isMusic = item.category === 'music'
   return (
-    <motion.div
+    <div
       ref={ref}
-      layout
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className={`rounded-2xl bg-white/[0.03] border transition-colors p-3 flex items-center gap-3 group ${
-        isMusic ? 'border-white/10 hover:border-fuchsia-500/40' : 'border-white/10 hover:border-amber-500/40'
-      }`}
+      className={cn(
+        'group flex items-center gap-3 rounded-2xl border border-subtle ds-surface-card p-3 transition-colors',
+        isMusic ? 'hover:border-fuchsia-500/40' : 'hover:border-amber-500/40'
+      )}
     >
       <button
        type="button"
         onClick={onPreview}
         title={isPlaying ? 'Pause' : 'Preview'}
-        className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white transition-colors flex-shrink-0 ${
-          isMusic ? 'bg-gradient-to-br from-fuchsia-500 to-purple-600 hover:from-fuchsia-600 hover:to-purple-700' : 'bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'
-        }`}
+        className={cn(
+          'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white transition-colors',
+          isMusic ? 'bg-gradient-to-br from-fuchsia-500 to-purple-600' : 'bg-gradient-to-br from-amber-500 to-orange-600'
+        )}
       >
-        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+        {isPlaying ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="ml-0.5 h-4 w-4" aria-hidden />}
       </button>
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-bold text-white truncate flex items-center gap-2">
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-2 truncate text-sm font-medium text-theme-primary">
           {item.title}
-          {item.premium && <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Pro</span>}
+          {item.premium && <span className="rounded-full border border-amber-500/30 bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400">Pro</span>}
         </p>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className={`text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${isMusic ? 'text-fuchsia-400' : 'text-amber-400'}`}>
-            <Icon className="w-2.5 h-2.5" />{item.mood}
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <span className={cn('flex items-center gap-1.5 text-[10px] font-medium', isMusic ? 'text-fuchsia-500' : 'text-amber-500')}>
+            <Icon className="h-3 w-3" aria-hidden />{item.mood}
           </span>
           {item.duration && (
-            <span className="text-[9px] font-mono text-slate-400 flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{Math.floor(item.duration / 60)}:{(item.duration % 60).toString().padStart(2, '0')}</span>
+            <span className="flex items-center gap-1 font-mono text-[10px] text-theme-muted"><Clock className="h-3 w-3" aria-hidden />{Math.floor(item.duration / 60)}:{(item.duration % 60).toString().padStart(2, '0')}</span>
           )}
-          {item.bpm && <span className="text-[9px] font-mono text-slate-400">{item.bpm} BPM</span>}
+          {item.bpm && <span className="font-mono text-[10px] text-theme-muted">{item.bpm} BPM</span>}
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         <button
          type="button"
           onClick={onFav}
           title={isFav ? 'Unfavorite' : 'Favorite'}
-          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${isFav ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'}`}
+          className={cn('flex h-9 w-9 items-center justify-center rounded-xl border transition-colors', isFav ? 'border-rose-500/40 bg-rose-500/20 text-rose-500' : 'border-subtle ds-surface-subtle text-theme-muted hover:text-theme-primary')}
         >
-          <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-rose-400' : ''}`} />
+          <Heart className={cn('h-3.5 w-3.5', isFav && 'fill-rose-500')} aria-hidden />
         </button>
         <button
          type="button"
           onClick={onAdd}
           title="Add to timeline"
-          className={`px-4 py-2 text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 ${
+          className={cn(
+            'flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold text-white transition-colors',
             isMusic ? 'bg-fuchsia-600 hover:bg-fuchsia-500' : 'bg-amber-600 hover:bg-amber-500'
-          }`}
+          )}
         >
-          <Plus className="w-3 h-3" /> Add
+          <Plus className="h-3 w-3" aria-hidden /> Add
         </button>
       </div>
-    </motion.div>
+    </div>
   )
 })
 StockTile.displayName = 'StockTile'

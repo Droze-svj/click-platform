@@ -4,41 +4,22 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Image as ImageIcon,
   Music,
-  Upload,
   Plus,
-  FolderOpen,
-  Sparkles,
-  Loader2,
-  FileAudio,
-  FileImage,
-  Search,
   Trash2,
-  Play,
-  Pause,
-  X,
-  Clock,
   Film,
   Zap,
-  Cpu,
-  Target,
-  Activity,
-  ArrowUpRight,
   Layers,
-  Radio,
-  Fingerprint
+  type LucideIcon,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 import { getAssetUrl } from '../../../utils/url'
 import {
-  ShapeOverlay,
-  ImageOverlay,
-  GradientOverlay,
   Asset,
-  AssetType,
   AUDIO_TRACKS,
   VIDEO_TRACKS
 } from '../../../types/editor'
+import { Panel, Button, Badge, SectionHeader, EmptyState, Modal } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 interface AssetLibraryViewProps {
   currentTime: number
@@ -49,25 +30,6 @@ interface AssetLibraryViewProps {
   myBroll?: Asset[]
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
-
-const FALLBACK_MUSIC: Asset[] = [
-  { id: 'click-music-1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', title: 'Upbeat Creative', type: 'music', duration: 180, source: 'click' },
-  { id: 'click-music-2', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', title: 'Calm Focus', type: 'music', duration: 240, source: 'click' },
-  { id: 'click-music-3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', title: 'Corporate Pulse', type: 'music', duration: 200, source: 'click' },
-  { id: 'click-music-4', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', title: 'Dramatic Build', type: 'music', duration: 190, source: 'click' },
-  { id: 'click-music-5', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', title: 'Minimal Loop', type: 'music', duration: 120, source: 'click' },
-]
-
-const FALLBACK_IMAGES: Asset[] = Array.from({ length: 12 }, (_, i) => ({
-  id: `click-img-${i + 1}`,
-  url: `https://picsum.photos/id/${i}/800/600`,
-  title: `Stock ${i + 1}`,
-  type: 'image' as const,
-  thumbnail: `https://picsum.photos/id/${i}/400/300`,
-  source: 'click' as const,
-}))
-
 const STORAGE_KEY_MUSIC = 'click-asset-library-my-music'
 const STORAGE_KEY_IMAGES = 'click-asset-library-my-images'
 const STORAGE_KEY_BROLL = 'click-asset-library-my-broll'
@@ -75,26 +37,18 @@ const STORAGE_KEY_SFX = 'click-asset-library-my-sfx'
 const STORAGE_KEY_RECENT = 'click-asset-library-recent'
 const RECENT_MAX = 6
 
-function getAuthHeaders(): Record<string, string> {
-  let token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && !token) {
-    token = 'dev-jwt-token-' + Date.now()
-    localStorage.setItem('token', token)
-  }
-  const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = `Bearer ${token}`
-  return headers
+// Static accent maps (dynamic `bg-${x}` classes can't survive Tailwind purge).
+const ACCENT_BORDER: Record<string, string> = {
+  emerald: 'hover:border-emerald-500/50',
+  orange: 'hover:border-orange-500/50',
+  amber: 'hover:border-amber-500/50',
+  indigo: 'hover:border-indigo-500/50',
 }
-
-function getUploadBaseUrl(): string {
-  const api = process.env.NEXT_PUBLIC_API_URL
-  if (api) {
-    const base = api.replace(/\/api\/?$/, '').trim()
-    if (base) return base
-  }
-  if (typeof window !== 'undefined' && (window.location.port === '3010' || window.location.hostname === 'localhost'))
-    return 'http://localhost:5001'
-  return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5001'
+const ACCENT_DOT: Record<string, string> = {
+  emerald: 'bg-emerald-500',
+  orange: 'bg-orange-500',
+  amber: 'bg-amber-500',
+  indigo: 'bg-indigo-500',
 }
 
 function formatTime(sec: number): string {
@@ -111,7 +65,6 @@ function formatDuration(sec?: number): string {
 const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
   const {
     currentTime,
-    videoDuration,
     setTimelineSegments,
     showToast,
   } = props
@@ -134,12 +87,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState<'music' | 'images' | 'broll' | 'sfx' | null>(null)
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
-  const [previewPlaying, setPreviewPlaying] = useState(false)
   const fileInputMusic = useRef<HTMLInputElement>(null)
   const fileInputImages = useRef<HTMLInputElement>(null)
   const fileInputBroll = useRef<HTMLInputElement>(null)
   const fileInputSfx = useRef<HTMLInputElement>(null)
-  const previewAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const fetchMyAssets = useCallback(async () => {
     try {
@@ -243,13 +194,13 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
       setStockHasMore(hasMoreVisible)
       setStockPage(page)
     } catch {
-      setClickMusic(FALLBACK_MUSIC)
-      setClickImages(FALLBACK_IMAGES)
+      // Honest failure: surface an error rather than presenting mock catalog as real.
+      showToast('Could not load the stock library', 'error')
     } finally {
       setLoading(false)
       setLoadingMore(false)
     }
-  }, [filter, search, mapStockItem])
+  }, [filter, search, mapStockItem, showToast])
 
   useEffect(() => {
     if (tab === 'click') loadClickStock(1, false)
@@ -258,7 +209,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
 
   const handleFileUpload = async (file: File, type: 'music' | 'image' | 'broll' | 'sfx') => {
     setUploading(true)
-    showToast(`Injecting ${file.name} into Neural Space...`, 'info')
+    showToast(`Uploading ${file.name}…`, 'info')
 
     try {
       const formData = new FormData()
@@ -278,11 +229,11 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      showToast('Neural Pattern Synced', 'success')
+      showToast('Asset uploaded', 'success')
       fetchMyAssets()
     } catch (error: any) {
       console.error('Upload failed:', error)
-      showToast(error.message || 'Transmission Failed', 'error')
+      showToast(error.message || 'Upload failed', 'error')
     } finally {
       setUploading(false)
     }
@@ -304,7 +255,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
     }
     setTimelineSegments((prev: any[]) => [...prev, segment])
     saveRecent((prev) => [asset, ...prev.filter((a) => a.id !== asset.id)].slice(0, RECENT_MAX))
-    showToast('Asset Bridge Complete', 'success')
+    showToast('Added to timeline', 'success')
     setPreviewAsset(null)
   }, [currentTime, setTimelineSegments, showToast, saveRecent])
 
@@ -312,29 +263,28 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
     e.preventDefault(); setDragOver(null);
     if (uploading) return;
     const files = Array.from(e.dataTransfer.files || []);
-    showToast(`Ingesting ${files.length} Node(s)`, 'info');
+    showToast(`Ingesting ${files.length} file(s)`, 'info');
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: { opacity: 1, scale: 1 }
-  }
+  const FILTERS: { id: typeof filter; label: string; icon: LucideIcon }[] = [
+    { id: 'all', label: 'All', icon: Layers },
+    { id: 'music', label: 'Music', icon: Music },
+    { id: 'images', label: 'Images', icon: ImageIcon },
+    { id: 'broll', label: 'B-Roll', icon: Film },
+    { id: 'sfx', label: 'SFX', icon: Zap },
+  ]
 
   const renderAssetCard = (asset: Asset, opts: { showDelete?: boolean } = {}) => {
     const isMusic = asset.type === 'music' || asset.type === 'sfx'
     const accent = asset.type === 'music' ? 'emerald' : asset.type === 'sfx' ? 'orange' : asset.type === 'broll' ? 'amber' : 'indigo'
 
     return (
-      <motion.div
+      <div
         key={`${asset.id}-${asset.url}`}
-        variants={itemVariants}
-        whileHover={{ scale: 1.05, y: -4 }}
-        className={`group relative rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/[0.03] transition-all duration-500 shadow-2xl hover:border-${accent}-500/50 hover:bg-white/[0.05] cursor-grab active:cursor-grabbing`}
+        className={cn(
+          'group relative cursor-grab overflow-hidden rounded-2xl border border-subtle ds-surface-card transition-colors active:cursor-grabbing',
+          ACCENT_BORDER[accent]
+        )}
         draggable
         onDragStart={(e: any) => {
           if (e.dataTransfer) {
@@ -347,217 +297,195 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
         }}
       >
         <div
-          className="aspect-video relative cursor-pointer overflow-hidden"
+          className="relative aspect-video cursor-pointer overflow-hidden"
           onClick={() => setPreviewAsset(asset)}
         >
           {isMusic ? (
-            <div className={`absolute inset-0 flex items-center justify-center bg-${accent}-500/5`}>
-              <div className={`w-16 h-16 rounded-full bg-${accent}-500/20 flex items-center justify-center shadow-3xl`}>
-                {asset.type === 'sfx' ? <Zap className="w-8 h-8 text-orange-400" /> : <Music className="w-8 h-8 text-emerald-400" />}
+            <div className="absolute inset-0 flex items-center justify-center ds-surface-subtle">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
+                {asset.type === 'sfx' ? <Zap className="h-7 w-7 text-orange-500" aria-hidden /> : <Music className="h-7 w-7 text-emerald-500" aria-hidden />}
               </div>
             </div>
           ) : (
-            <img src={asset.thumbnail || asset.url} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={asset.thumbnail || asset.url} alt={asset.title || ''} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
           )}
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
-          <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-            {asset.duration && <span className="text-[10px] font-black text-white italic uppercase tracking-widest tabular-nums">{formatDuration(asset.duration)}</span>}
-            <div className="flex gap-2 pointer-events-auto">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between p-3 opacity-0 transition-opacity group-hover:opacity-100">
+            {asset.duration && <span className="text-[10px] font-semibold tabular-nums text-white">{formatDuration(asset.duration)}</span>}
+            <div className="pointer-events-auto ml-auto flex gap-2">
+              <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); addToTimeline(asset); }}
-                className="p-3 bg-white text-black rounded-xl shadow-3xl"
-                title="Add to Chrono Matrix"
+                className="rounded-lg bg-white p-2 text-black shadow"
+                title="Add to timeline"
               >
-                <Plus className="w-4 h-4" />
-              </motion.button>
+                <Plus className="h-4 w-4" aria-hidden />
+              </button>
               {opts.showDelete && (
-                <button type="button" onClick={(e) => { e.stopPropagation(); showToast('Node Removed', 'info'); }} className="p-3 bg-rose-600 text-white rounded-xl shadow-3xl" title="Remove Node"><Trash2 className="w-4 h-4" /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); showToast('Asset removed', 'info'); }} className="rounded-lg bg-rose-600 p-2 text-white shadow" title="Remove asset"><Trash2 className="h-4 w-4" aria-hidden /></button>
               )}
             </div>
           </div>
 
           {asset.source === 'click' && (
-            <span className="absolute top-4 left-6 px-4 py-1.5 rounded-full bg-indigo-600/80 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest italic border border-white/20">ELITE CORE</span>
+            <Badge variant="outline" className="absolute left-3 top-3 border-white/20 bg-black/40 text-white">Stock</Badge>
           )}
         </div>
-        <div className="p-6 space-y-2">
-          <p className="text-sm font-black text-white italic truncate uppercase tracking-tighter">{asset.title || 'Untitled Node'}</p>
-          <div className="flex items-center gap-3">
-            <div className={`w-1.5 h-1.5 rounded-full bg-${accent}-500 shadow-[0_0_8px_rgba(var(--${accent}-rgb),0.8)]`} />
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">{asset.type.replace('image', 'vision')}</p>
+        <div className="space-y-1.5 p-4">
+          <p className="ds-text-label truncate text-theme-primary">{asset.title || 'Untitled'}</p>
+          <div className="flex items-center gap-2">
+            <span className={cn('h-1.5 w-1.5 rounded-full', ACCENT_DOT[accent])} />
+            <p className="ds-text-caption text-theme-muted">{asset.type}</p>
           </div>
           {asset.autoTags && asset.autoTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-1.5 pt-1">
               {asset.autoTags.slice(0, 3).map(tag => (
-                <span key={tag} className="text-[8px] font-bold text-slate-600 uppercase tracking-tighter bg-white/5 px-2 py-0.5 rounded-md">#{tag}</span>
+                <span key={tag} className="rounded-md bg-accent px-1.5 py-0.5 text-[10px] text-theme-muted">#{tag}</span>
               ))}
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     )
   }
 
+  const uploadZones: { label: string; icon: LucideIcon; color: string; ref: React.RefObject<HTMLInputElement>; type: 'music' | 'image' | 'broll' | 'sfx' }[] = [
+    { label: 'Upload audio', icon: Music, color: 'emerald', ref: fileInputMusic, type: 'music' },
+    { label: 'Upload image', icon: ImageIcon, color: 'indigo', ref: fileInputImages, type: 'image' },
+    { label: 'Upload video', icon: Film, color: 'amber', ref: fileInputBroll, type: 'broll' },
+    { label: 'Upload SFX', icon: Zap, color: 'orange', ref: fileInputSfx, type: 'sfx' },
+  ]
+
+  const inventory = tab === 'uploads'
+    ? [...recent, ...myMusic, ...myImages, ...myBroll, ...mySfx]
+    : [...recent, ...clickMusic, ...clickImages]
+
   return (
-    <div className="space-y-10 h-full flex flex-col max-w-[1400px] mx-auto py-4">
-      <div className="flex flex-col xl:flex-row items-center justify-between gap-8">
-        <div className="space-y-4">
-          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl">
-            <Cpu className="w-4 h-4 animate-pulse" />
-            Resource Repository
-          </div>
-          <h2 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">AI<br />ASSETS</h2>
+    <div className="mx-auto flex h-full max-w-[1400px] flex-col space-y-6 py-4 ds-anim-rise">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-3">
+          <Badge variant="outline" className="gap-2 border-indigo-500/30 text-indigo-500">
+            <Layers className="h-3.5 w-3.5" aria-hidden />
+            Asset Library
+          </Badge>
+          <SectionHeader as="h1" title="Assets" description="Your uploads and the stock library — drag onto the timeline or click to preview." />
         </div>
 
-        <div className="flex items-center gap-4 p-2 bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-3xl">
-          <button type="button" onClick={() => setTab('uploads')} className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${tab === 'uploads' ? 'bg-indigo-600 text-white shadow-2xl' : 'text-slate-500 hover:text-white'}`}>Identity Nodes</button>
-          <button type="button" onClick={() => setTab('click')} className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${tab === 'click' ? 'bg-indigo-600 text-white shadow-2xl' : 'text-slate-500 hover:text-white'}`}>Elite Core Lib</button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-        {(['all', 'music', 'images', 'broll', 'sfx'] as const).map(f => (
-          <motion.button
-            key={f}
-            whileHover={{ scale: 1.05, y: -4 }}
-            onClick={() => setFilter(f)}
-            className={`p-6 rounded-[2.2rem] border transition-all text-center flex flex-col items-center gap-4 ${filter === f ? 'bg-white/[0.08] border-indigo-500 shadow-3xl' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
-          >
-            <div className={`p-4 rounded-2xl bg-white/5 ${filter === f ? 'text-indigo-400' : 'text-slate-700'}`}>
-              {f === 'music' ? <Music className="w-6 h-6" /> : f === 'images' ? <ImageIcon className="w-6 h-6" /> : f === 'broll' ? <Film className="w-6 h-6" /> : f === 'sfx' ? <Zap className="w-6 h-6" /> : <Layers className="w-6 h-6" />}
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest italic">{f === 'broll' ? 'Vision Flux' : f === 'sfx' ? 'Zap Node' : f}</span>
-          </motion.button>
-        ))}
-      </div>
-
-      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-12 pr-4">
-        {tab === 'uploads' && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <input
-              ref={fileInputMusic}
-              type="file"
-              className="hidden"
-              accept="audio/*"
-              title="Upload Music"
-              placeholder="Upload Music File"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'music')}
-            />
-            <input
-              ref={fileInputImages}
-              type="file"
-              className="hidden"
-              accept="image/*"
-              title="Upload Image"
-              placeholder="Upload Image File"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'image')}
-            />
-            <input
-              ref={fileInputBroll}
-              type="file"
-              className="hidden"
-              accept="video/*"
-              title="Upload Video"
-              placeholder="Upload Video File"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'broll')}
-            />
-            <input
-              ref={fileInputSfx}
-              type="file"
-              className="hidden"
-              accept="audio/*"
-              title="Upload SFX"
-              placeholder="Upload SFX File"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'sfx')}
-            />
-
-            {[
-              { label: 'Ingest Audio', icon: Music, color: 'emerald', ref: fileInputMusic },
-              { label: 'Ingest Vision', icon: ImageIcon, color: 'indigo', ref: fileInputImages },
-              { label: 'Ingest Flux', icon: Film, color: 'amber', ref: fileInputBroll },
-              { label: 'Ingest Zaps', icon: Zap, color: 'orange', ref: fileInputSfx }
-            ].map(zone => (
-              <motion.div
-                key={zone.label}
-                whileHover={{ scale: 1.02, y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => !uploading && zone.ref.current?.click()}
-                className={`p-10 rounded-[3rem] border-2 border-dashed border-white/10 hover:border-${zone.color}-500/50 bg-white/[0.02] hover:bg-white/[0.05] transition-all cursor-pointer flex flex-col items-center gap-6 group ${uploading ? 'opacity-50 cursor-wait' : ''}`}
-              >
-                <div className={`p-5 rounded-full bg-${zone.color}-500/10 group-hover:scale-110 transition-transform`}>
-                  <zone.icon className={`w-8 h-8 text-${zone.color}-400`} />
-                </div>
-                <span className="text-xs font-black text-white italic uppercase tracking-widest text-center">{zone.label}</span>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-6">
-          <h3 className="text-xs font-black text-slate-700 uppercase tracking-[0.4em] italic leading-none pl-4">Node Inventory</h3>
-          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {recent.length > 0 && recent.map(a => renderAssetCard(a))}
-            {tab === 'uploads' ? (
-              <>
-                {myMusic.map(a => renderAssetCard(a, { showDelete: true }))}
-                {myImages.map(a => renderAssetCard(a, { showDelete: true }))}
-                {myBroll.map(a => renderAssetCard(a, { showDelete: true }))}
-                {mySfx.map(a => renderAssetCard(a, { showDelete: true }))}
-              </>
-            ) : (
-              <>
-                {clickMusic.map(a => renderAssetCard(a))}
-                {clickImages.map(a => renderAssetCard(a))}
-              </>
-            )}
-          </motion.div>
+        <div className="flex items-center gap-1 rounded-xl border border-subtle ds-surface-subtle p-1">
+          <button type="button" onClick={() => setTab('uploads')} className={cn('rounded-lg px-4 py-2 text-sm font-medium transition-colors', tab === 'uploads' ? 'bg-indigo-600 text-white' : 'text-theme-muted hover:text-theme-primary')}>My uploads</button>
+          <button type="button" onClick={() => setTab('click')} className={cn('rounded-lg px-4 py-2 text-sm font-medium transition-colors', tab === 'click' ? 'bg-indigo-600 text-white' : 'text-theme-muted hover:text-theme-primary')}>Stock library</button>
         </div>
       </div>
 
-      <AnimatePresence>
-        {previewAsset && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-10 bg-black/90 backdrop-blur-3xl"
-            onClick={() => setPreviewAsset(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className={`${glassStyle} rounded-[4rem] p-16 max-w-4xl w-full shadow-3xl text-center space-y-10`}
-              onClick={e => e.stopPropagation()}
+      {/* Filters */}
+      <div className="grid grid-cols-3 gap-3 md:grid-cols-5">
+        {FILTERS.map(f => {
+          const FIcon = f.icon
+          const active = filter === f.id
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilter(f.id)}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors',
+                active ? 'border-indigo-500 ds-surface-subtle' : 'border-subtle ds-surface-subtle hover:border-border'
+              )}
             >
-              <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{previewAsset.title}</h2>
-                <button type="button" onClick={() => setPreviewAsset(null)} className="p-4 rounded-full bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white transition-all" title="Close Preview"><X className="w-8 h-8" /></button>
-              </div>
+              <FIcon className={cn('h-5 w-5', active ? 'text-indigo-500' : 'text-theme-muted')} aria-hidden />
+              <span className={cn('ds-text-caption', active ? 'text-indigo-500' : 'text-theme-secondary')}>{f.label}</span>
+            </button>
+          )
+        })}
+      </div>
 
-              <div className="aspect-video w-full rounded-[3rem] bg-black/40 border border-white/5 overflow-hidden flex items-center justify-center">
-                {(previewAsset.type === 'music' || previewAsset.type === 'sfx') ? (
-                  <div className="p-20 rounded-full bg-indigo-500/10 border border-indigo-500/20 animate-pulse-slow">
-                    <Music className="w-24 h-24 text-indigo-400" />
+      <div className="flex-1 space-y-8 overflow-y-auto pr-1">
+        {tab === 'uploads' && (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <input ref={fileInputMusic} type="file" className="hidden" accept="audio/*" title="Upload Music" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'music')} />
+            <input ref={fileInputImages} type="file" className="hidden" accept="image/*" title="Upload Image" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'image')} />
+            <input ref={fileInputBroll} type="file" className="hidden" accept="video/*" title="Upload Video" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'broll')} />
+            <input ref={fileInputSfx} type="file" className="hidden" accept="audio/*" title="Upload SFX" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'sfx')} />
+
+            {uploadZones.map(zone => {
+              const ZIcon = zone.icon
+              return (
+                <button
+                  type="button"
+                  key={zone.label}
+                  onClick={() => !uploading && zone.ref.current?.click()}
+                  onDragOver={(e) => { e.preventDefault() }}
+                  onDrop={(e) => handleDrop(e, zone.type === 'image' ? 'images' : zone.type)}
+                  disabled={uploading}
+                  className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-subtle ds-surface-subtle p-8 transition-colors hover:border-border disabled:opacity-50"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+                    <ZIcon className="h-6 w-6 text-theme-secondary" aria-hidden />
                   </div>
-                ) : (
-                  <img src={previewAsset.url} alt={previewAsset.title || 'Preview Asset'} className="w-full h-full object-contain" title={previewAsset.title || 'Preview Asset'} />
-                )}
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.05, y: -4 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => addToTimeline(previewAsset)}
-                className="w-full py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black shadow-3xl shadow-indigo-600/40 uppercase tracking-[0.5em] italic flex items-center justify-center gap-6"
-              >
-                <Plus className="w-6 h-6" />
-                LINK TO CHRONO MATRIX
-              </motion.button>
-            </motion.div>
-          </motion.div>
+                  <span className="ds-text-label text-theme-primary">{zone.label}</span>
+                </button>
+              )
+            })}
+          </div>
         )}
-      </AnimatePresence>
+
+        <div className="space-y-4">
+          <span className="ds-text-label text-theme-muted">Inventory</span>
+          {inventory.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {recent.map(a => renderAssetCard(a))}
+              {tab === 'uploads' ? (
+                <>
+                  {myMusic.map(a => renderAssetCard(a, { showDelete: true }))}
+                  {myImages.map(a => renderAssetCard(a, { showDelete: true }))}
+                  {myBroll.map(a => renderAssetCard(a, { showDelete: true }))}
+                  {mySfx.map(a => renderAssetCard(a, { showDelete: true }))}
+                </>
+              ) : (
+                <>
+                  {clickMusic.map(a => renderAssetCard(a))}
+                  {clickImages.map(a => renderAssetCard(a))}
+                </>
+              )}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Layers}
+              title={loading ? 'Loading assets…' : tab === 'uploads' ? 'No uploads yet' : 'No stock assets found'}
+              description={tab === 'uploads' ? 'Upload audio, images, video or SFX to build your library.' : 'Try a different filter or search term.'}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Preview modal */}
+      <Modal
+        open={!!previewAsset}
+        onClose={() => setPreviewAsset(null)}
+        title={previewAsset?.title || 'Preview'}
+        className="max-w-3xl"
+      >
+        {previewAsset && (
+          <div className="space-y-5">
+            <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl ds-surface-subtle">
+              {(previewAsset.type === 'music' || previewAsset.type === 'sfx') ? (
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-indigo-500/10">
+                  <Music className="h-12 w-12 text-indigo-500" aria-hidden />
+                </div>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewAsset.url} alt={previewAsset.title || 'Preview asset'} className="h-full w-full object-contain" />
+              )}
+            </div>
+            <Button onClick={() => addToTimeline(previewAsset)} className="w-full" leftIcon={<Plus className="h-4 w-4" aria-hidden />}>
+              Add to timeline
+            </Button>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
