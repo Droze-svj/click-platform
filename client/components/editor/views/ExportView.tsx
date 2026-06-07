@@ -33,6 +33,8 @@ import { apiGet, apiPost, apiPatch } from '../../../lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { loadEditorContentPreferences, saveEditorContentPreferences } from '../../../utils/editorUtils'
 import OptimalPostingWindow from '../OptimalPostingWindow'
+import { Panel, Button, Badge, SectionHeader } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 const EXPORT_PRESETS = [
   { id: 'shorts', label: 'YT Shorts', icon: Youtube, color: 'from-red-500 to-red-700', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 4, format: 'mp4', quality: undefined, fps: 30, platformHint: 'Clear value, Subscribe CTA', glow: 'rgba(220,38,38,0.3)' },
@@ -64,7 +66,7 @@ interface ExportViewProps {
   onExportComplete?: () => void
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+const glassStyle = "ds-surface-card"
 
 const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, videoCrop, chromaKey, playbackSpeed, timelineSegments = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
   const [connectedAccounts, setConnectedAccounts] = useState<any>({})
@@ -237,164 +239,127 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
   }
 
   return (
-    <div className="space-y-12 max-w-[1600px] mx-auto pb-20">
-      {/* Elite Navigation Cluster */}
+    <div className="mx-auto max-w-[1400px] space-y-6 pb-20 ds-anim-rise">
+      {/* Navigation */}
       {setActiveCategory && (
-        <div className="flex items-center gap-6">
-          <motion.button
-            whileHover={{ x: -4 }}
-            onClick={() => setActiveCategory('edit')}
-            className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 italic"
-          >
-            <ChevronLeft className="w-4 h-4" /> Edit Node
-          </motion.button>
-          <motion.button
-            whileHover={{ x: -4 }}
-            onClick={() => setActiveCategory('timeline')}
-            className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/10 transition-all flex items-center gap-3 italic"
-          >
-            <ChevronLeft className="w-4 h-4" /> Chrono Matrix
-          </motion.button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setActiveCategory('edit')} leftIcon={<ChevronLeft className="h-4 w-4" aria-hidden />}>
+            Edit
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setActiveCategory('timeline')} leftIcon={<ChevronLeft className="h-4 w-4" aria-hidden />}>
+            Timeline
+          </Button>
         </div>
       )}
 
       {/* Main Export Hub */}
-      <div className={`${glassStyle} rounded-[4.5rem] p-16 text-center relative overflow-hidden shadow-3xl`}>
-        {/* Dynamic Global Atmosphere */}
-        <AnimatePresence>
-          <motion.div
-            key={selectedPresetConfig.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: 'easeInOut' }}
-            className="absolute inset-0 pointer-events-none mix-blend-screen"
-            style={{
-              background: `radial-gradient(circle at 50% 0%, ${selectedPresetConfig.glow || 'rgba(99,102,241,0.2)'} 0%, transparent 70%)`
-            }}
-          />
-        </AnimatePresence>
-
-        <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-orange-600 shadow-[0_4px_30px_rgba(99,102,241,0.5)]" />
-
-        <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none rotate-12">
-          <Download className="w-64 h-64 text-white" />
+      <Panel variant="glass" className="relative overflow-hidden p-6 sm:p-10">
+        <div className="pointer-events-none absolute right-6 top-6 opacity-[0.05]">
+          <Download className="h-48 w-48 text-theme-primary" aria-hidden />
         </div>
 
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-28 h-28 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-[0_30px_60px_rgba(79,70,229,0.4)] border border-white/20"
-        >
-          <Download className="w-12 h-12 text-white animate-bounce" />
-        </motion.div>
-
-        <h1 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none mb-4">
-          NEURAL MASTER
-        </h1>
-        <p className="text-slate-500 text-2xl font-medium tracking-tight italic mb-10">
-          Finalize your production with <span className="text-white font-black underline decoration-indigo-500/30 underline-offset-8">Elite-tier</span> variety engine synthesis.
-        </p>
+        <div className="relative z-10 flex flex-col items-center gap-3 text-center">
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500">
+            <Download className="h-8 w-8" aria-hidden />
+          </span>
+          <h1 className="ds-text-h1 text-theme-primary">Export &amp; Render</h1>
+          <p className="max-w-lg text-sm text-theme-muted">
+            Finalize your production and broadcast it to your connected platforms.
+          </p>
+        </div>
 
         {/* Agency Batch Mode Toggle */}
-        <div className="flex items-center justify-center gap-6 mb-16">
-           <div className={`px-6 py-3 rounded-full border flex items-center gap-4 transition-all cursor-pointer ${isBatchMode ? 'bg-fuchsia-500/20 border-fuchsia-500 shadow-[0_0_30px_rgba(217,70,239,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`} onClick={() => setIsBatchMode(!isBatchMode)}>
-              <div className={`w-10 h-5 rounded-full relative transition-colors ${isBatchMode ? 'bg-fuchsia-500' : 'bg-slate-700'}`}>
-                 <motion.div animate={{ x: isBatchMode ? 20 : 2 }} className="w-4 h-4 rounded-full bg-white absolute top-0.5 shadow-md" />
-              </div>
-              <div className="flex flex-col text-left">
-                 <span className={`text-[11px] font-black uppercase tracking-widest italic transition-colors ${isBatchMode ? 'text-fuchsia-400' : 'text-slate-400'}`}>Agency Batch Mode</span>
-                 <span className="text-[9px] text-slate-500 italic">Omni-channel parallel synthesis</span>
-              </div>
-           </div>
+        <div className="mb-10 mt-6 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setIsBatchMode(!isBatchMode)}
+            className={cn(
+              'flex cursor-pointer items-center gap-3 rounded-full border px-5 py-2.5 transition-all',
+              isBatchMode ? 'border-fuchsia-500/40 bg-fuchsia-500/10' : 'border-subtle ds-surface-subtle hover:border-border'
+            )}
+          >
+            <div className={cn('relative h-5 w-10 rounded-full transition-colors', isBatchMode ? 'bg-fuchsia-500' : 'bg-input')}>
+              <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', isBatchMode ? 'translate-x-5' : 'translate-x-0.5')} />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className={cn('ds-text-label', isBatchMode ? 'text-fuchsia-500' : 'text-theme-secondary')}>Agency Batch Mode</span>
+              <span className="ds-text-caption text-theme-muted">Multi-format parallel export</span>
+            </div>
+          </button>
         </div>
 
         {/* Quality Controls Cluster */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16 text-left">
+        <div className="mb-10 grid grid-cols-1 gap-6 text-left lg:grid-cols-2">
           {/* Primary Specs */}
-          <div className="space-y-10 p-10 bg-white/[0.02] border border-white/5 rounded-[3rem] shadow-inner">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 mb-2">
-                <Target className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">Output Spectrum</h3>
+          <div className="space-y-6 rounded-2xl ds-surface-subtle p-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-indigo-500" aria-hidden />
+                <h3 className="ds-text-label text-theme-secondary">Quality</h3>
               </div>
-              <div className="relative flex p-1.5 bg-black/40 border border-white/5 rounded-3xl overflow-hidden w-fit shadow-inner">
+              <div className="flex w-fit rounded-xl ds-surface-card p-1">
                 {(['high', 'medium', 'low'] as const).map(q => (
                   <button
                     type="button"
                     key={q}
                     onClick={() => setExportQuality(q)}
-                    className={`relative px-8 py-4 text-[10px] font-black uppercase tracking-widest italic transition-colors z-10 ${exportQuality === q ? 'text-white' : 'text-slate-500 hover:text-white'}`}
+                    className={cn('rounded-lg px-4 py-2 text-xs font-semibold transition-colors', exportQuality === q ? 'bg-primary text-primary-foreground' : 'text-theme-muted hover:text-theme-primary')}
                   >
-                    {exportQuality === q && (
-                      <motion.div
-                        layoutId="quality-pill"
-                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                        className="absolute inset-0 bg-indigo-600 rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.5)] border border-indigo-400 z-[-1]"
-                      />
-                    )}
-                    {q === 'high' ? 'High Precision' : q === 'medium' ? 'Standard' : 'Low Compression'}
+                    {q === 'high' ? 'High' : q === 'medium' ? 'Standard' : 'Low'}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest italic">Resolution</span>
-                <p className="text-3xl font-black text-white italic tracking-tighter">{selectedPresetConfig?.res}</p>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <span className="ds-text-caption text-theme-muted">Resolution</span>
+                <p className="ds-text-h3 text-theme-primary">{selectedPresetConfig?.res}</p>
               </div>
-              <div className="space-y-2">
-                <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest italic">Target bitrate</span>
-                <p className="text-3xl font-black text-indigo-400 italic tracking-tighter">~{effectiveBitrateMbps} <span className="text-sm opacity-40">Mbps</span></p>
+              <div className="space-y-1">
+                <span className="ds-text-caption text-theme-muted">Target bitrate</span>
+                <p className="ds-text-h3 text-indigo-500">~{effectiveBitrateMbps} <span className="text-sm opacity-50">Mbps</span></p>
               </div>
             </div>
 
-            <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">
-              <div className="flex items-center gap-4 text-emerald-400">
-                <Activity className="w-4 h-4 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] italic">Projection Stable</span>
+            <div className="flex items-center justify-between rounded-xl border border-indigo-500/10 bg-indigo-500/5 p-4">
+              <div className="flex items-center gap-2 text-emerald-500">
+                <Activity className="h-4 w-4" aria-hidden />
+                <span className="ds-text-caption">Estimated size</span>
               </div>
-              <span className="text-xl font-black text-white italic tabular-nums">~{approximateSizeMB} MB</span>
+              <span className="text-lg font-bold tabular-nums text-theme-primary">~{approximateSizeMB} MB</span>
             </div>
           </div>
 
           {/* Codec & Audio Cluster */}
-          <div className="space-y-10 p-10 bg-white/[0.02] border border-white/5 rounded-[3rem] shadow-inner">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 mb-2">
-                <Cpu className="w-5 h-5 text-orange-400" />
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">NEURAL CODEC</h3>
+          <div className="space-y-6 rounded-2xl ds-surface-subtle p-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-orange-500" aria-hidden />
+                <h3 className="ds-text-label text-theme-secondary">Codec</h3>
               </div>
-              <div className="relative flex p-1.5 bg-black/40 border border-white/5 rounded-3xl overflow-hidden w-fit shadow-inner">
+              <div className="flex w-fit rounded-xl ds-surface-card p-1">
                 {(['h264', 'hevc', 'prores'] as const).map(c => (
                   <button
                     type="button"
                     key={c}
                     onClick={() => setExportCodec(c)}
-                    className={`relative px-8 py-4 text-[10px] font-black uppercase tracking-widest italic transition-colors z-10 ${exportCodec === c ? 'text-white' : 'text-slate-500 hover:text-white'}`}
+                    className={cn('rounded-lg px-4 py-2 text-xs font-semibold transition-colors', exportCodec === c ? 'bg-orange-600 text-white' : 'text-theme-muted hover:text-theme-primary')}
                   >
-                    {exportCodec === c && (
-                      <motion.div
-                        layoutId="codec-pill"
-                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                        className="absolute inset-0 bg-orange-600 rounded-2xl shadow-[0_0_20px_rgba(234,88,12,0.5)] border border-orange-400 z-[-1]"
-                      />
-                    )}
-                    {c === 'h264' ? 'H.264 (MP4)' : c === 'hevc' ? 'HEVC V2' : 'PRORES (MOV)'}
+                    {c === 'h264' ? 'H.264 (MP4)' : c === 'hevc' ? 'HEVC' : 'ProRes (MOV)'}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 mb-2">
-                <Layers className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">Audio Synthesis</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-indigo-500" aria-hidden />
+                <h3 className="ds-text-label text-theme-secondary">Audio</h3>
               </div>
-              <label className="flex items-center gap-4 cursor-pointer group/audio">
-                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${duckMusicWhenVoiceover ? 'bg-indigo-600 border-indigo-400 shadow-lg' : 'border-white/10 group-hover:border-white/20'}`}>
-                  {duckMusicWhenVoiceover && <CheckCircle2 className="w-4 h-4 text-white" />}
+              <label className="group/audio flex cursor-pointer items-center gap-3">
+                <div className={cn('flex h-6 w-6 items-center justify-center rounded-lg border-2 transition-all', duckMusicWhenVoiceover ? 'border-indigo-500 bg-indigo-600' : 'border-subtle group-hover:border-border')}>
+                  {duckMusicWhenVoiceover && <CheckCircle2 className="h-4 w-4 text-white" aria-hidden />}
                 </div>
                 <input
                   type="checkbox"
@@ -403,11 +368,11 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                   onChange={(e) => setDuckMusicWhenVoiceover(e.target.checked)}
                   className="hidden"
                 />
-                <span className="text-sm text-slate-400 font-medium italic group-hover:text-white transition-colors">Neural Ducking Algorithm active</span>
+                <span className="text-sm text-theme-secondary transition-colors group-hover/audio:text-theme-primary">Duck music under voiceover</span>
               </label>
               {duckMusicWhenVoiceover && (
-                <div className="flex items-center gap-6 p-4 bg-white/[0.03] rounded-2xl border border-white/5">
-                  <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Floor (dB):</span>
+                <div className="flex items-center gap-4 rounded-xl ds-surface-card p-4">
+                  <span className="ds-text-caption text-theme-muted">Floor (dB):</span>
                   <input
                     type="range"
                     min={-24}
@@ -415,86 +380,75 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                     value={duckLevel}
                     onChange={(e) => setDuckLevel(Number(e.target.value))}
                     title={`Audio Ducking Level (dB): ${duckLevel}`}
-                    className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-500 [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(99,102,241,1)] [&::-webkit-slider-runnable-track]:h-full [&::-webkit-slider-runnable-track]:bg-transparent"
+                    className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-input accent-indigo-500"
                   />
-                  <span className="w-12 text-white font-black text-xl italic tabular-nums text-right">{duckLevel}</span>
+                  <span className="w-12 text-right text-lg font-bold tabular-nums text-theme-primary">{duckLevel}</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Preset Grid (Elite) */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 mb-16">
-          {EXPORT_PRESETS.map(p => (
-            <motion.button
-              key={p.id}
-              whileHover={{ scale: 1.05, y: -4 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setSelectedPreset(p.id)
-                showToast(`${p.label} Matrix Synced`, 'info')
-              }}
-              className={`p-8 rounded-[3rem] flex flex-col items-center gap-4 transition-all border relative overflow-hidden shadow-xl ${selectedPreset === p.id
-                ? 'bg-white/[0.08] border-indigo-400 shadow-[0_0_40px_rgba(79,70,229,0.3)] scale-[1.02]'
-                : 'bg-white/[0.03] border-white/10 hover:border-white/20 hover:bg-white/[0.06]'
-                }`}
-            >
-              {selectedPreset === p.id && (
-                <div className={`absolute inset-0 bg-gradient-to-br ${p.color} opacity-10 animate-pulse`} />
-              )}
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all shadow-2xl mb-2 ${selectedPreset === p.id ? `bg-gradient-to-br ${p.color} text-white` : 'bg-white/5 text-slate-700 group-hover:text-white'}`}>
-                <p.icon className="w-8 h-8" />
-              </div>
-              <div className="text-center space-y-1">
-                <span className={`block text-lg font-black uppercase italic tracking-tighter ${selectedPreset === p.id ? 'text-white' : 'text-slate-500'}`}>{p.label}</span>
-                <span className={`text-[10px] font-black uppercase tracking-widest block ${selectedPreset === p.id ? 'text-indigo-400' : 'text-slate-800'}`}>
-                  {p.res}
-                </span>
-              </div>
-            </motion.button>
-          ))}
+        {/* Preset Grid */}
+        <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {EXPORT_PRESETS.map(p => {
+            const active = selectedPreset === p.id
+            return (
+              <button
+                type="button"
+                key={p.id}
+                onClick={() => {
+                  setSelectedPreset(p.id)
+                  showToast(`${p.label} selected`, 'info')
+                }}
+                className={cn(
+                  'relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl border p-5 transition-all ds-hover-lift',
+                  active ? 'border-indigo-500/50 ds-surface-subtle' : 'border-subtle ds-surface-subtle hover:border-border'
+                )}
+              >
+                <div className={cn('flex h-12 w-12 items-center justify-center rounded-xl transition-all', active ? cn('bg-gradient-to-br text-white', p.color) : 'bg-accent text-theme-muted')}>
+                  <p.icon className="h-6 w-6" aria-hidden />
+                </div>
+                <div className="space-y-0.5 text-center">
+                  <span className={cn('block ds-text-label', active ? 'text-theme-primary' : 'text-theme-secondary')}>{p.label}</span>
+                  <span className={cn('block ds-text-caption', active ? 'text-indigo-500' : 'text-theme-muted')}>
+                    {p.res}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
         </div>
 
         {/* Batch Formats Selector (Only visible in Batch Mode) */}
-        <AnimatePresence>
-           {isBatchMode && (
-              <motion.div
-                 initial={{ opacity: 0, height: 0 }}
-                 animate={{ opacity: 1, height: 'auto' }}
-                 exit={{ opacity: 0, height: 0 }}
-                 className="flex justify-center gap-6 mb-16 overflow-hidden"
+        {isBatchMode && (
+          <div className="mb-10 flex flex-wrap justify-center gap-3">
+            {batchFormats.map(fmt => (
+              <button
+                type="button"
+                key={fmt.id}
+                onClick={() => setBatchFormats(prev => prev.map(f => f.id === fmt.id ? { ...f, selected: !f.selected } : f))}
+                className={cn(
+                  'flex min-w-[160px] flex-col items-center gap-2 rounded-2xl border p-5 transition-all',
+                  fmt.selected ? 'border-fuchsia-500/40 bg-fuchsia-500/10' : 'border-subtle ds-surface-subtle hover:border-border'
+                )}
               >
-                 {batchFormats.map(fmt => (
-                    <motion.button
-                       key={fmt.id}
-                       whileHover={{ scale: 1.05 }}
-                       whileTap={{ scale: 0.95 }}
-                       onClick={() => setBatchFormats(prev => prev.map(f => f.id === fmt.id ? { ...f, selected: !f.selected } : f))}
-                       className={`px-8 py-6 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all min-w-[180px] ${fmt.selected ? 'bg-fuchsia-500/10 border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.2)]' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
-                    >
-                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${fmt.selected ? 'bg-fuchsia-500 border-fuchsia-400 text-white' : 'border-white/20'}`}>
-                          {fmt.selected && <CheckCircle2 className="w-4 h-4" />}
-                       </div>
-                       <span className="text-xl font-black italic tracking-tighter">{fmt.id}</span>
-                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{fmt.label}</span>
-                    </motion.button>
-                 ))}
-              </motion.div>
-           )}
-        </AnimatePresence>
+                <div className={cn('flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors', fmt.selected ? 'border-fuchsia-500 bg-fuchsia-500 text-white' : 'border-subtle')}>
+                  {fmt.selected && <CheckCircle2 className="h-4 w-4" aria-hidden />}
+                </div>
+                <span className="ds-text-h3 text-theme-primary">{fmt.id}</span>
+                <span className="ds-text-caption text-theme-muted">{fmt.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* Sticky Master Production Trigger (Elite) */}
-        <div className="sticky bottom-10 z-50 mx-auto max-w-4xl mt-12 w-[calc(100%+4rem)] -ml-8">
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="p-3 bg-white/[0.05] backdrop-blur-3xl border border-white/10 rounded-[3rem] shadow-[0_30px_60px_rgba(0,0,0,0.5)] flex flex-col gap-4"
-          >
-            <motion.button
+        {/* Sticky Master Production Trigger */}
+        <div className="sticky bottom-6 z-40 mx-auto mt-8 max-w-3xl">
+          <div className="flex flex-col gap-4 rounded-2xl ds-surface-elevated p-3">
+            <button
+              type="button"
               disabled={isRendering || !videoUrl || (isBatchMode && !batchFormats.some(f => f.selected))}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
               onClick={async () => {
                 if (!videoUrl && !videoId) {
                   showToast('Production node offline', 'error')
@@ -527,8 +481,10 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                          if (allDone) {
                             clearInterval(interval)
                             setIsRendering(false)
-                            showToast('Batch Pipeline Complete! Assets packaged in ZIP.', 'success')
-                            setRenderResult({ downloadUrl: 'blob:mock-zip-package' })
+                            // Honest: batch multi-format export isn't wired to a
+                            // real packaged output yet — render each format
+                            // individually (single mode) to get a downloadable file.
+                            showToast('Batch preview complete. Use single-format render for a downloadable file.', 'info')
                          }
                          return next
                       })
@@ -619,97 +575,66 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                   setIsRendering(false)
                 }
               }}
-              className={`w-full py-8 ${isBatchMode ? 'bg-gradient-to-r from-fuchsia-600 to-pink-600 shadow-[0_0_40px_rgba(217,70,239,0.4)]' : 'bg-gradient-to-r from-indigo-600 to-violet-600 shadow-[0_0_40px_rgba(79,70,229,0.4)]'} text-white rounded-[2.5rem] font-black hover:shadow-[0_0_60px_rgba(79,70,229,0.7)] transition-all uppercase tracking-[0.5em] italic text-sm disabled:opacity-50 disabled:grayscale border border-white/30 relative overflow-hidden group/btn`}
+              className={cn(
+                'relative w-full overflow-hidden rounded-xl py-5 text-sm font-semibold text-white transition-all disabled:opacity-50',
+                isBatchMode ? 'bg-fuchsia-600 hover:bg-fuchsia-700' : 'bg-indigo-600 hover:bg-indigo-700'
+              )}
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-[-100%] group-hover/btn:translate-y-[100%] transition-transform duration-700 ease-in-out" />
                   {isRendering ? (
-                    <div className="flex flex-col items-center gap-6 w-full py-4">
-                       <div className="flex items-center justify-center gap-10">
-                          <div className="flex flex-col items-center gap-2">
-                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
-                             <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest italic">Core Alpha</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2 opacity-50">
-                             <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
-                             <span className="text-[8px] font-black text-violet-400 uppercase tracking-widest italic">Core Beta</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                             <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-ping" />
-                             <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-widest italic">Core Gamma</span>
-                          </div>
-                       </div>
-
-                       <div className="flex flex-col items-center gap-3 w-full">
-                          {isBatchMode ? (
-                             <div className="w-full space-y-4">
-                               <span className="flex items-center justify-center gap-4 text-white font-black italic tracking-[0.3em]">
-                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                 OMNI-CHANNEL BATCH PIPELINE
-                               </span>
-                               {Object.entries(batchProgress).map(([format, prog]) => (
-                                  <div key={format} className="flex items-center gap-4 px-10">
-                                     <span className="text-[10px] font-black uppercase tracking-widest text-fuchsia-400 w-16 text-right">{format}</span>
-                                     <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/5">
-                                         <motion.div
-                                           className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500 rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)]"
-                                           initial={{ width: 0 }}
-                                           animate={{ width: `${prog}%` }}
-                                           transition={{ duration: 0.3 }}
-                                         />
-                                     </div>
-                                     <span className="text-[10px] font-mono font-bold text-white w-10">{Math.round(prog)}%</span>
+                    <div className="flex w-full flex-col items-center gap-3 py-2">
+                       {isBatchMode ? (
+                          <div className="w-full space-y-3">
+                            <span className="flex items-center justify-center gap-3 font-semibold text-white">
+                              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                              Batch export
+                            </span>
+                            {Object.entries(batchProgress).map(([format, prog]) => (
+                               <div key={format} className="flex items-center gap-4 px-6">
+                                  <span className="w-16 text-right text-xs font-semibold text-white/90">{format}</span>
+                                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
+                                      <div className="h-full rounded-full bg-white transition-all" style={{ width: `${prog}%` }} />
                                   </div>
-                               ))}
-                             </div>
-                          ) : (
-                             <>
-                              <span className="flex items-center justify-center gap-4 text-white font-black italic tracking-[0.3em]">
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                SYNTHESIZING MATRIX: {Math.round(renderProgress)}%
-                              </span>
-                              <div className="w-1/2 h-1 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/5">
-                                  <motion.div
-                                    className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 rounded-full shadow-[0_0_15px_rgba(99,102,241,0.5)]"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${renderProgress}%` }}
-                                    transition={{ duration: 0.3 }}
-                                  />
-                              </div>
-                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest italic animate-pulse">Routing Neural Fragments to Cloud Nodes...</span>
-                             </>
-                          )}
-                       </div>
+                                  <span className="w-10 font-mono text-xs font-semibold text-white">{Math.round(prog)}%</span>
+                               </div>
+                            ))}
+                          </div>
+                       ) : (
+                          <>
+                           <span className="flex items-center justify-center gap-3 font-semibold text-white">
+                             <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                             Rendering: {Math.round(renderProgress)}%
+                           </span>
+                           <div className="h-1.5 w-1/2 overflow-hidden rounded-full bg-white/20">
+                               <div className="h-full rounded-full bg-white transition-all" style={{ width: `${renderProgress}%` }} />
+                           </div>
+                          </>
+                       )}
                     </div>
                   ) : (
-                <span className="flex items-center justify-center gap-6">
-                  <Zap className="w-7 h-7 fill-white drop-shadow-lg" />
-                  {isBatchMode ? 'INITIATE MULTI-FORMAT PIPELINE' : 'INITIATE MASTER RENDER'}
+                <span className="flex items-center justify-center gap-3">
+                  <Zap className="h-5 w-5" aria-hidden />
+                  {isBatchMode ? 'Render Batch' : 'Render'}
                 </span>
               )}
-            </motion.button>
+            </button>
 
-            <AnimatePresence>
-              {renderResult?.downloadUrl && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col sm:flex-row items-center justify-center gap-6"
-                >
-                  <motion.a
+            {renderResult?.downloadUrl && (
+                <div className="flex flex-col items-center justify-center gap-3 ds-anim-fade-in sm:flex-row">
+                  <a
                     href={renderResult.downloadUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    whileHover={{ scale: 1.05 }}
-                    className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] italic shadow-3xl shadow-emerald-600/30 transition-all flex items-center gap-4 border border-white/10"
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-emerald-700"
                   >
-                    <Download className="w-5 h-5" />
-                    Download Node
-                  </motion.a>
+                    <Download className="h-5 w-5" aria-hidden />
+                    Download
+                  </a>
 
                   {videoId && lastRenderExportPath && !saveSuccess && (
-                    <motion.button
+                    <Button
+                      variant="secondary"
                       disabled={isSaving}
-                      whileHover={{ scale: 1.05 }}
+                      loading={isSaving}
                       onClick={async () => {
                         setIsSaving(true)
                         try {
@@ -720,7 +645,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                             expiresInDays: saveExpiresDays,
                           })
                           setSaveSuccess(true)
-                          showToast(`Repository Linked`, 'success')
+                          showToast(`Saved to library`, 'success')
                           fetchSavedExports()
                         } catch (err: any) {
                           showToast(err?.response?.data?.error ?? err?.message ?? 'Save error', 'error')
@@ -728,18 +653,16 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                           setIsSaving(false)
                         }
                       }}
-                      className="px-12 py-5 bg-white text-black rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] italic shadow-3xl hover:bg-zinc-200 transition-all flex items-center gap-4"
+                      leftIcon={!isSaving ? <FolderDown className="h-5 w-5" aria-hidden /> : undefined}
                     >
-                      {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <FolderDown className="w-5 h-5" />}
-                      Link to Cluster
-                    </motion.button>
+                      Save to Library
+                    </Button>
                   )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                </div>
+            )}
+          </div>
         </div>
-      </div>
+      </Panel>
 
       {/* Schedule when it'll land — niche × platform optimal posting windows.
            Renders only when the user has at least one rendered export, since
@@ -755,253 +678,218 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
         </div>
       )}
 
-      {/* Repository Command Center */}
+      {/* Saved Exports */}
       {(savedExports.length > 0) && (
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`${glassStyle} rounded-[4.5rem] p-16 shadow-3xl relative overflow-hidden`}
-        >
-          <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none">
-            <Layers className="w-48 h-48 text-indigo-500" />
-          </div>
+        <Panel variant="glass" className="relative overflow-hidden p-6 sm:p-8 ds-anim-rise">
+          <SectionHeader
+            className="mb-6"
+            as="h3"
+            title={
+              <span className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                  <FolderDown className="h-5 w-5" aria-hidden />
+                </span>
+                Saved Exports
+              </span>
+            }
+            description={`Production archives (${savedExports.length})`}
+          />
 
-          <div className="flex items-center justify-between mb-12 relative z-10">
-            <div className="flex items-center gap-8">
-              <div className="p-5 rounded-[1.8rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl">
-                <FolderDown className="w-8 h-8 text-indigo-400" />
-              </div>
-              <div>
-                <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">NEURAL REPOSITORY</h3>
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] mt-3 block italic">Production Archives ({savedExports.length})</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-            {savedExports.map((s: any, idx) => {
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {savedExports.map((s: any) => {
               const downloadUrl = s.downloadUrl || (s.url?.startsWith('http') ? s.url : (typeof window !== 'undefined' ? window.location.origin : '') + (s.url || ''))
               return (
-                <motion.div
+                <div
                   key={s._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="group relative p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all duration-500 flex flex-col gap-6 shadow-inner"
+                  className="group flex flex-col gap-5 rounded-2xl ds-surface-subtle p-6 transition-colors hover:border-border"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="space-y-2 flex-1 min-w-0">
-                      <h4 className="text-xl font-black text-[var(--text-main)] italic tracking-tighter truncate leading-none uppercase">{s.title || 'Export_Sequence'}</h4>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic group-hover:text-slate-400 transition-colors">{s.quality} Precision // {new Date(s.expiresAt).toLocaleDateString()}</p>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <h4 className="truncate ds-text-h3 text-theme-primary">{s.title || 'Export'}</h4>
+                      <p className="ds-text-caption text-theme-muted">{s.quality} · {new Date(s.expiresAt).toLocaleDateString()}</p>
                     </div>
 
-                    {/* Hover Reveal Actions */}
-                    <div className="flex items-center gap-3 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(downloadUrl)
                             setCopySuccessId(s._id)
-                            showToast('Uplink Copied', 'success')
+                            showToast('Link copied', 'success')
                             setTimeout(() => setCopySuccessId(null), 2000)
                           } catch {
-                            showToast('Uplink Error', 'error')
+                            showToast('Copy failed', 'error')
                           }
                         }}
-                        title="Copy Uplink"
-                        className="p-3 rounded-xl bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all border border-white/10 shadow-lg"
+                        title="Copy link"
+                        className="rounded-lg ds-surface-card p-2.5 text-theme-secondary transition-all hover:text-theme-primary"
                       >
-                        {copySuccessId === s._id ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Link2 className="w-4 h-4" />}
-                      </motion.button>
+                        {copySuccessId === s._id ? <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
+                      </button>
 
                       <a
                         href={downloadUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        title="Download Source"
-                        className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 hover:text-white hover:bg-indigo-500/40 transition-all border border-indigo-500/20 shadow-lg"
+                        title="Download"
+                        className="rounded-lg bg-indigo-500/10 p-2.5 text-indigo-500 transition-all hover:bg-indigo-500/20"
                       >
-                        <FolderDown className="w-4 h-4" />
+                        <FolderDown className="h-4 w-4" aria-hidden />
                       </a>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-6 border-t border-white/5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${s.isExpired ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
-                      <span className={`text-[9px] font-black uppercase tracking-widest italic ${s.isExpired ? 'text-rose-500/50' : 'text-emerald-500/50 group-hover:text-emerald-400 transition-colors'}`}>
-                        {s.isExpired ? 'EXPIRED' : 'ACTIVE UPLINK'}
+                  <div className="flex items-center justify-between border-t border-subtle pt-4">
+                    <div className="flex items-center gap-2">
+                      <span className={cn('h-2 w-2 rounded-full', s.isExpired ? 'bg-rose-500' : 'bg-emerald-500')} />
+                      <span className={cn('ds-text-caption', s.isExpired ? 'text-rose-500' : 'text-emerald-500')}>
+                        {s.isExpired ? 'Expired' : 'Active'}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {!s.isExpired && (
-                        <div className="flex items-center gap-4 px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                          <select
-                            title="Extend Archive Duration"
-                            value={extendDays}
-                            onChange={(e) => setExtendDays(Number(e.target.value))}
-                            className="bg-transparent text-indigo-400 font-black text-[10px] uppercase italic border-none focus:ring-0 p-0 w-12 cursor-pointer"
-                          >
-                            <option value={7} className="text-black">7D</option>
-                            <option value={10} className="text-black">10D</option>
-                            <option value={30} className="text-black">30D</option>
-                          </select>
-                          <div className="w-px h-4 bg-indigo-500/20" />
-                          <button
-                            type="button"
-                            disabled={extendingId === s._id}
-                            title="Confirm Extension"
-                            onClick={async (e) => {
-                              e.stopPropagation(); e.preventDefault();
-                              setExtendingId(s._id)
-                              try {
-                                await apiPatch(`/video/manual-editing/saved-exports/${s._id}/extend`, { extendByDays: extendDays })
-                                showToast(`Repository Archive Extended`, 'success')
-                                fetchSavedExports()
-                              } catch (e) {
-                                showToast('Extend Error', 'error')
-                              } finally {
-                                setExtendingId(null)
-                              }
-                            }}
-                            className="text-indigo-400 hover:text-white transition-colors"
-                          >
-                            {extendingId === s._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUpRight className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    {!s.isExpired && (
+                      <div className="flex items-center gap-3 rounded-lg ds-surface-card px-3 py-1.5">
+                        <select
+                          title="Extend Archive Duration"
+                          value={extendDays}
+                          onChange={(e) => setExtendDays(Number(e.target.value))}
+                          className="w-12 cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-indigo-500 focus:ring-0"
+                        >
+                          <option value={7}>7D</option>
+                          <option value={10}>10D</option>
+                          <option value={30}>30D</option>
+                        </select>
+                        <div className="h-4 w-px bg-subtle" />
+                        <button
+                          type="button"
+                          disabled={extendingId === s._id}
+                          title="Confirm Extension"
+                          onClick={async (e) => {
+                            e.stopPropagation(); e.preventDefault();
+                            setExtendingId(s._id)
+                            try {
+                              await apiPatch(`/video/manual-editing/saved-exports/${s._id}/extend`, { extendByDays: extendDays })
+                              showToast(`Archive extended`, 'success')
+                              fetchSavedExports()
+                            } catch (e) {
+                              showToast('Extend error', 'error')
+                            } finally {
+                              setExtendingId(null)
+                            }
+                          }}
+                          className="text-indigo-500 transition-colors hover:text-theme-primary"
+                        >
+                          {extendingId === s._id ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ArrowUpRight className="h-4 w-4" aria-hidden />}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </motion.div>
+                </div>
               )
             })}
           </div>
-        </motion.div>
+        </Panel>
       )}
 
-      {/* Unified Distribution Hub (Elite) */}
-      <div className={`${glassStyle} rounded-[4.5rem] p-16 relative overflow-hidden group shadow-3xl`}>
-        <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none scale-150 grayscale rotate-45">
-          <Globe className="w-64 h-64 text-emerald-500" />
-        </div>
-
-        <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-16 relative z-10">
-          <div className="space-y-4">
-             <div className="flex items-center gap-6">
-                <div className="p-4 rounded-[1.2rem] bg-emerald-500/10 border border-emerald-500/20 shadow-xl">
-                   <Globe className="w-8 h-8 text-emerald-400 animate-pulse-slow" />
-                </div>
-                <div>
-                   <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">DISTRIBUTION Hub</h2>
-                   <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] mt-3 block italic">Platform Penetration Matrix</span>
-                </div>
-             </div>
-            <p className="text-slate-500 text-xl font-medium tracking-tight italic">
-              Cross-cluster broadcasting initialized for <span className="text-emerald-400 font-black">{PLATFORMS.filter(p => p.connected).length} Identity Nodes</span>.
-            </p>
-          </div>
-          <div className="px-10 py-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] italic shadow-2xl">
-            LINK_STABILITY: 100%
-          </div>
-        </div>
+      {/* Distribution Hub */}
+      <Panel variant="glass" className="relative overflow-hidden p-6 sm:p-8">
+        <SectionHeader
+          className="mb-6"
+          title={
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                <Globe className="h-5 w-5" aria-hidden />
+              </span>
+              Distribution Hub
+            </span>
+          }
+          description={`Publish to your ${PLATFORMS.filter(p => p.connected).length} connected ${PLATFORMS.filter(p => p.connected).length === 1 ? 'account' : 'accounts'}.`}
+        />
 
         {isLoadingAccounts ? (
-          <div className="text-center py-20 bg-white/[0.02] rounded-[3rem] border border-white/5">
-            <Loader2 className="w-16 h-16 animate-spin mx-auto text-emerald-500 mb-6" />
-            <p className="text-sm font-black text-slate-500 uppercase tracking-widest italic animate-pulse">Scanning Identity Nodes...</p>
+          <div className="rounded-2xl ds-surface-subtle py-16 text-center">
+            <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-emerald-500" aria-hidden />
+            <p className="ds-text-caption text-theme-muted">Checking connected accounts…</p>
           </div>
         ) : (
-          <div className="space-y-12 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {PLATFORMS.map(platform => (
-                <motion.button
-                  key={platform.id}
-                  whileHover={platform.connected ? { scale: 1.05, y: -4 } : {}}
-                  whileTap={platform.connected ? { scale: 0.95 } : {}}
-                  onClick={() => platform.connected && togglePlatform(platform.id)}
-                  className={`relative p-10 rounded-[3rem] border transition-all duration-700 flex flex-col items-center gap-6 shadow-xl ${!platform.connected
-                    ? 'bg-black/40 border-white/5 grayscale opacity-30 cursor-not-allowed'
-                    : selectedPlatforms.includes(platform.id)
-                      ? 'bg-gradient-to-br ' + platform.color + ' border-white/30 text-white shadow-[0_0_50px_rgba(16,185,129,0.3)] scale-[1.02] z-10'
-                      : 'bg-white/[0.03] border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/10'
-                    }`}
-                >
-                  {selectedPlatforms.includes(platform.id) && (
-                    <div className="absolute inset-0 bg-white/5 animate-pulse" />
-                  )}
-                  <div className={`w-20 h-20 rounded-[1.8rem] flex items-center justify-center transition-all shadow-3xl ${selectedPlatforms.includes(platform.id) ? 'bg-white/10' : 'bg-white/5'}`}>
-                    <platform.icon className={`w-10 h-10 ${selectedPlatforms.includes(platform.id) ? 'text-white' : 'text-slate-600'}`} />
-                  </div>
-                  <div className="text-center space-y-2">
-                    <p className="text-xl font-black italic uppercase tracking-tighter leading-none">{platform.label}</p>
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${selectedPlatforms.includes(platform.id) ? 'text-white/60' : 'text-slate-800'}`}>
-                      {platform.connected ? 'Cluster Linked' : 'Node Offline'}
-                    </p>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-
-            <AnimatePresence>
-              {selectedPlatforms.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  className={`bg-white text-black p-12 rounded-[3.5rem] border border-white/20 shadow-3xl overflow-hidden relative group/dispatch`}
-                >
-                  <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 group-hover/dispatch:scale-110 transition-transform">
-                    <Send className="w-32 h-32" />
-                  </div>
-
-                  <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
-                    <div className="space-y-4 text-center lg:text-left">
-                      <h4 className="text-4xl font-black italic tracking-tighter uppercase leading-none">IDENTITY BROADCAST</h4>
-                      <p className="text-slate-600 text-lg font-medium tracking-tight italic">
-                        Synchronized dispatch sequence initialized for <span className="text-black font-black underline decoration-black/20 underline-offset-4">{selectedPlatforms.length} Neural Nodes</span>.
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {PLATFORMS.map(platform => {
+                const active = selectedPlatforms.includes(platform.id)
+                return (
+                  <button
+                    type="button"
+                    key={platform.id}
+                    onClick={() => platform.connected && togglePlatform(platform.id)}
+                    disabled={!platform.connected}
+                    className={cn(
+                      'relative flex flex-col items-center gap-4 rounded-2xl border p-6 transition-all',
+                      !platform.connected
+                        ? 'cursor-not-allowed border-subtle ds-surface-subtle opacity-40'
+                        : active
+                          ? cn('border-transparent bg-gradient-to-br text-white', platform.color)
+                          : 'border-subtle ds-surface-subtle hover:border-emerald-500/40'
+                    )}
+                  >
+                    <div className={cn('flex h-16 w-16 items-center justify-center rounded-xl transition-all', active ? 'bg-white/15' : 'bg-accent')}>
+                      <platform.icon className={cn('h-8 w-8', active ? 'text-white' : 'text-theme-muted')} aria-hidden />
+                    </div>
+                    <div className="space-y-1 text-center">
+                      <p className={cn('ds-text-label', active ? 'text-white' : 'text-theme-primary')}>{platform.label}</p>
+                      <p className={cn('ds-text-caption', active ? 'text-white/70' : 'text-theme-muted')}>
+                        {platform.connected ? 'Connected' : 'Not connected'}
                       </p>
                     </div>
+                  </button>
+                )
+              })}
+            </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.05, x: 10 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handlePublish}
-                      disabled={isPublishing || !/^https?:\/\//i.test(renderResult?.url || '')}
-                      className="px-16 py-8 bg-black text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.5em] italic shadow-3xl transition-all flex items-center gap-6 group/pub disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isPublishing ? (
-                        <>
-                          <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-                          DISPATCHING...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-6 h-6 group-hover/pub:translate-x-2 group-hover/pub:-translate-y-2 transition-transform" />
-                          BROADCAST NOW
-                        </>
-                      )}
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {selectedPlatforms.length > 0 && (
+              <div className="flex flex-col items-center justify-between gap-4 rounded-2xl ds-surface-subtle p-6 ds-anim-rise lg:flex-row">
+                <div className="space-y-1 text-center lg:text-left">
+                  <h4 className="ds-text-h3 text-theme-primary">Publish</h4>
+                  <p className="text-sm text-theme-muted">
+                    Broadcasting to {selectedPlatforms.length} {selectedPlatforms.length === 1 ? 'platform' : 'platforms'}.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handlePublish}
+                  disabled={isPublishing || !/^https?:\/\//i.test(renderResult?.url || '')}
+                  loading={isPublishing}
+                  size="lg"
+                  leftIcon={!isPublishing ? <Send className="h-5 w-5" aria-hidden /> : undefined}
+                >
+                  {isPublishing ? 'Publishing…' : 'Broadcast Now'}
+                </Button>
+              </div>
+            )}
 
             {!connectedAccounts.tiktok && !connectedAccounts.youtube && !connectedAccounts.instagram && (
-              <div className="p-10 rounded-[3rem] bg-orange-500/5 border border-orange-500/20 text-center space-y-4">
-                <div className="w-16 h-16 rounded-[1.5rem] bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
-                  <ZapOff className="w-8 h-8 text-orange-400" />
-                </div>
-                <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">ZERO NODES CONNECTED</h4>
-                <p className="text-slate-500 font-medium italic">Link your identity clusters in the <span className="text-white font-black underline decoration-white/20 underline-offset-4 cursor-pointer" onClick={() => setActiveCategory?.('accounts')}>Social Vault</span> to unlock the Distribution Matrix.</p>
-              </div>
+              <EmptyStateBlock onConnect={() => setActiveCategory?.('accounts')} />
             )}
           </div>
         )}
-      </div>
+      </Panel>
     </div>
   )
 }
+
+/** Honest empty state when no social accounts are linked. */
+const EmptyStateBlock: React.FC<{ onConnect: () => void }> = ({ onConnect }) => (
+  <div className="space-y-4 rounded-2xl border border-orange-500/20 bg-orange-500/5 p-8 text-center">
+    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-500/10">
+      <ZapOff className="h-7 w-7 text-orange-500" aria-hidden />
+    </div>
+    <h4 className="ds-text-h3 text-theme-primary">No accounts connected</h4>
+    <p className="text-sm text-theme-muted">
+      Link your accounts in the{' '}
+      <button type="button" onClick={onConnect} className="font-semibold text-theme-primary underline underline-offset-4">Social Vault</button>{' '}
+      to publish directly.
+    </p>
+  </div>
+)
 
 export default ExportView

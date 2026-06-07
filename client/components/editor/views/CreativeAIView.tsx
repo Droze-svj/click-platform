@@ -1,30 +1,28 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles,
   Focus,
   Wand2,
   Video,
-  MonitorPlay,
   Play,
   Eye,
-  Camera,
   Layers,
   Zap,
   Loader2,
   CheckCircle2,
-  AlertCircle,
   Gauge,
-  Tv,
   Type,
   Globe2,
-  Maximize2
+  Maximize2,
+  type LucideIcon
 } from 'lucide-react'
-import { apiPost, apiGet } from '../../../lib/api'
+import { apiPost } from '../../../lib/api'
 import { useNeuralDepth } from '../../../hooks/useNeuralDepth'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
+import { Card, Button, Badge, SectionHeader } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 interface CreativeAIViewProps {
   videoId: string
@@ -34,8 +32,6 @@ interface CreativeAIViewProps {
   onUpdateBroll?: (overlays: any[]) => void
   transcript: any | null
 }
-
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)]"
 
 export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   videoId,
@@ -49,7 +45,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   const [outpainted, setOutpainted] = useState(false)
   const [processing, setProcessing] = useState<string | null>(null)
 
-  // Demo features state
+  // Feature activation state
   const [brollGenerated, setBrollGenerated] = useState(false)
   const [isReframed, setIsReframed] = useState(false)
   const [eyeContactFixed, setEyeContactFixed] = useState(false)
@@ -185,7 +181,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
     showToast('Synthesising AI talking-head replica…', 'info')
     try {
       // Use the new digital-twin endpoint
-      const res = await apiPost<any>('/digital-twin/generate', { 
+      const res = await apiPost<any>('/digital-twin/generate', {
         videoId,
         voiceNoteUrl: 'https://cdn.click.ai/assets/samples/voice_note_1.mp3', // Sample or derived from video
         options: {
@@ -193,7 +189,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           resolution: '4K'
         }
       })
-      
+
       if (res?.success) {
         setAvatarGenerated(true)
         showToast('Digital twin generation started. Check the activity log for status.', 'success')
@@ -260,82 +256,61 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
     id: string,
     title: string,
     desc: string,
-    Icon: any,
+    Icon: LucideIcon,
     action: () => void,
     isActive: boolean,
     isProcessing: boolean,
     colorClass: string
   }) => (
-    <motion.div
-      whileHover={{ scale: 1.02, y: -4 }}
-      className={`${glassStyle} p-8 rounded-[3rem] border-white/5 overflow-hidden group shadow-2xl relative flex flex-col justify-between`}
-    >
-      <div className={`absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none rotate-12 group-hover:scale-110 group-hover:opacity-[0.08] transition-all duration-700 ${colorClass}`}>
-        <Icon className="w-48 h-48" />
-      </div>
-
-      <div className="space-y-6 relative z-10 flex-1">
+    <Card variant="bento" className="flex flex-col justify-between gap-5 p-6">
+      <div className="flex-1 space-y-4">
         <div className="flex items-start justify-between">
-          <div className={`w-16 h-16 rounded-[1.5rem] bg-white/[0.05] flex items-center justify-center border border-white/10 shadow-xl group-hover:border-current transition-colors ${colorClass}`}>
-            <Icon className="w-8 h-8" />
-          </div>
+          <span className={cn('flex h-12 w-12 items-center justify-center rounded-xl bg-accent', colorClass)}>
+            <Icon className="h-6 w-6" aria-hidden />
+          </span>
           {isActive && (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold">
-              <CheckCircle2 className="w-3 h-3" /> ACTIVE
-            </div>
+            <Badge variant="outline" className="gap-1 border-emerald-500/30 text-emerald-500">
+              <CheckCircle2 className="h-3 w-3" aria-hidden /> Active
+            </Badge>
           )}
         </div>
-
         <div>
-          <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{title}</h3>
-          <p className="text-sm font-medium text-slate-400 mt-2">{desc}</p>
+          <h3 className="ds-text-h3 text-theme-primary">{title}</h3>
+          <p className="mt-1 text-sm text-theme-muted">{desc}</p>
         </div>
       </div>
 
-      <button
-        type="button"
+      <Button
+        variant={isActive ? 'secondary' : 'primary'}
         onClick={action}
         disabled={isProcessing}
+        loading={isProcessing}
         title={`Execute ${title} creative tool`}
-        className={`w-full relative mt-8 py-5 rounded-[2rem] bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-[10px] tracking-[0.4em] uppercase transition-all flex items-center justify-center gap-3 overflow-hidden group/btn disabled:opacity-50`}
+        leftIcon={!isProcessing ? (isActive ? <Zap className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />) : undefined}
+        className="w-full"
       >
-        <div className={`absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 bg-gradient-to-r transparent to-transparent ${colorClass.replace('text-', 'from-')}/20`} />
-        {isProcessing ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" /> EXECUTING...
-          </>
-        ) : isActive ? (
-          <>
-            <Zap className="w-4 h-4 fill-current" /> RE-INITIALIZE
-          </>
-        ) : (
-          <>
-            <Play className="w-4 h-4 fill-current" /> DEPLOY PROTOCOL
-          </>
-        )}
-      </button>
-    </motion.div>
+        {isProcessing ? 'Working…' : isActive ? 'Re-run' : 'Apply'}
+      </Button>
+    </Card>
   )
 
   return (
-    <div className="space-y-12 max-w-[1600px] mx-auto pb-20 relative px-4 xl:px-8 pt-8">
-      {/* Dynamic Background Glow */}
-      <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-indigo-600/10 blur-[150px] rounded-full opacity-60 pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-purple-600/10 blur-[150px] rounded-full opacity-50 pointer-events-none" />
-
+    <div className="space-y-6 pb-10 ds-anim-rise">
       {/* Header */}
-      <div className="space-y-6">
-        <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] shadow-lg">
-          <Sparkles className="w-4 h-4" />
-          GENERATIVE AI ENGINE
-        </div>
-        <h2 className="text-[5rem] md:text-[7rem] font-black tracking-tighter italic leading-none bg-gradient-to-br from-white via-indigo-200 to-purple-500 bg-clip-text text-transparent uppercase border-b border-white/10 pb-8">
-          CREATIVE<br />MATRIX
-        </h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <Badge variant="outline" className="gap-2 border-indigo-500/30 text-indigo-500">
+          <Sparkles className="h-3.5 w-3.5" aria-hidden />
+          Generative AI Engine
+        </Badge>
       </div>
+      <SectionHeader
+        as="h1"
+        title="Creative Matrix"
+        description="AI-driven enhancements applied directly to your timeline."
+      />
 
       {/* Tools Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="ds-bento-grid">
         <ToolCard
           id="reframe"
           title="Auto-Reframe"
@@ -344,7 +319,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleAutoReframe}
           isActive={isReframed}
           isProcessing={processing === 'reframe'}
-          colorClass="text-indigo-400"
+          colorClass="text-indigo-500"
         />
 
         <ToolCard
@@ -355,7 +330,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleMagicBRoll}
           isActive={brollGenerated}
           isProcessing={processing === 'broll'}
-          colorClass="text-purple-400"
+          colorClass="text-purple-500"
         />
 
         <ToolCard
@@ -366,7 +341,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleDepthLayering}
           isActive={depthLayeringActive}
           isProcessing={processing === 'depthLayer' || isDepthProcessing}
-          colorClass="text-cyan-400"
+          colorClass="text-cyan-500"
         />
 
         <ToolCard
@@ -377,7 +352,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleEyeContact}
           isActive={eyeContactFixed}
           isProcessing={processing === 'eyecontact'}
-          colorClass="text-emerald-400"
+          colorClass="text-emerald-500"
         />
 
         <ToolCard
@@ -388,7 +363,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleBackgroundSwap}
           isActive={false}
           isProcessing={processing === 'bgswap'}
-          colorClass="text-amber-400"
+          colorClass="text-amber-500"
         />
 
         <ToolCard
@@ -399,7 +374,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleSpeedRamp}
           isActive={speedRamped}
           isProcessing={processing === 'speedramp'}
-          colorClass="text-cyan-400"
+          colorClass="text-cyan-500"
         />
 
         <ToolCard
@@ -410,7 +385,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleAiAvatar}
           isActive={avatarGenerated}
           isProcessing={processing === 'avatar'}
-          colorClass="text-pink-400"
+          colorClass="text-pink-500"
         />
 
         <ToolCard
@@ -421,7 +396,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleLocalization}
           isActive={localized}
           isProcessing={processing === 'localization'}
-          colorClass="text-emerald-400"
+          colorClass="text-emerald-500"
         />
 
         <ToolCard
@@ -432,7 +407,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleOutpainting}
           isActive={outpainted}
           isProcessing={processing === 'outpainting'}
-          colorClass="text-sky-400"
+          colorClass="text-sky-500"
         />
       </div>
 

@@ -3,23 +3,23 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   Flame, Sparkles, LineChart as ChartIcon,
-  TrendingUp, Globe,
+  TrendingUp,
   RefreshCw, Trophy, Clock, ArrowUpRight,
-  AlertCircle, CalendarDays, BrainCircuit
+  AlertCircle, CalendarDays, BrainCircuit, CheckCircle2
 } from 'lucide-react'
 import { AreaChart, Area, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, Cell, LineChart, Line } from 'recharts'
-import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
+import { Panel, Button, Badge, Input, SectionHeader, EmptyState } from '../../ui'
+import { cn } from '../../../lib/utils'
 
 // Extracted constants to avoid CSS inline style lint warnings
 const TOOLTIP_STYLE = {
-  backgroundColor: 'rgba(0,0,0,0.9)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  backgroundColor: 'var(--glass-surface-heavy, rgba(0,0,0,0.9))',
+  border: '1px solid var(--glass-border, rgba(255,255,255,0.1))',
   borderRadius: '12px',
   fontSize: '11px',
-  color: '#fff',
 } as const
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -62,8 +62,6 @@ const PLATFORM_COLOR: Record<string, string> = {
 
 const DAY_COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#f59e0b', '#10b981', '#3b82f6', '#f43f5e']
 
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl'
-
 type Tab = 'benchmarks' | 'nextweek'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -72,24 +70,21 @@ function PercentileBar({ value }: { value: number }) {
   const pct = Math.min(100, Math.max(0, value))
   const color = pct >= 75 ? '#10b981' : pct >= 50 ? '#f59e0b' : pct >= 25 ? '#6366f1' : '#f43f5e'
   return (
-    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${pct}%` }}
-        transition={{ duration: 1.2, ease: 'easeOut' }}
-        className="h-full rounded-full"
-        style={{ backgroundColor: color, boxShadow: `0 0 12px ${color}80` }}
+    <div className="h-2 w-full overflow-hidden rounded-full bg-input">
+      <div
+        className="h-full rounded-full transition-all"
+        style={{ width: `${pct}%`, backgroundColor: color }}
       />
     </div>
   )
 }
 
-function Stat({ label, value, sub, color = 'text-white' }: { label: string; value: string | number; sub?: string; color?: string }) {
+function Stat({ label, value, sub, color = 'text-theme-primary' }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
-    <div className="flex flex-col gap-1 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">{label}</span>
-      <span className={`text-xl font-black italic tabular-nums ${color}`}>{value}</span>
-      {sub && <span className="text-[9px] text-slate-600">{sub}</span>}
+    <div className="flex flex-col gap-1 rounded-xl ds-surface-subtle p-4">
+      <span className="ds-text-caption text-theme-muted">{label}</span>
+      <span className={cn('text-xl font-bold tabular-nums', color)}>{value}</span>
+      {sub && <span className="text-xs text-theme-muted">{sub}</span>}
     </div>
   )
 }
@@ -186,353 +181,313 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
 
   const percentile = benchmark?.industry.percentile ?? 0
   const percentileLabel = percentile >= 90 ? 'TOP 10%' : percentile >= 75 ? 'TOP 25%' : percentile >= 50 ? 'TOP 50%' : 'BELOW MEDIAN'
-  const percentileColor = percentile >= 75 ? 'text-emerald-400' : percentile >= 50 ? 'text-amber-400' : 'text-indigo-400'
+  const percentileColor = percentile >= 75 ? 'text-emerald-500' : percentile >= 50 ? 'text-amber-500' : 'text-indigo-500'
 
   return (
-    <div className="space-y-6 h-full flex flex-col pb-10">
+    <div className="flex h-full flex-col space-y-5 pb-10 ds-anim-rise">
 
       {/* Controls bar */}
-      <div className="flex items-center justify-between shrink-0 flex-wrap gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {PLATFORMS.map(p => (
             <button type="button" key={p} onClick={() => setPlatform(p)}
-              className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
-                platform === p ? 'text-white border-white/20 bg-white/10 [box-shadow:0_0_12px_var(--glow-color)]' : 'text-slate-600 border-white/5 bg-white/[0.02] hover:text-white'
-              }`}
-              style={{ '--glow-color': `${PLATFORM_COLOR[p]}40` } as React.CSSProperties}
+              className={cn(
+                'rounded-lg border px-3 py-1.5 text-xs font-semibold capitalize transition-all',
+                platform === p ? 'border-border text-theme-primary ds-surface-subtle' : 'border-subtle text-theme-muted hover:text-theme-primary'
+              )}
+              style={platform === p ? { boxShadow: `0 0 0 1px ${PLATFORM_COLOR[p]}40` } : undefined}
             >
               {p}
             </button>
           ))}
-          <div className="flex items-center gap-1 ml-4 p-1 bg-white/5 rounded-xl border border-white/10">
+          <div className="ml-2 flex items-center gap-1 rounded-xl ds-surface-subtle p-1">
             {([['benchmarks', 'Benchmarks'], ['nextweek', 'Next Week']] as [Tab, string][]).map(([tab, label]) => (
               <button type="button" key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                  activeTab === tab ? 'bg-white/10 text-white' : 'text-slate-600 hover:text-white'
-                }`}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold transition-all',
+                  activeTab === tab ? 'bg-primary text-primary-foreground' : 'text-theme-muted hover:text-theme-primary'
+                )}
               >
-                {tab === 'nextweek' && <CalendarDays className="w-3 h-3" />}
+                {tab === 'nextweek' && <CalendarDays className="h-3 w-3" aria-hidden />}
                 {label}
               </button>
             ))}
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[8px] text-slate-700 font-mono">
+          <span className="font-mono text-xs text-theme-muted">
             {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => activeTab === 'benchmarks' ? fetchBenchmark() : fetchWeekPlan()}
             disabled={loading || weekLoading}
             title="Refresh"
-            className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-white transition-all disabled:opacity-50"
+            aria-label="Refresh"
+            className="h-8 w-8 p-0"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${(loading || weekLoading) ? 'animate-spin' : ''}`} />
-          </button>
+            <RefreshCw className={cn('h-3.5 w-3.5', (loading || weekLoading) && 'animate-spin')} aria-hidden />
+          </Button>
         </div>
       </div>
 
       {error && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px]">
-          <AlertCircle className="w-4 h-4 shrink-0" /> {error} — showing defaults
+        <div className="flex items-center gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-500">
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {error}
         </div>
       )}
 
-      <AnimatePresence mode="wait">
-        {/* ── BENCHMARKS TAB ─────────────────────────────────────────── */}
-        {activeTab === 'benchmarks' && (
-          <motion.div key="benchmarks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+      {/* ── BENCHMARKS TAB ─────────────────────────────────────────── */}
+      {activeTab === 'benchmarks' && (
+        <div className="space-y-5 ds-anim-fade-in">
 
-            <div className={`${glassStyle} rounded-[2rem] p-8 space-y-6`}>
-              <div className="flex items-center justify-between">
-                <div>
-                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Track a Competitor</p>
-                   <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Neural Competitor Analysis</h4>
-                </div>
-                <div className="flex -space-x-3">
-                   {['ORA', 'DNA', 'MON'].map(a => (
-                     <div key={a} className="w-8 h-8 rounded-full border-2 border-black bg-indigo-500/20 text-[10px] flex items-center justify-center font-black text-indigo-400">
-                        {a[0]}
-                     </div>
-                   ))}
-                </div>
-              </div>
+          <Panel variant="glass" className="space-y-5 p-6">
+            <SectionHeader
+              as="h3"
+              title="Competitor Analysis"
+              description="Track a competitor handle to monitor their performance"
+            />
 
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex-1 min-w-0">
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault()
-                      if (!trackHandle.trim()) return
-                      setTrackLoading(true)
-                      try {
-                        await apiPost('/competitive/track', { handle: trackHandle.trim(), platform })
-                        setTrackResult({ handle: trackHandle.trim(), platform })
-                        setTrackHandle('')
-                      } catch {
-                        setTrackResult({ handle: trackHandle.trim(), platform })
-                        setTrackHandle('')
-                      } finally {
-                        setTrackLoading(false)
-                      }
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <input
-                      type="text"
-                      value={trackHandle}
-                      onChange={e => setTrackHandle(e.target.value)}
-                      placeholder="@competitor_node"
-                      title="Competitor handle"
-                      className="flex-1 px-4 py-3 bg-black/40 border border-white/10 rounded-2xl text-[11px] text-white placeholder-slate-800 outline-none focus:border-indigo-500/50 transition-all font-mono"
-                    />
-                    <button                      type="submit"
-                      disabled={trackLoading || !trackHandle.trim()}
-                      className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all disabled:opacity-40 flex items-center gap-2 shadow-2xl shadow-indigo-600/20"
-                    >
-                      {trackLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
-                      Analyze handle
-                    </button>
-                  </form>
-                </div>
-                {trackResult && (
-                  <AnimatePresence>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="flex-1 min-w-[300px] p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col gap-3"
-                    >
-                      <div className="flex justify-between items-center border-b border-indigo-500/20 pb-2">
-                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                          <TrendingUp className="w-3 h-3" />
-                          Analysis: {trackResult.handle}
-                        </span>
-                        <button title="Dismiss" onClick={() => setTrackResult(null)} className="text-indigo-400 hover:text-white transition-colors text-[9px]">✕</button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                         <div className="space-y-1">
-                            <p className="text-[8px] font-black text-slate-500 uppercase">Weakness</p>
-                            <p className="text-[10px] text-white font-black italic">Low Engagement Floor (2.1%)</p>
-                         </div>
-                         <div className="space-y-1">
-                            <p className="text-[8px] font-black text-slate-500 uppercase">Opportunity</p>
-                            <p className="text-[10px] text-indigo-400 font-bold">Hook timing gap (0:15)</p>
-                         </div>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-              {/* Percentile card */}
-              <div className={`${glassStyle} rounded-[2.5rem] p-8 relative overflow-hidden`}>
-                <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <Flame className="w-32 h-32 text-orange-500" />
-                </div>
-                <AnimatePresence mode="wait">
-                  {loading
-                    ? <div className="h-40 flex items-center justify-center"><RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" /></div>
-                    : (
-                      <motion.div key="loaded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 relative z-10">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
-                              <TrendingUp className="w-5 h-5 text-emerald-400" /> Engagement Standing
-                            </h3>
-                            <span className="text-[9px] text-slate-600 font-black uppercase tracking-widest">{platform} · Last 30 days</span>
-                          </div>
-                          <div className={`text-6xl font-black italic tabular-nums ${percentileColor}`}>
-                            {percentile}<span className="text-xl ml-1 opacity-50">%</span>
-                          </div>
-                        </div>
-                        <PercentileBar value={percentile} />
-                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                          percentile >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : percentile >= 50 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                        }`}>
-                          <Trophy className="w-3 h-3" /> {percentileLabel}
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Stat label="Avg Engagement" value={benchmark?.user.avgEngagement ?? 0} sub={`Median: ${benchmark?.industry.median ?? 0}`} color={percentile >= 50 ? 'text-emerald-400' : 'text-rose-400'} />
-                          <Stat label="Originality Score" value="98.2%" sub="No clichés detected" color="text-amber-400" />
-                          <Stat label="Posts Analysed" value={benchmark?.user.postCount ?? 0} sub="30-day window" />
-                          <Stat label="Avg Reach" value={(benchmark?.user.avgReach ?? 0).toLocaleString()} sub="Per post" color="text-indigo-400" />
-                        </div>
-                      </motion.div>
-                    )}
-                </AnimatePresence>
-              </div>
-
-              {/* Gap chart */}
-              <div className={`${glassStyle} rounded-[2.5rem] p-8 relative overflow-hidden`}>
-                <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-full z-20">
-                  <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-rose-500 animate-ping' : 'bg-rose-500/40'}`} />
-                  <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Live Viral Delta</span>
-                </div>
-                <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest mb-6 flex items-center gap-3">
-                  <ChartIcon className="w-4 h-4 text-indigo-400" /> Engagement vs Industry
-                </h3>
-                <div className="h-[180px]">
-                  {loading
-                    ? <div className="h-full flex items-center justify-center"><RefreshCw className="w-6 h-6 text-indigo-500 animate-spin" /></div>
-                    : (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={gapChartData} barCategoryGap="30%">
-                          <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 9, fontWeight: 900 }} axisLine={false} tickLine={false} />
-                          <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                          <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                            {gapChartData.map((e, i) => <Cell key={i} fill={e.fill} />)}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    )}
-                </div>
-                <div className="mt-6">
-                  <h4 className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3">Retention Forecast</h4>
-                  <div className="h-[100px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      {deltaLogs.length > 2 ? (
-                        <LineChart data={deltaLogs.map(l => ({ v: l.delta, t: l.timestamp })).reverse()}>
-                          <Line type="monotone" dataKey="v" stroke="#f43f5e" strokeWidth={2} dot={false} isAnimationActive={false} />
-                        </LineChart>
-                      ) : (
-                        <AreaChart data={retentionData}>
-                          <defs>
-                            <linearGradient id="retGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="prob" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#retGrad)" />
-                          <Tooltip contentStyle={TOOLTIP_STYLE} />
-                        </AreaChart>
-                      )}
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {!loading && benchmark && (
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className={`${glassStyle} rounded-[2.5rem] p-6`}>
-                  <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-indigo-400" /> Best Posting Windows
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {benchmark.competitors.bestPostingTimes.map(t => (
-                      <span key={t} className="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black rounded-xl">{t}</span>
-                    ))}
-                  </div>
-                  <p className="text-[9px] text-slate-700 mt-3">Top performers on {platform} · Competitor analysis</p>
-                </div>
-                <div className={`${glassStyle} rounded-[2.5rem] p-6`}>
-                  <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-fuchsia-400" /> Priority Actions
-                  </h3>
-                  <div className="space-y-2">
-                    {benchmark.recommendations.slice(0, 3).map((rec, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${rec.priority === 'high' ? 'bg-rose-400' : 'bg-amber-400'}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-black text-white uppercase tracking-wide">{rec.title}</p>
-                          <p className="text-[9px] text-slate-600 mt-0.5">{rec.estimatedImpact}</p>
-                        </div>
-                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-
-        {/* ── NEXT WEEK PLAN TAB ─────────────────────────────────────── */}
-        {activeTab === 'nextweek' && (
-          <motion.div key="nextweek" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-            {weekError && (
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px]">
-                <AlertCircle className="w-4 h-4 shrink-0" /> {weekError}
-              </div>
-            )}
-            {weekLoading ? (
-              <div className="flex items-center justify-center h-48">
-                <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
-              </div>
-            ) : weekPlan.length === 0 ? (
-              <div className={`${glassStyle} rounded-[2.5rem] p-10 text-center`}>
-                <CalendarDays className="w-10 h-10 text-slate-700 mx-auto mb-4" />
-                <p className="text-slate-500 font-black uppercase text-[10px] tracking-widest mb-4">No plan yet</p>
-                <button type="button" onClick={fetchWeekPlan}
-                  className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all"
-                >
-                  Generate 7-Day Plan
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (!trackHandle.trim()) return
+                setTrackLoading(true)
+                try {
+                  await apiPost('/competitive/track', { handle: trackHandle.trim(), platform })
+                  setTrackResult({ handle: trackHandle.trim(), platform })
+                  setTrackHandle('')
+                } catch {
+                  setTrackResult({ handle: trackHandle.trim(), platform })
+                  setTrackHandle('')
+                } finally {
+                  setTrackLoading(false)
+                }
+              }}
+              className="flex flex-wrap items-center gap-2"
+            >
+              <Input
+                type="text"
+                value={trackHandle}
+                onChange={e => setTrackHandle(e.target.value)}
+                placeholder="@competitor"
+                title="Competitor handle"
+                className="max-w-xs flex-1 font-mono"
+              />
+              <Button
+                type="submit"
+                disabled={trackLoading || !trackHandle.trim()}
+                loading={trackLoading}
+                leftIcon={!trackLoading ? <BrainCircuit className="h-3.5 w-3.5" aria-hidden /> : undefined}
+              >
+                Track handle
+              </Button>
+            </form>
+            {trackResult && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-4">
+                <span className="flex items-center gap-2 text-sm text-theme-primary">
+                  <CheckCircle2 className="h-4 w-4 text-indigo-500" aria-hidden />
+                  Now tracking <strong>{trackResult.handle}</strong> on {trackResult.platform}. Their metrics will appear in your benchmarks as data is collected.
+                </span>
+                <button type="button" title="Dismiss" onClick={() => setTrackResult(null)} className="text-theme-muted transition-colors hover:text-theme-primary">
+                  <span aria-hidden>×</span>
+                  <span className="sr-only">Dismiss</span>
                 </button>
               </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-indigo-400" /> 7-Day Content Calendar
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[9px] text-emerald-400 font-black uppercase tracking-widest border border-emerald-500/20 px-2 py-0.5 rounded-full bg-emerald-500/5">12 Regional Twins Synthetic</span>
-                    <span className="text-[9px] text-slate-600 font-black uppercase tracking-widest">Platform: {platform}</span>
+            )}
+          </Panel>
+
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+
+            {/* Percentile card */}
+            <Panel variant="glass" className="relative overflow-hidden p-6">
+              <div className="pointer-events-none absolute right-4 top-4 opacity-[0.06]">
+                <Flame className="h-28 w-28 text-orange-500" aria-hidden />
+              </div>
+              {loading ? (
+                <div className="flex h-40 items-center justify-center"><RefreshCw className="h-8 w-8 animate-spin text-indigo-500" aria-hidden /></div>
+              ) : (
+                <div className="relative z-10 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="flex items-center gap-2 ds-text-h3 text-theme-primary">
+                        <TrendingUp className="h-5 w-5 text-emerald-500" aria-hidden /> Engagement Standing
+                      </h3>
+                      <span className="ds-text-caption capitalize text-theme-muted">{platform} · Last 30 days</span>
+                    </div>
+                    <div className={cn('text-5xl font-bold tabular-nums', percentileColor)}>
+                      {percentile}<span className="ml-1 text-lg opacity-50">%</span>
+                    </div>
+                  </div>
+                  <PercentileBar value={percentile} />
+                  <Badge variant="outline" className={cn('gap-1',
+                    percentile >= 75 ? 'border-emerald-500/20 text-emerald-500'
+                    : percentile >= 50 ? 'border-amber-500/20 text-amber-500'
+                    : 'border-indigo-500/20 text-indigo-500'
+                  )}>
+                    <Trophy className="h-3 w-3" aria-hidden /> {percentileLabel}
+                  </Badge>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Stat label="Avg Engagement" value={benchmark?.user.avgEngagement ?? 0} sub={`Median: ${benchmark?.industry.median ?? 0}`} color={percentile >= 50 ? 'text-emerald-500' : 'text-rose-500'} />
+                    <Stat label="Engagement Rate" value={`${benchmark?.user.engagementRate ?? 0}%`} sub="Your average" color="text-amber-500" />
+                    <Stat label="Posts Analysed" value={benchmark?.user.postCount ?? 0} sub="30-day window" />
+                    <Stat label="Avg Reach" value={(benchmark?.user.avgReach ?? 0).toLocaleString()} sub="Per post" color="text-indigo-500" />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3">
-                  {weekPlan.map((day, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className={`${glassStyle} rounded-[2rem] p-5 relative overflow-hidden hover:border-white/20 transition-all`}
-                    >
-                      {/* Day colour accent — data-driven colour, must be inline */}
-                      <div className="absolute top-0 left-0 w-full h-0.5 rounded-t-[2rem]"
-                        style={{ backgroundColor: DAY_COLORS[i % DAY_COLORS.length] }} />
-                      <div className="mb-3">
-                        <span className="text-[8px] font-black uppercase tracking-widest"
-                          style={{ color: DAY_COLORS[i % DAY_COLORS.length] }}>
-                          {day.day ?? `Day ${i + 1}`}
-                        </span>
-                        {day.bestTime && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Clock className="w-2.5 h-2.5 text-slate-600" />
-                            <span className="text-[8px] text-slate-600">{day.bestTime}</span>
-                          </div>
-                        )}
-                      </div>
+              )}
+            </Panel>
 
-                      {day.contentType && (
-                        <div className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/5 inline-flex mb-2">
-                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">{day.contentType}</span>
-                        </div>
-                      )}
-                      {day.topic && <p className="text-[10px] font-black text-white leading-tight mb-2">{day.topic}</p>}
-                      {day.hook && <p className="text-[9px] text-slate-500 leading-snug italic">&quot;{day.hook}&quot;</p>}
-                      {day.estimatedReach != null && (
-                        <div className="mt-3 flex items-center gap-1.5">
-                          <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />
-                          <span className="text-[8px] font-black text-emerald-400">{day.estimatedReach.toLocaleString()} est. reach</span>
-                        </div>
-                      )}
-                    </motion.div>
+            {/* Gap chart */}
+            <Panel variant="glass" className="relative overflow-hidden p-6">
+              <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-1.5">
+                <span className={cn('h-1.5 w-1.5 rounded-full', isLive ? 'animate-ping bg-rose-500' : 'bg-rose-500/40')} />
+                <span className="ds-text-caption text-rose-500">Live Viral Delta</span>
+              </div>
+              <h3 className="mb-5 flex items-center gap-2 ds-text-label text-theme-secondary">
+                <ChartIcon className="h-4 w-4 text-indigo-500" aria-hidden /> Engagement vs Industry
+              </h3>
+              <div className="h-[180px]">
+                {loading ? (
+                  <div className="flex h-full items-center justify-center"><RefreshCw className="h-6 w-6 animate-spin text-indigo-500" aria-hidden /></div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={gapChartData} barCategoryGap="30%">
+                      <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(127,127,127,0.06)' }} />
+                      <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                        {gapChartData.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+              <div className="mt-5">
+                <h4 className="mb-3 ds-text-caption text-theme-muted">Retention Forecast</h4>
+                <div className="h-[100px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    {deltaLogs.length > 2 ? (
+                      <LineChart data={deltaLogs.map(l => ({ v: l.delta, t: l.timestamp })).reverse()}>
+                        <Line type="monotone" dataKey="v" stroke="#f43f5e" strokeWidth={2} dot={false} isAnimationActive={false} />
+                      </LineChart>
+                    ) : (
+                      <AreaChart data={retentionData}>
+                        <defs>
+                          <linearGradient id="retGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <Area type="monotone" dataKey="prob" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#retGrad)" />
+                        <Tooltip contentStyle={TOOLTIP_STYLE} />
+                      </AreaChart>
+                    )}
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </Panel>
+          </div>
+
+          {!loading && benchmark && (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <Panel variant="glass" className="p-6">
+                <h3 className="mb-4 flex items-center gap-2 ds-text-label text-theme-secondary">
+                  <Clock className="h-4 w-4 text-indigo-500" aria-hidden /> Best Posting Windows
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {benchmark.competitors.bestPostingTimes.map(t => (
+                    <Badge key={t} variant="outline" className="border-indigo-500/20 text-indigo-500">{t}</Badge>
                   ))}
                 </div>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <p className="mt-3 text-xs capitalize text-theme-muted">Top performers on {platform} · Competitor analysis</p>
+              </Panel>
+              <Panel variant="glass" className="p-6">
+                <h3 className="mb-4 flex items-center gap-2 ds-text-label text-theme-secondary">
+                  <Sparkles className="h-4 w-4 text-fuchsia-500" aria-hidden /> Priority Actions
+                </h3>
+                <div className="space-y-2">
+                  {benchmark.recommendations.slice(0, 3).map((rec, i) => (
+                    <div key={i} className="flex items-start gap-3 rounded-xl ds-surface-subtle p-3">
+                      <div className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', rec.priority === 'high' ? 'bg-rose-500' : 'bg-amber-500')} />
+                      <div className="min-w-0 flex-1">
+                        <p className="ds-text-label text-theme-primary">{rec.title}</p>
+                        <p className="mt-0.5 text-xs text-theme-muted">{rec.estimatedImpact}</p>
+                      </div>
+                      <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-theme-muted" aria-hidden />
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── NEXT WEEK PLAN TAB ─────────────────────────────────────── */}
+      {activeTab === 'nextweek' && (
+        <div className="space-y-5 ds-anim-fade-in">
+          {weekError && (
+            <div className="flex items-center gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-500">
+              <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {weekError}
+            </div>
+          )}
+          {weekLoading ? (
+            <div className="flex h-48 items-center justify-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-indigo-500" aria-hidden />
+            </div>
+          ) : weekPlan.length === 0 ? (
+            <EmptyState
+              icon={CalendarDays}
+              className="ds-surface-card"
+              title="No plan yet"
+              description="Generate a 7-day content calendar tuned to your platform."
+              action={<Button onClick={fetchWeekPlan}>Generate 7-Day Plan</Button>}
+            />
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="flex items-center gap-2 ds-text-label text-theme-primary">
+                  <CalendarDays className="h-5 w-5 text-indigo-500" aria-hidden /> 7-Day Content Calendar
+                </h3>
+                <span className="ds-text-caption capitalize text-theme-muted">Platform: {platform}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-7">
+                {weekPlan.map((day, i) => (
+                  <Panel key={i} variant="glass" className="relative overflow-hidden p-5 ds-hover-lift">
+                    {/* Day colour accent — data-driven colour, must be inline */}
+                    <div className="absolute left-0 top-0 h-0.5 w-full rounded-t-2xl"
+                      style={{ backgroundColor: DAY_COLORS[i % DAY_COLORS.length] }} />
+                    <div className="mb-3">
+                      <span className="ds-text-caption"
+                        style={{ color: DAY_COLORS[i % DAY_COLORS.length] }}>
+                        {day.day ?? `Day ${i + 1}`}
+                      </span>
+                      {day.bestTime && (
+                        <div className="mt-1 flex items-center gap-1">
+                          <Clock className="h-2.5 w-2.5 text-theme-muted" aria-hidden />
+                          <span className="text-xs text-theme-muted">{day.bestTime}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {day.contentType && (
+                      <Badge variant="outline" className="mb-2 text-[10px] text-theme-secondary">{day.contentType}</Badge>
+                    )}
+                    {day.topic && <p className="mb-2 ds-text-label text-theme-primary">{day.topic}</p>}
+                    {day.hook && <p className="text-xs leading-snug text-theme-muted">&quot;{day.hook}&quot;</p>}
+                    {day.estimatedReach != null && (
+                      <div className="mt-3 flex items-center gap-1.5">
+                        <TrendingUp className="h-2.5 w-2.5 text-emerald-500" aria-hidden />
+                        <span className="text-xs font-semibold text-emerald-500">{day.estimatedReach.toLocaleString()} est. reach</span>
+                      </div>
+                    )}
+                  </Panel>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

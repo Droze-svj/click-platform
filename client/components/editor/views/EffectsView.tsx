@@ -618,7 +618,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                  type="button"
                   onClick={() => {
                     showToast('Analyzing motion…', 'info')
-                    setTimeout(() => showToast('✓ Motion track locked', 'success'), 1500)
+                    setTimeout(() => showToast('Motion track locked', 'success'), 1500)
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors group/track"
                   title="Pin overlay to moving objects in the video"
@@ -771,23 +771,24 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                   <span className="text-[9px] text-theme-muted ml-1">{keyframes.length} keyframe{keyframes.length !== 1 ? 's' : ''}</span>
                 )}
               </div>
-              <div className="flex items-center gap-4 bg-surface-elevated/50 p-3 rounded-2xl border border-white/5">
+              <div className="flex items-center gap-3 rounded-2xl ds-surface-subtle p-3">
                 <div className="flex items-center gap-2">
-                  <Spline className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Bezier Curve Control</span>
+                  <Spline className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
+                  <span className="ds-text-caption text-theme-muted">Bezier Curve</span>
                 </div>
-                <div className="flex-1 flex items-center gap-3">
-                  <div className="h-8 w-16 bg-black/40 rounded border border-indigo-500/20 relative flex items-center justify-center overflow-hidden">
-                     <svg className="w-full h-full p-1 overflow-visible" viewBox="0 0 100 100">
+                <div className="flex flex-1 items-center gap-3">
+                  <div className="relative flex h-8 w-16 items-center justify-center overflow-hidden rounded border border-subtle ds-surface-card">
+                     <svg className="h-full w-full overflow-visible p-1" viewBox="0 0 100 100">
                         <path d="M 0 100 C 42 100 58 0 100 0" stroke="currentColor" fill="none" className="text-indigo-500" strokeWidth="3" />
                      </svg>
                   </div>
                   <input
                     type="text"
                     placeholder="0.42, 0, 0.58, 1"
-                    className="flex-1 bg-black/60 border border-white/5 rounded-lg px-3 py-1.5 text-[10px] font-mono text-indigo-300 placeholder-slate-700 outline-none focus:border-indigo-500/50"
+                    aria-label="Bezier control points"
+                    className="flex-1 rounded-lg border border-subtle ds-surface-card px-3 py-1.5 font-mono text-xs text-theme-primary outline-none placeholder:text-theme-muted focus:border-indigo-500/50"
                   />
-                  <button className="px-3 py-1.5 bg-indigo-500/10 text-indigo-400 rounded-lg text-[9px] font-black uppercase hover:bg-indigo-500/20 transition-all">Connect</button>
+                  <button type="button" className="rounded-lg bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-indigo-500 transition-all hover:bg-indigo-500/20">Apply</button>
                 </div>
               </div>
               </div>
@@ -799,28 +800,28 @@ const EffectsView: React.FC<EffectsViewProps> = ({
 
       {/* Selection toolbar - shows when effects are selected */}
       {effectsSelected > 0 && (
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3 text-white">
-            <span className="text-sm font-bold">{effectsSelected} effect{effectsSelected > 1 ? 's' : ''} selected</span>
-            <span className="text-xs opacity-70">Ctrl/Cmd+Click for multi-select · Shift+Click for range</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl ds-surface-elevated p-4">
+          <div className="flex items-center gap-3">
+            <span className="ds-text-label text-theme-primary">{effectsSelected} effect{effectsSelected > 1 ? 's' : ''} selected</span>
+            <span className="ds-text-caption text-theme-muted">Ctrl/Cmd+Click for multi-select · Shift+Click for range</span>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={selectAll} className="px-3 py-1.5 text-xs font-bold bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">
+            <button type="button" onClick={selectAll} className="rounded-lg ds-surface-subtle px-3 py-1.5 text-xs font-semibold text-theme-secondary transition-colors hover:text-theme-primary">
               Select All
             </button>
-            <button type="button" onClick={copySelected} className="p-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors" title="Copy (Ctrl+C)">
-              <Clipboard className="w-4 h-4" />
+            <button type="button" onClick={copySelected} className="rounded-lg ds-surface-subtle p-2 text-theme-secondary transition-colors hover:text-theme-primary" title="Copy (Ctrl+C)">
+              <Clipboard className="h-4 w-4" aria-hidden />
             </button>
             {clipboardEffects.length > 0 && (
-              <button type="button" onClick={pasteEffects} className="p-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors" title="Paste (Ctrl+V)">
-                <ClipboardPaste className="w-4 h-4" />
+              <button type="button" onClick={pasteEffects} className="rounded-lg ds-surface-subtle p-2 text-theme-secondary transition-colors hover:text-theme-primary" title="Paste (Ctrl+V)">
+                <ClipboardPaste className="h-4 w-4" aria-hidden />
               </button>
             )}
-            <button type="button" onClick={deleteSelected} className="p-2 bg-red-500/80 text-white rounded-lg hover:bg-red-500 transition-colors" title="Delete">
-              <Trash2 className="w-4 h-4" />
+            <button type="button" onClick={deleteSelected} className="rounded-lg bg-rose-500/10 p-2 text-rose-500 transition-colors hover:bg-rose-500/20" title="Delete">
+              <Trash2 className="h-4 w-4" aria-hidden />
             </button>
-            <button type="button" onClick={clearSelection} className="p-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors" title="Clear selection">
-              <X className="w-4 h-4" />
+            <button type="button" onClick={clearSelection} className="rounded-lg ds-surface-subtle p-2 text-theme-secondary transition-colors hover:text-theme-primary" title="Clear selection">
+              <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
         </div>
