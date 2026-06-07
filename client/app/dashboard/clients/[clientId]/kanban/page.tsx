@@ -1,8 +1,9 @@
 'use client'
 
 import { useParams, useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
 import ApprovalKanbanBoard from '../../../../../components/ApprovalKanbanBoard'
+import { SectionHeader, EmptyState } from '@/components/ui'
+import { LayoutGrid } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 
 export default function ClientKanbanPage() {
@@ -14,18 +15,24 @@ export default function ClientKanbanPage() {
 
   if (!agencyWorkspaceId) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-gray-500">{t('clientKanbanPage.workspaceIdRequired')}</p>
+      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto">
+        <EmptyState
+          icon={LayoutGrid}
+          title={t('clientKanbanPage.workspaceIdRequired')}
+          className="py-24"
+        />
       </div>
     )
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">{t('clientKanbanPage.title')}</h1>
-        <p className="text-gray-600 mt-2">{t('clientKanbanPage.subtitle')}</p>
-      </div>
+    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+      <SectionHeader
+        as="h1"
+        title={t('clientKanbanPage.title')}
+        description={t('clientKanbanPage.subtitle')}
+        className="mb-6"
+      />
       <ApprovalKanbanBoard
         clientWorkspaceId={clientId}
         agencyWorkspaceId={agencyWorkspaceId}
@@ -33,4 +40,3 @@ export default function ClientKanbanPage() {
     </div>
   )
 }
-
