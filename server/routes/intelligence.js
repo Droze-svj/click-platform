@@ -496,51 +496,30 @@ router.post('/strategist/ask', async (req, res) => {
     }
     const niche = normaliseNiche(rawNiche);
     const platform = normalisePlatform(Array.isArray(platforms) ? platforms[0] : platforms);
+    const userId = req.user?._id || req.user?.id;
 
-    const system = buildSystemPrompt({
-      persona: 'marketing-strategist',
-      niche,
-      platform,
-      stage: 'script',
-      language: 'en',
-      extra:
-        '\nFormatting rules:\n' +
-        '• Reply in 2-4 short paragraphs OR a tight numbered list — never both.\n' +
-        '• Be specific: name tools, numbers, exact phrasing. No "engage authentically" type fluff.\n' +
-        '• Close with one concrete next step the creator can do TODAY.\n' +
-        '• Then return JSON in a fenced ```json block with shape: ' +
-        '{ "answer": "...", "followUps": ["q1", "q2", "q3"], "relatedPlaybooks": ["growth"|"engagement"|"monetization"] }',
-    });
+    // Route through the marketing brain: Claude-first (with LIVE web search so
+    // "what's trending now" questions are real + cited) and an automatic Gemini
+    // fallback inside the service. Response shape is preserved exactly.
+    const { askStrategist } = require('../services/marketingBrainService');
+    const brain = await askStrategist({ userId, question, niche, platform, language: 'en' });
 
-    const prompt = `${system}\n\nCREATOR QUESTION:\n${question}\n\nReply with the prose answer first, then the JSON block.`;
-    const raw = await generateContent(prompt, { temperature: 0.6, maxTokens: 1200 });
-
-    // Parse the trailing JSON block; fall back to the raw text if Gemini
-    // didn't comply with the format directive.
-    let answer = (raw || '').trim();
-    let followUps = [];
-    let relatedPlaybooks = [];
-    const jsonMatch = answer.match(/```json\s*([\s\S]+?)```/i);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[1].trim());
-        if (parsed?.answer) answer = parsed.answer;
-        else answer = answer.replace(jsonMatch[0], '').trim();
-        if (Array.isArray(parsed?.followUps)) followUps = parsed.followUps.slice(0, 4);
-        if (Array.isArray(parsed?.relatedPlaybooks)) relatedPlaybooks = parsed.relatedPlaybooks.slice(0, 3);
-      } catch (parseErr) {
-        // JSON malformed — strip the block and use the prose only. Log
-        // so we can spot models that regress on format compliance, but
-        // keep responding to the user with the prose so the UX is OK.
-        logger.warn('[intelligence] /strategist/ask: JSON block malformed', {
-          error: parseErr.message,
-          questionPreview: (req.body?.question || '').slice(0, 100),
-        });
-        answer = answer.replace(jsonMatch[0], '').trim();
-      }
+    if (!brain.ok) {
+      return res.status(503).json({ success: false, error: brain.error });
     }
 
-    res.json({ success: true, answer, followUps, relatedPlaybooks, niche, platform });
+    res.json({
+      success: true,
+      answer: brain.answer,
+      followUps: brain.followUps,
+      relatedPlaybooks: brain.relatedPlaybooks,
+      niche: brain.niche,
+      platform: brain.platform,
+      // Additive: source + citations let the UI show provenance for live claims.
+      // Existing clients ignore unknown fields, so the shape stays compatible.
+      source: brain.source,
+      citations: brain.citations || [],
+    });
   } catch (error) {
     logger.error('[intelligence] /strategist/ask failed', { error: error.message });
     res.status(500).json({ success: false, error: 'Strategist call failed. Try again in a moment.' });

@@ -103,26 +103,85 @@ function robustParseJSON(text) {
 /**
  * One streaming Claude call. Returns the final message object (with
  * .content blocks) or throws on transport/API error.
+ *
+ * `tools` (optional) — when provided (e.g. the server-side web_search tool),
+ * they're forwarded verbatim and the SDK runs Anthropic's server-side tool
+ * loop for us; `.finalMessage()` still resolves to the completed message with
+ * all content blocks (text + citations) once the loop settles.
  */
-async function streamMessage({ system, messages, model, maxTokens, timeout }) {
+async function streamMessage({ system, messages, model, maxTokens, timeout, tools }) {
   const c = getClient();
   if (!c) throw new Error('Anthropic client unavailable');
 
   // M1: allow a per-call timeout override so the parse-retry shares the budget
   // (it gets a tighter ceiling) rather than getting a fresh full 90s allowance.
+  // Web-search calls can run several server-side round-trips, so callers pass a
+  // larger timeout for those.
   const caller = (typeof timeout === 'number' && typeof c.withOptions === 'function')
     ? c.withOptions({ timeout })
     : c;
 
-  const stream = caller.messages.stream({
+  const params = {
     model,
     max_tokens: maxTokens,
     system,
     messages,
     thinking: { type: 'adaptive' },
     output_config: { effort: 'high' },
-  });
+  };
+  if (Array.isArray(tools) && tools.length > 0) params.tools = tools;
+
+  const stream = caller.messages.stream(params);
   return stream.finalMessage();
+}
+
+/**
+ * Pull citation source URLs from a Claude message's content blocks.
+ *
+ * When the server-side web_search tool runs, Claude attaches `citations` to
+ * the text blocks it grounds in search results. Each citation can carry a
+ * `url` (+ `title`). We also surface the raw queries Claude issued via the
+ * `server_tool_use` / `web_search_tool_result` blocks so the UI can show
+ * "searched for X" provenance. Returns a de-duplicated array of
+ * `{ url, title }` (sources) — never throws.
+ */
+function extractCitations(msg) {
+  if (!msg || !Array.isArray(msg.content)) return [];
+  const seen = new Set();
+  const sources = [];
+
+  const pushSource = (url, title) => {
+    if (!url || typeof url !== 'string') return;
+    if (seen.has(url)) return;
+    seen.add(url);
+    sources.push({ url, title: title || null });
+  };
+
+  for (const block of msg.content) {
+    if (!block || typeof block !== 'object') continue;
+
+    // 1) Inline citations attached to text blocks (the authoritative source).
+    if (block.type === 'text' && Array.isArray(block.citations)) {
+      for (const cit of block.citations) {
+        if (cit && typeof cit === 'object') pushSource(cit.url, cit.title);
+      }
+    }
+
+    // 2) web_search_tool_result blocks carry the raw result list. These back
+    //    the citations above; include any URLs Claude surfaced even if it
+    //    didn't inline-cite every one.
+    if (block.type === 'web_search_tool_result') {
+      const content = block.content;
+      const results = Array.isArray(content) ? content : (content?.content || []);
+      if (Array.isArray(results)) {
+        for (const r of results) {
+          if (r && typeof r === 'object') pushSource(r.url, r.title);
+        }
+      }
+    }
+  }
+
+  return sources;
 }
 
 /**
@@ -201,10 +260,92 @@ async function generateJSON(prompt, opts = {}) {
   }
 }
 
+/**
+ * generateJSONWithWeb — run a prompt through Claude with the server-side
+ * web_search tool enabled, returning robust-parsed JSON + the sources Claude
+ * cited. Use this for trend/strategy calls that must reflect what's happening
+ * RIGHT NOW — Claude searches the live web on Anthropic's infra, grounds its
+ * answer, and we extract the source URLs so nothing is presented as "live"
+ * without provenance (owner's #1 rule).
+ *
+ * @param {string} prompt
+ * @param {Object} [opts]
+ * @param {string} [opts.system]
+ * @param {string} [opts.model='claude-opus-4-8']
+ * @param {number} [opts.maxTokens=16000]
+ * @param {number} [opts.maxWebSearches=4] - cap server-side searches (cost/latency).
+ * @returns {Promise<{ok:true,data:any,citations:Array<{url,title}>}|{ok:false,error:string}>}
+ *
+ * Web search runs several server-side round-trips, so the per-call timeout is
+ * larger than the plain JSON path. On parse failure it does NOT re-search
+ * (that would re-bill searches) — it returns an honest error. Never fabricates.
+ */
+async function generateJSONWithWeb(prompt, opts = {}) {
+  const {
+    system,
+    model = 'claude-opus-4-8',
+    maxTokens = 16000,
+    maxWebSearches = 4,
+  } = opts;
+
+  if (!isConfigured()) {
+    return { ok: false, error: 'AI brain needs Claude configured (ANTHROPIC_API_KEY).' };
+  }
+
+  // Server-side web search tool (see claude-api skill — web_search_20260209
+  // adds dynamic filtering on Opus 4.8). max_uses caps cost/latency.
+  const tools = [{
+    type: 'web_search_20260209',
+    name: 'web_search',
+    max_uses: Math.max(1, Math.min(Number(maxWebSearches) || 4, 8)),
+  }];
+
+  try {
+    // 180s — web search can chain multiple server-side searches + fetches.
+    const msg = await streamMessage({
+      system,
+      messages: [{ role: 'user', content: prompt }],
+      model,
+      maxTokens,
+      timeout: 180_000,
+      tools,
+    });
+
+    const text = extractText(msg);
+    const citations = extractCitations(msg);
+    const parsed = robustParseJSON(text);
+
+    if (parsed) return { ok: true, data: parsed, citations };
+
+    logger.error('[AnthropicAI] generateJSONWithWeb: unparseable response', {
+      preview: String(text || '').slice(0, 160),
+    });
+    return { ok: false, error: 'Claude returned a web-grounded answer we could not parse. Please try again.' };
+  } catch (err) {
+    const status = err?.status;
+    const rawMsg = err?.message || String(err);
+    logger.error('[AnthropicAI] generateJSONWithWeb failed', { status, error: rawMsg.slice(0, 240) });
+
+    let friendly;
+    if (status === 401 || status === 403) {
+      friendly = 'AI brain could not authenticate with Claude (check ANTHROPIC_API_KEY).';
+    } else if (status === 429) {
+      friendly = 'AI brain is rate-limited right now — please try again in a moment.';
+    } else if (typeof status === 'number' && status >= 500) {
+      friendly = 'Claude is temporarily unavailable — please try again shortly.';
+    } else {
+      friendly = `AI brain web request failed: ${rawMsg.slice(0, 160)}`;
+    }
+    return { ok: false, error: friendly };
+  }
+}
+
 module.exports = {
   isConfigured,
   generateJSON,
+  generateJSONWithWeb,
   // Exported for unit testing / reuse.
   robustParseJSON,
   extractText,
+  extractCitations,
 };

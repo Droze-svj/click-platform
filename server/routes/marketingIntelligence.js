@@ -195,15 +195,76 @@ router.post('/retention-campaign', auth, (req, res) => {
 });
 
 // ── GET /fresh-angles ──────────────────────────────────────────────────────
-router.get('/fresh-angles', auth, (req, res) => {
+// Routed through the marketing brain: Claude-first (LIVE web search for what's
+// resonating now, blended with the user's real performance) → Gemini fallback
+// → curated knowledge base. Response shape { topic, niche, angles[] } preserved.
+router.get('/fresh-angles', auth, async (req, res) => {
   const topic = String(req.query.topic || 'content creation');
   const slice = pickSlice(req);
+  const userId = req.user?._id || req.user?.id;
+
+  try {
+    const { getFreshAngles } = require('../services/marketingBrainService');
+    const brain = await getFreshAngles({
+      userId, niche: slice.niche, platform: slice.platform, topic, language: req.language || 'en',
+    });
+    if (brain.ok && Array.isArray(brain.angles) && brain.angles.length) {
+      return res.json({
+        success: true,
+        data: {
+          topic: brain.topic,
+          niche: brain.niche,
+          angles: brain.angles,
+          source: brain.source,
+          citations: brain.citations || [],
+        },
+      });
+    }
+  } catch (err) {
+    logger.warn('[marketing-intel] fresh-angles brain call failed; using knowledge base', { error: err.message });
+  }
+
+  // Deterministic knowledge-base fallback — never empty-state.
   const angles = slice.nichePlaybook.angles.map((angle, i) => ({
     headline: `${angle}: ${topic}`,
     why: slice.nichePlaybook.triggers[i % slice.nichePlaybook.triggers.length],
     framework: HOOK_FRAMEWORKS[i % HOOK_FRAMEWORKS.length].id,
   }));
-  res.json({ success: true, data: { topic, niche: slice.niche, angles } });
+  res.json({ success: true, data: { topic, niche: slice.niche, angles, source: 'knowledge-base' } });
+});
+
+// ── GET /strategy ──────────────────────────────────────────────────────────
+// Current, web-grounded niche/platform strategy from the marketing brain.
+// Claude-first with LIVE web search (cited) → Gemini knowledge-base fallback.
+router.get('/strategy', auth, async (req, res) => {
+  const slice = pickSlice(req);
+  const userId = req.user?._id || req.user?.id;
+  const goal = req.query.goal || null;
+
+  try {
+    const { getStrategy } = require('../services/marketingBrainService');
+    const brain = await getStrategy({
+      userId, niche: slice.niche, platform: slice.platform, goal, language: req.language || 'en',
+    });
+    if (!brain.ok) {
+      return res.status(503).json({ success: false, error: brain.error });
+    }
+    return res.json({
+      success: true,
+      data: {
+        niche: brain.niche,
+        platform: brain.platform,
+        goal: brain.goal,
+        strategy: brain.strategy,
+        source: brain.source,
+        citations: brain.citations || [],
+        ...(brain.trendsNote ? { trendsNote: brain.trendsNote } : {}),
+      },
+    });
+  } catch (err) {
+    logger.error('[marketing-intel] /strategy failed', { error: err.message });
+    return res.status(503).json({ success: false, error: 'Strategy generation is temporarily unavailable.' });
+  }
 });
 
 // ── GET /inspiration-drop ──────────────────────────────────────────────────
@@ -224,13 +285,35 @@ router.get('/inspiration-drop', auth, (req, res) => {
 });
 
 // ── GET /engagement-prompts ────────────────────────────────────────────────
-router.get('/engagement-prompts', auth, (req, res) => {
+// Routed through the marketing brain (Claude-first reasoning over the niche
+// playbook + the creator's real performance → knowledge-base fallback). The
+// { platform, niche, prompts: {save,comment,share,dm,follow} } shape is kept.
+router.get('/engagement-prompts', auth, async (req, res) => {
   const slice = pickSlice(req);
+  const userId = req.user?._id || req.user?.id;
+
+  try {
+    const { getEngagementPlan } = require('../services/marketingBrainService');
+    const brain = await getEngagementPlan({
+      userId, niche: slice.niche, platform: slice.platform, language: req.language || 'en',
+    });
+    if (brain.ok && brain.prompts) {
+      return res.json({
+        success: true,
+        data: { platform: brain.platform, niche: brain.niche, prompts: brain.prompts, source: brain.source },
+      });
+    }
+  } catch (err) {
+    logger.warn('[marketing-intel] engagement-prompts brain call failed; using knowledge base', { error: err.message });
+  }
+
+  // Knowledge-base fallback — the global CTA library.
   res.json({
     success: true,
     data: {
       platform: slice.platform,
       niche: slice.niche,
+      source: 'knowledge-base',
       prompts: {
         save: CTA_LIBRARY.save,
         comment: CTA_LIBRARY.comment,

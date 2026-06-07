@@ -432,6 +432,14 @@ setImmediate(() => {
         // The downstream scheduler/worker pipeline takes over from there.
         const { startRecurringPostCron } = require('./services/recurringPostCron');
         startRecurringPostCron();
+
+        // Trends ingest schedule — pulls REAL web-grounded trends (Claude web
+        // search via liveTrendService) per platform into TrendSnapshot on a
+        // repeatable BullMQ job. Previously defined but never registered.
+        const { registerTrendsIngestSchedule } = require('./jobs/trendsIngestJob');
+        registerTrendsIngestSchedule().catch((err) =>
+          logger.warn('Trends ingest schedule registration failed', { error: err.message })
+        );
       } else {
         logger.info('Autonomous mode disabled (DISABLE_CRONS / AUTONOMOUS_MODE=off). Crons not started.');
       }
