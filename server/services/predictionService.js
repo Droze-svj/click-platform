@@ -3,7 +3,6 @@
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const ScheduledPost = require('../models/ScheduledPost');
-const ContentPerformance = require('../models/ContentPerformance');
 const { get, set } = require('./cacheService');
 
 /**
@@ -75,35 +74,57 @@ async function predictContentPerformance(contentId, contentData) {
  */
 async function getHistoricalPerformance(contentData) {
   try {
-    const { userId, type, category, tags } = contentData;
+    const { userId } = contentData;
+    if (!userId) {
+      return { count: 0, avgViews: 0, avgEngagement: 0, avgReach: 0, data: [] };
+    }
 
-    // Get user's historical content performance
-    const historicalContent = await ContentPerformance.find({
+    // Get the user's REAL historical performance from their published posts.
+    // ScheduledPost IS keyed by `userId` and carries the post-publish
+    // `analytics` synced by platformAnalyticsService. The previous
+    // implementation queried `ContentPerformance.find({ userId })`, but
+    // ContentPerformance has no `userId` (keyed by postId/workspaceId) and its
+    // metrics live under `performance.*` — so the query always returned [] and
+    // the "historical" branch never fired. We read the real shape here and
+    // normalise the field names (analytics.views / .engagement / .reach).
+    const posts = await ScheduledPost.find({
       userId,
-      ...(type && { 'content.type': type }),
-      ...(category && { 'content.category': category }),
+      status: 'posted',
+      'analytics.lastUpdated': { $exists: true },
     })
-      .sort({ createdAt: -1 })
+      .sort({ postedAt: -1 })
       .limit(100)
+      .select('analytics platform')
       .lean();
 
-    // Calculate averages
-    const avgViews =
-      historicalContent.reduce((sum, item) => sum + (item.views || 0), 0) /
-      Math.max(historicalContent.length, 1);
-    const avgEngagement =
-      historicalContent.reduce((sum, item) => sum + (item.engagement || 0), 0) /
-      Math.max(historicalContent.length, 1);
-    const avgReach =
-      historicalContent.reduce((sum, item) => sum + (item.reach || 0), 0) /
-      Math.max(historicalContent.length, 1);
+    // Only count posts that actually have a measured signal, so cold-start
+    // users honestly fall through to the no-history branch instead of being
+    // averaged against zeros.
+    const measured = posts.filter(p => {
+      const a = p.analytics || {};
+      return (a.views || a.impressions || a.reach || a.engagement || 0) > 0;
+    });
+
+    const norm = measured.map(p => {
+      const a = p.analytics || {};
+      return {
+        views: a.views || a.videoViews || a.impressions || 0,
+        engagement: a.engagement || 0,
+        reach: a.reach || a.impressions || 0,
+      };
+    });
+
+    const denom = Math.max(norm.length, 1);
+    const avgViews = norm.reduce((s, i) => s + i.views, 0) / denom;
+    const avgEngagement = norm.reduce((s, i) => s + i.engagement, 0) / denom;
+    const avgReach = norm.reduce((s, i) => s + i.reach, 0) / denom;
 
     return {
-      count: historicalContent.length,
+      count: norm.length,
       avgViews,
       avgEngagement,
       avgReach,
-      data: historicalContent,
+      data: norm,
     };
   } catch (error) {
     logger.error('Error getting historical performance', { error: error.message });
@@ -612,36 +633,78 @@ async function getVelocityScore(contentData) {
 }
 
 /**
+ * Pure helper — derive a self-correction factor from a user's REAL post
+ * history. Each row is expected as { predictedReach, actualReach } where
+ * `actualReach` is the platform-measured reach/impressions for a published
+ * post and `predictedReach` is the model's stored prediction for that post.
+ *
+ * Honest behaviour:
+ *   - Only rows that carry BOTH a real prediction (> 0) and a real measured
+ *     actual (> 0) contribute to the ratio. We never fabricate a prediction
+ *     from a score, so a post with no stored prediction is simply skipped.
+ *   - Fewer than 2 comparable rows → 1.0 (neutral, "not enough real data to
+ *     correct"), never a guessed multiplier.
+ *   - The resulting factor is clamped to [0.5, 2.0] to prevent wild swings.
+ *
+ * Extracted so it can be unit-tested without Mongo/external calls.
+ */
+function computeCorrectionFactor(perfHistory = []) {
+  const comparable = [];
+  for (const perf of perfHistory) {
+    const predicted = Number(perf?.predictedReach) || 0;
+    const actual = Number(perf?.actualReach) || 0;
+    if (predicted > 0 && actual > 0) {
+      comparable.push(actual / predicted);
+    }
+  }
+
+  // Need at least two real predicted-vs-actual pairs to trust a correction.
+  if (comparable.length < 2) return 1.0;
+
+  const avgCorrection = comparable.reduce((s, r) => s + r, 0) / comparable.length;
+  return Math.min(2.0, Math.max(0.5, avgCorrection));
+}
+
+/**
  * Apply Algorithmic Self-Correction
- * Adjusts weights based on previous prediction vs actual performance
+ * Adjusts the view estimate by how this creator's REAL measured reach has
+ * historically compared to the model's stored predictions.
+ *
+ * Reads from `ScheduledPost` (which IS keyed by `userId` and carries the
+ * post-publish `analytics` synced by platformAnalyticsService) — NOT from
+ * `ContentPerformance`, which has no `userId` field and never matched the old
+ * `{ userId }` query (it is keyed by postId/workspaceId). The prediction the
+ * post was launched with is read from `analytics.predictedReach` when the
+ * scheduler stored one; posts with no stored prediction are skipped rather
+ * than back-filled with a fabricated number, so the factor stays honest and
+ * falls back to a neutral 1.0 when there's no real signal yet.
  */
 async function applyAlgorithmicSelfCorrection(userId, contentData) {
   try {
-    // Look at last 5 pieces of performance data for this user
-    const perfHistory = await ContentPerformance.find({ userId })
-      .sort({ createdAt: -1 })
+    if (!userId) return 1.0;
+
+    // Last few published posts for THIS user that have settled analytics.
+    const posts = await ScheduledPost.find({
+      userId,
+      status: 'posted',
+      'analytics.reach': { $gt: 0 },
+    })
+      .sort({ postedAt: -1 })
       .limit(5)
+      .select('analytics')
       .lean();
 
-    if (perfHistory.length < 2) return 1.0; // Not enough data to correct
+    const perfHistory = posts.map(p => ({
+      // Prediction stored at launch time (only when the scheduler set it).
+      predictedReach: p.analytics?.predictedReach || 0,
+      // Real platform-measured reach (falls back to impressions).
+      actualReach: p.analytics?.reach || p.analytics?.impressions || 0,
+    }));
 
-    let totalDiff = 0;
-    perfHistory.forEach(perf => {
-      const predicted = perf.predictedViews || perf.scores.overall * 10; // Fallback
-      const actual = perf.performance.reach || perf.performance.impressions;
-      
-      if (predicted > 0 && actual > 0) {
-        // Ratio of actual to predicted
-        totalDiff += (actual / predicted);
-      }
-    });
-
-    const avgCorrection = totalDiff / perfHistory.length;
-    
-    // Clamp the correction factor to prevent wild swings (0.5x to 2.0x)
-    const factor = Math.min(2.0, Math.max(0.5, avgCorrection));
-    
-    logger.info('Algorithmic Self-Correction applied', { userId, factor });
+    const factor = computeCorrectionFactor(perfHistory);
+    if (factor !== 1.0) {
+      logger.info('Algorithmic Self-Correction applied', { userId, factor });
+    }
     return factor;
   } catch (error) {
     return 1.0;
@@ -756,6 +819,7 @@ module.exports = {
   ingestMarketTrendsSync,
   getVelocityScore,
   applyAlgorithmicSelfCorrection,
+  computeCorrectionFactor,
   detectNicheAndType,
   verifyTrendAlignment,
   detectCulturalEmergence

@@ -111,15 +111,17 @@ describe('Prediction Service', () => {
         type: 'video',
       };
 
-      const mockData = [
-        { views: 1000, engagement: 100, reach: 800 },
-        { views: 2000, engagement: 200, reach: 1600 },
+      // Real source is ScheduledPost (keyed by userId), metrics under `analytics`.
+      const mockPosts = [
+        { analytics: { views: 1000, engagement: 100, reach: 800, lastUpdated: new Date() }, platform: 'tiktok' },
+        { analytics: { views: 2000, engagement: 200, reach: 1600, lastUpdated: new Date() }, platform: 'tiktok' },
       ];
 
-      ContentPerformance.find.mockReturnValue({
+      ScheduledPost.find.mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockData),
+        select: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue(mockPosts),
       });
 
       const result = await predictionService.getHistoricalPerformance(contentData);
@@ -131,13 +133,14 @@ describe('Prediction Service', () => {
     });
 
     it('should return zeros if no historical data', async () => {
-      ContentPerformance.find.mockReturnValue({
+      ScheduledPost.find.mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         lean: jest.fn().mockResolvedValue([]),
       });
 
-      const result = await predictionService.getHistoricalPerformance({});
+      const result = await predictionService.getHistoricalPerformance({ userId: 'user-id' });
 
       expect(result.count).toBe(0);
       expect(result.avgViews).toBe(0);

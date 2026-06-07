@@ -103,6 +103,7 @@ async function resolveContext({ userId, niche, platform } = {}) {
 async function buildBrainContext({ userId, niche, platform, language = 'en', persona, extra = '' }) {
   let topPerformers = null;
   let blueprint = null;
+  let insightSummary = null;
 
   if (userId) {
     try {
@@ -115,6 +116,15 @@ async function buildBrainContext({ userId, niche, platform, language = 'en', per
       blueprint = await getActiveBlueprint(userId);
     } catch (err) {
       logger.warn('[marketingBrain] getActiveBlueprint failed', { error: err.message });
+    }
+    // Unified, normalized insight summary (post performance + account/audience
+    // signals) — single source of truth that reconciles the field-name
+    // differences across ScheduledPost/VideoMetrics/account insights.
+    try {
+      const { getUserInsightSummary } = require('./insightsService');
+      insightSummary = await getUserInsightSummary(userId);
+    } catch (err) {
+      logger.warn('[marketingBrain] getUserInsightSummary failed', { error: err.message });
     }
   }
 
@@ -135,6 +145,28 @@ async function buildBrainContext({ userId, niche, platform, language = 'en', per
     }
   }
 
+  // Fold real account/audience signals into the prompt — only when we have
+  // real data, never fabricated. Honest "no data yet" simply contributes
+  // nothing rather than a placeholder number.
+  let insightExtra = '';
+  if (insightSummary && insightSummary.hasData) {
+    const bits = [];
+    const aud = insightSummary.audience || {};
+    if (aud.totalFollowers != null) {
+      const perPlat = (aud.byPlatform || [])
+        .filter(p => p.available && p.followerCount != null)
+        .map(p => `${p.platform}: ${p.followerCount}`);
+      bits.push(`Total followers across connected accounts: ${aud.totalFollowers}${perPlat.length ? ` (${perPlat.join(', ')})` : ''}`);
+    }
+    const posts = insightSummary.posts || {};
+    if (posts.count > 0) {
+      bits.push(`Recent measured posts: ${posts.count}, avg engagement rate ${posts.avgEngagementRate}%${posts.avgRetention != null ? `, avg retention ${posts.avgRetention}%` : ''}`);
+    }
+    if (bits.length) {
+      insightExtra = '\n── This creator\'s real audience & performance signals (ground truth) ──\n' + bits.join('\n');
+    }
+  }
+
   const system = buildSystemPrompt({
     persona: persona || 'marketing-coach',
     niche,
@@ -143,10 +175,10 @@ async function buildBrainContext({ userId, niche, platform, language = 'en', per
     language,
     styleProfile: userId ? { userId } : null,
     topPerformers,
-    extra: `${extra}${blueprintExtra}`,
+    extra: `${extra}${blueprintExtra}${insightExtra}`,
   });
 
-  return { system, realPerformance: { topPerformers, blueprint } };
+  return { system, realPerformance: { topPerformers, blueprint, insightSummary } };
 }
 
 /**

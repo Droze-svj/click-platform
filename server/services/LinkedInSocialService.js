@@ -67,11 +67,67 @@ class LinkedInSocialService {
   }
 
   /**
-   * Syncs LinkedIn insights
+   * Fetch account-level member insights (network/follower size).
+   *
+   * Uses the real LinkedIn `networkSizes` endpoint. This requires the
+   * `r_1st_connections_size` scope (or an organization context for Page
+   * analytics) which LinkedIn grants selectively — most member tokens issued
+   * for posting (`w_member_social`) do NOT include it, so the call returns a
+   * 403.
+   *
+   * Honesty contract: on any failure (missing URN/token, missing scope,
+   * network) we return `{ available: false, reason }` with NO fabricated
+   * numbers. On success we return the real first-degree network size.
    */
   static async getMemberInsights(auth) {
-    // LinkedIn profile analytics logic
-    return { success: true, message: 'Insights sync staged' };
+    const accessToken = auth?.accessToken;
+    let personId = auth?.platformUserId;
+    if (!personId && auth?.linkedInUrn) {
+      personId = String(auth.linkedInUrn).replace('urn:li:person:', '');
+    }
+
+    if (!accessToken || accessToken === 'dev-token') {
+      return { available: false, platform: 'linkedin', reason: 'No LinkedIn access token available' };
+    }
+    if (!personId) {
+      return { available: false, platform: 'linkedin', reason: 'LinkedIn person URN/platformUserId missing' };
+    }
+
+    try {
+      const response = await axios.get(
+        `https://api.linkedin.com/v2/networkSizes/urn:li:person:${personId}`,
+        {
+          params: { edgeType: 'CONNECTION' },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'X-Restli-Protocol-Version': '2.0.0',
+          },
+          timeout: 10000,
+        }
+      );
+
+      const followerCount = response.data?.firstDegreeSize;
+      if (followerCount == null) {
+        return {
+          available: false,
+          platform: 'linkedin',
+          reason: 'LinkedIn returned no network size (likely missing r_1st_connections_size scope)',
+        };
+      }
+
+      return {
+        available: true,
+        platform: 'linkedin',
+        followerCount,
+        // LinkedIn does not return following count or demographics for member
+        // tokens; omit rather than fabricate.
+        fetchedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      const reason = error.response?.data?.message || error.message;
+      logger.warn('[LinkedIn] getMemberInsights unavailable', { reason });
+      return { available: false, platform: 'linkedin', reason };
+    }
   }
 }
 
