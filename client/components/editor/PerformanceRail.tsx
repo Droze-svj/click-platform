@@ -3,6 +3,8 @@
 import React from 'react'
 import { TrendingUp, Type as TypeIcon, Sparkles, Wand2, ChevronRight, Loader2, Activity, Cpu, Layers, type LucideIcon } from 'lucide-react'
 import { usePerformerInsights, type PerformerEntry } from '../../hooks/usePerformerInsights'
+import { Panel, EmptyState } from '../ui'
+import { cn } from '../../lib/utils'
 
 /**
  * Real client-performance sampler — NO fabricated numbers.
@@ -94,12 +96,12 @@ export default function PerformanceRail({
   const live = useLiveMetrics(true)
 
   const metricsBlock = (
-    <div className="grid grid-cols-3 gap-2 mb-5 relative z-10">
+    <div className="grid grid-cols-3 gap-2 mb-5">
       <LiveMetric icon={Activity} label="FPS"
         value={live.fps == null ? '—' : String(live.fps)} />
-      <LiveMetric icon={Cpu} label="HEAP"
+      <LiveMetric icon={Cpu} label="Heap"
         value={live.heapMB == null ? 'n/a' : `${live.heapMB}MB`} />
-      <LiveMetric icon={Layers} label="LAYERS"
+      <LiveMetric icon={Layers} label="Layers"
         value={
           editorStats == null
             ? '—'
@@ -110,10 +112,10 @@ export default function PerformanceRail({
 
   if (!loaded) {
     return (
-      <div className={`rounded-[2rem] border-2 border-white/5 bg-black/40 backdrop-blur-3xl p-6 flex items-center gap-3 shadow-2xl ${className}`}>
-        <Loader2 size={16} className="text-primary-400 animate-spin" />
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 italic">CALIBRATING_PERFORMANCE_METRICS…</span>
-      </div>
+      <Panel variant="glass" className={cn('ds-elev-2 p-6 flex items-center gap-3', className)}>
+        <Loader2 size={16} className="text-primary animate-spin" aria-hidden />
+        <span className="ds-text-caption text-theme-muted">Calibrating performance metrics…</span>
+      </Panel>
     )
   }
 
@@ -123,18 +125,21 @@ export default function PerformanceRail({
 
   if (totalEntries === 0) {
     return (
-      <div className={`rounded-[2rem] border-2 border-white/5 bg-black/40 backdrop-blur-3xl p-6 shadow-2xl ${className}`}>
+      <Panel variant="glass" className={cn('ds-elev-2 p-6', className)}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-xl bg-primary-500/10 border border-primary-500/20">
-            <TrendingUp size={14} className="text-primary-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <TrendingUp size={16} aria-hidden />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic">RETENTION_GENESIS</span>
+          <span className="ds-text-label text-theme-primary">Retention insights</span>
         </div>
         {metricsBlock}
-        <p className="text-[10px] text-slate-500 leading-relaxed italic uppercase font-bold tracking-wider">
-          Publish your first edit and your top-performing picks land here. Click reads engagement and re-ranks suggestions toward what your audience watches.
-        </p>
-      </div>
+        <EmptyState
+          icon={TrendingUp}
+          title="No performance data yet"
+          description="Publish your first edit and your top-performing picks land here. Click reads engagement and re-ranks suggestions toward what your audience watches."
+          className="p-0"
+        />
+      </Panel>
     )
   }
 
@@ -148,8 +153,8 @@ export default function PerformanceRail({
     return (
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <Icon size={12} className="text-primary-400" />
-          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 italic">{title}</span>
+          <Icon size={14} className="text-primary" aria-hidden />
+          <span className="ds-text-label text-theme-muted">{title}</span>
         </div>
         <ul className="space-y-2">
           {items.map(item => {
@@ -162,18 +167,19 @@ export default function PerformanceRail({
                  type="button"
                   onClick={() => onApply?.(item.key)}
                   disabled={!onApply}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all group ${
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all group ds-surface-card',
                     onApply
-                      ? 'bg-white/[0.02] border-2 border-white/5 hover:border-primary-500/30 hover:bg-primary-500/5 active:scale-95 shadow-sm'
-                      : 'bg-white/[0.01] border-2 border-white/5 opacity-50'
-                  }`}
+                      ? 'ds-hover-lift hover:border-primary/30'
+                      : 'opacity-50'
+                  )}
                 >
-                  <span className="text-[10px] text-white font-black uppercase tracking-widest truncate flex-1 italic group-hover:text-primary-400 transition-colors">{prettyKey(item.key)}</span>
+                  <span className="ds-text-body font-medium text-theme-primary truncate flex-1 group-hover:text-primary transition-colors">{prettyKey(item.key)}</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-mono font-black tabular-nums ${pct > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{lift}</span>
-                    <span className="text-[8px] text-slate-600 font-mono font-black opacity-60">N={item.sampleSize}</span>
+                    <span className={cn('text-xs font-mono font-semibold tabular-nums', pct > 0 ? 'text-emerald-500' : 'text-rose-500')}>{lift}</span>
+                    <span className="text-[10px] text-theme-muted font-mono tabular-nums">N={item.sampleSize}</span>
                   </div>
-                  {onApply && <ChevronRight size={12} className="text-slate-700 group-hover:text-white transition-colors flex-shrink-0" />}
+                  {onApply && <ChevronRight size={14} className="text-theme-muted group-hover:text-theme-primary transition-colors flex-shrink-0" aria-hidden />}
                 </button>
               </li>
             )
@@ -184,29 +190,26 @@ export default function PerformanceRail({
   }
 
   return (
-    <div className={`rounded-[2.5rem] border-2 border-primary-500/20 bg-black/40 backdrop-blur-3xl p-6 shadow-2xl relative overflow-hidden group ${className}`}>
-      {/* Glow effect */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 blur-[60px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-      
-      <div className="flex items-center justify-between mb-6 relative z-10">
+    <Panel variant="glass" className={cn('ds-elev-3 p-6', className)}>
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-primary-500/10 border border-primary-500/20 shadow-inner">
-             <TrendingUp size={14} className="text-primary-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <TrendingUp size={16} aria-hidden />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic leading-none">RETENTION_MATRIX</span>
+          <span className="ds-text-label text-theme-primary leading-none">Retention matrix</span>
         </div>
         {lastIngestedAt && (
-          <span className="text-[9px] font-mono font-black text-slate-600 uppercase tracking-tighter opacity-60 italic">{lastIngestedAt.toLocaleDateString()}</span>
+          <span className="text-[10px] font-mono text-theme-muted tabular-nums">{lastIngestedAt.toLocaleDateString()}</span>
         )}
       </div>
       {metricsBlock}
-      <div className="space-y-6 relative z-10">
-        <Section title="TOP_TYPOGRAPHY"          icon={TypeIcon} items={insights.fonts.slice(0, 3)}          onApply={onApplyFont} />
-        <Section title="CAPTION_DNA" icon={Sparkles} items={insights.captionStyles.slice(0, 3)} onApply={onApplyCaptionStyle} />
-        <Section title="KINETIC_MOTION"        icon={Wand2}    items={insights.motions.slice(0, 3)}        onApply={onApplyMotion} />
-        <Section title="ENGAGEMENT_HOOKS"          icon={TrendingUp} items={insights.hooks.slice(0, 3)} />
+      <div className="space-y-6">
+        <Section title="Top typography"  icon={TypeIcon}   items={insights.fonts.slice(0, 3)}         onApply={onApplyFont} />
+        <Section title="Caption styles"  icon={Sparkles}   items={insights.captionStyles.slice(0, 3)} onApply={onApplyCaptionStyle} />
+        <Section title="Motion"          icon={Wand2}      items={insights.motions.slice(0, 3)}       onApply={onApplyMotion} />
+        <Section title="Engagement hooks" icon={TrendingUp} items={insights.hooks.slice(0, 3)} />
       </div>
-    </div>
+    </Panel>
   )
 }
 
@@ -218,10 +221,10 @@ export default function PerformanceRail({
 function LiveMetric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   const unavailable = value === '—' || value === 'n/a'
   return (
-    <div className="rounded-2xl border-2 border-white/5 bg-white/[0.02] px-2 py-2.5 flex flex-col items-center gap-1">
-      <Icon size={11} className={unavailable ? 'text-slate-600' : 'text-primary-400'} />
-      <span className={`text-[11px] font-mono font-black tabular-nums leading-none ${unavailable ? 'text-slate-600' : 'text-white'}`}>{value}</span>
-      <span className="text-[7px] font-black uppercase tracking-[0.2em] text-slate-500 italic leading-none">{label}</span>
+    <div className="ds-surface-card px-2 py-2.5 flex flex-col items-center gap-1">
+      <Icon size={13} className={unavailable ? 'text-theme-muted' : 'text-primary'} aria-hidden />
+      <span className={cn('text-sm font-mono font-semibold tabular-nums leading-none', unavailable ? 'text-theme-muted' : 'text-theme-primary')}>{value}</span>
+      <span className="ds-text-caption text-theme-muted leading-none">{label}</span>
     </div>
   )
 }

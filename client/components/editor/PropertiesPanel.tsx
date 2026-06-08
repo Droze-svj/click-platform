@@ -26,6 +26,8 @@ import {
   GradientOverlay
 } from '../../types/editor'
 import { formatTime } from '../../utils/editorUtils'
+import { IconButton } from '../ui'
+import { cn } from '../../lib/utils'
 
 const CAPTION_LAYOUTS: { id: CaptionLayout; label: string }[] = [
   { id: 'bottom-center', label: 'Adaptive Bottom' },
@@ -33,8 +35,6 @@ const CAPTION_LAYOUTS: { id: CaptionLayout; label: string }[] = [
   { id: 'top-center', label: 'Zenith Center' },
   { id: 'full-width-bottom', label: 'Immersive Bar' }
 ]
-
-const glassStyle = "backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl"
 
 interface PropertiesPanelProps {
   isOpen: boolean
@@ -126,15 +126,15 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   }) => (
     <div className="group/slider relative space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest group-hover/slider:text-indigo-400 transition-colors">
+        <span className="ds-text-label text-theme-secondary group-hover/slider:text-primary transition-colors">
           {label}
         </span>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-mono font-bold text-white/50">{value}</span>
+          <span className="text-[11px] font-mono text-theme-muted tabular-nums">{value}</span>
           <button
             type="button"
             onClick={() => setVideoFilters((prev: any) => ({ ...prev, [field]: resetValue }))}
-            className="text-[8px] font-black text-slate-700 hover:text-white uppercase tracking-tighter"
+            className="text-[10px] font-medium text-theme-muted hover:text-theme-primary"
           >
             Reset
           </button>
@@ -188,44 +188,40 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         top: 0
       }}
     >
-      <div className={`${glassStyle} h-full rounded-[2.5rem] border-white/5 flex flex-col overflow-hidden pointer-events-auto shadow-[0_0_80px_rgba(0,0,0,0.6)] ${zenMode ? 'bg-black/20 backdrop-blur-3xl' : 'bg-white/[0.02]'}`}>
+      <div className={cn('ds-surface-elevated ds-elev-3 h-full rounded-[2rem] flex flex-col overflow-hidden pointer-events-auto', zenMode && 'backdrop-blur-3xl')}>
         {/* Header */}
-        <div className="px-6 py-6 border-b border-white/5 bg-white/[0.02] flex flex-col gap-6">
+        <div className="px-6 py-6 border-b border-border flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-600/10 border border-indigo-600/20 flex items-center justify-center text-indigo-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Settings className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">PROPERTIES MATRIX</span>
-                <span className="text-sm font-black text-white italic tracking-tight uppercase">{activeTab} node active</span>
+                <span className="ds-text-label text-theme-muted">Properties</span>
+                <span className="ds-text-body font-medium text-theme-primary capitalize">{activeTab} active</span>
               </div>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsOpen(false)}
-              className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white border border-white/5"
-            >
+            <IconButton aria-label="Close properties" variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
               <X className="w-4 h-4" />
-            </motion.button>
+            </IconButton>
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex p-1 bg-black/40 rounded-2xl border border-white/5 relative z-10 w-full overflow-x-auto custom-scrollbar">
+          <div className="flex p-1 ds-surface-subtle rounded-xl border border-border relative z-10 w-full overflow-x-auto custom-scrollbar">
             {(['transform', 'synthesis', 'projection', 'entities', ...(selectedSegmentId ? ['clip'] : [])] as const).map((tab) => (
               <button
                 type="button"
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all relative ${
-                  activeTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-300'
-                }`}
+                className={cn(
+                  'flex-1 py-2.5 rounded-lg ds-text-label capitalize transition-all relative',
+                  activeTab === tab ? 'text-theme-primary' : 'text-theme-muted hover:text-theme-secondary'
+                )}
               >
                 {activeTab === tab && (
                   <motion.div
                     layoutId="active-property-tab"
-                    className="absolute inset-0 bg-white/5 border border-white/10 rounded-xl shadow-inner"
+                    className="absolute inset-0 ds-surface-card rounded-lg"
                   />
                 )}
                 <span className="relative z-10">{tab}</span>
@@ -246,9 +242,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Scissors className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Clip Properties</span>
-                  <div className="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent ml-2" />
+                  <Scissors className="w-4 h-4 text-emerald-500" />
+                  <span className="ds-text-label text-theme-primary">Clip properties</span>
+                  <div className="flex-1 h-px bg-border ml-2" />
                 </div>
                 
                 {(() => {
@@ -256,17 +252,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   if (!seg) return null
                   return (
                      <div className="space-y-8">
-                        <div className="p-4 rounded-[1.2rem] bg-emerald-500/5 border border-emerald-500/20 shadow-inner">
-                          <span className="text-[9px] uppercase font-black tracking-[0.3em] text-emerald-400 block mb-1">Target Segment</span>
-                          <span className="text-sm font-bold text-white tracking-tight truncate flex items-center gap-2">
-                             <Fingerprint className="w-3 h-3 text-slate-500" />
+                        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                          <span className="ds-text-label text-emerald-500 block mb-1">Target segment</span>
+                          <span className="ds-text-body font-medium text-theme-primary truncate flex items-center gap-2">
+                             <Fingerprint className="w-3 h-3 text-theme-muted" />
                              {seg.name}
                           </span>
                         </div>
 
                         <div className="space-y-4">
                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest">Playback Velocity</span>
+                              <span className="ds-text-label text-theme-secondary">Playback speed</span>
                               <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">{(seg.playbackSpeed ?? 1).toFixed(2)}x</span>
                            </div>
                            <input
@@ -278,12 +274,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                               }}
                               className="w-full h-2 bg-white/5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-emerald-400 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all outline-none"
                            />
-                           <p className="text-[9px] text-slate-500 italic max-w-xs leading-relaxed">Adjusts internal media playback engine time-scale logic.</p>
+                           <p className="ds-text-caption text-theme-muted max-w-xs leading-relaxed">Adjusts internal media playback engine time-scale logic.</p>
                         </div>
-                        
-                        <div className="space-y-4 pt-6 border-t border-white/10">
+
+                        <div className="space-y-4 pt-6 border-t border-border">
                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest">Optical SteadyCam</span>
+                              <span className="ds-text-label text-theme-secondary">Stabilization</span>
                               <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded">{seg.stabilization ?? 0}%</span>
                            </div>
                            <div className="flex items-center gap-4">
@@ -298,16 +294,16 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                  className="flex-1 h-2 bg-white/5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-indigo-400 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all outline-none"
                               />
                            </div>
-                           <p className="text-[9px] text-slate-500 italic max-w-xs leading-relaxed">Applies Gyro-Smooth padding to edge-bounds of frame data to reduce jitters.</p>
+                           <p className="ds-text-caption text-theme-muted max-w-xs leading-relaxed">Applies Gyro-Smooth padding to edge-bounds of frame data to reduce jitters.</p>
                         </div>
 
                         {(seg.type === 'video' || seg.type === 'audio') && (
-                          <div className="space-y-6 pt-6 border-t border-white/10">
+                          <div className="space-y-6 pt-6 border-t border-border">
                              <div className="flex flex-col gap-4">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                     <Volume2 className="w-4 h-4 text-rose-400" />
-                                     <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest">Master Volume</span>
+                                     <Volume2 className="w-4 h-4 text-rose-500" />
+                                     <span className="ds-text-label text-theme-secondary">Master volume</span>
                                   </div>
                                   <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded">{Math.round((seg.volume ?? 1) * 100)}%</span>
                                 </div>
@@ -329,8 +325,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                         <Headphones className="w-4 h-4" />
                                      </div>
                                      <div className="flex flex-col">
-                                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-200">Auto-Ducking</span>
-                                        <span className="text-[9px] text-slate-500 italic">Lower DB against Dialogue</span>
+                                        <span className="ds-text-label text-theme-primary">Auto-ducking</span>
+                                        <span className="ds-text-caption text-theme-muted">Lower dB against dialogue</span>
                                      </div>
                                   </div>
                                   <button
@@ -397,9 +393,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Activity className="w-4 h-4 text-rose-400" />
-                  <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Spatial Transform</span>
-                  <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
+                  <Activity className="w-4 h-4 text-rose-500" />
+                  <span className="ds-text-label text-theme-primary">Spatial transform</span>
+                  <div className="flex-1 h-px bg-border ml-2" />
                 </div>
                 {setVideoTransform && (
                   <div className="space-y-6">
@@ -409,10 +405,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     <ControllerSlider label="Rotation (deg)" value={videoTransform?.rotation || 0} min={-180} max={180} field="rotation" resetValue={0} />
 
                     {setVideoTransformKeyframes && (
-                      <div className="pt-4 border-t border-white/10">
+                      <div className="pt-4 border-t border-border">
                         <div className="flex items-center justify-between mb-4">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Animation</span>
-                          <span className="text-[9px] text-indigo-400 font-bold">{videoTransformKeyframes?.length || 0} Keyframes</span>
+                          <span className="ds-text-label text-theme-secondary">Animation</span>
+                          <span className="ds-text-caption text-primary">{videoTransformKeyframes?.length || 0} keyframes</span>
                         </div>
                         <motion.button
                           whileHover={{ scale: 1.02 }}
@@ -429,9 +425,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                             }
                             setVideoTransformKeyframes([...(videoTransformKeyframes || []), newKf].sort((a,b) => a.time - b.time))
                           }}
-                          className="w-full py-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(79,70,229,0.2)]"
+                          className="w-full py-3 rounded-lg bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary ds-text-label transition-all"
                         >
-                          + Add Keyframe at Playhead
+                          + Add keyframe at playhead
                         </motion.button>
 
                         {onTimeUpdate && videoTransformKeyframes && videoTransformKeyframes.length > 0 && (
@@ -520,9 +516,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Palette className="w-4 h-4 text-indigo-400" />
-                  <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Global Synthesis</span>
-                  <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
+                  <Palette className="w-4 h-4 text-primary" />
+                  <span className="ds-text-label text-theme-primary">Global synthesis</span>
+                  <div className="flex-1 h-px bg-border ml-2" />
                 </div>
                 <div className="space-y-6">
                   <ControllerSlider label="Luminosity" value={videoFilters.brightness} min={0} max={200} field="brightness" />
@@ -544,17 +540,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Subtitles className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Intelligence Captions</span>
-                  <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
+                  <Subtitles className="w-4 h-4 text-emerald-500" />
+                  <span className="ds-text-label text-theme-primary">Captions</span>
+                  <div className="flex-1 h-px bg-border ml-2" />
                 </div>
 
                 <div className="space-y-6">
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-emerald-500/20 transition-all cursor-pointer"
                     onClick={() => setCaptionStyle({ ...cap, enabled: !cap.enabled })}>
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-white uppercase tracking-widest">Projection Active</span>
-                      <span className="text-[9px] text-slate-500 font-bold uppercase">Render real-time transcript</span>
+                      <span className="ds-text-label text-theme-primary">Captions active</span>
+                      <span className="ds-text-caption text-theme-muted">Render real-time transcript</span>
                     </div>
                     <div className={`w-10 h-5 rounded-full border border-white/10 relative transition-all ${cap.enabled ? 'bg-emerald-600' : 'bg-white/5'}`}>
                       <motion.div animate={{ x: cap.enabled ? 20 : 2 }} className="absolute top-1 w-3 h-3 rounded-full bg-white shadow-sm" />
@@ -570,24 +566,24 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           whileHover={{ y: -2 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setCaptionStyle({ ...cap, enabled: true, textStyle: pre.textStyle, layout: pre.layout, size: pre.size, font: pre.font })}
-                          className={`relative p-4 rounded-[1.5rem] border text-left overflow-hidden group/preset ${isActive ? 'bg-indigo-600 border-white/20 shadow-xl' : 'bg-white/[0.02] border-white/5 hover:border-indigo-500/30'}`}
+                          className={cn('relative p-4 rounded-xl border text-left overflow-hidden group/preset transition-all', isActive ? 'bg-primary border-primary text-primary-foreground' : 'ds-surface-card hover:border-primary/30')}
                         >
-                          <span className={`block text-[11px] font-black italic uppercase tracking-tight ${isActive ? 'text-white' : 'text-slate-400 group-hover/preset:text-white'}`}>{pre.label}</span>
-                          <span className={`block text-[8px] mt-1 font-bold italic uppercase ${isActive ? 'text-white/60' : 'text-slate-600'}`}>{pre.description}</span>
+                          <span className={cn('block ds-text-label', isActive ? 'text-primary-foreground' : 'text-theme-secondary group-hover/preset:text-theme-primary')}>{pre.label}</span>
+                          <span className={cn('block ds-text-caption mt-1', isActive ? 'text-primary-foreground/70' : 'text-theme-muted')}>{pre.description}</span>
                         </motion.button>
                       )
                     })}
                   </div>
 
-                  <div className="space-y-4 pt-4 border-t border-white/5">
-                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Projection Logic</span>
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <span className="ds-text-label text-theme-muted">Caption layout</span>
                     <div className="flex gap-2">
                       {CAPTION_LAYOUTS.map((l) => (
                         <button
                           type="button"
                           key={l.id}
                           onClick={() => setCaptionStyle({ ...cap, layout: l.id })}
-                          className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${cap.layout === l.id ? 'bg-white text-black border-white' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
+                          className={cn('flex-1 py-3 rounded-lg ds-text-label border transition-all', cap.layout === l.id ? 'bg-primary text-primary-foreground border-primary' : 'ds-surface-card text-theme-muted hover:text-theme-primary')}
                         >
                           {l.label.split(' ')[0]}
                         </button>
@@ -607,26 +603,26 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Layers className="w-4 h-4 text-amber-400" />
-                  <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Neural entities</span>
-                  <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
+                  <Layers className="w-4 h-4 text-amber-500" />
+                  <span className="ds-text-label text-theme-primary">Text entities</span>
+                  <div className="flex-1 h-px bg-border ml-2" />
                 </div>
 
                 <div className="space-y-3">
                   {textOverlays.length === 0 ? (
-                    <div className="p-12 text-center rounded-3xl border border-white/5 bg-white/[0.01]">
-                      <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest italic">No active entities detected</span>
+                    <div className="p-12 text-center rounded-2xl ds-surface-card">
+                      <span className="ds-text-body text-theme-muted">No text entities yet</span>
                     </div>
                   ) : (
                     textOverlays.map(overlay => (
-                      <div key={overlay.id} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group-hover:border-amber-500/20 transition-all">
+                      <div key={overlay.id} className="p-4 rounded-xl ds-surface-card flex items-center justify-between transition-all">
                         <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                             <Type className="w-4 h-4" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-[11px] font-black text-white italic truncate max-w-[120px]">{overlay.text}</span>
-                            <span className="text-[8px] font-bold text-slate-500 uppercase">{formatTime(overlay.startTime)} - {formatTime(overlay.endTime)}</span>
+                            <span className="ds-text-body font-medium text-theme-primary truncate max-w-[120px]">{overlay.text}</span>
+                            <span className="text-[10px] text-theme-muted">{formatTime(overlay.startTime)} - {formatTime(overlay.endTime)}</span>
                           </div>
                         </div>
                         <button
@@ -648,14 +644,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
 
         {/* Diagnostic Footer */}
-        <div className="px-4 py-5 border-t border-white/5 bg-black/40 backdrop-blur-3xl flex items-center justify-between">
+        <div className="px-4 py-5 border-t border-border ds-surface-subtle flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Fingerprint className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Matrix Synchronized</span>
+            <Fingerprint className="w-3.5 h-3.5 text-theme-muted" />
+            <span className="ds-text-caption text-theme-muted">Synchronized</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Zap className="w-3 h-3 text-amber-500 animate-pulse" />
-          </div>
+          <Zap className="w-3 h-3 text-amber-500" />
         </div>
       </div>
     </motion.aside>
