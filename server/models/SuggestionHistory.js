@@ -25,11 +25,16 @@ const suggestionHistorySchema = new mongoose.Schema({
   payloadHash: { type: String, required: true },
   // We keep the human-readable label for diagnostics; never trust it for dedup.
   label: { type: String, default: '' },
-  createdAt: { type: Date, default: Date.now, index: true },
+  createdAt: { type: Date, default: Date.now },
 }, { timestamps: false });
 
 // Compound index for the hot read path: "what has this user seen recently?"
 suggestionHistorySchema.index({ userId: 1, kind: 1, createdAt: -1 });
+
+// TTL: anti-repetition only needs a recent window, so expire rows after 90 days
+// to keep the collection bounded (it was previously unbounded). This single
+// field index also serves any createdAt-only reads.
+suggestionHistorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
 
 module.exports = mongoose.models.SuggestionHistory
   || mongoose.model('SuggestionHistory', suggestionHistorySchema);

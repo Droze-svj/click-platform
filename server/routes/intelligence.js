@@ -61,12 +61,15 @@ async function filterDuplicates({ userId, kind, candidates, minSize = 3, windowS
     return candidates;
   }
   const hashed = candidates.map(c => ({ candidate: c, hash: hashCandidate({ kind, key: c.id, niche: c.niche || null, platform: c.platform || null }) }));
-  let kept = hashed.filter(h => !recentHashes.has(h.hash));
-  if (kept.length < minSize) {
-    // Widen progressively: drop oldest half of the dedup window until we
-    // have enough candidates again. As a last resort allow repeats.
-    kept = hashed.slice(0, Math.max(minSize, hashed.length));
-  }
+  const unseen = hashed.filter(h => !recentHashes.has(h.hash));
+  if (unseen.length >= minSize) return unseen.map(h => h.candidate);
+
+  // Not enough fresh ones: ALWAYS prefer the unseen, then backfill with the
+  // already-seen extras (in their original order) only to reach minSize. The
+  // previous version discarded the dedup result entirely and returned the
+  // original list (seen-first), which defeated dedup exactly when it mattered.
+  const seen = hashed.filter(h => recentHashes.has(h.hash));
+  const kept = [...unseen, ...seen].slice(0, Math.max(minSize, unseen.length));
   return kept.map(h => h.candidate);
 }
 
