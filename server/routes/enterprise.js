@@ -43,6 +43,10 @@ const {
   getMarketplaceTemplates
 } = require('../services/workspaceService');
 
+const entitlements = require('../config/entitlements');
+const enforcement = require('../services/entitlementEnforcement');
+const logger = require('../utils/logger');
+
 const router = express.Router();
 
 /**
@@ -54,6 +58,38 @@ const router = express.Router();
  * Create workspace
  */
 router.post('/workspaces', auth, asyncHandler(async (req, res) => {
+  // Workspaces cap (hard enforcement): Free/Creator 1, Pro 3, Agency unlimited.
+  const tier = entitlements.resolveTier(req.user || {});
+  const cap = entitlements.limitFor(tier, 'workspaces');
+  if (Number.isFinite(cap)) {
+    let owned = 0;
+    try {
+      const Workspace = require('../models/Workspace');
+      owned = await Workspace.countDocuments({ ownerId: req.user._id });
+    } catch (e) {
+      // Paid entitlement → fail CLOSED on lookup error, but no 500.
+      logger.error('[workspaces-cap] count failed; blocking to stay safe', { userId: String(req.user._id), error: e.message });
+      return res.status(403).json({
+        success: false,
+        error: 'limit_reached',
+        limit: cap,
+        currentTier: tier,
+        requiredTier: enforcement.nextTierUp(tier),
+        upgradeUrl: enforcement.UPGRADE_URL,
+        message: 'Unable to verify your workspace count right now. Please retry shortly.',
+      });
+    }
+    if (owned >= cap) {
+      return res.status(403).json(enforcement.limitReachedBody({
+        limitKey: 'workspaces',
+        limit: cap,
+        used: owned,
+        currentTier: tier,
+        noun: 'workspace',
+      }));
+    }
+  }
+
   const workspace = await createWorkspace(req.user._id, req.body);
   sendSuccess(res, 'Workspace created', 201, workspace);
 }));

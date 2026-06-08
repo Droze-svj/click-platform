@@ -16,7 +16,48 @@ const {
 } = require('../services/teamService');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const entitlements = require('../config/entitlements');
+const enforcement = require('../services/entitlementEnforcement');
+const logger = require('../utils/logger');
 const router = express.Router();
+
+/**
+ * Enforce the team-seats cap before adding a member. Returns a structured
+ * `limit_reached` body (to send with 403) when the team is already at the
+ * inviter's tier seat cap, else null. Fails CLOSED on lookup error (returns a
+ * block body) since seats are a paid entitlement.
+ */
+async function seatBlockBody(teamId, inviter) {
+  const tier = entitlements.resolveTier(inviter || {});
+  const cap = entitlements.limitFor(tier, 'teamSeats');
+  if (!Number.isFinite(cap)) return null; // unlimited (agency)
+  try {
+    const Team = require('../models/Team');
+    const team = await Team.findById(teamId).select('members');
+    const used = team && Array.isArray(team.members) ? team.members.length : 0;
+    if (used >= cap) {
+      return enforcement.limitReachedBody({
+        limitKey: 'teamSeats',
+        limit: cap,
+        used,
+        currentTier: tier,
+        noun: 'team seat',
+      });
+    }
+    return null;
+  } catch (e) {
+    logger.error('[team-seats] member count failed; blocking to stay safe', { teamId, error: e.message });
+    return {
+      success: false,
+      error: 'limit_reached',
+      limit: cap,
+      currentTier: tier,
+      requiredTier: enforcement.nextTierUp(tier),
+      upgradeUrl: enforcement.UPGRADE_URL,
+      message: 'Unable to verify your team seat count right now. Please retry shortly.',
+    };
+  }
+}
 
 /**
  * @swagger
@@ -84,6 +125,9 @@ router.post('/:teamId/invite', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'User ID is required', 400);
   }
 
+  const block = await seatBlockBody(teamId, req.user);
+  if (block) return res.status(403).json(block);
+
   const team = await inviteMember(teamId, req.user._id, { userId, role });
   sendSuccess(res, 'Member invited', 200, team);
 }));
@@ -99,6 +143,9 @@ router.post('/:teamId/invite-by-email', auth, asyncHandler(async (req, res) => {
   if (!email || typeof email !== 'string') {
     return sendError(res, 'Email is required', 400);
   }
+
+  const block = await seatBlockBody(teamId, req.user);
+  if (block) return res.status(403).json(block);
 
   const result = await inviteByEmail(teamId, req.user._id, { email: email.trim(), role });
   sendSuccess(res, result.invitationSent ? 'Invitation sent to email' : 'Member invited', 200, result);

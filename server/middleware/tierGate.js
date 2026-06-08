@@ -200,10 +200,12 @@ function requireFeature(feature) {
  */
 async function checkExportQuota(req, res, next) {
   const userTier = getUserTier(req);
+  const enforcement = require('../services/entitlementEnforcement');
   const cap = EXPORT_CAPS[userTier] ?? 3;
 
   if (!isFinite(cap)) {
-    return next(); // unlimited tier
+    req.exportQuota = { cap: Infinity, used: 0, remaining: Infinity };
+    return next(); // unlimited tier (pro / agency / trial⇒pro)
   }
 
   try {
@@ -212,29 +214,86 @@ async function checkExportQuota(req, res, next) {
     thisMonthStart.setDate(1);
     thisMonthStart.setHours(0, 0, 0, 0);
 
-    const ExportJob = require('../models/ExportJob');
-    const count = await ExportJob.countDocuments({
-      userId,
-      createdAt: { $gte: thisMonthStart },
-      status: { $in: ['completed', 'processing', 'pending'] },
-    });
+    // Prefer the real metered counter (User.usage.exports, lazily monthly-reset);
+    // fall back to counting ExportJob docs this month if the counter is absent
+    // (e.g. legacy users who haven't exported since the counter was added).
+    const usageService = require('../services/usageService');
+    let count = 0;
+    try {
+      count = await usageService.getUsage(userId, 'exports');
+    } catch (_) {
+      count = 0;
+    }
+    if (!count) {
+      try {
+        const ExportJob = require('../models/ExportJob');
+        count = await ExportJob.countDocuments({
+          userId,
+          createdAt: { $gte: thisMonthStart },
+          status: { $in: ['completed', 'processing', 'pending'] },
+        });
+      } catch (_) {
+        count = 0;
+      }
+    }
 
     if (count >= cap) {
-      return res.status(429).json({
-        error: 'export_quota_exceeded',
-        message: `You've used all ${cap} exports for this month. Upgrade to Creator for unlimited.`,
-        quota: cap,
+      const body = enforcement.limitReachedBody({
+        limitKey: 'exportsPerMonth',
+        limit: cap,
         used: count,
-        resetDate: new Date(thisMonthStart.getFullYear(), thisMonthStart.getMonth() + 1, 1),
-        upgradeUrl: '/dashboard/settings/billing',
+        currentTier: userTier,
+        noun: 'monthly export',
       });
+      body.resetDate = new Date(thisMonthStart.getFullYear(), thisMonthStart.getMonth() + 1, 1);
+      return res.status(403).json(body);
     }
 
     req.exportQuota = { cap, used: count, remaining: cap - count };
     next();
   } catch (error) {
-    // Don't block if quota check fails
+    // Quota check infra error: this is a metered limit (not a security gate),
+    // so fail OPEN rather than 500 the export. Free users are still watermarked
+    // + resolution-capped by the render path regardless.
     next();
+  }
+}
+
+/**
+ * Middleware: enforce the monthly AI-generation cap
+ * (LIMITS.aiGenerationsPerMonth — Free 50, Creator 300, Pro/Agency unlimited).
+ *
+ * Reads the real metered counter (User.usage.contentGenerated, lazily
+ * monthly-reset) and blocks with the structured `limit_reached` shape once the
+ * cap is hit. costGuard still enforces the $ ceiling independently (402).
+ *
+ * On a counter-lookup failure this fails OPEN (it's a metered limit, not a
+ * security gate, and costGuard remains as the $ backstop) rather than 500.
+ * Pair with usageService.incrementUsage(userId, 'contentGenerated') on success.
+ */
+async function checkGenerationQuota(req, res, next) {
+  const userTier = getUserTier(req);
+  const cap = entitlements.limitFor(userTier, 'aiGenerationsPerMonth');
+  if (!Number.isFinite(cap)) return next(); // unlimited (pro / agency / trial⇒pro)
+
+  try {
+    const userId = req.user?.id || req.user?._id;
+    const usageService = require('../services/usageService');
+    const enforcement = require('../services/entitlementEnforcement');
+    const used = await usageService.getUsage(userId, 'contentGenerated');
+    if (used >= cap) {
+      return res.status(403).json(enforcement.limitReachedBody({
+        limitKey: 'aiGenerationsPerMonth',
+        limit: cap,
+        used,
+        currentTier: userTier,
+        noun: 'monthly AI generation',
+      }));
+    }
+    req.generationQuota = { cap, used, remaining: cap - used };
+    next();
+  } catch (error) {
+    next(); // fail open — costGuard $ ceiling is the backstop
   }
 }
 
@@ -276,6 +335,7 @@ module.exports = {
   requireTier,
   requireFeature,
   checkExportQuota,
+  checkGenerationQuota,
   addTierContext,
   getTierInfo,
   getUserTier,

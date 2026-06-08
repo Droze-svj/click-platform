@@ -3,6 +3,8 @@
 
 const express = require('express');
 const auth = require('../middleware/auth');
+const { checkExportQuota, addTierContext } = require('../middleware/tierGate');
+const usageService = require('../services/usageService');
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { parseRequestJson } = require('../utils/safeJson');
@@ -25,7 +27,7 @@ const logExportServer = (event, data) => {
  * POST /api/export
  * Create export job
  */
-router.post('/', auth, asyncHandler(async (req, res) => {
+router.post('/', auth, addTierContext, checkExportQuota, asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { type, format, filters, options } = req.body;
 
@@ -62,6 +64,12 @@ router.post('/', auth, asyncHandler(async (req, res) => {
       jobId: job?.id || job?._id,
       type,
       format
+    });
+
+    // Record the metered export against the user's monthly quota. Best-effort:
+    // a counter-write failure must not fail an already-created export job.
+    usageService.incrementUsage(userId, 'exports').catch((e) => {
+      logger.warn('Failed to increment export usage counter', { userId, error: e.message });
     });
 
     sendSuccess(res, 'Export job created', 201, job);

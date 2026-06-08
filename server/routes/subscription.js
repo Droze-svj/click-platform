@@ -30,10 +30,21 @@ router.post('/verify', auth, async (req, res) => {
     const isActive = ['active', 'trialing'].includes(subData.status);
 
     if (isActive) {
+      // Derive the plan from the canonical Whop product map — NEVER hardcode
+      // 'pro'. An unknown/unmapped product means we cannot prove a paid tier,
+      // so we record the membership as active on 'free' rather than granting Pro.
+      const { getProductMap } = require('../services/whopWebhookService');
+      const productId = subData.plan_id || subData.product_id || subData.plan?.id || null;
+      const mapping = productId ? getProductMap()[productId] : null;
+      if (!mapping) {
+        logger.warn('Subscription verify: unmapped Whop product, defaulting to free', { userId: req.user._id, productId });
+      }
+      const resolvedPlan = mapping ? mapping.planId : 'free';
+
       req.user.whopUserId = whopUserId;
       req.user.subscription = {
         status: 'active',
-        plan: (subData.plan_id || subData.plan?.id || 'pro').toLowerCase(),
+        plan: resolvedPlan,
         startDate: new Date(subData.created_at || Date.now()),
         endDate: new Date(subData.expires_at || Date.now() + 30 * 24 * 60 * 60 * 1000),
         whopSubscriptionId: whopSubscriptionId
@@ -101,8 +112,10 @@ router.get('/status', auth, async (req, res) => {
     const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
     const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
 
-    // Developer bypass for testing - instant response
-    if (allowDevMode && userId && (String(userId).startsWith('dev-') || String(userId) === 'dev-user-123')) {
+    // Developer bypass for testing — instant response. Gated strictly on
+    // NON-PRODUCTION + dev user id so production can never receive a free Pro.
+    if (process.env.NODE_ENV !== 'production' && allowDevMode && userId &&
+        (String(userId).startsWith('dev-') || String(userId) === 'dev-user-123')) {
       return {
         subscription: {
           status: 'active',
@@ -114,8 +127,13 @@ router.get('/status', auth, async (req, res) => {
       };
     }
 
+    // Surface the canonical resolved tier alongside the raw subscription so the
+    // client doesn't have to re-derive it (and so trial⇒pro is honoured here).
+    const entitlements = require('../config/entitlements');
+    const tier = entitlements.resolveTier(req.user || {});
     return {
       subscription: req.user.subscription || { status: 'none', plan: 'free' },
+      tier,
       usage: req.user.usage || {}
     };
   })();
@@ -130,60 +148,47 @@ router.get('/status', auth, async (req, res) => {
     res.json(result);
   } catch (err) {
     logger.error('Subscription status error or timeout', { error: err.message, userId: req.user?._id });
-    // Aggressive fallback to prevent dashboard blank screen
+    // SECURITY: never grant Pro on error/timeout. Fail to the LEAST-privileged
+    // honest answer — the user's real plan if we have it on the attached doc,
+    // else 'free'. Only non-production dev sessions get the generous fallback.
+    if (process.env.NODE_ENV !== 'production') {
+      return res.json({
+        subscription: req.user?.subscription || { status: 'active', plan: 'pro', isFallback: true },
+        tier: 'pro',
+        usage: req.user?.usage || {},
+        isFallback: true
+      });
+    }
+    let tier = 'free';
+    try {
+      tier = require('../config/entitlements').resolveTier(req.user || {});
+    } catch (_) { tier = 'free'; }
     res.json({
-      subscription: { status: 'active', plan: 'pro', isFallback: true },
-      usage: {}
+      subscription: req.user?.subscription || { status: 'none', plan: 'free' },
+      tier,
+      usage: req.user?.usage || {},
+      isFallback: true
     });
   }
 });
 
-// Webhook handler for WHOP events
-router.post('/webhook', async (req, res) => {
-  try {
-    const { action, data } = req.body;
-    
-    // Whop API v2 uses 'action' instead of 'event' in some cases
-    const eventType = action || req.body.event;
-
-    logger.info('WHOP Webhook received', { eventType, subscriptionId: data?.id });
-
-    if (['subscription.created', 'subscription.updated', 'membership.went_active'].includes(eventType)) {
-      const user = await User.findOne({ 
-        $or: [
-          { whopSubscriptionId: data.id },
-          { whopUserId: data.user_id },
-          { email: data.user?.email }
-        ]
-      });
-
-      if (user) {
-        user.subscription = {
-          status: ['active', 'trialing'].includes(data.status) ? 'active' : 'cancelled',
-          plan: (data.plan_id || 'pro').toLowerCase(),
-          startDate: new Date(data.created_at || Date.now()),
-          endDate: new Date(data.expires_at || Date.now()),
-          whopSubscriptionId: data.id
-        };
-        await user.save();
-        logger.info('User subscription updated via webhook', { userId: user._id, status: user.subscription.status });
-      }
-    }
-
-    if (['subscription.deleted', 'membership.went_inactive'].includes(eventType)) {
-      const user = await User.findOne({ whopSubscriptionId: data.id });
-      if (user) {
-        user.subscription.status = 'expired';
-        await user.save();
-        logger.info('User subscription expired via webhook', { userId: user._id });
-      }
-    }
-
-    res.json({ received: true });
-  } catch (error) {
-    logger.error('WHOP Webhook processing critical failure', { error: error.message });
-    res.status(500).json({ error: 'Webhook processing failed' });
-  }
+// RETIRED: legacy UNSIGNED webhook.
+//
+// This handler previously accepted unauthenticated POSTs and granted plans
+// (defaulting to 'pro') with NO signature verification — a trivial way for
+// anyone to upgrade any account. It is replaced by the canonical signed
+// handler at POST /api/webhooks/whop (server/routes/webhooks/whop.js), which
+// verifies the Whop HMAC signature and maps products via the canonical
+// product map. We return 410 Gone so any stale Whop dashboard config fails
+// loudly instead of silently granting access.
+router.post('/webhook', (req, res) => {
+  logger.warn('[subscription] hit RETIRED unsigned /subscription/webhook — use /api/webhooks/whop', {
+    ip: req.ip,
+  });
+  return res.status(410).json({
+    error: 'gone',
+    message: 'This endpoint has been retired. Configure your Whop webhook to POST /api/webhooks/whop (signed).',
+  });
 });
 
 module.exports = router;
