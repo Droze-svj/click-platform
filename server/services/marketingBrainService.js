@@ -22,11 +22,74 @@
  * results carry their source citations.
  */
 
+const crypto = require('crypto');
+const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 const anthropicAI = require('../utils/anthropicAI');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const { aiProfileForTier } = require('../config/aiProfiles');
+const SuggestionHistory = require('../models/SuggestionHistory');
 const marketingKnowledge = require('./marketingKnowledge');
+
+// ── Anti-repetition (SuggestionHistory) ──────────────────────────────────────
+// The generative brain endpoints (fresh angles, strategy) previously had NO
+// memory, so the model could return the same ideas every call. We now load what
+// we recently emitted for this user+kind, tell the model to avoid them, and
+// record the new outputs. Best-effort: any failure degrades to "no dedup", never
+// breaks the feature. SuggestionHistory.userId is an ObjectId, so we only engage
+// for Mongo-native users (Supabase/UUID users simply skip dedup, no error).
+
+function canUseHistory(userId) {
+  return !!userId && mongoose.Types.ObjectId.isValid(String(userId));
+}
+
+/** Recent emitted labels for a user+kind (newest first). Never throws. */
+async function recentSuggestionLabels(userId, kind, limit = 30) {
+  if (!canUseHistory(userId)) return [];
+  try {
+    const rows = await SuggestionHistory.find({ userId, kind })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select('label')
+      .lean();
+    return rows.map((r) => r.label).filter(Boolean);
+  } catch (err) {
+    logger.warn('[marketingBrain] suggestion history read failed', { error: err.message, kind });
+    return [];
+  }
+}
+
+/** Persist emitted labels so future calls avoid repeating them. Never throws. */
+async function recordSuggestions(userId, kind, labels) {
+  if (!canUseHistory(userId) || !Array.isArray(labels) || !labels.length) return;
+  try {
+    const docs = labels
+      .filter(Boolean)
+      .slice(0, 20)
+      .map((label) => ({
+        userId,
+        kind,
+        payloadHash: crypto
+          .createHash('sha256')
+          .update(`${kind}:${String(label).toLowerCase().trim()}`)
+          .digest('hex'),
+        label: String(label).slice(0, 300),
+      }));
+    if (docs.length) await SuggestionHistory.insertMany(docs, { ordered: false });
+  } catch (err) {
+    logger.warn('[marketingBrain] suggestion history insert failed', { error: err.message, kind });
+  }
+}
+
+/** Build an "avoid repeating these" prompt block from recent labels (or ''). */
+function avoidRepetitionBlock(labels, noun = 'ideas') {
+  if (!labels || !labels.length) return '';
+  const list = labels.slice(0, 20).map((l) => `- ${l}`).join('\n');
+  return (
+    `\n\nYou have ALREADY suggested the following ${noun} to this creator before. ` +
+    `Do NOT repeat or lightly reword any of them — produce genuinely fresh, distinct ${noun}:\n${list}\n`
+  );
+}
 
 const {
   buildSystemPrompt,
@@ -278,6 +341,11 @@ async function getStrategy({ userId, niche, platform, goal, language = 'en', tie
   });
 
   const goalLine = goal || (ctx.goals.length ? ctx.goals.join(', ') : 'grow reach and engagement');
+
+  // Anti-repetition: don't re-serve the same strategic pillars each time.
+  const priorPillars = await recentSuggestionLabels(userId, 'strategy-pillar');
+  const avoidBlock = avoidRepetitionBlock(priorPillars, 'strategic pillars');
+
   const prompt =
     `Using LIVE web search, build a current, specific marketing strategy for a ${ctx.niche} creator on ` +
     `${ctx.platform.toUpperCase()} whose primary goal is: ${goalLine}.\n` +
@@ -288,7 +356,8 @@ async function getStrategy({ userId, niche, platform, goal, language = 'en', tie
     `  "pillars": [{"title":"...","why":"...","action":"..."}],\n` +
     `  "currentTrends": [{"trend":"...","whyNow":"...","howToUse":"..."}],\n` +
     `  "nextSteps": ["...","..."]\n}\n` +
-    `3-4 pillars, 2-4 currentTrends (only verifiable ones), 3 nextSteps.`;
+    `3-4 pillars, 2-4 currentTrends (only verifiable ones), 3 nextSteps.` +
+    avoidBlock;
 
   const result = await runClaudeFirst({
     system, prompt, web: true, maxTokens: 6000, maxWebSearches: 5, tier,
@@ -336,6 +405,8 @@ async function getStrategy({ userId, niche, platform, goal, language = 'en', tie
   });
 
   if (!result.ok) return { ok: false, error: result.error };
+  // Record pillar titles so future strategies bring new angles, not repeats.
+  await recordSuggestions(userId, 'strategy-pillar', (result.data.strategy?.pillars || []).map((p) => p.title));
   return { ok: true, ...result.data, source: result.source };
 }
 
@@ -351,13 +422,18 @@ async function getFreshAngles({ userId, niche, platform, topic, language = 'en',
     userId, niche: ctx.niche, platform: ctx.platform, language, persona: 'creative-director',
   });
 
+  // Anti-repetition: exclude angles we've already given this creator.
+  const priorAngles = await recentSuggestionLabels(userId, 'fresh-angle');
+  const avoidBlock = avoidRepetitionBlock(priorAngles, 'content angles');
+
   const prompt =
     `Using LIVE web search to spot what's resonating right now, generate 5 fresh content angles for a ` +
     `${ctx.niche} creator on ${ctx.platform} about: "${safeTopic}".\n` +
     `Only reference a current trend if you actually verify it via search — otherwise lean on timeless angles. ` +
     `Do not invent trends.\n\n` +
     `Return ONLY valid JSON:\n{ "angles": [{ "headline": "...", "why": "...", "framework": "..." }] }\n` +
-    `5 angles. headline ≤ 90 chars. why = one sentence. framework = a short hook-framework slug.`;
+    `5 angles. headline ≤ 90 chars. why = one sentence. framework = a short hook-framework slug.` +
+    avoidBlock;
 
   const result = await runClaudeFirst({
     system, prompt, web: true, maxTokens: 4000, maxWebSearches: 4, tier,
@@ -401,6 +477,8 @@ async function getFreshAngles({ userId, niche, platform, topic, language = 'en',
   });
 
   if (!result.ok) return { ok: false, error: result.error };
+  // Record the emitted headlines so subsequent calls don't repeat them.
+  await recordSuggestions(userId, 'fresh-angle', (result.data.angles || []).map((a) => a.headline));
   return { ok: true, ...result.data, source: result.source };
 }
 
@@ -531,4 +609,8 @@ module.exports = {
   askStrategist,
   // exported for reuse/testing
   parseGeminiJson,
+  avoidRepetitionBlock,
+  canUseHistory,
+  recentSuggestionLabels,
+  recordSuggestions,
 };
