@@ -14,6 +14,7 @@ const logger = require('../utils/logger');
 const Script = require('../models/Script');
 const { generateContent } = require('../utils/googleAI');
 const { costGuard } = require('../middleware/costGuard');
+const { resolveTier } = require('../config/entitlements');
 const {
   HOOK_FRAMEWORKS, NICHE_PLAYBOOKS, NICHE_POSTING_WINDOWS, CTA_LIBRARY,
   RETENTION_CURVES,
@@ -502,7 +503,7 @@ router.post('/strategist/ask', async (req, res) => {
     // "what's trending now" questions are real + cited) and an automatic Gemini
     // fallback inside the service. Response shape is preserved exactly.
     const { askStrategist } = require('../services/marketingBrainService');
-    const brain = await askStrategist({ userId, question, niche, platform, language: 'en' });
+    const brain = await askStrategist({ userId, question, niche, platform, language: 'en', tier: resolveTier(req.user) });
 
     if (!brain.ok) {
       return res.status(503).json({ success: false, error: brain.error });

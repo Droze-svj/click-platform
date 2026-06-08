@@ -25,6 +25,7 @@
 const logger = require('../utils/logger');
 const anthropicAI = require('../utils/anthropicAI');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const { aiProfileForTier } = require('../config/aiProfiles');
 const marketingKnowledge = require('./marketingKnowledge');
 
 const {
@@ -192,20 +193,37 @@ async function buildBrainContext({ userId, niche, platform, language = 'en', per
  * @param {number} [cfg.maxWebSearches]
  * @param {Function} cfg.normalize     - (parsedData, citations) => clientShape
  * @param {Function} cfg.geminiFallback- async () => clientShape | null
+ * @param {string} [cfg.tier]          - caller's tier; scales AI depth (effort/
+ *                                        tokens/web) via aiProfiles. Agency gets
+ *                                        the deepest reasoning + most live web.
  * @returns {Promise<{ok:true, data, source, citations}|{ok:false, error}>}
  */
-async function runClaudeFirst({ system, prompt, web = false, maxTokens = 4000, maxWebSearches = 4, normalize, geminiFallback }) {
+async function runClaudeFirst({ system, prompt, web = false, maxTokens = 4000, maxWebSearches = 4, normalize, geminiFallback, tier }) {
+  // Scale the AI's depth to the caller's tier (when known). Higher tiers reason
+  // harder (effort), can write longer (maxTokens), and ground in more live
+  // sources (maxWebSearches) — same model, just more thorough. free → no live
+  // web, so we honestly route it to the non-web path rather than 1 token search.
+  let effectiveMaxTokens = maxTokens;
+  let effectiveWebSearches = maxWebSearches;
+  let effectiveWeb = web;
+  if (tier != null) {
+    const profile = aiProfileForTier(tier);
+    effectiveMaxTokens = Math.max(maxTokens, profile.maxTokens);
+    effectiveWebSearches = profile.maxWebSearches;
+    effectiveWeb = web && profile.maxWebSearches > 0;
+  }
+
   // 1) Claude path (preferred).
   if (anthropicAI.isConfigured()) {
     try {
-      const result = web
-        ? await anthropicAI.generateJSONWithWeb(prompt, { system, maxTokens, maxWebSearches })
-        : await anthropicAI.generateJSON(prompt, { system, maxTokens });
+      const result = effectiveWeb
+        ? await anthropicAI.generateJSONWithWeb(prompt, { system, maxTokens: effectiveMaxTokens, maxWebSearches: effectiveWebSearches, tier })
+        : await anthropicAI.generateJSON(prompt, { system, maxTokens: effectiveMaxTokens, tier });
 
       if (result.ok && result.data) {
         const shaped = normalize(result.data, result.citations || []);
         if (shaped) {
-          return { ok: true, data: shaped, source: web ? 'claude+web' : 'claude', citations: result.citations || [] };
+          return { ok: true, data: shaped, source: effectiveWeb ? 'claude+web' : 'claude', citations: result.citations || [] };
         }
       } else {
         logger.warn('[marketingBrain] Claude path returned no usable data; trying Gemini', {
@@ -253,7 +271,7 @@ function parseGeminiJson(raw) {
  * Blends knowledge base + real performance + LIVE web trends.
  * Returns { niche, platform, strategy, source, citations }.
  */
-async function getStrategy({ userId, niche, platform, goal, language = 'en' } = {}) {
+async function getStrategy({ userId, niche, platform, goal, language = 'en', tier } = {}) {
   const ctx = await resolveContext({ userId, niche, platform });
   const { system } = await buildBrainContext({
     userId, niche: ctx.niche, platform: ctx.platform, language, persona: 'marketing-coach',
@@ -273,7 +291,7 @@ async function getStrategy({ userId, niche, platform, goal, language = 'en' } = 
     `3-4 pillars, 2-4 currentTrends (only verifiable ones), 3 nextSteps.`;
 
   const result = await runClaudeFirst({
-    system, prompt, web: true, maxTokens: 6000, maxWebSearches: 5,
+    system, prompt, web: true, maxTokens: 6000, maxWebSearches: 5, tier,
     normalize: (data, citations) => {
       if (!data || (typeof data !== 'object')) return null;
       return {
@@ -326,7 +344,7 @@ async function getStrategy({ userId, niche, platform, goal, language = 'en' } = 
  * Returns { topic, niche, angles, source }.
  * Shape preserves the existing /fresh-angles route: angles = [{ headline, why, framework }].
  */
-async function getFreshAngles({ userId, niche, platform, topic, language = 'en' } = {}) {
+async function getFreshAngles({ userId, niche, platform, topic, language = 'en', tier } = {}) {
   const ctx = await resolveContext({ userId, niche, platform });
   const safeTopic = String(topic || 'content creation').slice(0, 200);
   const { system } = await buildBrainContext({
@@ -342,7 +360,7 @@ async function getFreshAngles({ userId, niche, platform, topic, language = 'en' 
     `5 angles. headline ≤ 90 chars. why = one sentence. framework = a short hook-framework slug.`;
 
   const result = await runClaudeFirst({
-    system, prompt, web: true, maxTokens: 4000, maxWebSearches: 4,
+    system, prompt, web: true, maxTokens: 4000, maxWebSearches: 4, tier,
     normalize: (data, citations) => {
       const angles = Array.isArray(data?.angles) ? data.angles : (Array.isArray(data) ? data : null);
       if (!angles) return null;
@@ -392,7 +410,7 @@ async function getFreshAngles({ userId, niche, platform, topic, language = 'en' 
  * the creator's signal), so it uses generateJSON (cheaper, no search).
  * Returns { platform, niche, prompts: { save, comment, share, dm, follow }, source }.
  */
-async function getEngagementPlan({ userId, niche, platform, language = 'en' } = {}) {
+async function getEngagementPlan({ userId, niche, platform, language = 'en', tier } = {}) {
   const ctx = await resolveContext({ userId, niche, platform });
   const { system } = await buildBrainContext({
     userId, niche: ctx.niche, platform: ctx.platform, language, persona: 'marketing-coach',
@@ -406,7 +424,7 @@ async function getEngagementPlan({ userId, niche, platform, language = 'en' } = 
     `2-3 lines per category. No emojis unless the niche playbook calls for them.`;
 
   const result = await runClaudeFirst({
-    system, prompt, web: false, maxTokens: 2500,
+    system, prompt, web: false, maxTokens: 2500, tier,
     normalize: (data) => {
       if (!data || typeof data !== 'object') return null;
       const arr = (k) => (Array.isArray(data[k]) ? data[k].filter(x => typeof x === 'string') : []);
@@ -446,7 +464,7 @@ async function getEngagementPlan({ userId, niche, platform, language = 'en' } = 
  * Returns { answer, followUps, relatedPlaybooks, niche, platform, source, citations }
  * — identical shape to the existing /strategist/ask route.
  */
-async function askStrategist({ userId, question, niche, platform, language = 'en' } = {}) {
+async function askStrategist({ userId, question, niche, platform, language = 'en', tier } = {}) {
   const ctx = await resolveContext({ userId, niche, platform });
   const safeQuestion = String(question || '').slice(0, 1500);
   const { system } = await buildBrainContext({
@@ -463,7 +481,7 @@ async function askStrategist({ userId, question, niche, platform, language = 'en
     `{ "answer": "...", "followUps": ["q1","q2","q3"], "relatedPlaybooks": ["growth"|"engagement"|"monetization"] }`;
 
   const result = await runClaudeFirst({
-    system, prompt, web: true, maxTokens: 4000, maxWebSearches: 4,
+    system, prompt, web: true, maxTokens: 4000, maxWebSearches: 4, tier,
     normalize: (data, citations) => {
       if (!data || typeof data !== 'object' || !data.answer) return null;
       return {
