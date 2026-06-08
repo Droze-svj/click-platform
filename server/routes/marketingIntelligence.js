@@ -23,6 +23,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const logger = require('../utils/logger');
 const redisCache = require('../utils/redisCache');
+const { resolveTier } = require('../config/entitlements');
 const { composeTrendReport } = require('../services/trendComposer');
 const {
   getKnowledgeSlice,
@@ -207,6 +208,7 @@ router.get('/fresh-angles', auth, async (req, res) => {
     const { getFreshAngles } = require('../services/marketingBrainService');
     const brain = await getFreshAngles({
       userId, niche: slice.niche, platform: slice.platform, topic, language: req.language || 'en',
+      tier: resolveTier(req.user),
     });
     if (brain.ok && Array.isArray(brain.angles) && brain.angles.length) {
       return res.json({
@@ -245,6 +247,7 @@ router.get('/strategy', auth, async (req, res) => {
     const { getStrategy } = require('../services/marketingBrainService');
     const brain = await getStrategy({
       userId, niche: slice.niche, platform: slice.platform, goal, language: req.language || 'en',
+      tier: resolveTier(req.user),
     });
     if (!brain.ok) {
       return res.status(503).json({ success: false, error: brain.error });
@@ -296,6 +299,7 @@ router.get('/engagement-prompts', auth, async (req, res) => {
     const { getEngagementPlan } = require('../services/marketingBrainService');
     const brain = await getEngagementPlan({
       userId, niche: slice.niche, platform: slice.platform, language: req.language || 'en',
+      tier: resolveTier(req.user),
     });
     if (brain.ok && brain.prompts) {
       return res.json({

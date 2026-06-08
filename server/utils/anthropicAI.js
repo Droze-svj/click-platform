@@ -13,6 +13,7 @@
 //   - STREAM (plan output is large) and read the final message.
 
 const logger = require('./logger');
+const { aiProfileForTier, DEFAULT_PROFILE } = require('../config/aiProfiles');
 
 let Anthropic = null;
 let client = null;
@@ -109,7 +110,7 @@ function robustParseJSON(text) {
  * loop for us; `.finalMessage()` still resolves to the completed message with
  * all content blocks (text + citations) once the loop settles.
  */
-async function streamMessage({ system, messages, model, maxTokens, timeout, tools }) {
+async function streamMessage({ system, messages, model, maxTokens, timeout, tools, effort }) {
   const c = getClient();
   if (!c) throw new Error('Anthropic client unavailable');
 
@@ -127,12 +128,37 @@ async function streamMessage({ system, messages, model, maxTokens, timeout, tool
     system,
     messages,
     thinking: { type: 'adaptive' },
-    output_config: { effort: 'high' },
+    // Effort scales with the caller's AI profile (tier). Defaults to 'high' —
+    // identical to the pre-profiles behavior — when no profile is threaded in.
+    output_config: { effort: effort || 'high' },
   };
   if (Array.isArray(tools) && tools.length > 0) params.tools = tools;
 
   const stream = caller.messages.stream(params);
   return stream.finalMessage();
+}
+
+/**
+ * Resolve the per-call AI knobs from opts. Precedence (highest first):
+ *   1. an explicit `opts.<field>` (model/maxTokens/maxWebSearches/effort)
+ *   2. an explicit `opts.profile` object
+ *   3. `opts.tier` → aiProfileForTier(tier)
+ *   4. DEFAULT_PROFILE (== the pre-profiles default behavior)
+ *
+ * Callers that pass none of these get byte-identical behavior to before
+ * profiles existed, so this is a safe, additive change for every existing site.
+ */
+function resolveCallParams(opts = {}) {
+  const profile = opts.profile
+    || (opts.tier != null ? aiProfileForTier(opts.tier) : null)
+    || DEFAULT_PROFILE;
+
+  return {
+    model: opts.model || profile.model || DEFAULT_PROFILE.model,
+    maxTokens: typeof opts.maxTokens === 'number' ? opts.maxTokens : profile.maxTokens,
+    effort: opts.effort || profile.effort || DEFAULT_PROFILE.effort,
+    maxWebSearches: typeof opts.maxWebSearches === 'number' ? opts.maxWebSearches : profile.maxWebSearches,
+  };
 }
 
 /**
@@ -192,6 +218,9 @@ function extractCitations(msg) {
  * @param {string} [opts.system] - system prompt.
  * @param {string} [opts.model='claude-opus-4-8']
  * @param {number} [opts.maxTokens=16000]
+ * @param {string} [opts.tier] - caller's tier; scales effort/maxTokens via aiProfiles.
+ * @param {object} [opts.profile] - explicit AI profile (overrides tier).
+ * @param {string} [opts.effort] - explicit effort override.
  * @returns {Promise<{ok:true,data:any}|{ok:false,error:string}>}
  *
  * Streams, extracts text, robust-parses. On parse failure, retries ONCE with a
@@ -199,7 +228,8 @@ function extractCitations(msg) {
  * — never fabricates output.
  */
 async function generateJSON(prompt, opts = {}) {
-  const { system, model = 'claude-opus-4-8', maxTokens = 16000 } = opts;
+  const { system } = opts;
+  const { model, maxTokens, effort } = resolveCallParams(opts);
 
   if (!isConfigured()) {
     return { ok: false, error: 'AI Director needs Claude configured (ANTHROPIC_API_KEY).' };
@@ -209,7 +239,7 @@ async function generateJSON(prompt, opts = {}) {
 
   try {
     // First attempt.
-    const msg = await streamMessage({ system, messages: baseMessages, model, maxTokens });
+    const msg = await streamMessage({ system, messages: baseMessages, model, maxTokens, effort });
     const text = extractText(msg);
     const parsed = robustParseJSON(text);
     if (parsed) return { ok: true, data: parsed };
@@ -231,7 +261,7 @@ async function generateJSON(prompt, opts = {}) {
     ];
     // Share the budget: the parse-retry gets a tighter ceiling (45s) so one
     // request can't consume ~3 minutes across two full-budget attempts.
-    const retryMsg = await streamMessage({ system, messages: retryMessages, model, maxTokens, timeout: 45_000 });
+    const retryMsg = await streamMessage({ system, messages: retryMessages, model, maxTokens, effort, timeout: 45_000 });
     const retryText = extractText(retryMsg);
     const retryParsed = robustParseJSON(retryText);
     if (retryParsed) return { ok: true, data: retryParsed };
@@ -274,6 +304,8 @@ async function generateJSON(prompt, opts = {}) {
  * @param {string} [opts.model='claude-opus-4-8']
  * @param {number} [opts.maxTokens=16000]
  * @param {number} [opts.maxWebSearches=4] - cap server-side searches (cost/latency).
+ * @param {string} [opts.tier] - caller's tier; scales effort/maxTokens/maxWebSearches via aiProfiles.
+ * @param {object} [opts.profile] - explicit AI profile (overrides tier).
  * @returns {Promise<{ok:true,data:any,citations:Array<{url,title}>}|{ok:false,error:string}>}
  *
  * Web search runs several server-side round-trips, so the per-call timeout is
@@ -281,12 +313,8 @@ async function generateJSON(prompt, opts = {}) {
  * (that would re-bill searches) — it returns an honest error. Never fabricates.
  */
 async function generateJSONWithWeb(prompt, opts = {}) {
-  const {
-    system,
-    model = 'claude-opus-4-8',
-    maxTokens = 16000,
-    maxWebSearches = 4,
-  } = opts;
+  const { system } = opts;
+  const { model, maxTokens, effort, maxWebSearches } = resolveCallParams(opts);
 
   if (!isConfigured()) {
     return { ok: false, error: 'AI brain needs Claude configured (ANTHROPIC_API_KEY).' };
@@ -307,6 +335,7 @@ async function generateJSONWithWeb(prompt, opts = {}) {
       messages: [{ role: 'user', content: prompt }],
       model,
       maxTokens,
+      effort,
       timeout: 180_000,
       tools,
     });
