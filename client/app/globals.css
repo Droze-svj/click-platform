@@ -197,6 +197,29 @@
   --text-main: #0f172a;
   --text-dim: #334155;
   --accent-glow: rgba(99, 102, 241, 0.08);
+
+  /* ── shadcn design tokens (HSL triplets) — Light mode ─────────────────
+   * Wired to Tailwind via theme.extend.colors as hsl(var(--token)/<alpha>).
+   * Powers components/ui/* primitives (Button/Card/Input/etc.). */
+  --background: 0 0% 100%;             /* white */
+  --foreground: 240 10% 9%;           /* zinc-950-ish dark text */
+  --card: 0 0% 100%;                  /* white */
+  --card-foreground: 240 10% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 9%;
+  --primary: 243 75% 59%;             /* indigo #6366f1 */
+  --primary-foreground: 0 0% 100%;    /* white on indigo */
+  --secondary: 280 67% 49%;           /* fuchsia #c026d3 */
+  --secondary-foreground: 0 0% 100%;  /* white on fuchsia */
+  --muted: 240 5% 96%;                /* zinc-100 */
+  --muted-foreground: 240 4% 40%;     /* zinc-600-ish */
+  --accent: 280 67% 49%;              /* fuchsia accent */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;           /* red-600 #dc2626 */
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 6% 90%;               /* zinc-200 */
+  --input: 240 6% 90%;                /* zinc-200 */
+  --ring: 243 75% 59%;                /* indigo focus ring */
 }
 
 .dark {
@@ -289,6 +312,29 @@
   --tint-fuchsia-edge: rgba(217, 70, 239, 0.38);
 
   --focus-ring: 0 0 0 3px rgba(165, 180, 252, 0.5);
+
+  /* ── shadcn design tokens (HSL triplets) — Dark mode ──────────────────
+   * Near-black glass surfaces with light foreground; matches Click's
+   * premium dark-glass aesthetic. */
+  --background: 240 24% 3%;            /* near-black #060609 */
+  --foreground: 0 0% 98%;             /* near-white text */
+  --card: 240 14% 7%;                 /* slightly raised dark surface */
+  --card-foreground: 0 0% 98%;
+  --popover: 240 16% 6%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 243 75% 59%;             /* indigo #6366f1 */
+  --primary-foreground: 0 0% 100%;    /* white on indigo */
+  --secondary: 280 67% 53%;           /* fuchsia, slightly brighter for dark */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 6% 14%;                /* zinc-800-ish */
+  --muted-foreground: 240 5% 65%;     /* zinc-400-ish, readable on dark */
+  --accent: 280 67% 53%;              /* fuchsia accent */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 55%;           /* red, slightly brighter for dark */
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 6% 16%;               /* subtle dark border */
+  --input: 240 6% 16%;
+  --ring: 243 75% 65%;                /* brighter indigo ring on dark */
 }
 
 /* ── Light-mode overrides (Modern Soft Indigo Theme) ────────────────── */
