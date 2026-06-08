@@ -7,8 +7,6 @@ import {
   Cpu,
   Zap,
   Loader2,
-  MessageSquare,
-  Scissors,
   Sparkles,
   TrendingUp,
   Copy,
@@ -22,9 +20,7 @@ import {
   Target,
   ArrowUpRight,
   ShieldCheck,
-  Activity,
-  Layers,
-  MousePointer2
+  Layers
 } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
 import { getDefaultTrackForSegmentType, Asset, StyleProfile } from '../../../types/editor'
@@ -32,46 +28,51 @@ import DirectorLog from '../DirectorLog'
 import StyleMimicView from './StyleMimicView'
 import VariantFactoryView from './VariantFactoryView'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
+import { Panel, Button, Badge, SectionHeader, EmptyState } from '../../ui'
+import { cn } from '../../../lib/utils'
+
+const INACTIVE_PILL =
+  'border-border bg-background/40 text-theme-secondary hover:text-theme-primary'
 
 const ENGINE_COLORS: Record<'gpt4' | 'claude' | 'gemini', { active: string; inactive: string }> = {
   gpt4: {
-    active: 'bg-fuchsia-500/20 border-fuchsia-500/40 text-fuchsia-400',
-    inactive: 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-white',
+    active: 'bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-500',
+    inactive: INACTIVE_PILL,
   },
   claude: {
-    active: 'bg-orange-500/20 border-orange-500/40 text-orange-400',
-    inactive: 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-white',
+    active: 'bg-orange-500/15 border-orange-500/40 text-orange-500',
+    inactive: INACTIVE_PILL,
   },
   gemini: {
-    active: 'bg-blue-500/20 border-blue-500/40 text-blue-400',
-    inactive: 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-white',
+    active: 'bg-blue-500/15 border-blue-500/40 text-blue-500',
+    inactive: INACTIVE_PILL,
   },
 }
 
 const PERSONA_COLORS: Record<'beast' | 'minimalist' | 'architect' | 'educator', { active: string; inactive: string; activeIconBg: string; inactiveIconBg: string }> = {
   beast: {
-    active: 'bg-orange-500/10 border-orange-500/30 text-orange-400 shadow-[0_0_30px_rgba(249,115,22,0.15)]',
-    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    active: 'bg-orange-500/10 border-orange-500/30 text-orange-500',
+    inactive: INACTIVE_PILL,
     activeIconBg: 'bg-orange-500/20',
-    inactiveIconBg: 'bg-white/5',
+    inactiveIconBg: 'bg-accent',
   },
   minimalist: {
-    active: 'bg-slate-500/10 border-slate-500/30 text-slate-400 shadow-[0_0_30px_rgba(148,163,184,0.15)]',
-    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    active: 'bg-slate-500/10 border-slate-500/30 text-slate-400',
+    inactive: INACTIVE_PILL,
     activeIconBg: 'bg-slate-500/20',
-    inactiveIconBg: 'bg-white/5',
+    inactiveIconBg: 'bg-accent',
   },
   architect: {
-    active: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.15)]',
-    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    active: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-500',
+    inactive: INACTIVE_PILL,
     activeIconBg: 'bg-indigo-500/20',
-    inactiveIconBg: 'bg-white/5',
+    inactiveIconBg: 'bg-accent',
   },
   educator: {
-    active: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.15)]',
-    inactive: 'bg-white/[0.02] border-white/5 text-slate-500 hover:bg-white/[0.05] hover:text-white',
+    active: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500',
+    inactive: INACTIVE_PILL,
     activeIconBg: 'bg-emerald-500/20',
-    inactiveIconBg: 'bg-white/5',
+    inactiveIconBg: 'bg-accent',
   },
 }
 
@@ -118,8 +119,6 @@ const itemVariants = {
   }
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)]"
-
 const EliteAIView: React.FC<EliteAIViewProps> = ({
   videoId, isTranscribing, setIsTranscribing, transcript, setTranscript, editingWords, setEditingWords, aiSuggestions, setTimelineSegments, showToast, setActiveCategory, setTextOverlays, autoEditClips = [], onGenerateClips, onApplyClip, engagementScore, userAssets = [], onForgeMaster, onApplyStyleProfile, onBeatSync
 }) => {
@@ -130,7 +129,6 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   const [requirementsReady, setRequirementsReady] = useState<boolean | null>(null)
   const [requirementsMessage, setRequirementsMessage] = useState<string>('')
   const [activeThought, setActiveThought] = useState('')
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [activeEngine, setActiveEngine] = useState<'gpt4' | 'claude' | 'gemini'>('gpt4')
   const [activePersona, setActivePersona] = useState<'beast' | 'minimalist' | 'architect' | 'educator'>('beast')
   const [showSwarmHUD, setShowSwarmHUD] = useState(false)
@@ -186,14 +184,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
     }, 6000)
     setActiveThought(aiThoughts[0])
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY })
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-
     return () => {
       clearInterval(thoughtInterval)
-      window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [aiThoughts])
 
@@ -448,7 +440,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-12 max-w-[1400px] mx-auto pb-20 relative"
+      className="relative mx-auto max-w-[1400px] space-y-8 pb-16 ds-bg-mesh-soft"
     >
       {/* ── SUBVIEW: THE MIMIC ── */}
       <AnimatePresence mode="wait">
@@ -458,7 +450,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="absolute inset-0 z-[100] bg-[#020202] p-8 overflow-y-auto rounded-[3rem] border border-white/5 shadow-2xl"
+            transition={{ duration: 0.25 }}
+            className="absolute inset-0 z-[100] overflow-y-auto rounded-2xl border border-border bg-background p-6 ds-elev-3"
           >
             <StyleMimicView
               onBack={() => setView('main')}
@@ -477,7 +470,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="absolute inset-0 z-[100] bg-[#020202] p-8 overflow-y-auto rounded-[3rem] border border-white/5 shadow-2xl"
+            transition={{ duration: 0.25 }}
+            className="absolute inset-0 z-[100] overflow-y-auto rounded-2xl border border-border bg-background p-6 ds-elev-3"
           >
             <VariantFactoryView
               onBack={() => setView('main')}
@@ -504,67 +498,26 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Dynamic Background Glow */}
-      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
-        <motion.div
-          animate={{
-            x: mousePos.x / 60,
-            y: mousePos.y / 60,
-          }}
-          className="absolute top-0 right-0 w-[500px] h-[500px] bg-fuchsia-600/10 blur-[150px] rounded-full opacity-60"
-        />
-        <motion.div
-          animate={{
-            x: -mousePos.x / 60,
-            y: -mousePos.y / 60,
-          }}
-          className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/10 blur-[150px] rounded-full opacity-60"
-        />
-      </div>
+      {/* Header Node */}
+      <motion.div variants={itemVariants} className="space-y-6">
+        <div className="flex flex-col justify-between gap-8 xl:flex-row xl:items-start">
+          <div className="space-y-5">
+            <SectionHeader as="h1" title="AI Storyteller" description={`Elite AI · ${String(activeEngine || 'idle')}`} />
 
-      {/* Elite Header Node */}
-      <motion.div variants={itemVariants} className="space-y-10">
-        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-12">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 text-[10px] font-bold uppercase tracking-[0.3em] shadow-lg">
-              <Radio className="w-3.5 h-3.5 animate-pulse" />
-              Elite AI · {String(activeEngine || 'idle')}
-            </div>
-            <h1 className="text-6xl font-black text-[var(--text-main)] tracking-tighter leading-[1.05]">
-              AI Storyteller
-            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <Button variant="primary" onClick={() => setView('mimic')} leftIcon={<Fingerprint className="h-4 w-4" aria-hidden />}>
+                The Mimic
+              </Button>
+              <Button variant="secondary" onClick={() => setView('variant-factory')} leftIcon={<Target className="h-4 w-4" aria-hidden />}>
+                Variant Factory
+              </Button>
+              <Button variant="secondary" onClick={onBeatSync} leftIcon={<Radio className="h-4 w-4" aria-hidden />}>
+                Beat-Sync
+              </Button>
 
-            <div className="flex flex-wrap items-center gap-4 mt-6">
-              <button
-                type="button"
-                onClick={() => setView('mimic')}
-                className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center gap-3 group shadow-[0_0_20px_rgba(79,70,229,0.3)] flex-shrink-0"
-              >
-                <Fingerprint className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-black text-white uppercase tracking-widest italic">The Mimic</span>
-              </button>
+              <div className="mx-1 hidden h-8 w-px bg-border md:block" />
 
-              <button
-                type="button"
-                onClick={() => setView('variant-factory')}
-                className="px-6 py-3 rounded-2xl bg-fuchsia-600/10 border border-fuchsia-500/20 hover:bg-fuchsia-600/20 transition-all flex items-center gap-3 group flex-shrink-0"
-              >
-                <Target className="w-4 h-4 text-fuchsia-400 group-hover:scale-125 transition-transform" />
-                <span className="text-xs font-black text-fuchsia-400 uppercase tracking-widest italic">Variant Factory</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={onBeatSync}
-                className="px-6 py-3 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 transition-all flex items-center gap-3 group flex-shrink-0"
-              >
-                <Radio className="w-4 h-4 text-emerald-400 group-hover:animate-ping" />
-                <span className="text-xs font-black text-emerald-400 uppercase tracking-widest italic">Beat-Sync</span>
-              </button>
-
-              <div className="hidden md:block h-8 w-px bg-white/10 mx-2 flex-shrink-0" />
-
-              <div className="flex flex-wrap gap-2 flex-shrink-0">
+              <div className="flex flex-wrap gap-2">
                 {engines.map(engine => {
                   const Icon = engine.icon
                   const isActive = activeEngine === engine.id
@@ -574,14 +527,12 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                       type="button"
                       key={engine.id}
                       onClick={() => setActiveEngine(engine.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all border ${
-                        isActive ? colors.active : colors.inactive
-                      }`}
+                      className={cn('flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors', isActive ? colors.active : colors.inactive)}
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      <Icon className="h-4 w-4" aria-hidden />
                       <div className="text-left">
-                        <div className="text-[10px] font-black uppercase tracking-widest leading-none">{engine.name}</div>
-                        <div className="text-[8px] uppercase tracking-tighter opacity-60 mt-0.5 leading-none">{engine.maker}</div>
+                        <div className="text-xs font-semibold leading-none">{engine.name}</div>
+                        <div className="mt-0.5 text-[10px] leading-none opacity-60">{engine.maker}</div>
                       </div>
                     </button>
                   )
@@ -590,9 +541,9 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             </div>
 
             {/* Persona Switcher */}
-            <div className="pt-6 border-t border-white/5 space-y-4">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic">Director Persona // Agentic Identity</p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="space-y-3 border-t border-border pt-5">
+              <p className="ds-text-label text-theme-muted">Director Persona</p>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {personas.map(persona => {
                   const Icon = persona.icon
                   const isActive = activePersona === persona.id
@@ -602,16 +553,14 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                       type="button"
                       key={persona.id}
                       onClick={() => setActivePersona(persona.id)}
-                      className={`flex flex-col gap-3 p-4 rounded-2xl transition-all border text-left group ${
-                        isActive ? colors.active : colors.inactive
-                      }`}
+                      className={cn('flex flex-col gap-3 rounded-xl border p-4 text-left transition-colors', isActive ? colors.active : colors.inactive)}
                     >
-                      <div className={`p-2 w-fit rounded-lg ${isActive ? colors.activeIconBg : colors.inactiveIconBg}`}>
-                        <Icon className="w-4 h-4" />
+                      <div className={cn('w-fit rounded-lg p-2', isActive ? colors.activeIconBg : colors.inactiveIconBg)}>
+                        <Icon className="h-4 w-4" aria-hidden />
                       </div>
                       <div>
-                        <div className="text-[10px] font-black uppercase tracking-widest">{persona.name}</div>
-                        <div className="text-[8px] font-medium opacity-50 mt-1">{persona.desc}</div>
+                        <div className="ds-text-label">{persona.name}</div>
+                        <div className="mt-1 text-xs opacity-60">{persona.desc}</div>
                       </div>
                     </button>
                   )
@@ -620,42 +569,37 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             </div>
           </div>
 
-          <div className={`${glassStyle} p-8 rounded-[3rem] space-y-3 min-w-[320px] relative overflow-hidden group border-fuchsia-500/10`}>
-             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
-                <Orbit className="w-24 h-24 text-fuchsia-500" />
-             </div>
-             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Core Status: {requirementsReady ? 'ALPHA ACTIVE' : 'FAULT DETECTED'}</p>
-             <div className="flex items-center gap-4">
-                <div className={`w-3 h-3 rounded-full animate-pulse shadow-[0_0_15px] ${requirementsReady ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-rose-500 shadow-rose-500/50'}`} />
-                <p className="text-sm font-black text-white italic truncate max-w-[200px] uppercase">
-                  {activeThought}
-                </p>
+          <Panel variant="glass" className="relative min-w-[320px] space-y-3 overflow-hidden">
+             <p className="ds-text-caption">Core status: {requirementsReady ? 'Active' : 'Fault detected'}</p>
+             <div className="flex items-center gap-3">
+                <div className={cn('h-2.5 w-2.5 animate-pulse rounded-full', requirementsReady ? 'bg-emerald-500' : 'bg-rose-500')} />
+                <p className="ds-text-label truncate text-theme-primary max-w-[220px]">{activeThought}</p>
              </div>
 
              {/* Agentic Forge Button */}
-             <div className="pt-4">
+             <div className="pt-3">
                 <button
                   type="button"
                   onClick={handleForge}
                   disabled={isForging || !onForgeMaster}
-                  className={`w-full p-8 rounded-[2.5rem] relative overflow-hidden group transition-all transform active:scale-95 ${
+                  className={cn(
+                    'relative w-full overflow-hidden rounded-2xl p-6 transition-all active:scale-[0.99] disabled:opacity-60',
                     isForging
-                      ? 'bg-indigo-600/50 cursor-wait'
-                      : 'bg-gradient-to-br from-indigo-600 to-fuchsia-600 hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                  }`}
+                      ? 'cursor-wait bg-primary/50'
+                      : 'bg-gradient-to-br from-indigo-600 to-fuchsia-600 ds-hover-lift'
+                  )}
                 >
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-overlay" />
                   <div className="relative z-10 flex flex-col items-center gap-2">
                      {isForging ? (
-                       <Loader2 className="w-8 h-8 animate-spin text-white mb-2" />
+                       <Loader2 className="mb-2 h-7 w-7 animate-spin text-white" aria-hidden />
                      ) : (
-                       <Zap className="w-8 h-8 text-white mb-2 animate-bounce" />
+                       <Zap className="mb-2 h-7 w-7 text-white" aria-hidden />
                      )}
-                     <div className="text-xl font-black text-white tracking-tight leading-tight">Agentic Forge</div>
-                     <div className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1.5">One-click generate</div>
+                     <div className="text-lg font-bold leading-tight text-white">Agentic Forge</div>
+                     <div className="mt-1 text-xs text-white/70">One-click generate</div>
                   </div>
 
-                  {/* Progress Bar (Mock) */}
+                  {/* Loading progress indicator while the forge runs */}
                   {isForging && (
                     <motion.div
                       initial={{ width: 0 }}
@@ -668,63 +612,55 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
              </div>
 
              {/* Director Voice HUD */}
-             <div className="pt-4">
+             <div className="pt-3">
                 <DirectorLog
                   persona={activePersona}
                   currentTime={0}
                   metrics={{
-                    cutsPerMinute: engagementScore?.cutsPerMinute || 6.5,
-                    brollRatio: engagementScore?.brollRatio || 0.15,
-                    hookStrength: engagementScore?.hookStrength || 78
+                    cutsPerMinute: engagementScore?.cutsPerMinute ?? 0,
+                    brollRatio: engagementScore?.brollRatio ?? 0,
+                    hookStrength: engagementScore?.hookStrength ?? 0
                   }}
                 />
              </div>
-          </div>
+          </Panel>
         </div>
       </motion.div>
 
       {/* Suggested Assets Node */}
       {suggestedAssets.length > 0 && (
-        <motion.div variants={itemVariants} className="space-y-8">
-           <div className="flex items-center gap-6">
-              <div className="w-10 h-2 bg-indigo-500 rounded-full" />
-              <h3 className="text-xl font-black text-[var(--text-main)] tracking-tight">Suggested Assets</h3>
-           </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <motion.div variants={itemVariants} className="space-y-4">
+           <SectionHeader as="h3" title="Suggested Assets" />
+           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {suggestedAssets.map((asset, i) => (
                 <motion.div
                   key={asset.id}
-                  whileHover={{ y: -10, scale: 1.02 }}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 transition-all group/asset shadow-xl relative overflow-hidden"
+                  transition={{ delay: i * 0.05 }}
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-background/40 p-5 transition-colors hover:border-primary/30"
                 >
                   {asset.thumbnail && (
-                    <img src={asset.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 group-hover:scale-110 transition-transform duration-1000" />
+                    <img src={asset.thumbnail} alt="" className="absolute inset-0 h-full w-full object-cover opacity-10" />
                   )}
-                  <div className="relative z-10 space-y-6">
+                  <div className="relative z-10 space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                        {asset.type === 'music' ? <Radio className="w-4 h-4 text-indigo-400" /> : <Layers className="w-4 h-4 text-indigo-400" />}
+                      <div className="rounded-xl border border-primary/20 bg-primary/10 p-2.5 text-primary">
+                        {asset.type === 'music' ? <Radio className="h-4 w-4" aria-hidden /> : <Layers className="h-4 w-4" aria-hidden />}
                       </div>
-                      <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic bg-indigo-500/10 px-3 py-1 rounded-full">MATCHED</span>
+                      <Badge variant="secondary">Matched</Badge>
                     </div>
                     <div>
-                      <h5 className="text-lg font-black text-white italic truncate uppercase">{asset.title}</h5>
-                      <div className="flex flex-wrap gap-2 mt-3">
+                      <h5 className="ds-text-label truncate text-theme-primary">{asset.title}</h5>
+                      <div className="mt-2 flex flex-wrap gap-2">
                          {asset.autoTags?.slice(0, 2).map(t => (
-                           <span key={t} className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">#{t}</span>
+                           <span key={t} className="ds-text-caption">#{t}</span>
                          ))}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleInjectAsset(asset)}
-                      className="w-full py-4 rounded-xl bg-indigo-500 text-white font-black text-[10px] tracking-widest uppercase italic shadow-lg shadow-indigo-500/20 border border-white/10"
-                    >
-                      Inject Draft node
-                    </button>
+                    <Button variant="primary" size="sm" className="w-full" onClick={() => handleInjectAsset(asset)}>
+                      Inject Draft Node
+                    </Button>
                   </div>
                 </motion.div>
               ))}
@@ -733,52 +669,37 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       )}
 
       {/* Initialize / Management Card */}
-      <motion.div
-        variants={itemVariants}
-        className={`${glassStyle} p-16 rounded-[4.5rem] relative overflow-hidden group shadow-3xl`}
-      >
-        <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none rotate-12 group-hover:scale-110 transition-transform duration-1000">
-          <Fingerprint className="w-64 h-64 text-fuchsia-500" />
-        </div>
-
-        <div className="space-y-12 relative z-10">
+      <motion.div variants={itemVariants}>
+       <Panel variant="glass" className="relative overflow-hidden">
+        <div className="relative z-10 space-y-8">
           {requirementsReady === false && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex gap-10 p-10 rounded-[3rem] bg-amber-500/5 border border-amber-500/10 shadow-inner backdrop-blur-3xl"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                <AlertCircle className="w-7 h-7 text-amber-500" />
+            <div className="flex gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10">
+                <AlertCircle className="h-5 w-5 text-amber-500" aria-hidden />
               </div>
-              <div className="space-y-2">
-                <p className="text-xs font-black text-amber-400 uppercase tracking-widest italic">NEURAL READINESS FAULT</p>
-                <p className="text-xl text-slate-400 font-medium italic">{requirementsMessage || 'Verify OPENAI_API_KEY in repository configuration.'}</p>
+              <div className="space-y-1">
+                <p className="ds-text-label text-amber-500">Neural readiness fault</p>
+                <p className="ds-text-body text-theme-secondary">{requirementsMessage || 'Verify OPENAI_API_KEY in repository configuration.'}</p>
               </div>
-            </motion.div>
+            </div>
           )}
 
-          <div className="flex gap-6">
-            <motion.button
-              variants={itemVariants}
-              whileHover={{ scale: 1.02, borderColor: 'rgba(99, 102, 241, 0.3)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.15)' }}
-              whileTap={{ scale: 0.98 }}
-              onClick={applySemanticCaptions}
-              className="flex-1 p-10 bg-white/[0.02] hover:bg-white/[0.04] rounded-[3rem] border border-white/5 flex flex-col items-center justify-center gap-6 group/btn relative overflow-hidden transition-all duration-500"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
-              <div className="w-16 h-16 rounded-[1.4rem] bg-indigo-500/10 flex items-center justify-center group-hover/btn:bg-indigo-500 border border-indigo-500/20 transition-all duration-500 relative z-10">
-                <Type className="w-8 h-8 text-indigo-400 group-hover/btn:text-white transition-colors duration-500" />
-              </div>
-              <div className="text-center space-y-2 relative z-10">
-                <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic group-hover/btn:text-indigo-400">Node Synthesis</p>
-                <p className="text-xl font-black text-white uppercase tracking-tighter">Semantic Captions</p>
-              </div>
-            </motion.button>
-          </div>
+          <button
+            type="button"
+            onClick={applySemanticCaptions}
+            className="group/btn flex w-full flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-background/40 p-8 transition-colors hover:border-primary/30"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-colors group-hover/btn:bg-primary group-hover/btn:text-primary-foreground">
+              <Type className="h-7 w-7" aria-hidden />
+            </div>
+            <div className="space-y-1 text-center">
+              <p className="ds-text-caption">Node Synthesis</p>
+              <p className="ds-text-h3 text-theme-primary">Semantic Captions</p>
+            </div>
+          </button>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+          <div className="space-y-1.5">
+            <label className="ds-text-label text-theme-secondary block">
               Spoken Video Language
             </label>
             <div className="relative">
@@ -786,23 +707,23 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 value={spokenLanguage}
                 title="Select spoken video language"
                 onChange={(e) => setSpokenLanguage(e.target.value)}
-                className="w-full appearance-none bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold text-white focus:outline-none focus:border-fuchsia-500/50 cursor-pointer transition-all"
+                className="h-11 w-full cursor-pointer appearance-none rounded-lg border border-input bg-background px-4 pr-10 text-sm text-theme-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code} className="bg-[#0c0c16] text-white">
+                  <option key={lang.code} value={lang.code}>
                     {lang.name}
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-500 text-[10px]">
+              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-theme-muted">
                 ▼
               </div>
             </div>
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={async () => {
               if (!videoId) {
                 showToast('No video loaded', 'error')
@@ -839,26 +760,24 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               }
             }}
             disabled={isTranscribing || requirementsReady === false}
-            className={`w-full py-10 rounded-[3rem] bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white font-black text-xs tracking-[0.6em] flex items-center justify-center gap-8 shadow-[0_40px_100px_rgba(217,70,239,0.3)] border border-white/20 uppercase transition-all disabled:opacity-30 disabled:grayscale relative overflow-hidden group/btn`}
+            className="relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 py-6 text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:grayscale"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
-            {isTranscribing ? <Loader2 className="w-8 h-8 animate-spin" /> : <Fingerprint className="w-8 h-8" />}
-            {isTranscribing ? 'Digitizing Neural Stream...' : requirementsReady === false ? 'Core Offline' : 'Initialize Semantic Extraction'}
+            {isTranscribing ? <Loader2 className="h-6 w-6 animate-spin" aria-hidden /> : <Fingerprint className="h-6 w-6" aria-hidden />}
+            {isTranscribing ? 'Transcribing…' : requirementsReady === false ? 'Core Offline' : 'Initialize Semantic Extraction'}
           </motion.button>
 
-          <div className="p-10 rounded-[3.5rem] bg-white/[0.02] border border-white/5 flex flex-col xl:flex-row items-center justify-between gap-10 hover:bg-white/[0.04] hover:border-fuchsia-500/20 transition-all shadow-inner group/exec">
-            <div className="flex items-center gap-10">
-              <div className="w-20 h-20 rounded-[2rem] bg-fuchsia-500/10 flex items-center justify-center border border-fuchsia-500/20 shadow-2xl group-hover/exec:scale-110 group-hover/exec:rotate-6 transition-all duration-700">
-                <Zap className="w-10 h-10 text-fuchsia-500 animate-pulse" />
+          <div className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-border bg-background/40 p-6 transition-colors hover:border-primary/20 xl:flex-row">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 text-fuchsia-500">
+                <Zap className="h-7 w-7" aria-hidden />
               </div>
               <div className="space-y-1 text-center xl:text-left">
-                <h4 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight">Apply all AI suggestions</h4>
-                <p className="text-[12px] text-slate-400 font-medium mt-2">Auto-edit cuts, captions, and pacing in one click.</p>
+                <h4 className="ds-text-h3 text-theme-primary">Apply all AI suggestions</h4>
+                <p className="ds-text-caption">Auto-edit cuts, captions, and pacing in one click.</p>
               </div>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05, x: 10 }}
-              whileTap={{ scale: 0.95 }}
+            <Button
+              variant="primary"
               onClick={() => {
                 if (viralQuotes.length && setTextOverlays) {
                   setTextOverlays((prev: any[]) => [...prev, ...viralQuotes.slice(0, 3).map((q: any) => ({
@@ -887,79 +806,69 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 setActiveCategory?.('timeline')
               }}
               title="Apply all AI suggestions"
-              className="px-10 py-3.5 bg-fuchsia-500 text-white rounded-full font-bold text-[12px] uppercase tracking-[0.2em] hover:bg-fuchsia-600 transition-colors shadow-xl shadow-fuchsia-500/30"
             >
               Apply all
-            </motion.button>
+            </Button>
           </div>
 
           {/* AI AUTO-EDIT CLIPS SECTOR */}
-          <div className="pt-12 border-t border-white/5 space-y-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-xl">
-                  <Layers className="w-7 h-7 text-indigo-400" />
+          <div className="space-y-6 border-t border-border pt-8">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <Layers className="h-6 w-6" aria-hidden />
                 </div>
                 <div>
-                  <h4 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight">Auto-edit clips</h4>
-                  <span className="text-[11px] font-medium text-slate-400 mt-1.5 block">Generate short-form variations from your video</span>
+                  <h4 className="ds-text-h3 text-theme-primary">Auto-edit clips</h4>
+                  <span className="ds-text-caption">Generate short-form variations from your video</span>
                 </div>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onGenerateClips}
-                className="px-7 py-3 bg-white/5 border border-white/10 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] text-white hover:bg-white/10 transition-colors flex items-center gap-2.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-fuchsia-400" />
+              <Button variant="secondary" onClick={onGenerateClips} leftIcon={<Sparkles className="h-4 w-4 text-fuchsia-500" aria-hidden />}>
                 Generate clips
-              </motion.button>
+              </Button>
             </div>
 
             {autoEditClips.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {autoEditClips.map((clip, i) => (
                   <motion.div
                     key={clip.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 transition-all group/clip shadow-2xl"
+                    transition={{ delay: i * 0.05 }}
+                    className="rounded-2xl border border-border bg-background/40 p-5 transition-colors hover:border-primary/30"
                   >
-                    <div className="flex items-center justify-between mb-6">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic">Variation 0{i+1}</span>
-                      <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold">
-                        {clip.engagementScore?.overall || 0}% RANK
-                      </div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <span className="ds-text-caption">Variation {String(i + 1).padStart(2, '0')}</span>
+                      <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500">
+                        {clip.engagementScore?.overall || 0}% rank
+                      </Badge>
                     </div>
-                    <h5 className="text-xl font-black text-white italic truncate mb-4 uppercase">{clip.name}</h5>
-                    <div className="flex items-center gap-4 mb-8">
-                       <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <h5 className="ds-text-label mb-4 truncate text-theme-primary">{clip.name}</h5>
+                    <div className="mb-6 flex items-center gap-3">
+                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${clip.engagementScore?.viralPotential || 0}%` }}
-                            className="h-full bg-indigo-500"
+                            className="h-full bg-primary"
                           />
                        </div>
-                       <span className="text-[9px] font-bold text-slate-400">VIRAL:{clip.engagementScore?.viralPotential || 0}</span>
+                       <span className="ds-text-caption">Viral: {clip.engagementScore?.viralPotential || 0}</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onApplyClip?.(clip)}
-                      className="w-full py-4 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all italic"
-                    >
-                      Apply To Timeline
-                    </button>
+                    <Button variant="secondary" size="sm" className="w-full" onClick={() => onApplyClip?.(clip)}>
+                      Apply to Timeline
+                    </Button>
                   </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="h-40 flex items-center justify-center rounded-[3rem] border-2 border-dashed border-white/5">
-                 <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest italic">No variants synthesized in current node</p>
+              <div className="flex h-40 items-center justify-center rounded-2xl border-2 border-dashed border-border">
+                 <p className="ds-text-caption">No variants synthesized yet</p>
               </div>
             )}
           </div>
         </div>
+       </Panel>
       </motion.div>
 
       <SwarmConsensusHUD
@@ -983,37 +892,33 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             className="space-y-12"
           >
             {/* Transcript Card */}
-            <motion.div variants={itemVariants} className={`${glassStyle} p-16 rounded-[4.5rem] relative overflow-hidden group`}>
-               <div className="absolute top-0 right-0 p-16 opacity-5 group-hover:scale-110 transition-transform duration-1000">
-                  <MessageSquare className="w-64 h-64 text-indigo-500" />
-               </div>
-
-               <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 relative z-10">
-                  <div className="space-y-2">
-                     <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Transcript</h3>
-                     <p className="text-[12px] font-medium text-slate-400">Click any word to seek the player. Extract quotes for overlays.</p>
+            <motion.div variants={itemVariants}>
+             <Panel variant="glass">
+               <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+                  <div className="space-y-1">
+                     <h3 className="ds-text-h3 text-theme-primary">Transcript</h3>
+                     <p className="ds-text-caption">Click any word to seek the player. Extract quotes for overlays.</p>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
+                  <Button
+                    variant="primary"
                     onClick={handleExtractQuotes}
-                    disabled={isExtractingQuotes}
-                    className="px-7 py-3 bg-indigo-600 text-white rounded-full font-bold text-[11px] uppercase tracking-[0.2em] flex items-center gap-2.5 shadow-lg shadow-indigo-500/30 transition-colors disabled:opacity-50"
+                    loading={isExtractingQuotes}
+                    leftIcon={isExtractingQuotes ? undefined : <TrendingUp className="h-4 w-4" aria-hidden />}
                   >
-                    {isExtractingQuotes ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <TrendingUp className="w-3.5 h-3.5" />}
                     {isExtractingQuotes ? 'Extracting…' : 'Extract key quotes'}
-                  </motion.button>
+                  </Button>
                </div>
 
-               <div className="h-[500px] w-full relative z-10 rounded-[3rem] overflow-hidden border border-white/5 bg-black/20 backdrop-blur-3xl shadow-inner">
+               <div className="h-[500px] w-full overflow-hidden rounded-xl border border-border bg-background/40">
                  <Virtuoso
                    data={wordChunks}
                    itemContent={(index, chunk) => (
-                     <div className="p-8 border-b border-white/5 last:border-0 hover:bg-white/[0.01] transition-colors flex flex-wrap gap-4">
+                     <div className="flex flex-wrap gap-3 border-b border-border p-6 last:border-0">
                         {chunk.words.map((w: any, i: number) => (
                           <motion.span
                             key={`${index}-${i}`}
-                            whileHover={{ scale: 1.2, color: '#818cf8', rotate: 2 }}
-                            className="text-2xl font-black text-slate-500 uppercase tracking-tighter cursor-pointer select-none transition-colors italic"
+                            whileHover={{ scale: 1.1, color: '#818cf8' }}
+                            className="cursor-pointer select-none text-lg font-semibold text-theme-secondary transition-colors"
                           >
                             {w.word}
                           </motion.span>
@@ -1022,49 +927,44 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                    )}
                  />
                </div>
+             </Panel>
             </motion.div>
 
             {/* Quotes Node */}
-            <motion.div variants={itemVariants} className="space-y-12">
-               <div className="flex items-center gap-8">
-                  <div className="w-1.5 h-12 bg-orange-500 rounded-full" />
-                  <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Viral-worthy quotes</h3>
-               </div>
+            <motion.div variants={itemVariants} className="space-y-4">
+               <SectionHeader as="h3" title="Viral-worthy quotes" />
 
-              <div className="relative z-10">
+              <div>
                 {viralQuotes.length > 0 ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {viralQuotes.map((quote, i) => (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, x: -30 }}
+                        initial={{ opacity: 0, x: -16 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        whileHover={{ y: -12, scale: 1.02 }}
-                        className="bg-white/[0.02] hover:bg-white/[0.04] rounded-[3.5rem] p-12 border border-white/5 hover:border-orange-500/30 transition-all group/quote relative shadow-3xl backdrop-blur-3xl"
+                        transition={{ delay: i * 0.05 }}
+                        className="group/quote relative rounded-2xl border border-border bg-background/40 p-6 transition-colors hover:border-orange-500/30"
                       >
-                        <div className="flex items-start justify-between gap-8 mb-10">
-                          <div className="flex flex-col gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="inline-flex px-5 py-2.5 bg-orange-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-xl italic w-fit">
-                                STRATEGIC WEIGHT: {quote.strategicWeight || (quote.score * 100).toFixed(0)}%
-                              </div>
+                        <div className="mb-5 flex items-start justify-between gap-4">
+                          <div className="flex flex-col gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge className="bg-orange-500">
+                                Strategic weight: {quote.strategicWeight || (quote.score * 100).toFixed(0)}%
+                              </Badge>
                               {quote.strategicWeight > 70 && (
-                                <div className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[8px] font-black border border-emerald-500/20 italic">
-                                  GROWTH NODE
-                                </div>
+                                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500">Growth node</Badge>
                               )}
                               {quote.integrityVerified && (
-                                <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[8px] font-black border border-indigo-500/20 flex items-center gap-1.5 italic">
-                                  <ShieldCheck className="w-3 h-3" />
-                                  INTEGRITY VERIFIED
-                                </div>
+                                <Badge variant="secondary" className="gap-1.5 bg-indigo-500/10 text-indigo-500">
+                                  <ShieldCheck className="h-3 w-3" aria-hidden />
+                                  Integrity verified
+                                </Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-4">
-                               <span className="text-[11px] text-slate-600 font-black uppercase tracking-[0.3em] italic group-hover/quote:text-orange-500 transition-colors">Top tier // Logic 0{i + 1}</span>
-                               <div className="h-1 w-24 bg-white/5 rounded-full overflow-hidden relative" title={`Originality Score: ${quote.originalityScore}%`}>
-                                  <motion.div 
+                            <div className="flex items-center gap-3">
+                               <span className="ds-text-caption">Logic {String(i + 1).padStart(2, '0')}</span>
+                               <div className="relative h-1 w-24 overflow-hidden rounded-full bg-accent" title={`Originality Score: ${quote.originalityScore}%`}>
+                                  <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${quote.originalityScore || 70}%` }}
                                     className="h-full bg-gradient-to-r from-orange-500 to-indigo-500"
@@ -1072,10 +972,10 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                                </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 opacity-0 group-hover/quote:opacity-100 transition-all">
+                          <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover/quote:opacity-100">
                             {setTextOverlays && (
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
+                              <button
+                                type="button"
                                 onClick={() => {
                                   setTextOverlays((prev: any[]) => [...prev, {
                                     id: `quote-${Date.now()}-${Math.random()}`,
@@ -1085,38 +985,38 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                                   }])
                                   showToast('Node projected to workspace', 'success')
                                 }}
-                                className="w-14 h-14 bg-orange-500/20 text-orange-400 rounded-[1.2rem] flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all border border-orange-500/20 shadow-2xl"
+                                title="Add to workspace"
+                                aria-label="Add quote to workspace"
+                                className="flex h-10 w-10 items-center justify-center rounded-lg border border-orange-500/20 bg-orange-500/10 text-orange-500 transition-colors hover:bg-orange-500 hover:text-white"
                               >
-                                <ArrowUpRight className="w-6 h-6" />
-                              </motion.button>
+                                <ArrowUpRight className="h-5 w-5" aria-hidden />
+                              </button>
                             )}
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
+                            <button
+                              type="button"
                               onClick={() => copyToClipboard(quote.text)}
-                              className="w-14 h-14 bg-white/5 text-slate-500 rounded-[1.2rem] flex items-center justify-center hover:bg-white/10 hover:text-white transition-all border border-white/10 shadow-2xl"
+                              title="Copy quote"
+                              aria-label="Copy quote"
+                              className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background/40 text-theme-muted transition-colors hover:bg-accent hover:text-theme-primary"
                             >
-                              <Copy className="w-6 h-6" />
-                            </motion.button>
+                              <Copy className="h-5 w-5" aria-hidden />
+                            </button>
                           </div>
                         </div>
-                        <p className="text-3xl font-black text-white italic leading-[1.1] tracking-tighter uppercase mb-10 group-hover/quote:scale-[1.02] transition-transform origin-left">&quot;{quote.text}&quot;</p>
-                        <div className="space-y-4">
+                        <p className="ds-text-h3 mb-5 text-theme-primary">&quot;{quote.text}&quot;</p>
+                        <div className="space-y-3">
                           {quote.reason && (
-                            <div className="flex items-start gap-5 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 group-hover/quote:border-orange-500/20 transition-all">
-                              <Target className="w-6 h-6 text-orange-500 shrink-0 mt-0.5" />
-                              <p className="text-[13px] text-slate-500 font-medium italic leading-relaxed group-hover/quote:text-slate-300">
-                                {quote.reason}
-                              </p>
+                            <div className="flex items-start gap-3 rounded-xl border border-border bg-background/40 p-4">
+                              <Target className="mt-0.5 h-5 w-5 shrink-0 text-orange-500" aria-hidden />
+                              <p className="ds-text-body text-theme-secondary">{quote.reason}</p>
                             </div>
                           )}
                           {quote.nicheRelevance && (
-                            <div className="flex items-start gap-5 p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group-hover/quote:border-indigo-500/30 transition-all">
-                              <Brain className="w-6 h-6 text-indigo-400 shrink-0 mt-0.5" />
+                            <div className="flex items-start gap-3 rounded-xl border border-indigo-500/10 bg-indigo-500/5 p-4">
+                              <Brain className="mt-0.5 h-5 w-5 shrink-0 text-indigo-500" aria-hidden />
                               <div className="space-y-1">
-                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Niche Relevance</span>
-                                <p className="text-[12px] text-indigo-200 font-medium italic leading-relaxed">
-                                  {quote.nicheRelevance}
-                                </p>
+                                <span className="ds-text-caption text-indigo-500">Niche relevance</span>
+                                <p className="ds-text-body text-theme-secondary">{quote.nicheRelevance}</p>
                               </div>
                             </div>
                           )}
@@ -1125,15 +1025,13 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-32 flex flex-col items-center gap-10">
-                    <div className="relative">
-                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="w-32 h-32 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center">
-                        <Sparkles className="w-12 h-12 text-slate-800" />
-                      </motion.div>
-                      <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0 bg-orange-500 blur-3xl rounded-full" />
-                    </div>
-                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.5em] italic">Processing // System Idle</p>
-                  </div>
+                  <Panel variant="subtle" className="p-0">
+                    <EmptyState
+                      icon={Sparkles}
+                      title="No quotes yet"
+                      description="Extract key quotes from the transcript to populate this list."
+                    />
+                  </Panel>
                 )}
               </div>
             </motion.div>
