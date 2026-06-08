@@ -17,9 +17,21 @@ const ScheduledPost = require('../models/ScheduledPost');
 const { ingestPostPerformance } = require('./creatorPerformanceService');
 const logger = require('../utils/logger');
 
+// Optional Sentry — mirror utils/googleAI.js so a missing @sentry/node in
+// local/dev never crashes the loop.
+let Sentry = null;
+try {
+  Sentry = require('@sentry/node');
+} catch (_) {
+  // Optional dependency in some local environments
+}
+
 const LOG_CONTEXT = { service: 'performance-learning' };
 
 let cronTask = null;
+// In-memory observability surface for GET /api/health/learning. Pure
+// read-only state; never feeds back into loop logic.
+let lastRunStats = null;
 // (inFlight removed — distributed lock from utils/cronLock handles this now)
 
 // Default cadence: every 6 hours. Override with PERFORMANCE_LEARN_CRON.
@@ -78,7 +90,11 @@ async function runLearningTick() {
   if (!release) return { skipped: true, reason: 'lock-held' };
   const startedAt = Date.now();
   const summary = { eligible: 0, processed: 0, failed: 0, picksUpdated: 0, pages: 0 };
+  // Distinct users whose posts we drained this run — for the observability
+  // summary only; not used by loop logic.
+  const usersSeen = new Set();
   try {
+    try { logger.info('Performance-learn tick start', LOG_CONTEXT); } catch { /* logger optional */ }
     // Paginate through the eligible-posts queue. Previously the cron
     // ran a single `.limit(100)` per tick, so at 1000 eligible posts
     // the tail waited 60h. Cursor on `_id` so we don't re-pull posts
@@ -98,6 +114,7 @@ async function runLearningTick() {
           });
           summary.processed += 1;
           summary.picksUpdated += r?.updated || 0;
+          if (p.userId != null) usersSeen.add(String(p.userId));
           await ScheduledPost.updateOne({ _id: p._id }, { $set: { lastLearnedAt: new Date() } });
         } catch (err) {
           summary.failed += 1;
@@ -109,11 +126,57 @@ async function runLearningTick() {
       // tail of the queue — stop instead of looping forever.
       if (page.length < PAGE_SIZE) break;
     }
-    logger.info('Performance-learn tick complete', { ...LOG_CONTEXT, ...summary, durationMs: Date.now() - startedAt });
+    const durationMs = Date.now() - startedAt;
+    const usersProcessed = usersSeen.size;
+    const postsDrained = summary.processed;
+    // Structured END summary requested for prod observability.
+    try {
+      logger.info('Performance-learn tick complete', {
+        ...LOG_CONTEXT,
+        ...summary,
+        usersProcessed,
+        postsDrained,
+        durationMs,
+      });
+    } catch { /* logger optional */ }
+    lastRunStats = {
+      at: new Date().toISOString(),
+      ok: true,
+      usersProcessed,
+      postsDrained,
+      failed: summary.failed,
+      picksUpdated: summary.picksUpdated,
+      durationMs,
+    };
     return summary;
+  } catch (err) {
+    // Record + report the failure without re-throwing into the loop wrapper's
+    // own error path differently — runLearningCron still catches, but we want
+    // the Sentry signal close to the failing run.
+    const durationMs = Date.now() - startedAt;
+    lastRunStats = {
+      at: new Date().toISOString(),
+      ok: false,
+      error: err && err.message,
+      usersProcessed: usersSeen.size,
+      postsDrained: summary.processed,
+      durationMs,
+    };
+    if (Sentry && typeof Sentry.captureException === 'function') {
+      try { Sentry.captureException(err); } catch (_) { /* sentry optional */ }
+    }
+    throw err;
   } finally {
     await release();
   }
+}
+
+/**
+ * Read-only snapshot of the last learning tick for the health surface.
+ * Never mutates loop state.
+ */
+function getLastRunStats() {
+  return lastRunStats;
 }
 
 function startLearningCron() {
@@ -141,4 +204,5 @@ module.exports = {
   startLearningCron,
   stopLearningCron,
   runLearningTick,
+  getLastRunStats,
 };

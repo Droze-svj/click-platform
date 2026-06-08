@@ -15,8 +15,20 @@ const logger = require('../utils/logger');
 const liveTrendService = require('../services/liveTrendService');
 const TrendSnapshot = require('../models/TrendSnapshot');
 
+// Optional Sentry — mirror utils/googleAI.js so a missing @sentry/node never
+// crashes the job.
+let Sentry = null;
+try {
+  Sentry = require('@sentry/node');
+} catch (_) {
+  // Optional dependency in some local environments
+}
+
 const PLATFORMS = ['tiktok', 'instagram', 'youtube'];
 const DEFAULT_REGION = 'us';
+
+// Read-only observability snapshot of the last run for GET /api/health/learning.
+let lastRunStats = null;
 
 function normalizeItems(raw, kindHint) {
   if (!raw) return [];
@@ -83,24 +95,69 @@ async function applyVelocity(platform, region, items) {
 }
 
 async function ingestOnce({ region = DEFAULT_REGION } = {}) {
+  const startedAt = Date.now();
   const summary = [];
-  for (const platform of PLATFORMS) {
-    const raw = await fetchPlatform(platform);
-    const items = await applyVelocity(platform, region, raw);
-    if (items.length === 0) {
-      summary.push({ platform, count: 0, skipped: 'no items' });
-      continue;
+  try {
+    for (const platform of PLATFORMS) {
+      const raw = await fetchPlatform(platform);
+      const items = await applyVelocity(platform, region, raw);
+      if (items.length === 0) {
+        summary.push({ platform, count: 0, skipped: 'no items' });
+        continue;
+      }
+      try {
+        await TrendSnapshot.create({ platform, region, items });
+        summary.push({ platform, count: items.length });
+      } catch (err) {
+        logger.warn('[trends-ingest] persist failed', { platform, error: err.message });
+        summary.push({ platform, count: items.length, error: err.message });
+      }
     }
+    const trendsIngested = summary.reduce((acc, s) => acc + (s.count || 0), 0);
+    const durationMs = Date.now() - startedAt;
+    // Structured per-run summary requested for prod observability.
     try {
-      await TrendSnapshot.create({ platform, region, items });
-      summary.push({ platform, count: items.length });
-    } catch (err) {
-      logger.warn('[trends-ingest] persist failed', { platform, error: err.message });
-      summary.push({ platform, count: items.length, error: err.message });
+      logger.info('[trends-ingest] cycle complete', {
+        platforms: PLATFORMS,
+        trendsIngested,
+        source: 'liveTrendService',
+        region,
+        durationMs,
+        summary,
+      });
+    } catch { /* logger optional */ }
+    lastRunStats = {
+      at: new Date().toISOString(),
+      ok: true,
+      platforms: PLATFORMS,
+      trendsIngested,
+      source: 'liveTrendService',
+      region,
+      durationMs,
+    };
+    return summary;
+  } catch (err) {
+    lastRunStats = {
+      at: new Date().toISOString(),
+      ok: false,
+      error: err && err.message,
+      platforms: PLATFORMS,
+      source: 'liveTrendService',
+      region,
+      durationMs: Date.now() - startedAt,
+    };
+    if (Sentry && typeof Sentry.captureException === 'function') {
+      try { Sentry.captureException(err); } catch (_) { /* sentry optional */ }
     }
+    throw err;
   }
-  logger.info('[trends-ingest] cycle complete', { summary });
-  return summary;
+}
+
+/**
+ * Read-only snapshot of the last trends-ingest run for the health surface.
+ */
+function getLastRunStats() {
+  return lastRunStats;
 }
 
 /**
@@ -144,4 +201,5 @@ module.exports = {
   ingestOnce,
   processTrendsIngestJob,
   registerTrendsIngestSchedule,
+  getLastRunStats,
 };

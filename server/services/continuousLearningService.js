@@ -5,6 +5,15 @@ const UserStyleProfile = require('../models/UserStyleProfile');
 const logger = require('../utils/logger');
 const { getClickPersonalityRules } = require('./marketingKnowledge');
 
+// Optional Sentry — mirror utils/googleAI.js so a missing @sentry/node never
+// crashes the learning path.
+let Sentry = null;
+try {
+  Sentry = require('@sentry/node');
+} catch (_) {
+  // Optional dependency in some local environments
+}
+
 /**
  * Continuous Learning Matrix — builds an editing blueprint from the user's
  * REAL performance signal.
@@ -145,6 +154,18 @@ async function ingestAnalyticsAndScrape(userId) {
 
     const { hasRealData, summary: performanceSummary, metrics } = buildPerformanceSummary(profile);
 
+    // Distinct cold-start signal: this creator has no settled performance data
+    // yet, so the blueprint will be built on niche/best-practices only.
+    if (!hasRealData) {
+      try {
+        logger.info('[ContinuousLearning] Cold-start blueprint (no real performance data yet)', {
+          userId,
+          hasRealData,
+          sampleSize: metrics.sampleSize,
+        });
+      } catch { /* logger optional */ }
+    }
+
     if (!geminiConfigured) {
       logger.warn('[ContinuousLearning] Gemini not configured; skipping blueprint generation');
       return null;
@@ -199,6 +220,13 @@ Return ONLY valid JSON:
 
     if (!result || !result.activeCreativeBlueprint) {
       logger.warn('[ContinuousLearning] Gemini returned unparseable blueprint', { preview: String(raw || '').slice(0, 100) });
+      // Surface LLM/parse failures in alerting without breaking the honest
+      // fallback (callers handle null).
+      if (Sentry && typeof Sentry.captureException === 'function') {
+        try {
+          Sentry.captureException(new Error('ContinuousLearning: unparseable blueprint from LLM'));
+        } catch (_) { /* sentry optional */ }
+      }
       return null;
     }
 
@@ -222,6 +250,9 @@ Return ONLY valid JSON:
     return result.activeCreativeBlueprint;
   } catch (error) {
     logger.error('[ContinuousLearning] ingestAnalyticsAndScrape failed', { error: error.message });
+    if (Sentry && typeof Sentry.captureException === 'function') {
+      try { Sentry.captureException(error); } catch (_) { /* sentry optional */ }
+    }
     return null;
   }
 }

@@ -280,6 +280,43 @@ router.get('/light', (req, res) => {
 });
 
 /**
+ * GET /api/health/learning
+ *
+ * Read-only observability surface for Click's continuous-learning loop.
+ * Returns the last-run timestamp + summary for each scheduled job from
+ * in-memory module state (no DB reads, no loop mutation). Each module
+ * require is wrapped so a missing/uninitialised service can never 500 the
+ * probe — it just reports null for that job.
+ */
+router.get('/learning', (req, res) => {
+  const safeStats = (modulePath) => {
+    try {
+      const mod = require(modulePath);
+      return (typeof mod.getLastRunStats === 'function' ? mod.getLastRunStats() : null) || null;
+    } catch (err) {
+      return { error: err.message };
+    }
+  };
+
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    autonomousMode: (() => {
+      try {
+        return require('../utils/cronLock').autonomousModeEnabled();
+      } catch {
+        return null;
+      }
+    })(),
+    jobs: {
+      platformIngestion: safeStats('../services/platformIngestionCronService'),
+      performanceLearning: safeStats('../services/performanceLearningCron'),
+      trendsIngest: safeStats('../jobs/trendsIngestJob'),
+    },
+  });
+});
+
+/**
  * @swagger
  * /api/health/trigger-sentry-error:
  *   get:
