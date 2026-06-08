@@ -1,7 +1,9 @@
 import React, { useState, useCallback } from 'react'
-import { Sparkles, X, Send, GitBranch, GitMerge, TrendingUp, Zap, Wand2, ChevronRight } from 'lucide-react'
+import { Sparkles, X, Send, GitBranch, GitMerge, Wand2, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../lib/api'
+import { IconButton, Input, Button, Badge } from '../ui'
+import { cn } from '../../lib/utils'
 
 import { StyleDNA } from '../../types/editor'
 
@@ -166,134 +168,89 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                     animate={{ x: 0 }}
                     exit={{ x: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="fixed top-0 right-0 h-full w-80 bg-surface-card border-l border-subtle z-[60] flex flex-col shadow-2xl backdrop-blur-xl"
+                    className="ds-surface-elevated ds-elev-3 fixed top-0 right-0 h-full w-80 border-l border-border z-[60] flex flex-col"
                 >
-                    <div className="p-4 border-b border-subtle flex items-center justify-between">
+                    <div className="p-4 border-b border-border flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-xl bg-accent-violet-solid shadow-md">
-                                <Sparkles className="w-4 h-4 text-white" />
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <Sparkles className="w-4 h-4" />
                             </div>
-                            <span className="text-xs font-bold uppercase text-theme-primary tracking-wider">Neural Oracle</span>
+                            <span className="ds-text-label text-theme-primary">AI Assistant</span>
                         </div>
-                        <button type="button" onClick={onClose} title="Close AI Assistant" className="p-2 hover:bg-surface-card-hover rounded-xl transition-colors text-theme-muted hover:text-theme-primary">
+                        <IconButton aria-label="Close AI Assistant" variant="ghost" size="sm" onClick={onClose}>
                             <X className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                     </div>
 
-                    <div className="p-4 border-b border-subtle space-y-4">
+                    <div className="p-4 border-b border-border space-y-4">
                         <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-bold uppercase text-theme-muted tracking-widest">Temporal Branches</p>
-                            <span className="text-[8px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black tracking-tighter">Agency Workflows</span>
+                            <p className="ds-text-label text-theme-muted">Timeline branches</p>
+                            <Badge variant="secondary">Workflows</Badge>
                         </div>
                         <div className="space-y-2">
                              {branches.map(branch => (
                                 <div
                                     key={branch.id}
-                                    className={`p-3 rounded-2xl border flex items-center justify-between group transition-all ${branch.active ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                                    className={cn(
+                                        'p-3 rounded-xl border flex items-center justify-between group transition-all',
+                                        branch.active ? 'bg-primary/10 border-primary/30' : 'ds-surface-card ds-hover-lift'
+                                    )}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <GitBranch className={`w-3.5 h-3.5 ${branch.active ? 'text-indigo-400' : 'text-slate-500'}`} />
+                                        <GitBranch className={cn('w-3.5 h-3.5', branch.active ? 'text-primary' : 'text-theme-muted')} />
                                         <div className="flex flex-col">
-                                            <span className={`text-[10px] font-bold ${branch.active ? 'text-white' : 'text-slate-400 uppercase tracking-tight'}`}>{branch.name}</span>
-                                            {branch.diff && <span className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider">+12 Cuts, -2 Overlays</span>}
+                                            <span className={cn('ds-text-body font-medium', branch.active ? 'text-theme-primary' : 'text-theme-secondary')}>{branch.name}</span>
+                                            {branch.diff && <span className="text-[10px] text-emerald-500 font-medium">Modified</span>}
                                         </div>
                                     </div>
 
                                     {!branch.active && (
-                                        <button
-                                            type="button"
+                                        <IconButton
+                                            aria-label={`Merge ${branch.name} into master`}
+                                            variant="primary"
+                                            size="sm"
                                             onClick={() => {
                                                 showToast?.(`Merging [${branch.name}] into master...`, 'info')
                                                 setBranches(prev => prev.map(b => ({ ...b, active: b.id === branch.id })))
                                                 setTimeout(() => showToast?.('Success: Timeline Merged non-destructively', 'success'), 1500)
                                             }}
-                                            title={`Merge ${branch.name} into master`}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-indigo-500 text-white shadow-lg transition-all active:scale-95"
+                                            className="opacity-0 group-hover:opacity-100"
                                         >
                                             <GitMerge className="w-3 h-3" />
-                                        </button>
+                                        </IconButton>
                                     )}
                                 </div>
                              ))}
                         </div>
                     </div>
 
-                    <div className="p-4 border-b border-subtle space-y-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-bold uppercase text-theme-muted tracking-widest">Viral Pulse</p>
-                            <span className="flex h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
-                        </div>
-                        <div className="p-4 rounded-3xl bg-rose-500/10 border border-rose-500/20 space-y-3 group cursor-pointer hover:bg-rose-500/15 transition-all">
-                            <div className="flex items-center gap-3">
-                                <TrendingUp className="w-5 h-5 text-rose-400" />
-                                <div>
-                                    <p className="text-[10px] font-black text-white uppercase tracking-tighter italic">Remix Opportunity</p>
-                                    <p className="text-[8px] text-rose-300 font-bold uppercase tracking-widest">Trend: &quot;Capybara Chill&quot; (+450%)</p>
-                                </div>
-                            </div>
-                            <p className="text-[9px] text-slate-400 leading-tight font-medium uppercase tracking-tight">
-                                Current clip matches trending motif. <span className="text-white font-bold">Apply &quot;Slow-Pan&quot;</span> to increase potential ROI.
-                            </p>
-                            <button
-                                type="button"
-                                onClick={() => showToast?.('Remix Protocol Initialized...', 'success')}
-                                className="w-full py-2 rounded-xl bg-rose-600 text-white text-[8px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/30 active:scale-95 transition-all"
-                            >
-                                Auto-Remix Now
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="p-4 border-b border-subtle space-y-3">
-                        <p className="text-[10px] font-bold uppercase text-theme-muted tracking-widest">Active background</p>
-                        <div className="space-y-2">
-                            {[
-                                { l: 'Scene Detection', p: 85, c: 'text-blue-500' },
-                                { l: 'Voice Sync', p: 40, c: 'text-orange-500' }
-                            ].map(item => (
-                                <div key={item.l} className="space-y-1">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-semibold text-theme-secondary uppercase">{item.l}</span>
-                                        <span className="text-[10px] font-bold text-theme-primary">{item.p}%</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-surface-elevated rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${item.p}%` }}
-                                            className={`h-full bg-current ${item.c} rounded-full`}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
                     {/* Niche-aware suggestions — pulled from /video/ai-editing/suggestions
                          which is grounded in the marketing playbooks for the creator's
                          niche/platform. Each item maps to a concrete editor action. */}
-                    <div className="p-4 border-b border-subtle space-y-3">
+                    <div className="p-4 border-b border-border space-y-3">
                         <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-bold uppercase text-theme-muted tracking-widest">Next moves</p>
-                            <button
-                               type="button"
+                            <p className="ds-text-label text-theme-muted">Next moves</p>
+                            <Button
+                                variant="secondary"
+                                size="sm"
                                 onClick={fetchSuggestions}
                                 disabled={loadingSuggestions}
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/30 text-[9px] font-black uppercase tracking-[0.18em] text-violet-300 hover:bg-violet-500/20 disabled:opacity-50"
+                                loading={loadingSuggestions}
+                                leftIcon={<Wand2 className="w-3 h-3" />}
                             >
-                                <Wand2 className="w-3 h-3" />
                                 {loadingSuggestions ? 'Loading…' : 'Suggest'}
-                            </button>
+                            </Button>
                         </div>
                         {suggestions.length === 0 ? (
                             <div className="space-y-2">
-                                <p className="text-[10px] text-theme-muted leading-relaxed">
-                                    Tap <span className="text-violet-300 font-bold">Suggest</span> for niche-aware edits — hooks, cuts, and CTAs grounded in your platform's retention curve.
+                                <p className="ds-text-body text-theme-muted leading-relaxed">
+                                    Tap <span className="text-primary font-medium">Suggest</span> for niche-aware edits — hooks, cuts, and CTAs grounded in your platform's retention curve.
                                 </p>
                                 <a
                                     href="/dashboard/marketing-ai"
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.18em] text-fuchsia-300 hover:text-fuchsia-200"
+                                    className="inline-flex items-center gap-1 ds-text-label text-primary hover:text-primary/80"
                                 >
                                     View Marketing Oracle <ChevronRight className="w-3 h-3" />
                                 </a>
@@ -305,22 +262,23 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                         <button
                                            type="button"
                                             onClick={() => applySuggestion(s)}
-                                            className="w-full text-left p-2.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-violet-500/30 hover:bg-violet-500/[0.06] transition-all group"
+                                            className="w-full text-left p-2.5 rounded-xl ds-surface-card ds-hover-lift hover:border-primary/30 transition-all group"
                                         >
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className={`text-[8px] font-black uppercase tracking-[0.18em] px-1.5 py-0.5 rounded ${
-                                                    s.kind === 'hook' ? 'bg-rose-500/15 text-rose-300' :
-                                                    s.kind === 'cta' ? 'bg-emerald-500/15 text-emerald-300' :
-                                                    s.kind === 'caption' ? 'bg-amber-500/15 text-amber-300' :
-                                                    'bg-sky-500/15 text-sky-300'
-                                                }`}>{s.kind}</span>
-                                                <span className="text-[9px] font-mono text-theme-muted tabular-nums">
+                                                <span className={cn(
+                                                    'text-[10px] font-medium px-1.5 py-0.5 rounded capitalize',
+                                                    s.kind === 'hook' ? 'bg-rose-500/15 text-rose-500' :
+                                                    s.kind === 'cta' ? 'bg-emerald-500/15 text-emerald-500' :
+                                                    s.kind === 'caption' ? 'bg-amber-500/15 text-amber-500' :
+                                                    'bg-sky-500/15 text-sky-500'
+                                                )}>{s.kind}</span>
+                                                <span className="text-[10px] font-mono text-theme-muted tabular-nums">
                                                     {s.timeRange ? `${s.timeRange.start.toFixed(1)}s` : ''}
                                                 </span>
-                                                <span className="ml-auto text-[8px] text-emerald-400 font-bold">+{Math.round(s.expectedRetentionDelta * 100)}%</span>
-                                                <ChevronRight className="w-3 h-3 text-theme-muted group-hover:text-violet-300 transition-colors" />
+                                                <span className="ml-auto text-[10px] text-emerald-500 font-semibold">+{Math.round(s.expectedRetentionDelta * 100)}%</span>
+                                                <ChevronRight className="w-3 h-3 text-theme-muted group-hover:text-primary transition-colors" />
                                             </div>
-                                            <p className="text-[10px] text-theme-secondary leading-snug line-clamp-2">{s.description}</p>
+                                            <p className="ds-text-body text-theme-secondary leading-snug line-clamp-2">{s.description}</p>
                                         </button>
                                     </li>
                                 ))}
@@ -331,30 +289,31 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                         {/* Style DNA Sync Badge */}
                         {styleDNA && (
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 group cursor-pointer hover:bg-indigo-500/10 transition-all" onClick={onNormalizeStyle}>
-                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-tighter">Style Sync: {styleDNA.theme || 'Vlog'}</span>
-                                <div className="hidden group-hover:flex items-center gap-1 ml-1 pl-1 border-l border-white/10">
-                                    <span className="text-[7px] text-white font-bold opacity-70">Nudge to DNA?</span>
-                                </div>
-                            </div>
+                            <button type="button" className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-primary/20 bg-primary/5 group hover:bg-primary/10 transition-all" onClick={onNormalizeStyle}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                <span className="text-[10px] font-medium text-primary capitalize">Style sync: {styleDNA.theme || 'Vlog'}</span>
+                                <span className="hidden group-hover:inline text-[10px] text-theme-secondary ml-1 pl-1 border-l border-border">Nudge to DNA?</span>
+                            </button>
                         )}
                         {messages.map((m, i) => (
-                            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] p-3 rounded-2xl text-xs font-medium leading-relaxed ${m.role === 'user' ? 'bg-accent-violet-solid text-white shadow-md' : 'bg-surface-elevated text-theme-primary border border-subtle'}`}>
+                            <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
+                                <div className={cn(
+                                    'max-w-[85%] p-3 rounded-2xl ds-text-body leading-relaxed',
+                                    m.role === 'user' ? 'bg-primary text-primary-foreground' : 'ds-surface-card text-theme-primary'
+                                )}>
                                     {m.text}
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="p-4 bg-surface-elevated/50 border-t border-subtle">
+                    <div className="p-4 ds-surface-subtle border-t border-border">
                         <div className="relative">
-                             <input
+                             <Input
                                 type="text"
                                 placeholder="Tell Click what to edit..."
                                 title="AI Command Input"
-                                className="w-full bg-surface-card border border-subtle rounded-xl px-4 py-3 text-xs font-semibold text-theme-primary placeholder:text-theme-muted outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
+                                className="pr-12"
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={(e) => {
@@ -367,8 +326,10 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                     }
                                 }}
                             />
-                            <button
-                                type="button"
+                            <IconButton
+                                aria-label="Send Command"
+                                variant="primary"
+                                size="sm"
                                 onClick={() => {
                                     if (inputValue.trim()) {
                                         const userText = inputValue.trim()
@@ -378,11 +339,10 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                         setTimeout(() => setMessages(prev => [...prev, { role: 'assistant', text: response }]), 600)
                                     }
                                 }}
-                                title="Send Command"
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-lg hover:scale-105 transition-all"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                             >
                                 <Send className="w-3 h-3" />
-                            </button>
+                            </IconButton>
                         </div>
                     </div>
                 </motion.aside>
