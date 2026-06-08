@@ -15,7 +15,6 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronRight,
-  Eye,
   EyeOff,
   Save,
   Search,
@@ -34,13 +33,11 @@ import {
   Fingerprint,
   Radio,
   Layers,
-  Target,
   Box,
   Zap,
   MessageSquare,
   Mic,
   Volume2,
-  TrendingUp,
   Activity,
   Waves,
   Wind,
@@ -2909,84 +2906,28 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         {/* ════ INSIGHTS ════ */}
         {activeEditTab === 'insights' && (
           <div className="space-y-3">
-            {/* Retention heatmap */}
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Retention Heatmap</span>
-                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">α Peak @ 4.2s</span>
+            {/* Analytics are not yet wired to a real data source for this view.
+                Per the no-fabricated-data rule we show an honest empty state
+                instead of mock retention / scoring numbers. */}
+            <div className="ds-surface-subtle p-6 flex flex-col items-center justify-center gap-3 text-center">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-subtle flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex gap-1 h-16 items-end">
-                {[60,45,85,55,95,40,75,55,88,98,35,68,60,92,48,70,50,85,72,60].map((h, i) => (
-                  <motion.div key={i}
-                    initial={{ height: '0%' }}
-                    animate={{ height: `${Number.isNaN(h) ? 0 : h}%` }}
-                    transition={{ delay: i * 0.03, duration: 0.8, ease: 'circOut' }}
-                    className={`flex-1 rounded-t-lg ${h > 90 ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : h > 70 ? 'bg-indigo-700/70' : 'bg-indigo-900/40'}`}
-                  />
-                ))}
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[8px] text-slate-600">0s</span>
-                <span className="text-[8px] text-slate-600">{(duration / 2).toFixed(0)}s</span>
-                <span className="text-[8px] text-slate-600">{duration.toFixed(0)}s</span>
-              </div>
+              <p className="ds-text-label text-theme-primary">Insights coming soon</p>
+              <p className="ds-text-caption text-theme-muted max-w-[220px]">
+                Retention, hook strength and pacing analytics will appear here once your
+                video has been analyzed.
+              </p>
             </div>
 
-            {/* Lab scores */}
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Lab Diagnosis</span>
-              {[
-                { label: 'Hook Strength', value: 92, color: 'bg-indigo-500' },
-                { label: 'Tone Cohesion',  value: 88, color: 'bg-emerald-500' },
-                { label: 'Pacing',          value: 76, color: 'bg-amber-500' },
-                { label: 'Viral Potential', value: 81, color: 'bg-fuchsia-500' },
-              ].map(({ label, value, color }) => (
-                <div key={label}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{label}</span>
-                    <span className="text-[9px] text-white font-black">{value}%</span>
-                  </div>
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${value}%` }}
-                      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                      className={`h-full rounded-full ${color}`}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* AI Suggestions */}
-            <div className="p-4 rounded-2xl bg-indigo-500/[0.06] border border-indigo-500/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">AI Directives</span>
-              </div>
-              <div className="space-y-2">
-                {[
-                  { icon: Target, text: 'Anchor viral hook to peak engagement node at 4.2s', action: 'Apply', color: 'text-indigo-400' },
-                  { icon: TrendingUp, text: 'Boost pacing in mid-section — cut average clip length by 0.8s', action: 'Plan', color: 'text-amber-400' },
-                  { icon: Eye, text: 'Add lower-third CTA at 80% — high save-rate zone', action: 'Add', color: 'text-emerald-400' },
-                ].map(({ icon: Icon, text, action, color }, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <Icon className={`w-3 h-3 ${color} mt-0.5 shrink-0`} />
-                    <p className="flex-1 text-[9px] text-slate-400 leading-relaxed">{text}</p>
-                    <button type="button" onClick={() => showToast(`${action} directive queued`, 'info')}
-                      className={`shrink-0 px-2 py-0.5 rounded-lg bg-white/5 text-[8px] font-black uppercase tracking-widest ${color} hover:bg-white/10 transition-all`}
-                    >{action}</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Transcript section */}
+            {/* Transcript section — real data from props */}
             {transcript?.fullText && (
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="ds-surface-card p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Mic className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Transcript</span>
+                  <Mic className="w-3.5 h-3.5 text-primary" />
+                  <span className="ds-text-label text-theme-secondary">Transcript</span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-6">{transcript.fullText}</p>
+                <p className="ds-text-caption text-theme-secondary leading-relaxed line-clamp-6">{transcript.fullText}</p>
               </div>
             )}
           </div>
