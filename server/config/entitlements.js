@@ -126,7 +126,7 @@ const FEATURES = {
   b_roll_ai:        { label: 'AI B-roll',                category: 'ai',      minTier: 'pro' },
   template_publish: { label: 'Publish templates',        category: 'creative', minTier: 'pro' },
   priority_render:  { label: 'Priority render queue',    category: 'compute', minTier: 'pro' },
-  spatial_editing:  { label: 'Spatial / XR editing',     category: 'editing', minTier: 'pro', earlyAccess: true },
+  spatial_editing:  { label: 'Spatial / XR editing',     category: 'editing', minTier: 'pro' },
   ai_agent:         { label: 'Autonomous AI agent',      category: 'ai',      minTier: 'pro' },
 
   // ── Agency (team + collaboration) ──

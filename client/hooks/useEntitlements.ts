@@ -146,7 +146,8 @@ async function fetchEntitlements(force = false): Promise<EntitlementsPayload> {
 export interface UseEntitlements {
   tier: EntitlementTier
   hasFeature: (id: string) => boolean
-  limit: (key: string) => number | null
+  /** null = unlimited; undefined = key not defined for this tier. */
+  limit: (key: string) => number | null | undefined
   usage: Record<string, number>
   isEarlyAccess: (id: string) => boolean
   features: Record<string, boolean>
@@ -210,9 +211,12 @@ export function useEntitlements(): UseEntitlements {
     [data]
   )
   const limit = useCallback(
-    (key: string) => {
-      const v = data.limits[key]
-      return v === undefined ? null : v
+    // null === unlimited (server serialized Infinity → null). undefined === the
+    // key isn't defined for this tier — callers can tell "unlimited" apart from
+    // "unknown" instead of treating a missing key as unlimited (over-permissive).
+    (key: string): number | null | undefined => {
+      if (!(key in data.limits)) return undefined
+      return data.limits[key]
     },
     [data]
   )

@@ -25,10 +25,17 @@ const RATE_CARD = {
     default: { input: 0.5, output: 1.5 },
   },
   anthropic: {
+    // Current models (per the claude-api skill catalog): Opus 4.x $5/$25,
+    // Sonnet 4.6 $3/$15, Haiku 4.5 $1/$5 per 1M tokens. The old keys
+    // (claude-3-haiku / 3-5-sonnet / opus-4-7@$15) didn't match the models
+    // actually called (claude-opus-4-8 etc.), so every call fell through to the
+    // cheap default and AI spend was under-counted.
+    'claude-opus-4-8': { input: 5, output: 25 },
+    'claude-opus-4-7': { input: 5, output: 25 },
+    'claude-sonnet-4-6': { input: 3, output: 15 },
+    'claude-haiku-4-5': { input: 1, output: 5 },
     'claude-3-haiku-20240307': { input: 0.25, output: 1.25 },
-    'claude-3-5-sonnet': { input: 3, output: 15 },
-    'claude-opus-4-7': { input: 15, output: 75 },
-    default: { input: 1, output: 5 },
+    default: { input: 5, output: 25 }, // conservative: assume Opus-tier when unknown
   },
   gemini: {
     default: { input: 0.075, output: 0.3 },
@@ -82,28 +89,26 @@ async function getRemainingBudgetUsd(userId) {
     User = require('../models/User');
   } catch { /* intentionally empty */ }
 
-  // Map the stored subscription.plan onto a budget tier. Previously this read
-  // only subscription.tier (never set by the model), so every user got the
-  // free $0.50 budget regardless of what they paid for.
-  const PLAN_TO_BUDGET_TIER = {
-    free: 'free', creator: 'pro', pro: 'pro', agency: 'agency',
-    monthly: 'pro', annual: 'pro', trial: 'pro',
-  };
+  // Resolve the canonical tier and read its AI budget from the single source of
+  // truth (entitlements LIMITS.aiBudgetUsd: free 0.5 / creator 5 / pro 50 /
+  // agency 500). Previously this read subscription.tier/user.tier — fields the
+  // User model never defines — so resolution was fragile and the budget table
+  // here could drift from the canonical one. resolveTier handles trial⇒pro and
+  // all legacy plan aliases.
+  const { resolveTier, limitFor } = require('../config/entitlements');
   const tier = await (async () => {
     if (!User) return 'free';
     try {
       const u = await User.findById(userId).lean();
-      const sub = u?.subscription;
-      if (u?.tier && DEFAULT_TIER_BUDGETS_USD[u.tier]) return u.tier;
-      if (sub?.tier && DEFAULT_TIER_BUDGETS_USD[sub.tier]) return sub.tier;
-      if (sub?.status === 'trial') return 'pro';
-      if (sub?.plan && PLAN_TO_BUDGET_TIER[sub.plan]) return PLAN_TO_BUDGET_TIER[sub.plan];
-      return 'free';
+      return resolveTier(u);
     } catch {
       return 'free';
     }
   })();
-  const tierBudget = DEFAULT_TIER_BUDGETS_USD[tier] ?? DEFAULT_TIER_BUDGETS_USD.free;
+  const canonicalBudget = limitFor(tier, 'aiBudgetUsd');
+  const tierBudget = (typeof canonicalBudget === 'number')
+    ? canonicalBudget
+    : (DEFAULT_TIER_BUDGETS_USD[tier] ?? DEFAULT_TIER_BUDGETS_USD.free);
 
   if (!UsageMeter) return tierBudget;
 

@@ -46,9 +46,14 @@ describe('entitlements — Agency-first rollout', () => {
     });
 
     it('still honours the legacy earlyAccess:true boolean', () => {
-      // white_label / spatial_editing remain on the legacy flag.
+      // white_label remains on the legacy flag (a permanent Agency exclusive).
       expect(isEarlyAccess('white_label', BEFORE_DESCENT)).toBe(true);
-      expect(isEarlyAccess('spatial_editing', BEFORE_DESCENT)).toBe(true);
+    });
+
+    it('does NOT flag a plain Pro feature (spatial_editing) as early access', () => {
+      // spatial_editing ships at Pro; the contradictory minTier:pro+earlyAccess
+      // combo was removed so it is no longer mislabeled as Agency-exclusive.
+      expect(isEarlyAccess('spatial_editing', BEFORE_DESCENT)).toBe(false);
     });
 
     it('is false for ordinary features', () => {

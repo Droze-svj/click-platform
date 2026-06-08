@@ -159,8 +159,11 @@ function requireFeature(feature) {
     const userTier = getUserTier(req)
 
     if (!entitlements.hasFeature(userTier, feature)) {
-      // The canonical minTier for this feature (fallback 'creator' if unknown).
-      const unlockTier = entitlements.FEATURES[feature]?.minTier || 'creator'
+      // The tier that ACTUALLY unlocks this feature right now — honours the
+      // Agency-first rollout schedule so a descended feature upsells the cheaper
+      // tier, not the original Agency one. Fallback 'creator' if unknown.
+      const unlockTier = entitlements.effectiveMinTier(feature)
+        || entitlements.FEATURES[feature]?.minTier || 'creator'
 
       return res.status(403).json({
         error: 'feature_gated',

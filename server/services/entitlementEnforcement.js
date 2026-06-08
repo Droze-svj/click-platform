@@ -25,6 +25,7 @@
 'use strict';
 
 const entitlements = require('../config/entitlements');
+const logger = require('../utils/logger');
 
 const UPGRADE_URL = '/dashboard/billing';
 
@@ -41,7 +42,10 @@ function nextTierUp(tier) {
  * @param {string} currentTier
  */
 function featureGatedBody(feature, currentTier) {
-  const requiredTier = entitlements.FEATURES[feature]?.minTier || nextTierUp(currentTier);
+  // effectiveMinTier honours the Agency-first rollout schedule, so once a
+  // feature descends the upsell points at the cheaper tier that now unlocks it.
+  const requiredTier = entitlements.effectiveMinTier(feature)
+    || entitlements.FEATURES[feature]?.minTier || nextTierUp(currentTier);
   const label = entitlements.FEATURES[feature]?.label || feature.replace(/_/g, ' ');
   return {
     success: false,
@@ -98,7 +102,13 @@ function limitReachedBody({ limitKey, limit, used, currentTier, noun }) {
  */
 function checkLimit(tier, limitKey, used) {
   const limit = entitlements.limitFor(tier, limitKey);
-  if (limit === undefined) return { allowed: true, limit: Infinity, used };
+  // Fail CLOSED on an unknown limit key (typo / removed key). This is a hard
+  // enforcement path — silently granting Infinity would bypass the cap entirely,
+  // the opposite of the fail-closed posture used elsewhere. Surface it loudly.
+  if (limit === undefined) {
+    logger.error('[entitlements] checkLimit called with unknown limit key', { tier, limitKey });
+    return { allowed: false, limit: 0, used };
+  }
   if (!Number.isFinite(limit)) return { allowed: true, limit, used };
   return { allowed: used < limit, limit, used };
 }
