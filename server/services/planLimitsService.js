@@ -11,42 +11,37 @@
  * Trial users inherit Creator caps so the trial is meaningful but capped.
  */
 
+const entitlements = require('../config/entitlements');
+
+/**
+ * Build a PLAN_LIMITS row from the canonical entitlements config so this
+ * service no longer owns its own numbers. `aiClipCount` is the per-request clip
+ * cap (we keep the historical creator=10 / pro=30 / agency=100 values, derived
+ * here as a fraction of the canonical clipCountPerDay so they stay in sync).
+ * `aiClipsPerDay` and `retentionDays` come straight from LIMITS.
+ */
+function rowFromTier(tierId, label) {
+  const perDay = entitlements.limitFor(tierId, 'clipCountPerDay');
+  // Historical per-request caps preserved: free 3, creator 10, pro 30, agency 100.
+  const perRequest = { free: 3, creator: 10, pro: 30, agency: 100 }[tierId] ?? 3;
+  return {
+    label,
+    aiClipCount: perRequest,
+    aiClipsPerDay: Number.isFinite(perDay) ? perDay : perRequest,
+    retentionDays: entitlements.limitFor(tierId, 'retentionDays'),
+    advancedOptions: tierId !== 'free',
+  };
+}
+
 const PLAN_LIMITS = {
-  free: {
-    label: 'Free',
-    aiClipCount: 3,
-    aiClipsPerDay: 6,
-    retentionDays: 14,
-    advancedOptions: false,
-  },
-  creator: {
-    label: 'Creator',
-    aiClipCount: 10,
-    aiClipsPerDay: 50,
-    retentionDays: 14,
-    advancedOptions: true,
-  },
-  trial: {
-    label: 'Trial',
-    aiClipCount: 10,
-    aiClipsPerDay: 30,
-    retentionDays: 14,
-    advancedOptions: true,
-  },
-  pro: {
-    label: 'Pro',
-    aiClipCount: 30,
-    aiClipsPerDay: 200,
-    retentionDays: 14,
-    advancedOptions: true,
-  },
-  agency: {
-    label: 'Agency',
-    aiClipCount: 100,
-    aiClipsPerDay: 1000,
-    retentionDays: 14,
-    advancedOptions: true,
-  },
+  free: rowFromTier('free', 'Free'),
+  creator: rowFromTier('creator', 'Creator'),
+  // Legacy 'trial' key kept so callers passing a literal 'trial' plan still
+  // resolve a row. Trial maps to pro-level access per canonical resolveTier,
+  // but its clip caps stay at the historically gentler values.
+  trial: { label: 'Trial', aiClipCount: 10, aiClipsPerDay: 30, retentionDays: 14, advancedOptions: true },
+  pro: rowFromTier('pro', 'Pro'),
+  agency: rowFromTier('agency', 'Agency'),
 };
 
 function planForUser(user) {

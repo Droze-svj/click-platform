@@ -1866,6 +1866,8 @@ app.use('/api/scripts', require('./routes/scripts'));
 app.use('/api/versions', require('./routes/versions'));
 app.use('/api/collaboration', require('./routes/collaboration'));
 app.use('/api/membership', require('./routes/membership'));
+// Canonical entitlements: GET /api/plans (public) + GET /api/me/entitlements (auth)
+app.use('/api', require('./routes/entitlements'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/subscription', require('./routes/subscription/status'));
 app.use('/api/import', require('./routes/import'));

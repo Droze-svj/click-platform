@@ -1,14 +1,14 @@
 /**
  * CLICK Pricing Tier Middleware
- * Enforces feature gates based on user subscription tier
+ * Enforces feature gates based on user subscription tier.
  *
- * Tiers (ascending):
- *   free     - 3 exports/month, watermark, 2min max, no AI features
- *   starter  - unlimited basic exports, auto-captions ($9/mo)
- *   creator  - starter + analytics, AI analysis, rewrites ($19/mo)
- *   pro      - creator + 4K, b-roll AI, spatial XR, AI agent ($49/mo)
- *   team     - pro + collaboration, client portal, custom bundles ($99/mo)
- *   elite    - team + generative dubbing, foley, retention heatmap, priority GPU ($199/mo)
+ * As of the canonical-entitlements refactor this file no longer owns any plan
+ * data — it READS everything from server/config/entitlements.js (the single
+ * source of truth). The exported middleware names/signatures are unchanged so
+ * existing route imports keep working; they just resolve against the canonical
+ * config now.
+ *
+ * Canonical tiers (ascending): free < creator < pro < agency.
  *
  * Usage:
  *   router.post('/export', auth, requireTier('creator'), handler)
@@ -16,109 +16,27 @@
  *   router.post('/agent/run', auth, requireFeature('ai_agent'), handler)
  */
 
-const TIER_FEATURES = {
-  free: new Set([
-    'export_basic',      // up to 3/month, 1080p max
-    'filters_basic',     // first 5 filters only
-    'text_overlays',     // up to 3 text overlays
-    'trim_basic',        // basic trim/cut
-  ]),
-  starter: new Set([
-    'export_basic',
-    'export_unlimited',
-    'filters_basic',
-    'text_overlays',
-    'text_unlimited',
-    'auto_captions',
-    'trim_basic',
-  ]),
-  creator: new Set([
-    'export_basic',
-    'export_unlimited',  // no monthly cap
-    'export_4k',         // up to 4K
-    'filters_all',       // all 17 filters
-    'text_overlays',
-    'text_unlimited',    // unlimited text overlays
-    'auto_captions',     // Whisper auto-captions
-    'ai_analysis',       // GPT-4o hook analysis
-    'ai_rewrites',       // AI script rewrites
-    'style_packs',       // all creativity packs
-    'motion_templates',  // all motion graphics
-    'trim_basic',
-    'trim_advanced',     // J-Cut, L-Cut, freeze frame
-    'custom_fonts',      // upload custom .ttf/.woff
-  ]),
-  pro: new Set([
-    ...(['export_basic','export_unlimited','export_4k','filters_all',
-      'text_overlays','text_unlimited','auto_captions','ai_analysis',
-      'ai_rewrites','style_packs','motion_templates','trim_basic',
-      'trim_advanced','custom_fonts',
-    ]),
-    'creator_analytics',  // Creator Analytics dashboard
-    'hook_attribution',   // Style attribution data
-    'b_roll_ai',          // AI B-roll suggestions
-    'template_publish',   // Publish templates to marketplace
-    'priority_render',    // Priority export queue
-    'white_label',        // Remove CLICK branding from exports
-    // 2026 tier features
-    'spatial_editing',    // Apple Vision Pro / Meta Quest XR editing
-    'ai_agent',           // Autonomous content pipeline agent
-  ]),
-  team: new Set([
-    ...(['export_basic','export_unlimited','export_4k','filters_all',
-      'text_overlays','text_unlimited','auto_captions','ai_analysis',
-      'ai_rewrites','style_packs','motion_templates','trim_basic',
-      'trim_advanced','custom_fonts','creator_analytics','hook_attribution',
-      'b_roll_ai','template_publish','priority_render','white_label',
-      'spatial_editing','ai_agent',
-    ]),
-    'collaboration',       // Real-time multi-user editing
-    'team_management',     // Add/remove team members
-    'shared_library',      // Shared asset library
-    'custom_bundles',      // Save & share custom packs
-    'client_portal',       // White-label client portal
-    'api_access',          // Developer API
-  ]),
-  elite: new Set([
-    ...(['export_basic','export_unlimited','export_4k','filters_all',
-      'text_overlays','text_unlimited','auto_captions','ai_analysis',
-      'ai_rewrites','style_packs','motion_templates','trim_basic',
-      'trim_advanced','custom_fonts','creator_analytics','hook_attribution',
-      'b_roll_ai','template_publish','priority_render','white_label',
-      'spatial_editing','ai_agent',
-      'collaboration','team_management','shared_library','custom_bundles',
-      'client_portal','api_access',
-    ]),
-    // 2026 Elite-exclusive features
-    'generative_dubbing',  // AI voice cloning & 10-language dubbing
-    'ai_foley',            // Auto sound design from timeline events
-    'retention_heatmap',   // Pre-export retention drop prediction
-    'client_feedback_ai',  // AI-parsed client comment action engine
-    'priority_gpu',        // Dedicated WebGPU rendering queue
-    'webgpu_rendering',    // WebGPU-accelerated 4K real-time preview
-  ]),
-};
+const entitlements = require('../config/entitlements');
 
+// ── Canonical-config-derived views (kept as the historical export shapes) ──────
+// TIER_FEATURES: { tierId: Set<featureId> } — derived from entitlements so the
+// shape downstream code expects (a Set per tier) is preserved.
+const TIER_FEATURES = entitlements.TIER_IDS.reduce((acc, tierId) => {
+  acc[tierId] = new Set(entitlements.featuresForTier(tierId));
+  return acc;
+}, {});
 
-// Monthly export caps
-const EXPORT_CAPS = {
-  free:    3,
-  starter: Infinity,
-  creator: Infinity,
-  pro:     Infinity,
-  team:    Infinity,
-  elite:   Infinity,
-};
+// Monthly export caps (derived from LIMITS.exportsPerMonth).
+const EXPORT_CAPS = entitlements.TIER_IDS.reduce((acc, tierId) => {
+  acc[tierId] = entitlements.limitFor(tierId, 'exportsPerMonth');
+  return acc;
+}, {});
 
-// Max video duration (seconds)
-const DURATION_CAPS = {
-  free:    120,       // 2 min
-  starter: 900,       // 15 min
-  creator: 1800,      // 30 min
-  pro:     7200,      // 2 hours
-  team:    Infinity,
-  elite:   Infinity,
-};
+// Max video duration in seconds (derived from LIMITS.videoDurationSec).
+const DURATION_CAPS = entitlements.TIER_IDS.reduce((acc, tierId) => {
+  acc[tierId] = entitlements.limitFor(tierId, 'videoDurationSec');
+  return acc;
+}, {});
 
 // Per-feature rate limits (requests/hour) — future enforcement via Redis
 const FEATURE_RATE_LIMITS = {
@@ -132,54 +50,30 @@ const FEATURE_RATE_LIMITS = {
 
 
 /**
- * Map the canonical/legacy `subscription.plan` value (the field the User model
- * actually stores — see server/models/User.js) onto a feature tier. Historically
- * getUserTier only read `subscription.tier`, which the model never sets, so EVERY
- * user — including paying customers — silently resolved to 'free' and was blocked
- * from all gated features. This map is the bridge.
- */
-const PLAN_TO_TIER = {
-  free: 'free',
-  creator: 'creator',
-  pro: 'pro',
-  agency: 'elite',
-  // Legacy billing-period values from older records:
-  monthly: 'pro',
-  annual: 'pro',
-  trial: 'pro',
-};
-
-/**
- * Get user tier from request (from auth middleware).
- * Resolution order: explicit tier → subscription.tier → mapped subscription.plan
- * → trial status (trials get pro-level access so users can genuinely evaluate)
- * → 'free'.
+ * Get user tier from request (from auth middleware). Delegates to the canonical
+ * resolveTier() so legacy plan values, trials, and explicit plans all resolve
+ * identically everywhere. Honours a pre-resolved `req.user.tier` if present.
  */
 function getUserTier(req) {
-  const sub = req.user?.subscription;
-  if (req.user?.tier) return req.user.tier;
-  if (sub?.tier) return sub.tier;
-  // Trial wins over the placeholder plan ('free' is the model default), so a
-  // user on a live trial gets pro-level features to genuinely evaluate Click.
-  // Once the trial expires the status flips to 'expired' and this falls through.
-  if (sub?.status === 'trial') return 'pro';
-  if (sub?.plan && PLAN_TO_TIER[sub.plan]) return PLAN_TO_TIER[sub.plan];
-  return 'free';
+  if (req.user?.tier && entitlements.TIER_IDS.includes(req.user.tier)) {
+    return req.user.tier;
+  }
+  return entitlements.resolveTier(req.user || {});
 }
 
-/** Ordered tier list for comparison */
-const TIER_ORDER = ['free', 'starter', 'creator', 'pro', 'team', 'elite'];
+/** Ordered canonical tier list for comparison (free < creator < pro < agency). */
+const TIER_ORDER = [...entitlements.TIER_IDS];
 
 /**
- * Returns true if userTier meets or exceeds requiredTier
+ * Returns true if userTier meets or exceeds requiredTier (by canonical order).
  */
 function tierMeetsRequirement(userTier, requiredTier) {
-  return TIER_ORDER.indexOf(userTier) >= TIER_ORDER.indexOf(requiredTier);
+  return entitlements.tierOrder(userTier) >= entitlements.tierOrder(requiredTier);
 }
 
 /**
  * Middleware: require minimum tier
- * @param {string} minTier - 'free' | 'starter' | 'creator' | 'pro' | 'team' | 'elite'
+ * @param {string} minTier - 'free' | 'creator' | 'pro' | 'agency'
  */
 function requireTier(minTier) {
   return (req, res, next) => {
@@ -263,13 +157,10 @@ async function checkFeatureRateLimit(userId, feature) {
 function requireFeature(feature) {
   return async (req, res, next) => {
     const userTier = getUserTier(req)
-    const features = TIER_FEATURES[userTier] || TIER_FEATURES.free
 
-    if (!features.has(feature)) {
-      // Find which tier first unlocks this feature (check all tiers in order)
-      const unlockTier = ['starter', 'creator', 'pro', 'team', 'elite'].find(t =>
-        TIER_FEATURES[t]?.has(feature)
-      ) || 'creator'
+    if (!entitlements.hasFeature(userTier, feature)) {
+      // The canonical minTier for this feature (fallback 'creator' if unknown).
+      const unlockTier = entitlements.FEATURES[feature]?.minTier || 'creator'
 
       return res.status(403).json({
         error: 'feature_gated',
@@ -367,25 +258,14 @@ function addTierContext(req, res, next) {
  * GET /api/tiers
  */
 function getTierInfo(req, res) {
-  const tiers = ['free', 'starter', 'creator', 'pro', 'team', 'elite'];
-  const prices = { free: 0, starter: 9, creator: 19, pro: 49, team: 99, elite: 199 };
-  const labels = {
-    free:    'Free',
-    starter: 'Starter',
-    creator: 'Creator',
-    pro:     'Pro',
-    team:    'Team',
-    elite:   'Elite 2026',
-  };
-
   res.json({
-    tiers: tiers.map(tier => ({
-      id: tier,
-      label: labels[tier],
-      price: prices[tier],
-      features: [...TIER_FEATURES[tier]],
-      exportCap: isFinite(EXPORT_CAPS[tier]) ? EXPORT_CAPS[tier] : 'unlimited',
-      maxDuration: isFinite(DURATION_CAPS[tier]) ? DURATION_CAPS[tier] : 'unlimited',
+    tiers: entitlements.TIERS.map(tier => ({
+      id: tier.id,
+      label: tier.name,
+      price: tier.price.monthlyUsd,
+      features: [...TIER_FEATURES[tier.id]],
+      exportCap: isFinite(EXPORT_CAPS[tier.id]) ? EXPORT_CAPS[tier.id] : 'unlimited',
+      maxDuration: isFinite(DURATION_CAPS[tier.id]) ? DURATION_CAPS[tier.id] : 'unlimited',
     })),
     userTier: getUserTier(req),
   });
@@ -398,6 +278,7 @@ module.exports = {
   checkExportQuota,
   addTierContext,
   getTierInfo,
+  getUserTier,
   tierMeetsRequirement,
   TIER_FEATURES,
   EXPORT_CAPS,
