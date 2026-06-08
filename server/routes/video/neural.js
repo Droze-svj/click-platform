@@ -119,6 +119,18 @@ router.post('/magic-b-roll', auth, async (req, res) => {
 
     const result = await generativeAssetService.magicBRollFill(prompt, duration);
 
+    // Honest surfacing: when text-to-video isn't configured the service returns
+    // status 'unavailable' (no fabricated clip). Report that truthfully (503)
+    // instead of dressing a non-result up as a successful generation.
+    if (!result || result.status !== 'minted' || !result.url) {
+      return res.status(503).json({
+        success: false,
+        status: result?.status || 'unavailable',
+        error: result?.error || 'B-roll generation is unavailable.',
+        data: result || null,
+      });
+    }
+
     res.json({
       success: true,
       data: result

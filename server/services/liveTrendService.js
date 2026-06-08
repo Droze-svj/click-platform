@@ -159,8 +159,9 @@ async function getTrendStrategy(trends) {
     `do not invent new trends.\n\nTRENDS:\n${JSON.stringify(trends)}\n\n` +
     `Return ONLY valid JSON:\n{\n  "mold": "Name of the mold",\n  "explanation": "Why this fits the ` +
     `current high-growth trends",\n  "keyThemes": ["theme1","theme2"],\n  "recommendedTone": "...",\n` +
-    `  "pacing": { "style": "fast-cut", "avgWordDensity": 3.2, "bgmTempo": "128bpm" },\n` +
-    `  "retentionHookStrategy": "A 3-second visual hook focused on X",\n  "predictedEngagement": 92\n}`;
+    `  "pacing": { "style": "fast-cut", "avgWordDensity": <number>, "bgmTempo": "<e.g. 128bpm>" },\n` +
+    `  "retentionHookStrategy": "A 3-second visual hook focused on X",\n` +
+    `  "predictedEngagement": <integer 0-100, your honest confidence — do NOT copy this example>\n}`;
 
   // Claude path.
   if (anthropicAI.isConfigured()) {

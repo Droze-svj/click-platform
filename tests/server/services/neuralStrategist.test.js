@@ -47,13 +47,16 @@ describe('Neural Strategist Suite', () => {
       }
     });
 
-    it('should generate magic B-roll with refined prompts', async () => {
+    it('should refine the B-roll prompt but NOT fabricate a generated clip', async () => {
+      // Honest contract: prompt refinement is real, but with no text-to-video
+      // provider wired up we must NOT return a fake "minted" 4K URL pointing at
+      // a non-existent file (owner's #1 rule). url is null + status 'unavailable'.
       const result = await generativeAssetService.magicBRollFill('cyberpunk city');
 
-      expect(result.status).toBe('minted');
       expect(result.refinedPrompt).toBeDefined();
-      expect(result.url).toContain('.mp4');
-      expect(result.metadata.engine).toBe('neural-video-v2');
+      expect(result.url).toBeNull();
+      expect(result.status).toBe('unavailable');
+      expect(result.error).toBeTruthy();
     });
   });
 
