@@ -1,6 +1,7 @@
 // Social media OAuth connections model
 
 const mongoose = require('mongoose');
+const { encryptToken, decryptToken } = require('../utils/dataEncryption');
 
 const socialConnectionSchema = new mongoose.Schema({
   userId: {
@@ -20,12 +21,24 @@ const socialConnectionSchema = new mongoose.Schema({
   platformUsername: {
     type: String
   },
+  // accessToken / refreshToken are encrypted AT REST (AES-256-GCM) via the
+  // setter, which stores the `enc:v1:<payload>` form. The getter transparently
+  // decrypts on read and PASSES THROUGH legacy plaintext (or any value that
+  // fails to decrypt) unchanged, so a DB full of pre-existing plaintext tokens
+  // keeps working. These getters run on hydrated documents; .lean()/updateOne
+  // queries BYPASS them, so token-read sites on lean docs must call
+  // decryptToken() and token-write sites using updateOne/findOneAndUpdate must
+  // call encryptToken() explicitly (see dataEncryption.js).
   accessToken: {
     type: String,
-    required: true
+    required: true,
+    set: encryptToken,
+    get: decryptToken
   },
   refreshToken: {
-    type: String
+    type: String,
+    set: encryptToken,
+    get: decryptToken
   },
   tokenExpiresAt: {
     type: Date
