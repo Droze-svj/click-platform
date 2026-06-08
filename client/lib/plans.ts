@@ -10,16 +10,26 @@
  * paid plan × period). They're public on purpose — Whop's checkout page does
  * the auth on its end. Empty values fall back to /register?plan=<id>.
  *
- * The serverTier field maps each plan to the tier name used by
- * server/middleware/tierGate.js so the gating stays consistent.
+ * The serverTier field maps each plan to the canonical tier id used by
+ * server/config/entitlements.js (free/creator/pro/agency) so the gating and
+ * pricing stay consistent across every surface.
+ *
+ * CANONICAL PRICING (mirrors GET /api/plans → server/config/entitlements.js):
+ *   free $0 · creator $39/mo ($390/yr) · pro $119/mo ($1190/yr, MOST POPULAR)
+ *   · agency $349/mo ($3490/yr, FLAGSHIP). Yearly === 10× monthly (2 months
+ *   free). If these ever drift from the server, the server wins — prefer the
+ *   live catalog (fetchPublicCatalog) and treat this static set as the typed
+ *   fallback that MUST match it.
  */
 
 import type { LucideIcon } from 'lucide-react';
 import { Sparkles, Rocket, Crown, Zap } from 'lucide-react';
+import { apiGet } from './api';
 
 export type PlanId = 'free' | 'creator' | 'pro' | 'agency';
 export type BillingPeriod = 'monthly' | 'yearly';
-export type ServerTier = 'free' | 'creator' | 'pro' | 'team';
+// Canonical server tier ids (server/config/entitlements.js): free/creator/pro/agency.
+export type ServerTier = 'free' | 'creator' | 'pro' | 'agency';
 
 export interface PlanFeature {
   label: string;
@@ -45,7 +55,8 @@ export interface Plan {
 
   cta: { label: string; subLabel?: string };
 
-  // Maps to server/middleware/tierGate.js tier names (free/creator/pro/team).
+  // Maps to server/config/entitlements.js canonical tier ids
+  // (free/creator/pro/agency). Same id as `id` for every canonical tier.
   serverTier: ServerTier;
 
   // Visuals — shared between landing and dashboard.
@@ -67,12 +78,12 @@ export const PLANS: Plan[] = [
     featured: false,
     features: [
       { label: '3 video exports / month', included: true },
-      { label: 'Clips up to 30 seconds', included: true },
+      { label: 'Exports up to 720p', included: true },
       { label: '50 AI generations / month', included: true },
-      { label: 'Click watermark on exports', included: true },
-      { label: 'AI auto-edit (Make it great)', included: false },
-      { label: 'Niche-aware trend reports', included: false },
-      { label: 'Multi-platform scheduling', included: false },
+      { label: 'Basic trim, filters & text overlays', included: true },
+      { label: 'Auto captions (Whisper)', included: false },
+      { label: 'AI hook analysis & script rewrites', included: false },
+      { label: 'Creator analytics', included: false },
       { label: 'Performance learning loop', included: false },
     ],
     checkoutUrl: { monthly: '', yearly: '' },
@@ -87,17 +98,17 @@ export const PLANS: Plan[] = [
     id: 'creator',
     name: 'Creator',
     tagline: 'For rising channels',
-    priceMonthly: 49,
-    priceYearly: 470, // 49 × 12 × 0.8 ≈ 470
+    priceMonthly: 39,
+    priceYearly: 390, // 10 × monthly — 2 months free
     featured: false,
     features: [
-      { label: '100 AI generations / month', included: true },
-      { label: 'Unlimited 30-min clips', included: true },
-      { label: 'Basic transcripts + captions', included: true },
-      { label: 'AI auto-edit (Make it great)', included: true },
-      { label: 'Niche-aware trend reports', included: true },
+      { label: '300 AI generations / month', included: true },
+      { label: 'Unlimited 30-min exports', included: true },
+      { label: 'Auto captions (Whisper)', included: true },
+      { label: 'AI hook analysis + script rewrites', included: true },
+      { label: 'Creativity style packs & motion templates', included: true },
       { label: '3 social accounts', included: true },
-      { label: 'Multi-platform scheduling', included: true, tooltip: 'TikTok, Reels, Shorts in one click' },
+      { label: 'AI creative tools (thumbnails)', included: true, tooltip: 'AI-generated thumbnails & creative assets' },
       { label: 'Performance learning loop', included: false },
       { label: 'Workspaces & approvals', included: false },
     ],
@@ -116,20 +127,19 @@ export const PLANS: Plan[] = [
     id: 'pro',
     name: 'Pro',
     tagline: 'The AI command center',
-    priceMonthly: 149,
-    priceYearly: 1430, // 149 × 12 × 0.8 ≈ 1430
+    priceMonthly: 119,
+    priceYearly: 1190, // 10 × monthly — 2 months free
     featured: true,
     features: [
+      { label: 'Everything in Creator', included: true },
       { label: 'Unlimited AI generations', included: true },
-      { label: 'Unlimited 2-hour clips', included: true },
-      { label: 'Advanced transcripts (90+ languages)', included: true },
-      { label: 'AI auto-edit + retention rewrites', included: true },
-      { label: 'Niche-aware trend reports + 6h refresh', included: true },
+      { label: 'Unlimited 2-hour exports', included: true },
+      { label: '4K exports', included: true },
+      { label: 'AI B-roll + autonomous AI agent', included: true },
+      { label: 'Creator analytics + hook/style attribution', included: true, tooltip: 'See which hooks and styles actually retain viewers' },
+      { label: 'Publish your own templates', included: true },
       { label: '10 social accounts', included: true },
-      { label: 'Performance learning loop', included: true, tooltip: 'Editor adapts to which of your posts retain viewers' },
-      { label: 'Predictive posting windows', included: true },
-      { label: 'Brand kit + template library', included: true },
-      { label: 'Priority AI compute', included: true, tooltip: 'Skips queue during peak load' },
+      { label: 'Priority render queue', included: true, tooltip: 'Skips queue during peak load' },
       { label: 'Workspaces & approvals', included: false },
     ],
     checkoutUrl: {
@@ -147,27 +157,27 @@ export const PLANS: Plan[] = [
     id: 'agency',
     name: 'Agency',
     tagline: 'For volume operations',
-    priceMonthly: 399,
-    priceYearly: 3830, // 399 × 12 × 0.8 ≈ 3830
+    priceMonthly: 349,
+    priceYearly: 3490, // 10 × monthly — 2 months free
     featured: false,
     features: [
       { label: 'Everything in Pro', included: true },
-      { label: 'Unlimited team seats', included: true },
-      { label: 'Workspaces + brand switching', included: true },
-      { label: 'Approval workflows', included: true },
+      { label: 'Unlimited team seats, brands & workspaces', included: true },
+      { label: 'Real-time collaboration + team management', included: true },
+      { label: 'Shared asset library', included: true },
       { label: '50 social accounts', included: true },
-      { label: 'White-label exports', included: true, tooltip: 'No Click branding on shared previews' },
-      { label: 'Custom AI playbooks', included: true, tooltip: 'Tune the niche knowledge base for your client roster' },
-      { label: 'SOC2-ready audit logs', included: true },
-      { label: 'Dedicated GPU pods', included: true },
-      { label: 'Priority human support', included: true },
+      { label: 'AI client-feedback engine', included: true },
+      { label: 'Early access: white-label exports & client portal', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
+      { label: 'Early access: generative dubbing + AI foley', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
+      { label: 'Early access: retention heatmap + WebGPU preview', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
+      { label: 'Early access: developer API + dedicated GPU pods', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
     ],
     checkoutUrl: {
       monthly: env('NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY'),
       yearly: env('NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY'),
     },
     cta: { label: 'Get Agency', subLabel: 'or talk to sales' },
-    serverTier: 'team',
+    serverTier: 'agency',
     icon: Crown,
     gradient: 'from-amber-500 via-rose-500 to-fuchsia-600',
     accent: 'text-amber-300',
@@ -243,4 +253,78 @@ export function yearlySavingsPct(plan: Plan): number {
   if (plan.priceMonthly === 0 || plan.priceYearly === 0) return 0;
   const yearlyAtMonthlyRate = plan.priceMonthly * 12;
   return Math.round(((yearlyAtMonthlyRate - plan.priceYearly) / yearlyAtMonthlyRate) * 100);
+}
+
+/**
+ * How many months are effectively free on the yearly plan
+ * (e.g. 12 × monthly − yearly, expressed in months). Our canonical model is
+ * yearly === 10 × monthly, i.e. 2 months free.
+ */
+export function freeMonthsYearly(plan: Plan): number {
+  if (plan.priceMonthly === 0 || plan.priceYearly === 0) return 0;
+  return Math.round((plan.priceMonthly * 12 - plan.priceYearly) / plan.priceMonthly);
+}
+
+// ─── LIVE CANONICAL CATALOG (GET /api/plans) ────────────────────────────────
+// The static PLANS above are a typed fallback that MUST match the server. When
+// a surface can do an async read, prefer the live catalog so prices/features
+// are never stale. The shape mirrors server/config/entitlements.js publicCatalog().
+
+export interface CatalogFeature {
+  id: string;
+  label: string;
+  category: string;
+  earlyAccess?: boolean;
+}
+
+export interface CatalogTier {
+  id: PlanId | string;
+  name: string;
+  order: number;
+  tagline: string;
+  price: { monthlyUsd: number | null; yearlyUsd: number | null };
+  featured?: boolean;
+  flagship?: boolean;
+  features: CatalogFeature[];
+  limits: Record<string, number | null>;
+}
+
+export interface PublicCatalog {
+  tiers: CatalogTier[];
+  /** Every gated feature with its unlock tier + early-access flag. */
+  features: Array<CatalogFeature & { minTier: string }>;
+}
+
+let catalogCache: PublicCatalog | null = null;
+let catalogInFlight: Promise<PublicCatalog | null> | null = null;
+
+/**
+ * Fetch the live public catalog from GET /api/plans (cached for the session).
+ * Returns null on any failure — callers should fall back to the static PLANS,
+ * which match the server. Never throws.
+ */
+export async function fetchPublicCatalog(): Promise<PublicCatalog | null> {
+  if (catalogCache) return catalogCache;
+  if (catalogInFlight) return catalogInFlight;
+  catalogInFlight = (async () => {
+    try {
+      const raw = await apiGet<any>('/plans');
+      const body = raw?.tiers ? raw : raw?.data ?? raw;
+      if (body && Array.isArray(body.tiers)) {
+        catalogCache = body as PublicCatalog;
+        return catalogCache;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      catalogInFlight = null;
+    }
+  })();
+  return catalogInFlight;
+}
+
+/** The full list of early-access-flagged features from a catalog. */
+export function earlyAccessFeatures(catalog: PublicCatalog): Array<CatalogFeature & { minTier: string }> {
+  return catalog.features.filter((f) => f.earlyAccess === true);
 }

@@ -16,7 +16,7 @@ import {
   // Grow
   BarChart3, Flame, Brain,
   // Manage
-  FolderKanban, Users, Gem, Boxes, Plug, Compass, Share2,
+  FolderKanban, Users, Gem, Boxes, Plug, Compass, Share2, FlaskConical,
   // Settings
   Settings, LogOut, Sun, Moon, Eye, EyeOff,
   Search,
@@ -94,6 +94,7 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/workspaces',   label: t('nav.workspaces') || 'Workspaces',    icon: Boxes,        badge: 'New' },
       { path: '/dashboard/projects',     label: t('nav.projects') || 'Projects',      icon: FolderKanban, badge: null },
       { path: '/dashboard/teams',        label: t('nav.teams') || 'Team',          icon: Users,        badge: null },
+      { path: '/dashboard/labs',         label: t('nav.labs') || 'Labs',           icon: FlaskConical, badge: 'Early' },
       { path: '/dashboard/billing',      label: t('nav.billing') || 'Billing',       icon: Gem,          badge: null },
     ],
   },
