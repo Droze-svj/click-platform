@@ -15,6 +15,8 @@ const LOG_CONTEXT = { service: 'platform-ingestion' };
 
 let cronTask = null;
 let inFlight = false;
+// Read-only observability snapshot of the last tick for GET /api/health/learning.
+let lastRunStats = null;
 
 const DEFAULT_PER_USER_LIMIT = parseInt(process.env.ANALYTICS_SYNC_PER_USER_LIMIT || '25', 10);
 const DEFAULT_SCHEDULE = process.env.ANALYTICS_SYNC_CRON || '*/15 * * * *'; // every 15 min
@@ -151,15 +153,36 @@ async function runIngestionTick() {
       }
     }
 
+    const durationMs = Date.now() - startedAt;
+    // Per-tick summary (one log per tick, never per-post). Named fields
+    // requested for prod observability alongside the raw counters.
     logger.info('Platform ingestion tick complete', {
       ...LOG_CONTEXT,
       ...summary,
-      durationMs: Date.now() - startedAt,
+      usersSynced: summary.users,
+      postsSynced: summary.synced,
+      accountInsightsSynced: summary.accountInsights,
+      durationMs,
     });
+    lastRunStats = {
+      at: new Date().toISOString(),
+      usersSynced: summary.users,
+      postsSynced: summary.synced,
+      accountInsightsSynced: summary.accountInsights,
+      failed: summary.failed,
+      durationMs,
+    };
     return summary;
   } finally {
     inFlight = false;
   }
+}
+
+/**
+ * Read-only snapshot of the last ingestion tick for the health surface.
+ */
+function getLastRunStats() {
+  return lastRunStats;
 }
 
 function startIngestionCron() {
@@ -187,4 +210,5 @@ module.exports = {
   startIngestionCron,
   stopIngestionCron,
   runIngestionTick,
+  getLastRunStats,
 };
