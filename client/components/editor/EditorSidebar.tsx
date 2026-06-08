@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,7 +9,6 @@ import {
   Tablet,
   Smartphone,
   History,
-  Orbit,
   Activity,
   Layers,
   ArrowUpRight,
@@ -18,7 +17,6 @@ import {
   X,
   Command,
   Keyboard,
-  Star,
   Lock,
   Sparkles,
   Library,
@@ -29,6 +27,8 @@ import { EditorCategory } from '../../types/editor'
 import { CATEGORIES } from '../../utils/editorConstants'
 import { EDITOR_GROUPS, groupForCategory, type EditorGroupId } from '../../utils/editorGroups'
 import { formatTime, loadEditorContentPreferences } from '../../utils/editorUtils'
+import { IconButton, Input, Badge } from '../ui'
+import { cn } from '../../lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -47,8 +47,6 @@ interface EditorSidebarProps {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)]'
 
 // Keyboard shortcut map (shown in tooltip when sidebar is expanded)
 const KB_SHORTCUTS: Record<string, string> = {
@@ -139,6 +137,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   const [pinnedCategories, setPinnedCategories] = useState<EditorCategory[]>([])
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [hoveredCategory, setHoveredCategory] = useState<EditorCategory | null>(null)
+  const reduceMotion = useReducedMotion()
   const [activeGroup, setActiveGroup] = useState<EditorGroupId | 'all'>(() => {
     if (typeof window === 'undefined') return 'all'
     const saved = localStorage.getItem('click_editor_active_group')
@@ -225,70 +224,62 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   const isCollapsed = sidebarCollapsed && deviceView !== 'mobile'
 
   return (
-    <aside className={`
-      ${deviceView === 'mobile'
-        ? `fixed inset-y-0 left-0 z-[60] w-72 transform transition-all duration-500 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
-        : isCollapsed ? 'w-20' : 'w-72'
-      }
-      relative flex flex-col transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] flex-shrink-0 overflow-hidden bg-black/40 backdrop-blur-3xl border-r border-white/5
-    `}>
-      {/* Gradient top decoration */}
-      <div className="absolute inset-x-0 top-0 h-[30rem] bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent pointer-events-none opacity-50" />
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.05] pointer-events-none mix-blend-overlay" />
+    <aside className={cn(
+      deviceView === 'mobile'
+        ? cn('fixed inset-y-0 left-0 z-[60] w-72 transform transition-transform duration-300', mobileMenuOpen ? 'translate-x-0' : '-translate-x-full')
+        : isCollapsed ? 'w-20' : 'w-72',
+      'relative flex flex-col transition-all duration-300 flex-shrink-0 overflow-hidden ds-surface-card rounded-none border-y-0 border-l-0'
+    )}>
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="p-4 flex-shrink-0 relative z-10">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <div className="flex items-center gap-3">
-              <Orbit className="w-5 h-5 text-indigo-500 animate-spin-slow" />
-              <div>
-                <h2 className="text-[11px] font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">NEURAL_CORE</h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
-                  <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none">LATTICE_SYNCED</span>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-accent-violet flex items-center justify-center shrink-0">
+                <Sparkles className="w-4 h-4 text-white" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <h2 className="ds-text-label text-theme-primary leading-none">Editor tools</h2>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Activity className="w-3 h-3 text-emerald-500" aria-hidden />
+                  <span className="text-[10px] text-theme-muted leading-none">Ready</span>
                 </div>
               </div>
             </div>
           )}
           {deviceView !== 'mobile' && (
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+            <IconButton
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              variant="secondary"
+              size="sm"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className={`${isCollapsed ? 'mx-auto' : ''} w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all`}
+              className={isCollapsed ? 'mx-auto' : ''}
             >
               {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </motion.button>
+            </IconButton>
           )}
         </div>
 
         {/* ── Search bar (hidden when collapsed) ─────────────────────────── */}
-        <AnimatePresence>
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mt-4 relative"
-            >
-              <Search className="w-3.5 h-3.5 text-slate-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                ref={searchRef}
-                type="text"
-                placeholder="INDEX_LATTICE… (⌘F)"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-black/40 border-2 border-white/5 text-[11px] text-indigo-200 placeholder-slate-800 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.02] transition-all italic uppercase font-black tracking-widest"
-              />
-              {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery('')} title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {!isCollapsed && (
+          <div className="mt-4 relative">
+            <Search className="w-3.5 h-3.5 text-theme-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+            <Input
+              ref={searchRef}
+              type="text"
+              placeholder="Search tools (⌘F)"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="h-10 pl-9 pr-8 text-xs"
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery('')} title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* ── Group filter rail ─────────────────────────────────────────────
              Six top-level groups + an "All" pill. Hidden when collapsed or
@@ -299,11 +290,11 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             <button
              type="button"
               onClick={() => setActiveGroup('all')}
-              className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border transition-all ${
+              className={cn('px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
                 activeGroup === 'all'
-                  ? 'bg-white text-black border-white shadow'
-                  : 'bg-white/[0.03] text-slate-400 border-white/10 hover:text-white hover:border-white/20'
-              }`}
+                  ? 'bg-primary text-primary-foreground border-transparent'
+                  : 'ds-surface-subtle text-theme-secondary border-subtle hover:text-theme-primary'
+              )}
             >
               All
             </button>
@@ -314,11 +305,11 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                   key={g.id}
                   title={g.description}
                   onClick={() => setActiveGroup(g.id)}
-                  className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border transition-all ${
+                  className={cn('px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
                     isOn
-                      ? `bg-gradient-to-r ${g.gradient} text-white border-white/30 shadow-md`
-                      : 'bg-white/[0.03] text-slate-400 border-white/10 hover:text-white hover:border-white/20'
-                  }`}
+                      ? 'bg-primary text-primary-foreground border-transparent'
+                      : 'ds-surface-subtle text-theme-secondary border-subtle hover:text-theme-primary'
+                  )}
                 >
                   {g.label}
                 </button>
@@ -329,59 +320,52 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       </div>
 
       {/* ── Recent History ─────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {!isCollapsed && !searchQuery && recentCategories.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="px-4 pb-4 flex-shrink-0 relative z-10"
-          >
-            <p className="text-[8px] font-black text-slate-600 uppercase tracking-[0.4em] mb-3 flex items-center gap-2">
-              <History className="w-3 h-3" /> RECENT_NODES
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {recentCategories.map((category) => {
-                const Icon = category.icon
-                return (
-                  <button
-                    type="button"
-                    key={category.id}
-                    onClick={() => {
-                      setActiveCategory(category.id as EditorCategory)
-                      if (deviceView === 'mobile') setMobileMenuOpen(false)
-                    }}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.02] border border-white/5 text-[10px] font-black text-slate-500 hover:bg-white/[0.06] hover:text-white transition-all group italic uppercase tracking-widest"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className="w-3.5 h-3.5 group-hover:text-indigo-400 transition-colors" />
-                      <span className="truncate">{category.label}</span>
-                    </div>
-                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                )
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {!isCollapsed && !searchQuery && recentCategories.length > 0 && (
+        <div className="px-4 pb-4 flex-shrink-0 relative z-10">
+          <p className="ds-text-label text-theme-muted mb-3 flex items-center gap-2">
+            <History className="w-3 h-3" aria-hidden /> Recent
+          </p>
+          <div className="flex flex-col gap-1.5">
+            {recentCategories.map((category) => {
+              const Icon = category.icon
+              return (
+                <button
+                  type="button"
+                  key={category.id}
+                  onClick={() => {
+                    setActiveCategory(category.id as EditorCategory)
+                    if (deviceView === 'mobile') setMobileMenuOpen(false)
+                  }}
+                  className="flex items-center justify-between px-3 py-2 rounded-xl ds-surface-subtle text-xs font-medium text-theme-secondary hover:text-theme-primary transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-3.5 h-3.5 group-hover:text-primary transition-colors" aria-hidden />
+                    <span className="truncate">{category.label}</span>
+                  </div>
+                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Category Navigation ────────────────────────────────────────────── */}
       <div className="flex-1 px-3 py-2 space-y-1.5 overflow-y-auto custom-scrollbar relative z-10">
 
         {/* No-results state */}
         {searchQuery && sortedCategories.length === 0 && (
-          <div className="text-center py-10 text-slate-600">
-            <Search className="w-6 h-6 mx-auto mb-2 opacity-30" />
-            <p className="text-[10px] uppercase tracking-wider">No panels found</p>
+          <div className="text-center py-10 text-theme-muted">
+            <Search className="w-6 h-6 mx-auto mb-2 opacity-40" aria-hidden />
+            <p className="text-xs">No tools found</p>
           </div>
         )}
 
         {/* Pin header */}
         {!searchQuery && pinnedCategories.length > 0 && !isCollapsed && (
           <div className="px-3 pt-1 pb-2">
-            <p className="text-[8px] font-black text-slate-700 uppercase tracking-[0.4em] flex items-center gap-2">
-              <Pin className="w-2.5 h-2.5" /> PINNED_LATTICE
+            <p className="ds-text-label text-theme-muted flex items-center gap-2">
+              <Pin className="w-2.5 h-2.5" aria-hidden /> Pinned
             </p>
           </div>
         )}
@@ -401,8 +385,8 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             <React.Fragment key={category.id}>
               {showDivider && (
                 <div className="px-3 pt-3 pb-2">
-                  <p className="text-[8px] font-black text-slate-700 uppercase tracking-[0.4em] flex items-center gap-2">
-                    <Layers className="w-2.5 h-2.5" /> NEURAL_LATTICE
+                  <p className="ds-text-label text-theme-muted flex items-center gap-2">
+                    <Layers className="w-2.5 h-2.5" aria-hidden /> All tools
                   </p>
                 </div>
               )}
@@ -419,51 +403,52 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     if (deviceView === 'mobile') setMobileMenuOpen(false)
                   }}
                   disabled={isLocked}
-                  className={`w-full group relative overflow-hidden rounded-2xl transition-all duration-500 text-left border ${
+                  className={cn('w-full group relative overflow-hidden rounded-xl transition-colors text-left border',
                     isActive
-                      ? 'bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-xl shadow-indigo-600/30 border-white/20 scale-[1.01]'
+                      ? 'bg-primary text-primary-foreground border-transparent'
                       : isLocked
-                      ? 'bg-white/[0.01] text-slate-700 border-white/[0.03] opacity-50 cursor-not-allowed'
-                      : 'bg-white/[0.02] text-slate-500 border-white/5 hover:bg-white/[0.05] hover:text-white hover:border-white/10'
-                  }`}
+                      ? 'ds-surface-subtle text-theme-muted opacity-50 cursor-not-allowed'
+                      : 'ds-surface-subtle text-theme-secondary hover:text-theme-primary'
+                  )}
                 >
-                  <div className={`flex items-center gap-4 ${isCollapsed ? 'p-3 justify-center' : 'px-4 py-3.5'}`}>
-                    <div className={`${isCollapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-xl transition-all flex items-center justify-center flex-shrink-0 ${
-                      isActive ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10'
-                    } ${isLocked ? 'opacity-40' : ''}`}>
+                  <div className={cn('flex items-center gap-3', isCollapsed ? 'p-3 justify-center' : 'px-4 py-3')}>
+                    <div className={cn(isCollapsed ? 'w-10 h-10' : 'w-8 h-8', 'rounded-lg transition-colors flex items-center justify-center flex-shrink-0',
+                      isActive ? 'bg-white/20' : 'bg-black/10 dark:bg-white/5',
+                      isLocked && 'opacity-40'
+                    )}>
                       {isLocked
-                        ? <Lock className="w-3.5 h-3.5 text-slate-600" />
-                        : <Icon className={`${isCollapsed ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
+                        ? <Lock className="w-3.5 h-3.5" aria-hidden />
+                        : <Icon className={cn(isCollapsed ? 'w-5 h-5' : 'w-4 h-4', isActive ? 'text-primary-foreground' : 'text-theme-secondary group-hover:text-primary')} aria-hidden />
                       }
                     </div>
 
                     {!isCollapsed && (
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-[12px] italic uppercase tracking-tight leading-none">
+                          <span className="font-medium text-[13px] leading-none truncate">
                             {category.label}
                           </span>
                           {/* Badges */}
                           {(category as any).badge && (
-                            <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ${
-                              (category as any).badge === '2026'
-                                ? 'bg-fuchsia-500/20 text-fuchsia-400'
-                                : (category as any).badge === 'PRO'
-                                ? 'bg-amber-500/20 text-amber-400'
-                                : (category as any).badge === 'BETA'
-                                ? 'bg-rose-500/20 text-rose-400'
-                                : 'bg-emerald-500/20 text-emerald-400'
-                            }`}>
+                            <Badge
+                              variant="secondary"
+                              className={cn('px-1.5 py-0 text-[9px] font-medium normal-case',
+                                (category as any).badge === '2026' ? 'bg-fuchsia-500/15 text-fuchsia-500'
+                                : (category as any).badge === 'PRO' ? 'bg-amber-500/15 text-amber-500'
+                                : (category as any).badge === 'BETA' ? 'bg-rose-500/15 text-rose-500'
+                                : 'bg-emerald-500/15 text-emerald-500'
+                              )}
+                            >
                               {(category as any).badge}
-                            </span>
+                            </Badge>
                           )}
                           {isLocked && requiredTier && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase">
+                            <Badge variant="secondary" className="px-1.5 py-0 text-[9px] font-medium bg-amber-500/15 text-amber-500 normal-case">
                               {requiredTier}+
-                            </span>
+                            </Badge>
                           )}
                         </div>
-                        <div className={`text-[9px] mt-0.5 font-medium uppercase tracking-wider leading-tight opacity-50 ${isActive ? 'text-white' : 'text-slate-600'}`}>
+                        <div className={cn('text-[11px] mt-0.5 leading-tight truncate', isActive ? 'text-primary-foreground/80' : 'text-theme-muted')}>
                           {category.description}
                         </div>
                       </div>
@@ -471,32 +456,25 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
 
                     {/* Keyboard shortcut badge */}
                     {!isCollapsed && shortcut && !isLocked && (
-                      <span className={`shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-black font-mono transition-all ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-700 group-hover:text-slate-400'
-                      }`}>
+                      <span className={cn('shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-medium font-mono transition-colors',
+                        isActive ? 'bg-white/20 text-primary-foreground' : 'bg-black/10 dark:bg-white/5 text-theme-muted'
+                      )}>
                         {shortcut}
                       </span>
                     )}
                   </div>
-
-                  {isActive && (
-                    <motion.div
-                      layoutId="active-nav-glow"
-                      className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none"
-                    />
-                  )}
                 </button>
 
                 {/* Pin button (hover) */}
                 {!isCollapsed && !isLocked && hoveredCategory === category.id && (
                   <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
+                    initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     onClick={(e) => togglePin(category.id as EditorCategory, e)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all z-10"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg ds-surface-elevated flex items-center justify-center text-theme-muted hover:text-theme-primary transition-colors z-10"
                     title={isPinned ? 'Unpin' : 'Pin to top'}
                   >
-                    <Pin className={`w-3 h-3 ${isPinned ? 'text-indigo-400 fill-indigo-400' : ''}`} />
+                    <Pin className={cn('w-3 h-3', isPinned && 'text-primary fill-primary')} aria-hidden />
                   </motion.button>
                 )}
               </div>
@@ -506,36 +484,36 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       </div>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <div className="p-3 border-t border-white/5 flex-shrink-0 bg-black/30 backdrop-blur-3xl relative z-20 space-y-3">
+      <div className="p-3 border-t border-subtle flex-shrink-0 relative z-20 space-y-3">
         {/* Device + duration row */}
         {!isCollapsed && (
           <div className="flex items-center justify-between px-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500">
-                {deviceView === 'desktop' && <Monitor className="w-3.5 h-3.5" />}
-                {deviceView === 'tablet' && <Tablet className="w-3.5 h-3.5" />}
-                {deviceView === 'mobile' && <Smartphone className="w-3.5 h-3.5" />}
+              <div className="w-7 h-7 rounded-lg ds-surface-subtle flex items-center justify-center text-theme-secondary">
+                {deviceView === 'desktop' && <Monitor className="w-3.5 h-3.5" aria-hidden />}
+                {deviceView === 'tablet' && <Tablet className="w-3.5 h-3.5" aria-hidden />}
+                {deviceView === 'mobile' && <Smartphone className="w-3.5 h-3.5" aria-hidden />}
               </div>
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">{deviceView}</span>
+              <span className="text-[11px] font-medium capitalize text-theme-muted">{deviceView}</span>
             </div>
-            <div className="text-[11px] font-black text-indigo-400 font-mono tabular-nums">{formatTime(videoDuration)}</div>
+            <div className="text-xs font-medium text-primary font-mono tabular-nums">{formatTime(videoDuration)}</div>
           </div>
         )}
 
         {/* Status + shortcuts row */}
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/5">
-          <Activity className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl ds-surface-subtle">
+          <Activity className="w-3.5 h-3.5 text-emerald-500" aria-hidden />
           {!isCollapsed && (
             <>
-              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex-1 leading-none">Neural Link Active</span>
+              <span className="text-[11px] font-medium text-theme-muted flex-1 leading-none">Ready</span>
               <button
                 type="button"
                 onClick={() => setShowShortcuts(v => !v)}
                 title="Keyboard shortcuts"
-                className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/5 border border-white/5 text-slate-600 hover:text-white transition-all"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-lg ds-surface-elevated text-theme-muted hover:text-theme-primary transition-colors"
               >
-                <Keyboard className="w-3 h-3" />
-                <span className="text-[8px] font-black">⌘</span>
+                <Keyboard className="w-3 h-3" aria-hidden />
+                <span className="text-[10px] font-medium">⌘</span>
               </button>
             </>
           )}
@@ -545,17 +523,17 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
         <AnimatePresence>
           {showShortcuts && !isCollapsed && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-full left-3 right-3 mb-2 p-4 rounded-2xl bg-black/90 border border-white/10 backdrop-blur-3xl z-50 shadow-2xl"
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+              className="absolute bottom-full left-3 right-3 mb-2 p-4 rounded-2xl ds-surface-elevated z-50"
             >
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                  <Command className="w-3 h-3 text-indigo-400" /> Keyboard Shortcuts
+                <p className="ds-text-label text-theme-primary flex items-center gap-2">
+                  <Command className="w-3 h-3 text-primary" aria-hidden /> Keyboard shortcuts
                 </p>
-                <button type="button" onClick={() => setShowShortcuts(false)} title="Close shortcuts" className="text-slate-600 hover:text-white">
-                  <X className="w-3.5 h-3.5" />
+                <button type="button" onClick={() => setShowShortcuts(false)} title="Close shortcuts" className="text-theme-muted hover:text-theme-primary">
+                  <X className="w-3.5 h-3.5" aria-hidden />
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-1.5">
@@ -563,15 +541,15 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                   const cat = ALL_CATEGORIES.find(c => c.id === catId)
                   if (!cat) return null
                   return (
-                    <div key={catId} className="flex items-center justify-between px-2 py-1 rounded-lg bg-white/5">
-                      <span className="text-[9px] text-slate-500 uppercase">{cat.label}</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[9px] font-mono text-white">{key}</kbd>
+                    <div key={catId} className="flex items-center justify-between px-2 py-1 rounded-lg ds-surface-subtle">
+                      <span className="text-[11px] text-theme-secondary truncate">{cat.label}</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-accent text-[10px] font-mono text-theme-primary">{key}</kbd>
                     </div>
                   )
                 })}
-                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-white/5 col-span-2">
-                  <span className="text-[9px] text-slate-500 uppercase">Search panels</span>
-                  <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[9px] font-mono text-white">⌘F</kbd>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg ds-surface-subtle col-span-2">
+                  <span className="text-[11px] text-theme-secondary">Search tools</span>
+                  <kbd className="px-1.5 py-0.5 rounded bg-accent text-[10px] font-mono text-theme-primary">⌘F</kbd>
                 </div>
               </div>
             </motion.div>

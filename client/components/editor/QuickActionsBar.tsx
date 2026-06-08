@@ -27,6 +27,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Wand2, Scissors, Type, Palette, Zap, Sparkles, Loader2, Brain, Eraser, Shuffle, Film, TrendingUp } from 'lucide-react'
 import { apiGet, apiPost } from '../../lib/api'
 import type { EditorCategory } from '../../types/editor'
+import { Badge } from '../ui'
+import { cn } from '../../lib/utils'
 
 const STYLE_INSIGHT_TIMEOUT_MS = 8000
 
@@ -250,44 +252,45 @@ export default function QuickActionsBar({
     // overflow-x-auto + flex-nowrap: rail scrolls horizontally on small
     // screens instead of being hidden, so mobile users can still tap
     // every action. The min-w-max trick keeps actions from squishing.
-    <div className="flex items-center gap-3 px-4 sm:px-6 py-3 bg-black/40 backdrop-blur-3xl border-b-2 border-white/5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden relative z-40">
+    <div className="flex items-center gap-3 px-4 sm:px-6 py-3 ds-surface-card rounded-none border-x-0 border-t-0 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden relative z-40">
       <div className="flex items-center gap-3 min-w-max">
-        <Action icon={Wand2} label="APPLY_STYLE" loading={busy === 'apply'}
+        <Action icon={Wand2} label="Apply style" loading={busy === 'apply'}
                 onClick={handleApplyStyle} accent="primary" />
 
         {onSplitAtPlayhead && (
-          <Action icon={Scissors} label="SPLIT" longLabel="SPLIT_SEQUENCE"
+          <Action icon={Scissors} label="Split" longLabel="Split at playhead"
                   onClick={onSplitAtPlayhead} hotkey="S" />
         )}
-        <Action icon={Type}    label="CAPTIONS"  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
-        <Action icon={Palette} label="GRADE"     onClick={() => setActiveCategory('color')}      hotkey="5" />
-        <Action icon={Zap}     label="EFFECTS"   onClick={() => setActiveCategory('effects')}    hotkey="4" />
-        <Action icon={Sparkles} label="NEURAL"       onClick={() => setActiveCategory('ai')}         hotkey="A" />
+        <Action icon={Type}    label="Captions"  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
+        <Action icon={Palette} label="Grade"     onClick={() => setActiveCategory('color')}      hotkey="5" />
+        <Action icon={Zap}     label="Effects"   onClick={() => setActiveCategory('effects')}    hotkey="4" />
+        <Action icon={Sparkles} label="AI tools"     onClick={() => setActiveCategory('ai')}         hotkey="A" />
         {onOpenSmartCleanup && (
-          <Action icon={Eraser} label="CLEAN" longLabel="NEURAL_CLEANUP"
+          <Action icon={Eraser} label="Clean" longLabel="Smart cleanup"
                   onClick={onOpenSmartCleanup} hotkey="C" />
         )}
         {/* Three competitive-edge actions wired to existing services. The
             backing routes already exist; these buttons surface them in
             one tap so users don't have to dig through sub-menus. */}
-        <Action icon={Shuffle} label="VARIANTS" longLabel="A/B_VARIANTS"
+        <Action icon={Shuffle} label="Variants" longLabel="A/B variants"
                 onClick={handleGenerateVariants} loading={busy === 'variants'} hotkey="V" />
         {contentId && (
-          <Action icon={Film} label="B-ROLL" longLabel="SUGGEST_B-ROLL"
+          <Action icon={Film} label="B-roll" longLabel="Suggest B-roll"
                   onClick={handleSuggestBRoll} loading={busy === 'broll'} hotkey="B" />
         )}
-        <Action icon={TrendingUp} label="TRENDS" longLabel="TRENDING_NOW"
+        <Action icon={TrendingUp} label="Trends" longLabel="Trending now"
                 onClick={handleTrending} loading={busy === 'trending'} hotkey="T" />
       </div>
 
       {learnedLabel && (
-        <div
-          className="hidden lg:flex ml-auto items-center gap-3 px-4 py-1.5 rounded-[1.25rem] bg-emerald-500/5 border-2 border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex-shrink-0 italic shadow-lg"
+        <Badge
+          variant="outline"
+          className="hidden lg:flex ml-auto items-center gap-2 px-3 py-1.5 border-emerald-500/30 text-emerald-500 flex-shrink-0 font-medium normal-case"
           title={`Click learned from ${insight!.totalPicks} of your published clips`}
         >
-          <Brain className="w-3.5 h-3.5 flex-shrink-0 animate-pulse" />
+          <Brain className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
           <span className="truncate max-w-[150px] lg:max-w-[220px]">{learnedLabel}</span>
-        </div>
+        </Badge>
       )}
     </div>
   )
@@ -310,26 +313,26 @@ function Action({
   loading?: boolean
   accent?: 'primary'
 }) {
-  const base = 'inline-flex items-center justify-center w-10 h-10 rounded-2xl transition-all active:scale-95 group relative flex-shrink-0'
+  const base = 'inline-flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-95 group relative flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
   const cls = accent === 'primary'
-    ? `${base} bg-gradient-to-tr from-indigo-500 to-fuchsia-500 hover:from-indigo-400 hover:to-fuchsia-400 text-white shadow-lg shadow-indigo-500/25`
-    : `${base} bg-white/[0.04] hover:bg-white/[0.1] border border-white/5 text-slate-400 hover:text-white shadow-sm`
-  
+    ? cn(base, 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm')
+    : cn(base, 'ds-surface-subtle border border-subtle text-theme-secondary hover:text-theme-primary')
+
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={loading}
       aria-label={loading ? `${longLabel || label} — loading` : (hotkey ? `${longLabel || label} (shortcut ${hotkey})` : (longLabel || label))}
-      className={`${cls} ${loading ? 'opacity-60 cursor-wait' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50`}
+      className={cn(cls, loading && 'opacity-60 cursor-wait')}
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
-      
+
       {/* Tooltip */}
       <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50">
-        <div className="bg-slate-900 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl">
+        <div className="ds-surface-elevated text-theme-primary text-[11px] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap">
           {longLabel || label}
-          {hotkey && <span className="ml-2 text-slate-500 border border-white/10 bg-black/40 rounded px-1">{hotkey}</span>}
+          {hotkey && <span className="ml-2 text-theme-muted border border-subtle rounded px-1">{hotkey}</span>}
         </div>
       </div>
     </button>
