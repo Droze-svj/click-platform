@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Zap, ShieldCheck, Cpu } from 'lucide-react';
 import type { Plan, BillingPeriod } from '../../lib/plans';
-import { formatPrice, formatPriceCadence, yearlySavingsPct } from '../../lib/plans';
+import { formatPrice, formatPriceCadence, freeMonthsYearly } from '../../lib/plans';
 import { PlanFeatureList } from './PlanFeatureList';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 export function PricingCard({ plan, period, onSelect, index }: Props) {
   const Icon = plan.icon;
   const featured = plan.featured;
-  const yearlySavings = yearlySavingsPct(plan);
+  const freeMonths = freeMonthsYearly(plan);
 
   return (
     <motion.div
@@ -77,7 +77,7 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
           className="mt-4 inline-flex items-center gap-3 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-widest italic"
         >
           <Zap size={12} />
-          UPLINK_BONUS: SAVE {yearlySavings}%
+          {freeMonths} MONTHS FREE
         </motion.div>
       )}
 

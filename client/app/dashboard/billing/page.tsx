@@ -5,16 +5,25 @@ import { useRouter } from 'next/navigation'
 import {
   Zap, ArrowRight, CreditCard, Receipt,
   TrendingUp, AlertTriangle, CheckCircle, Sparkles, Crown,
-  Database, Video, FileText, Calendar, Clock, RefreshCw, Download,
+  Database, Video, FileText, Calendar, Clock, Download, FlaskConical,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
 import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
+import { useEntitlements } from '../../../hooks/useEntitlements'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
-import { PLANS, buildCheckoutTarget, type BillingPeriod, type Plan as CanonicalPlan } from '../../../lib/plans'
+import {
+  PLANS,
+  buildCheckoutTarget,
+  fetchPublicCatalog,
+  earlyAccessFeatures,
+  type BillingPeriod,
+  type Plan as CanonicalPlan,
+  type CatalogFeature,
+} from '../../../lib/plans'
 import { cn } from '../../../lib/utils'
 import {
   Panel,
@@ -61,6 +70,7 @@ function fmtCurrency(n?: number, cur = 'USD') { if (n == null) return '—'; ret
 export default function BillingPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
+  const { tier: entTier, isEarlyAccess } = useEntitlements()
   const { t } = useTranslation()
   const { showToast } = useToast()
 
@@ -69,9 +79,14 @@ export default function BillingPage() {
   const [history, setHistory] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [upgradingId, setUpgradingId] = useState<string | null>(null)
+  const [earlyAccess, setEarlyAccess] = useState<CatalogFeature[]>([])
 
-  const currentPlan = (user?.subscription?.plan || 'starter').toLowerCase()
-  const subStatus = user?.subscription?.status || 'inactive'
+  // Derive the current plan from the canonical resolved entitlements tier
+  // (free/creator/pro/agency) — NOT the raw subscription.plan, which can be a
+  // legacy/blank value. entTier is the single source of truth the server
+  // already resolved for this user; default to 'free', never 'starter'.
+  const currentPlan = entTier || 'free'
+  const subStatus = user?.subscription?.status || (entTier !== 'free' ? 'active' : 'inactive')
 
   const loadAll = useCallback(async () => {
     try {
@@ -93,6 +108,15 @@ export default function BillingPage() {
     if (!user) { router.push('/login'); return }
     loadAll()
   }, [user, authLoading, router, loadAll])
+
+  // Real early-access feature list from the canonical catalog (GET /api/plans).
+  useEffect(() => {
+    let alive = true
+    fetchPublicCatalog().then((cat) => {
+      if (alive && cat) setEarlyAccess(earlyAccessFeatures(cat))
+    })
+    return () => { alive = false }
+  }, [])
 
   const handleUpgrade = async (plan: CanonicalPlan) => {
     if (plan.id === currentPlan) return
@@ -223,7 +247,7 @@ export default function BillingPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {PLANS.map(plan => {
-                const isCurrent = plan.id === currentPlan || (plan.id === 'free' && currentPlan === 'starter')
+                const isCurrent = plan.id === currentPlan
                 const isUpgrading = upgradingId === plan.id
                 const includedFeatures = plan.features.filter(f => f.included)
                 const PlanIcon = plan.icon
@@ -275,6 +299,55 @@ export default function BillingPage() {
               })}
             </div>
           </Panel>
+
+          {/* Agency early-access (real earlyAccess catalog features) */}
+          {earlyAccess.length > 0 && (
+            <Panel variant="bento" className="border-amber-500/20 bg-gradient-to-br from-amber-500/[0.05] to-fuchsia-600/[0.04]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-5 border-b border-[var(--border-subtle)]">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                    <FlaskConical size={20} aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="ds-text-h3 text-theme-primary">{t('billingPage.earlyAccessTitle')}</h2>
+                    <p className="ds-text-caption">
+                      {currentPlan === 'agency'
+                        ? t('billingPage.earlyAccessAvailable')
+                        : t('billingPage.earlyAccessLocked')}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={currentPlan === 'agency' ? 'secondary' : 'primary'}
+                  size="md"
+                  className="flex-shrink-0"
+                  onClick={() => router.push('/dashboard/labs')}
+                  rightIcon={<ArrowRight size={14} aria-hidden />}
+                >
+                  {currentPlan === 'agency' ? t('billingPage.openLabs') : t('billingPage.exploreLabs')}
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {earlyAccess.map((f) => {
+                  const unlocked = currentPlan === 'agency' && isEarlyAccess(f.id)
+                  return (
+                    <div key={f.id} className="ds-surface-subtle p-4 flex items-center gap-3">
+                      <span className={cn('flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg',
+                        unlocked ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/10 text-amber-500')}>
+                        {unlocked ? <CheckCircle size={17} aria-hidden /> : <Sparkles size={17} aria-hidden />}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="ds-text-label text-theme-primary truncate">{f.label}</p>
+                        <p className="ds-text-caption">
+                          {unlocked ? t('billingPage.earlyAccessOn') : t('billingPage.earlyAccessAgencyOnly')}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Panel>
+          )}
 
           {/* History (real /billing/history) */}
           <Panel variant="bento" className="p-0">

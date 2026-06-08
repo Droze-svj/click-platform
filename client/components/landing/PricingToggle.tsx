@@ -5,10 +5,11 @@ import type { BillingPeriod } from '../../lib/plans';
 interface Props {
   period: BillingPeriod;
   onChange: (p: BillingPeriod) => void;
-  yearlyDiscount?: number; // percent — to advertise the saving
+  /** The "free months" hook on the yearly option (canonical model = 2). */
+  freeMonths?: number;
 }
 
-export function PricingToggle({ period, onChange, yearlyDiscount = 20 }: Props) {
+export function PricingToggle({ period, onChange, freeMonths = 2 }: Props) {
   return (
     <div className="inline-flex items-center gap-2 p-1.5 rounded-full bg-white/5 border border-white/10" role="tablist" aria-label="Billing period">
       {(['monthly', 'yearly'] as BillingPeriod[]).map((p) => {
@@ -25,8 +26,8 @@ export function PricingToggle({ period, onChange, yearlyDiscount = 20 }: Props) 
           >
             {p === 'monthly' ? 'Monthly' : 'Yearly'}
             {p === 'yearly' && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
-                −{yearlyDiscount}%
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold normal-case tracking-normal">
+                {freeMonths} months free
               </span>
             )}
           </button>
