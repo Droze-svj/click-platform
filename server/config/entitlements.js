@@ -72,6 +72,25 @@ function tierOrder(tierId) {
 // unlocks it. `earlyAccess: true` flags Agency-exclusive flagship / brand-new
 // 2026 capabilities surfaced as "early access" in the UI.
 //
+// ── Agency-first rollout convention (the flagship's "constant growth" edge) ──
+// Every NEW AI feature / tool lands at AGENCY FIRST, then automatically rolls
+// down to lower tiers on a schedule — no code change to release a rolldown, just
+// a date. Register a new feature like:
+//
+//   my_new_tool: {
+//     label: 'My new tool', category: 'ai', minTier: 'agency',
+//     rollout: { stage: 'agency-first', addedAt: '2026-06-08',
+//                descendTo: 'pro', descendOn: '2026-09-01' },
+//   }
+//
+// `effectiveMinTier()` returns `descendTo` once `descendOn` has passed (so the
+// tool widens to Pro on that date by itself); until then it stays Agency-only.
+// `earlyAccess` is DERIVED from rollout (agency-first + a future descendOn) OR
+// the legacy `earlyAccess: true` boolean — both keep working. Stages:
+//   'agency-first' — Agency-exclusive now (shows as early access)
+//   'descending'   — past descendOn, available to descendTo and up
+//   'ga'           — fully rolled out (no early-access flag)
+//
 // Every key from the old tierGate.TIER_FEATURES is folded in below, mapped to a
 // canonical tier that preserves the behavior the existing routes already expect:
 //   - ai_analysis / auto_captions: creator (hook-analysis, captions routes)
@@ -120,12 +139,21 @@ const FEATURES = {
   api_access:       { label: 'Developer API access',     category: 'platform', minTier: 'agency', earlyAccess: true },
   client_feedback_ai:{ label: 'AI client-feedback engine', category: 'ai',    minTier: 'agency' },
 
-  // ── Agency flagship / 2026 early-access ──
-  generative_dubbing:{ label: 'Generative dubbing (10 langs)', category: 'ai', minTier: 'agency', earlyAccess: true },
-  ai_foley:         { label: 'AI foley / sound design',  category: 'ai',      minTier: 'agency', earlyAccess: true },
-  retention_heatmap:{ label: 'Retention heatmap',        category: 'analytics', minTier: 'agency', earlyAccess: true },
-  priority_gpu:     { label: 'Dedicated GPU pods',       category: 'compute', minTier: 'agency', earlyAccess: true },
-  webgpu_rendering: { label: 'WebGPU real-time preview', category: 'compute', minTier: 'agency', earlyAccess: true },
+  // ── Agency flagship / 2026 early-access (Agency-first rollout) ──
+  // These ship to Agency first and auto-widen to Pro on `descendOn` (the owner
+  // adjusts the date when a tool is ready to roll down). Until then they stay
+  // Agency-exclusive and show as "early access". This is the systematic
+  // "new tools land at Agency first, then roll down" growth mechanism.
+  generative_dubbing:{ label: 'Generative dubbing (10 langs)', category: 'ai', minTier: 'agency',
+    rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
+  ai_foley:         { label: 'AI foley / sound design',  category: 'ai',      minTier: 'agency',
+    rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
+  retention_heatmap:{ label: 'Retention heatmap',        category: 'analytics', minTier: 'agency',
+    rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
+  priority_gpu:     { label: 'Dedicated GPU pods',       category: 'compute', minTier: 'agency',
+    rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
+  webgpu_rendering: { label: 'WebGPU real-time preview', category: 'compute', minTier: 'agency',
+    rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
 };
 
 // ─── LIMITS ──────────────────────────────────────────────────────────────────
@@ -230,11 +258,61 @@ function resolveTier(user) {
   return 'free';
 }
 
-/** True if `tier` unlocks `featureId`. Unknown feature → false (fail closed). */
-function hasFeature(tier, featureId) {
+/**
+ * The tier that ACTUALLY unlocks a feature right now, honouring the Agency-first
+ * rollout schedule. Before `rollout.descendOn`, this is the feature's `minTier`
+ * (Agency-only for agency-first features); once that date has passed it widens to
+ * `rollout.descendTo`. No rollout / no descend date → just `minTier`.
+ *
+ * Parsing `descendOn` defensively: an invalid/missing date never descends.
+ *
+ * @param {string} featureId
+ * @param {number} [now=Date.now()] - injectable clock for testing.
+ * @returns {string} canonical tier id (defaults to the feature's minTier).
+ */
+function effectiveMinTier(featureId, now = Date.now()) {
+  const feat = FEATURES[featureId];
+  if (!feat) return 'agency'; // unknown → most restrictive (fail closed)
+  const r = feat.rollout;
+  if (r && r.descendTo && r.descendOn) {
+    const when = new Date(r.descendOn).getTime();
+    if (Number.isFinite(when) && now >= when && TIER_BY_ID[r.descendTo]) {
+      return r.descendTo;
+    }
+  }
+  return feat.minTier;
+}
+
+/**
+ * Whether a feature is currently "early access" (Agency-exclusive flagship).
+ * DERIVED: an agency-first rollout whose descendOn is still in the future, OR
+ * the legacy `earlyAccess: true` boolean. Once a feature has descended it is no
+ * longer early access.
+ *
+ * @param {string} featureId
+ * @param {number} [now=Date.now()]
+ */
+function isEarlyAccess(featureId, now = Date.now()) {
   const feat = FEATURES[featureId];
   if (!feat) return false;
-  return tierOrder(tier) >= tierOrder(feat.minTier);
+  const r = feat.rollout;
+  if (r && r.stage === 'agency-first') {
+    if (!r.descendOn) return true; // agency-first with no descend date = early access
+    const when = new Date(r.descendOn).getTime();
+    if (!Number.isFinite(when) || now < when) return true;
+    return false; // descend date passed → rolled down, no longer early access
+  }
+  return feat.earlyAccess === true;
+}
+
+/**
+ * True if `tier` unlocks `featureId` right now. Unknown feature → false (fail
+ * closed). Honours the Agency-first rollout schedule via effectiveMinTier.
+ */
+function hasFeature(tier, featureId, now = Date.now()) {
+  const feat = FEATURES[featureId];
+  if (!feat) return false;
+  return tierOrder(tier) >= tierOrder(effectiveMinTier(featureId, now));
 }
 
 /** Limit value for a tier+key (undefined if unknown). May be Infinity. */
@@ -248,9 +326,9 @@ function featuresForTier(tier) {
   return Object.keys(FEATURES).filter((id) => hasFeature(tier, id));
 }
 
-/** List of feature ids flagged earlyAccess. */
-function earlyAccessFeatures() {
-  return Object.keys(FEATURES).filter((id) => FEATURES[id].earlyAccess === true);
+/** List of feature ids currently early access (derived; honours rollout dates). */
+function earlyAccessFeatures(now = Date.now()) {
+  return Object.keys(FEATURES).filter((id) => isEarlyAccess(id, now));
 }
 
 // ─── JSON BOUNDARY ───────────────────────────────────────────────────────────
@@ -290,7 +368,7 @@ function publicCatalog() {
         id,
         label: FEATURES[id].label,
         category: FEATURES[id].category,
-        earlyAccess: FEATURES[id].earlyAccess === true,
+        earlyAccess: isEarlyAccess(id),
       })),
       limits: serializeLimits(t.id),
     })),
@@ -299,7 +377,9 @@ function publicCatalog() {
       label: FEATURES[id].label,
       category: FEATURES[id].category,
       minTier: FEATURES[id].minTier,
-      earlyAccess: FEATURES[id].earlyAccess === true,
+      // Effective unlock tier right now (honours Agency-first rollout schedule).
+      effectiveMinTier: effectiveMinTier(id),
+      earlyAccess: isEarlyAccess(id),
     })),
   };
 }
@@ -312,6 +392,8 @@ module.exports = {
   tierOrder,
   resolveTier,
   hasFeature,
+  effectiveMinTier,
+  isEarlyAccess,
   limitFor,
   featuresForTier,
   earlyAccessFeatures,
