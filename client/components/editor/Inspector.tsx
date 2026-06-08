@@ -3,6 +3,7 @@
 import React from 'react'
 import { Type, Film, AlignLeft, Trash2, Lock, Unlock, X, type LucideIcon } from 'lucide-react'
 import type { TextOverlay, TimelineSegment } from '../../types/editor'
+import { Button, IconButton, Input, Textarea, Slider, EmptyState } from '../ui'
 
 /**
  * Inspector — single right-side panel that switches its body based on what
@@ -41,14 +42,13 @@ export default function Inspector({
   onUpdateSegment, onUpdateText, onDeleteSegment, onDeleteText, onClose,
 }: Props) {
   return (
-    <aside className="w-72 flex-shrink-0 bg-black/40 backdrop-blur-2xl border-l border-white/[0.06] flex flex-col">
-      <header className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
-        <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Inspector</h3>
+    <aside className="w-72 flex-shrink-0 ds-surface-card rounded-none border-y-0 border-r-0 flex flex-col">
+      <header className="px-4 py-3 border-b border-subtle flex items-center justify-between">
+        <h3 className="ds-text-label text-theme-secondary">Inspector</h3>
         {onClose && (
-          <button type="button" onClick={onClose} title="Close inspector"
-            className="w-6 h-6 rounded-md text-slate-500 hover:text-white hover:bg-white/[0.06]">
-            <X size={12} className="mx-auto" />
-          </button>
+          <IconButton aria-label="Close inspector" size="sm" variant="ghost" onClick={onClose} title="Close inspector">
+            <X size={14} />
+          </IconButton>
         )}
       </header>
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
@@ -119,13 +119,13 @@ function TextOverlayInspector({
     <div className="space-y-5">
       <SectionHeader icon={Type} label="Text" hint={(overlay.text || '').slice(0, 24) || '—'} />
       <FieldRow label="Content" stack>
-        <textarea
+        <Textarea
           value={overlay.text}
           onChange={(e) => onUpdate({ text: e.target.value })}
           rows={2}
           aria-label="Text overlay content"
           placeholder="Caption text"
-          className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-[12px] text-white focus:border-fuchsia-500/40 focus:outline-none resize-none"
+          className="min-h-0 resize-none text-[12px]"
         />
       </FieldRow>
       <FieldRow label="Font size" suffix="px">
@@ -144,7 +144,7 @@ function TextOverlayInspector({
         <input type="color" value={overlay.color}
           onChange={(e) => onUpdate({ color: e.target.value })}
           aria-label="Text colour"
-          className="h-8 w-12 bg-transparent border border-white/10 rounded cursor-pointer" />
+          className="h-8 w-12 bg-transparent border border-subtle rounded cursor-pointer" />
       </FieldRow>
       <FieldRow label="X" suffix="%">
         <NumberField value={overlay.x} step={1} min={0} max={100}
@@ -170,30 +170,25 @@ function TextOverlayInspector({
 // ── Empty state ──────────────────────────────────────────────────────────────
 function EmptyInspector({ message }: { message?: string } = {}) {
   return (
-    <div className="text-center py-12 text-slate-500">
-      <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center">
-        <AlignLeft size={16} className="text-slate-600" />
-      </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
-        {message || 'Nothing selected'}
-      </p>
-      <p className="text-[10px] text-slate-600 mt-2 leading-relaxed max-w-[200px] mx-auto">
-        Click a clip on the timeline or a caption on the canvas to edit its properties.
-      </p>
-    </div>
+    <EmptyState
+      icon={AlignLeft}
+      title={message || 'Nothing selected'}
+      description="Click a clip on the timeline or a caption on the canvas to edit its properties."
+      className="py-12"
+    />
   )
 }
 
 // ── Subcomponents ───────────────────────────────────────────────────────────
 function SectionHeader({ icon: Icon, label, hint }: { icon: LucideIcon; label: string; hint?: string }) {
   return (
-    <div className="flex items-center gap-2 pb-2 border-b border-white/[0.06]">
-      <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/10 flex items-center justify-center flex-shrink-0">
-        <Icon size={12} className="text-fuchsia-300" />
+    <div className="flex items-center gap-2 pb-2 border-b border-subtle">
+      <div className="w-7 h-7 rounded-lg ds-surface-subtle flex items-center justify-center flex-shrink-0">
+        <Icon size={12} className="text-theme-primary" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black text-white uppercase tracking-[0.22em]">{label}</p>
-        {hint && <p className="text-[9px] text-slate-500 truncate">{hint}</p>}
+        <p className="ds-text-label text-theme-primary">{label}</p>
+        {hint && <p className="text-[11px] text-theme-muted truncate">{hint}</p>}
       </div>
     </div>
   )
@@ -203,17 +198,17 @@ function FieldRow({ label, suffix, stack, children }: { label: string; suffix?: 
   if (stack) {
     return (
       <div className="space-y-1.5">
-        <label className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">{label}</label>
+        <label className="ds-text-label text-theme-muted">{label}</label>
         {children}
       </div>
     )
   }
   return (
     <div className="flex items-center gap-3">
-      <label className="text-[10px] font-bold text-slate-400 w-16 flex-shrink-0">{label}</label>
+      <label className="text-[11px] font-medium text-theme-secondary w-16 flex-shrink-0">{label}</label>
       <div className="flex-1 flex items-center gap-2">
         {children}
-        {suffix && <span className="text-[9px] text-slate-600">{suffix}</span>}
+        {suffix && <span className="text-[11px] text-theme-muted">{suffix}</span>}
       </div>
     </div>
   )
@@ -221,7 +216,7 @@ function FieldRow({ label, suffix, stack, children }: { label: string; suffix?: 
 
 function NumberField({ value, onChange, step, min, max, label }: { value: number; onChange: (v: number) => void; step?: number; min?: number; max?: number; label?: string }) {
   return (
-    <input
+    <Input
       type="number"
       value={Number.isFinite(value) ? value : 0}
       step={step}
@@ -233,7 +228,7 @@ function NumberField({ value, onChange, step, min, max, label }: { value: number
         const v = parseFloat(e.target.value)
         if (Number.isFinite(v)) onChange(v)
       }}
-      className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-[12px] text-white text-right tabular-nums focus:border-fuchsia-500/40 focus:outline-none"
+      className="h-9 px-2 py-1.5 text-[12px] text-right tabular-nums"
     />
   )
 }
@@ -241,11 +236,11 @@ function NumberField({ value, onChange, step, min, max, label }: { value: number
 function RangeField({ value, onChange, min, max, step }: { value: number; onChange: (v: number) => void; min: number; max: number; step?: number }) {
   return (
     <div className="flex items-center gap-2 flex-1">
-      <input type="range" value={value} onChange={(e) => onChange(parseFloat(e.target.value))}
+      <Slider value={value} onValueChange={onChange}
         min={min} max={max} step={step}
         aria-label="value"
-        className="flex-1 accent-fuchsia-500" />
-      <span className="text-[10px] tabular-nums text-slate-400 w-8 text-right">{value.toFixed(2)}</span>
+        className="flex-1" />
+      <span className="text-[11px] tabular-nums text-theme-secondary w-8 text-right">{value.toFixed(2)}</span>
     </div>
   )
 }
@@ -254,8 +249,8 @@ function ToggleField({ value, onChange, onLabel, offLabel }: { value: boolean; o
   const ariaProps = { 'aria-pressed': value }
   return (
     <button type="button" onClick={() => onChange(!value)} {...ariaProps}
-      className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${
-        value ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-white/[0.02] border-white/10 text-slate-500 hover:text-white'
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium border transition-colors ${
+        value ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'ds-surface-subtle text-theme-muted hover:text-theme-primary'
       }`}>
       {value ? onLabel : offLabel}
       {value ? 'Locked' : 'Unlocked'}
@@ -265,11 +260,10 @@ function ToggleField({ value, onChange, onLabel, offLabel }: { value: boolean; o
 
 function DangerZone({ onDelete, label }: { onDelete: () => void; label: string }) {
   return (
-    <div className="pt-3 border-t border-white/[0.06]">
-      <button type="button" onClick={onDelete}
-        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-rose-500/20 bg-rose-500/[0.04] text-rose-300 text-[10px] font-bold uppercase tracking-[0.22em] hover:bg-rose-500/10 hover:border-rose-500/40">
-        <Trash2 size={11} /> {label}
-      </button>
+    <div className="pt-3 border-t border-subtle">
+      <Button type="button" variant="destructive" onClick={onDelete} leftIcon={<Trash2 size={14} />} className="w-full">
+        {label}
+      </Button>
     </div>
   )
 }

@@ -2,10 +2,14 @@
 
 import React from 'react'
 import type { LucideIcon } from 'lucide-react'
+import { EmptyState } from '../ui'
+import { cn } from '../../lib/utils'
 
 /**
  * Drop-in empty state for editor views. Consistent visual treatment so the
  * dozen+ view components don't each invent their own "nothing here yet" UI.
+ * Restyled onto the 2026 design system: thin wrapper over the shared
+ * `EmptyState` primitive so every editor view matches the calm chrome.
  *
  *   <EditorEmptyState
  *     icon={Layers}
@@ -20,7 +24,10 @@ interface Props {
   title: string
   hint?: string
   action?: React.ReactNode
-  /** When provided, the icon tile uses this gradient (Tailwind `from-X to-Y`). */
+  /**
+   * Retained for API compatibility — previously tinted the icon tile. The 2026
+   * system uses a single calm accent tile, so this is accepted but not styled.
+   */
   gradient?: string
   className?: string
 }
@@ -30,22 +37,18 @@ export default function EditorEmptyState({
   title,
   hint,
   action,
-  gradient = 'from-fuchsia-500/15 to-violet-500/15',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  gradient,
   className = '',
 }: Props) {
   return (
-    <div className={`flex flex-col items-center justify-center text-center px-6 py-12 ${className}`}>
-      {Icon && (
-        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} border border-white/10 flex items-center justify-center mb-4`}>
-          <Icon className="w-5 h-5 text-fuchsia-300" />
-        </div>
-      )}
-      <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-[0.22em] mb-2">{title}</h3>
-      {hint && (
-        <p className="text-[11px] text-slate-500 leading-relaxed max-w-[280px]">{hint}</p>
-      )}
-      {action && <div className="mt-5">{action}</div>}
-    </div>
+    <EmptyState
+      icon={Icon}
+      title={title}
+      description={hint}
+      action={action}
+      className={cn('px-6 py-12', className)}
+    />
   )
 }
 
@@ -55,9 +58,9 @@ export default function EditorEmptyState({
  */
 export function EditorSkeleton({ rows = 4, className = '' }: { rows?: number; className?: string }) {
   return (
-    <div className={`space-y-2 ${className}`} role="status" aria-label="Loading">
+    <div className={cn('space-y-2', className)} role="status" aria-label="Loading">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-12 rounded-xl bg-gradient-to-r from-white/[0.03] via-white/[0.06] to-white/[0.03] animate-pulse"
+        <div key={i} className="h-12 rounded-xl ds-surface-subtle motion-safe:animate-pulse"
           style={{ animationDelay: `${i * 80}ms` } as React.CSSProperties} />
       ))}
     </div>

@@ -5,8 +5,10 @@ import {
   Scissors, Trash2, Lock, Unlock, VolumeX, Volume2, Magnet, Maximize2,
   ZoomIn, ZoomOut, Copy, ClipboardPaste, Undo2, Redo2, Music, MicOff, Mic,
   Layers, Eye, EyeOff, ArrowLeftRight, Play, Square, Plus, MoreHorizontal,
-  Sparkles, Wand2, Repeat, FastForward, Rewind, ChevronDown, ChevronUp
+  Sparkles, Wand2, Repeat, FastForward, Rewind, ChevronDown, ChevronUp,
+  Timer
 } from 'lucide-react'
+import { cn } from '../../lib/utils'
 
 export interface TimelineToolbarProps {
   // Selection
@@ -77,14 +79,14 @@ const ToolButton: React.FC<React.PropsWithChildren<{
   const dims = size === 'sm' ? 'w-8 h-8 rounded-lg' : 'w-9 h-9 rounded-xl'
   const tone =
     disabled
-      ? 'bg-white/[0.02] text-slate-600 cursor-not-allowed'
+      ? 'ds-surface-subtle text-theme-muted cursor-not-allowed opacity-50'
       : variant === 'danger'
-        ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20 hover:text-rose-300'
+        ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30 hover:bg-rose-500/20'
         : variant === 'magic'
-          ? 'bg-gradient-to-br from-fuchsia-600 to-violet-700 text-white border border-fuchsia-400/40 hover:from-fuchsia-500 hover:to-violet-600 shadow-[0_8px_24px_rgba(217,70,239,0.25)]'
+          ? 'bg-primary text-primary-foreground border border-transparent hover:bg-primary/90 shadow-sm'
           : active
-            ? 'bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/40'
-            : 'bg-white/[0.03] text-slate-300 border border-white/10 hover:bg-white/[0.06] hover:text-white hover:border-white/20'
+            ? 'bg-primary/10 text-primary border border-primary/30'
+            : 'ds-surface-subtle text-theme-secondary border border-subtle hover:text-theme-primary'
   return (
     <button
      type="button"
@@ -92,16 +94,16 @@ const ToolButton: React.FC<React.PropsWithChildren<{
       aria-label={title}
       onClick={onClick}
       disabled={disabled}
-      className={`${btnBase} ${dims} ${tone}`}
+      className={cn(btnBase, dims, tone)}
     >
       {children}
     </button>
   )
 }
 
-const Divider = () => <div className="w-px h-6 bg-white/10 self-center" />
+const Divider = () => <div className="w-px h-6 bg-border self-center" />
 const GroupLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 hidden xl:inline-block px-1">{children}</span>
+  <span className="ds-text-label text-theme-muted hidden xl:inline-block px-1">{children}</span>
 )
 
 /**
@@ -150,7 +152,7 @@ const TimelineToolbar: React.FC<TimelineToolbarProps> = ({
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="w-full flex flex-col bg-[#0a0a14]/95 backdrop-blur-2xl border-y border-white/5">
+    <div className="w-full flex flex-col ds-surface-card rounded-none border-x-0">
       <div className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto custom-scrollbar">
         {/* History */}
         <GroupLabel>History</GroupLabel>
@@ -226,22 +228,22 @@ const TimelineToolbar: React.FC<TimelineToolbarProps> = ({
       </div>
 
       {/* Status bar — playhead time, duration, selection, zoom */}
-      <div className="flex items-center justify-between px-4 py-1.5 border-t border-white/5 bg-black/40 text-[10px] font-mono text-slate-400">
+      <div className="flex items-center justify-between px-4 py-1.5 border-t border-subtle text-[11px] font-mono text-theme-muted">
         <div className="flex items-center gap-3">
-          <span className="text-fuchsia-400">{fmt(currentTime)}</span>
-          <span className="text-slate-600">/</span>
-          <span>{fmt(duration)}</span>
-          <span className="text-slate-600 ml-2">·</span>
-          <span className={hasSelection ? 'text-emerald-400' : 'text-slate-500'}>
+          <span className="text-primary">{fmt(currentTime)}</span>
+          <span className="text-theme-muted">/</span>
+          <span className="text-theme-secondary">{fmt(duration)}</span>
+          <span className="text-theme-muted ml-2">·</span>
+          <span className={hasSelection ? 'text-emerald-500' : 'text-theme-muted'}>
             {hasSelection ? `${selectedCount} selected` : 'no selection'}
           </span>
         </div>
         <div className="flex items-center gap-3">
-          {snapToBeat && <span className="text-amber-400">⏱ beat-sync</span>}
-          {rippleDelete && <span className="text-cyan-400">↔ ripple</span>}
-          {trackLocked && <span className="text-rose-400">🔒 locked</span>}
-          {trackMuted && <span className="text-slate-500">🔇 muted</span>}
-          <span>zoom {Math.round(zoom * 100)}%</span>
+          {snapToBeat && <span className="inline-flex items-center gap-1 text-amber-500"><Timer className="w-3 h-3" aria-hidden /> beat-sync</span>}
+          {rippleDelete && <span className="inline-flex items-center gap-1 text-cyan-500"><ArrowLeftRight className="w-3 h-3" aria-hidden /> ripple</span>}
+          {trackLocked && <span className="inline-flex items-center gap-1 text-rose-500"><Lock className="w-3 h-3" aria-hidden /> locked</span>}
+          {trackMuted && <span className="inline-flex items-center gap-1 text-theme-muted"><VolumeX className="w-3 h-3" aria-hidden /> muted</span>}
+          <span className="text-theme-secondary">zoom {Math.round(zoom * 100)}%</span>
         </div>
       </div>
     </div>
