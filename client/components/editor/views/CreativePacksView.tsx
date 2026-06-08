@@ -6,8 +6,14 @@ import {
   Wand, CheckCircle2, Lock, Sliders, BookOpen,
   TrendingUp, Award, Target, Rocket, Mic, type LucideIcon,
 } from 'lucide-react'
-import { Panel, Button, Badge, SectionHeader } from '../../ui'
+import { Panel, Button, Badge, SectionHeader, UpgradeModal } from '../../ui'
 import { cn } from '../../../lib/utils'
+import { useEntitlements } from '../../../hooks/useEntitlements'
+
+// Premium packs require the canonical `style_packs` entitlement
+// (server/config/entitlements.js — "Creativity style packs", minTier creator).
+// Free users lack it; the gate blocks application and opens the UpgradeModal.
+const PREMIUM_PACK_FEATURE = 'style_packs'
 
 interface CreativePack {
   id: string
@@ -261,11 +267,16 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
   const [appliedId, setAppliedId] = useState<string | null>(null)
   const [applying, setApplying] = useState<string | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const { hasFeature, tier } = useEntitlements()
+
+  const canUsePremium = hasFeature(PREMIUM_PACK_FEATURE)
 
   const handleApply = async (pack: CreativePack) => {
-    if (pack.premium) {
-      // soft-paywall — frontend only
-      showToast?.(`${pack.name} is a Pro pack — upgrade to unlock.`, 'info')
+    if (pack.premium && !canUsePremium) {
+      // REAL gate: do NOT apply — open the paywall instead.
+      setUpgradeOpen(true)
+      return
     }
     setApplying(pack.id)
     setPreviewId(null)
@@ -306,6 +317,7 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
           const isApplied = appliedId === pack.id
           const isApplying = applying === pack.id
           const isPreviewing = previewId === pack.id
+          const isLocked = !!pack.premium && !canUsePremium
 
           return (
             <Panel
@@ -366,12 +378,13 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
                   <Button
                     size="sm"
                     className="flex-1"
+                    variant={isLocked ? 'secondary' : 'primary'}
                     onClick={() => handleApply(pack)}
                     disabled={!!applying}
                     loading={isApplying}
-                    leftIcon={!isApplying ? (isApplied ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <Rocket className="h-3.5 w-3.5" aria-hidden />) : undefined}
+                    leftIcon={!isApplying ? (isLocked ? <Lock className="h-3.5 w-3.5" aria-hidden /> : isApplied ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <Rocket className="h-3.5 w-3.5" aria-hidden />) : undefined}
                   >
-                    {isApplying ? 'Applying…' : isApplied ? 'Applied' : 'Apply pack'}
+                    {isApplying ? 'Applying…' : isLocked ? 'Unlock pack' : isApplied ? 'Applied' : 'Apply pack'}
                   </Button>
                 </div>
               </div>
@@ -390,6 +403,16 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
           </p>
         </div>
       </Panel>
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        feature={PREMIUM_PACK_FEATURE}
+        requiredTier="creator"
+        currentTier={tier}
+        reason="feature"
+        context="Premium packs include extended licensing and 4K stock."
+      />
     </div>
   )
 }
