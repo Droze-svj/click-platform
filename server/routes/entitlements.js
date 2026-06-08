@@ -13,6 +13,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const entitlements = require('../config/entitlements');
+const { publicAiProfile } = require('../config/aiProfiles');
 
 const router = express.Router();
 
@@ -50,6 +51,10 @@ router.get('/me/entitlements', auth, (req, res) => {
     earlyAccess: entitlements
       .earlyAccessFeatures()
       .filter((id) => entitlements.hasFeature(tier, id)),
+    // Honest, derived view of the AI intelligence level this tier ACTUALLY runs
+    // (effort/output/live-web depth) — no invented benchmarks. Powers the real
+    // Agency AI-edge indicator on the client.
+    aiProfile: publicAiProfile(tier),
   });
 });
 
