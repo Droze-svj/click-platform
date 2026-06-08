@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Virtuoso } from 'react-virtuoso'
 import {
-  Cpu,
   Zap,
   Loader2,
   Sparkles,
@@ -15,12 +14,13 @@ import {
   AlertCircle,
   Type,
   Radio,
-  Orbit,
   Fingerprint,
   Target,
   ArrowUpRight,
   ShieldCheck,
-  Layers
+  Layers,
+  Globe,
+  Crown
 } from 'lucide-react'
 import { Lock } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
@@ -39,21 +39,6 @@ const AI_AGENT_FEATURE = 'ai_agent'
 
 const INACTIVE_PILL =
   'border-border bg-background/40 text-theme-secondary hover:text-theme-primary'
-
-const ENGINE_COLORS: Record<'gpt4' | 'claude' | 'gemini', { active: string; inactive: string }> = {
-  gpt4: {
-    active: 'bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-500',
-    inactive: INACTIVE_PILL,
-  },
-  claude: {
-    active: 'bg-orange-500/15 border-orange-500/40 text-orange-500',
-    inactive: INACTIVE_PILL,
-  },
-  gemini: {
-    active: 'bg-blue-500/15 border-blue-500/40 text-blue-500',
-    inactive: INACTIVE_PILL,
-  },
-}
 
 const PERSONA_COLORS: Record<'beast' | 'minimalist' | 'architect' | 'educator', { active: string; inactive: string; activeIconBg: string; inactiveIconBg: string }> = {
   beast: {
@@ -135,17 +120,24 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   const [requirementsReady, setRequirementsReady] = useState<boolean | null>(null)
   const [requirementsMessage, setRequirementsMessage] = useState<string>('')
   const [activeThought, setActiveThought] = useState('')
-  const [activeEngine, setActiveEngine] = useState<'gpt4' | 'claude' | 'gemini'>('gpt4')
   const [activePersona, setActivePersona] = useState<'beast' | 'minimalist' | 'architect' | 'educator'>('beast')
   const [showSwarmHUD, setShowSwarmHUD] = useState(false)
   const [swarmHUDTask, setSwarmHUDTask] = useState('')
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
   const [spokenLanguage, setSpokenLanguage] = useState('auto')
 
-  // Entitlements — honest gate for Pro-only autonomous AI tools.
-  const { hasFeature, tier } = useEntitlements()
+  // Entitlements — honest gate for Pro-only autonomous AI tools + the REAL AI
+  // intelligence level this tier runs (no fake "engine" choice).
+  const { hasFeature, tier, aiProfile } = useEntitlements()
   const [upgradeOpen, setUpgradeOpen] = useState(false)
+  // When true, the upgrade modal pitches the Agency AI edge (deeper reasoning +
+  // more live web); otherwise it's the Pro `ai_agent` gate.
+  const [upgradeEdge, setUpgradeEdge] = useState(false)
   const aiAgentUnlocked = hasFeature(AI_AGENT_FEATURE)
+  const isAgency = tier === 'agency'
+
+  const openProGate = () => { setUpgradeEdge(false); setUpgradeOpen(true) }
+  const openAgencyEdge = () => { setUpgradeEdge(true); setUpgradeOpen(true) }
 
   const languages = [
     { code: 'auto', name: 'Auto-Detect Spoken Language' },
@@ -166,11 +158,12 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
     { code: 'vi', name: 'Vietnamese (Tiếng Việt)' }
   ]
 
-  const engines = [
-    { id: 'gpt4', name: 'GPT-4o', maker: 'OpenAI', icon: Cpu, color: 'fuchsia' },
-    { id: 'claude', name: 'Claude 3', maker: 'Anthropic', icon: Fingerprint, color: 'orange' },
-    { id: 'gemini', name: 'Gemini Pro', maker: 'Google', icon: Orbit, color: 'blue' },
-  ] as const
+  // Honest summary of the AI intelligence level this tier actually runs — built
+  // from the real aiProfile (effort/output/live-web depth), never a fake engine.
+  const aiLevelBits = [
+    aiProfile.deepReasoning ? 'deep reasoning' : 'standard reasoning',
+    aiProfile.liveWeb ? `live web (${aiProfile.maxWebSearches} sources)` : 'no live web',
+  ]
 
   const personas = [
     { id: 'beast', name: 'The Beast', desc: 'High-Retention / MrBeast Style', icon: Flame, color: 'orange' },
@@ -221,7 +214,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
   const handleForge = async () => {
     if (!aiAgentUnlocked) {
-      setUpgradeOpen(true)
+      openProGate()
       return
     }
     if (!onForgeMaster) return
@@ -248,11 +241,10 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   const executeExtractQuotes = async () => {
     try {
       setIsExtractingQuotes(true)
-      showToast(`Extracting quotes via ${engines.find(e => e.id === activeEngine)?.name}…`, 'info')
+      showToast(`Extracting quotes with ${aiProfile.label}…`, 'info')
       const fullText = editingWords.map(w => w.word).join(' ')
       const data = await apiPost<{ success?: boolean; quotes?: any[] }>('/ai/extract-quotes', {
         transcript: fullText,
-        engine: activeEngine,
         persona: activePersona
       })
       if (data?.success && data.quotes) {
@@ -517,19 +509,19 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       <motion.div variants={itemVariants} className="space-y-6">
         <div className="flex flex-col justify-between gap-8 xl:flex-row xl:items-start">
           <div className="space-y-5">
-            <SectionHeader as="h1" title="AI Storyteller" description={`Elite AI · ${String(activeEngine || 'idle')}`} />
+            <SectionHeader as="h1" title="AI Storyteller" description={`${aiProfile.label} · ${aiLevelBits.join(' · ')}`} />
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <Button
                 variant="primary"
-                onClick={() => (aiAgentUnlocked ? setView('mimic') : setUpgradeOpen(true))}
+                onClick={() => (aiAgentUnlocked ? setView('mimic') : openProGate())}
                 leftIcon={aiAgentUnlocked ? <Fingerprint className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
               >
                 The Mimic
               </Button>
               <Button
                 variant="secondary"
-                onClick={() => (aiAgentUnlocked ? setView('variant-factory') : setUpgradeOpen(true))}
+                onClick={() => (aiAgentUnlocked ? setView('variant-factory') : openProGate())}
                 leftIcon={aiAgentUnlocked ? <Target className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
               >
                 Variant Factory
@@ -540,26 +532,39 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
               <div className="mx-1 hidden h-8 w-px bg-border md:block" />
 
-              <div className="flex flex-wrap gap-2">
-                {engines.map(engine => {
-                  const Icon = engine.icon
-                  const isActive = activeEngine === engine.id
-                  const colors = ENGINE_COLORS[engine.id]
-                  return (
-                    <button
-                      type="button"
-                      key={engine.id}
-                      onClick={() => setActiveEngine(engine.id)}
-                      className={cn('flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors', isActive ? colors.active : colors.inactive)}
-                    >
-                      <Icon className="h-4 w-4" aria-hidden />
-                      <div className="text-left">
-                        <div className="text-xs font-semibold leading-none">{engine.name}</div>
-                        <div className="mt-0.5 text-[10px] leading-none opacity-60">{engine.maker}</div>
-                      </div>
-                    </button>
-                  )
-                })}
+              {/* REAL AI intelligence level for this tier (no fake engine choice).
+                  Agency = the elite flagship; lower tiers see their honest level
+                  plus a truthful nudge that Agency runs deeper. */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg border px-4 py-2',
+                    isAgency
+                      ? 'border-amber-500/40 bg-amber-500/10 text-amber-500'
+                      : 'border-border bg-background/40 text-theme-secondary'
+                  )}
+                  title={`Reasoning effort: ${aiProfile.effort}`}
+                >
+                  {isAgency ? <Crown className="h-4 w-4" aria-hidden /> : <Brain className="h-4 w-4" aria-hidden />}
+                  <div className="text-left">
+                    <div className="text-xs font-semibold leading-none">{aiProfile.label}</div>
+                    <div className="mt-0.5 flex items-center gap-1 text-[10px] leading-none opacity-70">
+                      {aiProfile.liveWeb && <Globe className="h-2.5 w-2.5" aria-hidden />}
+                      {aiLevelBits.join(' · ')}
+                    </div>
+                  </div>
+                </div>
+
+                {!isAgency && (
+                  <button
+                    type="button"
+                    onClick={openAgencyEdge}
+                    className="flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] font-medium text-amber-500 transition-colors hover:bg-amber-500/10"
+                  >
+                    <Crown className="h-3.5 w-3.5" aria-hidden />
+                    Agency runs deeper reasoning + more live sources
+                  </button>
+                )}
               </div>
             </div>
 
@@ -916,10 +921,13 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       <UpgradeModal
         open={upgradeOpen}
         onClose={() => setUpgradeOpen(false)}
-        feature={AI_AGENT_FEATURE}
-        requiredTier="pro"
+        feature={upgradeEdge ? undefined : AI_AGENT_FEATURE}
+        requiredTier={upgradeEdge ? 'agency' : 'pro'}
         currentTier={tier}
         reason="feature"
+        context={upgradeEdge
+          ? 'Agency runs the deepest reasoning and the most live-web grounding — and gets every new AI tool first.'
+          : undefined}
       />
 
       <AnimatePresence>

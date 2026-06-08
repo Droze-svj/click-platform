@@ -20,6 +20,21 @@ import { apiGet } from '../lib/api'
 
 export type EntitlementTier = 'free' | 'creator' | 'pro' | 'agency'
 
+/**
+ * Honest view of the AI intelligence level a tier ACTUALLY runs (derived from
+ * server/config/aiProfiles.js via GET /api/me/entitlements). No invented
+ * benchmarks — these are the real effort/output/live-web parameters.
+ */
+export interface AiProfileView {
+  label: string
+  depth: string
+  effort: string
+  maxWebSearches: number
+  deepReasoning: boolean
+  liveWeb: boolean
+  premiumTools: boolean
+}
+
 export interface EntitlementsPayload {
   tier: EntitlementTier
   /** Map of unlocked feature ids → true. Missing key == not unlocked. */
@@ -30,6 +45,18 @@ export interface EntitlementsPayload {
   usage: Record<string, number>
   /** Feature ids flagged early-access AND unlocked for this tier. */
   earlyAccess: string[]
+  /** The real AI intelligence level this tier runs. */
+  aiProfile: AiProfileView
+}
+
+const FREE_AI_PROFILE: AiProfileView = {
+  label: 'Standard AI',
+  depth: 'standard',
+  effort: 'medium',
+  maxWebSearches: 0,
+  deepReasoning: false,
+  liveWeb: false,
+  premiumTools: false,
 }
 
 const FREE_DEFAULTS: EntitlementsPayload = {
@@ -39,6 +66,7 @@ const FREE_DEFAULTS: EntitlementsPayload = {
   limits: {},
   usage: {},
   earlyAccess: [],
+  aiProfile: FREE_AI_PROFILE,
 }
 
 // ── Module-level cache (shared across every hook instance) ───────────────────
@@ -77,6 +105,10 @@ function normalize(raw: any): EntitlementsPayload {
     limits: body?.limits && typeof body.limits === 'object' ? body.limits : {},
     usage: body?.usage && typeof body.usage === 'object' ? body.usage : {},
     earlyAccess: Array.isArray(body?.earlyAccess) ? body.earlyAccess : [],
+    aiProfile:
+      body?.aiProfile && typeof body.aiProfile === 'object'
+        ? { ...FREE_AI_PROFILE, ...body.aiProfile }
+        : FREE_AI_PROFILE,
   }
 }
 
@@ -118,6 +150,8 @@ export interface UseEntitlements {
   usage: Record<string, number>
   isEarlyAccess: (id: string) => boolean
   features: Record<string, boolean>
+  /** The real AI intelligence level this tier runs (honest, derived). */
+  aiProfile: AiProfileView
   loading: boolean
   refresh: () => Promise<EntitlementsPayload>
   /** The full resolved payload (free defaults until loaded). */
@@ -194,6 +228,7 @@ export function useEntitlements(): UseEntitlements {
     usage: data.usage,
     isEarlyAccess,
     features: data.features,
+    aiProfile: data.aiProfile,
     loading,
     refresh,
     entitlements: data,
