@@ -67,6 +67,70 @@ function decrypt(encryptedData) {
   }
 }
 
+// ── Field-level token encryption (transparent, backward-compatible) ─────────
+// Storage format for an encrypted token string:  enc:v1:<base64(JSON)>
+// where JSON is the object returned by encrypt() ({ encrypted, iv, tag }).
+// Legacy plaintext tokens have NO prefix and are passed through unchanged on
+// read. This lets a DB full of plaintext tokens keep authenticating while all
+// new/refreshed tokens are stored encrypted going forward.
+const ENC_PREFIX = 'enc:v1:';
+
+/**
+ * Encrypt a single token string into the storable `enc:v1:<payload>` form.
+ * - Non-string / empty / null / undefined values are returned unchanged so
+ *   optional fields (e.g. refreshToken) and "no token" stay as-is.
+ * - If it's already in the encrypted form, it's returned unchanged (idempotent).
+ * - On any encryption failure, returns the original value (never throws) so a
+ *   write path can never be broken by encryption.
+ */
+function encryptToken(value) {
+  if (typeof value !== 'string' || value.length === 0) {
+    return value;
+  }
+  if (value.startsWith(ENC_PREFIX)) {
+    return value; // already encrypted
+  }
+  try {
+    const payload = encrypt(value);
+    return ENC_PREFIX + Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
+  } catch (error) {
+    logger.error('Token encryption failed; storing value unchanged', { error: error.message });
+    return value;
+  }
+}
+
+/**
+ * Decrypt a stored token value back to plaintext.
+ * - If it's NOT in the encrypted form (legacy plaintext), it's returned
+ *   unchanged (backward-compat).
+ * - If decryption fails for any reason (bad key, corrupt blob, garbage),
+ *   the raw stored value is returned unchanged — never throws, never returns a
+ *   broken blob. Token-read paths therefore always yield a usable value.
+ */
+function decryptToken(value) {
+  if (typeof value !== 'string' || !value.startsWith(ENC_PREFIX)) {
+    return value;
+  }
+  try {
+    const json = Buffer.from(value.slice(ENC_PREFIX.length), 'base64').toString('utf8');
+    const payload = JSON.parse(json);
+    if (!payload || !payload.iv || !payload.tag || payload.encrypted == null) {
+      return value;
+    }
+    return decrypt(payload);
+  } catch (error) {
+    logger.error('Token decryption failed; returning stored value unchanged', { error: error.message });
+    return value;
+  }
+}
+
+/**
+ * True if a stored value is in the encrypted token form.
+ */
+function isEncryptedToken(value) {
+  return typeof value === 'string' && value.startsWith(ENC_PREFIX);
+}
+
 /**
  * Hash sensitive data (one-way)
  */
@@ -148,6 +212,9 @@ function maskSensitiveData(data, fields = ['password', 'token', 'apiKey', 'secre
 module.exports = {
   encrypt,
   decrypt,
+  encryptToken,
+  decryptToken,
+  isEncryptedToken,
   hashSensitiveData,
   verifyHash,
   encryptPII,
