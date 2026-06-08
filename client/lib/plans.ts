@@ -77,6 +77,7 @@ export const PLANS: Plan[] = [
     priceYearly: 0,
     featured: false,
     features: [
+      { label: 'Standard AI (accurate, fast)', included: true, tooltip: 'Same top model as every tier — bounded reasoning depth, no live web' },
       { label: '3 video exports / month', included: true },
       { label: 'Exports up to 720p', included: true },
       { label: '50 AI generations / month', included: true },
@@ -102,6 +103,7 @@ export const PLANS: Plan[] = [
     priceYearly: 390, // 10 × monthly — 2 months free
     featured: false,
     features: [
+      { label: 'Advanced AI + live-web trends', included: true, tooltip: 'Higher reasoning effort and live web grounding than Free' },
       { label: '300 AI generations / month', included: true },
       { label: 'Unlimited 30-min exports', included: true },
       { label: 'Auto captions (Whisper)', included: true },
@@ -132,6 +134,7 @@ export const PLANS: Plan[] = [
     featured: true,
     features: [
       { label: 'Everything in Creator', included: true },
+      { label: 'Pro AI — deep reasoning + more live sources', included: true, tooltip: 'Deeper reasoning and more live-web grounding per request' },
       { label: 'Unlimited AI generations', included: true },
       { label: 'Unlimited 2-hour exports', included: true },
       { label: '4K exports', included: true },
@@ -162,6 +165,8 @@ export const PLANS: Plan[] = [
     featured: false,
     features: [
       { label: 'Everything in Pro', included: true },
+      { label: 'Agency Elite AI — the deepest reasoning + most live sources', included: true, tooltip: 'The strongest AI profile: maximum reasoning effort, longest outputs, most live-web grounding' },
+      { label: 'New AI tools first — Agency-first early access', included: true, tooltip: 'Every new tool launches to Agency first, then rolls down later' },
       { label: 'Unlimited team seats, brands & workspaces', included: true },
       { label: 'Real-time collaboration + team management', included: true },
       { label: 'Shared asset library', included: true },
