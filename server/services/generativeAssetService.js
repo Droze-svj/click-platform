@@ -69,37 +69,45 @@ async function autoSoundDesign(timeline) {
 }
 
 /**
- * Generate Magic B-Roll clips or background fill
+ * Generate Magic B-Roll clips or background fill.
+ *
+ * Prompt refinement is REAL (Gemini-backed). Actual text-to-video generation is
+ * NOT yet integrated, so we do NOT fabricate a "minted" 4K clip URL pointing at
+ * a file that doesn't exist (owner's #1 rule). We return the real refined prompt
+ * plus an honest `status: 'unavailable'` so the UI can state the truth instead
+ * of showing a dead asset as a success.
+ *
  * @param {string} prompt - Text prompt for B-roll (e.g., "futuristic city")
  * @param {number} duration - Desired duration
- * @returns {Promise<Object>} Generated clip metadata
+ * @returns {Promise<Object>} Refined prompt + honest availability status
  */
 async function magicBRollFill(prompt, duration = 3) {
   try {
-    logger.info('Starting Magic B-Roll Generation', { originalPrompt: prompt, duration });
+    logger.info('Starting Magic B-Roll prompt refinement', { originalPrompt: prompt, duration });
 
-    // 1. Refine the prompt
+    // Real step: refine the prompt for downstream video generation.
     const refinedPrompt = await refineBRollPrompt(prompt);
     logger.info('Prompt refined for video gen', { refinedPrompt });
 
-    // 2. Mocking Text-to-Video API (Veo/Sora/etc.)
-    const generatedClipUrl = `/uploads/videos/gen/${Date.now()}.mp4`;
-
+    // No text-to-video provider is wired up — return honestly, never a fake URL.
     return {
-      url: generatedClipUrl,
+      url: null,
       originalPrompt: prompt,
       refinedPrompt,
       duration,
-      status: 'minted',
-      metadata: {
-        engine: 'neural-video-v2',
-        resolution: '4K',
-        refinedBy: 'ClickAI-Strategist'
-      }
+      status: 'unavailable',
+      error: 'Text-to-video generation is not configured yet. Your refined prompt is ready for when it is.',
     };
   } catch (error) {
     logger.error('Magic B-Roll fill error', { error: error.message });
-    throw error;
+    return {
+      url: null,
+      originalPrompt: prompt,
+      refinedPrompt: null,
+      duration,
+      status: 'error',
+      error: error.message,
+    };
   }
 }
 

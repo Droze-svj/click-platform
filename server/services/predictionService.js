@@ -503,26 +503,40 @@ async function predictAudienceGrowth(userId, days = 30) {
 }
 
 /**
- * Ingest market trends from external APIs (TikTok, YT, IG)
- * Simulates real-time ingestion for the "Live-Wire" engine
+ * Ingest REAL market trends via the web-grounded liveTrendService (Claude web
+ * search). Returns an array of { topic, platform } plus a `trendingTopics`
+ * convenience list. Owner's #1 rule: NO fabricated trends — when live data is
+ * unavailable (no ANTHROPIC_API_KEY / nothing verifiable), we return an honest
+ * EMPTY result with source:'unavailable', never a hardcoded mock presented as
+ * current. Results are cached 24h here on top of liveTrendService's own cache.
  */
 async function ingestMarketTrends() {
   try {
-    logger.info('Live-Wire: Ingesting latest market trends...');
-    // In a real scenario, this would call TikTok Research API, YouTube Data API, etc.
-    const trends = [
-      { topic: 'AI Productivity', velocity: 0.85, platform: 'tiktok' },
-      { topic: 'Budget Travel', velocity: 0.92, platform: 'instagram' },
-      { topic: 'Mental Health 2026', velocity: 0.78, platform: 'youtube' },
-      { topic: 'SaaS Automation', velocity: 0.65, platform: 'linkedin' }
-    ];
-
     const cacheKey = 'market:trends:velocity';
-    await set(cacheKey, trends, 3600 * 24); // Cache for 24 hours
+    const cached = await get(cacheKey);
+    if (cached && Array.isArray(cached) && cached.length) {
+      const out = cached.slice();
+      out.trendingTopics = cached.map((t) => t.topic);
+      out.lastUpdate = new Date();
+      out.source = 'cache';
+      return out;
+    }
 
-    // Enhance standard array with custom properties to support both array and object usages
-    trends.trendingTopics = trends.map(t => t.topic);
+    const liveTrendService = require('./liveTrendService');
+    const live = await liveTrendService.getLatestTrends('tiktok');
+    const platform = live.platform || 'tiktok';
+    const labels = [
+      ...((live.topics || []).map((t) => t.label)),
+      ...((live.hashtags || []).map((t) => t.label)),
+    ].filter(Boolean).slice(0, 8);
+
+    const trends = labels.map((topic) => ({ topic, platform }));
+    trends.trendingTopics = labels;
     trends.lastUpdate = new Date();
+    trends.source = live.source || 'unavailable';
+
+    // Only cache REAL data (so we don't pin an honest-empty result for 24h).
+    if (labels.length) await set(cacheKey, trends.map((t) => ({ topic: t.topic, platform: t.platform })), 3600 * 24);
 
     return trends;
   } catch (error) {
@@ -530,73 +544,37 @@ async function ingestMarketTrends() {
     const fallback = [];
     fallback.trendingTopics = [];
     fallback.lastUpdate = new Date();
+    fallback.source = 'unavailable';
     return fallback;
   }
 }
 
 /**
- * Synchronous trend lookup for real-time services (Phase 10)
+ * Synchronous trend lookup for real-time services. We cannot do a live web
+ * search synchronously, so this returns an HONEST empty list rather than a
+ * fabricated one (owner's #1 rule). Callers already treat an empty
+ * trendingTopics list as "no live data".
  */
 function ingestMarketTrendsSync() {
-  // In a real environment, this would read from a shared memory buffer or fast local cache
-  // For simulation, we return high-velocity topics
   return {
-    trendingTopics: ['AI Productivity', 'SaaS Automation', 'Budget Travel', 'Mental Health 2026'],
-    lastUpdate: new Date()
+    trendingTopics: [],
+    lastUpdate: new Date(),
+    source: 'unavailable',
   };
 }
 
 /**
- * Detect Cultural Emergence (Phase 23)
- * Looks for "Low-Frequency" signals that indicate a coming trend.
+ * Detect Cultural Emergence — REAL signals only.
+ *
+ * The previous implementation fabricated "emerging" signals (hardcoded keywords
+ * with invented velocities) AND auto-scheduled real reposts off them. That
+ * violated the owner's #1 rule (no fake data) and acted on it. We do not have a
+ * verifiable low-frequency emergence detector yet, so this returns an HONEST
+ * empty result and performs NO auto-scheduling. When a real detector exists it
+ * can be wired here; until then we never invent signals or act on them.
  */
-async function detectCulturalEmergence(userId) {
-  try {
-    const cacheKey = `arbitrage:resurrection:count:${new Date().toISOString().split('T')[0]}`;
-    const dailyCount = await get(cacheKey) || 0;
-    const RESURRECTION_CAP = 2; // User approved 1-2 per platform
-
-    logger.info('Live-Wire: Scanning for Cultural Emergence...');
-    
-    // Simulate niche data ingestion
-    const signals = [
-      { niche: 'SaaS', keyword: 'Agentic Workflows', velocity: 0.15, threshold: 0.12 },
-      { niche: 'Lifestyle', keyword: 'Neural Minimalist', velocity: 0.08, threshold: 0.10 },
-      { niche: 'Finance', keyword: 'Post-Arbitrage Strategy', velocity: 0.22, threshold: 0.15 }
-    ];
-
-    const triggers = signals.filter(s => s.velocity > s.threshold);
-
-    if (triggers.length > 0 && dailyCount < RESURRECTION_CAP) {
-      logger.info('Phase 23: Cultural Emergence Detected', { triggers: triggers.map(t => t.keyword) });
-      
-      // Auto-trigger Resurrection
-      try {
-        const recycling = require('./contentRecyclingService');
-        const candidates = await recycling.scoutForResurrectionCandidates(userId);
-        
-        if (candidates.length > 0) {
-          const candidate = candidates[0];
-          logger.info('Arbitrage: Deploying Legacy Resurrection', { contentId: candidate.contentId });
-          
-          await recycling.createRecyclingPlan(userId, candidate.originalPostId, {
-            recycleType: 'exact',
-            autoSchedule: true,
-            repostSchedule: { frequency: 'daily', maxReposts: 1 }
-          });
-
-          await set(cacheKey, dailyCount + 1, 3600 * 24);
-        }
-      } catch (err) {
-        logger.warn('Arbitrage: Resurrection trigger failed', { error: err.message });
-      }
-    }
-
-    return triggers;
-  } catch (error) {
-    logger.error('Emergence detection failed', { error: error.message });
-    return [];
-  }
+async function detectCulturalEmergence(/* userId */) {
+  return [];
 }
 
 /**
@@ -611,24 +589,25 @@ async function getVelocityScore(contentData) {
       trends = await ingestMarketTrends();
     }
 
+    const list = Array.isArray(trends)
+      ? trends
+      : (Array.isArray(trends?.trendingTopics) ? trends.trendingTopics.map((t) => ({ topic: t })) : []);
+
     const { title = '', tags = [] } = contentData;
     const combinedTokens = (title + ' ' + tags.join(' ')).toLowerCase();
 
-    let maxVelocity = 0;
-    trends.forEach(trend => {
-      if (combinedTokens.includes(trend.topic.toLowerCase())) {
-        maxVelocity = Math.max(maxVelocity, trend.velocity);
-      }
+    // Honest, binary on-trend signal: 50 if the content matches a CURRENT
+    // (web-grounded) trending topic, else 0 (neutral). No random "market heat",
+    // and no fabricated velocity number — the trend list itself is now real, and
+    // when it's empty/unavailable this correctly returns 0.
+    const onTrend = list.some((trend) => {
+      const topic = String(trend?.topic || '').toLowerCase();
+      return topic && combinedTokens.includes(topic);
     });
 
-    // If no specific trend match, return a baseline "market heat" (randomized for simulation)
-    if (maxVelocity === 0) {
-      maxVelocity = 0.3 + (Math.random() * 0.2); 
-    }
-
-    return Math.round(maxVelocity * 100);
+    return onTrend ? 50 : 0;
   } catch (error) {
-    return 40; // Default fallback
+    return 0; // Neutral on failure — never fabricate a score.
   }
 }
 
@@ -780,12 +759,21 @@ function calculateSpectralResonance(contentData) {
   });
 
   const potency = Math.min(100, (kineticSharpness * 0.6) + (polarity * 0.4));
-  
+
+  // Originality: a DETERMINISTIC lexical-diversity measure derived from the
+  // actual text (unique words / total words), not a random number. Short/empty
+  // text yields a neutral 50 rather than a fabricated high score.
+  const words = combined.split(/\s+/).filter(Boolean);
+  const uniqueWords = new Set(words);
+  const originalityScale = words.length >= 8
+    ? Math.round((uniqueWords.size / words.length) * 100)
+    : 50;
+
   return {
     kineticSharpness: Math.min(100, kineticSharpness),
     emotionalPolarity: Math.min(100, polarity),
     potency,
-    originalityScale: 70 + (Math.random() * 20) // Heuristic for originality
+    originalityScale: Math.min(100, originalityScale),
   };
 }
 
@@ -795,13 +783,22 @@ async function verifyTrendAlignment(niche, claims) {
     const trendingTopicsList = trends.trendingTopics || (Array.isArray(trends) ? trends.map(t => t.topic || t) : []);
     const trendingTopics = trendingTopicsList.map(t => typeof t === 'string' ? t.toLowerCase() : String(t).toLowerCase());
     
+    // No real trends to align against → honest low-confidence "not aligned"
+    // rather than inventing alignment.
+    if (!trendingTopics.length) {
+      return claims.map((claim) => ({ claim, aligned: false, confidence: 0, note: 'No live trend data to verify against.' }));
+    }
+
     const results = claims.map(claim => {
-      const tokens = claim.toLowerCase().split(' ');
-      const match = tokens.some(token => trendingTopics.some(topic => topic.includes(token)));
+      // Whole-word match on meaningful tokens (≥4 chars) to avoid spurious
+      // substring hits like "ai" matching "AI Productivity" for any claim.
+      const tokens = claim.toLowerCase().split(/\s+/).filter((t) => t.length >= 4);
+      const match = tokens.some(token => trendingTopics.some(topic => topic.split(/\s+/).includes(token)));
       return {
         claim,
         aligned: match,
-        confidence: match ? 95 : 40
+        // Confidence reflects a real (web-grounded) match, not a fabricated 95.
+        confidence: match ? 75 : 35,
       };
     });
 
