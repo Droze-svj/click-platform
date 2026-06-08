@@ -7,6 +7,7 @@ import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import GlobalCommandPalette from '../../components/GlobalCommandPalette'
 import WorkflowRail from '../../components/WorkflowRail'
 import OnboardingNudge from '../../components/OnboardingNudge'
+import UpgradeGateListener from '../../components/UpgradeGateListener'
 import { LayoutPreferencesProvider } from '../../contexts/LayoutPreferencesContext'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -38,6 +39,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     </div>
                 </main>
                 <GlobalCommandPalette />
+                {/* App-wide paywall: any gated API call triggers this once. */}
+                <UpgradeGateListener />
             </div>
         </LayoutPreferencesProvider>
     )

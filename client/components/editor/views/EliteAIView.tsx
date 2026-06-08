@@ -22,14 +22,20 @@ import {
   ShieldCheck,
   Layers
 } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
 import { getDefaultTrackForSegmentType, Asset, StyleProfile } from '../../../types/editor'
 import DirectorLog from '../DirectorLog'
 import StyleMimicView from './StyleMimicView'
 import VariantFactoryView from './VariantFactoryView'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
-import { Panel, Button, Badge, SectionHeader, EmptyState } from '../../ui'
+import { Panel, Button, Badge, SectionHeader, EmptyState, UpgradeModal, LockedBadge } from '../../ui'
 import { cn } from '../../../lib/utils'
+import { useEntitlements } from '../../../hooks/useEntitlements'
+
+// Pro-tier flagship AI tools, gated honestly via the canonical `ai_agent`
+// entitlement (server/config/entitlements.js — "Autonomous AI agent", Pro).
+const AI_AGENT_FEATURE = 'ai_agent'
 
 const INACTIVE_PILL =
   'border-border bg-background/40 text-theme-secondary hover:text-theme-primary'
@@ -136,6 +142,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
   const [spokenLanguage, setSpokenLanguage] = useState('auto')
 
+  // Entitlements — honest gate for Pro-only autonomous AI tools.
+  const { hasFeature, tier } = useEntitlements()
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const aiAgentUnlocked = hasFeature(AI_AGENT_FEATURE)
+
   const languages = [
     { code: 'auto', name: 'Auto-Detect Spoken Language' },
     { code: 'en', name: 'English (US/UK)' },
@@ -209,6 +220,10 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   }, [])
 
   const handleForge = async () => {
+    if (!aiAgentUnlocked) {
+      setUpgradeOpen(true)
+      return
+    }
     if (!onForgeMaster) return
     setIsForging(true)
     try {
@@ -505,10 +520,18 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             <SectionHeader as="h1" title="AI Storyteller" description={`Elite AI · ${String(activeEngine || 'idle')}`} />
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <Button variant="primary" onClick={() => setView('mimic')} leftIcon={<Fingerprint className="h-4 w-4" aria-hidden />}>
+              <Button
+                variant="primary"
+                onClick={() => (aiAgentUnlocked ? setView('mimic') : setUpgradeOpen(true))}
+                leftIcon={aiAgentUnlocked ? <Fingerprint className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
+              >
                 The Mimic
               </Button>
-              <Button variant="secondary" onClick={() => setView('variant-factory')} leftIcon={<Target className="h-4 w-4" aria-hidden />}>
+              <Button
+                variant="secondary"
+                onClick={() => (aiAgentUnlocked ? setView('variant-factory') : setUpgradeOpen(true))}
+                leftIcon={aiAgentUnlocked ? <Target className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
+              >
                 Variant Factory
               </Button>
               <Button variant="secondary" onClick={onBeatSync} leftIcon={<Radio className="h-4 w-4" aria-hidden />}>
@@ -581,7 +604,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 <button
                   type="button"
                   onClick={handleForge}
-                  disabled={isForging || !onForgeMaster}
+                  disabled={isForging || (aiAgentUnlocked && !onForgeMaster)}
                   className={cn(
                     'relative w-full overflow-hidden rounded-2xl p-6 transition-all active:scale-[0.99] disabled:opacity-60',
                     isForging
@@ -589,14 +612,21 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                       : 'bg-gradient-to-br from-indigo-600 to-fuchsia-600 ds-hover-lift'
                   )}
                 >
+                  {!aiAgentUnlocked && !isForging && (
+                    <span className="absolute right-3 top-3 z-20">
+                      <LockedBadge requiredTier="pro" />
+                    </span>
+                  )}
                   <div className="relative z-10 flex flex-col items-center gap-2">
                      {isForging ? (
                        <Loader2 className="mb-2 h-7 w-7 animate-spin text-white" aria-hidden />
-                     ) : (
+                     ) : aiAgentUnlocked ? (
                        <Zap className="mb-2 h-7 w-7 text-white" aria-hidden />
+                     ) : (
+                       <Lock className="mb-2 h-7 w-7 text-white" aria-hidden />
                      )}
                      <div className="text-lg font-bold leading-tight text-white">Agentic Forge</div>
-                     <div className="mt-1 text-xs text-white/70">One-click generate</div>
+                     <div className="mt-1 text-xs text-white/70">{aiAgentUnlocked ? 'One-click generate' : 'Unlock with Pro'}</div>
                   </div>
 
                   {/* Loading progress indicator while the forge runs */}
@@ -881,6 +911,15 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             setPendingAction(null)
           }
         }}
+      />
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        feature={AI_AGENT_FEATURE}
+        requiredTier="pro"
+        currentTier={tier}
+        reason="feature"
       />
 
       <AnimatePresence>

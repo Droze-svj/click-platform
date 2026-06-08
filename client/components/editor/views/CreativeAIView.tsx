@@ -16,13 +16,24 @@ import {
   Type,
   Globe2,
   Maximize2,
+  Lock,
   type LucideIcon
 } from 'lucide-react'
 import { apiPost } from '../../../lib/api'
 import { useNeuralDepth } from '../../../hooks/useNeuralDepth'
+import { useEntitlements } from '../../../hooks/useEntitlements'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
-import { Card, Button, Badge, SectionHeader } from '../../ui'
+import { Card, Button, Badge, SectionHeader, UpgradeModal, LockedBadge } from '../../ui'
 import { cn } from '../../../lib/utils'
+
+// Canonical entitlement keys (server/config/entitlements.js) for the gated
+// creative tools. Tools NOT listed here are available on every tier.
+//   b_roll_ai          → Pro    (AI B-roll)
+//   generative_dubbing → Agency (Generative dubbing — voice clone + lip-sync)
+const TOOL_FEATURE: Record<string, { feature: string; tier: string }> = {
+  broll: { feature: 'b_roll_ai', tier: 'pro' },
+  localization: { feature: 'generative_dubbing', tier: 'agency' },
+}
 
 interface CreativeAIViewProps {
   videoId: string
@@ -54,6 +65,19 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   const [showSwarmHUD, setShowSwarmHUD] = useState(false)
   const [swarmHUDTask, setSwarmHUDTask] = useState('')
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
+
+  // Entitlements — honest client-side gate for Pro/Agency-only tools.
+  const { hasFeature, tier } = useEntitlements()
+  const [upgrade, setUpgrade] = useState<{ feature: string; tier: string } | null>(null)
+
+  // Returns true (and opens the paywall) when the tool is locked for this user.
+  const gateTool = (toolId: string): boolean => {
+    const gate = TOOL_FEATURE[toolId]
+    if (!gate) return false
+    if (hasFeature(gate.feature)) return false
+    setUpgrade(gate)
+    return true
+  }
 
   // Use a mock video ID for the depth hook if one isn't available
   const { isProcessing: isDepthProcessing, generateDepthMatte } = useNeuralDepth(`preview-video-${videoId}`)
@@ -95,6 +119,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   }
 
   const handleMagicBRoll = async () => {
+    if (gateTool('broll')) return
     setProcessing('broll')
     showToast('Injecting Context-Aware Semantic B-Roll...', 'info')
     try {
@@ -204,6 +229,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   }
 
   const handleLocalization = async () => {
+    if (gateTool('localization')) return
     setProcessing('localization')
     showToast('Initializing Hyper-Native Lip-Sync pipeline...', 'info')
     try {
@@ -261,18 +287,23 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
     isActive: boolean,
     isProcessing: boolean,
     colorClass: string
-  }) => (
+  }) => {
+    const gate = TOOL_FEATURE[id]
+    const locked = !!gate && !hasFeature(gate.feature)
+    return (
     <Card variant="bento" className="flex flex-col justify-between gap-5 p-6">
       <div className="flex-1 space-y-4">
         <div className="flex items-start justify-between">
           <span className={cn('flex h-12 w-12 items-center justify-center rounded-xl bg-accent', colorClass)}>
             <Icon className="h-6 w-6" aria-hidden />
           </span>
-          {isActive && (
+          {locked ? (
+            <LockedBadge requiredTier={gate.tier} />
+          ) : isActive ? (
             <Badge variant="outline" className="gap-1 border-emerald-500/30 text-emerald-500">
               <CheckCircle2 className="h-3 w-3" aria-hidden /> Active
             </Badge>
-          )}
+          ) : null}
         </div>
         <div>
           <h3 className="ds-text-h3 text-theme-primary">{title}</h3>
@@ -281,18 +312,19 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       </div>
 
       <Button
-        variant={isActive ? 'secondary' : 'primary'}
+        variant={locked ? 'secondary' : isActive ? 'secondary' : 'primary'}
         onClick={action}
         disabled={isProcessing}
         loading={isProcessing}
-        title={`Execute ${title} creative tool`}
-        leftIcon={!isProcessing ? (isActive ? <Zap className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />) : undefined}
+        title={locked ? `Upgrade to ${cap(gate.tier)} to unlock ${title}` : `Execute ${title} creative tool`}
+        leftIcon={!isProcessing ? (locked ? <Lock className="h-4 w-4" aria-hidden /> : isActive ? <Zap className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />) : undefined}
         className="w-full"
       >
-        {isProcessing ? 'Working…' : isActive ? 'Re-run' : 'Apply'}
+        {isProcessing ? 'Working…' : locked ? 'Unlock' : isActive ? 'Re-run' : 'Apply'}
       </Button>
     </Card>
-  )
+    )
+  }
 
   return (
     <div className="space-y-6 pb-10 ds-anim-rise">
@@ -422,8 +454,21 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           }
         }}
       />
+
+      <UpgradeModal
+        open={!!upgrade}
+        onClose={() => setUpgrade(null)}
+        feature={upgrade?.feature}
+        requiredTier={upgrade?.tier}
+        currentTier={tier}
+        reason="feature"
+      />
     </div>
   )
+}
+
+function cap(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
 export default CreativeAIView

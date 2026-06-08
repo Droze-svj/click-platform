@@ -45,6 +45,16 @@ export {
 export { Modal, Sheet } from "./modal"
 export type { ModalProps, SheetProps, SheetSide } from "./modal"
 
+// Entitlements / paywall
+export { UpgradeModal } from "./UpgradeModal"
+export type { UpgradeModalProps } from "./UpgradeModal"
+export { FeatureGate, LockedBadge } from "./FeatureGate"
+export type {
+  FeatureGateProps,
+  FeatureGateMode,
+  LockedBadgeProps,
+} from "./FeatureGate"
+
 // Tabs & Tooltip
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs"
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip"

@@ -8,6 +8,69 @@
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios'
 import { extractApiError } from '../utils/apiResponse'
 
+/**
+ * Global upgrade-gate plumbing.
+ *
+ * Gated server routes return a structured 402/403 body
+ * ({ error:'feature_gated'|'limit_reached', requiredTier, currentTier, ... }).
+ * Rather than make every caller handle this, the response interceptor detects
+ * that shape and dispatches a single window CustomEvent. A top-level listener
+ * (mounted once in the dashboard layout) renders the <UpgradeModal> in response.
+ *
+ * The original AxiosError still rejects so existing try/catch logic keeps
+ * working — this is purely additive.
+ */
+export const UPGRADE_REQUIRED_EVENT = 'click-upgrade-required'
+
+export interface UpgradeRequiredDetail {
+  reason: 'feature' | 'limit'
+  feature?: string
+  requiredTier?: string
+  currentTier?: string
+  limit?: number
+  used?: number
+  message?: string
+  upgradeUrl?: string
+  /** HTTP status that triggered it (403 feature/limit, 402 AI budget). */
+  status?: number
+}
+
+/** Inspect an error body and, if it's a gate response, emit the global event. */
+function maybeEmitUpgradeEvent(error: AxiosError): void {
+  if (typeof window === 'undefined') return
+  const status = error.response?.status
+  if (status !== 403 && status !== 402) return
+
+  const body = error.response?.data as any
+  if (!body || typeof body !== 'object') return
+
+  const code = body.error
+  const isFeatureGate = code === 'feature_gated' || code === 'limit_reached'
+  // 402 is the AI-budget ceiling — treat it as a limit-style upgrade prompt
+  // even if the error code differs.
+  const isBudget = status === 402
+
+  if (!isFeatureGate && !isBudget) return
+
+  const detail: UpgradeRequiredDetail = {
+    reason: code === 'limit_reached' || isBudget ? 'limit' : 'feature',
+    feature: body.feature,
+    requiredTier: body.requiredTier,
+    currentTier: body.currentTier,
+    limit: typeof body.limit === 'number' ? body.limit : undefined,
+    used: typeof body.used === 'number' ? body.used : undefined,
+    message: body.message,
+    upgradeUrl: body.upgradeUrl || '/dashboard/billing',
+    status,
+  }
+
+  try {
+    window.dispatchEvent(new CustomEvent(UPGRADE_REQUIRED_EVENT, { detail }))
+  } catch {
+    /* CustomEvent unsupported (very old env) — silently skip */
+  }
+}
+
 function resolveBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL
 
@@ -392,6 +455,11 @@ function createApiClient(): AxiosInstance {
       })
 
 
+
+      // Global upgrade-gate detection. Surface feature_gated / limit_reached
+      // (403) and AI-budget (402) responses to the app-wide UpgradeModal via a
+      // window event. Does NOT swallow the error — callers still reject below.
+      maybeEmitUpgradeEvent(error)
 
       // Enhanced error handling for database timeouts and server errors
       if (error.response?.status === 500) {
