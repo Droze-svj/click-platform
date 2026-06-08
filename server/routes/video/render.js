@@ -27,6 +27,10 @@ const { renderLimiter } = require('../../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const c2paService = require('../../services/c2paService');
+const entitlements = require('../../config/entitlements');
+const enforcement = require('../../services/entitlementEnforcement');
+const usageService = require('../../services/usageService');
+const { checkExportQuota } = require('../../middleware/tierGate');
 
 const router = express.Router();
 
@@ -53,17 +57,49 @@ const RATIO_TO_SIZE = {
  * Remotion/Chromium dependency. Output is normalized to RENDER_OUTPUT_DIR/<jobId>.mp4
  * so the existing status/download endpoints work unchanged.
  */
-async function runFfmpegRender({ tree, ratio, jobId, userId }) {
+/**
+ * The mandatory Click watermark overlay for Free-tier exports. Bottom-right,
+ * spans the whole clip. Uses the same drawtext overlay schema the editor uses
+ * so it's baked into the ffmpeg render with no extra pipeline. Duration is the
+ * tree duration (capped) so it persists across the entire export.
+ */
+function buildWatermarkOverlay(durationSec) {
+  const dur = Number.isFinite(durationSec) && durationSec > 0 ? durationSec : 36000;
+  return {
+    text: 'Made with Click',
+    x: 78,            // ~bottom-right (percent of frame)
+    y: 92,
+    fontSize: 28,
+    color: 'white@0.85',
+    startTime: 0,
+    endTime: dur,
+    style: 'default',
+    _watermark: true,
+  };
+}
+
+async function runFfmpegRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
   ensureRenderDir();
   const outputPath = path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
-  const [width, height] = RATIO_TO_SIZE[ratio] || RATIO_TO_SIZE['16:9'];
+  const [baseW, baseH] = RATIO_TO_SIZE[ratio] || RATIO_TO_SIZE['16:9'];
+
+  // Resolution cap: clamp (don't error) the export dimensions to the tier's
+  // maxResolution (Free 720, Creator 1080, Pro/Agency 2160).
+  const { width, height, clamped } = enforcement.clampDimensions(tier, baseW, baseH);
+  if (clamped) logger.info('[render] resolution clamped for tier', { jobId, tier, from: [baseW, baseH], to: [width, height] });
+
+  // Watermark: Free tier always exports with the Click watermark baked in.
+  const textOverlays = Array.isArray(tree.textOverlays) ? tree.textOverlays.slice() : [];
+  if (enforcement.mustWatermark(tier)) {
+    textOverlays.push(buildWatermarkOverlay(tree.duration));
+  }
 
   const videoRenderService = require('../../services/videoRenderService');
   const result = await videoRenderService.renderFromEditorState({
     videoId: tree?.metadata?.contentId || null,
     videoUrl: tree.videoUrl,
     videoFilters: tree.filters || tree.videoFilters || {},
-    textOverlays: Array.isArray(tree.textOverlays) ? tree.textOverlays : [],
+    textOverlays,
     shapeOverlays: Array.isArray(tree.shapeOverlays) ? tree.shapeOverlays : [],
     timelineSegments: Array.isArray(tree.timelineSegments) ? tree.timelineSegments : (tree.segments || []),
     exportOptions: { width, height, duration: tree.duration, quality: tree.quality || 'high', codec: 'h264' },
@@ -140,12 +176,12 @@ async function getBundleLocation(bundler) {
  * (<= 30s) or as a fallback when BullMQ is unavailable. For long renders the
  * worker variant queues to videoRenderQueue and emits SSE updates.
  */
-async function runRender({ tree, ratio, jobId, userId }) {
+async function runRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
   const remotion = tryRequireRemotion();
   if (!remotion.available) {
     // No Remotion → render with the real ffmpeg engine (same one the manual
     // editor uses). Produces a genuine export without Remotion/Chromium.
-    return runFfmpegRender({ tree, ratio, jobId, userId });
+    return runFfmpegRender({ tree, ratio, jobId, userId, tier });
   }
   const { bundler, renderer } = remotion;
 
@@ -155,8 +191,19 @@ async function runRender({ tree, ratio, jobId, userId }) {
 
   logger.info('[render] start', { jobId, userId, ratio, compositionId });
 
+  // Apply tier policy to the Remotion tree too: bake the Free watermark overlay
+  // and signal the resolution cap to the composition so the browser-rendered
+  // export matches the ffmpeg path's enforcement.
+  let policyTree = tree;
+  const resCap = enforcement.clampResolution(tier, RATIO_TO_SIZE[ratio]?.[1]);
+  if (enforcement.mustWatermark(tier) || resCap.clamped) {
+    const overlays = Array.isArray(tree.textOverlays) ? tree.textOverlays.slice() : [];
+    if (enforcement.mustWatermark(tier)) overlays.push(buildWatermarkOverlay(tree.duration));
+    policyTree = { ...tree, textOverlays: overlays, _tierPolicy: { tier, maxResolution: resCap.max === Infinity ? null : resCap.max } };
+  }
+
   const bundleLocation = await getBundleLocation(bundler);
-  const inputProps = { tree };
+  const inputProps = { tree: policyTree };
   const composition = await renderer.selectComposition({
     serveUrl: bundleLocation,
     id: compositionId,
@@ -242,6 +289,7 @@ router.post(
   '/render',
   auth,
   renderLimiter,
+  checkExportQuota,
   asyncHandler(async (req, res) => {
     const { tree, ratio = '16:9', sync = false } = req.body || {};
 
@@ -252,15 +300,23 @@ router.post(
     }
 
     const userId = req.user?.id || req.user?._id?.toString();
+    const tier = entitlements.resolveTier(req.user || {});
     const jobId = uuidv4();
+
+    // Record the metered export against the monthly quota (best-effort).
+    usageService.incrementUsage(userId, 'exports').catch((e) => {
+      logger.warn('[render] export usage increment failed', { userId, error: e.message });
+    });
 
     if (sync) {
       try {
-        const result = await runRender({ tree, ratio, jobId, userId });
+        const result = await runRender({ tree, ratio, jobId, userId, tier });
         return sendSuccess(res, {
           jobId,
           status: 'completed',
           ratio,
+          tier,
+          watermarked: enforcement.mustWatermark(tier),
           ...result,
         });
       } catch (e) {
@@ -277,21 +333,21 @@ router.post(
       if (queues && queues.videoRenderQueue && queues.videoRenderQueue.add) {
         await queues.videoRenderQueue.add(
           'render',
-          { tree, ratio, jobId, userId },
+          { tree, ratio, jobId, userId, tier },
           { jobId, attempts: 1, removeOnComplete: 50, removeOnFail: 100 }
         );
-        return sendSuccess(res, { jobId, status: 'queued', ratio });
+        return sendSuccess(res, { jobId, status: 'queued', ratio, tier, watermarked: enforcement.mustWatermark(tier) });
       }
     } catch (qErr) {
       logger.warn('[render] queue unavailable; running inline', { error: qErr.message });
     }
 
     // Inline fallback (not awaited) so we still return promptly.
-    runRender({ tree, ratio, jobId, userId }).catch((e) => {
+    runRender({ tree, ratio, jobId, userId, tier }).catch((e) => {
       logger.error('[render] inline run failed', { jobId, error: e.message });
     });
 
-    return sendSuccess(res, { jobId, status: 'queued-inline', ratio });
+    return sendSuccess(res, { jobId, status: 'queued-inline', ratio, tier, watermarked: enforcement.mustWatermark(tier) });
   })
 );
 
@@ -307,16 +363,24 @@ router.post(
 router.post(
   '/render-multi',
   auth,
+  checkExportQuota,
   asyncHandler(async (req, res) => {
     const { tree, ratios = ['9:16', '1:1', '16:9', '4:5'] } = req.body || {};
     const err = validateRenderTree(tree);
     if (err) return sendError(res, err, 400);
     const userId = req.user?.id || req.user?._id?.toString();
+    const tier = entitlements.resolveTier(req.user || {});
 
     const valid = ratios.filter((r) => COMPOSITION_BY_RATIO[r]);
     if (valid.length === 0) {
       return sendError(res, `No valid ratios provided. Allowed: ${Object.keys(COMPOSITION_BY_RATIO).join(', ')}`, 400);
     }
+
+    // A multi-render is one logical export (the same tree in N ratios) — count it
+    // once against the monthly quota.
+    usageService.incrementUsage(userId, 'exports').catch((e) => {
+      logger.warn('[render-multi] export usage increment failed', { userId, error: e.message });
+    });
 
     const jobs = valid.map((ratio) => ({ ratio, jobId: uuidv4() }));
 
@@ -328,23 +392,23 @@ router.post(
           jobs.map((j) =>
             queues.videoRenderQueue.add(
               'render',
-              { tree, ratio: j.ratio, jobId: j.jobId, userId },
+              { tree, ratio: j.ratio, jobId: j.jobId, userId, tier },
               { jobId: j.jobId, attempts: 1, removeOnComplete: 50, removeOnFail: 100 }
             )
           )
         );
-        return sendSuccess(res, { jobs, status: 'queued' });
+        return sendSuccess(res, { jobs, status: 'queued', tier, watermarked: enforcement.mustWatermark(tier) });
       }
     } catch (qErr) {
       logger.warn('[render-multi] queue unavailable; running inline', { error: qErr.message });
     }
 
     jobs.forEach((j) => {
-      runRender({ tree, ratio: j.ratio, jobId: j.jobId, userId }).catch((e) => {
+      runRender({ tree, ratio: j.ratio, jobId: j.jobId, userId, tier }).catch((e) => {
         logger.error('[render-multi] inline run failed', { jobId: j.jobId, error: e.message });
       });
     });
-    return sendSuccess(res, { jobs, status: 'queued-inline' });
+    return sendSuccess(res, { jobs, status: 'queued-inline', tier, watermarked: enforcement.mustWatermark(tier) });
   })
 );
 

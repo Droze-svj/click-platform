@@ -183,7 +183,12 @@ const userSchema = new mongoose.Schema({
     quotesCreated: { type: Number, default: 0 },
     postsScheduled: { type: Number, default: 0 },
     scriptsGenerated: { type: Number, default: 0 },
-    musicFiles: { type: Number, default: 0 }
+    musicFiles: { type: Number, default: 0 },
+    // Metered, monthly-reset counters for entitlement enforcement. `periodStart`
+    // marks the first day of the billing month these counters cover; a lazy
+    // reset (usageService.maybeResetUsage) zeroes them when the month rolls.
+    exports: { type: Number, default: 0 },
+    periodStart: { type: Date, default: null }
   },
   referralCode: {
     type: String,

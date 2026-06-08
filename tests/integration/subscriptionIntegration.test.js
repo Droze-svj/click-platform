@@ -39,12 +39,16 @@ describe('Subscription API Integration', () => {
   });
 
   describe('POST /api/subscription/verify', () => {
-    it('should map WHOP Elite plan to internal elite tier', async () => {
+    // Security: /verify derives the plan from the canonical Whop product map
+    // (entitlements). An UNMAPPED product id must NEVER grant a paid tier from
+    // arbitrary input — it resolves to 'free'. (The old behavior echoed the raw
+    // plan_id / hardcoded 'pro', which was a privilege-escalation hole.)
+    it('should resolve an unmapped WHOP product to free (no arbitrary grant)', async () => {
       axios.get.mockResolvedValue({
         data: {
           status: 'active',
           plan: { name: 'Elite 2026' },
-          plan_id: 'p_elite_1',
+          plan_id: 'p_unmapped_1',
           created_at: new Date().toISOString(),
           expires_at: new Date().toISOString()
         }
@@ -55,15 +59,15 @@ describe('Subscription API Integration', () => {
         .send({ whopUserId: 'user_1', whopSubscriptionId: 'sub_1' });
 
       expect(response.status).toBe(200);
-      expect(response.body.subscription.plan).toBe('p_elite_1');
+      expect(response.body.subscription.plan).toBe('free');
     });
 
-    it('should map generic plan to starter tier', async () => {
+    it('should never grant pro for a generic/unmapped plan', async () => {
       axios.get.mockResolvedValue({
         data: {
           status: 'active',
-          plan: { name: 'Basic Starter' },
-          plan_id: 'p_starter_1',
+          plan: { name: 'Basic' },
+          plan_id: 'p_generic_1',
           created_at: new Date().toISOString(),
           expires_at: new Date().toISOString()
         }
@@ -74,7 +78,7 @@ describe('Subscription API Integration', () => {
         .send({ whopUserId: 'user_1', whopSubscriptionId: 'sub_1' });
 
       expect(response.status).toBe(200);
-      expect(response.body.subscription.plan).toBe('p_starter_1');
+      expect(response.body.subscription.plan).not.toBe('pro');
     });
 
     it('should return 403 if subscription is not active', async () => {
@@ -93,9 +97,11 @@ describe('Subscription API Integration', () => {
     });
   });
 
-  describe('POST /api/subscription/webhook', () => {
-    it('should process subscription.created and update user tier', async () => {
-      // Mock User.findOne
+  describe('POST /api/subscription/webhook (legacy, retired)', () => {
+    // Security: the legacy UNSIGNED webhook was retired (it granted Pro with no
+    // signature verification). It now returns 410 Gone and must NOT mutate the
+    // user. The signed, HMAC-verified path is POST /api/webhooks/whop.
+    it('should be retired (410) and never grant a plan', async () => {
       const mockUser = {
         _id: 'user_123',
         tier: 'free',
@@ -117,9 +123,8 @@ describe('Subscription API Integration', () => {
           }
         });
 
-      expect(response.status).toBe(200);
-      expect(mockUser.subscription.plan).toBe('pro');
-      expect(mockUser.save).toHaveBeenCalled();
+      expect(response.status).toBe(410);
+      expect(mockUser.save).not.toHaveBeenCalled();
     });
   });
 });

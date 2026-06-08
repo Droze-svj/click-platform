@@ -3,7 +3,33 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const { apiLimiter, oauthLimiter } = require('../middleware/enhancedRateLimiter');
+const entitlements = require('../config/entitlements');
+const enforcement = require('../services/entitlementEnforcement');
 const router = express.Router();
+
+const SOCIAL_PLATFORMS = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'];
+
+/**
+ * Count the user's currently-connected social accounts across every platform.
+ * Mirrors the counting the /connections route does (per-service
+ * getConnectedAccounts), so the cap is enforced against the same source of
+ * truth the dashboard displays.
+ */
+async function countConnectedAccounts(userId) {
+  let total = 0;
+  await Promise.all(SOCIAL_PLATFORMS.map(async (p) => {
+    const service = getServiceByPlatform(p);
+    if (!service || typeof service.getConnectedAccounts !== 'function') return;
+    try {
+      const accs = await service.getConnectedAccounts(userId);
+      const arr = Array.isArray(accs) ? accs : (accs ? [accs] : []);
+      total += arr.length;
+    } catch (e) {
+      logger.warn(`[social-cap] failed to count ${p} accounts`, { userId, error: e?.message });
+    }
+  }));
+  return total;
+}
 
 // OAuth Services
 const twitterOAuth = require('../services/twitterOAuthService');
@@ -81,7 +107,50 @@ router.get('/:platform/connect', auth, oauthLimiter, validateConnect, asyncHandl
   const baseRedirect = redirect_uri || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social`;
 
   const userId = req.user._id || req.user.id;
-  
+
+  // Social-account cap (hard enforcement). Block initiating a NEW connection
+  // once the user is at their tier's socialAccounts limit. Free 1 / Creator 3 /
+  // Pro 10 / Agency 50. Re-connecting an account already linked on this platform
+  // is allowed (it doesn't grow the total), so only count when the platform
+  // currently has zero linked accounts OR the user is over the cap.
+  const tier = entitlements.resolveTier(req.user || {});
+  const cap = entitlements.limitFor(tier, 'socialAccounts');
+  if (Number.isFinite(cap)) {
+    try {
+      const [totalConnected, platAccounts] = await Promise.all([
+        countConnectedAccounts(userId),
+        (service.getConnectedAccounts ? service.getConnectedAccounts(userId) : Promise.resolve([])),
+      ]);
+      const platArr = Array.isArray(platAccounts) ? platAccounts : (platAccounts ? [platAccounts] : []);
+      // Adding a brand-new account (this platform has none yet) would push the
+      // total to totalConnected + 1; block if already at/over the cap.
+      const wouldAddNew = platArr.length === 0;
+      if (totalConnected >= cap && wouldAddNew) {
+        const body = enforcement.limitReachedBody({
+          limitKey: 'socialAccounts',
+          limit: cap,
+          used: totalConnected,
+          currentTier: tier,
+          noun: 'connected social account',
+        });
+        return res.status(403).json(body);
+      }
+    } catch (e) {
+      // Security-sensitive gate: fail CLOSED (block) on lookup error, but with
+      // an honest error rather than a 500 crash.
+      logger.error('[social-cap] connection count failed; blocking to stay safe', { userId, error: e.message });
+      return res.status(403).json({
+        success: false,
+        error: 'limit_reached',
+        limit: cap,
+        currentTier: tier,
+        requiredTier: enforcement.nextTierUp(tier),
+        upgradeUrl: enforcement.UPGRADE_URL,
+        message: 'Unable to verify your connected-account count right now. Please retry shortly.',
+      });
+    }
+  }
+
   // Create state payload
   const statePayload = {
     userId,

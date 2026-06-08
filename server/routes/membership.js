@@ -137,34 +137,50 @@ router.post('/upgrade', auth, asyncHandler(async (req, res) => {
 
   const userId = req.userId || req.user?._id || req.user?.id;
 
-  // Supabase users live in a different store; the membership upgrade flow
-  // here only knows how to persist into Mongo. Surface a clear error rather
-  // than throwing CastError, so the UI can route the user through the
-  // Supabase-aware checkout instead.
-  if (!isMongoUserId(userId)) {
-    return sendError(res, 'Membership upgrades for this account are handled via the checkout flow.', 501);
+  // SECURITY: a paid plan must NEVER be granted without a verified Whop
+  // payment. This route previously flipped the user's membershipPackage with
+  // zero payment — a free upgrade to any tier. It now returns the Whop
+  // checkout target; entitlements are only applied later by the SIGNED webhook
+  // (POST /api/webhooks/whop) once Whop confirms the payment.
+  //
+  // Build the checkout URL from the package's Whop product id (or a configured
+  // store URL fallback). We pass the userId as Whop `metadata.passthrough` so
+  // the webhook can resolve the exact user on payment.
+  const whopProductId =
+    membershipPackage.whopProductId ||
+    membershipPackage.whop?.productId ||
+    null;
+
+  const storeBase = process.env.WHOP_STORE_URL || process.env.WHOP_CHECKOUT_URL || null;
+  let checkoutUrl = null;
+  if (whopProductId) {
+    checkoutUrl = `https://whop.com/checkout/${encodeURIComponent(whopProductId)}?metadata[passthrough]=${encodeURIComponent(String(userId))}`;
+  } else if (storeBase) {
+    checkoutUrl = storeBase;
   }
 
-  const user = await User.findById(userId);
-  if (!user) return sendError(res, 'User not found', 404);
-
-  // Check if user already has this package
-  if (user.membershipPackage && user.membershipPackage.toString() === membershipPackage._id.toString()) {
-    return sendError(res, 'You already have this membership package', 400);
-  }
-
-  // Update user's membership package
-  user.membershipPackage = membershipPackage._id;
-  await user.save();
-
-  logger.info('Membership upgraded', {
-    userId: user._id,
+  logger.info('Membership upgrade requested → routing to Whop checkout (no free grant)', {
+    userId: String(userId),
     packageSlug,
-    packageId: membershipPackage._id
+    hasCheckoutUrl: Boolean(checkoutUrl),
   });
 
-  sendSuccess(res, 'Membership upgraded successfully', 200, {
-    package: membershipPackage
+  if (!checkoutUrl) {
+    return sendError(
+      res,
+      'Upgrades are processed through secure checkout. This plan is not yet linked to a checkout product — please contact support.',
+      400,
+      { code: 'CHECKOUT_REQUIRED', packageSlug }
+    );
+  }
+
+  return sendSuccess(res, 'Complete your upgrade at checkout', 200, {
+    checkoutRequired: true,
+    checkoutUrl,
+    package: {
+      slug: membershipPackage.slug,
+      name: membershipPackage.name,
+    },
   });
 }));
 
