@@ -663,8 +663,18 @@ allowedOrigins.push(
 // Allow production frontend if different
 if (process.env.NODE_ENV === 'production') {
   allowedOrigins.push('https://click-platform.onrender.com');
-  // Allow any subdomain of onrender.com for flexibility
-  allowedOrigins.push(/^https:\/\/.*\.onrender\.com$/);
+  // SECURITY: replaced the broad /^https:\/\/.*\.onrender\.com$/ wildcard — it
+  // let ANY Render-hosted app send CREDENTIALED cross-origin requests (onrender
+  // subdomains are open to public signup). Add extra production origins
+  // (preview deploys, custom domains) explicitly via the CORS_ALLOWED_ORIGINS
+  // env var (comma-separated) instead.
+  if (process.env.CORS_ALLOWED_ORIGINS) {
+    process.env.CORS_ALLOWED_ORIGINS
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((o) => allowedOrigins.push(o));
+  }
 }
 
 app.use(cors({
@@ -1806,9 +1816,15 @@ if (redisCache && typeof redisCache.middleware === 'function') {
 // Some writers anchor on `process.cwd()/uploads` and others on
 // `__dirname/../uploads`, so we mount both to keep URLs working regardless
 // of which working directory the server was started from.
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Hardening: dotfiles denied (no serving .env-style files that may land here)
+// and directory indexing disabled (no listing of other users' filenames).
+// NOTE: this is public/shareable media by design — user-private exports also
+// have an authenticated, ownership-checked download route
+// (/api/video/render/:jobId/download); output filenames are unguessable.
+const STATIC_OPTS = { dotfiles: 'deny', index: false };
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), STATIC_OPTS));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), STATIC_OPTS));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), STATIC_OPTS));
 
 // Routes
 // #region agent log - Route mounting
