@@ -204,11 +204,14 @@ async function checkDatabaseConnection() {
   }
 }
 
+let monitoringInterval = null;
+
 /**
  * Start monitoring loop
  */
 function startMonitoring(intervalMs = 60000) { // Default 1 minute
-  setInterval(async () => {
+  if (monitoringInterval) return; // already running — don't stack timers
+  monitoringInterval = setInterval(async () => {
     try {
       await checkMemoryUsage();
       await checkDatabaseConnection();
@@ -216,8 +219,20 @@ function startMonitoring(intervalMs = 60000) { // Default 1 minute
       logger.error('Monitoring check error', { error: error.message });
     }
   }, intervalMs);
+  // Don't keep the event loop alive on shutdown.
+  if (typeof monitoringInterval.unref === 'function') monitoringInterval.unref();
 
   logger.info('Alerting service monitoring started', { interval: `${intervalMs / 1000}s` });
+}
+
+/**
+ * Stop the monitoring loop (called on graceful shutdown).
+ */
+function stopMonitoring() {
+  if (monitoringInterval) {
+    clearInterval(monitoringInterval);
+    monitoringInterval = null;
+  }
 }
 
 module.exports = {
@@ -229,6 +244,7 @@ module.exports = {
   checkMemoryUsage,
   checkDatabaseConnection,
   startMonitoring,
+  stopMonitoring,
   ALERT_THRESHOLDS,
 };
 

@@ -75,6 +75,13 @@ async function startAgentPipeline(videoId, goals, userId) {
     result: null,
     startedAt: Date.now(),
   }
+  // Bound the in-memory cache (FIFO). Evicted jobs are still readable from
+  // Mongo via getJobStatus(), so dropping the oldest in-memory entry is safe.
+  const MAX_IN_MEMORY_JOBS = 500
+  if (jobs.size >= MAX_IN_MEMORY_JOBS) {
+    const oldest = jobs.keys().next().value
+    if (oldest !== undefined) jobs.delete(oldest)
+  }
   jobs.set(jobId, job)
   persistJob(job)
 

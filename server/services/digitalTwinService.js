@@ -39,6 +39,12 @@ class DigitalTwinService {
         createdAt: Date.now()
       };
 
+      // Bound the in-memory job registry (FIFO eviction of the oldest entry).
+      const MAX_GENERATION_JOBS = 1000;
+      if (this.generationJobs.size >= MAX_GENERATION_JOBS) {
+        const oldest = this.generationJobs.keys().next().value;
+        if (oldest !== undefined) this.generationJobs.delete(oldest);
+      }
       this.generationJobs.set(jobId, job);
 
       if (provider === 'heygen' && this.heygenApiKey) {

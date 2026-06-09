@@ -10,6 +10,22 @@ const { NotFoundError } = require('../utils/errorHandler');
 
 // Workflow execution engine
 const activeWorkflows = new Map(); // workflowId -> workflow state
+const MAX_ACTIVE_WORKFLOWS = 1000;   // bound the in-memory registry
+const MAX_EXECUTION_HISTORY = 200;   // bound per-workflow execution history
+
+// Store workflow state with bounded growth: trim the per-workflow history and
+// evict the oldest workflow (FIFO) once the registry hits its cap, so a
+// long-running server can't accumulate workflow state unbounded.
+function rememberWorkflowState(id, state) {
+  if (state && Array.isArray(state.executionHistory) && state.executionHistory.length > MAX_EXECUTION_HISTORY) {
+    state.executionHistory = state.executionHistory.slice(-MAX_EXECUTION_HISTORY);
+  }
+  if (!activeWorkflows.has(id) && activeWorkflows.size >= MAX_ACTIVE_WORKFLOWS) {
+    const oldest = activeWorkflows.keys().next().value;
+    if (oldest !== undefined) activeWorkflows.delete(oldest);
+  }
+  activeWorkflows.set(id, state);
+}
 
 /**
  * Create workflow from visual definition
@@ -48,7 +64,7 @@ async function createWorkflow(workflowDefinition) {
     await workflow.save();
 
     // Initialize workflow state
-    activeWorkflows.set(workflow._id.toString(), {
+    rememberWorkflowState(workflow._id.toString(), {
       workflowId: workflow._id,
       status: 'idle',
       currentStep: null,
@@ -162,7 +178,7 @@ async function executeWorkflow(workflowId, inputData = {}) {
       },
     });
 
-    activeWorkflows.set(workflowId.toString(), state);
+    rememberWorkflowState(workflowId.toString(), state);
 
     logger.info('Workflow executed', { workflowId, status: state.status });
 
@@ -405,7 +421,7 @@ async function createAdvancedWorkflow(userId, data) {
     await workflow.save();
 
     // Initialize workflow state in the running queue map
-    activeWorkflows.set(workflow._id.toString(), {
+    rememberWorkflowState(workflow._id.toString(), {
       workflowId: workflow._id,
       status: 'idle',
       currentStep: null,
@@ -512,7 +528,7 @@ async function executeConditionalWorkflow(workflowId, userId, context = {}) {
       },
     });
 
-    activeWorkflows.set(workflowId.toString(), state);
+    rememberWorkflowState(workflowId.toString(), state);
 
     return {
       success: true,

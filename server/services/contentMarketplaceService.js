@@ -8,6 +8,7 @@ const User = require('../models/User');
 
 // Marketplace registry
 const marketplaceItems = new Map(); // itemId -> item
+const MAX_MARKETPLACE_ITEMS = 5000; // bound in-memory registry growth
 
 /**
  * Create marketplace item
@@ -48,6 +49,10 @@ async function createMarketplaceItem(itemData) {
       status: 'pending', // pending, approved, rejected
     };
 
+    if (marketplaceItems.size >= MAX_MARKETPLACE_ITEMS) {
+      const oldest = marketplaceItems.keys().next().value;
+      if (oldest !== undefined) marketplaceItems.delete(oldest);
+    }
     marketplaceItems.set(item.id, item);
 
     logger.info('Marketplace item created', { itemId: item.id, type, title });

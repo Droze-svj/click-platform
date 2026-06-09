@@ -2462,6 +2462,10 @@ function __installShutdownHooks() {
         // Mongoose close error ignored
       }
 
+      // Stop the APM monitor's CPU/memory/GC intervals so they don't keep the
+      // process alive or leak across restarts.
+      try { global.apmMonitor?.stop?.(); } catch (err) { /* ignore */ }
+
       if (isNodemonRestart) {
         // Hand control back to nodemon
         try { process.kill(process.pid, 'SIGUSR2'); } catch { process.exit(0); }

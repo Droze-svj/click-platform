@@ -45,15 +45,25 @@ class ShadowSchedulerService {
    * Background processor (Mock for now, would be BullMQ in production)
    */
   startProcessor() {
-    setInterval(async () => {
+    this.processorInterval = setInterval(async () => {
       const now = new Date();
       const readyJobs = this.jobs.filter(j => j.status === 'pending' && j.scheduledTime <= now);
-      
+
       for (const job of readyJobs) {
         job.status = 'processing';
         await this.processJob(job);
       }
     }, 60000); // Check every minute
+    // Don't keep the event loop alive on shutdown.
+    if (typeof this.processorInterval.unref === 'function') this.processorInterval.unref();
+  }
+
+  /** Stop the background processor (graceful shutdown / test cleanup). */
+  stop() {
+    if (this.processorInterval) {
+      clearInterval(this.processorInterval);
+      this.processorInterval = null;
+    }
   }
 
   async processJob(job) {
