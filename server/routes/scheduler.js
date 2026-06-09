@@ -407,7 +407,18 @@ cron.schedule('* * * * *', async () => {
 
     const { postToSocialMedia } = require('../services/socialMediaService');
 
-    for (const post of posts) {
+    for (const candidate of posts) {
+      // Atomically CLAIM the post before publishing: flip status scheduled →
+      // publishing in one operation. Only the claimer proceeds. This prevents a
+      // slow platform call from letting the next minute's tick (or a parallel
+      // worker) re-select the same row and DOUBLE-POST to the user's real
+      // social account. Every downstream path resolves status to posted/failed.
+      const post = await ScheduledPost.findOneAndUpdate(
+        { _id: candidate._id, status: 'scheduled' },
+        { $set: { status: 'publishing' } },
+        { new: true }
+      );
+      if (!post) continue; // already claimed/processed by another tick
       try {
         // Check if user has connected the platform (SocialConnection or User.oauth for LinkedIn/Facebook)
         let hasConnection = false;
