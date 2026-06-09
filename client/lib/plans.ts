@@ -84,8 +84,7 @@ export const PLANS: Plan[] = [
       { label: 'Basic trim, filters & text overlays', included: true },
       { label: 'Auto captions (Whisper)', included: false },
       { label: 'AI hook analysis & script rewrites', included: false },
-      { label: 'Creator analytics', included: false },
-      { label: 'Performance learning loop', included: false },
+      { label: 'Creator analytics + hook attribution', included: false },
     ],
     checkoutUrl: { monthly: '', yearly: '' },
     cta: { label: 'Start Free' },
@@ -111,7 +110,7 @@ export const PLANS: Plan[] = [
       { label: 'Creativity style packs & motion templates', included: true },
       { label: '3 social accounts', included: true },
       { label: 'AI creative tools (thumbnails)', included: true, tooltip: 'AI-generated thumbnails & creative assets' },
-      { label: 'Performance learning loop', included: false },
+      { label: 'Creator analytics + hook attribution', included: false },
       { label: 'Workspaces & approvals', included: false },
     ],
     checkoutUrl: {

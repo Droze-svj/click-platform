@@ -320,12 +320,22 @@ async function generateJSONWithWeb(prompt, opts = {}) {
     return { ok: false, error: 'AI brain needs Claude configured (ANTHROPIC_API_KEY).' };
   }
 
+  // Honor a resolved maxWebSearches of 0 (e.g. the free profile's "no live web"
+  // setting): do NOT attach the web tool or bill a search — fall through to the
+  // plain non-web JSON path so the call stays accurate but ungrounded. Previously
+  // Math.max(1, ...) silently forced ≥1 search, leaking paid live web to free.
+  const webBudget = Number.isFinite(maxWebSearches) ? maxWebSearches : 4;
+  if (webBudget <= 0) {
+    const res = await generateJSON(prompt, { ...opts, maxWebSearches: undefined });
+    return res.ok ? { ...res, citations: [] } : res;
+  }
+
   // Server-side web search tool (see claude-api skill — web_search_20260209
   // adds dynamic filtering on Opus 4.8). max_uses caps cost/latency.
   const tools = [{
     type: 'web_search_20260209',
     name: 'web_search',
-    max_uses: Math.max(1, Math.min(Number(maxWebSearches) || 4, 8)),
+    max_uses: Math.max(1, Math.min(webBudget, 8)),
   }];
 
   try {

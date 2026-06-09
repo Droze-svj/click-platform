@@ -87,13 +87,14 @@ const TASK_PROVIDER_CHAIN = {
  * caller passes an explicit `openaiModel` / `anthropicModel` override.
  */
 const MODEL_DEFAULTS = {
-  // Anthropic: claude-opus-4-7 is the latest Opus generation (per the
-  // project knowledge cutoff). The mini-Sonnet variant is a cheaper
-  // fall-through for high-volume orchestration.
+  // Anthropic: claude-opus-4-8 is the current Opus generation (matches the rest
+  // of the codebase / aiProfiles). Sonnet 4.6 is the cheaper default; Haiku 4.5
+  // (bare alias — no date suffix) is the latency tier. Keeping aiRouter aligned
+  // with the direct anthropicAI path avoids silent capability/pricing drift.
   anthropic: {
-    orchestration: 'claude-opus-4-7',
-    creative:      'claude-opus-4-7',
-    fast:          'claude-haiku-4-5-20251001',
+    orchestration: 'claude-opus-4-8',
+    creative:      'claude-opus-4-8',
+    fast:          'claude-haiku-4-5',
     default:       'claude-sonnet-4-6',
   },
   // OpenAI: gpt-4o has native vision; gpt-4o-mini is the latency-tier
