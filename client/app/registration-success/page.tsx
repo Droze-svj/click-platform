@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { apiGet, handleApiError } from '@/lib/api'
+import { apiGet, apiPost, handleApiError } from '@/lib/api'
 import { Button, Card, Icon } from '@/components/ui'
 import { CheckCircle2, MailCheck, AlertCircle, Loader2, ArrowRight, User } from 'lucide-react'
 import ClickLogo from '@/components/ClickLogo'
@@ -15,6 +15,24 @@ function RegistrationSuccessContent() {
   const [error, setError] = useState<string>('')
   const verificationRequired = searchParams?.get('verification') === 'required'
   const email = searchParams?.get('email') || ''
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
+
+  const handleResend = async () => {
+    if (resending || resent || !email) return
+    setResending(true)
+    try {
+      await apiPost('/auth/resend-verification', { email })
+      setResent(true)
+      // Re-enable after a cooldown so users aren't locked out if it didn't land.
+      setTimeout(() => setResent(false), 30000)
+    } catch {
+      // The endpoint is intentionally non-committal (no account enumeration);
+      // treat any failure quietly and let the user retry after the cooldown.
+    } finally {
+      setResending(false)
+    }
+  }
 
   useEffect(() => {
     if (verificationRequired) {
@@ -103,7 +121,17 @@ function RegistrationSuccessContent() {
         </div>
 
         <div className="space-y-3">
-          <Button variant="primary" size="lg" className="w-full" onClick={() => router.push('/login')}>
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full"
+            onClick={handleResend}
+            loading={resending}
+            disabled={resending || resent || !email}
+          >
+            {resent ? 'Sent ✓ — check your inbox' : 'Resend verification email'}
+          </Button>
+          <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/login')}>
             Go to login
           </Button>
           <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/register')}>

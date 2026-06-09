@@ -17,6 +17,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [slowHint, setSlowHint] = useState(false)
 
   // If a token was sitting in localStorage when the user landed on /login,
   // assume it's stale — clear BOTH access and refresh tokens so the next
@@ -56,6 +57,10 @@ export default function Login() {
     }
 
     setLoading(true)
+    setSlowHint(false)
+    // Proactively reassure on a cold start (free-tier servers can take a while
+    // to wake) instead of only explaining it after a timeout error.
+    const slowTimer = setTimeout(() => setSlowHint(true), 8000)
 
     try {
       const response = await apiPost<{
@@ -86,6 +91,8 @@ export default function Login() {
         setError(errorMessage)
       }
     } finally {
+      clearTimeout(slowTimer)
+      setSlowHint(false)
       setLoading(false)
     }
   }
@@ -179,6 +186,12 @@ export default function Login() {
             >
               {loading ? 'Signing in…' : t('auth.login')}
             </Button>
+
+            {loading && slowHint && (
+              <p className="text-center text-xs text-theme-muted" role="status" aria-live="polite">
+                Still working… the server may be waking up (up to 30–60s on free tier).
+              </p>
+            )}
           </form>
 
           {/* Trust strip */}

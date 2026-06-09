@@ -21,7 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ShieldCheck, AlertCircle, Loader2, ArrowRight, RefreshCw, AlertTriangle } from 'lucide-react'
 import { apiPost, setTokens } from '@/lib/api'
-import { Button, Card, Icon } from '@/components/ui'
+import { Button, Card, Icon, Input } from '@/components/ui'
 import ClickLogo from '@/components/ClickLogo'
 import { clickVoice } from '@/lib/clickVoice'
 
@@ -33,6 +33,22 @@ function VerifyEmailInner() {
   const token = searchParams?.get('token') || ''
   const [phase, setPhase] = useState<Phase>(token ? 'verifying' : 'missing-token')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [resendEmail, setResendEmail] = useState('')
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
+
+  const handleResend = async () => {
+    if (resending || resent || !resendEmail) return
+    setResending(true)
+    try {
+      await apiPost('/auth/resend-verification', { email: resendEmail })
+      setResent(true)
+    } catch {
+      // Endpoint is intentionally non-committal — let the user retry.
+    } finally {
+      setResending(false)
+    }
+  }
 
   useEffect(() => {
     if (!token) return
@@ -117,15 +133,35 @@ function VerifyEmailInner() {
               Click couldn&apos;t verify this link.
             </h1>
             <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
-              The token may have expired or already been used. Sign in and we&apos;ll resend a fresh verification email.
+              The token may have expired or already been used. Enter your email and we&apos;ll send a fresh verification link.
             </p>
             {errorMessage && process.env.NODE_ENV === 'development' && (
               <p className="text-xs font-mono text-theme-muted break-all">{errorMessage}</p>
             )}
+            <div className="space-y-2 max-w-sm mx-auto text-left">
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+                aria-label="Email address to resend verification to"
+                autoComplete="email"
+              />
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={handleResend}
+                loading={resending}
+                disabled={resending || resent || !resendEmail}
+              >
+                {resent ? 'Sent ✓ — check your inbox' : 'Resend verification email'}
+              </Button>
+            </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
               <Link href="/login" className="block">
-                <Button variant="primary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />} className="w-full">
-                  Sign in
+                <Button variant="secondary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />} className="w-full">
+                  Sign in instead
                 </Button>
               </Link>
               <Link href="/register" className="block">

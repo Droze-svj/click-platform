@@ -5,13 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { apiGet, apiPost, apiPut, handleApiError, setTokens } from '@/lib/api'
 import { getPlan, buildCheckoutTarget, type BillingPeriod, type PlanId } from '@/lib/plans'
-import { NICHE_OPTIONS, PLATFORM_OPTIONS, GOAL_OPTIONS } from '@/lib/nicheCatalog'
+import { NICHE_OPTIONS, PLATFORM_OPTIONS, GOAL_OPTIONS, nicheLabel } from '@/lib/nicheCatalog'
+import { ACCENT_PALETTES, resolveAccentKey } from '@/lib/swarmTheme'
 import { useTranslation } from '../../hooks/useTranslation'
 import LanguagePicker from '../../components/LanguagePicker'
 import FormField from '../../components/FormField'
 import { cn } from '@/lib/utils'
 import {
-  ArrowLeft, ArrowRight, Check, ChevronRight, RefreshCw, Target,
+  ArrowLeft, ArrowRight, Check, ChevronRight, RefreshCw, Target, Lock, ShieldCheck,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ClickLogo from '../../components/ClickLogo'
@@ -61,6 +62,26 @@ export default function Register() {
       .catch(() => { /* default: not gated in the UI; server still enforces */ })
     return () => { cancelled = true }
   }, [])
+
+  // Pre-fill personalization from a landing deep-link
+  // (?niche=&platforms=&goal=) so the visitor's PlanBuilder choices carry in.
+  useEffect(() => {
+    const nq = searchParams?.get('niche')
+    const pq = searchParams?.get('platforms')
+    const gq = searchParams?.get('goal')
+    if (nq && NICHE_OPTIONS.some((o) => o.value === nq)) setNiche(nq)
+    if (pq) {
+      const valid = pq.split(',').filter((v) => PLATFORM_OPTIONS.some((o) => o.value === v))
+      if (valid.length) setPlatforms(valid)
+    }
+    if (gq && GOAL_OPTIONS.some((o) => o.value === gq)) setGoal(gq)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Bridge the landing accent into signup: a chosen niche tints the gradient
+  // buttons + progress bar; with no niche it stays the default indigo→fuchsia.
+  const accentKey = resolveAccentKey(niche || null, 'coach')
+  const accentBg = niche ? ACCENT_PALETTES[accentKey].solidBg : 'bg-gradient-to-r from-indigo-500 to-fuchsia-500'
 
   const planFromUrl = (searchParams?.get('plan') || '') as PlanId | ''
   const periodFromUrl = (searchParams?.get('period') === 'yearly' ? 'yearly' : 'monthly') as BillingPeriod
@@ -239,7 +260,9 @@ export default function Register() {
               </span>
               <h1 className="ds-text-h1 text-theme-primary">Meet Click</h1>
               <p className="ds-text-body text-theme-muted mt-2 max-w-md">
-                Click learns your niche on signup and gets sharper with every post you ship.
+                {niche
+                  ? `Tuned for ${nicheLabel(niche)} creators — Click gets sharper with every post you ship.`
+                  : 'Click learns your niche on signup and gets sharper with every post you ship.'}
               </p>
 
               {/* Plan teaser — confirms the picked plan / nudges free users. */}
@@ -272,8 +295,8 @@ export default function Register() {
                   <div
                     key={s}
                     className={cn(
-                      'h-1.5 flex-1 rounded-full transition-colors',
-                      s <= step ? 'bg-gradient-to-r from-indigo-500 to-fuchsia-500' : 'bg-accent'
+                      'h-1.5 flex-1 rounded-full transition-all duration-500',
+                      s <= step ? accentBg : 'bg-accent'
                     )}
                   />
                 ))}
@@ -288,6 +311,7 @@ export default function Register() {
 
             {/* ── Step 1: Credentials ────────────────────────────────── */}
             {step === 1 && (
+              <>
               <form onSubmit={handleContinue} className="space-y-5">
                 <FormField label="Name" name="name" type="text" value={name} onChange={setName} placeholder="Jane Doe" required autoFocus />
                 <FormField label="Email" name="email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
@@ -347,12 +371,29 @@ export default function Register() {
                 <button
                   type="submit"
                   disabled={!step1Valid}
-                  className="w-full h-12 rounded-xl font-medium text-white bg-gradient-to-r from-indigo-500 to-fuchsia-500 shadow-sm transition-all hover:from-indigo-500/90 hover:to-fuchsia-500/90 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2"
+                  className={cn('w-full h-12 rounded-xl font-medium text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2', accentBg)}
                 >
                   Continue
                   <ArrowRight size={18} aria-hidden />
                 </button>
               </form>
+
+              {/* Trust strip — same reassurance the login screen gives. */}
+              <div className="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-[var(--border-subtle)]">
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <Lock size={16} className="text-emerald-500" aria-hidden />
+                  <span className="ds-text-caption text-theme-muted leading-tight">256-bit encrypted</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <ShieldCheck size={16} className="text-indigo-500" aria-hidden />
+                  <span className="ds-text-caption text-theme-muted leading-tight">Bcrypt + JWT</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <Check size={16} className="text-fuchsia-500" aria-hidden />
+                  <span className="ds-text-caption text-theme-muted leading-tight">Never stored</span>
+                </div>
+              </div>
+              </>
             )}
 
             {/* ── Step 2: Personalization ────────────────────────────── */}
@@ -478,7 +519,7 @@ export default function Register() {
                     type="button"
                     onClick={() => submitRegistration(false)}
                     disabled={loading}
-                    className="flex-1 h-12 rounded-xl font-medium text-white bg-gradient-to-r from-indigo-500 to-fuchsia-500 shadow-sm transition-all hover:from-indigo-500/90 hover:to-fuchsia-500/90 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2 w-full"
+                    className={cn('flex-1 h-12 rounded-xl font-medium text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2 w-full', accentBg)}
                   >
                     {loading ? (
                       <><RefreshCw className="animate-spin" size={18} aria-hidden /> Creating account…</>
