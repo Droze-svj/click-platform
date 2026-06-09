@@ -15,6 +15,9 @@ async function createApprovalRequest(requestData) {
     // Check if user has permission to request approval
     if (teamId) {
       const team = await Team.findById(teamId);
+      if (!team) {
+        throw new Error('Team not found');
+      }
       const requester = team.members.find(m => m.userId.toString() === requestedBy.toString());
       if (!requester || !requester.permissions.canShare) {
         throw new Error('Insufficient permissions to request approval');

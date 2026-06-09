@@ -38,6 +38,9 @@ Format as JSON array with objects containing: title (string), startTime (seconds
 
     const fullPrompt = `You are a video chaptering expert. Create logical, engaging chapters that help viewers navigate content.\n\n${prompt}`;
     const chaptersText = await geminiGenerate(fullPrompt, { temperature: 0.6, maxTokens: 2000 });
+    if (!chaptersText) {
+      throw new Error('Failed to generate chapters from API');
+    }
 
     let chapters;
     try {

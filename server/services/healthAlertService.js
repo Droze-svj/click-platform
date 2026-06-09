@@ -54,12 +54,14 @@ async function checkHealthAlerts(clientWorkspaceId, agencyWorkspaceId) {
     // Check component drops
     if (previousHealth) {
       const components = ['awareness', 'engagement', 'growth', 'quality', 'sentiment'];
-      components.forEach(component => {
+      // for...of (not forEach) so we await each alert — pushing the unawaited
+      // Promise made later `a.alert.severity` reads crash.
+      for (const component of components) {
         const current = currentHealth.components[component]?.score || 0;
         const previous = previousHealth.components[component]?.score || 0;
-        
+
         if (current < previous - 15) {
-          alerts.push(createHealthAlert(clientWorkspaceId, agencyWorkspaceId, {
+          alerts.push(await createHealthAlert(clientWorkspaceId, agencyWorkspaceId, {
             type: `${component}_drop`,
             severity: current < 30 ? 'high' : 'medium',
             title: `${component.charAt(0).toUpperCase() + component.slice(1)} Score Decline`,
@@ -71,7 +73,7 @@ async function checkHealthAlerts(clientWorkspaceId, agencyWorkspaceId) {
             recommendations: generateComponentRecommendations(component, current)
           }));
         }
-      });
+      }
     }
 
     // Check for negative sentiment trend

@@ -13,7 +13,7 @@ async function processContentJob(jobData, job) {
   const userId = user?._id || user;
 
   const onProgress = (percent, message) => {
-    job.updateProgress(percent).catch(() => { });
+    job.updateProgress(percent).catch((err) => logger.warn('Failed to update job progress', { jobId: job.id, percent, error: err.message }));
     emitProcessingProgress(userId, job.id, percent, message);
   };
 

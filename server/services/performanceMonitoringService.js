@@ -321,11 +321,18 @@ function resetMetrics() {
 }
 
 // Collect system metrics every 30 seconds
+let metricsInterval = null;
 if (process.env.NODE_ENV !== 'test') {
-  setInterval(collectSystemMetrics, 30000);
+  metricsInterval = setInterval(collectSystemMetrics, 30000);
+  if (typeof metricsInterval.unref === 'function') metricsInterval.unref();
 
   // Initial collection
   collectSystemMetrics();
+}
+
+/** Stop the metrics interval (graceful shutdown / test cleanup). */
+function stopMetricsCollection() {
+  if (metricsInterval) { clearInterval(metricsInterval); metricsInterval = null; }
 }
 
 module.exports = {
@@ -337,4 +344,5 @@ module.exports = {
   getMetrics,
   resetMetrics,
   collectSystemMetrics,
+  stopMetricsCollection,
 };

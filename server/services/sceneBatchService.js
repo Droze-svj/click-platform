@@ -82,9 +82,10 @@ async function batchDetectScenes(contentIds, userId, options = {}) {
       });
 
       const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
 
-      // Separate successes and errors
+      // Separate successes and errors. (Previously every batchResult was also
+      // pushed to `results` here, double-counting successes and mixing errors
+      // into the success list.)
       batchResults.forEach(r => {
         if (r.success) {
           results.push(r);

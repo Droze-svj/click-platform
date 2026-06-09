@@ -18,9 +18,10 @@ const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 // silently falling back to a hardcoded dev key in prod would make any deployed
 // tokens un-decryptable after the env churns, looking like phantom "User not
 // connected" failures. Dev still falls back so localhost works out of the box.
-if (process.env.NODE_ENV === 'production' && !process.env.OAUTH_ENCRYPTION_KEY) {
+if (process.env.NODE_ENV === 'production'
+  && (!process.env.OAUTH_ENCRYPTION_KEY || process.env.OAUTH_ENCRYPTION_KEY.length < 32)) {
   throw new Error(
-    'OAUTH_ENCRYPTION_KEY is required in production. ' +
+    'OAUTH_ENCRYPTION_KEY (32+ characters) is required in production. ' +
     'Set a stable 32+ char secret in the environment before starting the server.'
   );
 }

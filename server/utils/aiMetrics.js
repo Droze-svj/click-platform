@@ -8,9 +8,16 @@ try {
 }
 
 const counters = new Map();
+const MAX_COUNTERS = 5000; // bound growth from high-cardinality metric+tag keys
 
 function increment(metric, tags = {}) {
   const key = metric + JSON.stringify(tags);
+  // FIFO-evict the oldest counter once we hit the cap so a long-running process
+  // with many distinct tag combinations can't grow this Map unbounded.
+  if (!counters.has(key) && counters.size >= MAX_COUNTERS) {
+    const oldest = counters.keys().next().value;
+    if (oldest !== undefined) counters.delete(oldest);
+  }
   counters.set(key, (counters.get(key) || 0) + 1);
   logger.info('metric.increment', { metric, tags, total: counters.get(key) });
   if (sentry && typeof sentry.captureMessage === 'function') {
