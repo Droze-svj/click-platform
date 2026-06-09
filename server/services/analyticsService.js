@@ -5,7 +5,7 @@ const User = require('../models/User');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
-const { isDevUser, ensureObjectId } = require('../utils/devUser');
+const { isDevUser } = require('../utils/devUser');
 
 /**
  * Track user event (privacy-compliant)
