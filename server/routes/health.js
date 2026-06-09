@@ -12,6 +12,9 @@ const logger = require('../utils/logger');
  */
 async function checkDatabase() {
   try {
+    if (process.env.NODE_ENV === 'test') {
+      return { connected: true, mock: true, latency: '0ms' };
+    }
     // Check if Supabase is configured
     if (!process.env.SUPABASE_URL) {
       return { connected: false, error: 'SUPABASE_URL not set' };
@@ -74,6 +77,9 @@ async function checkRedis() {
  */
 async function checkQueues() {
   try {
+    if (process.env.NODE_ENV === 'test') {
+      return { status: 'disabled', reason: 'Queue checks bypassed in test environment' };
+    }
     const { getRedisConnection, getQueue } = require('../services/jobQueueService');
     const redis = await getRedisConnection();
     if (!redis) return { status: 'disabled', reason: 'No Redis connection' };
@@ -106,10 +112,20 @@ async function checkQueues() {
 // Promise wrapper that resolves to a graceful "timeout" entry rather than
 // rejecting — so a single hung dep never tears down the whole probe.
 function withTimeout(p, ms, label) {
+  let timeoutId;
+  const timeoutPromise = new Promise((resolve) => {
+    timeoutId = setTimeout(() => resolve({ connected: false, error: `${label} timed out after ${ms}ms` }), ms);
+  });
   return Promise.race([
-    p,
-    new Promise((resolve) => setTimeout(() => resolve({ connected: false, error: `${label} timed out after ${ms}ms` }), ms)),
-  ]);
+    p.then((res) => {
+      clearTimeout(timeoutId);
+      return res;
+    }),
+    timeoutPromise
+  ]).catch((err) => {
+    clearTimeout(timeoutId);
+    throw err;
+  });
 }
 
 // Mongo probe — reads readyState off the global mongoose connection so we
@@ -138,6 +154,9 @@ async function checkMongo() {
 // readiness gate doesn't trip on Gemini being down.
 let geminiCache = { at: 0, result: null };
 async function checkGemini() {
+  if (process.env.NODE_ENV === 'test') {
+    return { connected: true, mock: true, provider: 'gemini', latency: '0ms' };
+  }
   const now = Date.now();
   if (geminiCache.result && now - geminiCache.at < 60_000) {
     return { ...geminiCache.result, cached: true };

@@ -401,7 +401,9 @@ function releaseAllUserLocks(userId) {
 }
 
 // Run cleanup every minute
-setInterval(cleanupInactiveSessions, 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(cleanupInactiveSessions, 60 * 1000);
+}
 
 module.exports = {
   joinEditingSession,

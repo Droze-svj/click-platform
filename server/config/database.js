@@ -102,10 +102,20 @@ const initDatabases = async () => {
 
   // Helper for timed execution
   const withTimeout = (promise, ms, label) => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error(`${label} TIMEOUT`)), ms);
+    });
     return Promise.race([
-      promise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} TIMEOUT`)), ms))
-    ]);
+      promise.then((res) => {
+        clearTimeout(timeoutId);
+        return res;
+      }),
+      timeoutPromise
+    ]).catch((err) => {
+      clearTimeout(timeoutId);
+      throw err;
+    });
   };
 
   // Run initializations in parallel to speed up boot

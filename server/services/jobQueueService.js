@@ -63,6 +63,18 @@ if (isProduction) {
 }
 
 function getRedisConnection() {
+  if (process.env.NODE_ENV === 'test') {
+    if (process.env.ALLOW_TEST_REDIS === 'true') {
+      logger.info('🛡️ [JobQueue] Test environment with ALLOW_TEST_REDIS. Returning mock Redis options.');
+      return {
+        host: 'localhost',
+        port: 6379,
+        mock: true
+      };
+    }
+    logger.info('🛡️ [JobQueue] Test environment detected. Bypassing Redis connection to prevent hangs.');
+    return null;
+  }
   // In production/staging, ALWAYS require REDIS_URL (no fallbacks)
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
 
@@ -1377,20 +1389,28 @@ async function verifyRedisConnection(redis) {
     }
   }
 
+  let timeoutId;
   try {
     // Perform ping with timeout
     const pingPromise = typeof instance.ping === 'function' ? instance.ping() : Promise.resolve('PONG');
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Redis ping timeout')), 2000)
+      timeoutId = setTimeout(() => reject(new Error('Redis ping timeout')), 2000)
     );
 
-    const result = await Promise.race([pingPromise, timeoutPromise]);
+    const result = await Promise.race([
+      pingPromise.then((res) => {
+        clearTimeout(timeoutId);
+        return res;
+      }),
+      timeoutPromise
+    ]);
     
     if (result === 'PONG') {
       return true;
     }
     return false;
   } catch (error) {
+    clearTimeout(timeoutId);
     logger.debug('Redis connectivity check failed', { error: error.message });
     return false;
   } finally {

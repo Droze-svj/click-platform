@@ -334,18 +334,20 @@ async function sendTestNotification(userId) {
 }
 
 // Clean up old/invalid subscriptions periodically
-setInterval(() => {
-  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days
-  let cleaned = 0
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days
+    let cleaned = 0
 
-  for (const [id, subData] of pushSubscriptions.entries()) {
-    if (new Date(subData.lastUsed) < cutoff) {
-      pushSubscriptions.delete(id)
-      cleaned++
+    for (const [id, subData] of pushSubscriptions.entries()) {
+      if (new Date(subData.lastUsed) < cutoff) {
+        pushSubscriptions.delete(id)
+        cleaned++
+      }
     }
-  }
 
-  if (cleaned > 0) { /* intentionally empty */ }
-}, 24 * 60 * 60 * 1000) // Daily cleanup
+    if (cleaned > 0) { /* intentionally empty */ }
+  }, 24 * 60 * 60 * 1000) // Daily cleanup
+}
 
 module.exports = router

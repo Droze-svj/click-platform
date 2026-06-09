@@ -4,7 +4,9 @@ const ScheduledPost = require('../models/ScheduledPost');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
-const cron = require('node-cron');
+const cron = process.env.NODE_ENV === 'test' 
+  ? { schedule: () => ({ start: () => {}, stop: () => {} }) } 
+  : require('node-cron');
 const { getOptimalPostingWindows } = require('../services/optimalPostingTimeService');
 const logger = require('../utils/logger');
 const router = express.Router();

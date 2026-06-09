@@ -321,10 +321,12 @@ function resetMetrics() {
 }
 
 // Collect system metrics every 30 seconds
-setInterval(collectSystemMetrics, 30000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(collectSystemMetrics, 30000);
 
-// Initial collection
-collectSystemMetrics();
+  // Initial collection
+  collectSystemMetrics();
+}
 
 module.exports = {
   trackAPIRequest,

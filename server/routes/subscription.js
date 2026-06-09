@@ -139,14 +139,22 @@ router.get('/status', auth, async (req, res) => {
   })();
 
   // 2s timeout for critical dashboard load
+  let timeoutId;
   const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('TIMEOUT')), 2000)
+    timeoutId = setTimeout(() => reject(new Error('TIMEOUT')), 2000)
   );
 
   try {
-    const result = await Promise.race([statusPromise, timeoutPromise]);
+    const result = await Promise.race([
+      statusPromise.then((res) => {
+        clearTimeout(timeoutId);
+        return res;
+      }),
+      timeoutPromise
+    ]);
     res.json(result);
   } catch (err) {
+    clearTimeout(timeoutId);
     logger.error('Subscription status error or timeout', { error: err.message, userId: req.user?._id });
     // SECURITY: never grant Pro on error/timeout. Fail to the LEAST-privileged
     // honest answer — the user's real plan if we have it on the attached doc,

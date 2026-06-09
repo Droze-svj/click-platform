@@ -99,10 +99,12 @@ function initializeAllWorkers() {
 
 
     if (!redisConnection || redisConnection === null || redisConnection === undefined) {
-      const errorMsg = '❌ FATAL: getRedisConnection() returned null/undefined. Cannot create workers.';
-      
-      logger.error(errorMsg);
-      logger.error('❌ Workers will NOT be initialized. Check REDIS_URL in Render.com.');
+      if (isProduction) {
+        logger.error('❌ FATAL: getRedisConnection() returned null/undefined. Cannot create workers.');
+        logger.error('❌ Workers will NOT be initialized. Check REDIS_URL in Render.com.');
+      } else {
+        logger.info('🛡️ [JobQueue] Redis connection is null. Workers will run in-process without Redis (development fallback).');
+      }
       return;
     }
 

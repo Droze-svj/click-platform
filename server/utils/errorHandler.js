@@ -179,12 +179,20 @@ const recoveryStrategies = {
   },
 
   timeout: async (fn, timeoutMs = 5000) => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) =>
+      timeoutId = setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
+    );
     return Promise.race([
-      fn(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
-      ),
-    ]);
+      fn().then((res) => {
+        clearTimeout(timeoutId);
+        return res;
+      }),
+      timeoutPromise
+    ]).catch((err) => {
+      clearTimeout(timeoutId);
+      throw err;
+    });
   },
 };
 

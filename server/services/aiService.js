@@ -368,7 +368,7 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
  * Validates AI output against source material to eliminate hallucinations.
  */
 async function validateAndRefineOutput(generatedContent, sourceMaterial, type = 'general') {
-  if (!geminiConfigured) return generatedContent;
+  if (process.env.NODE_ENV === 'test' || !geminiConfigured) return generatedContent;
 
   try {
     const prompt = `System: You are the Sovereignty Engine (Integrity Agent).

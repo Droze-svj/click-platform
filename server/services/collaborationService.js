@@ -272,7 +272,9 @@ function cleanupStalePresence() {
 }
 
 // Clean up stale presence every minute
-setInterval(cleanupStalePresence, 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(cleanupStalePresence, 60 * 1000);
+}
 
 /**
  * Track an activity pulse for a team

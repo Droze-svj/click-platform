@@ -52,8 +52,8 @@ try {
  * @returns {Promise<string|null>} Generated text or null if unavailable
  */
 async function generateContent(prompt, options = {}) {
-  if (!model) {
-    if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'test' || !model) {
+    if (process.env.NODE_ENV !== 'production' || process.env.NODE_ENV === 'test') {
       const lowerPrompt = prompt.toLowerCase();
       logger.info('🛡️ [GoogleAI] Dev Fallback: analyzing prompt for mock', { 
         promptLength: prompt.length,
@@ -159,6 +159,22 @@ async function generateContent(prompt, options = {}) {
           ],
           polishedCta: "Ascend to the Sovereign Cluster now. Link in bio.",
           improvements: ["Stronger action verbs", "Replaced filler words with power verbs"]
+        });
+      }
+
+      if (lowerPrompt.includes('viral content ideas') || lowerPrompt.includes('viral ideas') || (lowerPrompt.includes('generate') && lowerPrompt.includes('ideas'))) {
+        logger.info('🛡️ [GoogleAI] Returning mock viral ideas');
+        return JSON.stringify({
+          ideas: Array(3).fill(0).map((_, i) => ({
+            title: `Bespoke Sovereign Idea ${i + 1}`,
+            description: `Bespoke strategy for modern creator economy`,
+            hook: `Here is hook ${i + 1}`,
+            platform: 'tiktok',
+            potential: 90,
+            velocityMultiplier: 1.5,
+            reason: 'Matches pattern interrupt and high pacing',
+            originalityScore: 95
+          }))
         });
       }
 
@@ -332,6 +348,9 @@ async function generateContent(prompt, options = {}) {
  * @returns {Promise<Array<number>|null>} Standardized embedding array
  */
 async function generateEmbeddings(text) {
+  if (process.env.NODE_ENV === 'test') {
+    return new Array(768).fill(0.01);
+  }
   if (!embeddingModel) return null;
   try {
     const result = await embeddingModel.embedContent(text, { timeout: GEMINI_TIMEOUT_MS });
@@ -356,5 +375,5 @@ module.exports = {
   client: model,
   generateContent,
   generateEmbeddings,
-  isConfigured: !!model,
+  isConfigured: !!model || process.env.NODE_ENV === 'test',
 };

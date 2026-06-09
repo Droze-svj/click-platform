@@ -199,9 +199,11 @@ class PerformanceMonitor {
 const performanceMonitor = new PerformanceMonitor();
 
 // Update system metrics every 30 seconds
-setInterval(() => {
-  performanceMonitor.updateSystemMetrics();
-}, 30000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    performanceMonitor.updateSystemMetrics();
+  }, 30000);
+}
 
 module.exports = performanceMonitor;
 

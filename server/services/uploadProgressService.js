@@ -270,7 +270,9 @@ async function cleanupOldUploads() {
 }
 
 // Run cleanup every hour
-setInterval(cleanupOldUploads, 60 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(cleanupOldUploads, 60 * 60 * 1000);
+}
 
 module.exports = {
   initializeUpload,
