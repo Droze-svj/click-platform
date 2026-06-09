@@ -8,6 +8,7 @@ const twitterService = require('../../services/twitterOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
+const { signState, verifyState } = require('../../utils/oauthState');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
   statePayload.codeVerifier = codeVerifier;
 
-  const state = Buffer.from(JSON.stringify(statePayload)).toString('base64');
+  const state = signState(statePayload); // HMAC-signed (CSRF protection)
   const url = await twitterService.getAuthorizationUrl(userId, state, callbackUrl);
 
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
@@ -66,12 +67,13 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     // signed-at-issue `state` blob (base64 JSON written by the authorize route).
     // Previously this read req.userId (always undefined here), so the token
     // exchange failed and Twitter could never finish connecting.
+    // Verify the HMAC-signed state (CSRF) and derive the userId from it — the
+    // provider redirect carries no session. A forged/tampered/expired state is
+    // rejected; an attacker can't inject another user's id.
     let userId = req.userId || req.user?._id || req.user?.id;
     if (!userId && state) {
-      try {
-        const decoded = JSON.parse(Buffer.from(String(state), 'base64').toString('utf8'));
-        if (decoded && decoded.userId) userId = decoded.userId;
-      } catch (_) { /* malformed state handled below */ }
+      const decoded = verifyState(String(state));
+      if (decoded && decoded.userId) userId = decoded.userId;
     }
     if (!userId) {
       return sendError(res, 'Invalid OAuth state', 400);

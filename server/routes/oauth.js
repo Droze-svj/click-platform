@@ -5,6 +5,7 @@ const logger = require('../utils/logger');
 const { apiLimiter, oauthLimiter } = require('../middleware/enhancedRateLimiter');
 const entitlements = require('../config/entitlements');
 const enforcement = require('../services/entitlementEnforcement');
+const { signState, verifyState } = require('../utils/oauthState');
 const router = express.Router();
 
 const SOCIAL_PLATFORMS = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'];
@@ -165,10 +166,11 @@ router.get('/:platform/connect', auth, oauthLimiter, validateConnect, asyncHandl
     statePayload.codeVerifier = codeVerifier;
   }
 
-  const state = Buffer.from(JSON.stringify(statePayload)).toString('base64');
-  
+  // HMAC-signed so the callback can trust userId/codeVerifier (CSRF protection).
+  const state = signState(statePayload);
+
   try {
-    const callbackUrl = service.defaultRedirectUri?.(req) || 
+    const callbackUrl = service.defaultRedirectUri?.(req) ||
       `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/${plat}/callback`;
     
     // Pass the signed state and callback URL to the service
@@ -223,18 +225,13 @@ router.get('/:platform/callback', validateCallback, asyncHandler(async (req, res
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=missing_params`);
   }
 
-  // Decode the base64 `state` defensively — a malformed/forged value must
-  // redirect with a clear invalid_state error, not fall through to the
-  // generic token-exchange catch (which would mislabel it as a provider error).
-  let stateData;
-  try {
-    stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-  } catch (e) {
-    logger.warn(`OAuth callback received malformed state for ${platform}`);
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=invalid_state`);
-  }
+  // Verify the HMAC-signed `state` — a forged/tampered/expired value (or a
+  // legacy unsigned blob from a flow started before this deploy) must redirect
+  // with a clear invalid_state error, never be trusted. This is the CSRF guard:
+  // an attacker can't forge a state carrying someone else's userId.
+  const stateData = verifyState(state);
   if (!stateData || typeof stateData !== 'object' || !stateData.userId) {
-    logger.warn(`OAuth callback state missing userId for ${platform}`);
+    logger.warn(`OAuth callback received invalid/forged/expired state for ${platform}`);
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=invalid_state`);
   }
 
