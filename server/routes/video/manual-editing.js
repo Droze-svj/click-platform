@@ -72,7 +72,11 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    // SECURITY: never write the client-supplied originalname into the path — it
+    // can contain `../` and escape the upload dir (path traversal). Take only the
+    // basename, strip anything but safe chars, and keep just the extension.
+    const ext = path.extname(path.basename(file.originalname || '')).replace(/[^.\w]/g, '').slice(0, 12);
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${ext}`);
   }
 });
 

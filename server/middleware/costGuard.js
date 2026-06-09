@@ -45,8 +45,13 @@ const RATE_CARD = {
 const CHARS_PER_TOKEN = 4;
 const CREDIT_PER_USD = 100; // 1 credit = $0.01 displayed in UI
 
+// Fallback only — the live budget comes from entitlements LIMITS.aiBudgetUsd via
+// getRemainingBudgetUsd. Keys aligned to canonical tiers (creator added; the
+// legacy starter/enterprise kept as harmless aliases) so the `?? free` fallback
+// can't accidentally under-budget a creator user.
 const DEFAULT_TIER_BUDGETS_USD = {
   free: 0.5,
+  creator: 5,
   starter: 5,
   pro: 50,
   agency: 500,
@@ -79,7 +84,14 @@ function usdToCredits(usd) {
 }
 
 async function getRemainingBudgetUsd(userId) {
-  if (!userId) return Infinity;
+  // Fail CLOSED: a missing userId must not yield an unlimited budget. Treat it
+  // as the free-tier ceiling so an unauthenticated/misrouted AI call can't drive
+  // unbounded spend. (All AI routes are authed today; this is defense-in-depth.)
+  if (!userId) {
+    const { limitFor } = require('../config/entitlements');
+    const freeBudget = limitFor('free', 'aiBudgetUsd');
+    return typeof freeBudget === 'number' ? freeBudget : DEFAULT_TIER_BUDGETS_USD.free;
+  }
   let UsageMeter;
   let User;
   try {
