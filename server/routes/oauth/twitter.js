@@ -62,7 +62,20 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
   }
 
   try {
-    const userId = req.userId || req.user?._id || req.user?.id;
+    // The provider redirect carries no session, so derive the userId from the
+    // signed-at-issue `state` blob (base64 JSON written by the authorize route).
+    // Previously this read req.userId (always undefined here), so the token
+    // exchange failed and Twitter could never finish connecting.
+    let userId = req.userId || req.user?._id || req.user?.id;
+    if (!userId && state) {
+      try {
+        const decoded = JSON.parse(Buffer.from(String(state), 'base64').toString('utf8'));
+        if (decoded && decoded.userId) userId = decoded.userId;
+      } catch (_) { /* malformed state handled below */ }
+    }
+    if (!userId) {
+      return sendError(res, 'Invalid OAuth state', 400);
+    }
     await twitterService.exchangeCodeForToken(userId, code, state);
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
