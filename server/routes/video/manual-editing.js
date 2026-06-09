@@ -7,6 +7,7 @@ const express = require('express');
 const auth = require('../../middleware/auth');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { guardOwnership } = require('../../utils/ownership');
 const logger = require('../../utils/logger');
 const multer = require('multer');
 const path = require('path');
@@ -410,14 +411,17 @@ router.post('/ai-assist/creative-director', auth, asyncHandler(async (req, res) 
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
+  // IDOR guard: this route persists to Content by videoId — verify ownership.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const brief = await aiAssistedService.generateCreativeDirectorBrief(videoId, transcript, metadata);
-    
+
     // Persist the brief for session consistency
     const Content = require('../../models/Content');
-    await Content.findByIdAndUpdate(videoId, { 
-      $set: { 'generatedContent.creativeBrief': brief } 
+    await Content.findByIdAndUpdate(videoId, {
+      $set: { 'generatedContent.creativeBrief': brief }
     });
 
     sendSuccess(res, 'Creative Director brief generated', 200, brief);
@@ -477,12 +481,13 @@ router.post('/ai-assist/auto-edit-sequence', auth, asyncHandler(async (req, res)
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
+  // IDOR guard: this route reads Content by videoId — verify ownership.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
-    // Attempt to fetch the existing brief for session consistency
-    const Content = require('../../models/Content');
-    const content = await Content.findById(videoId);
-    const brief = content?.generatedContent?.creativeBrief || null;
+    // Reuse the ownership-verified content for the existing brief.
+    const brief = owned?.generatedContent?.creativeBrief || null;
 
     const sequence = await aiAssistedService.autoEditSequence(videoId, transcript, metadata, req.user._id, brief);
     sendSuccess(res, 'Auto-edit sequence generated', 200, sequence);

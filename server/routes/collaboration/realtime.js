@@ -12,6 +12,7 @@ const {
 } = require('../../services/realtimeCollaborationService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { guardOwnership } = require('../../utils/ownership');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
@@ -96,6 +97,11 @@ router.post('/:contentId/cursor', auth, asyncHandler(async (req, res) => {
 router.post('/:contentId/change', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
   const { operation, version, content, index, text, length } = req.body;
+
+  // IDOR guard: handleContentChange mutates+saves the Content's transcript —
+  // verify the requester owns it before allowing edits.
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
 
   try {
     const result = await handleContentChange(contentId, req.user._id, {

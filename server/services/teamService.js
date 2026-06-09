@@ -260,6 +260,22 @@ async function updateMemberRole(teamId, updaterId, memberId, newRole) {
       throw new Error('Member not found');
     }
 
+    // Validate the target role.
+    const VALID_ROLES = ['owner', 'admin', 'editor', 'viewer', 'member'];
+    if (!VALID_ROLES.includes(newRole)) {
+      throw new Error('Invalid role');
+    }
+    // Privilege-escalation guards: only an OWNER may grant the owner role or
+    // change an existing owner's role. An admin must not be able to promote
+    // anyone (incl. themselves) to owner, or demote the owner. (Use the team's
+    // explicit ownership-transfer flow for handing over ownership.)
+    if (newRole === 'owner' && updater.role !== 'owner') {
+      throw new Error('Only the team owner can grant the owner role');
+    }
+    if (member.role === 'owner' && updater.role !== 'owner') {
+      throw new Error('Only the team owner can change the owner\'s role');
+    }
+
     member.role = newRole;
     member.permissions = getPermissionsForRole(newRole);
 
