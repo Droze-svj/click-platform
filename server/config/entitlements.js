@@ -232,23 +232,39 @@ const PLAN_ALIASES = {
 /**
  * Canonical tier resolution for a user document.
  * Order:
- *   1. explicit subscription.plan in {creator,pro,agency} → that
+ *   1. explicit subscription.plan in {creator,pro,agency} → that, UNLESS the sub
+ *      is cancelled/expired and its paid period has ended → 'free'
  *   2. active trial (status==='trial', not expired) → 'pro'
  *   3. legacy plan {monthly,annual} → 'pro'
  *   4. else 'free'
+ *
+ * @param {Object} user
+ * @param {number} [now=Date.now()] - injectable clock for testing.
  */
-function resolveTier(user) {
+function resolveTier(user, now = Date.now()) {
   const sub = user && user.subscription;
   const plan = sub && sub.plan;
 
-  // 1. Explicit paid canonical plan wins.
-  if (plan === 'creator' || plan === 'pro' || plan === 'agency') return plan;
+  // 1. Explicit paid canonical plan. Honour cancellation/expiry with a grace
+  //    period: a cancelled/expired subscription keeps access until its paid
+  //    period ends (endDate), then drops to 'free'. Active subs — and cancelled
+  //    subs that are still within their paid window or carry no endDate — keep
+  //    their plan. (Previously resolveTier ignored status/endDate entirely, so
+  //    cancellation never actually revoked access.)
+  if (plan === 'creator' || plan === 'pro' || plan === 'agency') {
+    const status = sub && sub.status;
+    if (status === 'cancelled' || status === 'expired') {
+      const end = sub.endDate ? new Date(sub.endDate).getTime() : null;
+      if (end !== null && Number.isFinite(end) && now >= end) return 'free';
+    }
+    return plan;
+  }
 
   // 2. Live trial → pro-level so users can genuinely evaluate Click.
   //    Honour endDate when present; a trial with a past endDate falls through.
   if (sub && sub.status === 'trial') {
     const end = sub.endDate ? new Date(sub.endDate).getTime() : null;
-    if (end === null || end > Date.now()) return 'pro';
+    if (end === null || end > now) return 'pro';
   }
 
   // 3. Legacy billing-period values.
