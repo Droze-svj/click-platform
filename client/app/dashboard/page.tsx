@@ -8,6 +8,7 @@ import {
   Eye, Heart, Megaphone, Signal,
   Sparkles, ArrowRight, ArrowUpRight, Rocket, Clock,
   LayoutGrid, RefreshCw, Target, Fingerprint, Link2, X,
+  Brain, Cpu, Zap, TrendingUp
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { apiGet } from '../../lib/api'
@@ -24,6 +25,87 @@ import {
   EmptyState,
   Button,
 } from '../../components/ui'
+
+type SwarmMode = 'viral' | 'trust' | 'coach' | 'authority'
+
+const SWARM_DETAILS: Record<SwarmMode, {
+  title: string
+  icon: any
+  desc: string
+  color: string
+  textColor: string
+  telemetry: { label: string; value: string }[]
+  tips: string[]
+}> = {
+  viral: {
+    title: 'Viral Swarm',
+    icon: Flame,
+    desc: 'Hyper-energy loops and dynamic transitions optimized for high-pacing TikTok and Reel audiences.',
+    color: 'from-orange-500/20 to-rose-500/20 border-rose-500/30',
+    textColor: 'text-rose-400',
+    telemetry: [
+      { label: 'Swarm Sync', value: '98.8%' },
+      { label: 'Virality', value: '92/100' },
+      { label: 'Pacing', value: '1.15x' },
+    ],
+    tips: [
+      'Open with a negative pattern interrupt: "Stop doing this if..."',
+      'Deploy glitch transitions on key musical beats.',
+      'Inject high-frequency Unicode emojis to highlight key statements.',
+    ]
+  },
+  trust: {
+    title: 'Trust Swarm',
+    icon: Brain,
+    desc: 'Cinematic luma grading and slower, authoritative pacing designed to establish deep brand affinity.',
+    color: 'from-emerald-500/20 to-teal-500/20 border-teal-500/30',
+    textColor: 'text-teal-400',
+    telemetry: [
+      { label: 'Brand Align', value: '99.4%' },
+      { label: 'Authority', value: '96/100' },
+      { label: 'Pacing', value: '0.95x' },
+    ],
+    tips: [
+      'State credential markers in the first 3 seconds: "After researching..."',
+      'Use high-contrast serif typography for clinical takeaways.',
+      'Soften background sound during complex educational sections.',
+    ]
+  },
+  coach: {
+    title: 'Witty Coach',
+    icon: Sparkles,
+    desc: 'Sassy hooks, playful micro-bursts, and interactive caption overlays to maximize personal connection.',
+    color: 'from-indigo-500/20 to-violet-500/20 border-indigo-500/30',
+    textColor: 'text-indigo-400',
+    telemetry: [
+      { label: 'Empathy Coeff', value: '97.2%' },
+      { label: 'Hook Impact', value: '89/100' },
+      { label: 'Pacing', value: '1.05x' },
+    ],
+    tips: [
+      'Begin hooks with a question targeting a core frustration: "Is your workflow...?"',
+      'Apply dynamic scale bounces to caption text on emphasis words.',
+      'Utilize light comedic pauses before dropping primary value points.',
+    ]
+  },
+  authority: {
+    title: 'ExpertSwarm',
+    icon: Cpu,
+    desc: 'AIDA-structured marketing, telemetry-based positioning, and direct competitor benchmark alignment.',
+    color: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30',
+    textColor: 'text-cyan-400',
+    telemetry: [
+      { label: 'Telemetry', value: '99.1%' },
+      { label: 'Strategic', value: '95/100' },
+      { label: 'Pacing', value: '1.10x' },
+    ],
+    tips: [
+      'Reference industry competitor metrics in the opening hook.',
+      'Deploy AIDA (Attention, Interest, Desire, Action) structural stages.',
+      'Include data-backed visualizations/overlays during main highlights.',
+    ]
+  }
+}
 
 /**
  * Dashboard quick-nav cards. The `key` drives the translation lookup
@@ -118,6 +200,24 @@ export default function DashboardHome() {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null)
   const [styleInsight, setStyleInsight] = useState<StyleInsight | null>(null)
   const [connections, setConnections] = useState<Record<string, boolean>>({})
+  const [activeSwarm, setActiveSwarm] = useState<SwarmMode>('coach')
+
+  // Listen to swarm changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const savedSwarm = localStorage.getItem('click-active-swarm') as SwarmMode
+    if (savedSwarm && SWARM_DETAILS[savedSwarm]) setActiveSwarm(savedSwarm)
+
+    const handleSwarmChange = (e: Event) => {
+      const customEvent = e as CustomEvent<SwarmMode>
+      if (customEvent.detail && SWARM_DETAILS[customEvent.detail]) {
+        setActiveSwarm(customEvent.detail)
+      }
+    }
+
+    window.addEventListener('click-swarm-change', handleSwarmChange)
+    return () => window.removeEventListener('click-swarm-change', handleSwarmChange)
+  }, [])
 
   // Live time-aware greeting — re-evaluates each minute so it stays correct
   // without a reload when the user crosses a time-of-day boundary.
@@ -476,6 +576,76 @@ export default function DashboardHome() {
                 })}
               </ul>
             )}
+          </Panel>
+
+          {/* ── Swarm Intelligence HUD (1x2) ───────────────────────────── */}
+          <Panel variant="bento" className="ds-bento-1x2 ds-anim-rise flex flex-col p-6 border-white/5 bg-slate-950/40 backdrop-blur-xl relative overflow-hidden transition-all duration-500">
+            {/* Swarm Ambient Glow */}
+            <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${SWARM_DETAILS[activeSwarm].color} opacity-20 blur-2xl pointer-events-none transition-all duration-500`} />
+            
+            <div className="flex items-center justify-between mb-4">
+              <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[8px] font-black uppercase tracking-wider italic leading-none">
+                2026 Swarm Core
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
+                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Active</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${SWARM_DETAILS[activeSwarm].color} flex items-center justify-center border transition-all duration-500`}>
+                {(() => {
+                  const IconComponent = SWARM_DETAILS[activeSwarm].icon
+                  return <IconComponent className={`w-5 h-5 ${SWARM_DETAILS[activeSwarm].textColor}`} />
+                })()}
+              </div>
+              <div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-white leading-none">
+                  {SWARM_DETAILS[activeSwarm].title}
+                </h4>
+                <p className="text-[10px] font-semibold text-slate-400 mt-1">
+                  Active Playbook Mode
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed font-medium mb-5">
+              {SWARM_DETAILS[activeSwarm].desc}
+            </p>
+
+            {/* Realtime Telemetry Grid */}
+            <div className="grid grid-cols-3 gap-2 p-3 bg-slate-900/60 rounded-xl border border-white/5 mb-5">
+              {SWARM_DETAILS[activeSwarm].telemetry.map((t, idx) => (
+                <div key={idx} className="text-center">
+                  <span className="block text-[8px] font-black uppercase tracking-widest text-slate-500">{t.label}</span>
+                  <span className="block text-[10px] font-black text-white mt-1">{t.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Swarm recommendation header */}
+            <div className="space-y-3 flex-1 flex flex-col justify-end">
+              <div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Swarm Telemetry Tips</span>
+                <ul className="space-y-2">
+                  {SWARM_DETAILS[activeSwarm].tips.map((tip, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-[10px] font-semibold text-slate-300 leading-snug">
+                      <Zap size={10} className={`mt-0.5 shrink-0 ${SWARM_DETAILS[activeSwarm].textColor}`} />
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-2">
+                <Link href="/dashboard/forge">
+                  <Button variant="primary" size="md" className="w-full justify-center" rightIcon={<ArrowRight size={14} />}>
+                    Apply Swarm Playbook
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </Panel>
 
           {/* ── Connect accounts (real /oauth/connections) ─────────────── */}

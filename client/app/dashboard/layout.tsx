@@ -4,6 +4,7 @@ import React, { useEffect } from 'react'
 import LogEmitter from '../../utils/logEmitter'
 import SidebarNav from '../../components/SidebarNav'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
+import ClickDynamicIsland from '../../components/click/ClickDynamicIsland'
 import GlobalCommandPalette from '../../components/GlobalCommandPalette'
 import WorkflowRail from '../../components/WorkflowRail'
 import OnboardingNudge from '../../components/OnboardingNudge'
@@ -32,6 +33,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <SidebarNav />
                 <main className="flex-1 min-w-0 pb-24 lg:pb-0 flex flex-col overflow-x-hidden">
                     <DashboardHeader />
+                    <ClickDynamicIsland />
                     <WorkflowRail />
                     <OnboardingNudge />
                     <div className="flex-1 min-w-0">

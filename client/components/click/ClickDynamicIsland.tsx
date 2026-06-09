@@ -123,6 +123,13 @@ export default function ClickDynamicIsland() {
     }
   }, [])
 
+  // Reflect swarm mode on root element for dynamic theme styling
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-swarm', swarmMode)
+    }
+  }, [swarmMode])
+
   // Reflect an ambient presence mood based on the current route. This only
   // drives Click's voice/glow — it does NOT fabricate task progress. (A previous
   // version simulated fake task percentages/subtasks here; that was removed in
@@ -167,6 +174,11 @@ export default function ClickDynamicIsland() {
     setSwarmMode(mode)
     localStorage.setItem('click-active-swarm', mode)
     
+    // Dispatch custom event for cross-component reactive personalization
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('click-swarm-change', { detail: mode }))
+    }
+    
     setChatLog(prev => [
       ...prev,
       { sender: 'click', text: SWARM_CONFIGS[mode].voice }
@@ -210,6 +222,13 @@ export default function ClickDynamicIsland() {
     localStorage.setItem('click-dynamic-island-coords', JSON.stringify(coords))
   }
 
+const SWARM_SHADOWS: Record<SwarmMode, string> = {
+  viral: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(244,63,94,0.25)] border-rose-500/30',
+  trust: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(20,184,166,0.25)] border-teal-500/30',
+  coach: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(99,102,241,0.25)] border-indigo-500/30',
+  authority: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(6,182,212,0.25)] border-cyan-500/30'
+}
+
   const activeSwarm = SWARM_CONFIGS[swarmMode]
 
   return (
@@ -233,9 +252,9 @@ export default function ClickDynamicIsland() {
           stiffness: 220, 
           damping: 24
         }}
-        className={`pointer-events-auto overflow-hidden bg-slate-950/80 backdrop-blur-2xl border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(99,102,241,0.15)] text-white select-none relative ${
-          isExpanded ? 'p-6' : 'px-4 py-2 h-11 flex items-center justify-between cursor-pointer hover:border-indigo-500/40 hover:scale-[1.02] active:scale-[0.98]'
-        } transition-all duration-300`}
+        className={`pointer-events-auto overflow-hidden bg-slate-950/80 backdrop-blur-2xl text-white select-none relative border transition-all duration-500 ${SWARM_SHADOWS[swarmMode]} ${
+          isExpanded ? 'p-6' : 'px-4 py-2 h-11 flex items-center justify-between cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+        }`}
         onClick={() => !isExpanded && setIsExpanded(true)}
       >
         <AnimatePresence mode="wait">
