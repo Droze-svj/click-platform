@@ -26,6 +26,21 @@ class GenerationQueue {
    * Add generation to queue
    */
   async enqueue(generationId, provider, priority = 0) {
+    // Dedupe: never queue a generation that's already pending or in-flight.
+    // Two near-simultaneous requests for the same id would otherwise spawn
+    // duplicate polling loops (wasted provider calls / double charges).
+    const alreadyPending = this.pendingQueue.find(item => item.generationId === generationId);
+    if (alreadyPending) {
+      logger.info('Generation already queued, skipping duplicate', { generationId, provider });
+      return alreadyPending;
+    }
+    for (const inFlight of this.processingQueue.values()) {
+      if (inFlight.has(generationId)) {
+        logger.info('Generation already processing, skipping duplicate', { generationId, provider });
+        return { generationId, provider, priority, addedAt: Date.now(), alreadyProcessing: true };
+      }
+    }
+
     const queueItem = {
       generationId,
       provider,

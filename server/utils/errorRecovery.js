@@ -198,6 +198,9 @@ class ErrorDeduplicator {
   constructor() {
     this.errorCache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+    // Hard cap so a burst of *unique* errors can't grow the map unbounded
+    // between time-based sweeps. Oldest entries are evicted FIFO.
+    this.maxEntries = parseInt(process.env.ERROR_DEDUP_MAX_ENTRIES || '5000', 10);
   }
 
   /**
@@ -219,6 +222,13 @@ class ErrorDeduplicator {
       cached.count++;
       cached.lastOccurrence = new Date();
       return true;
+    }
+
+    // Evict the oldest entry (Map preserves insertion order) before adding a
+    // new one once we hit the cap.
+    if (this.errorCache.size >= this.maxEntries) {
+      const oldestKey = this.errorCache.keys().next().value;
+      if (oldestKey !== undefined) this.errorCache.delete(oldestKey);
     }
 
     this.errorCache.set(fingerprint, {

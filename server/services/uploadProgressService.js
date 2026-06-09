@@ -18,6 +18,23 @@ function getSocketIO() {
   return io;
 }
 
+/**
+ * Best-effort real-time broadcast. Progress is always persisted before this
+ * runs, so a disconnected/throwing socket layer must never fail the upload
+ * operation — we log and move on.
+ * @param {string} uploadId
+ * @param {Object} progress
+ */
+function emitProgress(uploadId, progress) {
+  const socketIO = getSocketIO();
+  if (!socketIO) return;
+  try {
+    socketIO.to(`upload:${uploadId}`).emit(`upload:progress:${uploadId}`, progress);
+  } catch (err) {
+    logger.warn('Upload progress emit failed', { uploadId, error: err.message });
+  }
+}
+
 // Store upload progress in memory (fallback to Redis if available)
 const uploadProgress = new Map();
 
@@ -98,11 +115,8 @@ async function updateProgress(uploadId, bytesUploaded, totalBytes = null) {
     uploadProgress.set(uploadId, progress);
     await set(`upload:${uploadId}`, progress, 3600);
 
-    // Emit WebSocket event for real-time updates
-    const socketIO = getSocketIO();
-    if (socketIO) {
-      socketIO.to(`upload:${uploadId}`).emit(`upload:progress:${uploadId}`, progress);
-    }
+    // Emit WebSocket event for real-time updates (best-effort)
+    emitProgress(uploadId, progress);
 
     logger.debug('Upload progress updated', {
       uploadId,
@@ -171,11 +185,8 @@ async function completeUpload(uploadId, result = {}) {
     uploadProgress.set(uploadId, progress);
     await set(`upload:${uploadId}`, progress, 3600);
 
-    // Emit WebSocket event
-    const socketIO = getSocketIO();
-    if (socketIO) {
-      socketIO.to(`upload:${uploadId}`).emit(`upload:progress:${uploadId}`, progress);
-    }
+    // Emit WebSocket event (best-effort)
+    emitProgress(uploadId, progress);
 
     logger.info('Upload completed', { uploadId, filename: progress.filename });
 
@@ -204,11 +215,8 @@ async function failUpload(uploadId, error) {
     uploadProgress.set(uploadId, progress);
     await set(`upload:${uploadId}`, progress, 3600);
 
-    // Emit WebSocket event
-    const socketIO = getSocketIO();
-    if (socketIO) {
-      socketIO.to(`upload:${uploadId}`).emit(`upload:progress:${uploadId}`, progress);
-    }
+    // Emit WebSocket event (best-effort)
+    emitProgress(uploadId, progress);
 
     logger.error('Upload failed', { uploadId, error, filename: progress.filename });
 

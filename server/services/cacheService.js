@@ -1,5 +1,6 @@
 const redis = require('redis');
 const logger = require('../utils/logger');
+const { safeJsonParse } = require('../utils/safeJson');
 
 // Lazy load cache monitoring to avoid circular dependencies
 let cacheMonitoring = null;
@@ -124,7 +125,9 @@ async function get(key) {
       // Track cache hit
       const monitoring = getCacheMonitoring();
       if (monitoring) monitoring.trackCacheHit(key);
-      return JSON.parse(value);
+      // Corrupt/legacy entries degrade to a cache miss instead of throwing
+      // into the catch below (which would log a misleading "Cache get error").
+      return safeJsonParse(value, null);
     }
     // Track cache miss
     const monitoring = getCacheMonitoring();
@@ -341,11 +344,8 @@ async function mget(keys) {
       if (value) {
         const monitoring = getCacheMonitoring();
         if (monitoring) monitoring.trackCacheHit(keys[index]);
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value;
-        }
+        // Fall back to the raw string for non-JSON values (never throws).
+        return safeJsonParse(value, value);
       } else {
         const monitoring = getCacheMonitoring();
         if (monitoring) monitoring.trackCacheMiss(keys[index]);
