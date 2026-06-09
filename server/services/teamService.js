@@ -8,6 +8,33 @@ const ContentShare = require('../models/ContentShare');
 const logger = require('../utils/logger');
 const crypto = require('crypto');
 const { sendTeamInvitationEmail } = require('./emailService');
+const { resolveTier, limitFor } = require('../config/entitlements');
+
+/**
+ * Enforce the team seat cap at the single choke point where a member is added.
+ * The cap comes from the TEAM OWNER's tier (the paying subject), not the
+ * inviter/invitee. Previously acceptInvitation added members with NO cap check,
+ * so an owner could invite unlimited people past their plan's seat limit.
+ *
+ * Monetization limit (not a security gate): if the owner's tier can't be
+ * resolved (e.g. transient lookup error), we fail OPEN rather than wrongly block
+ * a legitimate team. Throws SEAT_LIMIT when a finite cap is reached.
+ */
+async function assertSeatAvailable(team) {
+  let cap = Infinity;
+  try {
+    const owner = await User.findById(team.ownerId).select('subscription').lean();
+    if (owner) cap = limitFor(resolveTier(owner), 'teamSeats');
+  } catch (err) {
+    logger.warn('assertSeatAvailable: owner tier lookup failed; allowing', { teamId: team._id, error: err.message });
+    return; // fail open
+  }
+  if (Number.isFinite(cap) && (team.members?.length || 0) >= cap) {
+    const e = new Error(`Team seat limit reached (${cap}). Upgrade the team owner's plan to add more members.`);
+    e.code = 'SEAT_LIMIT';
+    throw e;
+  }
+}
 
 /**
  * Create team
@@ -175,6 +202,9 @@ async function acceptInvitation(token, userId) {
     );
 
     if (!existingMember) {
+      // Enforce the owner's seat cap — this path previously added members with
+      // no check, fully bypassing the limit via email invitations.
+      await assertSeatAvailable(team);
       team.members.push({
         userId,
         role,
@@ -219,6 +249,9 @@ async function inviteMember(teamId, inviterId, inviteData) {
     if (existingMember) {
       throw new Error('User is already a team member');
     }
+
+    // Enforce the owner's seat cap before adding.
+    await assertSeatAvailable(team);
 
     const role = inviteData.role || team.settings.defaultRole;
     const permissions = getPermissionsForRole(role);
