@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Wand2 } from 'lucide-react';
+import { useLandingTheme } from './LandingThemeContext';
 
 export function FinalCTA() {
+  const { niche, accent } = useLandingTheme();
+  const accentText = niche ? accent.textAccent : 'text-indigo-500';
   return (
     <section className="py-32 px-6 relative flex flex-col items-center justify-center min-h-[60vh]">
       <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden">
@@ -24,7 +27,7 @@ export function FinalCTA() {
         </div>
 
         <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8">
-          STOP EDITING. <span className="text-indigo-500">START SHIPPING.</span>
+          STOP EDITING. <span className={`${accentText} transition-colors duration-500`}>START SHIPPING.</span>
         </h2>
         <p className="text-slate-400 text-xl md:text-2xl font-medium mb-12 max-w-2xl mx-auto">
           You bring the idea. Click handles the cuts, the captions, the schedule, the five platforms. Then it remembers what worked and gets sharper for tomorrow.

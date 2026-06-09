@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { type LucideIcon, Zap, Network, BrainCircuit, Activity, Terminal, Fingerprint } from 'lucide-react';
+import { useLandingTheme } from './LandingThemeContext';
 
 interface Pillar {
   icon: LucideIcon;
@@ -40,6 +41,11 @@ const PILLARS: Pillar[] = [
 ];
 
 export function EnginePillars() {
+  const { niche, accent } = useLandingTheme();
+  const accentText = niche ? accent.textAccent : 'text-primary-500';
+  const headingGradient = niche
+    ? `bg-gradient-to-r ${accent.gradient}`
+    : 'bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-primary-600';
   return (
     <section id="features" className="py-48 px-6 bg-surface-page relative overflow-hidden font-inter border-y-2 border-surface-100 dark:border-white/5">
       
@@ -52,11 +58,11 @@ export function EnginePillars() {
         <div className="text-center mb-32 space-y-8">
           <div className="flex items-center justify-center gap-4">
              <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,1)] animate-pulse" />
-             <span className="text-[11px] font-black uppercase tracking-[0.6em] text-primary-500 italic">What Click actually does</span>
+             <span className={`text-[11px] font-black uppercase tracking-[0.6em] ${accentText} italic transition-colors duration-500`}>What Click actually does</span>
           </div>
 
           <h2 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic">
-            THREE JOBS. <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-primary-600">ZERO EXCUSES.</span>
+            THREE JOBS. <span className={`text-transparent bg-clip-text ${headingGradient} transition-all duration-500`}>ZERO EXCUSES.</span>
           </h2>
 
           <p className="text-surface-500 dark:text-slate-500 max-w-4xl mx-auto text-xl md:text-2xl font-medium italic uppercase tracking-tight opacity-70 leading-relaxed">

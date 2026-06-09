@@ -17,6 +17,7 @@ import { PricingCard } from './PricingCard';
 import { PricingToggle } from './PricingToggle';
 import { Brain, Gauge, Globe, Crown, Zap, Target, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLandingTheme } from './LandingThemeContext';
 
 // What makes Click different — only REAL, shipped capabilities. Each maps to a
 // real product surface (performance learning loop, trends, Labs early-access).
@@ -46,17 +47,26 @@ const DIFFERENTIATORS = [
 export function Pricing() {
   const [period, setPeriod] = useState<BillingPeriod>('monthly');
   const [earlyAccess, setEarlyAccess] = useState<CatalogFeature[]>([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
   const router = useRouter();
   const auth = useAuth() as { user: { _id?: string; id?: string; email?: string } | null };
   const user = auth?.user || null;
+  const { niche, accent } = useLandingTheme();
+  const accentText = niche ? accent.textAccent : 'text-primary-500';
+  const headingGradient = niche ? `bg-gradient-to-r ${accent.gradient}` : 'bg-gradient-to-r from-primary-400 to-fuchsia-400';
+  const chipGradient = niche ? `bg-gradient-to-br ${accent.gradient}` : 'bg-gradient-to-br from-primary-600 to-fuchsia-600';
 
   // Pull the REAL early-access feature list from the live canonical catalog so
   // the Agency callout never lists anything that isn't actually flagged.
   useEffect(() => {
     let alive = true;
-    fetchPublicCatalog().then((cat) => {
-      if (alive && cat) setEarlyAccess(earlyAccessFeatures(cat));
-    });
+    fetchPublicCatalog()
+      .then((cat) => {
+        if (!alive) return;
+        if (cat) setEarlyAccess(earlyAccessFeatures(cat));
+        setLoadingCatalog(false);
+      })
+      .catch(() => { if (alive) setLoadingCatalog(false); });
     return () => {
       alive = false;
     };
@@ -105,7 +115,7 @@ export function Pricing() {
            </motion.div>
 
           <h2 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">
-            PRICED <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">FOR CREATORS.</span>
+            PRICED <span className={`text-transparent bg-clip-text ${headingGradient} transition-all duration-500`}>FOR CREATORS.</span>
           </h2>
 
           <p className="text-surface-500 dark:text-slate-500 max-w-3xl mx-auto text-xl font-medium italic uppercase tracking-tight opacity-70">
@@ -128,9 +138,9 @@ export function Pricing() {
         {/* ── Differentiation strip — what makes Click different (real, shipped) ── */}
         <div className="mt-32">
           <div className="text-center mb-12 space-y-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-primary-500 italic">Why Click</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.5em] ${accentText} italic transition-colors duration-500`}>Why Click</p>
             <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">
-              Not another editor. A <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">growth engine.</span>
+              Not another editor. A <span className={`text-transparent bg-clip-text ${headingGradient} transition-all duration-500`}>growth engine.</span>
             </h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[1700px] mx-auto">
@@ -145,7 +155,7 @@ export function Pricing() {
                   transition={{ delay: i * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   className="ds-surface-card p-7 rounded-3xl border-2 border-surface-100 dark:border-white/5 flex flex-col gap-4"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-fuchsia-600 text-white shadow-lg">
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${chipGradient} text-white shadow-lg transition-all duration-500`}>
                     <DIcon size={22} aria-hidden="true" />
                   </span>
                   <h4 className="text-lg font-black tracking-tight text-surface-900 dark:text-white leading-snug">{d.title}</h4>
@@ -157,7 +167,7 @@ export function Pricing() {
         </div>
 
         {/* ── Agency exclusive early-access callout (real earlyAccess catalog) ── */}
-        {earlyAccess.length > 0 && (
+        {(loadingCatalog || earlyAccess.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -192,17 +202,30 @@ export function Pricing() {
                 )}
               </div>
               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {earlyAccess.map((f) => (
-                  <li
-                    key={f.id}
-                    className="flex items-center gap-3 rounded-2xl bg-surface-card/60 border border-amber-500/10 px-4 py-3.5"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500">
-                      <Sparkles size={15} aria-hidden="true" />
-                    </span>
-                    <span className="text-sm font-semibold text-surface-800 dark:text-slate-200 leading-tight">{f.label}</span>
-                  </li>
-                ))}
+                {loadingCatalog && earlyAccess.length === 0
+                  ? Array.from({ length: 6 }).map((_, i) => (
+                      <li
+                        key={`skeleton-${i}`}
+                        className="flex items-center gap-3 rounded-2xl bg-surface-card/60 border border-amber-500/10 px-4 py-3.5"
+                        aria-hidden="true"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15">
+                          <span className="h-4 w-4 rounded bg-amber-500/30 motion-safe:animate-pulse" />
+                        </span>
+                        <span className="h-3.5 flex-1 rounded bg-surface-200/70 dark:bg-white/10 motion-safe:animate-pulse" />
+                      </li>
+                    ))
+                  : earlyAccess.map((f) => (
+                      <li
+                        key={f.id}
+                        className="flex items-center gap-3 rounded-2xl bg-surface-card/60 border border-amber-500/10 px-4 py-3.5"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500">
+                          <Sparkles size={15} aria-hidden="true" />
+                        </span>
+                        <span className="text-sm font-semibold text-surface-800 dark:text-slate-200 leading-tight">{f.label}</span>
+                      </li>
+                    ))}
               </ul>
             </div>
           </motion.div>

@@ -3,8 +3,15 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Play, Zap, ShieldCheck, Globe, Cpu, Terminal, Activity } from 'lucide-react';
+import { useLandingTheme } from './LandingThemeContext';
 
 export function Hero() {
+  const { niche, accent } = useLandingTheme();
+  // Re-tint the headline only when a niche is chosen; otherwise keep the exact
+  // default gradient so an untouched landing is unchanged.
+  const headlineGradient = niche
+    ? `bg-gradient-to-r ${accent.gradient}`
+    : 'bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-fuchsia-400';
   return (
     <section className="relative pt-56 md:pt-72 pb-24 md:pb-56 px-6 flex flex-col items-center overflow-hidden font-inter">
       
@@ -45,7 +52,7 @@ export function Hero() {
                 className="absolute -bottom-4 left-0 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-50"
               />
             </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-fuchsia-400 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+            <span className={`text-transparent bg-clip-text ${headlineGradient} drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all duration-500`}>
               YOU SHOW UP.
             </span>
           </motion.h1>

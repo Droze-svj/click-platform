@@ -9,9 +9,15 @@ import { LiveDemo } from '../components/landing/LiveDemo';
 import { PlatformMarquee } from '../components/landing/PlatformMarquee';
 import { EnginePillars } from '../components/landing/EnginePillars';
 import { Workflow } from '../components/landing/Workflow';
+import { LandingThemeProvider } from '../components/landing/LandingThemeContext';
+import NichePicker from '../components/landing/NichePicker';
 import { Fingerprint } from 'lucide-react';
 
 // Below-the-fold sections
+const PlanBuilder = dynamic(
+  () => import('../components/landing/PlanBuilder'),
+  { ssr: true },
+);
 const IntelligenceShowcase = dynamic(
   () => import('../components/landing/IntelligenceShowcase').then((m) => m.IntelligenceShowcase),
   { ssr: true },
@@ -71,6 +77,7 @@ const STRUCTURED_DATA = {
 
 export default function LandingPage() {
   return (
+    <LandingThemeProvider>
     <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 selection:bg-primary-500/30 overflow-x-hidden font-inter transition-colors duration-500 bg-noise-grain">
       <script
         type="application/ld+json"
@@ -96,6 +103,7 @@ export default function LandingPage() {
 
       <ScrollProgress />
       <Nav />
+      <NichePicker />
 
       <main className="relative z-10 w-full">
         <Hero />
@@ -103,6 +111,7 @@ export default function LandingPage() {
         <PlatformMarquee />
         <EnginePillars />
         <Workflow />
+        <PlanBuilder />
         <IntelligenceShowcase />
         <Testimonials />
         <Pricing />
@@ -117,5 +126,6 @@ export default function LandingPage() {
         html { scroll-behavior: smooth; }
       `}</style>
     </div>
+    </LandingThemeProvider>
   );
 }
