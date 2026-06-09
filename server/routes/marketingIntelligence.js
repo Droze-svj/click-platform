@@ -92,7 +92,7 @@ router.post('/sync-signals', auth, (_req, res) => {
 // (niche × platform × language) for 6 hours so we don't hammer the AI quota
 // for every editor mount. On cache miss + Gemini failure, the composer falls
 // back to a structured response so the UI never empty-states.
-router.get('/trend-report', async (req, res) => {
+router.get('/trend-report', auth, async (req, res) => {
   const niche = req.query.niche || null;
   const platform = req.query.platform || null;
   const language = req.query.language || req.language || 'en';
@@ -108,24 +108,31 @@ router.get('/trend-report', async (req, res) => {
     }
   }
 
-  const report = await composeTrendReport({ niche, platform, language });
+  try {
+    const report = await composeTrendReport({ niche, platform, language });
 
-  // Also include the legacy `trends` shape so any old client still renders
-  // something useful while it migrates to the new schema.
-  const np = NICHE_PLAYBOOKS[report.niche] || NICHE_PLAYBOOKS.other;
-  const legacyTrends = (np.angles || []).map((angle, i) => ({
-    angle,
-    momentum: report.hooks?.[i]?.momentum || ['rising', 'steady', 'rising', 'peaking', 'steady'][i % 5],
-    confidence: 0.62 + (i % 4) * 0.07,
-    triggerExamples: (np.triggers || []).slice(0, 2),
-  }));
+    // Also include the legacy `trends` shape so any old client still renders
+    // something useful while it migrates to the new schema.
+    const np = NICHE_PLAYBOOKS[report.niche] || NICHE_PLAYBOOKS.other;
+    const legacyTrends = (np.angles || []).map((angle, i) => ({
+      angle,
+      momentum: report.hooks?.[i]?.momentum || ['rising', 'steady', 'rising', 'peaking', 'steady'][i % 5],
+      confidence: 0.62 + (i % 4) * 0.07,
+      triggerExamples: (np.triggers || []).slice(0, 2),
+    }));
 
-  const data = { ...report, trends: legacyTrends, vocabulary: np.keywords || [] };
+    const data = { ...report, trends: legacyTrends, vocabulary: np.keywords || [] };
 
-  try { await redisCache.set(key, data, TREND_CACHE_TTL_SEC); }
-  catch (e) { logger.warn('trend-report cache set failed', { error: e.message }); }
+    try { await redisCache.set(key, data, TREND_CACHE_TTL_SEC); }
+    catch (e) { logger.warn('trend-report cache set failed', { error: e.message }); }
 
-  res.json({ success: true, data, cached: false });
+    res.json({ success: true, data, cached: false });
+  } catch (err) {
+    // The composer is meant to fall back internally, but never let an
+    // unexpected rejection become an unhandled error / hung request.
+    logger.error('trend-report composition failed', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to compose trend report' });
+  }
 });
 
 // ── GET /knowledge-insights ────────────────────────────────────────────────
