@@ -71,17 +71,26 @@ async function initCache() {
     });
 
     // Connect with timeout
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new Error('Redis connection timeout')),
+        (process.env.NODE_ENV === 'test' || process.env.REDIS_CONNECT_TIMEOUT)
+          ? parseInt(process.env.REDIS_CONNECT_TIMEOUT || '500', 10)
+          : 5000
+      );
+    });
+
     await Promise.race([
-      redisClient.connect(),
-      new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error('Redis connection timeout')),
-          (process.env.NODE_ENV === 'test' || process.env.REDIS_CONNECT_TIMEOUT)
-            ? parseInt(process.env.REDIS_CONNECT_TIMEOUT || '500', 10)
-            : 5000
-        )
-      )
-    ]);
+      redisClient.connect().then((res) => {
+        clearTimeout(timeoutId);
+        return res;
+      }),
+      timeoutPromise
+    ]).catch((err) => {
+      clearTimeout(timeoutId);
+      throw err;
+    });
 
     cacheEnabled = true;
     logger.info('✅ Redis cache initialized');
