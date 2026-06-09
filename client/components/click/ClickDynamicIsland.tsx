@@ -11,46 +11,17 @@ import {
 } from 'lucide-react'
 import { apiPost } from '../../lib/api'
 import { clickVoice, type ClickIntent } from '../../lib/clickVoice'
+import {
+  ACCENT_PALETTES, SWARM_THEMES, SWARM_MODES, isSwarmMode, type SwarmMode,
+} from '../../lib/swarmTheme'
 
-type SwarmMode = 'viral' | 'trust' | 'coach' | 'authority'
-
-interface SwarmConfig {
-  label: string
-  icon: React.ElementType
-  desc: string
-  color: string
-  voice: string
-}
-
-const SWARM_CONFIGS: Record<SwarmMode, SwarmConfig> = {
-  viral: {
-    label: 'Viral Swarm',
-    icon: Flame,
-    desc: 'High-energy pacing, dynamic speed ramps, emoji injections.',
-    color: 'from-orange-500 to-rose-500',
-    voice: 'Hyper-Growth mode active. Click is targeting raw retention.'
-  },
-  trust: {
-    label: 'Trust Swarm',
-    icon: Brain,
-    desc: 'Cinematic grades, slower authoritative pacing, clean serif captions.',
-    color: 'from-emerald-500 to-teal-500',
-    voice: 'Authority locked. Suggesting logical layout structures.'
-  },
-  coach: {
-    label: 'Witty Coach',
-    icon: Sparkles,
-    desc: 'Clever hooks, snappy cuts, responsive caption micro-bursts.',
-    color: 'from-indigo-500 to-violet-500',
-    voice: 'Sassy coach mode active. Let\'s make this one pop!'
-  },
-  authority: {
-    label: 'ExpertSwarm',
-    icon: Cpu,
-    desc: 'Deep industry context, competitor positioning metrics, AIDA hooks.',
-    color: 'from-cyan-500 to-blue-500',
-    voice: 'Enterprise swarm online. Benchmarking opponent channels.'
-  }
+// Icons are React component refs, so they stay local; everything else (label,
+// desc, voice, accent classes) comes from the shared swarmTheme module.
+const SWARM_ICONS: Record<SwarmMode, React.ElementType> = {
+  viral: Flame,
+  trust: Brain,
+  coach: Sparkles,
+  authority: Cpu,
 }
 
 // Neural sound-wave visualizer when Click is thinking
@@ -110,8 +81,8 @@ export default function ClickDynamicIsland() {
   
   // Hydrate custom swarm and drag coordinates from local storage
   useEffect(() => {
-    const savedSwarm = localStorage.getItem('click-active-swarm') as SwarmMode
-    if (savedSwarm && SWARM_CONFIGS[savedSwarm]) setSwarmMode(savedSwarm)
+    const savedSwarm = localStorage.getItem('click-active-swarm')
+    if (isSwarmMode(savedSwarm)) setSwarmMode(savedSwarm)
 
     try {
       const savedCoords = localStorage.getItem('click-dynamic-island-coords')
@@ -181,7 +152,7 @@ export default function ClickDynamicIsland() {
     
     setChatLog(prev => [
       ...prev,
-      { sender: 'click', text: SWARM_CONFIGS[mode].voice }
+      { sender: 'click', text: SWARM_THEMES[mode].voice }
     ])
   }
 
@@ -222,14 +193,29 @@ export default function ClickDynamicIsland() {
     localStorage.setItem('click-dynamic-island-coords', JSON.stringify(coords))
   }
 
-const SWARM_SHADOWS: Record<SwarmMode, string> = {
-  viral: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(244,63,94,0.25)] border-rose-500/30',
-  trust: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(20,184,166,0.25)] border-teal-500/30',
-  coach: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(99,102,241,0.25)] border-indigo-500/30',
-  authority: 'shadow-[0_30px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(6,182,212,0.25)] border-cyan-500/30'
-}
+  // Keyboard-operable reposition for the drag grip (pointer drag is mouse-only).
+  const handleGripKeyDown = (e: React.KeyboardEvent) => {
+    const step = e.shiftKey ? 40 : 12
+    let dx = 0
+    let dy = 0
+    switch (e.key) {
+      case 'ArrowLeft': dx = -step; break
+      case 'ArrowRight': dx = step; break
+      case 'ArrowUp': dy = -step; break
+      case 'ArrowDown': dy = step; break
+      default: return
+    }
+    e.preventDefault()
+    setDragOffset(prev => {
+      const coords = { x: prev.x + dx, y: prev.y + dy }
+      try { localStorage.setItem('click-dynamic-island-coords', JSON.stringify(coords)) } catch { /* storage unavailable */ }
+      return coords
+    })
+  }
 
-  const activeSwarm = SWARM_CONFIGS[swarmMode]
+  const activeAccent = ACCENT_PALETTES[swarmMode]
+  const activeTheme = SWARM_THEMES[swarmMode]
+  const ActiveIcon = SWARM_ICONS[swarmMode]
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none w-full max-w-[1200px] px-4 flex justify-center">
@@ -252,7 +238,7 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
           stiffness: 220, 
           damping: 24
         }}
-        className={`pointer-events-auto overflow-hidden bg-slate-950/80 backdrop-blur-2xl text-white select-none relative border transition-all duration-500 ${SWARM_SHADOWS[swarmMode]} ${
+        className={`pointer-events-auto overflow-hidden bg-slate-950/80 backdrop-blur-2xl text-white select-none relative border transition-all duration-500 ${activeAccent.shadow} ${
           isExpanded ? 'p-6' : 'px-4 py-2 h-11 flex items-center justify-between cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
         }`}
         onClick={() => !isExpanded && setIsExpanded(true)}
@@ -268,9 +254,9 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
               className="flex items-center justify-between w-full h-full"
             >
               <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${activeSwarm.color} p-[1px] flex items-center justify-center`}>
+                <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${activeAccent.gradient} p-[1px] flex items-center justify-center`}>
                   <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-                    <activeSwarm.icon className="w-3.5 h-3.5 text-slate-200 animate-pulse" />
+                    <ActiveIcon className="w-3.5 h-3.5 text-slate-200 animate-pulse" />
                   </div>
                 </div>
                 <div className="flex flex-col text-left">
@@ -294,9 +280,13 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
             >
               {/* Drag Grip + Header HUD */}
               <div className="flex items-center justify-between pb-3 border-b border-white/5 relative">
-                <div 
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Move Click HUD — drag, or focus and use arrow keys (hold Shift for larger steps)"
                   onPointerDown={(e) => dragControls.start(e)}
-                  className="absolute top-[-10px] left-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing p-1 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 flex items-center justify-center transition-all z-50"
+                  onKeyDown={handleGripKeyDown}
+                  className="absolute top-[-10px] left-1/2 -translate-x-1/2 cursor-grab active:cursor-grabbing p-1 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 flex items-center justify-center transition-all z-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                 >
                   <GripHorizontal className="w-4 h-4 text-slate-400" />
                 </div>
@@ -304,11 +294,11 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
                   <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-widest italic text-white leading-none">Click HUD</h3>
-                    <p className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Autonomous Swarm Integration</p>
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Autonomous Swarm Integration</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  {loadingChat && <NeuralSoundWave color={activeSwarm.color} />}
+                  {loadingChat && <NeuralSoundWave color={activeAccent.gradient} />}
                   <button
                     type="button"
                     title="Close Console"
@@ -327,9 +317,9 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
               {/* Context Coach Advice */}
               <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-2 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                  <activeSwarm.icon className="w-20 h-20 text-indigo-500" />
+                  <ActiveIcon className="w-20 h-20 text-indigo-500" />
                 </div>
-                <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[8px] font-black uppercase tracking-wider italic leading-none">
+                <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase tracking-wider italic leading-none">
                   Context Insight
                 </span>
                 <p className="text-xs font-semibold text-slate-200 leading-relaxed italic">
@@ -341,36 +331,43 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Swarm Strategy</label>
                 <div className="grid grid-cols-4 gap-2 bg-slate-900/60 p-1 rounded-2xl border border-white/5">
-                  {(['viral', 'trust', 'coach', 'authority'] as SwarmMode[]).map((mode) => {
-                    const cfg = SWARM_CONFIGS[mode]
+                  {SWARM_MODES.map((mode) => {
                     const isActive = swarmMode === mode
-                    const Icon = cfg.icon
+                    const Icon = SWARM_ICONS[mode]
                     return (
                       <button
                         key={mode}
                         type="button"
                         onClick={() => handleSwarmChange(mode)}
+                        aria-pressed={isActive ? 'true' : 'false'}
+                        title={SWARM_THEMES[mode].label}
                         className={`py-2 rounded-xl flex flex-col items-center gap-1.5 transition-all ${
-                          isActive 
-                            ? `bg-gradient-to-r ${cfg.color} text-white shadow-lg scale-105` 
+                          isActive
+                            ? `bg-gradient-to-r ${ACCENT_PALETTES[mode].gradient} text-white shadow-lg scale-105`
                             : 'hover:bg-white/5 text-slate-400 hover:text-slate-200'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
-                        <span className="text-[8px] font-black uppercase tracking-wider">{mode}</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider">{mode}</span>
                       </button>
                     )
                   })}
                 </div>
-                <p className="text-[9px] font-bold text-slate-500 ml-1 leading-snug">
-                  {activeSwarm.desc}
+                <p className="text-[11px] font-bold text-slate-500 ml-1 leading-snug">
+                  {activeTheme.desc}
                 </p>
               </div>
 
               {/* Mini Assistant Console */}
               <div className="space-y-3">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Ask Click Assistant</label>
-                <div className="max-h-[140px] overflow-y-auto space-y-3 px-1 custom-scrollbar">
+                <div
+                  role="log"
+                  aria-live="polite"
+                  aria-relevant="additions text"
+                  aria-label="Click assistant conversation"
+                  className="max-h-[140px] overflow-y-auto space-y-3 px-1 custom-scrollbar"
+                >
                   {chatLog.length === 0 ? (
                     <div className="text-[10px] text-slate-500 italic py-2 text-center uppercase tracking-widest">
                       Ask me to draft hooks, suggest themes, or check telemetry.
@@ -384,7 +381,7 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
                         }`}
                       >
                         {msg.sender === 'click' && (
-                          <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${activeSwarm.color} flex items-center justify-center text-[9px] font-black italic`}>
+                          <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${activeAccent.gradient} flex items-center justify-center text-[9px] font-black italic`}>
                             C
                           </div>
                         )}
@@ -399,8 +396,8 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
                     ))
                   )}
                   {loadingChat && (
-                    <div className="flex gap-3 text-xs justify-start items-center">
-                      <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${activeSwarm.color} flex items-center justify-center`}>
+                    <div className="flex gap-3 text-xs justify-start items-center" role="status" aria-label="Click is thinking">
+                      <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${activeAccent.gradient} flex items-center justify-center`}>
                         <RefreshCw className="w-3 h-3 text-white animate-spin" />
                       </div>
                       <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-400 italic">
@@ -439,7 +436,7 @@ const SWARM_SHADOWS: Record<SwarmMode, string> = {
                       setDragOffset({ x: 0, y: 0 })
                       localStorage.setItem('click-dynamic-island-coords', JSON.stringify({ x: 0, y: 0 }))
                     }}
-                    className="px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[8px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-all"
+                    className="px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-all"
                   >
                     Reset HUD Position
                   </button>

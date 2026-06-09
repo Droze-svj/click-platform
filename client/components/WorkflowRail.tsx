@@ -15,6 +15,7 @@ import {
 import { useTranslation } from '../hooks/useTranslation'
 import LanguagePicker from './LanguagePicker'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ACCENT_PALETTES, resolveAccentKey, isSwarmMode, type SwarmMode } from '../lib/swarmTheme'
 
 const STAGE_ICONS: Record<WorkflowStage, LucideIcon> = {
   ingest: Upload,
@@ -22,35 +23,6 @@ const STAGE_ICONS: Record<WorkflowStage, LucideIcon> = {
   edit: Video,
   schedule: Send,
   analyze: BarChart3,
-}
-
-type SwarmMode = 'viral' | 'trust' | 'coach' | 'authority'
-
-const SWARM_ACCENTS: Record<SwarmMode, { bg: string; text: string; border: string; glow: string }> = {
-  viral: {
-    bg: 'bg-gradient-to-r from-orange-500 to-rose-500 border-rose-500/30',
-    text: 'text-rose-500 dark:text-rose-400',
-    border: 'border-orange-500/30',
-    glow: 'ring-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.4)]'
-  },
-  trust: {
-    bg: 'bg-gradient-to-r from-emerald-500 to-teal-500 border-teal-500/30',
-    text: 'text-teal-500 dark:text-teal-400',
-    border: 'border-emerald-500/30',
-    glow: 'ring-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.4)]'
-  },
-  coach: {
-    bg: 'bg-indigo-600 border-indigo-600',
-    text: 'text-indigo-500 dark:text-indigo-400',
-    border: 'border-indigo-500/30',
-    glow: 'ring-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.4)]'
-  },
-  authority: {
-    bg: 'bg-gradient-to-r from-cyan-500 to-blue-500 border-blue-500/30',
-    text: 'text-cyan-500 dark:text-cyan-400',
-    border: 'border-cyan-500/30',
-    glow: 'ring-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
-  }
 }
 
 interface CoPilotContent {
@@ -117,14 +89,12 @@ export default function WorkflowRail() {
   // Listen to swarm changes
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const savedSwarm = localStorage.getItem('click-active-swarm') as SwarmMode
-    if (savedSwarm && SWARM_ACCENTS[savedSwarm]) setActiveSwarm(savedSwarm)
+    const savedSwarm = localStorage.getItem('click-active-swarm')
+    if (isSwarmMode(savedSwarm)) setActiveSwarm(savedSwarm)
 
     const handleSwarmChange = (e: Event) => {
-      const customEvent = e as CustomEvent<SwarmMode>
-      if (customEvent.detail && SWARM_ACCENTS[customEvent.detail]) {
-        setActiveSwarm(customEvent.detail)
-      }
+      const detail = (e as CustomEvent<unknown>).detail
+      if (isSwarmMode(detail)) setActiveSwarm(detail)
     }
 
     window.addEventListener('click-swarm-change', handleSwarmChange)
@@ -178,6 +148,9 @@ export default function WorkflowRail() {
   ]
 
   const cop = STAGE_COPILOTS[activeStage]
+  // Niche tints the rail when recognised, otherwise falls back to the active
+  // swarm — so each creator's workflow feels personalised to their content.
+  const accent = ACCENT_PALETTES[resolveAccentKey(state.niche, activeSwarm)]
 
   return (
     <div className="sticky top-16 z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-surface-200/50 dark:border-white/10 transition-all duration-500 shadow-sm flex flex-col">
@@ -244,7 +217,7 @@ export default function WorkflowRail() {
                     } : undefined}
                     className={`group flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all duration-500 ease-out whitespace-nowrap ${
                       isCurrent
-                        ? `${SWARM_ACCENTS[activeSwarm].bg} text-white border-transparent ring-2 ${SWARM_ACCENTS[activeSwarm].glow}`
+                        ? `${accent.solidBg} text-white border-transparent ring-2 ${accent.ring}`
                         : isDone
                           ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/50'
                           : isReachable
@@ -293,8 +266,8 @@ export default function WorkflowRail() {
               }
             }}
             className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all duration-500 ease-out flex-shrink-0 ${
-              state.completed[activeStage] 
-                ? `${SWARM_ACCENTS[activeSwarm].bg} text-white hover:scale-105 hover:opacity-90 hover:shadow-md`
+              state.completed[activeStage]
+                ? `${accent.solidBg} text-white hover:scale-105 hover:opacity-90 hover:shadow-md`
                 : 'bg-surface-200 dark:bg-slate-900 text-surface-400 cursor-not-allowed border border-white/5'
             }`}
           >
@@ -344,7 +317,7 @@ export default function WorkflowRail() {
                   <p className="text-xs text-slate-400 leading-relaxed font-medium">
                     {cop.desc}
                   </p>
-                  <p className={`text-[10px] font-semibold italic ${SWARM_ACCENTS[activeSwarm].text}`}>
+                  <p className={`text-[10px] font-semibold italic ${accent.textAccent}`}>
                     💡 Swarm Tip: {cop.nicheTip}
                   </p>
                 </div>
@@ -363,7 +336,7 @@ export default function WorkflowRail() {
                 </button>
                 <Link
                   href={cop.actionRoute}
-                  className={`px-6 py-3 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-glow-primary ${SWARM_ACCENTS[activeSwarm].bg} hover:opacity-90`}
+                  className={`px-6 py-3 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-glow-primary ${accent.solidBg} hover:opacity-90`}
                 >
                   {cop.actionLabel} <ArrowRight size={12} />
                 </Link>
