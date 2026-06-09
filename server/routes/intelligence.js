@@ -10,6 +10,7 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
+const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const Script = require('../models/Script');
 const { generateContent } = require('../utils/googleAI');
@@ -337,13 +338,13 @@ const NICHE_LABELS = {
  * Returns the catalogue of supported niches, formatted for the niche
  * picker dropdown in NicheStrategyPanel.
  */
-router.get('/niches', async (req, res) => {
+router.get('/niches', asyncHandler(async (req, res) => {
   const niches = Object.keys(NICHE_PLAYBOOKS).map(value => ({
     value,
     label: NICHE_LABELS[value] || value,
   }));
   res.json({ success: true, niches });
-});
+}));
 
 /**
  * GET /api/intelligence/niche/:niche

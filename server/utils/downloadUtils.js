@@ -117,7 +117,10 @@ function streamDownload(url, destPath, { maxBytes = 500 * 1024 * 1024, redirects
       });
       request.on('error', fail);
       request.setTimeout(45_000, () => {
-        request.destroy(new Error('Download timed out'));
+        // Destroy without an error arg (so we don't double-settle via the
+        // 'error' listener), then reject the promise explicitly.
+        request.destroy();
+        fail(new Error('Download timed out'));
       });
     };
     get(url, redirects);

@@ -1,6 +1,7 @@
 const { generateEmbeddings } = require('../utils/googleAI');
 const redisClient = require('../utils/redisCache');
 const VectorMemory = require('../models/VectorMemory');
+const logger = require('../utils/logger');
 
 // IMPORTANT: VectorMemory is a PERSISTED store. Its vectors are written at one
 // time and compared at another, so the embedding provider MUST stay constant
@@ -40,12 +41,17 @@ async function storeUserMemory(userId, text, metadata = {}) {
     return false;
   }
 
-  await VectorMemory.create({
-    userId,
-    text,
-    vector,
-    metadata
-  });
+  try {
+    await VectorMemory.create({
+      userId,
+      text,
+      vector,
+      metadata
+    });
+  } catch (err) {
+    logger.error('Failed to store user memory', { userId, error: err.message });
+    throw err;
+  }
 
   return true;
 }

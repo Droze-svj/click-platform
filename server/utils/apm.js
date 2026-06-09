@@ -407,9 +407,11 @@ class APMMonitor {
     // Log alert
     
 
-    // Trigger alerting system
-    if (global.alertingSystem) {
-      global.alertingSystem.handleAlert(alert).catch(err => {
+    // Trigger alerting system. Capture the reference first so it can't become
+    // null between the check and the call.
+    const alertSystem = global.alertingSystem;
+    if (alertSystem) {
+      Promise.resolve(alertSystem.handleAlert(alert)).catch(err => {
         logger.error('Failed to handle alert in APM', { error: err.message });
       });
     }

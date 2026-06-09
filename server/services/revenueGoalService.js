@@ -225,9 +225,14 @@ async function getRevenueGoals(workspaceId, filters = {}) {
       .sort({ 'period.startDate': -1 })
       .lean();
 
-    // Update progress for all goals
+    // Update progress for all goals. Isolate failures so one bad goal doesn't
+    // abort the whole batch.
     for (const goal of goals) {
-      await updateRevenueGoalProgress(goal._id);
+      try {
+        await updateRevenueGoalProgress(goal._id);
+      } catch (err) {
+        logger.warn('Failed to update revenue goal progress', { goalId: goal._id, error: err.message });
+      }
     }
 
     // Re-fetch with updated progress

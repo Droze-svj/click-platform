@@ -290,6 +290,11 @@ const circuitBreakers = new Map();
  */
 function getCircuitBreaker(actionType) {
   if (!circuitBreakers.has(actionType)) {
+    // Bound growth (FIFO) in case action types are dynamic/high-cardinality.
+    if (circuitBreakers.size >= 1000) {
+      const oldest = circuitBreakers.keys().next().value;
+      if (oldest !== undefined) circuitBreakers.delete(oldest);
+    }
     circuitBreakers.set(actionType, new CircuitBreaker({
       failureThreshold: 5,
       resetTimeout: 60000

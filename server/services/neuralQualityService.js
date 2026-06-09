@@ -71,7 +71,13 @@ function checkCaptionOverlaps(captions) {
  * Automated fix for minor audit issues
  */
 async function autoFixProject(projectData, auditReport) {
-  const fixedProject = JSON.parse(JSON.stringify(projectData));
+  let fixedProject;
+  try {
+    fixedProject = JSON.parse(JSON.stringify(projectData));
+  } catch (e) {
+    logger.error('autoFixProject: failed to clone project', { error: e.message });
+    return projectData;
+  }
 
   auditReport.issues.forEach(issue => {
     if (issue.type === 'visual' && issue.desc.includes('overlap')) {

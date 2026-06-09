@@ -122,7 +122,11 @@ Give one very specific, immediately actionable piece of advice. Keep it sharp an
 Respond in JSON: { "action": "...", "reasoning": "...", "urgency": "..." }`;
 
     const response = await geminiGenerate(prompt, { temperature: 0.3 });
-    return JSON.parse(response);
+    try {
+      return JSON.parse(response);
+    } catch {
+      return fallbacks[anomalyType] || fallbacks[ANOMALY_TYPES.NONE];
+    }
   } catch (err) {
     logger.warn('Anomaly advice AI call failed, using fallback', { err: err.message });
     return fallbacks[anomalyType] || fallbacks[ANOMALY_TYPES.NONE];

@@ -401,11 +401,19 @@ function releaseAllUserLocks(userId) {
 }
 
 // Run cleanup every minute
+let cleanupInterval = null;
 if (process.env.NODE_ENV !== 'test') {
-  setInterval(cleanupInactiveSessions, 60 * 1000);
+  cleanupInterval = setInterval(cleanupInactiveSessions, 60 * 1000);
+  if (typeof cleanupInterval.unref === 'function') cleanupInterval.unref();
+}
+
+/** Stop the cleanup interval (graceful shutdown / test cleanup). */
+function stopCleanup() {
+  if (cleanupInterval) { clearInterval(cleanupInterval); cleanupInterval = null; }
 }
 
 module.exports = {
+  stopCleanup,
   joinEditingSession,
   leaveEditingSession,
   updateCursor,

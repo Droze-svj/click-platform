@@ -219,13 +219,20 @@ function isIPWhitelisted(userId, ip) {
  */
 async function blockIP(ip, duration = 0) {
   try {
+    // Bound the in-memory block list (FIFO) so permanent blocks (duration 0)
+    // can't grow it unbounded over the process lifetime.
+    if (!blockedIPs.has(ip) && blockedIPs.size >= 50000) {
+      const oldest = blockedIPs.values().next().value;
+      if (oldest !== undefined) blockedIPs.delete(oldest);
+    }
     blockedIPs.add(ip);
 
     if (duration > 0) {
-      setTimeout(() => {
+      const expiry = setTimeout(() => {
         blockedIPs.delete(ip);
         logger.info('IP block expired', { ip });
       }, duration * 60 * 1000);
+      if (typeof expiry.unref === 'function') expiry.unref();
     }
 
     logger.warn('IP blocked', { ip, duration });
@@ -327,6 +334,12 @@ async function revokeDevice(userId, deviceId) {
 function trackSecurityEvent(userId, eventType, metadata = {}) {
   try {
     if (!securityEvents.has(userId)) {
+      // Bound the number of tracked users (FIFO eviction) so this in-memory
+      // store can't grow unbounded over the process lifetime.
+      if (securityEvents.size >= 10000) {
+        const oldest = securityEvents.keys().next().value;
+        if (oldest !== undefined) securityEvents.delete(oldest);
+      }
       securityEvents.set(userId, []);
     }
 

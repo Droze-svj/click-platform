@@ -43,9 +43,10 @@ Format as JSON array with objects containing: timestamp (seconds), reason (strin
     try {
       suggestions = JSON.parse(suggestionsText);
     } catch (error) {
-      const jsonMatch = suggestionsText.match(/\[[\s\S]*\]/);
+      const jsonMatch = suggestionsText && suggestionsText.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        suggestions = JSON.parse(jsonMatch[0]);
+        try { suggestions = JSON.parse(jsonMatch[0]); }
+        catch { throw new Error('Failed to parse thumbnail suggestions'); }
       } else {
         throw new Error('Failed to parse thumbnail suggestions');
       }

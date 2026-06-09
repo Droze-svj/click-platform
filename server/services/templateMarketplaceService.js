@@ -125,8 +125,9 @@ async function getTemplateDetails(templateId, userId = null) {
       throw new Error('Template not accessible');
     }
 
-    // Increment view count (async)
-    TemplateModel.findByIdAndUpdate(templateId, { $inc: { views: 1 } }).catch(() => {});
+    // Increment view count (fire-and-forget, but log failures).
+    TemplateModel.findByIdAndUpdate(templateId, { $inc: { views: 1 } })
+      .catch((err) => logger.warn('Failed to increment template views', { templateId, error: err.message }));
 
     return template;
   } catch (error) {

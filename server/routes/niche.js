@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 const UserPreferences = require('../models/UserPreferences');
 const auth = require('../middleware/auth');
+const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const { NICHE_PLAYBOOKS } = require('../services/marketingKnowledge');
 const router = express.Router();
@@ -17,7 +18,7 @@ const VALID_GOALS = ['grow_audience', 'more_views', 'monetize', 'save_time', 'bu
 const VALID_PLATFORMS = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin', 'facebook'];
 
 // Get niche packs
-router.get('/packs', auth, async (req, res) => {
+router.get('/packs', auth, asyncHandler(async (req, res) => {
   const nichePacks = {
     health: {
       name: 'Health & Wellness',
@@ -99,7 +100,7 @@ router.get('/packs', auth, async (req, res) => {
   };
 
   res.json(nichePacks);
-});
+}));
 
 // Update user niche
 router.put('/select', auth, async (req, res) => {

@@ -111,7 +111,10 @@ const requireActiveSubscription = (req, res, next) => {
     const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
 
     if (!nodeEnv || nodeEnv !== 'production' || isLocalhost) {
-      
+      // Fail open in dev/localhost so a subscription-service hiccup doesn't
+      // block local work — but log it at error level so a real bug in the
+      // check isn't silently hidden.
+      logger.error('Subscription check failed open (non-production)', { error: outerError.message });
       return next();
     }
 
