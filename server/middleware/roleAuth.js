@@ -17,11 +17,15 @@ function requireRole(roles) {
       const userRole = req.user.role || req.user.subscription?.tier || 'free';
       const requiredRoles = Array.isArray(roles) ? roles : [roles];
 
-      if (!requiredRoles.includes(userRole) && !requiredRoles.includes('admin')) {
-        // Check if user is admin (admins can access everything)
-        if (userRole !== 'admin') {
-          return sendError(res, 'Insufficient permissions', 403);
-        }
+      // Admins can access everything; otherwise the user's role must be in the
+      // required set. The previous logic was fail-OPEN: when `requiredRoles`
+      // contained 'admin' (the only role required by callers), the condition
+      // `!requiredRoles.includes('admin')` was false, so the 403 was skipped and
+      // next() ran for EVERY authenticated user — a privilege-escalation hole on
+      // the plugin / tenant / performance-metrics admin routes.
+      const isAdmin = userRole === 'admin';
+      if (!isAdmin && !requiredRoles.includes(userRole)) {
+        return sendError(res, 'Insufficient permissions', 403);
       }
 
       next();
