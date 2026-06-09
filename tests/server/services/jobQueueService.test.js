@@ -54,6 +54,7 @@ jest.mock('ioredis', () => {
 
 // Set a dummy redis url to bypass dev neutralization shield
 process.env.REDIS_URL = 'redis://sandbox-redis:6379';
+process.env.ALLOW_TEST_REDIS = 'true';
 
 const { getQueue, addJob, getJobStatus, getQueueStats } = require('../../../server/services/jobQueueService');
 

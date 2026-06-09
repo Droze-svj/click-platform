@@ -230,6 +230,11 @@ describe('End-to-End Flow Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-test-user-id', testUser._id.toString());
 
+      if (modelsRes.status !== 200) {
+        process.stdout.write('=== DEBUG MODELS RES ===\n');
+        process.stdout.write('Status: ' + modelsRes.status + '\n');
+        process.stdout.write('Body: ' + JSON.stringify(modelsRes.body) + '\n');
+      }
       expect(modelsRes.status).toBe(200);
       expect(modelsRes.body.success).toBe(true);
 
@@ -274,6 +279,11 @@ describe('End-to-End Flow Integration Tests', () => {
           // Missing required fields
         });
 
+      if (![400, 500].includes(invalidRes.status)) {
+        process.stdout.write('=== DEBUG INVALID RES ===\n');
+        process.stdout.write('Status: ' + invalidRes.status + '\n');
+        process.stdout.write('Body: ' + JSON.stringify(invalidRes.body) + '\n');
+      }
       expect([400, 500]).toContain(invalidRes.status);
 
       // Test with valid data but missing API key (should handle gracefully)

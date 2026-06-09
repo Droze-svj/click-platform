@@ -19,9 +19,11 @@ const errorLogger = require('./errorLogger');
 const errorDeduplicator = new ErrorDeduplicator();
 
 // Clean up old entries every 10 minutes
-setInterval(() => {
-  errorDeduplicator.clearOldEntries();
-}, 10 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    errorDeduplicator.clearOldEntries();
+  }, 10 * 60 * 1000);
+}
 
 /**
  * Enhanced error handler middleware

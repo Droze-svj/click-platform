@@ -49,23 +49,32 @@ module.exports = {
       // returns 200 without a token, /api/auth/me ignores Bearer headers
       // in test mode, etc. Re-enable per-file as those are fixed.
       testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/server/routes/'],
+      setupFiles: ['<rootDir>/tests/setup-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
     {
       displayName: 'integration',
       testMatch: ['<rootDir>/tests/integration/**/*.test.js'],
+      setupFiles: ['<rootDir>/tests/setup-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
     {
       displayName: 'e2e',
       testMatch: ['<rootDir>/tests/e2e/**/*.test.js'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
     {
       displayName: 'performance',
       testMatch: ['<rootDir>/tests/performance/**/*.test.js'],
+      setupFiles: ['<rootDir>/tests/setup-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
     {
       displayName: 'security',
       testMatch: ['<rootDir>/tests/security/**/*.test.js'],
+      setupFiles: ['<rootDir>/tests/setup-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
   ]
 };
