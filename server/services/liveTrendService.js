@@ -11,6 +11,7 @@
 
 const anthropicAI = require('../utils/anthropicAI');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const { aiProfileForTier } = require('../config/aiProfiles');
 const cache = require('../utils/cache');
 const logger = require('./../utils/logger');
 
@@ -99,6 +100,22 @@ async function getLatestTrends(platform = 'tiktok', opts = {}) {
     if (cached) return cached;
   }
 
+  // Tier-aware live-web depth (Agency-edge): higher tiers ground in more sources.
+  // When a tier is given we let its AI profile scale searches/effort/tokens; a
+  // profile with 0 web searches (free) cannot produce verifiable LIVE trends, so
+  // we return the honest "unavailable" result rather than risk an ungrounded
+  // (hallucinated) list. With no tier we keep the default depth (5).
+  let webOpts = { maxTokens: 5000, maxWebSearches: 5 };
+  if (opts.tier != null) {
+    const profile = aiProfileForTier(opts.tier);
+    if (profile.maxWebSearches <= 0) {
+      const naLow = normalizeTrends({}, { platform, niche, source: 'unavailable' });
+      naLow.error = 'Live trends are available on Creator and above (live web grounding).';
+      return naLow;
+    }
+    webOpts = { maxTokens: Math.max(5000, profile.maxTokens), tier: opts.tier };
+  }
+
   // Claude web-search path (the only path that can produce REAL live trends).
   if (anthropicAI.isConfigured()) {
     const nicheLine = niche ? ` relevant to the ${niche} niche` : '';
@@ -114,7 +131,7 @@ async function getLatestTrends(platform = 'tiktok', opts = {}) {
       `Up to 5 per category. whyNow = one sentence on why it's surging NOW.`;
 
     try {
-      const result = await anthropicAI.generateJSONWithWeb(prompt, { maxTokens: 5000, maxWebSearches: 5 });
+      const result = await anthropicAI.generateJSONWithWeb(prompt, webOpts);
       if (result.ok && result.data) {
         const normalized = normalizeTrends(result.data, {
           platform, niche, citations: result.citations || [], source: 'claude+web',
@@ -152,7 +169,7 @@ async function getLatestTrends(platform = 'tiktok', opts = {}) {
  *
  * @param {Array|Object} trends - real trends (e.g. from getLatestTrends)
  */
-async function getTrendStrategy(trends) {
+async function getTrendStrategy(trends, opts = {}) {
   const prompt =
     `Analyze these REAL current social trends and propose a "Script Mold" (a specific satirical, ` +
     `educational, or storytelling format) that rides them. Base everything on the trends provided — ` +
@@ -163,11 +180,13 @@ async function getTrendStrategy(trends) {
     `  "retentionHookStrategy": "A 3-second visual hook focused on X",\n` +
     `  "predictedEngagement": <integer 0-100, your honest confidence — do NOT copy this example>\n}`;
 
-  // Claude path.
+  // Claude path. Returns a consistent { ok:true, ...mold } shape on success so
+  // callers can branch on `ok` AND read mold fields directly (back-compatible).
+  // tier scales reasoning depth via aiProfiles (Agency-edge).
   if (anthropicAI.isConfigured()) {
     try {
-      const result = await anthropicAI.generateJSON(prompt, { maxTokens: 2000 });
-      if (result.ok && result.data && result.data.mold) return result.data;
+      const result = await anthropicAI.generateJSON(prompt, { maxTokens: 2000, tier: opts.tier });
+      if (result.ok && result.data && result.data.mold) return { ok: true, ...result.data };
     } catch (err) {
       logger.warn('[liveTrends] getTrendStrategy Claude path failed', { error: err.message });
     }
@@ -180,11 +199,14 @@ async function getTrendStrategy(trends) {
       if (content) {
         const fenced = content.match(/```json\s*([\s\S]+?)```/i);
         const candidate = fenced ? fenced[1].trim() : content.trim();
-        try { return JSON.parse(candidate); } catch (_) {
+        const tryParse = (s) => { try { return JSON.parse(s); } catch (_) { return null; } };
+        let parsed = tryParse(candidate);
+        if (!parsed) {
           const first = candidate.indexOf('{');
           const last = candidate.lastIndexOf('}');
-          if (first !== -1 && last > first) return JSON.parse(candidate.slice(first, last + 1));
+          if (first !== -1 && last > first) parsed = tryParse(candidate.slice(first, last + 1));
         }
+        if (parsed && parsed.mold) return { ok: true, ...parsed };
       }
     } catch (err) {
       logger.error('[liveTrends] getTrendStrategy Gemini fallback failed', { error: err.message });

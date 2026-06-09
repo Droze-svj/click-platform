@@ -7,6 +7,7 @@ const aiVoiceService = require('../../services/aiVoiceService');
 const generativeAssetService = require('../../services/generativeAssetService');
 const logger = require('../../utils/logger');
 const auth = require('../../middleware/auth');
+const { resolveTier } = require('../../config/entitlements');
 
 /**
  * GET /api/video/neural/trends
@@ -15,8 +16,9 @@ const auth = require('../../middleware/auth');
 router.get('/trends', auth, async (req, res) => {
   try {
     const platform = req.query.platform || 'tiktok';
-    const trends = await liveTrendService.getLatestTrends(platform);
-    const strategy = await liveTrendService.getTrendStrategy(trends);
+    const tier = resolveTier(req.user);
+    const trends = await liveTrendService.getLatestTrends(platform, { tier });
+    const strategy = await liveTrendService.getTrendStrategy(trends, { tier });
 
     res.json({
       success: true,

@@ -11,6 +11,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess } = require('../utils/response');
 const TrendSnapshot = require('../models/TrendSnapshot');
 const liveTrendService = require('../services/liveTrendService');
+const { resolveTier } = require('../config/entitlements');
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.get(
     // Live fallback (slow path) — only hits provider when no snapshot exists.
     let live = [];
     try {
-      const r = await liveTrendService.getLatestTrends(platform);
+      const r = await liveTrendService.getLatestTrends(platform, { tier: resolveTier(req.user) });
       live = []
         .concat((r?.sounds || []).map((s, i) => ({ kind: 'sound', label: s.label || s.name, score: 100 - i })))
         .concat((r?.hashtags || []).map((h, i) => ({ kind: 'hashtag', label: h.label || h.tag, score: 100 - i })))

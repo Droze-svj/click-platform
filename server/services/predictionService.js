@@ -194,8 +194,11 @@ function predictEngagement(contentData, historicalData, velocityScore = 0, corre
   }
 
   const baseEngagement = historicalData.avgEngagement;
-  const baseViews = historicalData.avgViews;
-  const baseEngagementRate = baseViews > 0 ? baseEngagement / baseViews : 0.05;
+  // Engagement RATE uses REACH as the denominator to match insightsService
+  // (the conventional ER base), so the dashboard and predictions agree. Falls
+  // back to views, then a 5% default, guarding division by zero.
+  const baseDenom = historicalData.avgReach || historicalData.avgViews || 0;
+  const baseEngagementRate = baseDenom > 0 ? baseEngagement / baseDenom : 0.05;
 
   // Adjust based on content quality indicators
   const hasDescription = contentData.description && contentData.description.length > 100;
@@ -220,7 +223,7 @@ function predictEngagement(contentData, historicalData, velocityScore = 0, corre
 /**
  * Predict reach based on content data
  */
-function predictReach(contentData, historicalData) {
+function predictReach(contentData, historicalData, velocityScore = 0) {
   if (historicalData.count === 0) {
     return {
       min: 30,
@@ -232,8 +235,10 @@ function predictReach(contentData, historicalData) {
   const baseReach = historicalData.avgReach;
   const variance = baseReach * 0.25;
 
-  // Reach is typically 60-80% of views
-  const viewsPrediction = predictViews(contentData, historicalData);
+  // Reach is typically 60-80% of views. Thread velocityScore through so the
+  // reach-from-views base matches the estimatedViews shown elsewhere (previously
+  // it recomputed views at the 0.5 velocity floor, so the two disagreed).
+  const viewsPrediction = predictViews(contentData, historicalData, velocityScore);
   const reachFromViews = viewsPrediction.expected * 0.7;
 
   const expected = Math.max(baseReach, reachFromViews);
@@ -346,11 +351,13 @@ function calculatePerformanceScore(contentData, historicalData, velocityScore = 
     score += 5;
   }
 
-  // Historical performance & Self-Correction (0-20 points)
+  // Historical performance & Self-Correction (0-20 points). Engagement rate uses
+  // REACH as the denominator (consistent with predictEngagement + insightsService).
   if (historicalData.count > 0) {
+    const denom = historicalData.avgReach || historicalData.avgViews || 0;
     const avgEngagementRate =
-      historicalData.avgViews > 0
-        ? (historicalData.avgEngagement / historicalData.avgViews) * correctionFactor
+      denom > 0
+        ? (historicalData.avgEngagement / denom) * correctionFactor
         : 0;
     if (avgEngagementRate > 0.15) {
       score += 20;
@@ -486,14 +493,21 @@ async function predictAudienceGrowth(userId, days = 30) {
     );
     const postsPerDay = posts.length / daysOfData;
 
-    // Predict growth
-    const predictedReach = avgReach * postsPerDay * days;
-    const growthRate = postsPerDay > 0 ? (avgReach / postsPerDay) * 100 : 0;
+    // This projects cumulative REACH over the window (not follower growth — we
+    // don't have a follower time series here). Previous `growthRate` was
+    // dimensionally meaningless ((reach/postsPerDay)*100); replace it with a
+    // real, sound metric: projected reach per day. Fields are labelled honestly.
+    const reachPerDay = avgReach * postsPerDay;
+    const projectedReach = reachPerDay * days;
 
     return {
-      current: avgReach,
-      predicted: Math.round(predictedReach),
-      growthRate: Math.round(growthRate * 100) / 100,
+      basis: 'reach', // this is a REACH projection, not audience/follower growth
+      avgReachPerPost: Math.round(avgReach),
+      postsPerDay: Math.round(postsPerDay * 100) / 100,
+      // Back-compat keys, now dimensionally correct + honestly meaningful:
+      current: Math.round(reachPerDay),       // current reach generated per day
+      predicted: Math.round(projectedReach),  // projected cumulative reach over `days`
+      growthRate: Math.round(reachPerDay * 100) / 100, // projected reach/day rate
       confidence: posts.length >= 20 ? 'high' : posts.length >= 10 ? 'medium' : 'low',
     };
   } catch (error) {
