@@ -46,7 +46,7 @@ router.get('/query', authenticate, async (req, res) => {
     const results = await vectorMemoryService.queryUserMemory(req.user.id, query);
     res.json({ results, status: 200 });
   } catch (error) {
-    
+    logger.error('Query semantic memory error', { error: error.message });
     res.status(500).json({ error: "Server Error querying semantic memory" });
   }
 });

@@ -291,7 +291,7 @@ userSchema.virtual('isLocked').get(function() {
 userSchema.methods.incLoginAttempts = async function() {
   // If we have a previous lock that has expired, restart at 1
   if (this.lockUntil && this.lockUntil < Date.now()) {
-    return this.updateOne({
+    return await this.updateOne({
       $set: { loginAttempts: 1 },
       $unset: { lockUntil: 1 }
     });

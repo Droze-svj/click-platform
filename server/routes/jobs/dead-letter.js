@@ -22,7 +22,8 @@ router.get('/', auth, requireAdmin, asyncHandler(async (req, res) => {
   const { queueName, limit = 100, since, until } = req.query;
 
   try {
-    const jobs = await getDeadLetterJobs(queueName || null, parseInt(limit, 10), { since, until });
+    const safeLimit = Math.max(1, Math.min(1000, parseInt(limit, 10) || 100));
+    const jobs = await getDeadLetterJobs(queueName || null, safeLimit, { since, until });
     sendSuccess(res, 'Dead letter jobs retrieved', 200, { jobs });
   } catch (error) {
     logger.error('Get dead letter jobs error', { error: error.message });

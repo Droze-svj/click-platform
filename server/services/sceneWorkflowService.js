@@ -123,6 +123,7 @@ function getSceneAggregateValue(scenes, field) {
     return scenes.some(s => s.isKeyMoment);
   }
   if (field === 'averageDuration') {
+    if (!scenes.length) return 0; // avoid NaN/Infinity on an empty scene list
     return scenes.reduce((sum, s) => sum + (s.duration || 0), 0) / scenes.length;
   }
   return null;

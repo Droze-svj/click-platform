@@ -246,7 +246,7 @@ async function cancelUpload(uploadId) {
     // Clean up after 1 hour
     setTimeout(() => {
       uploadProgress.delete(uploadId);
-      del(`upload:${uploadId}`).catch(() => {});
+      del(`upload:${uploadId}`).catch((err) => logger.warn('Failed to clean up upload cache', { uploadId, error: err.message }));
     }, 3600000); // 1 hour
 
     logger.info('Upload cancelled', { uploadId, filename: progress.filename });
@@ -268,7 +268,7 @@ async function cleanupOldUploads() {
       const age = now - new Date(progress.startedAt).getTime();
       if (age > maxAge) {
         uploadProgress.delete(uploadId);
-        await del(`upload:${uploadId}`).catch(() => {});
+        await del(`upload:${uploadId}`).catch((err) => logger.warn('Failed to delete old upload from cache', { uploadId, error: err.message }));
         logger.debug('Cleaned up old upload progress', { uploadId });
       }
     }
@@ -279,7 +279,8 @@ async function cleanupOldUploads() {
 
 // Run cleanup every hour
 if (process.env.NODE_ENV !== 'test') {
-  setInterval(cleanupOldUploads, 60 * 60 * 1000);
+  const cleanupInterval = setInterval(cleanupOldUploads, 60 * 60 * 1000);
+  if (typeof cleanupInterval.unref === 'function') cleanupInterval.unref();
 }
 
 module.exports = {

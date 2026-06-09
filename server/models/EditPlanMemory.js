@@ -227,16 +227,14 @@ editPlanMemorySchema.statics.markStatus = async function markStatus(userId, fing
   if (!allowed.includes(status)) throw new Error(`Invalid status: ${status}`);
 
   const key = String(fingerprintOrDirectionId);
-  // Prefer fingerprint match; fall back to directionId.
-  const row = await this.findOne({
-    userId,
-    $or: [{ fingerprint: key }, { directionId: key }],
-  }).sort({ createdAt: -1 });
-
-  if (!row) return null;
-  row.status = status;
-  await row.save();
-  return row;
+  // Atomic update of the most-recent matching row (prefer fingerprint, fall
+  // back to directionId). Replaces a read-then-write that let two concurrent
+  // markStatus calls clobber each other.
+  return this.findOneAndUpdate(
+    { userId, $or: [{ fingerprint: key }, { directionId: key }] },
+    { $set: { status } },
+    { new: true, sort: { createdAt: -1 } },
+  );
 };
 
 module.exports = mongoose.models.EditPlanMemory

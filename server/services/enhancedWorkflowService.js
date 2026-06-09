@@ -22,7 +22,7 @@ async function createWorkflow(userId, workflowData) {
     }
 
     const workflow = {
-      id: require('mongoose').Types.ObjectId(),
+      id: new (require('mongoose').Types.ObjectId)(),
       name: workflowData.name,
       description: workflowData.description,
       trigger: workflowData.trigger, // 'manual', 'scheduled', 'event'

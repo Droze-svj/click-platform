@@ -35,7 +35,9 @@ function cacheResponse(ttl = 300) {
 
       // Override json method to cache response
       res.json = function(data) {
-        cacheContent(cacheKey, data);
+        // cacheContent may be async — don't let a rejection become an unhandled
+        // promise; log and keep serving the response.
+        Promise.resolve(cacheContent(cacheKey, data)).catch((err) => logger.error('Cache store error', { error: err.message }));
         return originalJson(data);
       };
 

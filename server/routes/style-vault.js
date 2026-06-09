@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const logger = require('../utils/logger');
 const { parseTimelineXML } = require('../utils/styleVaultExtractor');
 
 // Setup multer for in-memory file parsing
@@ -31,7 +32,7 @@ router.post('/extract', authenticate, upload.single('timeline'), async (req, res
 
     res.json({ message: "Style DNA Extractions complete", styleProfile, status: 200 });
   } catch (error) {
-    
+    logger.error('Style vault XML extraction error', { error: error.message });
     res.status(500).json({ error: "Server Error examining XML" });
   }
 });

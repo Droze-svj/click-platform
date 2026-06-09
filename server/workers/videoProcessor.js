@@ -9,8 +9,9 @@ const logger = require('../utils/logger');
  * Video processing job processor
  */
 async function processVideoJob(jobData, job) {
-  const { contentId, videoPath, user } = jobData;
-  const userId = user._id || user;
+  const { contentId, videoPath, user, userId: userIdParam } = jobData;
+  // Handle all enqueue shapes: a user object, a user-id string, or userId.
+  const userId = user?._id || user || userIdParam;
 
   try {
     // Update job progress and emit real-time update

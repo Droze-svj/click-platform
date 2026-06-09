@@ -15,14 +15,15 @@ async function verifyWorkspaceAccess(userId, workspaceId, requiredPermission = n
       return { allowed: false, reason: 'Workspace not found' };
     }
 
-    // Check if user is owner
-    if (workspace.ownerId.toString() === userId.toString()) {
+    // Check if user is owner. Use String() on both sides so a Supabase UUID
+    // (string) and an ObjectId compare correctly and an undefined id can't throw.
+    if (String(workspace.ownerId) === String(userId)) {
       return { allowed: true, role: 'owner', workspace };
     }
 
     // Check if user is a member
     const member = workspace.members.find(
-      m => m.userId.toString() === userId.toString() && m.status === 'active'
+      m => String(m.userId) === String(userId) && m.status === 'active'
     );
 
     if (!member) {
