@@ -167,12 +167,19 @@ function setupUncaughtExceptionHandler() {
 }
 
 /**
- * Initialize error handlers
+ * Initialize error handlers.
+ *
+ * NOTE: server/index.js already registers process-level `uncaughtException` and
+ * `unhandledRejection` handlers with environment-aware behavior (exit in
+ * production, continue in development). We deliberately do NOT register the
+ * duplicates here — the previous version did, and its uncaught handler called
+ * `process.exit(1)` UNCONDITIONALLY, which silently defeated index.js's
+ * dev-survivability and ran two handlers per event. The setup* functions remain
+ * exported for explicit/standalone use, but initErrorHandlers is now a no-op
+ * registration to avoid double handlers.
  */
 function initErrorHandlers() {
-  setupUnhandledRejectionHandler();
-  setupUncaughtExceptionHandler();
-  logger.info('✅ Error handlers initialized');
+  logger.info('✅ Error handlers initialized (process-level handlers owned by index.js)');
 }
 
 module.exports = {

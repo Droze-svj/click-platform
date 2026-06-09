@@ -629,8 +629,10 @@ app.use(securityHeaders());
 app.use(customSecurityHeaders);
 
 // Enhanced security middleware - Input sanitization
+// NOTE: sanitizeInput is applied AFTER the body parsers (see below, post
+// express.json/urlencoded) — it sanitizes req.body, which doesn't exist yet at
+// this point in the chain. Mounting it here left request bodies unsanitized.
 const { sanitizeInput } = require('./middleware/inputSanitization');
-app.use(sanitizeInput);
 
 // CSRF Protection (after body parsing) - temporarily disabled for auth testing
 // const { csrfProtection } = require('./middleware/csrfProtection');
@@ -772,6 +774,10 @@ try {
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Sanitize inputs AFTER body parsing so req.body (not just query/params) is
+// actually cleaned. (Mounting this before the parsers left bodies unsanitized.)
+app.use(sanitizeInput);
 
 // Request ID middleware
 const { addRequestId } = require('./middleware/requestId');
@@ -1879,7 +1885,6 @@ app.use('/api/social', require('./routes/social'));
 app.use('/api/teams', require('./routes/teams'));
 app.use('/api/approvals', require('./routes/approvals'));
 app.use('/api/collections', require('./routes/collections'));
-app.use('/api/versions', require('./routes/versions'));
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/analytics/enhanced', require('./routes/analytics/enhanced'));
 app.use('/api/analytics/content-performance', require('./routes/analytics/contentPerformance'));
@@ -1956,7 +1961,6 @@ app.use('/api/plugins', require('./routes/plugins'));
 app.use('/api/marketplace', require('./routes/marketplace'));
 app.use('/api/tenants', require('./routes/tenants'));
 app.use('/api/workflows/advanced-automation', require('./routes/workflows/advanced-automation'));
-app.use('/api/video/effects', require('./routes/video/effects'));
 app.use('/api/video/analytics', require('./routes/video/analytics'));
 app.use('/api/video/transcription', require('./routes/video/transcription'));
 app.use('/api/video/thumbnails', require('./routes/video/thumbnails'));
@@ -1985,13 +1989,10 @@ app.use('/api/workflows/templates', require('./routes/workflows/templates'));
 
 // Mobile app routes (if needed for mobile-specific endpoints)
 // app.use('/api/mobile', require('./routes/mobile'));
-app.use('/api/templates', require('./routes/templates'));
-app.use('/api/search', require('./routes/search'));
 app.use('/api/search/advanced', require('./routes/search/advanced'));
 app.use('/api/search/elasticsearch', require('./routes/search/elasticsearch'));
 app.use('/api/suggestions/enhanced', require('./routes/suggestions/enhanced'));
 app.use('/api/workflows/enhanced', require('./routes/workflows/enhanced'));
-app.use('/api/social', require('./routes/social'));
 app.use('/api/ai', require('./routes/ai-recommendations'));
 app.use('/api/scheduling', require('./routes/scheduling/advanced'));
 app.use('/api/scheduling/advanced', require('./routes/scheduling/advanced'));
@@ -2014,7 +2015,6 @@ app.use('/api/recycling', require('./routes/recycling'));
 app.use('/api/content-ops', require('./routes/content-ops-api'));
 
 // Webhook routes
-app.use('/api/webhooks', require('./routes/webhooks'));
 
 // Integration routes
 app.use('/api/integrations', require('./routes/integrations'));
@@ -2182,7 +2182,6 @@ app.use('/api/reports', require('./routes/report-enhanced'));
 app.use('/api/pricing', require('./routes/pricing-enhanced'));
 
 // Export routes
-app.use('/api/export', require('./routes/export'));
 
 // Enhanced support routes
 app.use('/api/support', require('./routes/support-enhanced'));
@@ -2211,7 +2210,6 @@ app.use('/api/workflows/webhooks', require('./routes/workflows/webhooks'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/jobs/dashboard', require('./routes/jobs/dashboard'));
 app.use('/api/jobs', require('./routes/jobs/progress'));
-app.use('/api/upload/progress', require('./routes/upload/progress'));
 app.use('/api/upload/chunked', require('./routes/upload/chunked'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/privacy', require('./routes/privacy'));
@@ -2264,7 +2262,6 @@ app.use('/api/phase18', phase16_18);
 app.use('/api/monetization', require('./routes/monetization'));
 app.use('/api/click', require('./routes/click'));
 app.use('/api/vector-memory', require('./routes/vector-memory'));
-app.use('/api/social', require('./routes/social'));
 
 app.get('/api/dev/db-cleanup', async (req, res) => {
   try {

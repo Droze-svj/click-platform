@@ -59,7 +59,6 @@ const musicSuggestionFeedbackSchema = new mongoose.Schema({
 });
 
 musicSuggestionFeedbackSchema.index({ userId: 1, timestamp: -1 });
-musicSuggestionFeedbackSchema.index({ contentId: 1 });
 musicSuggestionFeedbackSchema.index({ action: 1, timestamp: -1 });
 
 module.exports = mongoose.model('MusicSuggestionFeedback', musicSuggestionFeedbackSchema);

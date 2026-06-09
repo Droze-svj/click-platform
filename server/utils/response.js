@@ -41,9 +41,17 @@ const sendSuccess = (res, arg1, arg2 = 'Success', arg3 = 200) => {
 };
 
 const sendError = (res, error, statusCode = 400) => {
+  const raw = (error && error.message) || error;
+  // Don't leak internal error detail (Mongoose/driver text, stack hints) to
+  // clients on server errors in production. Client errors (4xx) keep their
+  // message since they're intentional/validation feedback.
+  const isServerError = statusCode >= 500;
+  const message = (process.env.NODE_ENV === 'production' && isServerError)
+    ? 'An unexpected error occurred. Please try again.'
+    : raw;
   res.status(statusCode).json({
     success: false,
-    error: error.message || error
+    error: message
   });
 };
 

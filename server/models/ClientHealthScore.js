@@ -115,7 +115,6 @@ const clientHealthScoreSchema = new mongoose.Schema({
 
 clientHealthScoreSchema.index({ clientWorkspaceId: 1, 'period.startDate': -1 });
 clientHealthScoreSchema.index({ agencyWorkspaceId: 1, 'period.startDate': -1 });
-clientHealthScoreSchema.index({ healthScore: -1 });
 clientHealthScoreSchema.index({ status: 1 });
 
 clientHealthScoreSchema.pre('save', function(next) {

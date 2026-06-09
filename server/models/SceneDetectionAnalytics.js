@@ -87,7 +87,6 @@ const sceneDetectionAnalyticsSchema = new mongoose.Schema({
 // Indexes
 sceneDetectionAnalyticsSchema.index({ workspaceId: 1, createdAt: -1 });
 sceneDetectionAnalyticsSchema.index({ userId: 1, createdAt: -1 });
-sceneDetectionAnalyticsSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('SceneDetectionAnalytics', sceneDetectionAnalyticsSchema);
 

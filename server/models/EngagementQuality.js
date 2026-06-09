@@ -66,7 +66,6 @@ const engagementQualitySchema = new mongoose.Schema({
 });
 
 // postId already has unique: true which creates an index
-engagementQualitySchema.index({ qualityScore: -1 });
 
 module.exports = mongoose.model('EngagementQuality', engagementQualitySchema);
 
