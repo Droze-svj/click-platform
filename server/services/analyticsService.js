@@ -115,7 +115,9 @@ async function getUserAnalytics(userId, timeRange = '30d') {
 
     const postsPublished = await ScheduledPost.countDocuments({
       userId,
-      status: 'published',
+      // The success status is 'posted' (ScheduledPost enum); 'published' is never
+      // stored, so this previously always counted 0.
+      status: 'posted',
       createdAt: { $gte: startDate },
     });
 
@@ -234,7 +236,7 @@ async function getComprehensiveAnalytics(userId, period = 30) {
     const contentBreakdown = await Content.aggregate([
       {
         $match: {
-          userId: ensureObjectId(userId),
+          userId: String(userId),
           createdAt: { $gte: startDate }
         }
       },
@@ -254,7 +256,7 @@ async function getComprehensiveAnalytics(userId, period = 30) {
     const platformStats = await ScheduledPost.aggregate([
       {
         $match: {
-          userId: ensureObjectId(userId),
+          userId: String(userId),
           createdAt: { $gte: startDate }
         }
       },
@@ -263,7 +265,7 @@ async function getComprehensiveAnalytics(userId, period = 30) {
           _id: '$platform',
           total: { $sum: 1 },
           published: {
-            $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$status', 'posted'] }, 1, 0] }
           },
           scheduled: {
             $sum: { $cond: [{ $eq: ['$status', 'scheduled'] }, 1, 0] }
@@ -310,7 +312,7 @@ async function getPerformanceTrends(userId, period = 30) {
     const contentTrends = await Content.aggregate([
       {
         $match: {
-          userId: ensureObjectId(userId),
+          userId: String(userId),
           createdAt: { $gte: startDate }
         }
       },
@@ -332,7 +334,7 @@ async function getPerformanceTrends(userId, period = 30) {
     const postingTrends = await ScheduledPost.aggregate([
       {
         $match: {
-          userId: ensureObjectId(userId),
+          userId: String(userId),
           createdAt: { $gte: startDate }
         }
       },
@@ -343,7 +345,7 @@ async function getPerformanceTrends(userId, period = 30) {
           },
           postsScheduled: { $sum: 1 },
           postsPublished: {
-            $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$status', 'posted'] }, 1, 0] }
           }
         }
       },
