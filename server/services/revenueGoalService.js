@@ -138,8 +138,9 @@ async function checkGoalAlerts(goalId) {
 
     const progress = goal.progress.percentage;
 
-    // Check thresholds
-    goal.alerts.thresholds.forEach(async (threshold) => {
+    // Check thresholds. Use for...of (not forEach with an async callback,
+    // which fires the DB updates in parallel and returns before they settle).
+    for (const threshold of goal.alerts.thresholds) {
       if (progress >= threshold.percentage && !threshold.triggered) {
         // Send notification
         const Workspace = require('../models/Workspace');
@@ -174,7 +175,7 @@ async function checkGoalAlerts(goalId) {
           arrayFilters: [{ 'elem.percentage': threshold.percentage }]
         });
       }
-    });
+    }
 
     // Check if at risk
     if (goal.status === 'at_risk' && !goal.progress.onTrack) {

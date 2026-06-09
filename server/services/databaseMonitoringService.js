@@ -75,8 +75,10 @@ function getQueryStats() {
   return {
     ...queryStats,
     slowQueries: slowQueries.slice(-20), // Last 20 slow queries
-    averageQueryTime: queryStats.total > 0 
-      ? slowQueries.reduce((sum, q) => sum + q.duration, 0) / slowQueries.length 
+    averageQueryTime: queryStats.total > 0
+      // Divide by total queries (not slowQueries.length, which is 0 when no
+      // slow queries have been recorded → NaN).
+      ? slowQueries.reduce((sum, q) => sum + q.duration, 0) / queryStats.total
       : 0,
   };
 }

@@ -45,6 +45,10 @@ async function installIntegration(userId, marketplaceId, config) {
     if (!marketplace || !marketplace.isActive) {
       throw new Error('Integration not available');
     }
+    // marketplace.api is optional in the schema — guard before dereferencing.
+    if (!marketplace.api || !marketplace.api.baseUrl) {
+      throw new Error('Integration marketplace entry is missing API configuration');
+    }
 
     // Create integration instance
     const integration = new Integration({

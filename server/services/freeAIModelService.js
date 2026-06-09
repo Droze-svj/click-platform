@@ -158,7 +158,9 @@ function selectBestModel(taskType, options = {}) {
   const providerConfig = FREE_AI_PROVIDERS[provider];
   
   if (!providerConfig) {
-    return providerConfig.freeTier.models[0];
+    // Unknown provider — fall back to the default provider's first free model
+    // (the original code dereferenced the undefined providerConfig here).
+    return FREE_AI_PROVIDERS.openrouter?.freeTier?.models?.[0] || 'qwen/qwen-2.5-7b-instruct:free';
   }
 
   // Use learning data to select best model
