@@ -63,7 +63,6 @@ securityLogSchema.index({ userId: 1, createdAt: -1 });
 securityLogSchema.index({ eventType: 1, createdAt: -1 });
 securityLogSchema.index({ severity: 1, createdAt: -1 });
 securityLogSchema.index({ ipAddress: 1, createdAt: -1 });
-securityLogSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('SecurityLog', securityLogSchema);
 

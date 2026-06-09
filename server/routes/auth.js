@@ -763,29 +763,9 @@ router.post('/login',
     }
   });
 
-// Debug endpoint to check user lookup
-router.get('/debug-user/:email', async (req, res) => {
-  try {
-    const { email } = req.params;
-    
-
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, email, name')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    
-
-    res.json({
-      success: !!user,
-      user: user ? { id: user.id, email: user.email, name: user.name } : null,
-      error: error?.message
-    });
-  } catch (err) {
-    res.json({ success: false, error: err.message });
-  }
-});
+// SECURITY: the unauthenticated GET /debug-user/:email endpoint was removed —
+// it was an open account-enumeration oracle (returned whether an email exists
+// plus id/name) and dereferenced `supabase` with no null guard.
 
 // Get current user
 router.get('/me', require('../middleware/auth'), async (req, res) => {
@@ -1397,7 +1377,7 @@ router.post(
 );
 
 // Change password
-router.post('/change-password', require('../middleware/auth'), async (req, res) => {
+router.post('/change-password', authRateLimiter, require('../middleware/auth'), async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -1687,7 +1667,7 @@ router.get('/2fa/status', require('../middleware/auth'), async (req, res) => {
  * POST /api/auth/2fa/verify
  * Verify 2FA token (used during login)
  */
-router.post('/2fa/verify', async (req, res) => {
+router.post('/2fa/verify', authRateLimiter, async (req, res) => {
   try {
     const { token, tempToken } = req.body;
 
@@ -1934,7 +1914,7 @@ router.delete('/delete', require('../middleware/auth'), async (req, res) => {
  * POST /api/auth/reactivate
  * Reactivate a deactivated account
  */
-router.post('/reactivate', async (req, res) => {
+router.post('/reactivate', authRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 

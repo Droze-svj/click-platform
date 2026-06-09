@@ -37,7 +37,6 @@ const linkClickSchema = new mongoose.Schema({
 });
 
 linkClickSchema.index({ linkId: 1, clickedAt: -1 });
-linkClickSchema.index({ clickedAt: -1 });
 
 module.exports = mongoose.model('LinkClick', linkClickSchema);
 
