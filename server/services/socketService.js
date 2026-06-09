@@ -28,31 +28,61 @@ function initializeSocket(server) {
     }
   });
 
+  // Handshake authentication. The client sends its JWT in
+  // socket.handshake.auth.token (see client/hooks/useSocket.ts). We verify it
+  // and stamp the SERVER-VERIFIED userId on socket.data — identity is never
+  // taken from a client-supplied `authenticate({userId})` payload anymore
+  // (that allowed impersonating any user / joining any room). A socket with NO
+  // token is allowed to connect but stays anonymous (socket.data.userId
+  // undefined) so it can only use public progress subscriptions, never user/
+  // project rooms. A token that is PRESENT but INVALID is rejected.
+  io.use((socket, next) => {
+    try {
+      const h = socket.handshake || {};
+      const token = h.auth?.token
+        || (h.headers?.authorization || '').replace(/^Bearer\s+/i, '')
+        || h.query?.token;
+      if (!token) return next(); // anonymous progress-only socket
+      const jwt = require('jsonwebtoken');
+      const { getJwtSecret } = require('../utils/jwtSecret');
+      const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
+      if (decoded && decoded.userId) socket.data.userId = String(decoded.userId);
+      return next();
+    } catch (err) {
+      return next(new Error('unauthorized'));
+    }
+  });
+
   io.on('connection', (socket) => {
     const logger = require('../utils/logger');
     const collaborationService = require('./collaborationService');
     const realtimeCollaborationService = require('./realtimeCollaborationService');
     logger.info('Client connected', { socketId: socket.id });
 
-    let currentUserId = null;
+    // Identity comes from the verified handshake (io.use), NOT from the client.
+    let currentUserId = socket.data.userId || null;
     let currentUserName = null;
     // Rooms this socket joined for editor collaboration, mapped to the
     // contentId so disconnect/leave can release locks for the right content.
     // editorRooms: Map<room, contentId>
     const editorRooms = new Map();
 
-    // Authenticate/assign user context
-    socket.on('authenticate', ({ userId }) => {
-      if (userId) {
-        currentUserId = userId;
-        socket.join(`user-${userId}`);
-        logger.info('User authenticated on socket', { userId, socketId: socket.id });
+    // Join the user's private room immediately on a verified connection so
+    // emitToUser reaches them without waiting for a client 'authenticate'.
+    if (currentUserId) {
+      socket.join(`user-${currentUserId}`);
+      const activeUsers = collaborationService.getActiveUsers();
+      io.emit('presence-update', activeUsers.map(u => u.userId));
+    }
 
-        // Broadcast new presence
-        const activeUsers = collaborationService.getActiveUsers();
-        const onlineIds = activeUsers.map(u => u.userId);
-        io.emit('presence-update', onlineIds);
-      }
+    // Back-compat 'authenticate' event: the client may still emit it, but we
+    // IGNORE any userId it sends and use the server-verified identity only.
+    socket.on('authenticate', () => {
+      if (!currentUserId) return; // unauthenticated socket cannot assume an identity
+      socket.join(`user-${currentUserId}`);
+      logger.info('User authenticated on socket', { userId: currentUserId, socketId: socket.id });
+      const activeUsers = collaborationService.getActiveUsers();
+      io.emit('presence-update', activeUsers.map(u => u.userId));
     });
 
     // Handle get-presence request
@@ -65,6 +95,23 @@ function initializeSocket(server) {
     // Join content room for collaboration
     socket.on('join:room', async ({ room, contentId, user }) => {
       if (!room) return;
+      // Must be authenticated to join a collaboration room.
+      if (!currentUserId) {
+        socket.emit('join:denied', { room, error: 'Authentication required' });
+        return;
+      }
+      // IDOR guard: when the room is scoped to a contentId, verify the user owns
+      // it before joining (otherwise any authed user could subscribe to another
+      // team's live timeline/comments by guessing the id).
+      if (contentId) {
+        try {
+          const { assertOwnership } = require('../utils/ownership');
+          await assertOwnership({ user: { _id: currentUserId, id: currentUserId } }, contentId);
+        } catch (e) {
+          socket.emit('join:denied', { room, contentId, error: 'You do not have access to this content' });
+          return;
+        }
+      }
       socket.join(room);
       // Track editor rooms (those scoped to a contentId) for lock cleanup.
       if (contentId) editorRooms.set(room, contentId);
@@ -143,6 +190,7 @@ function initializeSocket(server) {
 
     // Join agency calendar room
     socket.on('join:calendar', ({ agencyWorkspaceId }) => {
+      if (!currentUserId || !agencyWorkspaceId) return;
       const room = `agency-calendar-${agencyWorkspaceId}`;
       socket.join(room);
       logger.info('User joined calendar room', { agencyWorkspaceId, socketId: socket.id });
@@ -157,6 +205,7 @@ function initializeSocket(server) {
 
     // Join client portal room
     socket.on('join:portal', ({ portalId }) => {
+      if (!currentUserId || !portalId) return;
       const room = `portal-${portalId}`;
       socket.join(room);
       logger.info('User joined portal room', { portalId, socketId: socket.id });
@@ -228,7 +277,7 @@ function initializeSocket(server) {
 
     // Task chat: join room for a specific task
     socket.on('join:task', ({ taskId }) => {
-      if (taskId) {
+      if (currentUserId && taskId) {
         socket.join(`task:${taskId}`);
         logger.info('User joined task room', { taskId, socketId: socket.id });
       }
@@ -246,7 +295,7 @@ function initializeSocket(server) {
 
     // Team signals: broadcast pulses to the whole team
     socket.on('join:team', ({ teamId }) => {
-      if (teamId) {
+      if (currentUserId && teamId) {
         socket.join(`team:${teamId}`);
         logger.info('User joined team room', { teamId, socketId: socket.id });
       }
@@ -268,7 +317,7 @@ function initializeSocket(server) {
 
     // Task call: WebRTC signaling
     socket.on('join:call', ({ roomId }) => {
-      if (roomId) {
+      if (currentUserId && roomId) {
         socket.join(`call:${roomId}`);
         socket.to(`call:${roomId}`).emit('call:joined', { userId: currentUserId });
         logger.info('User joined call room', { roomId, socketId: socket.id });
