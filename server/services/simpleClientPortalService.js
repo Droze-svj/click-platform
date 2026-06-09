@@ -95,7 +95,9 @@ async function getSimpleApprovalView(token) {
       simple: true // Flag for ultra-simple UI
     };
   } catch (error) {
-    logger.error('Error getting simple approval view', { error: error.message, token });
+    // Never log the raw approval token — it's a bearer credential for
+    // approve/decline actions and would leak into log aggregation.
+    logger.error('Error getting simple approval view', { error: error.message });
     throw error;
   }
 }
@@ -151,10 +153,11 @@ async function processSimpleApproval(token, action, comment = null) {
     approvalToken.usedAt = new Date();
     await approvalToken.save();
 
-    logger.info('Simple approval processed', { token, action, approvalId: approval._id });
+    logger.info('Simple approval processed', { action, approvalId: approval._id });
     return { success: true, action, message: `Content ${action === 'approve' ? 'approved' : 'declined'} successfully` };
   } catch (error) {
-    logger.error('Error processing simple approval', { error: error.message, token });
+    // Don't log the raw token (bearer credential).
+    logger.error('Error processing simple approval', { error: error.message, action });
     throw error;
   }
 }

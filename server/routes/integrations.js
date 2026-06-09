@@ -21,6 +21,23 @@ const router = express.Router();
 // short-circuit to an empty result instead of 400-ing.
 const isMongoId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 
+// Verify the requesting user owns the integration before any per-integration
+// action. Returns the integration doc, or null after sending a 404. Closes IDOR
+// on the /:id/{sync,health,oauth/refresh,test} routes (auth alone proved a
+// user's identity but not their ownership of the target integration).
+async function getOwnedIntegration(req, res) {
+  if (!isMongoId(req.user._id) || !isMongoId(req.params.id)) {
+    sendError(res, 'Integration not found', 404);
+    return null;
+  }
+  const integration = await Integration.findOne({ _id: req.params.id, userId: req.user._id });
+  if (!integration) {
+    sendError(res, 'Integration not found', 404);
+    return null;
+  }
+  return integration;
+}
+
 /**
  * GET /api/integrations/marketplace
  * Get marketplace integrations
@@ -186,6 +203,7 @@ router.post('/:id/sync', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content is required', 400);
   }
 
+  if (!(await getOwnedIntegration(req, res))) return;
   const result = await syncContentToIntegration(req.params.id, content, direction);
   sendSuccess(res, 'Content synced', 200, result);
 }));
@@ -195,6 +213,7 @@ router.post('/:id/sync', auth, asyncHandler(async (req, res) => {
  * Check integration health
  */
 router.post('/:id/health', auth, asyncHandler(async (req, res) => {
+  if (!(await getOwnedIntegration(req, res))) return;
   const health = await checkIntegrationHealth(req.params.id);
   sendSuccess(res, 'Integration health checked', 200, health);
 }));
@@ -277,6 +296,7 @@ router.get('/:id/oauth/callback', auth, asyncHandler(async (req, res) => {
  */
 router.post('/:id/oauth/refresh', auth, asyncHandler(async (req, res) => {
   const { refreshOAuthToken } = require('../services/integrationOAuthService');
+  if (!(await getOwnedIntegration(req, res))) return;
   const result = await refreshOAuthToken(req.params.id);
   sendSuccess(res, 'OAuth token refreshed', 200, result);
 }));
@@ -287,6 +307,7 @@ router.post('/:id/oauth/refresh', auth, asyncHandler(async (req, res) => {
  */
 router.post('/:id/test', auth, asyncHandler(async (req, res) => {
   const { testIntegration } = require('../services/integrationOAuthService');
+  if (!(await getOwnedIntegration(req, res))) return;
   const result = await testIntegration(req.params.id, req.body.testData);
   sendSuccess(res, 'Integration tested', 200, result);
 }));

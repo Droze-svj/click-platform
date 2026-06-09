@@ -110,7 +110,14 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Webhook not found', 404);
   }
 
-  Object.assign(webhook, req.body);
+  // Whitelist updatable fields. Object.assign(webhook, req.body) let a user
+  // overwrite `secret` (used for HMAC signing) and `userId` — a mass-assignment
+  // hole that allowed forging valid webhook signatures. Only copy safe fields,
+  // and only when provided (preserves partial-update semantics).
+  const ALLOWED_FIELDS = ['name', 'url', 'events', 'active', 'filters', 'headers', 'settings', 'description'];
+  for (const key of ALLOWED_FIELDS) {
+    if (req.body[key] !== undefined) webhook[key] = req.body[key];
+  }
   await webhook.save();
 
   // Don't send secret
