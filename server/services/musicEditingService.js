@@ -3,30 +3,33 @@
 
 const logger = require('../utils/logger');
 const MusicTrack = require('../models/MusicTrack');
-// FFmpeg execution helper (if service doesn't exist, use child_process)
-const { exec } = require('child_process');
+// Use execFile (no shell) and pass FFmpeg/FFprobe arguments as an array. Values
+// sourced from the database (e.g. a track's download URL) are passed as single
+// argv entries and can never be interpreted as shell syntax — this prevents
+// command injection.
+const { execFile } = require('child_process');
 const { promisify } = require('util');
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
-async function execFFmpeg(command) {
+async function execFFmpeg(args) {
   try {
-    const { stdout, stderr } = await execAsync(command);
+    const { stdout, stderr } = await execFileAsync('ffmpeg', args);
     if (stderr && !stderr.includes('Deprecated')) {
       logger.warn('FFmpeg warning', { stderr });
     }
     return stdout;
   } catch (error) {
-    logger.error('FFmpeg error', { error: error.message, command });
+    logger.error('FFmpeg error', { error: error.message, args });
     throw error;
   }
 }
 
-async function execFFprobe(command) {
+async function execFFprobe(args) {
   try {
-    const { stdout, stderr } = await execAsync(command);
+    const { stdout } = await execFileAsync('ffprobe', args);
     return stdout;
   } catch (error) {
-    logger.error('FFprobe error', { error: error.message, command });
+    logger.error('FFprobe error', { error: error.message, args });
     throw error;
   }
 }
@@ -113,16 +116,14 @@ async function buildProcessedAudio(track, sourceUrl) {
     filters.push(`afade=t=out:st=${fadeStart}:d=${track.fadeOut.duration}`);
   }
 
-  // Build FFmpeg command
-  let command = `ffmpeg -i "${sourceUrl}"`;
-  
+  // Build FFmpeg args (passed to execFile — no shell, see execFFmpeg).
+  const args = ['-i', sourceUrl];
   if (filters.length > 0) {
-    command += ` -af "${filters.join(',')}"`;
+    args.push('-af', filters.join(','));
   }
+  args.push('-y', outputPath);
 
-  command += ` -y "${outputPath}"`;
-
-  await execFFmpeg(command);
+  await execFFmpeg(args);
 
   return outputPath;
 }
@@ -305,9 +306,12 @@ async function fitTrackToVideoLength(trackId, videoDuration, userId) {
  * Get audio metadata
  */
 async function getAudioMetadata(audioUrl) {
-  const command = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioUrl}"`;
-  
-  const output = await execFFprobe(command);
+  const output = await execFFprobe([
+    '-v', 'error',
+    '-show_entries', 'format=duration',
+    '-of', 'default=noprint_wrappers=1:nokey=1',
+    audioUrl,
+  ]);
   const duration = parseFloat(output.trim());
 
   return { duration };

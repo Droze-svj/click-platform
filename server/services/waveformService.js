@@ -2,11 +2,27 @@
 // Generates waveform data for visualization
 
 const logger = require('../utils/logger');
-const { exec } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const { promisify } = require('util');
 const fs = require('fs');
 const path = require('path');
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+// Run ffmpeg with spawn (no shell) and collect raw PCM (s16le) from stdout.
+// Passing audioPath as an argv entry prevents shell command injection.
+function runFFmpegPcm(audioPath) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('ffmpeg', ['-i', audioPath, '-af', 'aresample=8000,asetnsamples=n=200', '-f', 's16le', '-']);
+    const chunks = [];
+    proc.stdout.on('data', (d) => chunks.push(d));
+    proc.stderr.on('data', () => {}); // discard ffmpeg progress/logs
+    proc.on('error', reject);
+    proc.on('close', (code) => {
+      if (code === 0) resolve(Buffer.concat(chunks));
+      else reject(new Error(`ffmpeg exited with code ${code}`));
+    });
+  });
+}
 
 /**
  * Generate waveform data from audio file
@@ -44,39 +60,31 @@ async function generateWaveform(audioUrl, options = {}) {
  */
 async function generateWaveformData(audioPath, width, precision) {
   try {
-    // Use FFmpeg to extract waveform data
-    // This uses the 'showwavespic' filter to generate data
-    const tempDir = path.join(__dirname, '../../tmp/waveforms');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+    // Decode to raw PCM via ffmpeg (no shell), then compute RMS per pixel here
+    // in Node — previously this was an inline `node -e` shell pipeline that was
+    // both injectable and broken (it never emitted the waveform).
+    const buffer = await runFFmpegPcm(audioPath);
+
+    const samples = [];
+    for (let i = 0; i + 1 < buffer.length; i += 2) {
+      samples.push(Math.abs(buffer.readInt16LE(i)) / 32768);
     }
 
-    const dataPath = path.join(tempDir, `waveform_${Date.now()}.txt`);
+    const samplesPerPixel = Math.max(1, Math.floor(samples.length / width));
+    const waveform = [];
+    for (let i = 0; i < width; i++) {
+      const start = i * samplesPerPixel;
+      const segment = samples.slice(start, start + samplesPerPixel);
+      const rms = segment.length
+        ? Math.sqrt(segment.reduce((sum, val) => sum + val * val, 0) / segment.length)
+        : 0;
+      waveform.push(rms);
+    }
 
-    // Extract audio samples and calculate RMS per segment
-    const command = `ffmpeg -i "${audioPath}" -af "aresample=8000,asetnsamples=n=200" -f s16le - 2>/dev/null | node -e "
-      const fs = require('fs');
-      const buffer = fs.readFileSync(0);
-      const samples = [];
-      for (let i = 0; i < buffer.length; i += 2) {
-        const sample = buffer.readInt16LE(i);
-        samples.push(Math.abs(sample) / 32768);
-      }
-      const width = ${width};
-      const samplesPerPixel = Math.floor(samples.length / width);
-      const waveform = [];
-      for (let i = 0; i < width; i++) {
-        const start = i * samplesPerPixel;
-        const end = start + samplesPerPixel;
-        const segment = samples.slice(start, end);
-        const rms = Math.sqrt(segment.reduce((sum, val) => sum + val * val, 0) / segment.length);
-        waveform.push(rms);
-      }
-      
-    "`;
-
-    const { stdout } = await execAsync(command);
-    const waveform = JSON.parse(stdout.trim());
+    if (!waveform.some((v) => v > 0)) {
+      // No usable audio decoded — fall back to the simplified generator.
+      return await generateWaveformSimplified(audioPath, width);
+    }
 
     // Normalize to 0-1 range
     const max = Math.max(...waveform);
@@ -101,13 +109,14 @@ async function generateWaveformData(audioPath, width, precision) {
  * Simplified waveform generation (fallback)
  */
 async function generateWaveformSimplified(audioPath, width) {
-  // Get audio duration
-  const { exec } = require('child_process');
-  const { promisify } = require('util');
-  const execAsync = promisify(exec);
-  
-  const durationCommand = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`;
-  const { stdout } = await execAsync(durationCommand);
+  // Get audio duration via ffprobe (execFile — no shell, audioPath is an argv
+  // entry so it can't be interpreted as a command).
+  const { stdout } = await execFileAsync('ffprobe', [
+    '-v', 'error',
+    '-show_entries', 'format=duration',
+    '-of', 'default=noprint_wrappers=1:nokey=1',
+    audioPath,
+  ]);
   const duration = parseFloat(stdout.trim());
 
   // Generate placeholder waveform (sine wave pattern for demo)
@@ -135,10 +144,16 @@ async function generateWaveformImage(audioPath, width, height) {
     const tempDir = path.join(__dirname, '../../tmp/waveforms');
     const outputPath = path.join(tempDir, `waveform_${Date.now()}.png`);
 
-    // Use FFmpeg showwavespic filter
-    const command = `ffmpeg -i "${audioPath}" -filter_complex "[0:a]showwavespic=s=${width}x${height}:colors=0x00ff00" -frames:v 1 -y "${outputPath}"`;
-
-    await execAsync(command);
+    // Use FFmpeg showwavespic filter (execFile — no shell). Dimensions are
+    // coerced to integers so they can't smuggle filtergraph syntax.
+    const w = Math.max(1, parseInt(width, 10) || 800);
+    const h = Math.max(1, parseInt(height, 10) || 200);
+    await execFileAsync('ffmpeg', [
+      '-i', audioPath,
+      '-filter_complex', `[0:a]showwavespic=s=${w}x${h}:colors=0x00ff00`,
+      '-frames:v', '1',
+      '-y', outputPath,
+    ]);
 
     // Read image and convert to base64 or return path
     const imageBuffer = fs.readFileSync(outputPath);
