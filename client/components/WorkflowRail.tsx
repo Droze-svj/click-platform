@@ -14,7 +14,7 @@ import {
 } from '../contexts/WorkflowContext'
 import { useTranslation } from '../hooks/useTranslation'
 import LanguagePicker from './LanguagePicker'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ACCENT_PALETTES, resolveAccentKey, isSwarmMode, type SwarmMode } from '../lib/swarmTheme'
 
 const STAGE_ICONS: Record<WorkflowStage, LucideIcon> = {
@@ -85,6 +85,7 @@ export default function WorkflowRail() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [stageError, setStageError] = useState<string | null>(null)
   const [activeSwarm, setActiveSwarm] = useState<SwarmMode>('coach')
+  const reduceMotion = useReducedMotion()
 
   // Listen to swarm changes
   useEffect(() => {
@@ -207,10 +208,10 @@ export default function WorkflowRail() {
                     aria-current={isCurrent ? 'step' : undefined}
                     title={stageLabel(s)}
                     aria-label={stageLabel(s)}
-                    animate={isCurrent ? {
+                    animate={isCurrent && !reduceMotion ? {
                       scale: [1.05, 1.07, 1.05],
-                    } : { scale: 1 }}
-                    transition={isCurrent ? {
+                    } : { scale: isCurrent ? 1.05 : 1 }}
+                    transition={isCurrent && !reduceMotion ? {
                       duration: 2.5,
                       repeat: Infinity,
                       ease: "easeInOut"

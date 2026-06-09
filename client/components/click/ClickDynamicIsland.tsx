@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useDragControls } from 'framer-motion'
+import { motion, AnimatePresence, useDragControls, useReducedMotion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { 
   Sparkles, Brain, Flame, Send, X, Command,
@@ -26,16 +26,17 @@ const SWARM_ICONS: Record<SwarmMode, React.ElementType> = {
 
 // Neural sound-wave visualizer when Click is thinking
 function NeuralSoundWave({ color }: { color: string }) {
+  // Framer's JS loop isn't covered by the global prefers-reduced-motion CSS,
+  // so gate the infinite animation explicitly.
+  const reduce = useReducedMotion()
   return (
     <div className="flex items-center gap-1 h-5 px-2">
       {Array.from({ length: 5 }).map((_, i) => (
         <motion.div
           key={i}
           className={`w-1 rounded-full bg-gradient-to-t ${color}`}
-          animate={{
-            height: [4, 20, 4],
-          }}
-          transition={{
+          animate={reduce ? { height: 12 } : { height: [4, 20, 4] }}
+          transition={reduce ? { duration: 0 } : {
             duration: 0.8,
             repeat: Infinity,
             delay: i * 0.15,
