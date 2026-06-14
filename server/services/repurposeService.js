@@ -28,6 +28,7 @@ const aiRouter = require('../utils/aiRouter');
 const aiProfiles = require('../config/aiProfiles');
 const enforcement = require('./entitlementEnforcement');
 const urlGuard = require('../utils/urlGuard');
+const downloadUtils = require('../utils/downloadUtils');
 const usageService = require('./usageService');
 const logger = require('../utils/logger');
 // The canonical niche/platform playbook (18 niches × 7 platforms, hook
@@ -315,18 +316,37 @@ async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, ni
 }
 
 /**
- * Resolve a source videoUrl/path to something ffmpeg can read. Remote URLs are
- * SSRF-guarded; local paths are made absolute and existence-checked.
- * @returns {Promise<string>}
+ * Resolve a source videoUrl/path to a LOCAL file path ffmpeg can safely read,
+ * plus a cleanup() to call when done.
+ *
+ * Remote URLs are downloaded via the per-hop SSRF-guarded streamer to a temp
+ * file — we must NOT hand ffmpeg a URL it can follow, because ffmpeg re-resolves
+ * DNS and follows redirects itself (a one-time URL check is defeated by a
+ * redirect-to-private-IP or a DNS-rebind). Local paths are jailed to uploads/.
+ *
+ * @returns {Promise<{ path: string, cleanup: () => void }>}
  */
 async function resolveSource(videoUrl) {
   if (!videoUrl || typeof videoUrl !== 'string') throw new Error('A source videoUrl is required');
   const trimmed = videoUrl.trim();
+  const noop = () => {};
 
-  // Remote: SSRF-guard then let ffmpeg read it directly.
   if (/^https?:\/\//i.test(trimmed)) {
-    await urlGuard.assertPublicUrl(trimmed); // throws BlockedUrlError on SSRF
-    return trimmed;
+    await urlGuard.assertPublicUrl(trimmed); // initial check; streamDownload re-guards EVERY hop
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'repurpose-src-'));
+    const dest = path.join(tmpDir, 'source.mp4');
+    const cleanup = () => { fs.promises.rm(tmpDir, { recursive: true, force: true }).catch(() => {}); };
+    try {
+      // streamDownload calls urlGuard.assertPublicUrl on the initial URL AND on
+      // every redirect hop, so ffmpeg only ever sees the validated local file.
+      await downloadUtils.streamDownload(trimmed, dest);
+    } catch (e) {
+      cleanup();
+      const err = new Error(`Could not fetch source video: ${e.message}`);
+      err.statusCode = e.statusCode || 400;
+      throw err;
+    }
+    return { path: dest, cleanup };
   }
 
   // Local: the platform serves user media from <cwd>/uploads via `/uploads/...`
@@ -339,7 +359,7 @@ async function resolveSource(videoUrl) {
     throw new Error('Source video must be an uploaded file');
   }
   if (!fs.existsSync(resolved)) throw new Error(`Source video not found: ${videoUrl}`);
-  return resolved;
+  return { path: resolved, cleanup: noop };
 }
 
 /**
@@ -406,13 +426,14 @@ async function planRepurpose({ baseTree, targets, tier, transcript, niche, userI
  * variant failures are logged and recorded on the variant object).
  *
  * @param {object} opts
- * @param {string} opts.sourcePath  resolved source (local abs path or guarded URL)
+ * @param {string} opts.sourcePath  resolved LOCAL source file path
  * @param {object} opts.baseTree    the editor RenderTree (filters/overlays/etc.)
  * @param {Array}  opts.variants    output of planRepurpose().variants
  * @param {string} opts.tier
  * @param {string} opts.userId
+ * @param {function} [opts.cleanup] removes the resolved source (e.g. a downloaded temp)
  */
-async function runVariants({ sourcePath, baseTree, variants, tier, userId }) {
+async function runVariants({ sourcePath, baseTree, variants, tier, userId, cleanup }) {
   const renderRoute = require('../routes/video/render');
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'repurpose-'));
 
@@ -446,8 +467,10 @@ async function runVariants({ sourcePath, baseTree, variants, tier, userId }) {
     }
   }
 
-  // Remove the (now-empty) temp dir.
+  // Remove the (now-empty) temp dir, then the source (no-op for user uploads;
+  // removes the downloaded temp file for remote sources).
   fs.promises.rm(tmpRoot, { recursive: true, force: true }).catch(() => {});
+  if (typeof cleanup === 'function') { try { cleanup(); } catch (_) { /* best-effort */ } }
 }
 
 /**
@@ -463,9 +486,9 @@ async function runVariants({ sourcePath, baseTree, variants, tier, userId }) {
  *                  | {ok:false, status:number, error:string}>}
  */
 async function orchestrate({ tree, targets, tier, niche, transcript, userId, personalization }) {
-  let sourcePath;
+  let src;
   try {
-    sourcePath = await resolveSource(tree.videoUrl);
+    src = await resolveSource(tree.videoUrl); // { path, cleanup }
   } catch (e) {
     return { ok: false, status: e.statusCode || 400, error: e.message || 'Invalid source video' };
   }
@@ -474,10 +497,12 @@ async function orchestrate({ tree, targets, tier, niche, transcript, userId, per
   try {
     plan = await planRepurpose({ baseTree: tree, targets, tier, niche, transcript, userId, personalization });
   } catch (e) {
+    src.cleanup(); // don't leak a downloaded temp source on early failure
     logger.error('[repurpose] planning failed', { error: e.message });
     return { ok: false, status: 500, error: 'Could not plan repurpose job' };
   }
   if (!plan.variants.length) {
+    src.cleanup();
     return { ok: false, status: 400, error: 'No valid target aspect ratios. Allowed: ' + SUPPORTED_RATIOS.join(', ') };
   }
 
@@ -489,8 +514,9 @@ async function orchestrate({ tree, targets, tier, niche, transcript, userId, per
   }
 
   // Fire the renders in the background; the caller responds immediately.
-  runVariants({ sourcePath, baseTree: tree, variants: plan.variants, tier, userId })
-    .catch((e) => logger.error('[repurpose] runVariants crashed', { error: e.message }));
+  // runVariants owns the source cleanup once it starts (runs after all variants).
+  runVariants({ sourcePath: src.path, baseTree: tree, variants: plan.variants, tier, userId, cleanup: src.cleanup })
+    .catch((e) => { src.cleanup(); logger.error('[repurpose] runVariants crashed', { error: e.message }); });
 
   const variants = plan.variants.map((v) => ({
     jobId: v.jobId,

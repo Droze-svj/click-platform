@@ -3,6 +3,37 @@
 // so every provider must report "unavailable" rather than throw.
 
 const gen = require('../../../server/services/generationService');
+const personalizationService = require('../../../server/services/personalizationService');
+const imageGen = require('../../../server/services/imageGenerationService');
+
+describe('generationService personalization + learning hook', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('injects the brand grade into the image prompt AND records it as a learning signal', async () => {
+    jest.spyOn(personalizationService, 'getPersona').mockResolvedValue({ brand: { colors: { primary: '#FF0050' }, colorGrade: 'cinematic' }, voice: {} });
+    const imgSpy = jest.spyOn(imageGen, 'generateImage').mockResolvedValue({ ok: true, url: 'https://img/x.png' });
+    const rec = jest.spyOn(personalizationService, 'recordChoices').mockResolvedValue({ recorded: 2 });
+
+    const r = await gen.generate('image', { userId: 'u1', prompt: 'a city skyline' });
+    expect(r.ok).toBe(true);
+    // brand palette + grade folded into the provider prompt
+    expect(imgSpy.mock.calls[0][0]).toMatch(/#FF0050/);
+    expect(imgSpy.mock.calls[0][0]).toMatch(/cinematic color grade/);
+    // colour grade recorded back into the learned profile
+    expect(rec).toHaveBeenCalledWith('u1', expect.arrayContaining([
+      expect.objectContaining({ facet: 'colorGrades', key: 'cinematic' }),
+      expect.objectContaining({ weightedFacet: 'weightedColorGrades', key: 'cinematic' }),
+    ]));
+  });
+
+  it('does not record when no brand grade is set', async () => {
+    jest.spyOn(personalizationService, 'getPersona').mockResolvedValue({ brand: { colors: {}, colorGrade: '' }, voice: {} });
+    jest.spyOn(imageGen, 'generateImage').mockResolvedValue({ ok: true, url: 'https://img/y.png' });
+    const rec = jest.spyOn(personalizationService, 'recordChoices').mockResolvedValue({ recorded: 0 });
+    await gen.generate('image', { userId: 'u1', prompt: 'a city' });
+    expect(rec).not.toHaveBeenCalled();
+  });
+});
 
 describe('generationService.getCapabilities', () => {
   const saved = {};

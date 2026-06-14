@@ -20,7 +20,18 @@ const marketingKnowledge = require('./marketingKnowledge');
 const logger = require('../utils/logger');
 
 const PERSONA_TTL_MS = 60 * 1000;
+const PERSONA_CACHE_MAX = 5000; // hard cap so the cache can't grow unbounded
 const _personaCache = new Map(); // key `${userId}|${niche}|${platform}` → { value, expires }
+
+/** Insert into the TTL cache with size-bounded (oldest-first) eviction. */
+function cacheSet(key, value) {
+  // Map preserves insertion order, so deleting the first key drops the oldest.
+  if (_personaCache.size >= PERSONA_CACHE_MAX) {
+    const oldest = _personaCache.keys().next().value;
+    if (oldest !== undefined) _personaCache.delete(oldest);
+  }
+  _personaCache.set(key, { value, expires: Date.now() + PERSONA_TTL_MS });
+}
 
 // The facets UserStyleProfile.recordPick / recordPerformance accept. They THROW
 // on an unknown facet, so recordChoices pre-filters against these.
@@ -97,7 +108,7 @@ async function getPersona(userId, { niche, platform } = {}) {
     platform: platform || null,
   };
 
-  _personaCache.set(cacheKey, { value: persona, expires: Date.now() + PERSONA_TTL_MS });
+  cacheSet(cacheKey, persona);
   return persona;
 }
 

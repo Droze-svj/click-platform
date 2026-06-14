@@ -54,16 +54,21 @@ async function generateVoiceover({ userId, text, voice, voiceId, speed }) {
   // Personalize the default voice from the creator's saved tone (only when the
   // request didn't specify a voice). Best-effort.
   let resolvedVoice = voice;
+  let appliedTone = '';
   if (!voice && !voiceId) {
     try {
       const persona = await personalizationService.getPersona(userId, {});
       const toneKey = String(persona?.voice?.tone || '').toLowerCase().split(/\s+/)[0];
-      if (TONE_VOICE_DEFAULTS[toneKey]) resolvedVoice = TONE_VOICE_DEFAULTS[toneKey];
+      if (TONE_VOICE_DEFAULTS[toneKey]) { resolvedVoice = TONE_VOICE_DEFAULTS[toneKey]; appliedTone = toneKey; }
     } catch (_) { /* best-effort */ }
   }
   try {
     const r = await aiVoiceover.generateVoiceover(userId, text.slice(0, 3000), { voice: resolvedVoice, voiceId, speed });
     if (r && r.success && r.url) {
+      // Learning loop: a voiceover in this tone is a positive style signal.
+      if (appliedTone && userId) {
+        personalizationService.recordChoices(userId, [{ weightedFacet: 'weightedVoiceTones', key: appliedTone, retentionDelta: 0.2 }]).catch(() => {});
+      }
       return { ok: true, asset: { type: 'voiceover', url: r.url, title: `Voiceover (${r.provider || 'tts'})`, prompt: text.slice(0, 120) } };
     }
     return { ok: false, error: 'Voiceover produced no audio' };
@@ -94,17 +99,25 @@ async function generateImage({ userId, prompt, aspectRatio }) {
   // the prompt so generated images match their look. Best-effort, façade-level
   // (keeps imageGenerationService provider-agnostic).
   let finalPrompt = prompt;
+  let appliedGrade = '';
   try {
     const persona = await personalizationService.getPersona(userId, {});
     const bits = [];
     if (persona?.brand?.colors?.primary) bits.push(`brand color ${persona.brand.colors.primary}`);
     if (persona?.brand?.colors?.accent) bits.push(`accent ${persona.brand.colors.accent}`);
-    if (persona?.brand?.colorGrade) bits.push(`${persona.brand.colorGrade} color grade`);
+    if (persona?.brand?.colorGrade) { bits.push(`${persona.brand.colorGrade} color grade`); appliedGrade = persona.brand.colorGrade; }
     if (bits.length && prompt) finalPrompt = `${prompt}. Style: ${bits.join(', ')}.`;
   } catch (_) { /* best-effort personalization */ }
 
   const r = await imageGen.generateImage(finalPrompt, { aspectRatio });
   if (r.ok) {
+    // Learning loop: generating in this colour grade is a positive style signal.
+    if (appliedGrade && userId) {
+      personalizationService.recordChoices(userId, [
+        { facet: 'colorGrades', key: appliedGrade },
+        { weightedFacet: 'weightedColorGrades', key: appliedGrade, retentionDelta: 0.2 },
+      ]).catch(() => {});
+    }
     return { ok: true, asset: { type: 'image', url: r.url, title: `Image: ${String(prompt || '').slice(0, 40)}`, prompt: String(prompt || '').slice(0, 120) } };
   }
   return { ok: false, unavailable: !!r.unavailable, error: r.error };

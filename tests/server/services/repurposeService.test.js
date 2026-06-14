@@ -6,6 +6,31 @@ const svc = require('../../../server/services/repurposeService');
 const liveTrendService = require('../../../server/services/liveTrendService');
 const aiRouter = require('../../../server/utils/aiRouter');
 const personalizationService = require('../../../server/services/personalizationService');
+const downloadUtils = require('../../../server/utils/downloadUtils');
+const fs = require('fs');
+const os = require('os');
+
+describe('repurposeService.resolveSource (SSRF-safe source resolution)', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('blocks a cloud-metadata / private source URL up front', async () => {
+    await expect(svc.resolveSource('http://169.254.169.254/latest/meta-data/')).rejects.toBeDefined();
+  });
+
+  it('downloads a remote source via the per-hop-guarded streamer to a temp file (+ cleanup)', async () => {
+    const dl = jest.spyOn(downloadUtils, 'streamDownload').mockImplementation(async (url, dest) => { fs.writeFileSync(dest, 'data'); return { bytes: 4 }; });
+    const r = await svc.resolveSource('https://1.1.1.1/clip.mp4');
+    expect(dl).toHaveBeenCalled();               // ffmpeg never gets the URL — only the local temp file
+    expect(r.path.startsWith(os.tmpdir())).toBe(true);
+    expect(fs.existsSync(r.path)).toBe(true);
+    expect(typeof r.cleanup).toBe('function');
+    r.cleanup();
+  });
+
+  it('rejects a path-traversal local source', async () => {
+    await expect(svc.resolveSource('../../etc/passwd')).rejects.toThrow(/uploaded file/);
+  });
+});
 
 describe('repurposeService.deterministicCopy (niche-aware)', () => {
   it('returns a complete copy object for any platform/niche', () => {

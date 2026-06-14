@@ -12,12 +12,14 @@
  */
 
 const express = require('express');
+const mongoose = require('mongoose');
 
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const UserPreferences = require('../models/UserPreferences');
+const UserStyleProfile = require('../models/UserStyleProfile');
 const personalizationService = require('../services/personalizationService');
 
 const router = express.Router();
@@ -49,6 +51,45 @@ router.post(
       logger.warn('[me] record choices failed', { error: e.message });
     }
     return sendSuccess(res, result); // best-effort, always 200
+  })
+);
+
+// ── GET /personalization/insights ────────────────────────────────────────────
+// "What Click has learned about you" — a cheap, read-only snapshot of the
+// learned style graph (one findOne, no AI). Builds trust + makes the loop visible.
+router.get(
+  '/personalization/insights',
+  auth,
+  asyncHandler(async (req, res) => {
+    const userId = uid(req);
+    let profile = null;
+    try {
+      if (mongoose.Types.ObjectId.isValid(String(userId))) profile = await UserStyleProfile.findOne({ userId });
+    } catch (e) {
+      logger.warn('[me] insights read failed', { error: e.message });
+    }
+    if (!profile) return sendSuccess(res, { confidence: 'low', sample: 0, learned: {} });
+
+    const keys = (arr) => (Array.isArray(arr) ? arr.map((p) => p && p.key).filter(Boolean) : []);
+    const top = (facet) => (typeof profile.topPicks === 'function' ? keys(profile.topPicks(facet, 3)) : []);
+    const perf = (facet) => (typeof profile.topPerformers === 'function' ? keys(profile.topPerformers(facet, 3)) : []);
+    const sample = profile.totalPicks || 0;
+    const confidence = sample >= 50 ? 'high' : sample >= 10 ? 'medium' : 'low';
+
+    return sendSuccess(res, {
+      confidence,
+      sample,
+      learned: {
+        topPlatforms: top('platforms'),
+        topHookStyles: top('hookStyles'),
+        topCaptionStyles: top('captionStyles'),
+        topColorGrades: top('colorGrades'),
+        topNiches: top('niches'),
+        provenHooks: perf('weightedHooks'),
+        provenColorGrades: perf('weightedColorGrades'),
+        avgCutDurationSec: profile.averages?.avgCutDuration ?? null,
+      },
+    });
   })
 );
 

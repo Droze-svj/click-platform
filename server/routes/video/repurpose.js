@@ -67,7 +67,10 @@ router.post(
       return sendError(res, 'Too many targets (max 12)', 400);
     }
 
-    const userId = req.user?.id || req.user?._id?.toString();
+    // Prefer the real ObjectId (as a string) so personalization + learning
+    // writes cast cleanly — the dev user's `id` is a non-hex string that would
+    // silently no-op those writes.
+    const userId = req.user?._id?.toString() || req.user?.id;
     const tier = entitlements.resolveTier(req.user || {});
     // Niche grounds the per-platform copy in the marketing playbook. Prefer an
     // explicit body override, else the creator's saved niche; getKnowledgeSlice

@@ -19,10 +19,25 @@ const EMPTY: AiPreferences = {
 
 const toList = (s: string) => s.split(/[,\n]/).map((x) => x.trim()).filter(Boolean)
 
+interface Insights {
+  confidence: 'low' | 'medium' | 'high'
+  sample: number
+  learned: {
+    topPlatforms?: string[]
+    topHookStyles?: string[]
+    topCaptionStyles?: string[]
+    topColorGrades?: string[]
+    topNiches?: string[]
+    provenHooks?: string[]
+    avgCutDurationSec?: number | null
+  }
+}
+
 const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'error' | 'info') => void }> = ({ showToast }) => {
   const [prefs, setPrefs] = useState<AiPreferences>(EMPTY)
   const [vocabText, setVocabText] = useState('')
   const [bannedText, setBannedText] = useState('')
+  const [insights, setInsights] = useState<Insights | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -39,6 +54,10 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
           setBannedText((d.voice.banned || []).join(', '))
         }
       } catch { /* defaults */ } finally { setLoading(false) }
+      try {
+        const ir = await apiGet<any>('/me/personalization/insights', undefined, false)
+        setInsights((ir?.data ?? ir) as Insights)
+      } catch { /* best-effort */ }
     })()
   }, [])
 
@@ -65,6 +84,16 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
   const label = 'text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block'
   const input = 'w-full rounded-xl bg-black/30 border border-white/10 p-2.5 text-sm text-[var(--text-main)] outline-none focus:border-fuchsia-500'
 
+  const chipGroup = (groupLabel: string, items?: string[]) => {
+    if (!items || !items.length) return null
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{groupLabel}:</span>
+        {items.map((it) => <span key={it} className="text-[10px] font-bold text-fuchsia-300 bg-fuchsia-500/10 px-2 py-0.5 rounded capitalize">{it}</span>)}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full bg-slate-950/40 backdrop-blur-xl p-8 overflow-y-auto">
       <div className="max-w-2xl mx-auto w-full space-y-7">
@@ -78,6 +107,23 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
             Click also learns from what you actually use, so it keeps getting more “you” over time.
           </p>
         </div>
+
+        {/* What Click has learned (the adaptive loop, made visible) */}
+        {insights && insights.sample > 0 && (
+          <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/[0.04] p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-black text-[var(--text-main)] uppercase tracking-tight">What Click has learned about you</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-fuchsia-400">{insights.confidence} confidence · {insights.sample} signals</span>
+            </div>
+            {chipGroup('Platforms', insights.learned.topPlatforms)}
+            {chipGroup('Proven hooks', insights.learned.provenHooks)}
+            {chipGroup('Hook styles', insights.learned.topHookStyles)}
+            {chipGroup('Caption styles', insights.learned.topCaptionStyles)}
+            {chipGroup('Color grades', insights.learned.topColorGrades)}
+            {chipGroup('Niches', insights.learned.topNiches)}
+            <p className="text-slate-500 text-[11px]">Click keeps learning from what you generate, download and remix — this gets sharper over time.</p>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center gap-2 text-slate-500"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
@@ -97,7 +143,7 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
                 </div>
                 <div>
                   <span className={label}>Pacing / intensity</span>
-                  <select className={input} value={prefs.voice.pacing} onChange={(e) => setVoice('pacing', e.target.value)}>
+                  <select aria-label="Pacing intensity" className={input} value={prefs.voice.pacing} onChange={(e) => setVoice('pacing', e.target.value)}>
                     <option value="gentle">Gentle</option>
                     <option value="medium">Medium</option>
                     <option value="aggressive">Aggressive</option>
@@ -121,14 +167,14 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
                 <div>
                   <span className={label}>Primary color</span>
                   <div className="flex items-center gap-2">
-                    <input type="color" value={prefs.brand.primaryColor || '#7C3AED'} onChange={(e) => setBrand('primaryColor', e.target.value)} className="h-10 w-12 rounded-lg bg-transparent border border-white/10" />
+                    <input type="color" aria-label="Primary brand color" value={prefs.brand.primaryColor || '#7C3AED'} onChange={(e) => setBrand('primaryColor', e.target.value)} className="h-10 w-12 rounded-lg bg-transparent border border-white/10" />
                     <input className={input} value={prefs.brand.primaryColor} onChange={(e) => setBrand('primaryColor', e.target.value)} placeholder="#7C3AED" />
                   </div>
                 </div>
                 <div>
                   <span className={label}>Accent color</span>
                   <div className="flex items-center gap-2">
-                    <input type="color" value={prefs.brand.accentColor || '#00E0FF'} onChange={(e) => setBrand('accentColor', e.target.value)} className="h-10 w-12 rounded-lg bg-transparent border border-white/10" />
+                    <input type="color" aria-label="Accent brand color" value={prefs.brand.accentColor || '#00E0FF'} onChange={(e) => setBrand('accentColor', e.target.value)} className="h-10 w-12 rounded-lg bg-transparent border border-white/10" />
                     <input className={input} value={prefs.brand.accentColor} onChange={(e) => setBrand('accentColor', e.target.value)} placeholder="#00E0FF" />
                   </div>
                 </div>
