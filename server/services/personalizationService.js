@@ -139,7 +139,7 @@ function invalidatePersona(userId) {
  * @param {object} [opts.persona] pre-fetched persona (skips the getPersona read)
  * @returns {Promise<string>}
  */
-async function buildPersonalizedSystemPrompt({ userId, niche, platform, role = 'creative-director', stage = 'script', extra = '', override = null, persona = null } = {}) {
+async function buildPersonalizedSystemPrompt({ userId, niche, platform, role = 'creative-director', stage = 'script', language = 'en', extra = '', override = null, persona = null } = {}) {
   try {
     const p = persona || await getPersona(userId, { niche, platform });
 
@@ -161,6 +161,7 @@ async function buildPersonalizedSystemPrompt({ userId, niche, platform, role = '
       niche,
       platform,
       stage,
+      language,
       styleProfile: p.styleProfile || (userId ? { userId } : null),
       topPerformers: p.topPerformers,
       voice,
@@ -169,7 +170,7 @@ async function buildPersonalizedSystemPrompt({ userId, niche, platform, role = '
   } catch (e) {
     logger.warn('[personalization] buildPersonalizedSystemPrompt failed; using base prompt', { error: e.message });
     try {
-      return marketingKnowledge.buildSystemPrompt({ persona: role, niche, platform, stage });
+      return marketingKnowledge.buildSystemPrompt({ persona: role, niche, platform, stage, language });
     } catch (_) {
       return '';
     }

@@ -7,6 +7,7 @@ Object.defineProperty(global, 'geminiConfigured', {
 });
 const logger = require('../utils/logger');
 const { buildSystemPrompt, buildCompactGuidance, getTopPerformingPlaybook } = require('./marketingKnowledge');
+const personalizationService = require('./personalizationService');
 let Sentry = null;
 try {
   Sentry = require('@sentry/node');
@@ -77,7 +78,11 @@ async function generateCaptions(text, niche, platform = 'tiktok', language = 'en
       ? await fetchRecentCaptions(targetUserId, targetPlatform, 8).catch(() => [])
       : [];
 
-    const system = buildSystemPrompt({ persona: 'caption-writer', niche, platform: targetPlatform, stage: 'script', language: targetLanguage, topPerformers });
+    // Personalized when we know the creator (folds in their learned style +
+    // saved voice/brand on top of topPerformers); base prompt otherwise.
+    const system = targetUserId
+      ? await personalizationService.buildPersonalizedSystemPrompt({ userId: targetUserId, niche, platform: targetPlatform, role: 'caption-writer', stage: 'script', language: targetLanguage })
+      : buildSystemPrompt({ persona: 'caption-writer', niche, platform: targetPlatform, stage: 'script', language: targetLanguage, topPerformers });
     const dedupeBlock = recentCaptions.length > 0
       ? `\n── Do not repeat these recent captions ──\n${recentCaptions.map((c, i) => `${i + 1}. ${c.slice(0, 200)}`).join('\n')}\nWrite something with a meaningfully different hook, angle, or sentence structure than ALL of the above.\n`
       : '';
@@ -103,7 +108,7 @@ Content context: ${text}
 
 Return only the caption text — no preamble, no explanation.`;
 
-    const content = await geminiGenerate(prompt, { maxTokens: 200 });
+    const content = await geminiGenerate(prompt, { maxTokens: 1200 });
     const caption = content || `Check this out! 🔥 #${niche} #viral #trending`;
 
     // Post-generation dedupe — if the model still echoes a recent caption
@@ -113,7 +118,7 @@ Return only the caption text — no preamble, no explanation.`;
     if (recentCaptions.length > 0 && isTooSimilar(caption, recentCaptions, 0.7)) {
       logger.info('Caption too similar to recent; re-rolling once', { niche, platform });
       const retryPrompt = `${prompt}\n\nThe first attempt was too similar to caption #${1 + recentCaptions.findIndex((c) => isTooSimilar(caption, [c], 0.7))}. Rewrite with a completely different opening verb and a different angle from the playbook.`;
-      const retry = await geminiGenerate(retryPrompt, { maxTokens: 200 }).catch(() => null);
+      const retry = await geminiGenerate(retryPrompt, { maxTokens: 1200 }).catch(() => null);
       if (retry && !isTooSimilar(retry, recentCaptions, 0.7)) return retry;
     }
     return caption;
