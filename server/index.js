@@ -2002,6 +2002,9 @@ app.use('/api/ai/predictive', require('./routes/ai/predictive'));
 app.use('/api/ai/advanced', require('./routes/ai/advanced'));
 app.use('/api/ai/content-generation', require('./routes/ai/content-generation'));
 app.use('/api/ai/adapt', require('./routes/ai/adapt'));
+// Unified asset generation (voiceover / SFX / image) for the editor's Generate
+// panel. Specific path so it takes precedence over the general /api/ai routers.
+app.use('/api/ai/generate', require('./routes/ai/generate'));
 app.use('/api/ai', require('./routes/ai/generate-idea'));
 app.use('/api/infrastructure/cache', require('./routes/infrastructure/cache'));
 app.use('/api/infrastructure/load-balancer', require('./routes/infrastructure/load-balancer'));
