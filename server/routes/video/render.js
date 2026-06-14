@@ -102,7 +102,10 @@ async function runFfmpegRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
     textOverlays,
     shapeOverlays: Array.isArray(tree.shapeOverlays) ? tree.shapeOverlays : [],
     timelineSegments: Array.isArray(tree.timelineSegments) ? tree.timelineSegments : (tree.segments || []),
-    exportOptions: { width, height, duration: tree.duration, quality: tree.quality || 'high', codec: 'h264' },
+    // smartReframe (set by the Repurpose Studio) tells the engine the source was
+    // already cover-scaled + subject-cropped to this aspect, so it must skip its
+    // legacy forced center crop. Defaults false → existing renders unchanged.
+    exportOptions: { width, height, duration: tree.duration, quality: tree.quality || 'high', codec: 'h264', smartReframe: tree.smartReframe === true },
     userId,
   });
 

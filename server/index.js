@@ -1969,6 +1969,11 @@ app.use('/api/video/clips', require('./routes/video/clips'));
 // reaches it. Was previously orphaned (file existed but no mount), which
 // is why the frontend's render button silently 404'd.
 app.use('/api/video', require('./routes/video/render'));
+// Multi-Format Repurpose Studio: POST /api/video/repurpose → one source video
+// to N platform-native, smart-reframed variants. Renders via the render
+// pipeline above, so its /render/:jobId/status + /download endpoints serve the
+// resulting variant jobIds. Mounted under /api/video alongside render.
+app.use('/api/video', require('./routes/video/repurpose'));
 // Tools hub: silence-removal, filler removal, edit-by-text. Thin wrappers
 // around aiVideoEditingService.js so the Tools UI can hit single endpoints.
 app.use('/api/video/tools', require('./routes/video/tools'));

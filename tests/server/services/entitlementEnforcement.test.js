@@ -37,4 +37,23 @@ describe('entitlementEnforcement', () => {
       expect(body.requiredTier).toBe('pro');
     });
   });
+
+  describe('clampVariants (Repurpose Studio per-tier variant cap)', () => {
+    it('clamps the request down to the tier max (free 1, creator 2, pro/agency 4)', () => {
+      expect(enforcement.clampVariants('free', 4)).toMatchObject({ allowed: 1, clamped: true });
+      expect(enforcement.clampVariants('creator', 4)).toMatchObject({ allowed: 2, clamped: true });
+      expect(enforcement.clampVariants('pro', 4)).toMatchObject({ allowed: 4, clamped: false });
+      expect(enforcement.clampVariants('agency', 10)).toMatchObject({ allowed: 4, clamped: true });
+    });
+
+    it('never resolves below 1 variant, even for bad/zero/negative input', () => {
+      expect(enforcement.clampVariants('pro', 0).allowed).toBe(1);
+      expect(enforcement.clampVariants('pro', -3).allowed).toBe(1);
+      expect(enforcement.clampVariants('pro', NaN).allowed).toBe(1);
+    });
+
+    it('passes a within-cap request through unclamped', () => {
+      expect(enforcement.clampVariants('pro', 2)).toMatchObject({ allowed: 2, clamped: false });
+    });
+  });
 });

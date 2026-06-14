@@ -772,6 +772,11 @@ async function renderFromEditorState(options) {
 
   const width = exportOptions.width ?? 1920
   const height = exportOptions.height ?? 1080
+  // smartReframe: the caller (Repurpose Studio) has already cover-scaled + crop-
+  // framed the source to this exact target aspect in a pre-pass, so we must NOT
+  // re-apply the legacy forced center/Lissajous crop below — that would override
+  // the subject-aware framing AND upscale tier-clamped exports back to 1080x1920.
+  const smartReframe = exportOptions.smartReframe === true
   const isBestQuality = exportOptions.quality === 'best'
   const isProres = exportOptions.codec === 'prores'
   let bitrateMbps = exportOptions.bitrateMbps ?? 8
@@ -935,8 +940,11 @@ async function renderFromEditorState(options) {
     videoFilters_ff.push('rgbashift=rh=1:bv=-1');
   }
 
-  // Inject Dynamic Cameraman Drift & Shake if video is vertical
-  if (height > width) {
+  // Inject Dynamic Cameraman Drift & Shake if video is vertical.
+  // Skipped entirely under smartReframe: the source was already cover-scaled and
+  // subject-cropped to this aspect upstream, so re-cropping here would discard
+  // that framing and ignore the tier resolution clamp.
+  if (height > width && !smartReframe) {
     if (comfortMode) {
       // 🌿 Steady, smooth, perfectly centered professional crop (No motion sickness, no drift)
       videoFilters_ff.push('scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920');

@@ -4,6 +4,7 @@ const http = require('http');
 const path = require('path');
 const { execFile } = require('child_process');
 const logger = require('./logger');
+const urlGuard = require('./urlGuard');
 
 const BINARY_DIR = path.join(process.cwd(), 'bin');
 const BINARY_PATH = path.join(BINARY_DIR, 'yt-dlp');
@@ -78,50 +79,55 @@ function streamDownload(url, destPath, { maxBytes = 500 * 1024 * 1024, redirects
     };
 
     const get = (currentUrl, hopsLeft) => {
-      const lib = currentUrl.startsWith('https:') ? https : http;
-      const request = lib.get(currentUrl, (res) => {
+      // SSRF guard on EVERY hop (anti DNS-rebind): a hostname that resolved
+      // public on the previous hop can resolve to a private IP on this one, so
+      // we re-validate the resolved IP of each URL we actually connect to.
+      urlGuard.assertPublicUrl(currentUrl).then(() => {
+        const lib = currentUrl.startsWith('https:') ? https : http;
+        const request = lib.get(currentUrl, (res) => {
         // Follow redirects
-        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hopsLeft > 0) {
-          res.resume();
-          const next = new URL(res.headers.location, currentUrl).toString();
-          return get(next, hopsLeft - 1);
-        }
-        if (res.statusCode !== 200) {
-          res.resume();
-          return fail(new Error(`Source returned HTTP ${res.statusCode}`));
-        }
-        const ct = (res.headers['content-type'] || '').toLowerCase();
-        if (ct && !ct.startsWith('video/') && !ct.startsWith('application/octet-stream')) {
-          res.resume();
-          return fail(new Error(`Source is not a video (content-type: ${ct})`));
-        }
-        const cl = parseInt(res.headers['content-length'] || '0', 10);
-        if (cl && cl > maxBytes) {
-          res.resume();
-          return fail(new Error(`File exceeds ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
-        }
-        let received = 0;
-        const file = fs.createWriteStream(destPath);
-        res.on('data', (chunk) => {
-          received += chunk.length;
-          if (received > maxBytes) {
-            res.destroy();
-            file.destroy();
-            return fail(new Error(`Stream exceeded ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
+          if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hopsLeft > 0) {
+            res.resume();
+            const next = new URL(res.headers.location, currentUrl).toString();
+            return get(next, hopsLeft - 1);
           }
+          if (res.statusCode !== 200) {
+            res.resume();
+            return fail(new Error(`Source returned HTTP ${res.statusCode}`));
+          }
+          const ct = (res.headers['content-type'] || '').toLowerCase();
+          if (ct && !ct.startsWith('video/') && !ct.startsWith('application/octet-stream')) {
+            res.resume();
+            return fail(new Error(`Source is not a video (content-type: ${ct})`));
+          }
+          const cl = parseInt(res.headers['content-length'] || '0', 10);
+          if (cl && cl > maxBytes) {
+            res.resume();
+            return fail(new Error(`File exceeds ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
+          }
+          let received = 0;
+          const file = fs.createWriteStream(destPath);
+          res.on('data', (chunk) => {
+            received += chunk.length;
+            if (received > maxBytes) {
+              res.destroy();
+              file.destroy();
+              return fail(new Error(`Stream exceeded ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
+            }
+          });
+          res.on('error', fail);
+          res.pipe(file);
+          file.on('finish', () => file.close(() => succeed({ bytes: received })));
+          file.on('error', fail);
         });
-        res.on('error', fail);
-        res.pipe(file);
-        file.on('finish', () => file.close(() => succeed({ bytes: received })));
-        file.on('error', fail);
-      });
-      request.on('error', fail);
-      request.setTimeout(45_000, () => {
+        request.on('error', fail);
+        request.setTimeout(45_000, () => {
         // Destroy without an error arg (so we don't double-settle via the
         // 'error' listener), then reject the promise explicitly.
-        request.destroy();
-        fail(new Error('Download timed out'));
-      });
+          request.destroy();
+          fail(new Error('Download timed out'));
+        });
+      }).catch(fail); // blocked/invalid URL (SSRF guard) or DNS failure
     };
     get(url, redirects);
   });

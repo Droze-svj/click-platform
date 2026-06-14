@@ -18,12 +18,15 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
-const https = require('https');
-const http = require('http');
 const auth = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { devVideoStore } = require('../utils/devStore');
 const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser');
+// classifyUrl + streamDownload live in utils/downloadUtils (single source of
+// truth — this route used to carry a byte-identical copy). streamDownload is
+// SSRF-guarded per redirect hop via utils/urlGuard.
+const { classifyUrl, streamDownload } = require('../utils/downloadUtils');
+const urlGuard = require('../utils/urlGuard');
 
 const router = express.Router();
 
@@ -31,96 +34,10 @@ const UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'videos');
 try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch { /* dir exists */ }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-
-const PLATFORM_PATTERNS = [
-  { name: 'youtube',   re: /(?:youtube\.com|youtu\.be)/i },
-  { name: 'tiktok',    re: /tiktok\.com/i },
-  { name: 'instagram', re: /instagram\.com/i },
-  { name: 'twitter',   re: /(?:twitter\.com|x\.com)/i },
-  { name: 'facebook',  re: /facebook\.com/i },
-  { name: 'vimeo',     re: /vimeo\.com/i },
-];
-
-const DIRECT_VIDEO_EXTS = ['.mp4', '.mov', '.webm', '.m4v', '.mkv'];
-
-function classifyUrl(rawUrl) {
-  let u;
-  try { u = new URL(rawUrl); } catch { return { kind: 'invalid' }; }
-  if (!/^https?:$/.test(u.protocol)) return { kind: 'invalid' };
-
-  const ext = path.extname(u.pathname).toLowerCase();
-  if (DIRECT_VIDEO_EXTS.includes(ext)) return { kind: 'direct', ext };
-
-  for (const p of PLATFORM_PATTERNS) {
-    if (p.re.test(u.host)) return { kind: 'platform', platform: p.name };
-  }
-  return { kind: 'unknown' };
-}
-
-function streamDownload(url, destPath, { maxBytes = 500 * 1024 * 1024, redirects = 3 } = {}) {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const cleanup = () => { try { fs.unlinkSync(destPath); } catch { /* file already gone */ } };
-    const fail = (err) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      reject(err);
-    };
-    const succeed = (val) => {
-      if (settled) return;
-      settled = true;
-      resolve(val);
-    };
-
-    const get = (currentUrl, hopsLeft) => {
-      const lib = currentUrl.startsWith('https:') ? https : http;
-      const request = lib.get(currentUrl, (res) => {
-        // Follow redirects
-        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hopsLeft > 0) {
-          res.resume();
-          const next = new URL(res.headers.location, currentUrl).toString();
-          return get(next, hopsLeft - 1);
-        }
-        if (res.statusCode !== 200) {
-          res.resume();
-          return fail(new Error(`Source returned HTTP ${res.statusCode}`));
-        }
-        const ct = (res.headers['content-type'] || '').toLowerCase();
-        if (ct && !ct.startsWith('video/') && !ct.startsWith('application/octet-stream')) {
-          res.resume();
-          return fail(new Error(`Source is not a video (content-type: ${ct})`));
-        }
-        const cl = parseInt(res.headers['content-length'] || '0', 10);
-        if (cl && cl > maxBytes) {
-          res.resume();
-          return fail(new Error(`File exceeds ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
-        }
-        let received = 0;
-        const file = fs.createWriteStream(destPath);
-        res.on('data', (chunk) => {
-          received += chunk.length;
-          if (received > maxBytes) {
-            res.destroy();
-            file.destroy();
-            return fail(new Error(`Stream exceeded ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
-          }
-        });
-        res.on('error', fail);
-        res.pipe(file);
-        file.on('finish', () => file.close(() => succeed({ bytes: received })));
-        file.on('error', fail);
-      });
-      request.on('error', fail);
-      request.setTimeout(45_000, () => {
-        // setTimeout's callback fires BEFORE 'error' — make sure we both kill
-        // the request and clean up any partial file the response may have written.
-        request.destroy(new Error('Download timed out'));
-      });
-    };
-    get(url, redirects);
-  });
-}
+// classifyUrl + streamDownload are imported from utils/downloadUtils (above).
+// The yt-dlp helpers below stay local: ingest shells out to the system `yt-dlp`
+// binary directly, which is a deliberately different strategy from
+// downloadUtils' optional yt-dlp-wrap path.
 
 function ytDlpAvailable() {
   return new Promise((resolve) => {
@@ -157,6 +74,16 @@ async function ingestUrlHandler(req, res) {
     const classified = classifyUrl(url);
     if (classified.kind === 'invalid') {
       return res.status(400).json({ success: false, error: 'Invalid URL' });
+    }
+
+    // SSRF guard on the user-supplied entry URL (covers both the direct-download
+    // and yt-dlp paths). streamDownload additionally re-validates each redirect
+    // hop; yt-dlp's internal redirects are outside our control, so guarding the
+    // entry URL is the meaningful check for the platform path.
+    try {
+      await urlGuard.assertPublicUrl(url);
+    } catch (e) {
+      return res.status(400).json({ success: false, error: e.message || 'Blocked URL' });
     }
 
     const userId = req.user?._id || req.user?.id;
