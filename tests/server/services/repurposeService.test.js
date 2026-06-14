@@ -5,6 +5,7 @@
 const svc = require('../../../server/services/repurposeService');
 const liveTrendService = require('../../../server/services/liveTrendService');
 const aiRouter = require('../../../server/utils/aiRouter');
+const personalizationService = require('../../../server/services/personalizationService');
 
 describe('repurposeService.deterministicCopy (niche-aware)', () => {
   it('returns a complete copy object for any platform/niche', () => {
@@ -89,6 +90,28 @@ describe('repurposeService live-trend wiring (generatePlatformCopy)', () => {
     });
     expect(Array.isArray(copy.tiktok.hashtags)).toBe(true);
     expect(copy.tiktok.hashtags.length).toBeGreaterThan(0);
+  });
+});
+
+describe('repurposeService personalization wiring (generatePlatformCopy)', () => {
+  beforeEach(() => {
+    jest.spyOn(liveTrendService, 'getLatestTrends').mockResolvedValue({ source: 'unavailable', hashtags: [], topics: [] });
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  it('passes the personalized systemPrompt to the AI call when a userId is present', async () => {
+    jest.spyOn(personalizationService, 'buildPersonalizedSystemPrompt').mockResolvedValue('SYS-PERSONALIZED');
+    const aiSpy = jest.spyOn(aiRouter, 'aiCallJsonValidated').mockResolvedValue(null);
+    await svc.generatePlatformCopy({ baseTitle: 'x', platforms: ['tiktok'], tier: 'pro', niche: 'finance', userId: 'u1' });
+    expect(aiSpy).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ systemPrompt: 'SYS-PERSONALIZED' }));
+  });
+
+  it('maps a per-request creativity knob to sampling temperature', async () => {
+    jest.spyOn(personalizationService, 'buildPersonalizedSystemPrompt').mockResolvedValue('SYS');
+    const aiSpy = jest.spyOn(aiRouter, 'aiCallJsonValidated').mockResolvedValue(null);
+    await svc.generatePlatformCopy({ baseTitle: 'x', platforms: ['tiktok'], tier: 'pro', niche: 'finance', userId: 'u1', personalization: { creativity: 0.2 } });
+    // 0.2 clamps up to the 0.4 floor
+    expect(aiSpy).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ temperature: 0.4 }));
   });
 });
 

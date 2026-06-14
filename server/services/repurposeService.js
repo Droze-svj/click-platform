@@ -38,6 +38,9 @@ const { getKnowledgeSlice } = require('./marketingKnowledge');
 // gated, and HONESTLY returns source:'unavailable' rather than fabricating).
 // Used best-effort to make the copy ride what's trending right now.
 const liveTrendService = require('./liveTrendService');
+// Per-creator personalization (learned style + voice + brand) folded into the
+// copy's SYSTEM prompt so output is unique to each creator and improves over time.
+const personalizationService = require('./personalizationService');
 
 // Default platform per aspect (used when the caller passes bare ratio strings).
 // The platform drives the per-platform copy tone, not the geometry.
@@ -213,7 +216,7 @@ async function getLiveTrendContext({ platform, niche, tier, timeoutMs = 7000 }) 
  * @param {string} [opts.niche]       creator niche — grounds copy in the playbook
  * @returns {Promise<Object<string, {hook,title,description,hashtags}>>}
  */
-async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, niche }) {
+async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, niche, userId, personalization }) {
   const distinct = [...new Set(platforms)];
   const fallback = {};
   for (const p of distinct) fallback[p] = deterministicCopy(p, baseTitle, niche);
@@ -260,6 +263,23 @@ async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, ni
     `"title": string, "description": string (1-2 sentences), ` +
     `"hashtags": string[] (follow that platform's hashtag rule, each starting with #) }.`;
 
+  // Per-creator personalization: the SYSTEM prompt carries the creator's learned
+  // style, what's worked for them, their saved voice (tone/vocab/banned) and brand
+  // — so two creators get distinctly different copy from the same clip. Best-effort:
+  // never blocks copy gen (cold-start / no userId → undefined → base behaviour).
+  let systemPrompt;
+  try {
+    // 'caption-writer' persona — aligned with producing structured copy. (The
+    // 'creative-director' persona asks for 3-5 free-form options, which fights
+    // this task's "return ONLY a JSON object keyed by platform" instruction.)
+    systemPrompt = await personalizationService.buildPersonalizedSystemPrompt({
+      userId, niche, platform: distinct[0], role: 'caption-writer', stage: 'script', override: personalization,
+    });
+  } catch (_) { systemPrompt = undefined; }
+  // Per-request creativity (0..1) → sampling temperature (clamped sane range).
+  const creativity = personalization && typeof personalization.creativity === 'number' ? personalization.creativity : null;
+  const temperature = creativity != null ? Math.max(0.4, Math.min(1.0, creativity)) : 0.8;
+
   let raw;
   try {
     raw = await aiRouter.aiCallJsonValidated(prompt, {
@@ -267,7 +287,8 @@ async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, ni
       taskKind: 'creative',
       taskType: 'repurpose-copy',
       maxTokens,
-      temperature: 0.8,
+      temperature,
+      systemPrompt,
     });
   } catch (e) {
     logger.warn('[repurpose] copy generation threw; using deterministic copy', { error: e.message });
@@ -328,7 +349,7 @@ async function resolveSource(videoUrl) {
  *
  * @returns {Promise<{ variants: Array, copyByPlatform: object, clampedFrom?: number }>}
  */
-async function planRepurpose({ baseTree, targets, tier, transcript, niche }) {
+async function planRepurpose({ baseTree, targets, tier, transcript, niche, userId, personalization }) {
   const requested = (Array.isArray(targets) && targets.length ? targets : SUPPORTED_RATIOS)
     .map(normaliseTarget)
     .filter((t) => SUPPORTED_RATIOS.includes(t.ratio));
@@ -353,6 +374,8 @@ async function planRepurpose({ baseTree, targets, tier, transcript, niche }) {
     platforms: chosen.map((t) => t.platform),
     tier,
     niche,
+    userId,
+    personalization,
   });
 
   const variants = chosen.map((t) => {
@@ -439,7 +462,7 @@ async function runVariants({ sourcePath, baseTree, variants, tier, userId }) {
  * @returns {Promise<{ok:true, variants:Array, clampedFrom?:number}
  *                  | {ok:false, status:number, error:string}>}
  */
-async function orchestrate({ tree, targets, tier, niche, transcript, userId }) {
+async function orchestrate({ tree, targets, tier, niche, transcript, userId, personalization }) {
   let sourcePath;
   try {
     sourcePath = await resolveSource(tree.videoUrl);
@@ -449,7 +472,7 @@ async function orchestrate({ tree, targets, tier, niche, transcript, userId }) {
 
   let plan;
   try {
-    plan = await planRepurpose({ baseTree: tree, targets, tier, niche, transcript });
+    plan = await planRepurpose({ baseTree: tree, targets, tier, niche, transcript, userId, personalization });
   } catch (e) {
     logger.error('[repurpose] planning failed', { error: e.message });
     return { ok: false, status: 500, error: 'Could not plan repurpose job' };

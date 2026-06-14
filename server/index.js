@@ -2215,6 +2215,10 @@ app.use('/api/support', require('./routes/support-enhanced'));
 
 // Pro mode routes
 app.use('/api/pro-mode', require('./routes/pro-mode'));
+// Per-creator personalization: the learning write-loop (record choices) + the
+// AI voice/brand/defaults controls. Powers personalizationService across every
+// AI surface (repurpose copy, generation, the autonomous pipeline).
+app.use('/api/me', require('./routes/me-personalization'));
 
 // Status page (public)
 

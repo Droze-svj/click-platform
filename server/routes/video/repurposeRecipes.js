@@ -145,6 +145,13 @@ router.post(
     // Count the remix (best-effort) — popularity + attribution.
     recipeService.incrementRemix(doc._id);
 
+    // Learning loop: applying a recipe is a niche choice — train the profile.
+    try {
+      require('../../services/personalizationService')
+        .recordChoices(userId, [{ facet: 'niches', key: niche || doc.recipe?.niche }])
+        .catch(() => {});
+    } catch (_) { /* best-effort */ }
+
     return sendSuccess(res, {
       status: 'queued',
       tier,

@@ -507,7 +507,7 @@ function buildStyleProfileBlock(profile) {
  * output adapts to their voice over time instead of starting from
  * scratch every time.
  */
-function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage = 'script', language = 'en', extra = '', styleProfile = null, topPerformers = null } = {}) {
+function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage = 'script', language = 'en', extra = '', styleProfile = null, topPerformers = null, voice = null } = {}) {
   const slice = getKnowledgeSlice({ niche, platform, stage, language });
   const np = slice.nichePlaybook;
   const pp = slice.platformPlaybook;
@@ -561,7 +561,11 @@ function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage =
     '',
     `Niche: ${slice.niche.toUpperCase()}. Platform: ${slice.platform.toUpperCase()}. Stage: ${stage}. Language: ${lp.name.toUpperCase()}.`,
     '',
-    getClickPersonalityRules(styleProfile?.userId || niche),
+    // `voice` (when provided) carries the creator's saved tone/vocab/banned
+    // overrides AND their userId for the deterministic archetype seed; it takes
+    // precedence over the plain userId/niche seed. Backward-compatible: callers
+    // that don't pass `voice` get the exact previous behaviour.
+    getClickPersonalityRules(voice || styleProfile?.userId || niche),
     '',
     '── Language & locale ──',
     `Output language: ${lp.name}. Write all user-facing copy (script body, captions, CTAs, hashtags) in ${lp.name}.`,

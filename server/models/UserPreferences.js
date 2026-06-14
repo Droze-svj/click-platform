@@ -173,7 +173,12 @@ const userPreferencesSchema = new mongoose.Schema({
     captionFontScale: { type: Number, default: 1.0 },
     captionVerticalOffset: { type: Number, default: 0 },
     aestheticColorGrade: { type: String, default: 'vibrant' },
-    aestheticTransition: { type: String, default: 'fade' }
+    aestheticTransition: { type: String, default: 'fade' },
+    // Creator voice controls — woven into every AI generation via
+    // personalizationService → getClickPersonalityRules (signature vocab) and
+    // the banned-clichés list. Empty by default (no effect until the creator sets them).
+    brandVocab: { type: [String], default: [] },
+    bannedWords: { type: [String], default: [] }
   },
   updatedAt: {
     type: Date,

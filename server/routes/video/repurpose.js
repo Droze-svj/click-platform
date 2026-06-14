@@ -32,6 +32,16 @@ const router = express.Router();
 
 const MAX_DURATION_SEC = 60 * 30; // mirror render.js per-render cap
 
+// Per-request personalization override: a short tone string + a 0..1 creativity
+// knob. Bounded at the boundary so arbitrary bodies can't reach the prompt/router.
+function sanitizePersonalization(p) {
+  if (!p || typeof p !== 'object') return undefined;
+  const out = {};
+  if (typeof p.tone === 'string' && p.tone.trim()) out.tone = p.tone.trim().slice(0, 120);
+  if (typeof p.creativity === 'number' && Number.isFinite(p.creativity)) out.creativity = Math.max(0, Math.min(1, p.creativity));
+  return Object.keys(out).length ? out : undefined;
+}
+
 router.post(
   '/repurpose',
   auth,
@@ -65,6 +75,9 @@ router.post(
     const niche = (typeof body.niche === 'string' && body.niche.trim())
       || req.user?.niche || req.user?.social_links?.niche || undefined;
 
+    // Per-request personalization overrides (optional) — whitelisted at the boundary.
+    const personalization = sanitizePersonalization(body.personalization);
+
     // ── Resolve source (SSRF-guarded) + plan + fire renders via the shared
     //    orchestrator (same path the recipe "apply"/remix route uses). ──
     const result = await repurposeService.orchestrate({
@@ -74,6 +87,7 @@ router.post(
       niche,
       transcript: typeof body.transcript === 'string' ? body.transcript : undefined,
       userId,
+      personalization,
     });
     if (!result.ok) return sendError(res, result.error, result.status);
 

@@ -401,6 +401,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
                       <a
                         href={variantFileUrl(v.jobId)}
                         download={`click-${v.platform}-${v.ratio.replace(':', 'x')}.mp4`}
+                        onClick={() => { apiPost('/me/personalization/record', { choices: [{ facet: 'platforms', key: v.platform }] }).catch(() => {}) }}
                         className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-[11px] transition-colors"
                       >
                         <Download className="w-4 h-4" /> Download

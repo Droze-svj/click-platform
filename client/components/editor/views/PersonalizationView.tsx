@@ -1,0 +1,159 @@
+'use client'
+
+import React, { useState, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
+import { Fingerprint, Save, Loader2, Sparkles } from 'lucide-react'
+import { apiGet, apiPut } from '../../../lib/api'
+
+interface AiPreferences {
+  voice: { tone: string; hookStyle: string; pacing: string; vocab: string[]; banned: string[] }
+  brand: { primaryColor: string; accentColor: string; titleFont: string; bodyFont: string; colorGrade: string }
+  defaults: { niche: string; platformFocus: string[] }
+}
+
+const EMPTY: AiPreferences = {
+  voice: { tone: '', hookStyle: '', pacing: 'medium', vocab: [], banned: [] },
+  brand: { primaryColor: '', accentColor: '', titleFont: '', bodyFont: '', colorGrade: '' },
+  defaults: { niche: '', platformFocus: [] },
+}
+
+const toList = (s: string) => s.split(/[,\n]/).map((x) => x.trim()).filter(Boolean)
+
+const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'error' | 'info') => void }> = ({ showToast }) => {
+  const [prefs, setPrefs] = useState<AiPreferences>(EMPTY)
+  const [vocabText, setVocabText] = useState('')
+  const [bannedText, setBannedText] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const toast = useCallback((m: string, t: 'success' | 'error' | 'info' = 'info') => showToast?.(m, t), [showToast])
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiGet<any>('/me/ai-preferences', undefined, false)
+        const d = (res?.data ?? res) as AiPreferences
+        if (d?.voice) {
+          setPrefs({ voice: { ...EMPTY.voice, ...d.voice }, brand: { ...EMPTY.brand, ...d.brand }, defaults: { ...EMPTY.defaults, ...d.defaults } })
+          setVocabText((d.voice.vocab || []).join(', '))
+          setBannedText((d.voice.banned || []).join(', '))
+        }
+      } catch { /* defaults */ } finally { setLoading(false) }
+    })()
+  }, [])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      await apiPut('/me/ai-preferences', {
+        voice: { tone: prefs.voice.tone, hookStyle: prefs.voice.hookStyle, pacing: prefs.voice.pacing, vocab: toList(vocabText), banned: toList(bannedText) },
+        brand: { primaryColor: prefs.brand.primaryColor, accentColor: prefs.brand.accentColor, colorGrade: prefs.brand.colorGrade, titleFont: prefs.brand.titleFont, bodyFont: prefs.brand.bodyFont },
+        defaults: { niche: prefs.defaults.niche },
+      })
+      toast('AI personalization saved — every generation now uses it.', 'success')
+    } catch (e: any) {
+      toast(e?.response?.data?.error || 'Could not save', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const setVoice = (k: keyof AiPreferences['voice'], v: any) => setPrefs((p) => ({ ...p, voice: { ...p.voice, [k]: v } }))
+  const setBrand = (k: keyof AiPreferences['brand'], v: any) => setPrefs((p) => ({ ...p, brand: { ...p.brand, [k]: v } }))
+  const setDefault = (k: keyof AiPreferences['defaults'], v: any) => setPrefs((p) => ({ ...p, defaults: { ...p.defaults, [k]: v } }))
+
+  const label = 'text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block'
+  const input = 'w-full rounded-xl bg-black/30 border border-white/10 p-2.5 text-sm text-[var(--text-main)] outline-none focus:border-fuchsia-500'
+
+  return (
+    <div className="flex flex-col h-full bg-slate-950/40 backdrop-blur-xl p-8 overflow-y-auto">
+      <div className="max-w-2xl mx-auto w-full space-y-7">
+        <div className="flex flex-col gap-3">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400 w-fit">
+            <Fingerprint className="w-4 h-4" /> AI Personalization
+          </div>
+          <h1 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">Teach the AI your style</h1>
+          <p className="text-slate-400 text-base">
+            These shape <span className="text-fuchsia-400">every</span> AI generation — repurpose copy, captions, images, the autonomous pipeline.
+            Click also learns from what you actually use, so it keeps getting more “you” over time.
+          </p>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center gap-2 text-slate-500"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+        ) : (
+          <>
+            {/* Voice */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
+              <div className="text-sm font-black text-[var(--text-main)] uppercase tracking-tight flex items-center gap-2"><Sparkles className="w-4 h-4 text-fuchsia-400" /> Voice</div>
+              <div>
+                <span className={label}>Tone</span>
+                <input className={input} value={prefs.voice.tone} onChange={(e) => setVoice('tone', e.target.value)} placeholder="e.g. blunt operator, calm professorial, hype" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className={label}>Go-to hook style</span>
+                  <input className={input} value={prefs.voice.hookStyle} onChange={(e) => setVoice('hookStyle', e.target.value)} placeholder="curiosity-gap" />
+                </div>
+                <div>
+                  <span className={label}>Pacing / intensity</span>
+                  <select className={input} value={prefs.voice.pacing} onChange={(e) => setVoice('pacing', e.target.value)}>
+                    <option value="gentle">Gentle</option>
+                    <option value="medium">Medium</option>
+                    <option value="aggressive">Aggressive</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <span className={label}>Signature words (comma-separated) — woven into copy</span>
+                <textarea className={`${input} h-16 resize-none`} value={vocabText} onChange={(e) => setVocabText(e.target.value)} placeholder="cheat code, unfair advantage, receipts" />
+              </div>
+              <div>
+                <span className={label}>Banned words (never used)</span>
+                <textarea className={`${input} h-16 resize-none`} value={bannedText} onChange={(e) => setBannedText(e.target.value)} placeholder="delve, game-changer, unlock" />
+              </div>
+            </div>
+
+            {/* Brand */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
+              <div className="text-sm font-black text-[var(--text-main)] uppercase tracking-tight">Brand</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className={label}>Primary color</span>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={prefs.brand.primaryColor || '#7C3AED'} onChange={(e) => setBrand('primaryColor', e.target.value)} className="h-10 w-12 rounded-lg bg-transparent border border-white/10" />
+                    <input className={input} value={prefs.brand.primaryColor} onChange={(e) => setBrand('primaryColor', e.target.value)} placeholder="#7C3AED" />
+                  </div>
+                </div>
+                <div>
+                  <span className={label}>Accent color</span>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={prefs.brand.accentColor || '#00E0FF'} onChange={(e) => setBrand('accentColor', e.target.value)} className="h-10 w-12 rounded-lg bg-transparent border border-white/10" />
+                    <input className={input} value={prefs.brand.accentColor} onChange={(e) => setBrand('accentColor', e.target.value)} placeholder="#00E0FF" />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <span className={label}>Default color grade (used in generated images)</span>
+                <input className={input} value={prefs.brand.colorGrade} onChange={(e) => setBrand('colorGrade', e.target.value)} placeholder="cinematic / vibrant / muted" />
+              </div>
+            </div>
+
+            {/* Defaults */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+              <span className={label}>Primary niche</span>
+              <input className={input} value={prefs.defaults.niche} onChange={(e) => setDefault('niche', e.target.value)} placeholder="finance / fitness / tech…" />
+            </div>
+
+            <motion.button whileTap={{ scale: saving ? 1 : 0.97 }} disabled={saving} onClick={save}
+              className={`h-12 px-6 rounded-2xl inline-flex items-center gap-2 text-white font-black uppercase tracking-widest text-sm ${saving ? 'bg-slate-700 opacity-60' : 'bg-fuchsia-600 hover:bg-fuchsia-500'}`}>
+              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : <><Save className="w-4 h-4" /> Save personalization</>}
+            </motion.button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default PersonalizationView

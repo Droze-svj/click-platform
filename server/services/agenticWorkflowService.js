@@ -353,7 +353,11 @@ async function executeStep(stepId, job, isRetry = false) {
     case 'metadata': {
       logger.info('AgenticStep: Metadata', { videoId });
       const { generateCaptions: genMeta } = require('./aiService');
-      const caption = await genMeta(job.transcript || 'Viral video content', 'general');
+      // Personalized + niche-aware: pass the creator (job.userId) and resolved
+      // niche so the AUTONOMOUS pipeline writes in their learned voice
+      // (topPerformers + adaptive goal), not a generic 'general' prompt.
+      const metaNiche = job.niche || job.metadata?.niche || 'business';
+      const caption = await genMeta(job.transcript || 'Viral video content', metaNiche, 'tiktok', 'en', job.userId);
       return {
         title: caption.substring(0, 40) + '...',
         description: caption,

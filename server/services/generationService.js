@@ -17,10 +17,18 @@
 const aiVoiceover = require('./aiVoiceoverService');
 const aiFoley = require('./aiFoleyService');
 const imageGen = require('./imageGenerationService');
+const personalizationService = require('./personalizationService');
 const logger = require('../utils/logger');
 
 const voiceConfigured = () => !!process.env.OPENAI_API_KEY || !!process.env.ELEVENLABS_API_KEY;
 const sfxConfigured = () => !!process.env.ELEVENLABS_API_KEY;
+
+// Map the creator's saved voice tone → an OpenAI stock voice, used only as a
+// DEFAULT when the request doesn't name an explicit voice/voiceId.
+const TONE_VOICE_DEFAULTS = {
+  hype: 'nova', calm: 'shimmer', professional: 'onyx', friendly: 'alloy',
+  authoritative: 'echo', warm: 'fable', bold: 'onyx', energetic: 'nova',
+};
 
 // Friendly SFX style → the foley engine's transition type.
 const SFX_STYLE_MAP = { whoosh: 'zoom_in', riser: 'scale_up', swipe: 'slide', impact: 'cut' };
@@ -43,8 +51,18 @@ async function generateVoiceover({ userId, text, voice, voiceId, speed }) {
   if (!voiceConfigured()) {
     return { ok: false, unavailable: true, error: 'Voiceover needs OPENAI_API_KEY or ELEVENLABS_API_KEY configured' };
   }
+  // Personalize the default voice from the creator's saved tone (only when the
+  // request didn't specify a voice). Best-effort.
+  let resolvedVoice = voice;
+  if (!voice && !voiceId) {
+    try {
+      const persona = await personalizationService.getPersona(userId, {});
+      const toneKey = String(persona?.voice?.tone || '').toLowerCase().split(/\s+/)[0];
+      if (TONE_VOICE_DEFAULTS[toneKey]) resolvedVoice = TONE_VOICE_DEFAULTS[toneKey];
+    } catch (_) { /* best-effort */ }
+  }
   try {
-    const r = await aiVoiceover.generateVoiceover(userId, text.slice(0, 3000), { voice, voiceId, speed });
+    const r = await aiVoiceover.generateVoiceover(userId, text.slice(0, 3000), { voice: resolvedVoice, voiceId, speed });
     if (r && r.success && r.url) {
       return { ok: true, asset: { type: 'voiceover', url: r.url, title: `Voiceover (${r.provider || 'tts'})`, prompt: text.slice(0, 120) } };
     }
@@ -71,8 +89,21 @@ async function generateSfx({ style, durationSeconds, videoId }) {
   }
 }
 
-async function generateImage({ prompt, aspectRatio }) {
-  const r = await imageGen.generateImage(prompt, { aspectRatio });
+async function generateImage({ userId, prompt, aspectRatio }) {
+  // Personalize: weave the creator's brand palette + learned colour grade into
+  // the prompt so generated images match their look. Best-effort, façade-level
+  // (keeps imageGenerationService provider-agnostic).
+  let finalPrompt = prompt;
+  try {
+    const persona = await personalizationService.getPersona(userId, {});
+    const bits = [];
+    if (persona?.brand?.colors?.primary) bits.push(`brand color ${persona.brand.colors.primary}`);
+    if (persona?.brand?.colors?.accent) bits.push(`accent ${persona.brand.colors.accent}`);
+    if (persona?.brand?.colorGrade) bits.push(`${persona.brand.colorGrade} color grade`);
+    if (bits.length && prompt) finalPrompt = `${prompt}. Style: ${bits.join(', ')}.`;
+  } catch (_) { /* best-effort personalization */ }
+
+  const r = await imageGen.generateImage(finalPrompt, { aspectRatio });
   if (r.ok) {
     return { ok: true, asset: { type: 'image', url: r.url, title: `Image: ${String(prompt || '').slice(0, 40)}`, prompt: String(prompt || '').slice(0, 120) } };
   }
