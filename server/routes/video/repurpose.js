@@ -24,10 +24,8 @@ const asyncHandler = require('../../middleware/asyncHandler');
 const { renderLimiter } = require('../../middleware/enhancedRateLimiter');
 const { requireFeature, checkExportQuota } = require('../../middleware/tierGate');
 const { sendSuccess, sendError } = require('../../utils/response');
-const logger = require('../../utils/logger');
 const entitlements = require('../../config/entitlements');
 const enforcement = require('../../services/entitlementEnforcement');
-const usageService = require('../../services/usageService');
 const repurposeService = require('../../services/repurposeService');
 
 const router = express.Router();
@@ -67,64 +65,24 @@ router.post(
     const niche = (typeof body.niche === 'string' && body.niche.trim())
       || req.user?.niche || req.user?.social_links?.niche || undefined;
 
-    // ── Resolve + guard the source up front (SSRF guard for remote URLs, exists
-    //    check for local). A bad source fails the request synchronously. ──
-    let sourcePath;
-    try {
-      sourcePath = await repurposeService.resolveSource(tree.videoUrl);
-    } catch (e) {
-      return sendError(res, e.message || 'Invalid source video', e.statusCode || 400);
-    }
-
-    // ── Plan variants (clamp count to tier, mint jobIds, generate copy) ──
-    let plan;
-    try {
-      plan = await repurposeService.planRepurpose({
-        baseTree: tree,
-        targets,
-        tier,
-        niche,
-        transcript: typeof body.transcript === 'string' ? body.transcript : undefined,
-      });
-    } catch (e) {
-      logger.error('[repurpose] planning failed', { error: e.message });
-      return sendError(res, 'Could not plan repurpose job', 500);
-    }
-
-    if (!plan.variants.length) {
-      return sendError(res, 'No valid target aspect ratios. Allowed: ' + repurposeService.SUPPORTED_RATIOS.join(', '), 400);
-    }
-
-    // Count the whole repurpose as ONE metered export (best-effort).
-    usageService.incrementUsage(userId, 'exports').catch((e) => {
-      logger.warn('[repurpose] export usage increment failed', { userId, error: e.message });
+    // ── Resolve source (SSRF-guarded) + plan + fire renders via the shared
+    //    orchestrator (same path the recipe "apply"/remix route uses). ──
+    const result = await repurposeService.orchestrate({
+      tree,
+      targets,
+      tier,
+      niche,
+      transcript: typeof body.transcript === 'string' ? body.transcript : undefined,
+      userId,
     });
-
-    // ── Fire the renders in the background; respond immediately. ──
-    repurposeService
-      .runVariants({ sourcePath, baseTree: tree, variants: plan.variants, tier, userId })
-      .catch((e) => logger.error('[repurpose] runVariants crashed', { error: e.message }));
-
-    const variants = plan.variants.map((v) => ({
-      jobId: v.jobId,
-      ratio: v.ratio,
-      platform: v.platform,
-      platformLabel: v.platformLabel,
-      status: 'queued',
-      hook: v.hook,
-      title: v.title,
-      description: v.description,
-      hashtags: v.hashtags,
-      statusUrl: `/api/video/render/${v.jobId}/status`,
-      downloadUrl: `/api/video/render/${v.jobId}/download`,
-    }));
+    if (!result.ok) return sendError(res, result.error, result.status);
 
     return sendSuccess(res, {
       status: 'queued',
       tier,
       watermarked: enforcement.mustWatermark(tier),
-      variantsRequested: plan.clampedFrom,        // present only when clamped
-      variants,
+      variantsRequested: result.clampedFrom,        // present only when clamped
+      variants: result.variants,
     });
   })
 );

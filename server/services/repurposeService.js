@@ -28,6 +28,7 @@ const aiRouter = require('../utils/aiRouter');
 const aiProfiles = require('../config/aiProfiles');
 const enforcement = require('./entitlementEnforcement');
 const urlGuard = require('../utils/urlGuard');
+const usageService = require('./usageService');
 const logger = require('../utils/logger');
 // The canonical niche/platform playbook (18 niches × 7 platforms, hook
 // frameworks, niche CTAs/keywords). Repurpose copy is grounded in it so every
@@ -426,9 +427,69 @@ async function runVariants({ sourcePath, baseTree, variants, tier, userId }) {
   fs.promises.rm(tmpRoot, { recursive: true, force: true }).catch(() => {});
 }
 
+/**
+ * Run a complete repurpose: resolve + SSRF-guard the source, plan the variants
+ * (tier clamp + per-platform copy), meter the export, and fire the background
+ * renders. Shared by the /repurpose route and the recipe "apply" (remix) route
+ * so both go through the exact same guards and pipeline.
+ *
+ * Field validation of `tree` (videoUrl/duration/targets) is the caller's job;
+ * this performs the SOURCE guard and orchestration. Never throws.
+ *
+ * @returns {Promise<{ok:true, variants:Array, clampedFrom?:number}
+ *                  | {ok:false, status:number, error:string}>}
+ */
+async function orchestrate({ tree, targets, tier, niche, transcript, userId }) {
+  let sourcePath;
+  try {
+    sourcePath = await resolveSource(tree.videoUrl);
+  } catch (e) {
+    return { ok: false, status: e.statusCode || 400, error: e.message || 'Invalid source video' };
+  }
+
+  let plan;
+  try {
+    plan = await planRepurpose({ baseTree: tree, targets, tier, niche, transcript });
+  } catch (e) {
+    logger.error('[repurpose] planning failed', { error: e.message });
+    return { ok: false, status: 500, error: 'Could not plan repurpose job' };
+  }
+  if (!plan.variants.length) {
+    return { ok: false, status: 400, error: 'No valid target aspect ratios. Allowed: ' + SUPPORTED_RATIOS.join(', ') };
+  }
+
+  // Count the whole repurpose as ONE metered export (best-effort).
+  if (userId) {
+    usageService.incrementUsage(userId, 'exports').catch((e) => {
+      logger.warn('[repurpose] export usage increment failed', { userId, error: e.message });
+    });
+  }
+
+  // Fire the renders in the background; the caller responds immediately.
+  runVariants({ sourcePath, baseTree: tree, variants: plan.variants, tier, userId })
+    .catch((e) => logger.error('[repurpose] runVariants crashed', { error: e.message }));
+
+  const variants = plan.variants.map((v) => ({
+    jobId: v.jobId,
+    ratio: v.ratio,
+    platform: v.platform,
+    platformLabel: v.platformLabel,
+    status: 'queued',
+    hook: v.hook,
+    title: v.title,
+    description: v.description,
+    hashtags: v.hashtags,
+    statusUrl: `/api/video/render/${v.jobId}/status`,
+    downloadUrl: `/api/video/render/${v.jobId}/download`,
+  }));
+
+  return { ok: true, variants, clampedFrom: plan.clampedFrom };
+}
+
 module.exports = {
   planRepurpose,
   runVariants,
+  orchestrate,
   resolveSource,
   generatePlatformCopy,
   deterministicCopy,

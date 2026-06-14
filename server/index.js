@@ -1974,6 +1974,9 @@ app.use('/api/video', require('./routes/video/render'));
 // pipeline above, so its /render/:jobId/status + /download endpoints serve the
 // resulting variant jobIds. Mounted under /api/video alongside render.
 app.use('/api/video', require('./routes/video/repurpose'));
+// Repurpose Recipes: save/browse/remix shareable repurpose "formulas".
+// Mounted at the more specific path so it takes precedence over /repurpose.
+app.use('/api/video/repurpose/recipes', require('./routes/video/repurposeRecipes'));
 // Tools hub: silence-removal, filler removal, edit-by-text. Thin wrappers
 // around aiVideoEditingService.js so the Tools UI can hit single endpoints.
 app.use('/api/video/tools', require('./routes/video/tools'));

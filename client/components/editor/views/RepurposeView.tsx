@@ -14,6 +14,9 @@ import {
   Download,
   Copy,
   Play,
+  Bookmark,
+  Users,
+  Wand2,
 } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
 
@@ -50,6 +53,18 @@ interface Variant {
   status: VariantStatus
 }
 
+interface RecipeSummary {
+  id: string
+  name: string
+  description: string
+  niche: string
+  createdByName: string
+  isPublic: boolean
+  remixCount: number
+  formats: string[]
+  mine: boolean
+}
+
 interface RepurposeViewProps {
   videoUrl: string
   videoId?: string
@@ -75,10 +90,77 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
   const [isBusy, setIsBusy] = useState(false)
   const [variants, setVariants] = useState<Variant[]>([])
   const pollingRef = useRef(false)
+  const [recipes, setRecipes] = useState<RecipeSummary[]>([])
+  const [recipesOpen, setRecipesOpen] = useState(false)
+  const [savingRecipe, setSavingRecipe] = useState(false)
 
   const toast = useCallback((m: string, t: 'success' | 'error' | 'info' = 'info') => {
     showToast?.(m, t)
   }, [showToast])
+
+  // Feed an /apply or /repurpose variants payload into the polling UI.
+  const ingestVariants = useCallback((raw: any[]) => {
+    const got: Variant[] = (raw || []).map((v: any) => ({ ...v, status: 'processing' as VariantStatus }))
+    if (!got.length) { toast('No variants were produced.', 'error'); setIsBusy(false); return }
+    setVariants(got)
+    setIsBusy(true)
+  }, [toast])
+
+  const loadRecipes = useCallback(async () => {
+    try {
+      const res = await apiGet<any>('/video/repurpose/recipes?scope=all', undefined, false)
+      const data = res?.data ?? res
+      setRecipes(Array.isArray(data?.recipes) ? data.recipes : [])
+    } catch {
+      toast('Could not load recipes.', 'error')
+    }
+  }, [toast])
+
+  const toggleRecipes = () => {
+    const next = !recipesOpen
+    setRecipesOpen(next)
+    if (next) loadRecipes()
+  }
+
+  // Save the current format selection + look as a reusable, shareable recipe.
+  const saveRecipe = async () => {
+    if (selected.length === 0) { toast('Select at least one format to save a recipe.', 'error'); return }
+    const name = (projectName && projectName.trim()) || 'My repurpose recipe'
+    setSavingRecipe(true)
+    try {
+      const res = await apiPost<any>('/video/repurpose/recipes', {
+        name,
+        isPublic: true, // server downgrades to private if the tier can't publish
+        recipe: { targets: selected, videoFilters: props.videoFilters || {}, textOverlays: props.textOverlays || [] },
+      })
+      const data = res?.data ?? res
+      if (data?.publicGated) toast(`Recipe saved privately — publishing to the community needs the ${data.requiredTier || 'Pro'} plan.`, 'info')
+      else toast('Recipe published to the community.', 'success')
+      if (recipesOpen) loadRecipes()
+    } catch (e: any) {
+      toast(e?.response?.data?.error || 'Could not save recipe', 'error')
+    } finally {
+      setSavingRecipe(false)
+    }
+  }
+
+  // Remix: apply someone's recipe to the current video.
+  const applyRecipe = async (r: RecipeSummary) => {
+    if (!videoUrl) { toast('Load a video first to remix a recipe.', 'error'); return }
+    setIsBusy(true)
+    setVariants([])
+    try {
+      const res = await apiPost<any>(`/video/repurpose/recipes/${r.id}/apply`, {
+        videoUrl, duration: props.videoDuration, title: projectName,
+      })
+      const data = res?.data ?? res
+      ingestVariants(data?.variants || [])
+      toast(`Remixing "${r.name}" by ${r.createdByName}…`, 'success')
+    } catch (e: any) {
+      toast(e?.response?.data?.error || 'Could not apply recipe', 'error')
+      setIsBusy(false)
+    }
+  }
 
   const toggle = (id: string) =>
     setSelected((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]))
@@ -227,6 +309,55 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
           >
             {isBusy ? (<><Loader2 className="w-5 h-5 animate-spin" /> Working…</>) : (<><Play className="w-5 h-5 fill-current" /> Repurpose</>)}
           </motion.button>
+        </div>
+
+        {/* Recipes: save the current setup, or remix a community recipe */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02]">
+          <div className="flex items-center justify-between p-4">
+            <button
+              onClick={toggleRecipes}
+              className="inline-flex items-center gap-2 text-[var(--text-main)] text-sm font-black uppercase tracking-tight hover:text-indigo-400 transition-colors"
+            >
+              <Users className="w-4 h-4" /> Community recipes
+              <span className="text-slate-500 text-[10px]">{recipesOpen ? '▲' : '▼'}</span>
+            </button>
+            <button
+              onClick={saveRecipe}
+              disabled={savingRecipe || selected.length === 0}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[var(--text-main)] text-[11px] font-black uppercase tracking-widest transition-colors disabled:opacity-50"
+            >
+              {savingRecipe ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bookmark className="w-4 h-4" />} Save as recipe
+            </button>
+          </div>
+          {recipesOpen && (
+            <div className="px-4 pb-4 space-y-3">
+              {recipes.length === 0 ? (
+                <p className="text-slate-500 text-xs">No recipes yet. Save one above to start the gallery.</p>
+              ) : (
+                recipes.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-[var(--text-main)] truncate">{r.name}</span>
+                        {r.mine && <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">Mine</span>}
+                        {!r.isPublic && <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Private</span>}
+                      </div>
+                      <p className="text-slate-500 text-[11px] mt-0.5">
+                        {r.formats.join(' · ')} · {r.niche} · by {r.createdByName} · {r.remixCount} remix{r.remixCount === 1 ? '' : 'es'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => applyRecipe(r)}
+                      disabled={isBusy || !videoUrl}
+                      className="shrink-0 inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest transition-colors disabled:opacity-50"
+                    >
+                      <Wand2 className="w-3.5 h-3.5" /> Remix
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {/* Variant results */}
