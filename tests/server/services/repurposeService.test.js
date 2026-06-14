@@ -3,6 +3,8 @@
 // deterministicCopy is provider-free, so these run with no AI/network.
 
 const svc = require('../../../server/services/repurposeService');
+const liveTrendService = require('../../../server/services/liveTrendService');
+const aiRouter = require('../../../server/utils/aiRouter');
 
 describe('repurposeService.deterministicCopy (niche-aware)', () => {
   it('returns a complete copy object for any platform/niche', () => {
@@ -46,6 +48,47 @@ describe('repurposeService.deterministicCopy (niche-aware)', () => {
     expect(fin).not.toBe(health);
     expect(fin).toContain('#finance');
     expect(health).toContain('#health');
+  });
+});
+
+describe('repurposeService live-trend wiring (generatePlatformCopy)', () => {
+  let aiSpy;
+  beforeEach(() => {
+    // Force the deterministic-fallback path so the test is offline + fast; the
+    // live-trend enrichment applies to that path too.
+    aiSpy = jest.spyOn(aiRouter, 'aiCallJsonValidated').mockResolvedValue(null);
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  it('appends the top verified trending hashtag to each platform', async () => {
+    jest.spyOn(liveTrendService, 'getLatestTrends').mockResolvedValue({
+      source: 'claude+web',
+      hashtags: [{ label: '#trendingnow' }, { label: '#second' }],
+      topics: [{ label: 'AI agents' }],
+    });
+    const copy = await svc.generatePlatformCopy({
+      baseTitle: 'My budget', platforms: ['tiktok', 'youtube'], tier: 'pro', niche: 'finance',
+    });
+    expect(copy.tiktok.hashtags).toContain('#trendingnow');
+    expect(copy.youtube.hashtags).toContain('#trendingnow');
+  });
+
+  it('degrades gracefully when trends are unavailable (no extra tag, copy intact)', async () => {
+    jest.spyOn(liveTrendService, 'getLatestTrends').mockResolvedValue({ source: 'unavailable', hashtags: [], topics: [] });
+    const copy = await svc.generatePlatformCopy({
+      baseTitle: 'My budget', platforms: ['tiktok'], tier: 'pro', niche: 'finance',
+    });
+    expect(copy.tiktok.hashtags).toContain('#finance'); // static playbook still applies
+    expect(copy.tiktok.hashtags).not.toContain('#trendingnow');
+  });
+
+  it('never throws when the trend source errors out', async () => {
+    jest.spyOn(liveTrendService, 'getLatestTrends').mockRejectedValue(new Error('web search down'));
+    const copy = await svc.generatePlatformCopy({
+      baseTitle: 'My budget', platforms: ['tiktok'], tier: 'pro', niche: 'finance',
+    });
+    expect(Array.isArray(copy.tiktok.hashtags)).toBe(true);
+    expect(copy.tiktok.hashtags.length).toBeGreaterThan(0);
   });
 });
 

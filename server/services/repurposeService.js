@@ -33,6 +33,10 @@ const logger = require('../utils/logger');
 // frameworks, niche CTAs/keywords). Repurpose copy is grounded in it so every
 // hook/hashtag is niche- and platform-native instead of generic.
 const { getKnowledgeSlice } = require('./marketingKnowledge');
+// Live, Claude-web-grounded trending sounds/hashtags/topics (cached 8h, tier-
+// gated, and HONESTLY returns source:'unavailable' rather than fabricating).
+// Used best-effort to make the copy ride what's trending right now.
+const liveTrendService = require('./liveTrendService');
 
 // Default platform per aspect (used when the caller passes bare ratio strings).
 // The platform drives the per-platform copy tone, not the geometry.
@@ -159,6 +163,43 @@ function platformGuidanceBlock(platform, niche) {
   ].filter(Boolean).join('\n');
 }
 
+/** Race a promise against a timeout; resolves to `null` if the timer wins. */
+function withTimeout(promise, ms) {
+  let t;
+  const timeout = new Promise((resolve) => { t = setTimeout(() => resolve(null), ms); });
+  return Promise.race([
+    Promise.resolve(promise).then((v) => { clearTimeout(t); return v; }, () => { clearTimeout(t); return null; }),
+    timeout,
+  ]);
+}
+
+/**
+ * Best-effort live trend context for a niche/platform. Never throws and never
+ * blocks the request for long — a slow/unavailable trend source just yields an
+ * empty context and the copy falls back to the static playbook. Returns the
+ * verified trending hashtags + topics (label strings), or empties.
+ *
+ * @returns {Promise<{ hashtags: string[], topics: string[], source: string }>}
+ */
+async function getLiveTrendContext({ platform, niche, tier, timeoutMs = 7000 }) {
+  const empty = { hashtags: [], topics: [], source: 'none' };
+  try {
+    const r = await withTimeout(
+      liveTrendService.getLatestTrends(platform || 'tiktok', { niche, tier }),
+      timeoutMs
+    );
+    if (!r || r.source === 'unavailable') return empty;
+    const labels = (arr) => (Array.isArray(arr) ? arr : []).map((x) => x && x.label).filter(Boolean);
+    const hashtags = labels(r.hashtags).slice(0, 5);
+    const topics = labels(r.topics).slice(0, 5);
+    if (!hashtags.length && !topics.length) return empty;
+    return { hashtags, topics, source: r.source || 'live' };
+  } catch (e) {
+    logger.warn('[repurpose] live trend fetch failed; proceeding without', { error: e.message });
+    return empty;
+  }
+}
+
 /**
  * Generate per-platform copy for all targets in a single AI call (with a
  * deterministic fallback). Never throws.
@@ -176,6 +217,25 @@ async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, ni
   const fallback = {};
   for (const p of distinct) fallback[p] = deterministicCopy(p, baseTitle, niche);
 
+  // Live trending context (best-effort; bellwether = first platform). Empty when
+  // unavailable / free-tier, in which case copy rests on the static playbook.
+  const trends = await getLiveTrendContext({ platform: distinct[0], niche, tier });
+
+  // Append the single strongest trending hashtag to each variant (deduped,
+  // capped) so even the deterministic fallback rides the moment when we have one.
+  const applyTrends = (copyMap) => {
+    const topTag = trends.hashtags[0];
+    if (!topTag) return copyMap;
+    const enriched = {};
+    for (const p of Object.keys(copyMap)) {
+      const c = copyMap[p];
+      const tags = Array.isArray(c.hashtags) ? c.hashtags.slice() : [];
+      if (!tags.some((t) => String(t).toLowerCase() === topTag.toLowerCase())) tags.push(topTag);
+      enriched[p] = { ...c, hashtags: tags.slice(0, 8) };
+    }
+    return enriched;
+  };
+
   const profile = (() => {
     try { return aiProfiles.aiProfileForTier(tier); } catch (_) { return null; }
   })();
@@ -184,10 +244,15 @@ async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, ni
   // Ground the prompt in the per-platform niche playbook so the AI uses real
   // hook frameworks, niche keywords, and platform hashtag rules.
   const guidance = distinct.map((p) => platformGuidanceBlock(p, niche)).filter(Boolean).join('\n\n');
+  const trendBlock = (trends.topics.length || trends.hashtags.length)
+    ? `\n\nCURRENTLY TRENDING right now (ride these where they fit naturally — do not force):` +
+      (trends.topics.length ? `\n- Topics: ${trends.topics.join('; ')}` : '') +
+      (trends.hashtags.length ? `\n- Hashtags: ${trends.hashtags.join(' ')}` : '')
+    : '';
   const ctx = transcript ? `\n\nTranscript excerpt:\n"""${String(transcript).slice(0, 1000)}"""` : '';
   const prompt =
     `You are an expert short-form social copywriter. Write platform-native copy for a video ` +
-    `titled "${baseTitle || 'Untitled'}"${niche ? ` in the "${niche}" niche` : ''}.${ctx}\n\n` +
+    `titled "${baseTitle || 'Untitled'}"${niche ? ` in the "${niche}" niche` : ''}.${ctx}${trendBlock}\n\n` +
     `Follow this per-platform playbook exactly — match each platform's voice, hook frameworks, and hashtag rule:\n${guidance}\n\n` +
     `Return ONLY a JSON object keyed by lowercase platform id (${distinct.join(', ')}). ` +
     `Each value: { "hook": string (<=12 words, scroll-stopping, built on one of the hook frameworks), ` +
@@ -205,9 +270,9 @@ async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, ni
     });
   } catch (e) {
     logger.warn('[repurpose] copy generation threw; using deterministic copy', { error: e.message });
-    return fallback;
+    return applyTrends(fallback);
   }
-  if (!raw || typeof raw !== 'object') return fallback;
+  if (!raw || typeof raw !== 'object') return applyTrends(fallback);
 
   // Merge AI output over the deterministic baseline so any missing/partial
   // platform still has complete copy.
@@ -224,7 +289,7 @@ async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, ni
         : base.hashtags,
     };
   }
-  return out;
+  return applyTrends(out);
 }
 
 /**
