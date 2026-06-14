@@ -51,6 +51,7 @@ interface Variant {
   description: string
   hashtags: string[]
   status: VariantStatus
+  previewUrl?: string   // object URL from the authed blob fetch (preview + download)
 }
 
 interface RecipeSummary {
@@ -80,16 +81,14 @@ interface RepurposeViewProps {
   showToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
 
-// Renders are served from the static uploads mount (auth is Bearer-only, so a
-// plain download link must use the public path, not the authed API route).
-const variantFileUrl = (jobId: string) => `/uploads/renders/${jobId}.mp4`
-
 const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
   const { videoUrl, videoId, projectName, showToast } = props
   const [selected, setSelected] = useState<string[]>(['9:16', '1:1', '16:9', '4:5'])
   const [isBusy, setIsBusy] = useState(false)
   const [variants, setVariants] = useState<Variant[]>([])
   const pollingRef = useRef(false)
+  // Object URLs we create from authed blob fetches — revoked on unmount.
+  const objectUrlsRef = useRef<string[]>([])
   const [recipes, setRecipes] = useState<RecipeSummary[]>([])
   const [recipesOpen, setRecipesOpen] = useState(false)
   const [savingRecipe, setSavingRecipe] = useState(false)
@@ -223,7 +222,18 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
               const r = await apiGet<any>(`/video/render/${v.jobId}/status`, undefined, false)
               const d = r?.data ?? r
               const s = d?.status
-              if (s === 'completed') return { ...v, status: 'completed' as VariantStatus }
+              if (s === 'completed') {
+                // Fetch the render through the AUTHED, ownership-checked endpoint
+                // (renders are no longer publicly served) and hold it as an
+                // object URL for preview + download.
+                let previewUrl: string | undefined
+                try {
+                  const blob = await apiGet<Blob>(`/video/render/${v.jobId}/download`, { responseType: 'blob' }, false)
+                  previewUrl = URL.createObjectURL(blob as any)
+                  objectUrlsRef.current.push(previewUrl)
+                } catch { /* leave preview unset; user can retry */ }
+                return { ...v, status: 'completed' as VariantStatus, previewUrl }
+              }
               if (s === 'failed') return { ...v, status: 'failed' as VariantStatus }
               return v
             } catch {
@@ -239,6 +249,9 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
 
     return () => clearInterval(id)
   }, [variants])
+
+  // Revoke all created object URLs when the panel unmounts.
+  useEffect(() => () => { objectUrlsRef.current.forEach((u) => { try { URL.revokeObjectURL(u) } catch { /* noop */ } }) }, [])
 
   const copy = async (text: string) => {
     try { await navigator.clipboard.writeText(text); toast('Copied to clipboard', 'success') }
@@ -396,17 +409,21 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
                     </div>
                   </div>
                   {v.status === 'completed' && (
-                    <div className="mt-4 flex items-center gap-4">
-                      <video src={variantFileUrl(v.jobId)} controls preload="metadata" className="h-40 rounded-xl border border-white/10 bg-black" />
-                      <a
-                        href={variantFileUrl(v.jobId)}
-                        download={`click-${v.platform}-${v.ratio.replace(':', 'x')}.mp4`}
-                        onClick={() => { apiPost('/me/personalization/record', { choices: [{ facet: 'platforms', key: v.platform }] }).catch(() => {}) }}
-                        className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-[11px] transition-colors"
-                      >
-                        <Download className="w-4 h-4" /> Download
-                      </a>
-                    </div>
+                    v.previewUrl ? (
+                      <div className="mt-4 flex items-center gap-4">
+                        <video src={v.previewUrl} controls preload="metadata" className="h-40 rounded-xl border border-white/10 bg-black" />
+                        <a
+                          href={v.previewUrl}
+                          download={`click-${v.platform}-${v.ratio.replace(':', 'x')}.mp4`}
+                          onClick={() => { apiPost('/me/personalization/record', { choices: [{ facet: 'platforms', key: v.platform }] }).catch(() => {}) }}
+                          className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-[11px] transition-colors"
+                        >
+                          <Download className="w-4 h-4" /> Download
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="mt-4 inline-flex items-center gap-2 text-slate-500 text-[11px] font-black uppercase tracking-widest"><Loader2 className="w-4 h-4 animate-spin" /> Preparing…</div>
+                    )
                   )}
                 </div>
               ))}

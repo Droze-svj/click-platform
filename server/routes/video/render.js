@@ -114,6 +114,7 @@ async function runFfmpegRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
     await fs.promises.copyFile(result.outputPath, outputPath);
     fs.promises.unlink(result.outputPath).catch(() => {});
   }
+  writeRenderOwner(jobId, userId); // IDOR guard: stamp the owner
   const buf = await fs.promises.readFile(outputPath);
   const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
   logger.info('[render] ffmpeg render done', { jobId, sizeBytes: buf.length, ratio });
@@ -147,8 +148,13 @@ function validateRenderTree(tree) {
   return null;
 }
 
+// Renders live OUTSIDE the public `uploads/` static mount so they can ONLY be
+// reached through the authed, ownership-checked endpoints below — not by anyone
+// who guesses a jobId. (Was uploads/renders, which `express.static` served to
+// any caller.) Ops can still override via RENDER_OUTPUT_DIR, but it should stay
+// out of any statically-served path.
 const RENDER_OUTPUT_DIR = path.resolve(
-  process.env.RENDER_OUTPUT_DIR || path.join(process.cwd(), 'uploads', 'renders')
+  process.env.RENDER_OUTPUT_DIR || path.join(process.cwd(), 'render-outputs')
 );
 
 function ensureRenderDir() {
@@ -157,6 +163,28 @@ function ensureRenderDir() {
   } catch (err) {
     logger.warn('[render] could not create output dir', { dir: RENDER_OUTPUT_DIR, error: err.message });
   }
+}
+
+// ── Render ownership (IDOR guard) ────────────────────────────────────────────
+// A render is keyed only by jobId, so we stamp a `.owner` sidecar next to each
+// output and check it on status/download. The dir is NOT publicly served, so the
+// sidecar isn't exposed. Fail OPEN when there's no sidecar (legacy renders) or
+// the requester can't be identified — so this never breaks a legitimate request,
+// only blocks a stranger holding someone else's jobId.
+function ownerSidecarPath(jobId) {
+  return path.join(RENDER_OUTPUT_DIR, `${jobId}.owner`);
+}
+function writeRenderOwner(jobId, userId) {
+  if (!userId) return;
+  try { fs.writeFileSync(ownerSidecarPath(jobId), String(userId), 'utf8'); } catch (_) { /* best-effort */ }
+}
+function mayAccessRender(jobId, req) {
+  let owner;
+  try { owner = fs.readFileSync(ownerSidecarPath(jobId), 'utf8').trim(); } catch (_) { return true; }
+  if (!owner) return true;
+  const ids = [req.user?._id, req.user?.id].filter(Boolean).map(String);
+  if (!ids.length) return true;
+  return ids.includes(owner);
 }
 
 let bundleCachePromise = null;
@@ -225,6 +253,8 @@ async function runRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
       logger.debug('[render] progress', { jobId, progress });
     },
   });
+
+  writeRenderOwner(jobId, userId); // IDOR guard: stamp the owner
 
   // SHA-256 the unsigned output, then attempt to inject a C2PA manifest.
   // Signing is best-effort; if c2patool / c2pa-node isn't installed we still
@@ -421,6 +451,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { jobId } = req.params;
     if (!/^[a-f0-9-]{8,}$/.test(jobId)) return sendError(res, 'Invalid jobId', 400);
+    if (!mayAccessRender(jobId, req)) return sendError(res, 'Render not found', 404);
 
     const expectedPath = path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
     try {
@@ -460,6 +491,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { jobId } = req.params;
     if (!/^[a-f0-9-]{8,}$/.test(jobId)) return sendError(res, 'Invalid jobId', 400);
+    if (!mayAccessRender(jobId, req)) return sendError(res, 'Render not found', 404);
     const filePath = path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
     try {
       await fs.promises.access(filePath);
@@ -475,3 +507,7 @@ router.get(
 module.exports = router;
 module.exports.runRender = runRender;
 module.exports.COMPOSITION_BY_RATIO = COMPOSITION_BY_RATIO;
+module.exports.RENDER_OUTPUT_DIR = RENDER_OUTPUT_DIR;
+// Exposed for unit tests of the ownership ACL.
+module.exports._writeRenderOwner = writeRenderOwner;
+module.exports._mayAccessRender = mayAccessRender;
