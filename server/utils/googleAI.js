@@ -260,6 +260,12 @@ async function generateContent(prompt, options = {}) {
           topP: options.topP ?? 0.95,
           topK: options.topK ?? 40,
           responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
+          // gemini-2.5-flash spends "thinking" tokens out of maxOutputTokens by
+          // default, which silently TRUNCATES output (e.g. a 1000-budget script
+          // came back at ~111 chars). This is a copywriting workload, not a
+          // reasoning one, so disable thinking → the full budget goes to output
+          // (also faster + cheaper). Callers can re-enable via options.thinkingBudget.
+          thinkingConfig: { thinkingBudget: options.thinkingBudget ?? 0 },
         },
         safetySettings,
       }, { timeout: GEMINI_TIMEOUT_MS });
@@ -308,6 +314,9 @@ async function generateContent(prompt, options = {}) {
               topP: options.topP ?? 0.95,
               topK: options.topK ?? 40,
               responseMimeType: options.responseMimeType || (prompt.toLowerCase().includes('json') ? 'application/json' : undefined),
+              // See note above — disable gemini-2.5 "thinking" so it can't starve
+              // the output budget and truncate. Opt back in via options.thinkingBudget.
+              thinkingConfig: { thinkingBudget: options.thinkingBudget ?? 0 },
             },
             safetySettings,
           }, { timeout: GEMINI_TIMEOUT_MS });
