@@ -29,6 +29,10 @@ const aiProfiles = require('../config/aiProfiles');
 const enforcement = require('./entitlementEnforcement');
 const urlGuard = require('../utils/urlGuard');
 const logger = require('../utils/logger');
+// The canonical niche/platform playbook (18 niches × 7 platforms, hook
+// frameworks, niche CTAs/keywords). Repurpose copy is grounded in it so every
+// hook/hashtag is niche- and platform-native instead of generic.
+const { getKnowledgeSlice } = require('./marketingKnowledge');
 
 // Default platform per aspect (used when the caller passes bare ratio strings).
 // The platform drives the per-platform copy tone, not the geometry.
@@ -63,16 +67,96 @@ function normaliseTarget(t) {
   return { ratio, platform: (t && t.platform) || RATIO_DEFAULT_PLATFORM[ratio] || 'tiktok' };
 }
 
-/** Deterministic, provider-free copy so a variant always has something usable. */
-function deterministicCopy(platform, baseTitle) {
+/** Small deterministic string→index hash (stable across runs; no Math.random). */
+function hashIndex(str, mod) {
+  if (!mod || mod < 1) return 0;
+  let h = 0;
+  for (let i = 0; i < String(str).length; i++) h = (h * 31 + String(str).charCodeAt(i)) >>> 0;
+  return h % mod;
+}
+
+/** Turn a keyword/phrase into a clean hashtag, or null if it has no letters. */
+function hashtagify(s) {
+  const cleaned = String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  return cleaned ? `#${cleaned}` : null;
+}
+
+// Title-aware hook templates. Chosen deterministically by platform so the same
+// video gets a DIFFERENT hook angle per platform (real per-platform diversity).
+const HOOK_TEMPLATES = [
+  (t) => `Most people get ${t} wrong. Here's the fix.`,
+  (t) => `The truth about ${t} nobody tells you.`,
+  (t) => `I tried ${t} so you don't have to.`,
+  (t, angle) => (angle ? `${t}: ${String(angle).toLowerCase()}.` : `Watch this before you try ${t}.`),
+];
+
+/** Broad/discovery tag + per-platform hashtag count cap (follows the playbook). */
+const PLATFORM_BROAD_TAG = { tiktok: '#fyp', instagram: '#reels', youtube: '#shorts', linkedin: null, twitter: null };
+const PLATFORM_TAG_CAP = { tiktok: 5, instagram: 6, youtube: 3, linkedin: 4, twitter: 1 };
+
+/** Build niche-native hashtags from the playbook keywords + a broad tag. */
+function nicheHashtags(slice, platform) {
+  const out = [];
+  const push = (t) => { if (t && !out.includes(t)) out.push(t); };
+  if (slice.niche && slice.niche !== 'other') push(`#${slice.niche}`);
+  for (const kw of (slice.nichePlaybook?.keywords || [])) {
+    if (out.length >= 4) break;
+    push(hashtagify(kw));
+  }
+  push(PLATFORM_BROAD_TAG[platform]);
+  const cap = PLATFORM_TAG_CAP[platform] ?? 5;
+  const capped = out.slice(0, cap);
+  return capped.length ? capped : ['#fyp'];
+}
+
+/**
+ * Deterministic, provider-free copy so a variant always has something usable —
+ * now grounded in the niche/platform playbook (real hook angle, niche hashtags,
+ * a niche-appropriate CTA) rather than a generic "Wait for it…".
+ */
+function deterministicCopy(platform, baseTitle, niche) {
   const label = PLATFORM_LABEL[platform] || platform;
-  const title = (baseTitle && String(baseTitle).trim()) || 'Your video';
-  return {
-    hook: `Wait for it… ${title}`,
-    title: `${title} (${label})`,
-    description: `Made with Click — optimised for ${label}.`,
-    hashtags: ['#fyp', '#viral', `#${platform}`],
-  };
+  const title = (baseTitle && String(baseTitle).trim()) || 'this';
+
+  let slice = null;
+  try { slice = getKnowledgeSlice({ niche, platform }); } catch (_) { slice = null; }
+  if (!slice) {
+    return {
+      hook: `Wait for it… ${title}`,
+      title,
+      description: `Made with Click — optimised for ${label}.`,
+      hashtags: ['#fyp', '#viral', `#${platform}`],
+    };
+  }
+
+  const angle = slice.nichePlaybook?.angles?.[0];
+  const hook = HOOK_TEMPLATES[hashIndex(platform, HOOK_TEMPLATES.length)](title, angle);
+  // A concrete, niche-merged CTA from the playbook (save/follow pools).
+  const ctaPool = (slice.ctas?.save || []).concat(slice.ctas?.follow || []);
+  const cta = ctaPool.length ? ctaPool[hashIndex(platform + title, ctaPool.length)] : 'Follow for more.';
+  const description = [angle ? `${angle}.` : '', cta].filter(Boolean).join(' ').trim();
+
+  return { hook, title, description, hashtags: nicheHashtags(slice, platform) };
+}
+
+/** A compact, per-platform playbook block injected into the AI copy prompt. */
+function platformGuidanceBlock(platform, niche) {
+  let slice;
+  try { slice = getKnowledgeSlice({ niche, platform }); } catch (_) { return ''; }
+  const np = slice.nichePlaybook || {};
+  const pp = slice.platformPlaybook || {};
+  const hookIds = (slice.hooks || []).slice(0, 4).map((h) => h.id).join(', ');
+  return [
+    `### ${PLATFORM_LABEL[platform] || platform} — niche: ${slice.niche}`,
+    np.voice ? `- Voice: ${np.voice}` : null,
+    np.angles?.length ? `- Proven angles: ${np.angles.slice(0, 4).join('; ')}` : null,
+    hookIds ? `- Hook frameworks to draw from: ${hookIds}` : null,
+    pp.captionStyle ? `- Caption style: ${pp.captionStyle}` : null,
+    pp.cta ? `- CTA approach: ${pp.cta}` : null,
+    pp.hashtags ? `- Hashtag rule: ${pp.hashtags}` : null,
+    np.keywords?.length ? `- Weave in niche keywords where natural: ${np.keywords.slice(0, 5).join(', ')}` : null,
+    np.avoid?.length ? `- Avoid: ${np.avoid.slice(0, 3).join('; ')}` : null,
+  ].filter(Boolean).join('\n');
 }
 
 /**
@@ -84,26 +168,31 @@ function deterministicCopy(platform, baseTitle) {
  * @param {string} [opts.transcript]  optional context (first ~1k chars used)
  * @param {string[]} opts.platforms   distinct platform ids to write for
  * @param {string} opts.tier
+ * @param {string} [opts.niche]       creator niche — grounds copy in the playbook
  * @returns {Promise<Object<string, {hook,title,description,hashtags}>>}
  */
-async function generatePlatformCopy({ baseTitle, transcript, platforms, tier }) {
+async function generatePlatformCopy({ baseTitle, transcript, platforms, tier, niche }) {
   const distinct = [...new Set(platforms)];
   const fallback = {};
-  for (const p of distinct) fallback[p] = deterministicCopy(p, baseTitle);
+  for (const p of distinct) fallback[p] = deterministicCopy(p, baseTitle, niche);
 
   const profile = (() => {
     try { return aiProfiles.aiProfileForTier(tier); } catch (_) { return null; }
   })();
-  const maxTokens = profile?.maxTokens ? Math.min(profile.maxTokens, 1200) : 800;
+  const maxTokens = profile?.maxTokens ? Math.min(profile.maxTokens, 1400) : 1000;
 
+  // Ground the prompt in the per-platform niche playbook so the AI uses real
+  // hook frameworks, niche keywords, and platform hashtag rules.
+  const guidance = distinct.map((p) => platformGuidanceBlock(p, niche)).filter(Boolean).join('\n\n');
   const ctx = transcript ? `\n\nTranscript excerpt:\n"""${String(transcript).slice(0, 1000)}"""` : '';
   const prompt =
-    `You are a short-form social copywriter. For a video titled "${baseTitle || 'Untitled'}", ` +
-    `write platform-native copy for each of these platforms: ${distinct.map((p) => PLATFORM_LABEL[p] || p).join(', ')}.${ctx}\n\n` +
+    `You are an expert short-form social copywriter. Write platform-native copy for a video ` +
+    `titled "${baseTitle || 'Untitled'}"${niche ? ` in the "${niche}" niche` : ''}.${ctx}\n\n` +
+    `Follow this per-platform playbook exactly — match each platform's voice, hook frameworks, and hashtag rule:\n${guidance}\n\n` +
     `Return ONLY a JSON object keyed by lowercase platform id (${distinct.join(', ')}). ` +
-    `Each value: { "hook": string (<=12 words, scroll-stopping), "title": string, ` +
-    `"description": string (1-2 sentences), "hashtags": string[] (3-6 items, each starting with #) }. ` +
-    `Match each platform's voice (TikTok punchy, LinkedIn professional, YouTube searchable).`;
+    `Each value: { "hook": string (<=12 words, scroll-stopping, built on one of the hook frameworks), ` +
+    `"title": string, "description": string (1-2 sentences), ` +
+    `"hashtags": string[] (follow that platform's hashtag rule, each starting with #) }.`;
 
   let raw;
   try {
@@ -173,7 +262,7 @@ async function resolveSource(videoUrl) {
  *
  * @returns {Promise<{ variants: Array, copyByPlatform: object, clampedFrom?: number }>}
  */
-async function planRepurpose({ baseTree, targets, tier, transcript }) {
+async function planRepurpose({ baseTree, targets, tier, transcript, niche }) {
   const requested = (Array.isArray(targets) && targets.length ? targets : SUPPORTED_RATIOS)
     .map(normaliseTarget)
     .filter((t) => SUPPORTED_RATIOS.includes(t.ratio));
@@ -197,10 +286,11 @@ async function planRepurpose({ baseTree, targets, tier, transcript }) {
     transcript,
     platforms: chosen.map((t) => t.platform),
     tier,
+    niche,
   });
 
   const variants = chosen.map((t) => {
-    const copy = copyByPlatform[t.platform] || deterministicCopy(t.platform, baseTitle);
+    const copy = copyByPlatform[t.platform] || deterministicCopy(t.platform, baseTitle, niche);
     return {
       jobId: uuidv4(),
       ratio: t.ratio,

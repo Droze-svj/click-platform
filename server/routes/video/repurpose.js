@@ -61,6 +61,11 @@ router.post(
 
     const userId = req.user?.id || req.user?._id?.toString();
     const tier = entitlements.resolveTier(req.user || {});
+    // Niche grounds the per-platform copy in the marketing playbook. Prefer an
+    // explicit body override, else the creator's saved niche; getKnowledgeSlice
+    // defaults to 'other' if unknown.
+    const niche = (typeof body.niche === 'string' && body.niche.trim())
+      || req.user?.niche || req.user?.social_links?.niche || undefined;
 
     // ── Resolve + guard the source up front (SSRF guard for remote URLs, exists
     //    check for local). A bad source fails the request synchronously. ──
@@ -78,6 +83,7 @@ router.post(
         baseTree: tree,
         targets,
         tier,
+        niche,
         transcript: typeof body.transcript === 'string' ? body.transcript : undefined,
       });
     } catch (e) {
