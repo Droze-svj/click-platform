@@ -38,6 +38,36 @@ function strArray(v, maxItems, maxLen) {
   return v.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, maxLen)).slice(0, maxItems);
 }
 
+// Pure shaper for GET /personalization/recommendations — takes the persisted
+// `marketingIntelligence` sub-doc and returns the trimmed, cold-start-safe
+// response. Extracted so the populated path is unit-testable without a DB.
+function shapeRecommendations(mi) {
+  const m = mi || {};
+  const bp = m.activeCreativeBlueprint || null;
+  const perf = m.historicalPerformanceMetrics || null;
+  const hasData = !!(bp && typeof bp === 'object' && Object.keys(bp).length > 0);
+  const arr = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim()) : []);
+  return {
+    hasData,
+    lastSync: m.lastLearningSync || null,
+    performance: perf ? {
+      avgRetentionDelta: Number(perf.avgRetentionDelta) || 0,
+      sampleSize: Number(perf.sampleSize) || 0,
+      hasRealData: !!perf.hasRealData,
+    } : null,
+    blueprint: hasData ? {
+      recommendedColorMood: bp.recommendedColorMood || '',
+      pacingStrategy: bp.pacingStrategy || '',
+      captionStyle: bp.captionStyle || '',
+      recommendedVfx: arr(bp.recommendedVfx),
+      failingPatterns: arr(bp.failingPatterns),
+      suggestedPivot: bp.suggestedPivot || '',
+      contentSeriesWinners: arr(bp.contentSeriesWinners),
+      rationale: bp.rationale || '',
+    } : null,
+  };
+}
+
 // ── POST /personalization/record ─────────────────────────────────────────────
 router.post(
   '/personalization/record',
@@ -90,6 +120,26 @@ router.get(
         avgCutDurationSec: profile.averages?.avgCutDuration ?? null,
       },
     });
+  })
+);
+
+// ── GET /personalization/recommendations ─────────────────────────────────────
+// "What Click recommends for you" — the creative blueprint the continuous-
+// learning loop derived from the creator's REAL post analytics (color mood,
+// pacing, what's failing, a suggested pivot, winning series). Cheap read of the
+// persisted blueprint (no AI). Cold-start safe: hasData:false until the loop runs.
+router.get(
+  '/personalization/recommendations',
+  auth,
+  asyncHandler(async (req, res) => {
+    let mi = {};
+    try {
+      const prefs = await UserPreferences.findOne({ userId: uid(req) }).lean();
+      mi = prefs?.marketingIntelligence || {};
+    } catch (e) {
+      logger.warn('[me] recommendations read failed', { error: e.message });
+    }
+    return sendSuccess(res, shapeRecommendations(mi));
   })
 );
 
@@ -172,3 +222,4 @@ router.put(
 );
 
 module.exports = router;
+module.exports.shapeRecommendations = shapeRecommendations;

@@ -33,11 +33,27 @@ interface Insights {
   }
 }
 
+interface Recommendations {
+  hasData: boolean
+  performance: { avgRetentionDelta: number; sampleSize: number; hasRealData: boolean } | null
+  blueprint: {
+    recommendedColorMood: string
+    pacingStrategy: string
+    captionStyle: string
+    recommendedVfx: string[]
+    failingPatterns: string[]
+    suggestedPivot: string
+    contentSeriesWinners: string[]
+    rationale: string
+  } | null
+}
+
 const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'error' | 'info') => void }> = ({ showToast }) => {
   const [prefs, setPrefs] = useState<AiPreferences>(EMPTY)
   const [vocabText, setVocabText] = useState('')
   const [bannedText, setBannedText] = useState('')
   const [insights, setInsights] = useState<Insights | null>(null)
+  const [recs, setRecs] = useState<Recommendations | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -57,6 +73,10 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
       try {
         const ir = await apiGet<any>('/me/personalization/insights', undefined, false)
         setInsights((ir?.data ?? ir) as Insights)
+      } catch { /* best-effort */ }
+      try {
+        const rr = await apiGet<any>('/me/personalization/recommendations', undefined, false)
+        setRecs((rr?.data ?? rr) as Recommendations)
       } catch { /* best-effort */ }
     })()
   }, [])
@@ -122,6 +142,34 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
             {chipGroup('Color grades', insights.learned.topColorGrades)}
             {chipGroup('Niches', insights.learned.topNiches)}
             <p className="text-slate-500 text-[11px]">Click keeps learning from what you generate, download and remix — this gets sharper over time.</p>
+          </div>
+        )}
+
+        {/* What Click recommends — the blueprint from your REAL post analytics */}
+        {recs && recs.hasData && recs.blueprint && (
+          <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/[0.04] p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-black text-[var(--text-main)] uppercase tracking-tight flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-400" /> What Click recommends for you</span>
+              {recs.performance?.hasRealData && (
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  {recs.performance.avgRetentionDelta >= 0 ? '+' : ''}{Math.round(recs.performance.avgRetentionDelta * 100)}% vs benchmark · {recs.performance.sampleSize} posts
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {recs.blueprint.recommendedColorMood && <div className="rounded-xl bg-black/20 p-3"><div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Color mood</div><div className="text-sm text-emerald-300 capitalize">{recs.blueprint.recommendedColorMood}</div></div>}
+              {recs.blueprint.pacingStrategy && <div className="rounded-xl bg-black/20 p-3"><div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Pacing</div><div className="text-sm text-emerald-300 capitalize">{recs.blueprint.pacingStrategy}</div></div>}
+            </div>
+            {chipGroup('Lean into', recs.blueprint.recommendedVfx)}
+            {chipGroup('Winning series', recs.blueprint.contentSeriesWinners)}
+            {recs.blueprint.failingPatterns.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[9px] font-black uppercase tracking-widest text-rose-400">Stop doing:</span>
+                {recs.blueprint.failingPatterns.map((f) => <span key={f} className="text-[10px] font-bold text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded">{f}</span>)}
+              </div>
+            )}
+            {recs.blueprint.suggestedPivot && <p className="text-emerald-200/90 text-xs"><span className="font-black uppercase tracking-widest text-[9px] text-emerald-400">Pivot:</span> {recs.blueprint.suggestedPivot}</p>}
+            {recs.blueprint.rationale && <p className="text-slate-500 text-[11px]">{recs.blueprint.rationale}</p>}
           </div>
         )}
 
