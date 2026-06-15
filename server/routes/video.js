@@ -98,15 +98,13 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    try {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const userId = (req.user && (req.user.id || req.user._id)) ? String(req.user.id || req.user._id) : 'unknown';
-      cb(null, `${userId}-${uniqueSuffix}${path.extname(file.originalname)}`);
-    } catch (error) {
-      // Fallback if there's any error accessing req.user
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, `unknown-${uniqueSuffix}${path.extname(file.originalname)}`);
-    }
+    // Crypto-random, NON-identifying name. The old `${userId}-${Date.now()}-
+    // ${Math.random()*1e9}` embedded the owner's id (a leaked /uploads URL then
+    // revealed whose footage it was + let a tenant be enumerated) and used
+    // non-cryptographic Math.random. Nothing parses the userId back out of the
+    // filename, so this is a safe swap.
+    const { randomMediaNameFrom } = require('../utils/mediaName');
+    cb(null, randomMediaNameFrom(file.originalname, '.mp4'));
   }
 });
 

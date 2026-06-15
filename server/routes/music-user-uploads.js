@@ -72,8 +72,12 @@ router.post('/user-uploads', auth, upload.single('audio'), asyncHandler(async (r
 
   try {
     // Upload the temp file to storage. uploadFile(filePath, key, contentType)
-    // returns { url, key, storage } — pass the path, not a stream.
-    const storageKey = `user-music/${req.user._id}_${Date.now()}${ext}`;
+    // returns { url, key, storage } — pass the path, not a stream. The key is
+    // crypto-random + NON-identifying: this is private (isPublic:false) media
+    // served via the public /uploads mount, so the owner's id must not be in the
+    // path (it would reveal whose track it is + let a tenant be enumerated).
+    const { randomMediaName } = require('../utils/mediaName');
+    const storageKey = `user-music/${randomMediaName(ext)}`;
     const uploadedFile = await uploadFile(req.file.path, storageKey, req.file.mimetype);
 
     // Get file metadata (duration, etc.)

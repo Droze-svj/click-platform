@@ -108,7 +108,7 @@ async function ingestUrlHandler(req, res) {
 
     const userId = req.user?._id || req.user?.id;
     const devModeAllowed = checkAllowDevMode(req);
-    const filename = `ingest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`;
+    const filename = require('../utils/mediaName').randomMediaName('.mp4'); // crypto-random, unguessable
     const destPath = path.join(UPLOADS_DIR, filename);
     const fileUrl = `/uploads/videos/${filename}`;
 
