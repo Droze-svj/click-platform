@@ -341,9 +341,31 @@ async function staleWhileRevalidateStrategy(request) {
   return cachedResponse || fetchPromise;
 }
 
+// Signed media URLs (/uploads/...) carry rotating ?exp&sig query params, so the
+// SAME underlying file gets a fresh URL on every API response. Keyed by the full
+// URL, the cache would store a duplicate per rotation AND miss the prior entry —
+// defeating the cache and growing it unboundedly. Normalize the cache key by
+// stripping exp/sig so it's keyed by the file path. The network fetch still uses
+// the original (signed) request, so the server-side signature gate is unaffected
+// (the signature authorizes the network fetch, not this per-browser local cache).
+function mediaCacheKey(request) {
+  try {
+    const url = new URL(request.url);
+    if (url.searchParams.has('sig') || url.searchParams.has('exp')) {
+      url.searchParams.delete('sig');
+      url.searchParams.delete('exp');
+      return url.toString();
+    }
+  } catch (err) {
+    // Malformed URL — fall back to the original request as the key.
+  }
+  return request;
+}
+
 // Cache First with Expiration - for images
 async function cacheFirstWithExpiration(request) {
-  const cachedResponse = await caches.match(request);
+  const cacheKey = mediaCacheKey(request);
+  const cachedResponse = await caches.match(cacheKey);
   if (cachedResponse) {
     // Check if cache is still fresh (24 hours)
     const cacheTime = new Date(cachedResponse.headers.get('sw-cache-time') || 0);
@@ -369,7 +391,7 @@ async function cacheFirstWithExpiration(request) {
       });
 
       const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, responseWithTimestamp);
+      cache.put(cacheKey, responseWithTimestamp);
     }
     return networkResponse;
   } catch (error) {
