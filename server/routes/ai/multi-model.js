@@ -2,6 +2,7 @@
 
 const express = require('express');
 const auth = require('../../middleware/auth');
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
 const {
   initAIProvider,
   generateWithModel,
@@ -15,6 +16,11 @@ const {
 } = require('../../utils/errorHandler');
 const logger = require('../../utils/logger');
 const router = express.Router();
+
+// Paid LLM calls — the router had no rate limit, and /compare fans out one call
+// per entry in a fully attacker-supplied `models` array. Rate-limit POSTs.
+router.use((req, res, next) => (req.method === 'POST' ? aiLimiter(req, res, next) : next()));
+const MAX_COMPARE_MODELS = 4;
 
 router.post('/provider', auth, asyncHandler(async (req, res) => {
   const { provider, model } = req.body;
@@ -49,7 +55,9 @@ router.post('/compare', auth, asyncHandler(async (req, res) => {
     ]);
   }
   
-  const result = await compareModelOutputs(prompt, taskType, models || ['gpt-4', 'gpt-3.5-turbo']);
+  // Cap the fan-out: one LLM call per model, so an unbounded array is a cost bomb.
+  const requested = Array.isArray(models) && models.length ? models : ['gpt-4', 'gpt-3.5-turbo'];
+  const result = await compareModelOutputs(prompt, taskType, requested.slice(0, MAX_COMPARE_MODELS));
   sendSuccess(res, 'Model outputs compared', 200, result);
 }));
 

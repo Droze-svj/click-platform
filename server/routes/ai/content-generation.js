@@ -37,7 +37,9 @@ router.post('/variations', auth, checkGenerationQuota, asyncHandler(async (req, 
     return sendError(res, 'Original content is required', 400);
   }
   try {
-    const variations = await generateContentVariations(originalContent, count || 3);
+    // Cap fan-out: one LLM call per variation, so clamp the body-supplied count.
+    const safeCount = Math.min(Math.max(1, parseInt(count, 10) || 3), 10);
+    const variations = await generateContentVariations(originalContent, safeCount);
     usageService.incrementUsage(req.user._id, 'contentGenerated').catch((e) => {
       logger.warn('Failed to increment generation usage', { error: e.message });
     });

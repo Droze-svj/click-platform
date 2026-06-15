@@ -6,7 +6,12 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const { suggestSoundtracks } = require('../services/aiSoundtrackSuggestionService');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const router = express.Router();
+
+// AI generation — apply the tight AI rate limiter to POSTs (these were only
+// under the loose global apiLimiter, not the AI-specific one).
+router.use((req, res, next) => (req.method === 'POST' ? aiLimiter(req, res, next) : next()));
 
 /**
  * @route POST /api/music/ai-suggestions
