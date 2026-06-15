@@ -49,19 +49,26 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
   }, [loadComments])
 
   useEffect(() => {
-    if (!socket || !entityId) return
+    if (!socket || !entityId || !teamId) return
+
+    // Subscribe to the team-scoped comment room (the server gates this join on
+    // team membership and broadcasts new comments as `comment:new`).
+    socket.emit('join:comments', { teamId, entityId })
 
     const handleNewComment = (comment: Comment) => {
+      // The room is already team+entity scoped, but guard against stale rooms.
+      if ((comment as any)?.entityId && (comment as any).entityId !== entityId) return
       setComments(prev => [...prev, comment])
       setTimeout(scrollToBottom, 100)
     }
 
-    on(`comment:${entityId}`, handleNewComment)
+    on('comment:new', handleNewComment)
 
     return () => {
-      off(`comment:${entityId}`, handleNewComment)
+      off('comment:new', handleNewComment)
+      socket.emit('leave:comments', { teamId, entityId })
     }
-  }, [socket, entityId, on, off])
+  }, [socket, entityId, teamId, on, off])
 
   const handleSend = async () => {
     if (!newComment.trim() || !user || !teamId) return

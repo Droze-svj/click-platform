@@ -67,12 +67,13 @@ router.post('/', auth, async (req, res) => {
       parentId
     });
 
-    // SECURITY: scope the broadcast to a per-entity room instead of io.emit(),
-    // which sent every comment (text + author) to ALL connected sockets. Consumers
-    // join `comments:<entityId>` — that room join should be access-checked too
-    // (same team-membership rule) in the socket layer.
+    // SECURITY: broadcast to a TEAM-scoped room (`comments:<teamId>:<entityId>`),
+    // not a per-entity room — comments are team-scoped, so an entity-global room
+    // would leak one team's comments to another team commenting on the same entity.
+    // The matching `join:comments` socket handler verifies team membership before
+    // a socket can join this room.
     try {
-      getIO().to(`comments:${entityId}`).emit('comment:new', comment);
+      getIO().to(`comments:${teamId}:${entityId}`).emit('comment:new', comment);
     } catch (_) { /* socket layer optional */ }
 
     sendSuccess(res, 'Comment created', 201, comment);

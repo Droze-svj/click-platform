@@ -239,6 +239,32 @@ function initializeSocket(server) {
       logger.info('User left calendar room', { agencyWorkspaceId, socketId: socket.id });
     });
 
+    // Join a team's comment stream for an entity. Comments are TEAM-scoped (see
+    // routes/comments.js + utils/resourceAccess), and the room is keyed by
+    // `comments:<teamId>:<entityId>`, so the joiner must be a member of the team —
+    // otherwise anyone could subscribe to another team's live comments by id.
+    socket.on('join:comments', async ({ teamId, entityId }) => {
+      if (!currentUserId || !teamId || !entityId) return;
+      try {
+        const { teamAccessible } = require('../utils/resourceAccess');
+        const ok = await teamAccessible({ user: { _id: currentUserId, id: currentUserId } }, teamId);
+        if (!ok) {
+          socket.emit('join:denied', { room: `comments:${teamId}:${entityId}`, error: 'No access to this team' });
+          return;
+        }
+      } catch (e) {
+        return; // fail closed
+      }
+      socket.join(`comments:${teamId}:${entityId}`);
+      logger.info('User joined comments room', { teamId, entityId, socketId: socket.id });
+    });
+
+    // Leave a team's comment stream
+    socket.on('leave:comments', ({ teamId, entityId }) => {
+      if (!teamId || !entityId) return;
+      socket.leave(`comments:${teamId}:${entityId}`);
+    });
+
     // Join client portal room
     socket.on('join:portal', async ({ portalId }) => {
       if (!currentUserId || !portalId) return;
