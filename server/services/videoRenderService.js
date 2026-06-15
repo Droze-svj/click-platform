@@ -963,7 +963,8 @@ async function renderFromEditorState(options) {
 
   const allVideoFilters = [...videoFilters_ff, ...lutFilters, ...overlayFilters]
   const firstMusic = timelineSegments.find(s => s.type === 'audio' && s.sourceUrl)
-  const musicVolume = firstMusic?.properties?.volume ?? 0.5
+  // music volume is read where it's applied — inside the `if (hasMusic)` audio
+  // graph below (firstMusic.properties.volume), not here.
   const hasMusic = !!firstMusic
 
   // ── Editor parity: prepare multi-input visual overlays (image / svg /

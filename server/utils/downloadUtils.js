@@ -2,7 +2,6 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const path = require('path');
-const { execFile } = require('child_process');
 const logger = require('./logger');
 const urlGuard = require('./urlGuard');
 

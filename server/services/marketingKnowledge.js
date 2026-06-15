@@ -462,10 +462,27 @@ function buildStyleProfileBlock(profile) {
   const sections = [];
   const picks = (facet) => {
     const counts = profile[facet];
-    if (!counts || typeof counts !== 'object') return null;
-    const entries = Object.entries(counts).sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0)).slice(0, 3);
-    if (entries.length === 0) return null;
-    return entries.map(([k]) => k).join(' · ');
+    let keys;
+    if (Array.isArray(counts)) {
+      // Canonical shape: UserStyleProfile stores each facet as a counter array
+      // [{ key, count }]. (Object.entries on this would yield array INDICES.)
+      keys = counts
+        .filter((c) => c && c.key)
+        .slice()
+        .sort((a, b) => (Number(b.count) || 0) - (Number(a.count) || 0))
+        .slice(0, 3)
+        .map((c) => c.key);
+    } else if (counts && typeof counts === 'object') {
+      // Legacy/defensive: plain object map { key: count }.
+      keys = Object.entries(counts)
+        .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))
+        .slice(0, 3)
+        .map(([k]) => k);
+    } else {
+      return null;
+    }
+    keys = keys.filter(Boolean);
+    return keys.length ? keys.join(' · ') : null;
   };
   const fonts = picks('fonts');
   const captionStyles = picks('captionStyles');
@@ -484,10 +501,12 @@ function buildStyleProfileBlock(profile) {
   if (niches)        lines.push(`Default niches: ${niches}`);
   if (platforms)     lines.push(`Default platforms: ${platforms}`);
 
-  // Pacing averages — these come from the creator's actual edit history.
-  if (typeof profile.avgCutDuration === 'number')   lines.push(`Average cut length: ${profile.avgCutDuration.toFixed(1)}s (match this pacing)`);
-  if (typeof profile.avgFontSize === 'number')      lines.push(`Average font size: ${Math.round(profile.avgFontSize)}px`);
-  if (typeof profile.avgCaptionLength === 'number') lines.push(`Average caption length: ${Math.round(profile.avgCaptionLength)} chars`);
+  // Pacing averages — these come from the creator's actual edit history. The
+  // model nests them under `averages`; fall back to a flat shape defensively.
+  const avg = (profile.averages && typeof profile.averages === 'object') ? profile.averages : profile;
+  if (typeof avg.avgCutDuration === 'number')   lines.push(`Average cut length: ${avg.avgCutDuration.toFixed(1)}s (match this pacing)`);
+  if (typeof avg.avgFontSize === 'number')      lines.push(`Average font size: ${Math.round(avg.avgFontSize)}px`);
+  if (typeof avg.avgCaptionLength === 'number') lines.push(`Average caption length: ${Math.round(avg.avgCaptionLength)} chars`);
 
   if (lines.length === 0) return [];
   sections.push('── Creator style profile (bias output toward these) ──');

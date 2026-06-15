@@ -30,12 +30,19 @@ function uid(req) {
   return req.user?._id || req.user?.id;
 }
 
+// Strip C0 control chars (incl. \n \r \t) + DEL to spaces before storing — values
+// are interpolated verbatim into the AI system prompt (tone/vocab/banned), so a
+// newline-bearing value could otherwise inject fake instruction lines.
+function clean(s) {
+  // eslint-disable-next-line no-control-regex -- intentional: stripping control chars
+  return String(s).replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+}
 function str(v, max) {
-  return typeof v === 'string' ? v.trim().slice(0, max) : undefined;
+  return typeof v === 'string' ? clean(v).slice(0, max) : undefined;
 }
 function strArray(v, maxItems, maxLen) {
   if (!Array.isArray(v)) return undefined;
-  return v.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, maxLen)).slice(0, maxItems);
+  return v.filter((x) => typeof x === 'string' && x.trim()).map((x) => clean(x).slice(0, maxLen)).slice(0, maxItems);
 }
 
 // Pure shaper for GET /personalization/recommendations — takes the persisted
@@ -223,3 +230,4 @@ router.put(
 
 module.exports = router;
 module.exports.shapeRecommendations = shapeRecommendations;
+module.exports.clean = clean;
