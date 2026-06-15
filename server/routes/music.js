@@ -22,8 +22,9 @@ const storage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${req.user._id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    // Crypto-random, non-identifying name (was `${userId}-${Date.now()}-rand`).
+    const { randomMediaNameFrom } = require('../utils/mediaName');
+    cb(null, randomMediaNameFrom(file.originalname, '.mp3'));
   }
 });
 
