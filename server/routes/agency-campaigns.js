@@ -54,8 +54,10 @@ router.get('/:agencyWorkspaceId/campaigns', auth, requireWorkspaceAccess(), asyn
  * Get campaign details
  */
 router.get('/:agencyWorkspaceId/campaigns/:campaignId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { campaignId } = req.params;
-  const campaign = await Campaign.findById(campaignId)
+  const { agencyWorkspaceId, campaignId } = req.params;
+  // Scope by agencyWorkspaceId: requireWorkspaceAccess only proves the caller owns
+  // the agency in the PATH — the campaignId could belong to a different agency.
+  const campaign = await Campaign.findOne({ _id: campaignId, agencyWorkspaceId })
     .populate('createdBy', 'name email')
     .populate('clientInstances.clientWorkspaceId', 'name')
     .populate('clientInstances.scheduledPosts')
@@ -73,11 +75,16 @@ router.get('/:agencyWorkspaceId/campaigns/:campaignId', auth, requireWorkspaceAc
  * Clone campaign to multiple clients
  */
 router.post('/:agencyWorkspaceId/campaigns/:campaignId/clone', auth, requireWorkspaceAccess('canCreate'), asyncHandler(async (req, res) => {
-  const { campaignId } = req.params;
+  const { agencyWorkspaceId, campaignId } = req.params;
   const { clientWorkspaceIds, options = {} } = req.body;
 
   if (!clientWorkspaceIds || !Array.isArray(clientWorkspaceIds) || clientWorkspaceIds.length === 0) {
     return sendError(res, 'Client workspace IDs are required', 400);
+  }
+
+  // Confirm the campaign belongs to the agency in the path (not another tenant's).
+  if (!(await Campaign.exists({ _id: campaignId, agencyWorkspaceId }))) {
+    return sendError(res, 'Campaign not found', 404);
   }
 
   const result = await cloneCampaignToClients(campaignId, clientWorkspaceIds, options);
@@ -89,7 +96,7 @@ router.post('/:agencyWorkspaceId/campaigns/:campaignId/clone', auth, requireWork
  * Update campaign for specific clients
  */
 router.put('/:agencyWorkspaceId/campaigns/:campaignId/update-clients', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
-  const { campaignId } = req.params;
+  const { agencyWorkspaceId, campaignId } = req.params;
   const { clientWorkspaceIds, updates } = req.body;
 
   if (!clientWorkspaceIds || !Array.isArray(clientWorkspaceIds) || clientWorkspaceIds.length === 0) {
@@ -98,6 +105,11 @@ router.put('/:agencyWorkspaceId/campaigns/:campaignId/update-clients', auth, req
 
   if (!updates) {
     return sendError(res, 'Updates are required', 400);
+  }
+
+  // Confirm the campaign belongs to the agency in the path (not another tenant's).
+  if (!(await Campaign.exists({ _id: campaignId, agencyWorkspaceId }))) {
+    return sendError(res, 'Campaign not found', 404);
   }
 
   const result = await updateCampaignForClients(campaignId, clientWorkspaceIds, updates);
@@ -109,14 +121,21 @@ router.put('/:agencyWorkspaceId/campaigns/:campaignId/update-clients', auth, req
  * Update campaign template
  */
 router.put('/:agencyWorkspaceId/campaigns/:campaignId', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
-  const { campaignId } = req.params;
-  const campaign = await Campaign.findById(campaignId);
+  const { agencyWorkspaceId, campaignId } = req.params;
+  const campaign = await Campaign.findOne({ _id: campaignId, agencyWorkspaceId });
 
   if (!campaign) {
     return sendError(res, 'Campaign not found', 404);
   }
 
-  Object.assign(campaign, req.body);
+  // Explicit allow-list — never Object.assign(req.body) over the whole doc, which
+  // would let a caller overwrite agencyWorkspaceId/createdBy/clientInstances
+  // (tenant reassignment + injecting client instances).
+  const CAMPAIGN_EDITABLE = ['name', 'description', 'templateContent', 'brandGuidelines',
+    'scheduling', 'platforms', 'variations', 'status', 'metadata'];
+  for (const field of CAMPAIGN_EDITABLE) {
+    if (Object.prototype.hasOwnProperty.call(req.body, field)) campaign[field] = req.body[field];
+  }
   await campaign.save();
 
   sendSuccess(res, 'Campaign updated', 200, campaign);
@@ -127,8 +146,8 @@ router.put('/:agencyWorkspaceId/campaigns/:campaignId', auth, requireWorkspaceAc
  * Delete campaign
  */
 router.delete('/:agencyWorkspaceId/campaigns/:campaignId', auth, requireWorkspaceAccess('canDelete'), asyncHandler(async (req, res) => {
-  const { campaignId } = req.params;
-  const campaign = await Campaign.findById(campaignId);
+  const { agencyWorkspaceId, campaignId } = req.params;
+  const campaign = await Campaign.findOne({ _id: campaignId, agencyWorkspaceId });
 
   if (!campaign) {
     return sendError(res, 'Campaign not found', 404);
@@ -146,14 +165,14 @@ router.delete('/:agencyWorkspaceId/campaigns/:campaignId', auth, requireWorkspac
  * Customize campaign content for specific client
  */
 router.post('/:agencyWorkspaceId/campaigns/:campaignId/customize', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
-  const { campaignId } = req.params;
+  const { agencyWorkspaceId, campaignId } = req.params;
   const { clientWorkspaceId, customizedContent, brandGuidelines } = req.body;
 
   if (!clientWorkspaceId) {
     return sendError(res, 'Client workspace ID is required', 400);
   }
 
-  const campaign = await Campaign.findById(campaignId);
+  const campaign = await Campaign.findOne({ _id: campaignId, agencyWorkspaceId });
   if (!campaign) {
     return sendError(res, 'Campaign not found', 404);
   }

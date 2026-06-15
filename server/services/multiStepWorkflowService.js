@@ -132,6 +132,26 @@ async function advanceToNextStage(approvalId, userId, action, comment = '', acce
       throw new Error('Current stage not found');
     }
 
+    // AUTHORIZATION: only an assigned approver for the current stage (or someone
+    // assigned to it, or the approval's creator) may act on it. Without this, any
+    // authenticated caller could approve/reject/advance ANY approval by id —
+    // cross-tenant — flipping its status and auto-scheduling the post. Scoped to
+    // the present-tense mutating actions so the trusted internal callers that pass
+    // past-tense actions ('approved'/'rejected') keep their existing behavior, and
+    // the email/portal-token callers (which pass the verified assigned approverId)
+    // still pass this check.
+    if (['approve', 'reject', 'request_changes'].includes(action)) {
+      const uid = userId != null ? String(userId) : null;
+      const isAuthorized = uid && (
+        (currentStage.approvals || []).some(a => a.approverId && String(a.approverId) === uid) ||
+        (approval.assignedTo || []).some(a => a.stageOrder === approval.currentStage && a.userId && String(a.userId) === uid) ||
+        (approval.createdBy && String(approval.createdBy) === uid)
+      );
+      if (!isAuthorized) {
+        throw new Error('You are not authorized to act on this approval stage');
+      }
+    }
+
     const Content = require('../models/Content');
     const content = await Content.findById(approval.contentId);
 
