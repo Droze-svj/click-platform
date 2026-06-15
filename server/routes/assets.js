@@ -5,6 +5,7 @@ const express = require('express')
 const auth = require('../middleware/auth')
 const asyncHandler = require('../middleware/asyncHandler')
 const { sendSuccess, sendError } = require('../utils/response')
+const { signMediaUrls } = require('../utils/mediaUrlSigner')
 const stockAssetsService = require('../services/stockAssetsService')
 const { tagMedia } = require('../services/mediaTaggingService')
 const { generateSmartFolders } = require('../services/smartFolderService')
@@ -26,7 +27,7 @@ router.get('/stock', auth, asyncHandler(async (req, res) => {
   try {
     const result = await stockAssetsService.fetchStockAssets(type, page, limit, q)
     sendSuccess(res, 'Stock assets retrieved', 200, {
-      items: result.items,
+      items: signMediaUrls(result.items),
       hasMore: result.hasMore,
       total: result.total,
       page: parseInt(page, 10) || 1,
@@ -61,7 +62,7 @@ router.post('/smart-organize', auth, asyncHandler(async (req, res) => {
   const folders = await generateSmartFolders(taggedAssets)
 
   sendSuccess(res, 'Assets organized into smart folders', 200, {
-    folders,
+    folders: signMediaUrls(folders),
     totalAssets: taggedAssets.length
   })
 }))

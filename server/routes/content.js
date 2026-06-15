@@ -8,6 +8,7 @@ const { requireActiveSubscription } = require('../middleware/subscriptionAccess'
 const asyncHandler = require('../middleware/asyncHandler');
 const { trackAction } = require('../services/workflowService');
 const { sendSuccess, sendError } = require('../utils/response');
+const { signMediaUrls } = require('../utils/mediaUrlSigner');
 const router = express.Router();
 
 /**
@@ -164,7 +165,7 @@ router.get('/:contentId', auth, async (req, res) => {
 
     res.json({
       success: true,
-      data: content
+      data: signMediaUrls(content)
     });
   } catch (error) {
     logger.error('Get content error', { error: error.message, contentId: req.params.contentId });
@@ -385,7 +386,7 @@ router.post('/:contentId/duplicate', auth, asyncHandler(async (req, res) => {
   await duplicate.save();
   logger.info('Content duplicated', { originalId: content._id, duplicateId: duplicate._id, userId: req.user._id });
 
-  sendSuccess(res, 'Content duplicated', 201, duplicate);
+  sendSuccess(res, 'Content duplicated', 201, signMediaUrls(duplicate));
 }));
 
 // ── Pre-Publish Optimization and Clicks/Insights Analytics ──

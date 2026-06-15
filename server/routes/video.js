@@ -44,7 +44,23 @@ const { trackAction } = require('../services/workflowService');
 logger.debug('📦 workflowService loaded');
 const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser');
 logger.debug('✅ Video route core dependencies loaded');
+const { signMediaUrls } = require('../utils/mediaUrlSigner');
 const router = express.Router();
+
+// Response-level media-URL signer. This router returns private media (source
+// videos, generated clips, thumbnails) as `/uploads/...` URLs scattered across
+// ~30 handlers; rather than wrap each one, deep-sign every JSON response here so
+// they go out as short-lived HMAC-signed capability URLs. signMediaUrls only
+// rewrites `/uploads` strings (external/CDN/data URLs and non-media payloads pass
+// through untouched) and is flag-independent + idempotent, so this is a safe
+// no-op for any response that carries no private media. Mounted before the
+// sub-router mounts so their media responses are signed too.
+router.use((req, res, next) => {
+  const _json = res.json.bind(res);
+  res.json = (body) => _json(signMediaUrls(body));
+  next();
+});
+
 router.use('/ai-editing', require('./video/ai-editing'));
 router.use('/progress', require('./video/progress'));
 // In-memory store for dev videos (maps contentId to video data)

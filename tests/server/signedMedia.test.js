@@ -26,7 +26,8 @@ describe('mediaUrlSigner', () => {
     const u = new URLSearchParams(signed.split('?')[1]);
     const exp = u.get('exp'); const sig = u.get('sig');
     expect(verifyMediaUrl('/uploads/videos/OTHER.mp4', exp, sig)).toBe(false); // different path
-    expect(verifyMediaUrl('/uploads/videos/abc123.mp4', exp, sig.slice(0, -1) + '0')).toBe(false); // tampered sig
+    const tamperedSig = sig.slice(0, -1) + (sig.slice(-1) === '0' ? '1' : '0'); // guaranteed-different last hex char
+    expect(verifyMediaUrl('/uploads/videos/abc123.mp4', exp, tamperedSig)).toBe(false); // tampered sig
     expect(verifyMediaUrl('/uploads/videos/abc123.mp4', exp, undefined)).toBe(false); // missing
     expect(verifyMediaUrl('/uploads/videos/abc123.mp4', String(Math.floor(Date.now() / 1000) - 10), sig)).toBe(false); // expired
   });
@@ -63,6 +64,34 @@ describe('signMediaUrls (deep response signer)', () => {
     const doc = { toObject: () => ({ file: { url: '/uploads/music/m.mp3' } }) };
     const out = signMediaUrls(doc);
     expect(out.file.url).toMatch(/\?exp=\d+&sig=/);
+  });
+
+  test('signs a full response envelope (content/video shape), preserving non-url fields', () => {
+    // Mirrors the video.js router-level signer + content.js GET /:contentId usage:
+    // sign the whole { success, data } body; only /uploads strings change.
+    const body = {
+      success: true,
+      data: {
+        status: 'completed',
+        originalFile: { url: '/uploads/videos/src.mp4', size: 99 },
+        generatedContent: {
+          shortVideos: [
+            { url: '/uploads/users/x/clips/c1.mp4', thumbnail: '/uploads/thumbnails/t1.jpg', platform: 'tiktok' },
+          ],
+        },
+      },
+    };
+    const out = signMediaUrls(body);
+    expect(out.success).toBe(true); // boolean preserved
+    expect(out.data.status).toBe('completed'); // plain string preserved
+    expect(out.data.originalFile.size).toBe(99); // number preserved
+    expect(out.data.originalFile.url).toMatch(/^\/uploads\/videos\/src\.mp4\?exp=\d+&sig=[0-9a-f]{64}$/);
+    expect(out.data.generatedContent.shortVideos[0].url).toMatch(/^\/uploads\/users\/x\/clips\/c1\.mp4\?exp=/);
+    expect(out.data.generatedContent.shortVideos[0].thumbnail).toMatch(/^\/uploads\/thumbnails\/t1\.jpg\?exp=/);
+    // re-signing an already-signed url stays valid (idempotent: query is stripped before signing)
+    const resigned = signMediaUrls(out.data.originalFile.url);
+    const u = new URLSearchParams(resigned.split('?')[1]);
+    expect(verifyMediaUrl('/uploads/videos/src.mp4', u.get('exp'), u.get('sig'))).toBe(true);
   });
 });
 
