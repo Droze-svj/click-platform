@@ -9,12 +9,16 @@ const ScheduledPost = require('../models/ScheduledPost');
 const SocialConnection = require('../models/SocialConnection');
 const { syncAllUserAnalytics } = require('./platformAnalyticsService');
 const { syncAccountInsights } = require('./accountInsightsService');
+const { acquire, autonomousModeEnabled } = require('../utils/cronLock');
 const logger = require('../utils/logger');
 
 const LOG_CONTEXT = { service: 'platform-ingestion' };
 
 let cronTask = null;
-let inFlight = false;
+// Max eligible users processed per tick. Synced users get a fresh
+// lastAnalyticsSync so they drop out of findUsersDuringTick next tick, so the
+// remaining stale users naturally rotate in — a simple cap can't starve them.
+const MAX_USERS_PER_TICK = parseInt(process.env.ANALYTICS_SYNC_MAX_USERS_PER_TICK || '250', 10);
 // Read-only observability snapshot of the last tick for GET /api/health/learning.
 let lastRunStats = null;
 
@@ -98,20 +102,27 @@ async function accountInsightsDue(userId) {
  * spiking platform rate limits; per-user errors are isolated.
  */
 async function runIngestionTick() {
-  if (inFlight) {
-    logger.debug('Skipping ingestion tick - previous tick still running', LOG_CONTEXT);
-    return { skipped: true };
-  }
+  // Respect the master kill-switch (DISABLE_CRONS / AUTONOMOUS_MODE=off) — like
+  // every other cron, this must bail so "stop all background work" is honoured.
+  if (!autonomousModeEnabled()) return { skipped: true, reason: 'autonomous-disabled' };
   if (mongoose.connection.readyState !== 1) {
     return { skipped: true, reason: 'mongo-disconnected' };
   }
+  // Distributed lock (Redis, memory fallback) — replaces the old process-local
+  // `inFlight` boolean, which let every replica run its own tick concurrently
+  // (N× platform-API load + N× the learning re-count). 13m TTL < 15m schedule.
+  const release = await acquire('platformIngestion', 13 * 60 * 1000);
+  if (!release) return { skipped: true, reason: 'lock-held' };
 
-  inFlight = true;
   const startedAt = Date.now();
   const summary = { users: 0, synced: 0, failed: 0, accountInsights: 0 };
 
   try {
-    const userIds = await findUsersDuringTick();
+    let userIds = await findUsersDuringTick();
+    if (userIds.length > MAX_USERS_PER_TICK) {
+      logger.info('Ingestion users capped for this tick', { ...LOG_CONTEXT, eligible: userIds.length, cap: MAX_USERS_PER_TICK });
+      userIds = userIds.slice(0, MAX_USERS_PER_TICK);
+    }
     summary.users = userIds.length;
 
     for (const userId of userIds) {
@@ -174,7 +185,7 @@ async function runIngestionTick() {
     };
     return summary;
   } finally {
-    inFlight = false;
+    await release();
   }
 }
 
