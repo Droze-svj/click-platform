@@ -112,6 +112,11 @@ router.get('/:postId/versions/compare', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Both version numbers are required', 400);
   }
 
+  // Same ownership guard as the list/single endpoints — don't expose another
+  // user's version diffs.
+  const ownerCheck = await ScheduledPost.findOne({ _id: postId, userId: req.user._id || req.user.id }).select('_id').lean();
+  if (!ownerCheck) return sendError(res, 'Post not found', 404);
+
   const comparison = await compareVersions(
     postId,
     parseInt(version1, 10),
@@ -132,6 +137,10 @@ router.post('/:postId/versions/:versionNumber/comments', auth, asyncHandler(asyn
   if (!text) {
     return sendError(res, 'Comment text is required', 400);
   }
+
+  // Don't let a stranger write into another user's version history.
+  const ownerCheck = await ScheduledPost.findOne({ _id: postId, userId: req.user._id || req.user.id }).select('_id').lean();
+  if (!ownerCheck) return sendError(res, 'Post not found', 404);
 
   const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber, 10) });
   if (!version) {
