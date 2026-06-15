@@ -77,7 +77,7 @@ router.get('/:workspaceId/competitor-benchmark/compare', auth, requireWorkspaceA
  * POST /api/clients/:clientWorkspaceId/health-score/calculate
  * Calculate client health score
  */
-router.post('/:clientWorkspaceId/health-score/calculate', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/health-score/calculate', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId, period } = req.body;
 
@@ -93,7 +93,7 @@ router.post('/:clientWorkspaceId/health-score/calculate', auth, asyncHandler(asy
  * GET /api/clients/:clientWorkspaceId/health-score/dashboard
  * Get client health dashboard
  */
-router.get('/:clientWorkspaceId/health-score/dashboard', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/health-score/dashboard', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const dashboard = await getClientHealthDashboard(clientWorkspaceId, req.query);
   sendSuccess(res, 'Client health dashboard retrieved', 200, dashboard);
@@ -103,7 +103,7 @@ router.get('/:clientWorkspaceId/health-score/dashboard', auth, asyncHandler(asyn
  * POST /api/clients/:clientWorkspaceId/key-wins
  * Create key win
  */
-router.post('/:clientWorkspaceId/key-wins', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/key-wins', auth, requireWorkspaceAccess('canCreate'), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { workspaceId, agencyWorkspaceId, ...winData } = req.body;
 
@@ -119,7 +119,7 @@ router.post('/:clientWorkspaceId/key-wins', auth, asyncHandler(async (req, res) 
  * GET /api/clients/:clientWorkspaceId/key-wins
  * Get key wins
  */
-router.get('/:clientWorkspaceId/key-wins', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/key-wins', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const wins = await getKeyWins(clientWorkspaceId, req.query);
   sendSuccess(res, 'Key wins retrieved', 200, { wins });
@@ -129,7 +129,7 @@ router.get('/:clientWorkspaceId/key-wins', auth, asyncHandler(async (req, res) =
  * GET /api/clients/:clientWorkspaceId/key-wins/summary
  * Get key wins summary
  */
-router.get('/:clientWorkspaceId/key-wins/summary', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/key-wins/summary', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const summary = await getKeyWinsSummary(clientWorkspaceId, req.query);
   sendSuccess(res, 'Key wins summary retrieved', 200, summary);
@@ -159,7 +159,7 @@ router.get('/:workspaceId/comments/sentiment/trends', auth, requireWorkspaceAcce
  * GET /api/clients/:clientWorkspaceId/health-report/export/excel
  * Export client health report to Excel
  */
-router.get('/:clientWorkspaceId/health-report/export/excel', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/health-report/export/excel', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId, ...filters } = req.query;
 
@@ -178,7 +178,7 @@ router.get('/:clientWorkspaceId/health-report/export/excel', auth, asyncHandler(
  * GET /api/clients/:clientWorkspaceId/health-report/export/pdf
  * Export client health report to PDF
  */
-router.get('/:clientWorkspaceId/health-report/export/pdf', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/health-report/export/pdf', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId, ...filters } = req.query;
 

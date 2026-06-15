@@ -104,7 +104,20 @@ const requireWorkspaceAccess = (requiredPermission = null) => {
       });
     }
 
-    const workspaceId = req.params.workspaceId || req.body.workspaceId || req.query.workspaceId;
+    // SECURITY: a PATH param is the resource being addressed and must be
+    // authoritative. Many routes name it :agencyWorkspaceId / :clientWorkspaceId
+    // (not :workspaceId); if we only read req.params.workspaceId it is undefined
+    // and we'd fall through to req.body/query.workspaceId — which the caller
+    // controls, letting them pass a workspace they DO own while the handler
+    // operates on the victim id in the path (cross-tenant IDOR). Prefer path
+    // params (incl. the agency/client aliases); only use body/query when the
+    // route carries NO workspace path param at all.
+    const workspaceId =
+      req.params.workspaceId ||
+      req.params.agencyWorkspaceId ||
+      req.params.clientWorkspaceId ||
+      req.body.workspaceId ||
+      req.query.workspaceId;
     if (!workspaceId) {
       return res.status(400).json({
         success: false,
@@ -181,8 +194,15 @@ const enforceWorkspaceIsolation = async (req, res, next) => {
     return next(); // Let auth middleware handle this
   }
 
-  // Get workspace from request
-  const workspaceId = req.params.workspaceId || req.body.workspaceId || req.query.workspaceId;
+  // Get workspace from request. Prefer path params (incl. the agency/client
+  // aliases) so a caller can't substitute a workspace they own via body/query
+  // while the handler acts on a path id — see requireWorkspaceAccess above.
+  const workspaceId =
+    req.params.workspaceId ||
+    req.params.agencyWorkspaceId ||
+    req.params.clientWorkspaceId ||
+    req.body.workspaceId ||
+    req.query.workspaceId;
 
   if (workspaceId) {
     const access = await verifyWorkspaceAccess(req.user._id, workspaceId);
