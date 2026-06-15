@@ -238,6 +238,16 @@ async function updateTicketStatus(ticketId, status, userId) {
       throw new Error('Ticket not found');
     }
 
+    // Only the ticket owner or its assignee may change status (mirrors
+    // addTicketMessage) — was ignoring userId, so any user could resolve/close
+    // another user's ticket.
+    if (
+      ticket.userId.toString() !== userId.toString() &&
+      ticket.assignedTo?.toString() !== userId.toString()
+    ) {
+      throw new Error('Unauthorized');
+    }
+
     ticket.status = status;
 
     if (status === 'resolved' || status === 'closed') {

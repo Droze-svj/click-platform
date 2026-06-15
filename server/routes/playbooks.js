@@ -20,7 +20,19 @@ const {
   publishToMarketplace,
   searchMarketplace
 } = require('../services/playbookEnhancementService');
+const Playbook = require('../models/Playbook');
 const router = express.Router();
+
+// The version/analytics/performance services take only a playbookId with no owner
+// scope (playbooks default to private). Verify the caller owns it (writes) or owns
+// it / it's public (reads) before the service runs. Returns the playbook or null.
+async function getAccessiblePlaybook(playbookId, userId, { write = false } = {}) {
+  const pb = await Playbook.findById(playbookId).select('userId sharing').lean();
+  if (!pb) return null;
+  if (String(pb.userId) === String(userId)) return pb;
+  if (!write && pb.sharing?.isPublic) return pb;
+  return null;
+}
 
 /**
  * POST /api/playbooks
@@ -72,6 +84,9 @@ router.post('/:playbookId/apply', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:playbookId/performance', auth, asyncHandler(async (req, res) => {
   const { playbookId } = req.params;
+  if (!(await getAccessiblePlaybook(playbookId, req.user._id))) {
+    return sendError(res, 'Playbook not found', 404);
+  }
   const performance = await getPlaybookPerformance(playbookId);
   sendSuccess(res, 'Performance retrieved', 200, performance);
 }));
@@ -94,6 +109,9 @@ router.get('/suggestions/:clientId', auth, asyncHandler(async (req, res) => {
 router.post('/:playbookId/versions', auth, asyncHandler(async (req, res) => {
   const { playbookId } = req.params;
   const userId = req.user._id;
+  if (!(await getAccessiblePlaybook(playbookId, userId, { write: true }))) {
+    return sendError(res, 'Playbook not found', 404);
+  }
   const version = await createPlaybookVersion(playbookId, userId, req.body);
   sendSuccess(res, 'Version created', 201, version);
 }));
@@ -104,6 +122,9 @@ router.post('/:playbookId/versions', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:playbookId/versions', auth, asyncHandler(async (req, res) => {
   const { playbookId } = req.params;
+  if (!(await getAccessiblePlaybook(playbookId, req.user._id))) {
+    return sendError(res, 'Playbook not found', 404);
+  }
   const versions = await getPlaybookVersions(playbookId);
   sendSuccess(res, 'Versions retrieved', 200, { versions });
 }));
@@ -120,6 +141,10 @@ router.get('/:playbookId/versions/compare', auth, asyncHandler(async (req, res) 
     return sendError(res, 'Both version1 and version2 are required', 400);
   }
 
+  if (!(await getAccessiblePlaybook(playbookId, req.user._id))) {
+    return sendError(res, 'Playbook not found', 404);
+  }
+
   const comparison = await comparePlaybookVersions(playbookId, parseInt(version1, 10), parseInt(version2, 10));
   sendSuccess(res, 'Versions compared', 200, comparison);
 }));
@@ -130,6 +155,9 @@ router.get('/:playbookId/versions/compare', auth, asyncHandler(async (req, res) 
  */
 router.get('/:playbookId/analytics', auth, asyncHandler(async (req, res) => {
   const { playbookId } = req.params;
+  if (!(await getAccessiblePlaybook(playbookId, req.user._id))) {
+    return sendError(res, 'Playbook not found', 404);
+  }
   const analytics = await getPlaybookAnalytics(playbookId);
   sendSuccess(res, 'Analytics retrieved', 200, analytics);
 }));

@@ -21,6 +21,13 @@ const CalendarEvent = require('../models/CalendarEvent');
 const ScheduledPost = require('../models/ScheduledPost');
 const router = express.Router();
 
+// requireWorkspaceAccess only proves the caller owns the workspace in the PATH —
+// a postId/viewId from body/params could belong to a DIFFERENT agency. Verify the
+// resource is in the validated workspace before an (unscoped) service touches it.
+async function postInWorkspace(postId, agencyWorkspaceId) {
+  return ScheduledPost.exists({ _id: postId, agencyWorkspaceId });
+}
+
 /**
  * GET /api/agency/:agencyWorkspaceId/calendar/analytics
  * Get calendar analytics and insights
@@ -42,10 +49,15 @@ router.get('/:agencyWorkspaceId/calendar/analytics', auth, requireWorkspaceAcces
  * Reschedule single post (drag-and-drop)
  */
 router.post('/:agencyWorkspaceId/calendar/reschedule', auth, requireWorkspaceAccess('canSchedule'), asyncHandler(async (req, res) => {
+  const { agencyWorkspaceId } = req.params;
   const { postId, newScheduledTime, options = {} } = req.body;
 
   if (!postId || !newScheduledTime) {
     return sendError(res, 'Post ID and new scheduled time are required', 400);
+  }
+
+  if (!(await postInWorkspace(postId, agencyWorkspaceId))) {
+    return sendError(res, 'Post not found', 404);
   }
 
   const result = await reschedulePost(postId, newScheduledTime, options);
@@ -73,7 +85,10 @@ router.post('/:agencyWorkspaceId/calendar/bulk-reschedule', auth, requireWorkspa
  * Get reschedule suggestions
  */
 router.get('/:agencyWorkspaceId/calendar/reschedule-suggestions/:postId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { postId } = req.params;
+  const { agencyWorkspaceId, postId } = req.params;
+  if (!(await postInWorkspace(postId, agencyWorkspaceId))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const options = {
     suggestOptimal: req.query.suggestOptimal !== 'false',
     suggestAlternatives: req.query.suggestAlternatives !== 'false',
@@ -89,7 +104,10 @@ router.get('/:agencyWorkspaceId/calendar/reschedule-suggestions/:postId', auth, 
  * Get performance preview for post
  */
 router.get('/:agencyWorkspaceId/calendar/performance-preview/:postId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { postId } = req.params;
+  const { agencyWorkspaceId, postId } = req.params;
+  if (!(await postInWorkspace(postId, agencyWorkspaceId))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const preview = await getPerformancePreview(postId);
   sendSuccess(res, 'Performance preview retrieved', 200, preview);
 }));
@@ -99,13 +117,16 @@ router.get('/:agencyWorkspaceId/calendar/performance-preview/:postId', auth, req
  * Batch get performance previews
  */
 router.post('/:agencyWorkspaceId/calendar/performance-preview/batch', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
+  const { agencyWorkspaceId } = req.params;
   const { postIds } = req.body;
 
   if (!postIds || !Array.isArray(postIds)) {
     return sendError(res, 'Post IDs array is required', 400);
   }
 
-  const previews = await batchGetPerformancePreviews(postIds);
+  // Only preview posts that actually belong to this workspace.
+  const ownedIds = await ScheduledPost.find({ _id: { $in: postIds }, agencyWorkspaceId }).distinct('_id');
+  const previews = await batchGetPerformancePreviews(ownedIds);
   sendSuccess(res, 'Performance previews retrieved', 200, { previews });
 }));
 
@@ -156,8 +177,8 @@ router.get('/:agencyWorkspaceId/calendar/views', auth, requireWorkspaceAccess(),
  * Get calendar view
  */
 router.get('/:agencyWorkspaceId/calendar/views/:viewId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { viewId } = req.params;
-  const view = await CalendarView.findById(viewId).lean();
+  const { agencyWorkspaceId, viewId } = req.params;
+  const view = await CalendarView.findOne({ _id: viewId, agencyWorkspaceId }).lean();
 
   if (!view) {
     return sendError(res, 'Calendar view not found', 404);
@@ -171,8 +192,8 @@ router.get('/:agencyWorkspaceId/calendar/views/:viewId', auth, requireWorkspaceA
  * Update calendar view
  */
 router.put('/:agencyWorkspaceId/calendar/views/:viewId', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
-  const { viewId } = req.params;
-  const view = await CalendarView.findById(viewId);
+  const { agencyWorkspaceId, viewId } = req.params;
+  const view = await CalendarView.findOne({ _id: viewId, agencyWorkspaceId });
 
   if (!view) {
     return sendError(res, 'Calendar view not found', 404);
@@ -186,7 +207,12 @@ router.put('/:agencyWorkspaceId/calendar/views/:viewId', auth, requireWorkspaceA
     );
   }
 
-  Object.assign(view, req.body);
+  // Whitelist editable fields — never Object.assign(req.body) (would let a caller
+  // move the view to another workspace or overwrite createdBy).
+  const VIEW_EDITABLE = ['name', 'isDefault', 'isShared', 'filters', 'layout', 'settings', 'config', 'color'];
+  for (const f of VIEW_EDITABLE) {
+    if (Object.prototype.hasOwnProperty.call(req.body, f)) view[f] = req.body[f];
+  }
   await view.save();
 
   sendSuccess(res, 'Calendar view updated', 200, view);
@@ -197,8 +223,11 @@ router.put('/:agencyWorkspaceId/calendar/views/:viewId', auth, requireWorkspaceA
  * Delete calendar view
  */
 router.delete('/:agencyWorkspaceId/calendar/views/:viewId', auth, requireWorkspaceAccess('canDelete'), asyncHandler(async (req, res) => {
-  const { viewId } = req.params;
-  await CalendarView.findByIdAndDelete(viewId);
+  const { agencyWorkspaceId, viewId } = req.params;
+  const deleted = await CalendarView.findOneAndDelete({ _id: viewId, agencyWorkspaceId });
+  if (!deleted) {
+    return sendError(res, 'Calendar view not found', 404);
+  }
   sendSuccess(res, 'Calendar view deleted', 200);
 }));
 
@@ -207,18 +236,22 @@ router.delete('/:agencyWorkspaceId/calendar/views/:viewId', auth, requireWorkspa
  * Add comment to calendar event
  */
 router.post('/:agencyWorkspaceId/calendar/events/:postId/comments', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { postId } = req.params;
+  const { agencyWorkspaceId, postId } = req.params;
   const { text, mentions = [] } = req.body;
 
   if (!text) {
     return sendError(res, 'Comment text is required', 400);
   }
 
-  let event = await CalendarEvent.findOne({ scheduledPostId: postId });
+  if (!(await postInWorkspace(postId, agencyWorkspaceId))) {
+    return sendError(res, 'Post not found', 404);
+  }
+
+  let event = await CalendarEvent.findOne({ scheduledPostId: postId, agencyWorkspaceId });
   if (!event) {
     event = new CalendarEvent({
       scheduledPostId: postId,
-      agencyWorkspaceId: req.params.agencyWorkspaceId
+      agencyWorkspaceId
     });
   }
 
@@ -238,8 +271,11 @@ router.post('/:agencyWorkspaceId/calendar/events/:postId/comments', auth, requir
  * Get calendar event (comments, notes, performance)
  */
 router.get('/:agencyWorkspaceId/calendar/events/:postId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { postId } = req.params;
-  let event = await CalendarEvent.findOne({ scheduledPostId: postId })
+  const { agencyWorkspaceId, postId } = req.params;
+  if (!(await postInWorkspace(postId, agencyWorkspaceId))) {
+    return sendError(res, 'Post not found', 404);
+  }
+  let event = await CalendarEvent.findOne({ scheduledPostId: postId, agencyWorkspaceId })
     .populate('comments.userId', 'name email')
     .populate('comments.mentions', 'name email')
     .lean();
@@ -270,13 +306,16 @@ router.get('/:agencyWorkspaceId/calendar/events/:postId', auth, requireWorkspace
  * Update calendar event (notes, priority, tags)
  */
 router.put('/:agencyWorkspaceId/calendar/events/:postId', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
-  const { postId } = req.params;
-  let event = await CalendarEvent.findOne({ scheduledPostId: postId });
+  const { agencyWorkspaceId, postId } = req.params;
+  if (!(await postInWorkspace(postId, agencyWorkspaceId))) {
+    return sendError(res, 'Post not found', 404);
+  }
+  let event = await CalendarEvent.findOne({ scheduledPostId: postId, agencyWorkspaceId });
 
   if (!event) {
     event = new CalendarEvent({
       scheduledPostId: postId,
-      agencyWorkspaceId: req.params.agencyWorkspaceId
+      agencyWorkspaceId
     });
   }
 
