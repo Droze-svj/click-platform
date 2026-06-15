@@ -163,13 +163,12 @@ function buildDrawTextFilter(overlay) {
   const style = overlay.style || overlay.type || 'default'
   const sty = CAPTION_STYLE_MAP[style] || CAPTION_STYLE_MAP.default
 
-  // If manual color explicitly set, use it; otherwise use style preset
-  const fontColor = overlay.color || sty.fontColor
-  // Convert any CSS rgba() to FFmpeg format (e.g. rgba(0,0,0,0.85) → black@0.85)
+  // If manual color explicitly set, use it; otherwise use style preset. User
+  // colors are whitelisted through cssColorToFfmpeg (→ safe 0xRRGGBB / [a-z]
+  // name token) so they can't break out of the single-quoted filter option.
+  const fontColor = overlay.color ? ffColor(overlay.color, sty.fontColor) : sty.fontColor
   const rawBg = overlay.backgroundColor || overlay.background || null
-  const bgColor = rawBg
-    ? rawBg.replace(/rgba?\(0,0,0,([0-9.]+)\)/i, 'black@$1').replace(/rgba?\(.*?\)/i, 'black@0.8')
-    : sty.bgColor
+  const bgColor = rawBg ? ffColor(rawBg, sty.bgColor) : sty.bgColor
 
   // Positioning: support explicit x/y (percentage-based from editor) or style defaults
   const x = overlay.x !== undefined
@@ -444,6 +443,17 @@ function cssColorToFfmpeg(css) {
   }
   // Named color — pass through; default fully opaque.
   return { color: s.replace(/[^a-z]/g, '') || 'white', alpha: 1 }
+}
+
+/**
+ * User color → a single safe ffmpeg color token (`0xRRGGBB`, `name`, or
+ * `token@alpha`), falling back to `fallbackToken` for empty input. Output is
+ * whitelist-derived from cssColorToFfmpeg, so it never contains quotes/colons.
+ */
+function ffColor(css, fallbackToken) {
+  if (css == null || css === '') return fallbackToken
+  const { color, alpha } = cssColorToFfmpeg(css)
+  return alpha < 1 ? `${color}@${alpha}` : color
 }
 
 /** Parse a css color to {r,g,b,a} for sharp raster generation. */

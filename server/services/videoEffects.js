@@ -3,6 +3,7 @@
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const logger = require('../utils/logger');
+const { escapeDrawtext, safeColor } = require('../utils/ffmpegSafe');
 
 /**
  * Apply video filter/effect
@@ -91,7 +92,12 @@ async function addTextOverlay(videoPath, outputPath, textOptions) {
   }
 
   return new Promise((resolve, reject) => {
-    const drawText = `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=${fontColor}:x=${xPos}:y=${yPos}:box=1:boxcolor=${backgroundColor}@${backgroundColorAlpha}:boxborderw=5`;
+    // Escape user text + whitelist colors — drawtext is an injection surface.
+    const safeText = escapeDrawtext(text);
+    const safeFontColor = safeColor(fontColor, 'white');
+    const safeBg = safeColor(backgroundColor, 'black');
+    const safeAlpha = Math.max(0, Math.min(1, Number(backgroundColorAlpha))) || 0;
+    const drawText = `drawtext=text='${safeText}':fontsize=${Number(fontSize) || 24}:fontcolor=${safeFontColor}:x=${xPos}:y=${yPos}:box=1:boxcolor=${safeBg}@${safeAlpha}:boxborderw=5`;
 
     ffmpeg(videoPath)
       .videoFilters(drawText)
