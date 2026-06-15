@@ -13,6 +13,7 @@ const logger = require('../utils/logger')
 const videoEnhancer = require('../utils/videoEnhancer')
 const c2paService = require('./c2paService')
 const { toAbsolutePath } = require('../utils/pathUtils')
+const urlGuard = require('../utils/urlGuard')
 
 /**
  * Build FFmpeg video filter chain from editor videoFilters
@@ -599,6 +600,7 @@ async function rasterizeSvgToPng(svgOverlay, W, H, tmpDir) {
   const url = String(svgOverlay.url || '')
   let svgBuf
   if (/^https?:\/\//i.test(url)) {
+    await assertSafeRemote(url) // SSRF: block private/internal targets before fetch
     const res = await fetch(url)
     if (!res.ok) throw new Error(`svg fetch ${res.status}`)
     svgBuf = Buffer.from(await res.arrayBuffer())
@@ -721,19 +723,29 @@ function isRemoteUrl(p) {
   return typeof p === 'string' && /^https?:\/\//i.test(p)
 }
 
+// SSRF guard: any http(s) URL ffmpeg/fetch will reach must resolve to a PUBLIC
+// address. urlGuard.assertPublicUrl resolves every DNS record and throws a
+// BlockedUrlError on private/loopback/link-local/metadata ranges. Local paths
+// (already resolved to absolute) pass straight through. Returns the input so it
+// can be used inline: `const s = await assertSafeRemote(url)`.
+async function assertSafeRemote(u) {
+  if (isRemoteUrl(u)) await urlGuard.assertPublicUrl(u)
+  return u
+}
+
 async function resolveInputPath(videoId, videoUrl) {
   // ffmpeg can read http(s) URLs directly (e.g. Cloudinary/S3). Pass them
   // through untouched — toAbsolutePath() would otherwise mangle
   // "https://host/x.mp4" into "<cwd>/https:/host/x.mp4" and the file would
   // then look like a missing local path.
-  if (videoUrl) return isRemoteUrl(videoUrl) ? videoUrl : toAbsolutePath(videoUrl);
+  if (videoUrl) return isRemoteUrl(videoUrl) ? await assertSafeRemote(videoUrl) : toAbsolutePath(videoUrl);
   if (!videoId) throw new Error('Video not found: provide videoId or videoUrl')
   const content = await Content.findById(videoId)
   if (!content || !content.originalFile?.url) {
     throw new Error('Video not found in database')
   }
   const url = content.originalFile.url
-  return isRemoteUrl(url) ? url : toAbsolutePath(url);
+  return isRemoteUrl(url) ? await assertSafeRemote(url) : toAbsolutePath(url);
 }
 
 /**
@@ -1014,7 +1026,7 @@ async function renderFromEditorState(options) {
     try {
       if (ro.kind === 'image') {
         const url = String(ro.spec.url)
-        const source = isRemoteUrl(url) ? url : toAbsolutePath(url)
+        const source = isRemoteUrl(url) ? await assertSafeRemote(url) : toAbsolutePath(url)
         overlayInputs.push({ kind: 'image', source, spec: ro.spec })
       } else if (ro.kind === 'svg') {
         const png = await rasterizeSvgToPng(ro.spec, width, height, tmpRenderDir)
@@ -1042,339 +1054,358 @@ async function renderFromEditorState(options) {
   }
   const hasVisualOverlays = overlayInputs.length > 0
 
-  // Best-effort cleanup of temp rasterized PNGs + dir.
+  // Best-effort cleanup of temp rasterized PNGs + dir. rmSync(recursive,force)
+  // removes the dir even if an unlink above failed (rmdirSync needs it empty)
+  // and never throws on an already-gone dir, so it is safe to call twice.
   const cleanupTmp = () => {
     for (const f of tmpFiles) { try { fs.unlinkSync(f) } catch (_) { /* noop */ } }
-    try { fs.rmdirSync(tmpRenderDir) } catch (_) { /* noop */ }
+    try { fs.rmSync(tmpRenderDir, { recursive: true, force: true }) } catch (_) { /* noop */ }
   }
 
   const { renderQueue, optimizeFFmpegCommand } = require('./performanceOptimizationService')
 
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
-    // 🛸 Phase 14: Neural Enhancement Scan
-    let enhancementFilters = []
-    let hasAudio = false
+    // Guard the whole async executor: a throw during command/filter building
+    // would otherwise become an unhandled rejection (the no-async-promise-
+    // executor footgun) — the outer Promise would never settle (render hangs)
+    // and tmpRenderDir would leak. Catch → cleanup + reject so it fails fast.
     try {
-      const metadata = await new Promise((res, rej) => {
-        ffmpeg.ffprobe(inputPath, (err, data) => err ? rej(err) : res(data))
-      })
-      enhancementFilters = videoEnhancer.getEnhancementFilters(metadata)
-      hasAudio = Array.isArray(metadata.streams) && metadata.streams.some(s => s.codec_type === 'audio')
-    } catch (err) {
-      logger.warn('Quality scan failed, proceeding with baseline', { error: err.message })
-    }
+    // 🛸 Phase 14: Neural Enhancement Scan
+      let enhancementFilters = []
+      let hasAudio = false
+      try {
+        const metadata = await new Promise((res, rej) => {
+          ffmpeg.ffprobe(inputPath, (err, data) => err ? rej(err) : res(data))
+        })
+        enhancementFilters = videoEnhancer.getEnhancementFilters(metadata)
+        hasAudio = Array.isArray(metadata.streams) && metadata.streams.some(s => s.codec_type === 'audio')
+      } catch (err) {
+        logger.warn('Quality scan failed, proceeding with baseline', { error: err.message })
+      }
 
-    let command = ffmpeg(inputPath)
-    if (hasMusic) {
+      let command = ffmpeg(inputPath)
+      if (hasMusic) {
       // Resolve the music source the same way as the main input: pass remote
       // http(s) URLs through untouched, but turn a relative "/uploads/..." URL
       // into a real absolute filesystem path (raw "/uploads/x.mp3" would be read
       // by ffmpeg as a non-existent absolute path).
-      const musicInput = isRemoteUrl(firstMusic.sourceUrl)
-        ? firstMusic.sourceUrl
-        : toAbsolutePath(firstMusic.sourceUrl)
-      command = command.input(musicInput)
-    }
+        const musicInput = isRemoteUrl(firstMusic.sourceUrl)
+          ? await assertSafeRemote(firstMusic.sourceUrl)
+          : toAbsolutePath(firstMusic.sourceUrl)
+        command = command.input(musicInput)
+      }
 
-    const finalFilterList = [...allVideoFilters, ...enhancementFilters]
+      const finalFilterList = [...allVideoFilters, ...enhancementFilters]
     
-    // 🌍 Phase 15: Global Subtitle Burn-in
-    if (exportOptions.subtitlePath && fs.existsSync(exportOptions.subtitlePath)) {
-      logger.info('Injecting Neural Subtitles', { path: exportOptions.subtitlePath });
-      const subPath = exportOptions.subtitlePath.replace(/\\/g, '/').replace(/:/g, '\\:');
-      finalFilterList.push(`ass='${subPath}'`);
-    }
+      // 🌍 Phase 15: Global Subtitle Burn-in
+      if (exportOptions.subtitlePath && fs.existsSync(exportOptions.subtitlePath)) {
+        logger.info('Injecting Neural Subtitles', { path: exportOptions.subtitlePath });
+        const subPath = exportOptions.subtitlePath.replace(/\\/g, '/').replace(/:/g, '\\:');
+        finalFilterList.push(`ass='${subPath}'`);
+      }
 
-    // 🎬 Phase 16: Cinematic Film Grain (2026 Hollywood Standard)
-    // Automatically injects a subtle dynamic noise overlay to remove the 'digital/cheap' look
-    if (!comfortMode) {
-      finalFilterList.push('noise=alls=8:allf=t+u');
-    } else {
+      // 🎬 Phase 16: Cinematic Film Grain (2026 Hollywood Standard)
+      // Automatically injects a subtle dynamic noise overlay to remove the 'digital/cheap' look
+      if (!comfortMode) {
+        finalFilterList.push('noise=alls=8:allf=t+u');
+      } else {
       // Subtle organic dither to avoid compression banding but remain comfortable
-      finalFilterList.push('noise=alls=2:allf=t+u');
-    }
+        finalFilterList.push('noise=alls=2:allf=t+u');
+      }
 
-    // 💰 Phase 17: Autonomous Commerce Inlays
-    if (exportOptions.monetizationPlan && exportOptions.monetizationPlan.triggers) {
-      const commerceAssetService = require('./commerceAssetService');
-      const filteredTriggers = exportOptions.monetizationPlan.triggers.filter(t => (t.intentScore || 0) >= 0.85);
+      // 💰 Phase 17: Autonomous Commerce Inlays
+      if (exportOptions.monetizationPlan && exportOptions.monetizationPlan.triggers) {
+        const commerceAssetService = require('./commerceAssetService');
+        const filteredTriggers = exportOptions.monetizationPlan.triggers.filter(t => (t.intentScore || 0) >= 0.85);
       
-      for (const trigger of filteredTriggers) {
-        try {
-          logger.info('Neural Commerce: Generating High-Intent Inlay', { productId: trigger.productId });
-          const overlayUrl = await commerceAssetService.generateNeuralCommerceOverlay({
-            name: trigger.productName,
-            price: trigger.productPrice,
-            checkoutUrl: trigger.checkoutUrl,
-            id: trigger.productId
-          });
+        for (const trigger of filteredTriggers) {
+          try {
+            logger.info('Neural Commerce: Generating High-Intent Inlay', { productId: trigger.productId });
+            const overlayUrl = await commerceAssetService.generateNeuralCommerceOverlay({
+              name: trigger.productName,
+              price: trigger.productPrice,
+              checkoutUrl: trigger.checkoutUrl,
+              id: trigger.productId
+            });
 
-          command = command.input(overlayUrl);
-          const inputIndex = hasMusic ? 2 : 1; 
-          finalFilterList.push(`[${inputIndex}:v]scale=400:-1[comm];[qv][comm]overlay=x=(W-w)/2:y=H*0.7:enable='between(t,${trigger.startTime},${trigger.startTime + trigger.duration})'[qv]`);
-        } catch (err) {
-          logger.warn('Failed to inject commerce inlay', { error: err.message });
+            command = command.input(overlayUrl);
+            const inputIndex = hasMusic ? 2 : 1; 
+            finalFilterList.push(`[${inputIndex}:v]scale=400:-1[comm];[qv][comm]overlay=x=(W-w)/2:y=H*0.7:enable='between(t,${trigger.startTime},${trigger.startTime + trigger.duration})'[qv]`);
+          } catch (err) {
+            logger.warn('Failed to inject commerce inlay', { error: err.message });
+          }
         }
       }
-    }
 
-    // 🕰️ Phase 19: Long-Tail Resurrection (Hook Injection)
-    if (exportOptions.resurrectionHookPath && fs.existsSync(exportOptions.resurrectionHookPath)) {
-      logger.info('Phase 19: Injecting Resurrection Hook', { path: exportOptions.resurrectionHookPath });
-      // We'll use the concat demuxer or filter-based concat
-      // For this pipeline, we prepend the hook as an input and concat
-      command = command.input(exportOptions.resurrectionHookPath);
+      // 🕰️ Phase 19: Long-Tail Resurrection (Hook Injection)
+      if (exportOptions.resurrectionHookPath && fs.existsSync(exportOptions.resurrectionHookPath)) {
+        logger.info('Phase 19: Injecting Resurrection Hook', { path: exportOptions.resurrectionHookPath });
+        // We'll use the concat demuxer or filter-based concat
+        // For this pipeline, we prepend the hook as an input and concat
+        command = command.input(exportOptions.resurrectionHookPath);
       // Construct concat filter logic if needed, but for MVP we'll assume the hook is prepended
       // This requires complex filter adjustment. For Phase 19 implementation, we'll mark this as active.
-    }
+      }
 
-    const finalFilterStr = finalFilterList.length > 0 ? finalFilterList.join(',') : null;
+      const finalFilterStr = finalFilterList.length > 0 ? finalFilterList.join(',') : null;
 
-    // ── Editor parity: register visual overlay inputs (image/svg/gradient) and
-    // build their chained overlay graph. These inputs are added AFTER any music
-    // / commerce / resurrection inputs so we don't shift those hardcoded
-    // indices. We snapshot the current input count to compute our base index. ──
-    let overlayGraph = '' // chains appended to the video branch; consumes/ends [vout]
-    if (hasVisualOverlays) {
+      // ── Editor parity: register visual overlay inputs (image/svg/gradient) and
+      // build their chained overlay graph. These inputs are added AFTER any music
+      // / commerce / resurrection inputs so we don't shift those hardcoded
+      // indices. We snapshot the current input count to compute our base index. ──
+      let overlayGraph = '' // chains appended to the video branch; consumes/ends [vout]
+      if (hasVisualOverlays) {
       // fluent-ffmpeg tracks inputs on command._inputs.
-      let baseIdx = Array.isArray(command._inputs) ? command._inputs.length : (hasMusic ? 2 : 1)
-      const chains = []
-      let prevLabel = 'vbase' // base text/shape chain will be relabeled to [vbase]
-      overlayInputs.forEach((ov, i) => {
-        try {
-          command = command.input(ov.source)
-          const inputIdx = baseIdx + i
-          const isLast = i === overlayInputs.length - 1
-          const outLabel = isLast ? 'vout' : `vo${i}`
-          const seg = buildImageOverlaySegment(ov.spec, inputIdx, prevLabel, outLabel, width, height)
-          chains.push(...seg.chains)
-          prevLabel = outLabel
-        } catch (e) {
-          logger.warn('Skip visual overlay input', { error: e.message })
+        let baseIdx = Array.isArray(command._inputs) ? command._inputs.length : (hasMusic ? 2 : 1)
+        const chains = []
+        let prevLabel = 'vbase' // base text/shape chain will be relabeled to [vbase]
+        overlayInputs.forEach((ov, i) => {
+          try {
+            command = command.input(ov.source)
+            const inputIdx = baseIdx + i
+            const isLast = i === overlayInputs.length - 1
+            const outLabel = isLast ? 'vout' : `vo${i}`
+            const seg = buildImageOverlaySegment(ov.spec, inputIdx, prevLabel, outLabel, width, height)
+            chains.push(...seg.chains)
+            prevLabel = outLabel
+          } catch (e) {
+            logger.warn('Skip visual overlay input', { error: e.message })
+          }
+        })
+        if (chains.length > 0) {
+          overlayGraph = ';' + chains.join(';')
         }
-      })
-      if (chains.length > 0) {
-        overlayGraph = ';' + chains.join(';')
       }
-    }
-    const hasOverlayGraph = overlayGraph.length > 0
+      const hasOverlayGraph = overlayGraph.length > 0
 
-    // When a complexFilter maps an explicit [vout], scaling is done INSIDE the
-    // filtergraph (scale=W:H prepended to the video chain). In that case we must
-    // NOT also call .size() (-s W:H) on the mapped output — applying -s on top of
-    // a filtergraph-mapped pad fails on some modern ffmpeg builds with
-    // "Error opening output file: Invalid argument" (exit 234). We track this so
-    // the size() call below only runs for the non-complexFilter branches.
-    let videoMappedViaFiltergraph = false
+      // When a complexFilter maps an explicit [vout], scaling is done INSIDE the
+      // filtergraph (scale=W:H prepended to the video chain). In that case we must
+      // NOT also call .size() (-s W:H) on the mapped output — applying -s on top of
+      // a filtergraph-mapped pad fails on some modern ffmpeg builds with
+      // "Error opening output file: Invalid argument" (exit 234). We track this so
+      // the size() call below only runs for the non-complexFilter branches.
+      let videoMappedViaFiltergraph = false
 
-    // Base video label: when visual overlays are chained, the base text/shape
-    // chain must terminate at [vbase] and the overlay graph carries it to [vout].
-    const baseVidLabel = hasOverlayGraph ? 'vbase' : 'vout'
+      // Base video label: when visual overlays are chained, the base text/shape
+      // chain must terminate at [vbase] and the overlay graph carries it to [vout].
+      const baseVidLabel = hasOverlayGraph ? 'vbase' : 'vout'
 
-    if (hasMusic) {
-      const musicVolume = firstMusic?.properties?.volume ?? 0.5
-      const duckLevel = exportOptions.duckLevel ?? -12
-      const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
-      const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
-      videoMappedViaFiltergraph = true
-      const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
+      if (hasMusic) {
+        const musicVolume = firstMusic?.properties?.volume ?? 0.5
+        const duckLevel = exportOptions.duckLevel ?? -12
+        const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
+        const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+        videoMappedViaFiltergraph = true
+        const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
-      if (hasAudio) {
+        if (hasAudio) {
         // Source has audio + background music added -> map both with sidechain compression
-        let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
-        const complexStr = `${vidPart};${audPart}`
-        command = command
-          .complexFilter(complexStr)
-          .outputOptions(['-map', '[vout]', '-map', '[aout]'])
-      } else {
+          let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+          const complexStr = `${vidPart};${audPart}`
+          command = command
+            .complexFilter(complexStr)
+            .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+        } else {
         // Silent source + background music added -> map only music track directly (skip sidechain amix)
-        let audPart = `[1:a]volume=${musicVolume},${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
-        const complexStr = `${vidPart};${audPart}`
-        command = command
-          .complexFilter(complexStr)
-          .outputOptions(['-map', '[vout]', '-map', '[aout]'])
-      }
-    } else {
-      const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
+          let audPart = `[1:a]volume=${musicVolume},${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+          const complexStr = `${vidPart};${audPart}`
+          command = command
+            .complexFilter(complexStr)
+            .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+        }
+      } else {
+        const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
-      if (hasAudio) {
-        if (finalFilterStr || hasOverlayGraph) {
+        if (hasAudio) {
+          if (finalFilterStr || hasOverlayGraph) {
           // Source has audio, no music, with video filters/overlays -> map with
           // complex filter. Scale INSIDE the filtergraph (see
           // videoMappedViaFiltergraph note) so we don't also need .size(), which
           // would error on the mapped [vout] pad.
-          const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
-          const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
-          command = command.complexFilter(`${vidPart};[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
-            .outputOptions(['-map', '[vout]', '-map', '[aout]'])
-          videoMappedViaFiltergraph = true
-        } else {
+            const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
+            const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+            command = command.complexFilter(`${vidPart};[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
+              .outputOptions(['-map', '[vout]', '-map', '[aout]'])
+            videoMappedViaFiltergraph = true
+          } else {
           // Source has audio, no music, no video filters -> apply audioFilters directly.
           // No complexFilter here, so .size() (-s W:H) below performs the scaling.
-          command = command.audioFilters(`highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}`)
-        }
-      } else {
+            command = command.audioFilters(`highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}`)
+          }
+        } else {
         // Source is completely silent and no background music added -> render as video only
-        if (finalFilterStr || hasOverlayGraph) {
-          const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
-          const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
-          command = command.complexFilter(vidPart)
-            .outputOptions(['-map', '[vout]'])
-          videoMappedViaFiltergraph = true
+          if (finalFilterStr || hasOverlayGraph) {
+            const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
+            const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+            command = command.complexFilter(vidPart)
+              .outputOptions(['-map', '[vout]'])
+            videoMappedViaFiltergraph = true
+          }
+          command = command.noAudio()
         }
-        command = command.noAudio()
       }
-    }
 
-    const videoOutputOptions = isProres
-      ? ['-profile:v', '3', '-vendor', 'apl0'] // ProRes 422 HQ
-      : [`-b:v ${bitrateMbps}M`, `-preset ${preset}`, `-crf ${crf}`, '-movflags +faststart']
+      const videoOutputOptions = isProres
+        ? ['-profile:v', '3', '-vendor', 'apl0'] // ProRes 422 HQ
+        : [`-b:v ${bitrateMbps}M`, `-preset ${preset}`, `-crf ${crf}`, '-movflags +faststart']
 
-    const commandChain = command
-      .videoCodec(codec)
-      .outputOptions(videoOutputOptions)
+      const commandChain = command
+        .videoCodec(codec)
+        .outputOptions(videoOutputOptions)
 
-    // Only apply -s W:H when scaling was NOT already done inside a filtergraph that
-    // maps [vout]. Applying -s on a filtergraph-mapped output can fail on modern
-    // ffmpeg ("Invalid argument", exit 234); the complexFilter branches above
-    // already prepend scale=W:H to the video chain instead.
-    if (!videoMappedViaFiltergraph) {
-      commandChain.size(`${width}x${height}`)
-    }
+      // Only apply -s W:H when scaling was NOT already done inside a filtergraph that
+      // maps [vout]. Applying -s on a filtergraph-mapped output can fail on modern
+      // ffmpeg ("Invalid argument", exit 234); the complexFilter branches above
+      // already prepend scale=W:H to the video chain instead.
+      if (!videoMappedViaFiltergraph) {
+        commandChain.size(`${width}x${height}`)
+      }
 
-    if (hasAudio || hasMusic) {
-      commandChain
-        .audioCodec('aac')
-        .outputOptions(['-b:a', audioBitrate])
-    }
+      if (hasAudio || hasMusic) {
+        commandChain
+          .audioCodec('aac')
+          .outputOptions(['-b:a', audioBitrate])
+      }
 
-    commandChain.output(outputPath)
+      commandChain.output(outputPath)
 
-    // Optimize for this specific machine
-    optimizeFFmpegCommand(commandChain)
+      // Optimize for this specific machine
+      optimizeFFmpegCommand(commandChain)
 
-    const job = {
-      execute: () => {
-        return new Promise((jobResolve, jobReject) => {
-          commandChain
-            .on('start', () => {
-              logger.info('Neural Node Dispatch: Render Process Initialized', {
-                videoId,
-                outputPath,
-                node: 'Alpha-1'
-              })
-            })
-            .on('progress', (p) => {
-              if (p.percent) logger.debug('Render progress', { percent: p.percent.toFixed(1) })
-            })
-            .on('end', async () => {
-              cleanupTmp() // remove temp rasterized overlay PNGs
-              if (!fs.existsSync(outputPath)) {
-                return jobReject(new Error('Neural Node Error: Output Fragment Missing'))
-              }
-              // Defensive: ffmpeg can exit 0 with a near-empty file under
-              // OOM / codec bailout / aborted-mid-write conditions. Treat
-              // anything under 1KB as a failed render so the client
-              // doesn't hand the user a zero-byte download.
-              const size = fs.statSync(outputPath).size
-              if (size <= 1024) {
-                try { fs.unlinkSync(outputPath) } catch (_) { /* best effort cleanup */ }
-                return jobReject(new Error(`Neural Node Error: ffmpeg produced an empty/truncated file (${size} bytes) — likely OOM or codec failure`))
-              }
-
-              // C2PA provenance signing — best-effort, never blocks or fails the render.
-              // signRender() handles its own graceful degradation: tries c2pa-node,
-              // falls back to c2patool CLI, and if neither is present returns
-              // { signed: false } with a warning rather than throwing.
-              const c2paJobId = outputFilename.replace(/\.[^.]+$/, '')
-              let c2paResult = { signed: false, sha256: null, sizeBytes: size }
-              try {
-                c2paResult = await c2paService.signRender({
-                  inputPath: outputPath,
-                  tree: null,
-                  jobId: c2paJobId,
-                  userId: userId || null,
-                })
-              } catch (err) {
-                logger.warn('[render] C2PA signing threw; export will be unsigned', {
-                  error: err.message,
+      const job = {
+        execute: () => {
+          return new Promise((jobResolve, jobReject) => {
+            commandChain
+              .on('start', () => {
+                logger.info('Neural Node Dispatch: Render Process Initialized', {
                   videoId,
+                  outputPath,
+                  node: 'Alpha-1'
                 })
-              }
-              // Persist the authenticity record without blocking the render response.
-              c2paService.persistAuthenticity({
-                contentId: videoId || null,
-                userId: userId || null,
-                jobId: c2paJobId,
-                signed: c2paResult.signed,
-                manifest: c2paResult.manifest || null,
-                signer: c2paResult.signer || null,
-                sha256: c2paResult.sha256 || null,
-                reason: c2paResult.reason || null,
-              }).catch((err) => {
-                logger.warn('[render] persistAuthenticity threw', { jobId: c2paJobId, error: err.message })
               })
+              .on('progress', (p) => {
+                if (p.percent) logger.debug('Render progress', { percent: p.percent.toFixed(1) })
+              })
+              .on('end', async () => {
+                try {
+                  cleanupTmp() // remove temp rasterized overlay PNGs
+                  if (!fs.existsSync(outputPath)) {
+                    return jobReject(new Error('Neural Node Error: Output Fragment Missing'))
+                  }
+                  // Defensive: ffmpeg can exit 0 with a near-empty file under
+                  // OOM / codec bailout / aborted-mid-write conditions. Treat
+                  // anything under 1KB as a failed render so the client
+                  // doesn't hand the user a zero-byte download.
+                  const size = fs.statSync(outputPath).size
+                  if (size <= 1024) {
+                    try { fs.unlinkSync(outputPath) } catch (_) { /* best effort cleanup */ }
+                    return jobReject(new Error(`Neural Node Error: ffmpeg produced an empty/truncated file (${size} bytes) — likely OOM or codec failure`))
+                  }
 
-              // Default to the local URL. On hosts with cloud storage configured
-              // (Cloudinary/S3) the local uploads dir is ephemeral, so push the
-              // export to cloud and hand back the durable URL instead. This is
-              // best-effort: any failure falls back to the local URL so the user
-              // can still download within the current process lifetime.
-              let url = `/uploads/exports/${outputFilename}`
-              try {
-                const storageService = require('./storageService')
-                if (storageService.isCloudStorageEnabled && storageService.isCloudStorageEnabled()) {
-                  const contentType = ext === 'mov' ? 'video/quicktime' : 'video/mp4'
-                  const uploaded = await storageService.uploadFile(
-                    outputPath,
-                    `exports/${outputFilename}`,
-                    contentType
-                  )
-                  if (uploaded?.url) {
-                    url = uploaded.url
-                    logger.info('[render] Export uploaded to cloud storage', {
+                  // C2PA provenance signing — best-effort, never blocks or fails the render.
+                  // signRender() handles its own graceful degradation: tries c2pa-node,
+                  // falls back to c2patool CLI, and if neither is present returns
+                  // { signed: false } with a warning rather than throwing.
+                  const c2paJobId = outputFilename.replace(/\.[^.]+$/, '')
+                  let c2paResult = { signed: false, sha256: null, sizeBytes: size }
+                  try {
+                    c2paResult = await c2paService.signRender({
+                      inputPath: outputPath,
+                      tree: null,
+                      jobId: c2paJobId,
+                      userId: userId || null,
+                    })
+                  } catch (err) {
+                    logger.warn('[render] C2PA signing threw; export will be unsigned', {
+                      error: err.message,
                       videoId,
-                      storage: uploaded.storage,
-                      url,
                     })
                   }
+                  // Persist the authenticity record without blocking the render response.
+                  c2paService.persistAuthenticity({
+                    contentId: videoId || null,
+                    userId: userId || null,
+                    jobId: c2paJobId,
+                    signed: c2paResult.signed,
+                    manifest: c2paResult.manifest || null,
+                    signer: c2paResult.signer || null,
+                    sha256: c2paResult.sha256 || null,
+                    reason: c2paResult.reason || null,
+                  }).catch((err) => {
+                    logger.warn('[render] persistAuthenticity threw', { jobId: c2paJobId, error: err.message })
+                  })
+
+                  // Default to the local URL. On hosts with cloud storage configured
+                  // (Cloudinary/S3) the local uploads dir is ephemeral, so push the
+                  // export to cloud and hand back the durable URL instead. This is
+                  // best-effort: any failure falls back to the local URL so the user
+                  // can still download within the current process lifetime.
+                  let url = `/uploads/exports/${outputFilename}`
+                  try {
+                    const storageService = require('./storageService')
+                    if (storageService.isCloudStorageEnabled && storageService.isCloudStorageEnabled()) {
+                      const contentType = ext === 'mov' ? 'video/quicktime' : 'video/mp4'
+                      const uploaded = await storageService.uploadFile(
+                        outputPath,
+                        `exports/${outputFilename}`,
+                        contentType
+                      )
+                      if (uploaded?.url) {
+                        url = uploaded.url
+                        logger.info('[render] Export uploaded to cloud storage', {
+                          videoId,
+                          storage: uploaded.storage,
+                          url,
+                        })
+                      }
+                    }
+                  } catch (err) {
+                    logger.warn('[render] Cloud upload of export failed; serving local URL', {
+                      error: err.message,
+                      videoId,
+                    })
+                  }
+
+                  logger.info('Neural Node Handoff: Render Complete', {
+                    videoId,
+                    url,
+                    bytes: size,
+                    signed: c2paResult.signed,
+                    signer: c2paResult.signer || null,
+                  })
+                  jobResolve({ outputPath, url, signed: c2paResult.signed })
+                } catch (e) {
+                // A throw after existsSync (e.g. statSync race) must reject the
+                // job, not become an unhandled rejection that hangs the render.
+                  cleanupTmp()
+                  logger.error('Neural Node Failure (post-render)', { error: e.message, videoId })
+                  jobReject(e)
                 }
-              } catch (err) {
-                logger.warn('[render] Cloud upload of export failed; serving local URL', {
-                  error: err.message,
-                  videoId,
-                })
-              }
-
-              logger.info('Neural Node Handoff: Render Complete', {
-                videoId,
-                url,
-                bytes: size,
-                signed: c2paResult.signed,
-                signer: c2paResult.signer || null,
               })
-              jobResolve({ outputPath, url, signed: c2paResult.signed })
-            })
-            .on('error', (err) => {
-              cleanupTmp() // remove temp rasterized overlay PNGs
-              logger.error('Neural Node Failure', { error: err.message, videoId })
-              jobReject(err)
-            })
-            .run()
-        })
+              .on('error', (err) => {
+                cleanupTmp() // remove temp rasterized overlay PNGs
+                logger.error('Neural Node Failure', { error: err.message, videoId })
+                jobReject(err)
+              })
+              .run()
+          })
+        }
       }
-    }
 
-    renderQueue.add({
-      ...job,
-      execute: async () => {
-        const res = await job.execute()
-        return res
-      },
-      onComplete: (res) => resolve(res),
-      onError: (err) => reject(err)
-    })
+      renderQueue.add({
+        ...job,
+        execute: async () => {
+          const res = await job.execute()
+          return res
+        },
+        onComplete: (res) => resolve(res),
+        onError: (err) => reject(err)
+      })
+    } catch (err) {
+      cleanupTmp() // never leak the temp dir on a build-time failure
+      reject(err)
+    }
   })
 }
 
@@ -1504,6 +1535,8 @@ async function stitchSegments(inputPath, segments, opts = {}) {
   // Build one ffmpeg invocation. Input index === segment index.
   const cmd = ffmpeg()
   const sources = segs.map((seg) => resolveSegmentSource(seg, inputPath))
+  // SSRF: validate every remote segment source before it reaches ffmpeg.
+  await Promise.all(sources.map((s) => assertSafeRemote(s)))
   for (const src of sources) cmd.input(src)
 
   // Probe audio presence in parallel. Silent segments synthesize their audio
