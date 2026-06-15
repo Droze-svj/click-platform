@@ -3,9 +3,16 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../../middleware/auth');
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../../utils/response');
 const advancedAIService = require('../../services/advancedAIService');
 const logger = require('../../utils/logger');
+
+// Every route here is a paid LLM generation (some fan out by `count`), and the
+// router previously had NO rate limit — a free user could run unbounded calls.
+// Apply the AI rate limiter to all POSTs and hard-cap any fan-out count.
+router.use((req, res, next) => (req.method === 'POST' ? aiLimiter(req, res, next) : next()));
+const clampN = (v, d) => Math.min(Math.max(1, parseInt(v, 10) || d), 10);
 
 /**
  * POST /api/ai/advanced/multi-modal
@@ -39,7 +46,7 @@ router.post('/content-series', authenticate, async (req, res) => {
       return sendError(res, 'Topic is required', 400);
     }
 
-    const series = await advancedAIService.generateContentSeries(topic, count, options);
+    const series = await advancedAIService.generateContentSeries(topic, clampN(count, 5), options);
     return sendSuccess(res, { series, count: series.length });
   } catch (error) {
     logger.error('Error generating content series', { error: error.message });

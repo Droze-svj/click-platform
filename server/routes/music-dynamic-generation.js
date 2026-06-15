@@ -11,7 +11,11 @@ const {
   generateStructuredTrack,
   mergeSectionIntoTrack
 } = require('../services/dynamicMusicGenerationService');
+const { aiLimiter } = require("../middleware/enhancedRateLimiter");
 const router = express.Router();
+
+// AI generation — apply the tight AI rate limiter to POSTs (was only under the global limiter).
+router.use((req, res, next) => (req.method === "POST" ? aiLimiter(req, res, next) : next()));
 
 /**
  * @route POST /api/music/dynamic/generate

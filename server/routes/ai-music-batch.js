@@ -8,7 +8,11 @@ const logger = require('../utils/logger');
 const { generateMusicTrack } = require('../services/aiMusicGenerationService');
 const { queueGeneration } = require('../services/aiMusicGenerationQueue');
 const MusicGeneration = require('../models/MusicGeneration');
+const { aiLimiter } = require("../middleware/enhancedRateLimiter");
 const router = express.Router();
+
+// AI generation — apply the tight AI rate limiter to POSTs (was only under the global limiter).
+router.use((req, res, next) => (req.method === "POST" ? aiLimiter(req, res, next) : next()));
 
 /**
  * @route POST /api/ai-music/batch/generate
