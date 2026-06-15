@@ -20,6 +20,12 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     region: oregon
+    # Deploy the latest commit on main automatically. If pushes to main aren't
+    # deploying, the service may have been created manually (not from this
+    # blueprint) — in that case also flip Auto-Deploy = Yes + Branch = main under
+    # the service's Settings → Build & Deploy, or trigger a Manual Deploy.
+    branch: main
+    autoDeploy: true
     # Liveness probe only — /api/health is a DEEP readiness check that returns
     # 503 if Mongo/Redis/Supabase has any transient blip, which would make Render
     # kill a healthy instance. /api/health/light always returns 200 if the
