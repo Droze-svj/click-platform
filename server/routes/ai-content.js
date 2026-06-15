@@ -6,6 +6,8 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
+const { guardOwnership } = require('../utils/ownership');
+const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { analyzeContentConfidence, getContentConfidence } = require('../services/aiConfidenceService');
 const { createOrUpdateTemplate, getTemplates, generateContentWithTemplate } = require('../services/aiTemplateService');
 const { generateVariants, improveSection, rewriteForTone, generateHookVariations } = require('../services/assistedEditingService');
@@ -20,6 +22,32 @@ router.use((req, res, next) => {
   if (req.method === 'POST') return aiLimiter(req, res, next);
   return next();
 });
+
+// Hard cap on per-request variant/hook fan-out. Each variant is one LLM call, so
+// an unclamped `count` from the body (e.g. 100000) was a cost bomb — one allowed
+// request could issue 100k paid generations. Clamp to a sane absolute max.
+const MAX_GEN_VARIANTS = 10;
+function clampCount(v) {
+  const n = parseInt(v, 10);
+  return Math.min(Math.max(1, Number.isFinite(n) ? n : 5), MAX_GEN_VARIANTS);
+}
+
+// A template is accessible to its creator or to any member of its owning agency
+// workspace. Templates carry proprietary prompts/brand rules, so every lookup
+// must pass this (otherwise any authed user could read/generate-on a competitor's
+// template by guessing the id).
+async function canAccessTemplate(template, req) {
+  if (!template) return false;
+  const uid = String(req.user?._id || req.user?.id || '');
+  if (template.createdBy && String(template.createdBy) === uid) return true;
+  if (template.agencyWorkspaceId) {
+    try {
+      const a = await verifyWorkspaceAccess(req.user._id, template.agencyWorkspaceId);
+      if (a.allowed) return true;
+    } catch (_) { /* fail closed */ }
+  }
+  return false;
+}
 
 /**
  * POST /api/ai/generate-script
@@ -119,6 +147,13 @@ router.post('/confidence/analyze', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content ID or content text is required', 400);
   }
 
+  // IDOR guard: when analyzing by contentId, the caller must own that content.
+  // (Analyzing raw `content` text the caller supplied is their own data.)
+  if (contentId) {
+    const owned = await guardOwnership(req, res, contentId);
+    if (!owned) return;
+  }
+
   const score = await analyzeContentConfidence(contentId, content, context || {});
   sendSuccess(res, 'Confidence analyzed', 200, score);
 }));
@@ -129,6 +164,12 @@ router.post('/confidence/analyze', auth, asyncHandler(async (req, res) => {
  */
 router.get('/confidence/:contentId', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
+
+  // IDOR guard: confidence scores (with their human-review reasons) are keyed
+  // only by contentId, so verify the caller owns the content first.
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
+
   const score = await getContentConfidence(contentId);
 
   if (!score) {
@@ -161,6 +202,12 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Agency workspace ID is required', 400);
   }
 
+  // IDOR guard: only members of the workspace may list its templates.
+  const access = await verifyWorkspaceAccess(req.user._id, agencyWorkspaceId);
+  if (!access.allowed) {
+    return sendError(res, 'You do not have access to this workspace', 403);
+  }
+
   const templates = await getTemplates(agencyWorkspaceId, clientWorkspaceId);
   sendSuccess(res, 'Templates retrieved', 200, { templates });
 }));
@@ -171,9 +218,9 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
  */
 router.get('/templates/:templateId', auth, asyncHandler(async (req, res) => {
   const { templateId } = req.params;
-  const template = await AITemplate.findById(templateId).lean();
+  const template = await AITemplate.findById(templateId).lean().catch(() => null);
 
-  if (!template) {
+  if (!template || !(await canAccessTemplate(template, req))) {
     return sendError(res, 'Template not found', 404);
   }
 
@@ -192,6 +239,12 @@ router.post('/templates/:templateId/generate', auth, asyncHandler(async (req, re
     return sendError(res, 'Input is required', 400);
   }
 
+  // IDOR guard: don't run a billed generation on a template the caller can't access.
+  const template = await AITemplate.findById(templateId).select('createdBy agencyWorkspaceId').lean().catch(() => null);
+  if (!template || !(await canAccessTemplate(template, req))) {
+    return sendError(res, 'Template not found', 404);
+  }
+
   const result = await generateContentWithTemplate(templateId, input, options || {});
   sendSuccess(res, 'Content generated', 200, result);
 }));
@@ -208,7 +261,7 @@ router.post('/variants', auth, asyncHandler(async (req, res) => {
   }
 
   const userId = req.user?._id?.toString() || req.user?.id;
-  const variants = await generateVariants(content, count, { ...(options || {}), userId });
+  const variants = await generateVariants(content, clampCount(count), { ...(options || {}), userId });
   sendSuccess(res, 'Variants generated', 200, { variants });
 }));
 
@@ -256,10 +309,11 @@ router.post('/hooks', auth, asyncHandler(async (req, res) => {
   }
 
   const userId = req.user?._id?.toString() || req.user?.id;
-  const variants = await generateHookVariations(content, count, { userId });
+  const variants = await generateHookVariations(content, clampCount(count), { userId });
   sendSuccess(res, 'Hook variations generated', 200, { variants });
 }));
 
 module.exports = router;
+module.exports.clampCount = clampCount;
 
 
