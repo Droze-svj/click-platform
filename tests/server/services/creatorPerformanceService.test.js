@@ -26,6 +26,18 @@ describe('creatorPerformanceService.computeRetentionDelta', () => {
     expect(computeRetentionDelta({})).toBe(0);
     expect(computeRetentionDelta({ viewCount: 100 })).toBe(0); // no retention signal
   });
+
+  it('derives retention from nested watchTime (the raw shape the 6h cron passes)', () => {
+    // 80% avg watch → 0.80 - 0.55 benchmark = 0.25. This is the signal that
+    // would have been LOST when the inline derivation was removed if the cron's
+    // raw `post.analytics` (nested watchTime) produced a neutral 0.
+    expect(computeRetentionDelta({ watchTime: { averagePercentage: 80 } })).toBeCloseTo(0.25);
+    // flat fields take precedence over the nested fallback
+    expect(computeRetentionDelta({ retentionRate: 0.6, watchTime: { averagePercentage: 99 } })).toBeCloseTo(0.05);
+    // missing/garbage nested value → neutral 0, never NaN
+    expect(computeRetentionDelta({ watchTime: {} })).toBe(0);
+    expect(computeRetentionDelta({ watchTime: { averagePercentage: 'NaN' } })).toBe(0);
+  });
 });
 
 describe('creatorPerformanceService.extractPicks', () => {

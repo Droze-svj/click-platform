@@ -557,11 +557,23 @@ async function syncPostAnalytics(userId, postId) {
       return null;
     }
 
-    // Update post with synced analytics
+    // Update post with synced analytics. Stamp analytics.lastUpdated ONLY when
+    // the measured numbers actually moved (or on the first sync). The 6h
+    // performanceLearningCron keys eligibility on lastUpdated > lastLearnedAt,
+    // so this makes that cron the single, idempotent learning writer: each post
+    // trains the UserStyleProfile EMA once per real analytics change — instead
+    // of the previous inline path that re-trained on every 15-minute sync and
+    // inflated sampleSize/performanceScore.
+    const prevAnalytics = post.analytics || {};
+    const moved = ['views', 'videoViews', 'likes', 'comments', 'shares', 'reach'].some(
+      (k) => (Number(analytics[k]) || 0) !== (Number(prevAnalytics[k]) || 0)
+    );
     post.analytics = {
-      ...post.analytics,
+      ...prevAnalytics,
       ...analytics,
     };
+    if (moved || !prevAnalytics.lastUpdated) post.analytics.lastUpdated = new Date();
+    post.markModified('analytics');
     post.lastAnalyticsSync = new Date();
     await post.save();
 
@@ -613,42 +625,13 @@ async function syncPostAnalytics(userId, postId) {
     }
 
     // ── Continuous learning loop ────────────────────────────────────────────
-    // Fold the post's measured retention into the user's UserStyleProfile so
-    // tomorrow's editor suggestions weight by what's actually performing for
-    // this creator. Best-effort — analytics sync should never fail because
-    // the learning loop hiccupped.
-    if (post.contentId) {
-      try {
-        const { ingestPostPerformance } = require('./creatorPerformanceService');
-        const completionRate =
-          analytics.watchTime?.averagePercentage != null
-            ? Number(analytics.watchTime.averagePercentage) / 100
-            : null;
-        const totalEngagement =
-          (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
-        const engagementRate = analytics.views ? totalEngagement / analytics.views : null;
-
-        await ingestPostPerformance({
-          userId,
-          contentId: String(post.contentId),
-          metrics: {
-            retentionRate: completionRate,
-            completionRate,
-            viewCount: analytics.views || 0,
-            likes: analytics.likes || 0,
-            shares: analytics.shares || 0,
-            comments: analytics.comments || 0,
-            engagementRate,
-            // Benchmark omitted — creatorPerformanceService falls back to a
-            // platform-default in computeRetentionDelta when absent.
-          },
-        });
-      } catch (learnErr) {
-        logger.warn('[learning-loop] ingestPostPerformance skipped', {
-          postId, contentId: String(post.contentId), error: learnErr.message,
-        });
-      }
-    }
+    // NOTE: learning is intentionally NOT done inline here. This sync runs every
+    // ~15 minutes, so an inline ingestPostPerformance re-trained the EMA on every
+    // tick and inflated sampleSize/performanceScore. The autonomous-gated 6h
+    // performanceLearningCron is now the single writer — it drains posts whose
+    // analytics.lastUpdated (stamped above only on real movement) is newer than
+    // lastLearnedAt, so each change trains the profile exactly once and the
+    // DISABLE_CRONS kill-switch actually stops the learning writes.
 
     logger.info('Post analytics synced', { postId, platform: post.platform, userId });
     return analytics;
