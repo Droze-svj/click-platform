@@ -26,7 +26,13 @@ const {
   monitorPostEngagement,
   getRealTimeEngagementDashboard
 } = require('../services/realTimeEngagementService');
+const ScheduledPost = require('../models/ScheduledPost');
 const router = express.Router();
+
+// The :postId services query by postId with no owner scope; gate on ownership.
+async function ownsPost(postId, userId) {
+  return ScheduledPost.exists({ _id: postId, userId });
+}
 
 /**
  * GET /api/workspaces/:workspaceId/performance/benchmark
@@ -70,6 +76,9 @@ router.post('/:workspaceId/performance/predict', auth, requireWorkspaceAccess('c
  */
 router.post('/:postId/engagement-quality', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  if (!(await ownsPost(postId, req.user._id))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const quality = await analyzeEngagementQuality(postId);
   sendSuccess(res, 'Engagement quality analyzed', 200, quality);
 }));
@@ -148,6 +157,9 @@ router.get('/:workspaceId/performance/export/pdf', auth, requireWorkspaceAccess(
  */
 router.post('/:postId/engagement/monitor', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  if (!(await ownsPost(postId, req.user._id))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const result = await monitorPostEngagement(postId, req.body);
   sendSuccess(res, 'Engagement monitored', 200, result);
 }));

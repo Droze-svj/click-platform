@@ -18,7 +18,14 @@ const {
   syncAudienceGrowth,
   syncAllPlatformsAudienceGrowth
 } = require('../services/audienceGrowthSyncService');
+const ScheduledPost = require('../models/ScheduledPost');
 const router = express.Router();
+
+// The :postId analytics services do a bare ScheduledPost.findById(postId) + save,
+// so without this any user could read/overwrite another user's post analytics.
+async function ownsPost(postId, userId) {
+  return ScheduledPost.exists({ _id: postId, userId });
+}
 
 /**
  * POST /api/posts/:postId/analytics/engagement-rate
@@ -27,6 +34,10 @@ const router = express.Router();
 router.post('/:postId/analytics/engagement-rate', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const { method = 'all' } = req.body;
+
+  if (!(await ownsPost(postId, req.user._id))) {
+    return sendError(res, 'Post not found', 404);
+  }
 
   const result = await calculateEngagementRate(postId, { method });
   sendSuccess(res, 'Engagement rate calculated', 200, result);
@@ -38,6 +49,9 @@ router.post('/:postId/analytics/engagement-rate', auth, asyncHandler(async (req,
  */
 router.put('/:postId/analytics/reach-impressions', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  if (!(await ownsPost(postId, req.user._id))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const analytics = await updateReachAndImpressions(postId, req.body);
   sendSuccess(res, 'Reach and impressions updated', 200, analytics);
 }));
@@ -48,6 +62,9 @@ router.put('/:postId/analytics/reach-impressions', auth, asyncHandler(async (req
  */
 router.put('/:postId/analytics/engagement-breakdown', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  if (!(await ownsPost(postId, req.user._id))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const analytics = await updateEngagementBreakdown(postId, req.body);
   sendSuccess(res, 'Engagement breakdown updated', 200, analytics);
 }));

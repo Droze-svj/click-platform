@@ -22,7 +22,14 @@ const {
   processGoogleAnalyticsConversion,
   processShopifyConversion
 } = require('../services/webhookConversionService');
+const ScheduledPost = require('../models/ScheduledPost');
 const router = express.Router();
+
+// The :postId click/CTR services query by postId with no owner scope, so without
+// this any user could read another user's click analytics (referrers, geo, etc.).
+async function ownsPost(postId, userId) {
+  return ScheduledPost.exists({ _id: postId, userId });
+}
 
 /**
  * POST /api/clicks/track
@@ -45,6 +52,9 @@ router.post('/track', asyncHandler(async (req, res) => {
  */
 router.get('/:postId/clicks/analytics', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  if (!(await ownsPost(postId, req.user._id))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const analytics = await getClickAnalytics(postId, req.query);
   sendSuccess(res, 'Click analytics retrieved', 200, analytics);
 }));
@@ -55,6 +65,9 @@ router.get('/:postId/clicks/analytics', auth, asyncHandler(async (req, res) => {
  */
 router.post('/:postId/ctr/calculate', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  if (!(await ownsPost(postId, req.user._id))) {
+    return sendError(res, 'Post not found', 404);
+  }
   const ctr = await calculateCTR(postId);
   sendSuccess(res, 'CTR calculated', 200, ctr);
 }));

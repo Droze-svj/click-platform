@@ -4,8 +4,16 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/requireAdmin');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+
+// These endpoints read AND mutate GLOBAL, platform-wide AI model-version config
+// (upgrade / rollback / rollout affect every tenant), so the whole router is
+// admin-only. Without this, any authenticated user could deprecate the live
+// model or hijack a rollout for all users. The per-route `auth` below is now
+// redundant but harmless.
+router.use(auth, requireAdmin);
 
 const {
   checkForModelUpgrades,

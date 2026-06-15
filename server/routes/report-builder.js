@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { createOrUpdateTemplate, getTemplates, generateReport } = require('../services/reportBuilderService');
 const { generateMultiClientRollup, getRollup } = require('../services/multiClientRollupService');
 const { generateReportSummary, generateRollupSummary } = require('../services/aiReportSummaryService');
@@ -36,6 +36,10 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Agency workspace ID is required', 400);
   }
 
+  if (!(await verifyWorkspaceAccess(req.user._id, agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Access denied', 403);
+  }
+
   const templates = await getTemplates(agencyWorkspaceId, clientWorkspaceId);
   sendSuccess(res, 'Templates retrieved', 200, { templates });
 }));
@@ -52,6 +56,10 @@ router.get('/templates/:templateId', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Template not found', 404);
   }
 
+  if (!(await verifyWorkspaceAccess(req.user._id, template.agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Template not found', 404);
+  }
+
   sendSuccess(res, 'Template retrieved', 200, template);
 }));
 
@@ -61,6 +69,13 @@ router.get('/templates/:templateId', auth, asyncHandler(async (req, res) => {
  */
 router.delete('/templates/:templateId', auth, asyncHandler(async (req, res) => {
   const { templateId } = req.params;
+  const template = await ReportTemplate.findById(templateId).select('agencyWorkspaceId').lean();
+  if (!template) {
+    return sendError(res, 'Template not found', 404);
+  }
+  if (!(await verifyWorkspaceAccess(req.user._id, template.agencyWorkspaceId, 'canDelete')).allowed) {
+    return sendError(res, 'Template not found', 404);
+  }
   await ReportTemplate.findByIdAndDelete(templateId);
   sendSuccess(res, 'Template deleted', 200);
 }));
@@ -74,6 +89,10 @@ router.post('/generate', auth, asyncHandler(async (req, res) => {
 
   if (!templateId || !period || !clientWorkspaceId || !agencyWorkspaceId) {
     return sendError(res, 'Template ID, period, client workspace ID, and agency workspace ID are required', 400);
+  }
+
+  if (!(await verifyWorkspaceAccess(req.user._id, agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Access denied', 403);
   }
 
   const report = await generateReport(templateId, period, clientWorkspaceId, agencyWorkspaceId, req.user._id);
@@ -94,6 +113,10 @@ router.get('/:reportId', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Report not found', 404);
   }
 
+  if (!(await verifyWorkspaceAccess(req.user._id, report.agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Report not found', 404);
+  }
+
   sendSuccess(res, 'Report retrieved', 200, report);
 }));
 
@@ -111,6 +134,10 @@ router.post('/:reportId/summary', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Report not found', 404);
   }
 
+  if (!(await verifyWorkspaceAccess(req.user._id, report.agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Report not found', 404);
+  }
+
   const summary = await generateReportSummary(report, report.templateId?.aiSummary || {});
 
   // Update report with summary
@@ -125,7 +152,7 @@ router.post('/:reportId/summary', auth, asyncHandler(async (req, res) => {
  * GET /api/agencies/:agencyWorkspaceId/rollup
  * Get multi-client rollup
  */
-router.get('/agencies/:agencyWorkspaceId/rollup', auth, asyncHandler(async (req, res) => {
+router.get('/agencies/:agencyWorkspaceId/rollup', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId } = req.params;
   const { startDate, endDate } = req.query;
 
@@ -142,7 +169,7 @@ router.get('/agencies/:agencyWorkspaceId/rollup', auth, asyncHandler(async (req,
  * POST /api/agencies/:agencyWorkspaceId/rollup/generate
  * Generate multi-client rollup
  */
-router.post('/agencies/:agencyWorkspaceId/rollup/generate', auth, asyncHandler(async (req, res) => {
+router.post('/agencies/:agencyWorkspaceId/rollup/generate', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId } = req.params;
   const { startDate, endDate } = req.body;
 
@@ -163,7 +190,7 @@ router.post('/agencies/:agencyWorkspaceId/rollup/generate', auth, asyncHandler(a
  * POST /api/agencies/:agencyWorkspaceId/rollup/summary
  * Generate AI summary for rollup
  */
-router.post('/agencies/:agencyWorkspaceId/rollup/summary', auth, asyncHandler(async (req, res) => {
+router.post('/agencies/:agencyWorkspaceId/rollup/summary', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId } = req.params;
   const { tone = 'professional' } = req.body;
 
