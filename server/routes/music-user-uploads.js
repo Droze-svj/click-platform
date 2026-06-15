@@ -60,14 +60,21 @@ router.post('/user-uploads', auth, upload.single('audio'), asyncHandler(async (r
     return sendError(res, 'You must attest that you own/hold rights to use this track', 400);
   }
 
+  // Constrain the stored extension to an audio allowlist — the mimetype filter
+  // alone doesn't stop a client sending originalname "x.html" with an audio
+  // mimetype, which would otherwise be stored under a non-audio extension.
+  const AUDIO_EXT = ['.mp3', '.wav', '.m4a', '.aac', '.mpeg', '.mpga'];
+  const ext = path.extname(req.file.originalname || '').toLowerCase();
+  if (!AUDIO_EXT.includes(ext)) {
+    await fs.promises.unlink(req.file.path).catch(() => {});
+    return sendError(res, `Unsupported audio file extension${ext ? `: ${ext}` : ''}`, 400);
+  }
+
   try {
-    // Upload file to storage
-    const fileStream = fs.createReadStream(req.file.path);
-    const uploadedFile = await uploadFile(fileStream, {
-      folder: 'user-music',
-      filename: `${req.user._id}_${Date.now()}${path.extname(req.file.originalname)}`,
-      contentType: req.file.mimetype
-    });
+    // Upload the temp file to storage. uploadFile(filePath, key, contentType)
+    // returns { url, key, storage } — pass the path, not a stream.
+    const storageKey = `user-music/${req.user._id}_${Date.now()}${ext}`;
+    const uploadedFile = await uploadFile(req.file.path, storageKey, req.file.mimetype);
 
     // Get file metadata (duration, etc.)
     // This would typically use ffprobe or similar
@@ -84,7 +91,7 @@ router.post('/user-uploads', auth, upload.single('audio'), asyncHandler(async (r
       tags: tags ? (Array.isArray(tags) ? tags : tags.split(',')) : [],
       file: {
         url: uploadedFile.url,
-        filename: uploadedFile.filename,
+        filename: path.basename(uploadedFile.key || storageKey),
         size: req.file.size,
         duration: fileDuration
       },

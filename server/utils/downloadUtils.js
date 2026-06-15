@@ -38,14 +38,25 @@ function getYtDlp() {
 }
 
 const DIRECT_VIDEO_EXTS = ['.mp4', '.mov', '.webm', '.m4v', '.mkv'];
-const PLATFORM_PATTERNS = [
-  { name: 'youtube',   re: /(?:youtube\.com|youtu\.be)/i },
-  { name: 'tiktok',    re: /tiktok\.com/i },
-  { name: 'instagram', re: /instagram\.com/i },
-  { name: 'twitter',   re: /(?:twitter\.com|x\.com)/i },
-  { name: 'facebook',  re: /facebook\.com/i },
-  { name: 'vimeo',     re: /vimeo\.com/i },
+// Each platform is a list of EXACT registrable domains. Matching is anchored to
+// the host being that domain or a subdomain of it (host === d || endsWith('.'+d))
+// — NOT a substring regex. An unanchored /youtube\.com/ test matched
+// `youtube.com.evil.com` and even `notyoutube.com`, which let an attacker-
+// controlled domain (with attacker-controlled DNS) reach the yt-dlp download
+// path → SSRF. Anchoring means only the real platforms (whose DNS the attacker
+// can't control) are ever handed to yt-dlp.
+const PLATFORM_DOMAINS = [
+  { name: 'youtube',   domains: ['youtube.com', 'youtu.be'] },
+  { name: 'tiktok',    domains: ['tiktok.com'] },
+  { name: 'instagram', domains: ['instagram.com'] },
+  { name: 'twitter',   domains: ['twitter.com', 'x.com'] },
+  { name: 'facebook',  domains: ['facebook.com', 'fb.watch'] },
+  { name: 'vimeo',     domains: ['vimeo.com'] },
 ];
+
+function hostMatchesDomain(host, domain) {
+  return host === domain || host.endsWith('.' + domain);
+}
 
 function classifyUrl(rawUrl) {
   let u;
@@ -55,8 +66,9 @@ function classifyUrl(rawUrl) {
   const ext = path.extname(u.pathname).toLowerCase();
   if (DIRECT_VIDEO_EXTS.includes(ext)) return { kind: 'direct', ext };
 
-  for (const p of PLATFORM_PATTERNS) {
-    if (p.re.test(u.host)) return { kind: 'platform', platform: p.name };
+  const host = u.hostname.toLowerCase();
+  for (const p of PLATFORM_DOMAINS) {
+    if (p.domains.some((d) => hostMatchesDomain(host, d))) return { kind: 'platform', platform: p.name };
   }
   return { kind: 'unknown' };
 }
@@ -189,5 +201,6 @@ module.exports = {
   ytDlpAvailable,
   ytDlpDownload,
   DIRECT_VIDEO_EXTS,
-  PLATFORM_PATTERNS
+  PLATFORM_DOMAINS,
+  classifyUrlHostMatches: hostMatchesDomain,
 };
