@@ -9,6 +9,7 @@ const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
+const ssx = require('../../utils/oauthServerSideExchange');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
@@ -37,8 +38,9 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
 
   const userId = req.userId || req.user?._id || req.user?.id;
   const { url, state } = await facebookService.getAuthorizationUrl(userId, callbackUrl);
+  const finalUrl = ssx.serverSideExchangeEnabled() ? ssx.wrapAuthorizeUrl(url, userId, 'facebook') : url;
 
-  sendSuccess(res, 'Authorization URL generated', 200, { url, state });
+  sendSuccess(res, 'Authorization URL generated', 200, { url: finalUrl, state });
 }));
 
 /**
@@ -58,12 +60,19 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     return sendError(res, 'Missing authorization code or state', 400);
   }
 
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    // Hardened path: exchange server-side so the code never reaches the browser
+    // URL. (Page enrichment that /complete does is recoverable via /status.)
+    if (ssx.serverSideExchangeEnabled()) {
+      const u = ssx.unwrapCallbackState(state);
+      if (!u) return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent('Invalid OAuth state')}`);
+      await facebookService.exchangeCodeForToken(u.userId, code, u.innerState);
+      return res.redirect(`${frontendUrl}/dashboard/social?connected=facebook&success=true`);
+    }
     res.redirect(`${frontendUrl}/dashboard/social?platform=facebook&code=${code}&state=${state}`);
   } catch (err) {
     logger.error('Facebook OAuth callback error', { error: err.message });
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}`);
   }
 }));
