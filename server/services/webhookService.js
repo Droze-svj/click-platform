@@ -6,6 +6,18 @@ const WebhookLog = require('../models/WebhookLog');
 const crypto = require('crypto');
 const axios = require('axios');
 const logger = require('../utils/logger');
+const urlGuard = require('../utils/urlGuard');
+
+// SSRF guard for OUTBOUND webhook delivery. The destination URL is fully
+// user-controlled, so without this an attacker registers a webhook pointing at
+// http://169.254.169.254/… or an internal host and the server fetches it from
+// inside the trust boundary (and the response body is stored + readable via the
+// logs endpoint). assertPublicUrl DNS-resolves and blocks private/loopback/
+// link-local/metadata ranges + non-http(s) schemes. Callers also pass
+// maxRedirects:0 so a 3xx to an internal address can't slip past this.
+async function assertSafeWebhookUrl(url) {
+  await urlGuard.assertPublicUrl(url);
+}
 
 /**
  * Create webhook
@@ -21,6 +33,15 @@ async function createWebhook(userId, webhookData) {
       headers = {},
       settings = {}
     } = webhookData;
+
+    // Reject a private/internal/non-http(s) destination at create time (fail fast).
+    try {
+      await assertSafeWebhookUrl(url);
+    } catch (e) {
+      const err = new Error('Webhook URL must be a reachable public http(s) URL');
+      err.statusCode = 400;
+      throw err;
+    }
 
     // Generate secret
     const secret = crypto.randomBytes(32).toString('hex');
@@ -112,9 +133,11 @@ async function deliverWebhook(webhookId, event, payload) {
           payload: webhookPayload
         });
 
+        await assertSafeWebhookUrl(webhook.url);
         const response = await axios.post(webhook.url, webhookPayload, {
           headers,
           timeout: webhook.settings.timeout,
+          maxRedirects: 0, // SSRF: never follow a 3xx to an internal address
           validateStatus: () => true // Don't throw on any status
         });
 
@@ -542,9 +565,11 @@ async function deliverBatchedWebhook(webhookId, events) {
       ...webhook.headers
     };
 
+    await assertSafeWebhookUrl(webhook.url);
     const response = await axios.post(webhook.url, webhookPayload, {
       headers,
       timeout: webhook.settings.timeout,
+      maxRedirects: 0, // SSRF: never follow a 3xx to an internal address
       validateStatus: () => true
     });
 
@@ -603,8 +628,10 @@ async function getWebhookHealth(webhookId) {
     // Check if webhook is responding
     let endpointHealth = 'unknown';
     try {
+      await assertSafeWebhookUrl(webhook.url);
       const testResponse = await axios.get(webhook.url, {
         timeout: 5000,
+        maxRedirects: 0, // SSRF: never follow a 3xx to an internal address
         validateStatus: () => true
       });
       endpointHealth = testResponse.status < 500 ? 'healthy' : 'degraded';
