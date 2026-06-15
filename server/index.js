@@ -1842,6 +1842,21 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// SECURITY (signed media): deep-sign every /uploads URL in API JSON responses at
+// ONE global point, so private media always leaves the API as a short-lived
+// HMAC-signed capability URL and NO route (current or future, including the video
+// sub-routers mounted directly below) can leak an unsigned path. This is what
+// makes REQUIRE_SIGNED_MEDIA=true safe to enable: with the gate on, the client
+// only ever receives signable URLs. signMediaUrls only rewrites /uploads strings
+// (external/CDN/data URLs and non-media payloads pass through) and is idempotent,
+// so the per-route signers added earlier remain correct (re-signing is a no-op).
+const { signMediaUrls: _signMediaUrls } = require('./utils/mediaUrlSigner');
+app.use('/api', (req, res, next) => {
+  const _json = res.json.bind(res);
+  res.json = (body) => _json(_signMediaUrls(body));
+  next();
+});
+
 // Debug middleware for quote routes
 app.use('/api/quote', (req, res, next) => {
   // #region agent log

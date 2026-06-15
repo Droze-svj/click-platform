@@ -101,17 +101,42 @@ objectURL, which is a large rework, heavier, and worse for CDN caching. Reserve
 this pattern for genuine *downloads* (already done for renders), not inline media.
 
 ## Rollout
-1. Ship the backend (util + middleware + response signing) with `REQUIRE_SIGNED_MEDIA`
-   **off** — no behavior change.
-2. Turn signing of API-returned URLs on; verify the frontend still renders media
-   (URLs are signed but the gate isn't enforcing yet → still served).
-3. **Staging:** set `REQUIRE_SIGNED_MEDIA=true`. E2E: (a) media loads in the
-   editor/library/player; (b) a hand-crafted unsigned/expired `/uploads/...` URL
-   → 403; (c) public-allowlisted assets still load; (d) video seeking (range
-   requests) works.
-4. Configure the CDN cache key to include `exp`/`sig` (or bypass cache for the
-   private prefixes).
-5. **Production:** enable the flag.
+
+### Status (implemented — all code shipped to main)
+
+- ✅ Signer util (`utils/mediaUrlSigner`) + enforcement middleware
+  (`middleware/requireSignedMedia`, mounted before the `/uploads` static handlers).
+- ✅ **Global API response signer** (`server/index.js`, `app.use('/api', …)`): deep-signs
+  every `/uploads` URL in EVERY API JSON response at one point — so no route (incl. the
+  video sub-routes mounted directly under `/api/video/*`) can leak an unsigned path.
+  Supersedes the earlier per-route signers (now redundant-but-harmless / idempotent).
+- ✅ Frontend consumes the signed `file.url`; service worker strips `exp`/`sig` from the
+  cache key (so rotating signatures don't fragment the cache).
+- ✅ Crypto-random filenames + private S3 ACL.
+- ✅ **E2E-verified with the flag ON** (local): unsigned `/uploads/...` → 403, valid signed
+  → 200, tampered → 403, `fonts/` public prefix → 200. Tests: `tests/server/signedMedia.test.js`,
+  `tests/server/globalMediaSigner.test.js`.
+- ⬜ **Only remaining step: flip `REQUIRE_SIGNED_MEDIA=true` in staging → prod** (ops).
+
+### Cutover checklist
+
+1. **Set the secret first.** Set `MEDIA_URL_SECRET` (32+ random bytes) — identical across
+   ALL app instances/workers — so signatures verify regardless of which node serves the
+   request. (If left unset it falls back to `JWT_SECRET`, which also works but couples the
+   two secrets.) Deploy this with the flag still **off** — no behavior change.
+2. **Staging: set `REQUIRE_SIGNED_MEDIA=true`.** Smoke-test each media surface logged in:
+   editor (source video + clips + waveform/filmstrip), library, player (incl. range/seek),
+   music panel, generated/processed assets, thumbnails, exports/render downloads. Every
+   media URL is now `…?exp&sig`; anything that still renders a bare `/uploads/...` is a
+   missed surface → sign that response (or, if genuinely public, add its prefix to
+   `PUBLIC_MEDIA_PREFIXES`). The global signer should make this empty, but verify.
+3. **Negative checks (staging):** a hand-crafted unsigned/expired `/uploads/...` → 403;
+   a `fonts/` (public-prefix) asset → 200.
+4. **CDN:** include `exp`/`sig` in the cache key for `/uploads/*` (or bypass cache for the
+   private prefixes) so signed URLs aren't served from a stale-key cache.
+5. **Production: set `REQUIRE_SIGNED_MEDIA=true`.**
+6. **Rollback** is instant and safe: set `REQUIRE_SIGNED_MEDIA=false` (or unset). URLs keep
+   being signed; only enforcement turns off. No data migration either way.
 
 ## Effort
 ~1–2 days backend (signer + middleware + wiring the response serializers) + a
