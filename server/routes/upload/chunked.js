@@ -38,7 +38,7 @@ router.post('/init', auth, asyncHandler(async (req, res) => {
   }
 
   try {
-    initChunkedUpload(uploadId, totalSize, totalChunks, filename);
+    initChunkedUpload(uploadId, totalSize, totalChunks, filename, req.user._id);
     sendSuccess(res, 'Chunked upload initialized', 200, { uploadId });
   } catch (error) {
     logger.error('Init chunked upload error', { error: error.message });
@@ -68,7 +68,8 @@ router.post('/:uploadId', auth, upload.single('chunk'), asyncHandler(async (req,
       uploadId,
       parseInt(chunkNumber, 10),
       req.file.buffer,
-      req.file.size
+      req.file.size,
+      req.user._id
     );
 
     sendSuccess(res, 'Chunk uploaded', 200, result);
@@ -89,15 +90,13 @@ router.post('/:uploadId', auth, upload.single('chunk'), asyncHandler(async (req,
  */
 router.post('/:uploadId/assemble', auth, asyncHandler(async (req, res) => {
   const { uploadId } = req.params;
-  const { outputPath } = req.body;
-
-  if (!outputPath) {
-    return sendError(res, 'Output path is required', 400);
-  }
 
   try {
-    const finalPath = await assembleChunks(uploadId, outputPath);
-    sendSuccess(res, 'Chunks assembled', 200, { filePath: finalPath });
+    // The destination is derived server-side (never client-supplied). Return a
+    // public-relative path rather than the absolute server path.
+    const finalPath = await assembleChunks(uploadId, req.user._id);
+    const relPath = `/uploads/assembled/${path.basename(finalPath)}`;
+    sendSuccess(res, 'Chunks assembled', 200, { filePath: relPath });
   } catch (error) {
     logger.error('Assemble chunks error', { error: error.message, uploadId });
     sendError(res, error.message, 500);
@@ -117,7 +116,7 @@ router.get('/:uploadId/progress', auth, asyncHandler(async (req, res) => {
   const { uploadId } = req.params;
 
   try {
-    const progress = getChunkedUploadProgress(uploadId);
+    const progress = getChunkedUploadProgress(uploadId, req.user._id);
     if (!progress) {
       return sendError(res, 'Upload not found', 404);
     }
@@ -142,7 +141,7 @@ router.get('/:uploadId/missing', auth, asyncHandler(async (req, res) => {
   const { uploadId } = req.params;
 
   try {
-    const missing = getMissingChunks(uploadId);
+    const missing = getMissingChunks(uploadId, req.user._id);
     if (!missing) {
       return sendError(res, 'Upload not found', 404);
     }
@@ -167,7 +166,7 @@ router.delete('/:uploadId', auth, asyncHandler(async (req, res) => {
   const { uploadId } = req.params;
 
   try {
-    const cancelled = cancelChunkedUpload(uploadId);
+    const cancelled = cancelChunkedUpload(uploadId, req.user._id);
     if (!cancelled) {
       return sendError(res, 'Upload not found', 404);
     }

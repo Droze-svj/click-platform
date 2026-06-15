@@ -160,7 +160,22 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Integration not found', 404);
   }
 
-  Object.assign(integration, req.body);
+  // Whitelist updatable fields — never Object.assign(req.body) over the whole
+  // doc. In particular config.baseUrl must NOT be client-settable: it is pinned
+  // from the trusted marketplace entry at install time, and the /health + /sync
+  // handlers fetch it via axios — a caller-controlled baseUrl is an SSRF vector
+  // (cloud metadata / internal services). userId/status/marketplaceId stay fixed.
+  const { name, enabled, settings, config } = req.body;
+  if (name !== undefined) integration.name = name;
+  if (enabled !== undefined) integration.enabled = enabled;
+  if (settings !== undefined) integration.settings = settings;
+  if (config && typeof config === 'object') {
+    for (const k of Object.keys(config)) {
+      if (k === 'baseUrl') continue; // never client-settable
+      integration.config[k] = config[k];
+    }
+    integration.markModified('config');
+  }
   await integration.save();
 
   const response = integration.toObject();

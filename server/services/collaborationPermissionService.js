@@ -11,6 +11,15 @@ const logger = require('../utils/logger');
  */
 async function inviteCollaborator(contentId, ownerId, inviteeEmail, role, permissions) {
   try {
+    // AUTHORIZATION: only the content's owner may invite collaborators. Without
+    // this, any user could grant themselves (or anyone) an 'editor' permission on
+    // content they don't own, then accept it and gain write access (privilege
+    // escalation). Mirrors the owner check in removeCollaborator.
+    const content = await Content.findOne({ _id: contentId, userId: ownerId }).select('title').lean();
+    if (!content) {
+      throw new Error('Content not found or you do not have permission to share it');
+    }
+
     // Find invitee user
     const invitee = await User.findOne({ email: inviteeEmail });
     if (!invitee) {
@@ -44,8 +53,7 @@ async function inviteCollaborator(contentId, ownerId, inviteeEmail, role, permis
       await permission.save();
     }
 
-    // Send invitation email
-    const content = await Content.findById(contentId).select('title').lean();
+    // Send invitation email (content was already fetched + ownership-verified above)
     await sendEmail(
       inviteeEmail,
       'Collaboration Invitation',
@@ -165,8 +173,21 @@ async function checkPermission(contentId, userId, action) {
 /**
  * Get content collaborators
  */
-async function getCollaborators(contentId) {
+async function getCollaborators(contentId, requesterId) {
   try {
+    // Only the owner or an accepted collaborator may list collaborators (the list
+    // exposes member names + emails). Without this it was a cross-content info leak.
+    const content = await Content.findById(contentId).select('userId').lean();
+    const isOwner = content && requesterId && content.userId.toString() === String(requesterId);
+    if (!isOwner) {
+      const member = requesterId && await CollaborationPermission.findOne({
+        contentId, userId: requesterId, status: 'accepted',
+      }).lean();
+      if (!member) {
+        throw new Error('Not authorized to view collaborators');
+      }
+    }
+
     const permissions = await CollaborationPermission.find({
       contentId,
       status: 'accepted',

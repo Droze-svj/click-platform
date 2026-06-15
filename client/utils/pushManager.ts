@@ -162,18 +162,16 @@ class PushNotificationManager {
     try {
       const response = await fetch('/api/push/subscribe', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.authHeaders(),
         body: JSON.stringify({
+          // The server derives the owner from the bearer token — no userId sent.
           subscription: {
             endpoint: subscription.endpoint,
             keys: {
               p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh')!),
               auth: this.arrayBufferToBase64(subscription.getKey('auth')!)
             }
-          },
-          userId: this.getUserId() // You'll need to implement this
+          }
         })
       })
 
@@ -201,12 +199,9 @@ class PushNotificationManager {
         if (this.subscription) {
           await fetch('/api/push/unsubscribe', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: this.authHeaders(),
             body: JSON.stringify({
-              endpoint: (this.subscription as PushSubscription).endpoint,
-              userId: this.getUserId()
+              subscription: { endpoint: (this.subscription as PushSubscription).endpoint }
             })
           })
         }
@@ -224,17 +219,10 @@ class PushNotificationManager {
    */
   async sendTestNotification(): Promise<void> {
     try {
-      const userId = this.getUserId()
-      if (!userId) {
-        throw new Error('User not authenticated')
-      }
-
       const response = await fetch('/api/push/test', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId })
+        headers: this.authHeaders(),
+        body: JSON.stringify({}) // server sends the test to the authenticated user
       })
 
       if (!response.ok) {
@@ -255,9 +243,7 @@ class PushNotificationManager {
     try {
       const response = await fetch(`/api/push/send/${userId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.authHeaders(),
         body: JSON.stringify(options)
       })
 
@@ -279,9 +265,7 @@ class PushNotificationManager {
     try {
       const response = await fetch('/api/push/broadcast', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.authHeaders(),
         body: JSON.stringify({
           ...options,
           userIds
@@ -304,7 +288,7 @@ class PushNotificationManager {
    */
   async getStats() {
     try {
-      const response = await fetch('/api/push/stats')
+      const response = await fetch('/api/push/stats', { headers: this.authHeaders(false) })
       if (response.ok) {
         return await response.json()
       }
@@ -331,13 +315,15 @@ class PushNotificationManager {
   }
 
   /**
-   * Get user ID (implement based on your auth system)
+   * Build request headers with the bearer token. The push API is now
+   * authenticated (Bearer-only), so every state-changing call must carry it.
    */
-  private getUserId(): string | null {
-    // This should be implemented based on your authentication system
-    // For example:
-    // return localStorage.getItem('userId') || null
-    return 'current-user-id' // Placeholder
+  private authHeaders(json = true): Record<string, string> {
+    const headers: Record<string, string> = {}
+    if (json) headers['Content-Type'] = 'application/json'
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    if (token) headers.Authorization = `Bearer ${token}`
+    return headers
   }
 
   /**
