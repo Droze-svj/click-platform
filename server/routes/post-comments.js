@@ -5,7 +5,6 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const {
   addComment,
   getPostComments,
@@ -14,35 +13,11 @@ const {
   editComment,
   deleteComment
 } = require('../services/postCommentService');
-const PostComment = require('../models/PostComment');
-const ScheduledPost = require('../models/ScheduledPost');
+// Comments inherit the parent post's access — see utils/resourceAccess. Previously
+// these routes had NO ownership check, so any authed user could read another
+// tenant's comments (with commenter name/email) or write onto any post by id.
+const { accessiblePost, accessibleComment } = require('../utils/resourceAccess');
 const router = express.Router();
-
-// Comments inherit the parent post's access. These routes previously did NO
-// ownership check, so any authed user could read another tenant's comments
-// (with commenter name/email) or write onto any post by guessing its id.
-async function postAccessibleBy(post, req) {
-  if (!post) return false;
-  const uid = String(req.user._id || req.user.id || '');
-  if (String(post.userId) === uid) return true;
-  for (const ws of [post.workspaceId, post.agencyWorkspaceId]) {
-    if (ws) {
-      try { if ((await verifyWorkspaceAccess(req.user._id, ws)).allowed) return true; } catch (_) { /* fail closed */ }
-    }
-  }
-  return false;
-}
-async function accessiblePost(req, postId) {
-  const post = await ScheduledPost.findById(postId)
-    .select('userId workspaceId agencyWorkspaceId').lean().catch(() => null);
-  return (post && await postAccessibleBy(post, req)) ? post : null;
-}
-// For commentId routes: the caller must have access to the comment's parent post.
-async function accessibleComment(req, commentId) {
-  const comment = await PostComment.findById(commentId).select('postId').lean().catch(() => null);
-  if (!comment) return false;
-  return !!(await accessiblePost(req, comment.postId));
-}
 
 /**
  * POST /api/posts/:postId/comments
