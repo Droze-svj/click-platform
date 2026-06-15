@@ -172,7 +172,10 @@ export default function AssetLibrary({
               ...m,
               id: m._id || m.id,
               type: 'music' as const,
-              url: m.url || m.fileUrl || `/uploads/music/${m.filename}`,
+              // Prefer the API-provided file.url — it's the signed capability URL
+              // (?exp&sig) the server now returns. The hand-built /uploads path is
+              // an unsigned last resort that won't survive REQUIRE_SIGNED_MEDIA.
+              url: m.file?.url || m.url || m.fileUrl || `/uploads/music/${m.filename}`,
               title: m.title || m.name,
               duration: m.duration
             }))
