@@ -4,6 +4,18 @@ const { Server } = require('socket.io');
 
 let io = null;
 
+// Resolve the authoritative contentId for a collaboration room. For editor
+// rooms the id is taken from the ROOM NAME (`editor:<id>`), NOT a separate
+// client field — so a client can't join `editor:<victim>` while passing
+// contentId:<their-own-id> to satisfy the ownership check (the C1 takeover).
+// Exported for tests.
+function deriveRoomContentId(room, contentId) {
+  if (typeof room === 'string' && room.startsWith('editor:')) {
+    return room.slice('editor:'.length) || null;
+  }
+  return contentId ? String(contentId) : null;
+}
+
 function initializeSocket(server) {
   // In dev, accept any localhost/127.0.0.1 origin so we don't have to keep the
   // explicit list in lock-step with whatever port `next dev` picks.
@@ -94,41 +106,45 @@ function initializeSocket(server) {
 
     // Join content room for collaboration
     socket.on('join:room', async ({ room, contentId, user }) => {
-      if (!room) return;
+      if (!room || typeof room !== 'string') return;
       // Must be authenticated to join a collaboration room.
       if (!currentUserId) {
         socket.emit('join:denied', { room, error: 'Authentication required' });
         return;
       }
-      // IDOR guard: when the room is scoped to a contentId, verify the user owns
-      // it before joining (otherwise any authed user could subscribe to another
-      // team's live timeline/comments by guessing the id).
-      if (contentId) {
-        try {
-          const { assertOwnership } = require('../utils/ownership');
-          await assertOwnership({ user: { _id: currentUserId, id: currentUserId } }, contentId);
-        } catch (e) {
-          socket.emit('join:denied', { room, contentId, error: 'You do not have access to this content' });
-          return;
-        }
+      // The room IS the authorization scope. For editor rooms the contentId is
+      // derived from the ROOM NAME (`editor:<id>`), NOT a separate client field —
+      // otherwise a client could join `editor:<victim>` while passing
+      // contentId:<their-own-id> to satisfy the ownership check, taking over the
+      // victim's live collaboration stream. Every join must resolve to a content
+      // id we can authorize the user against.
+      const cid = deriveRoomContentId(room, contentId);
+      if (!cid) {
+        socket.emit('join:denied', { room, error: 'A content room is required' });
+        return;
+      }
+      try {
+        const { assertOwnership } = require('../utils/ownership');
+        await assertOwnership({ user: { _id: currentUserId, id: currentUserId } }, cid);
+      } catch (e) {
+        socket.emit('join:denied', { room, contentId: cid, error: 'You do not have access to this content' });
+        return;
       }
       socket.join(room);
-      // Track editor rooms (those scoped to a contentId) for lock cleanup.
-      if (contentId) editorRooms.set(room, contentId);
+      // Map room → VERIFIED contentId. Membership in this Map is what every
+      // mutating handler below checks (so a socket can't write to a room it
+      // never ownership-joined).
+      editorRooms.set(room, cid);
       // Allow the joiner to thread a display name through the payload.
       if (user && user.name) currentUserName = user.name;
-      if (currentUserId) {
-        collaborationService.trackPresence(currentUserId, socket.id, room, null, currentUserName);
-        const users = collaborationService.getRoomUsers(room);
-        io.to(room).emit('presence:update', { users });
-        // Hydrate the freshly-joined client with the current lock state so it
-        // doesn't briefly think every segment is unlocked.
-        if (contentId) {
-          const locks = realtimeCollaborationService.getContentLocks(contentId);
-          for (const [segmentId, lockedBy] of Object.entries(locks)) {
-            socket.emit('segment:lock-state', { segmentId, lockedBy });
-          }
-        }
+      collaborationService.trackPresence(currentUserId, socket.id, room, null, currentUserName);
+      const users = collaborationService.getRoomUsers(room);
+      io.to(room).emit('presence:update', { users });
+      // Hydrate the freshly-joined client with the current lock state so it
+      // doesn't briefly think every segment is unlocked.
+      const locks = realtimeCollaborationService.getContentLocks(cid);
+      for (const [segmentId, lockedBy] of Object.entries(locks)) {
+        socket.emit('segment:lock-state', { segmentId, lockedBy });
       }
       logger.info('User joined content room', { room, socketId: socket.id });
     });
@@ -138,20 +154,27 @@ function initializeSocket(server) {
     // the room only — never echo to the sender (the sender already applied it
     // locally). version lets clients drop stale ops.
     socket.on('timeline:op', ({ room, op, version }) => {
-      if (!room || !currentUserId) return;
+      // Membership gate: only a socket that did an ownership-checked join:room
+      // (→ editorRooms) may broadcast into the room. `socket.to(room)` targets a
+      // room regardless of membership, so without this any authed socket could
+      // overwrite another tenant's timeline by naming their room.
+      if (!currentUserId || !editorRooms.has(room)) return;
       socket.to(room).emit('timeline:op', { userId: currentUserId, op, version });
     });
 
     // Playhead position broadcast (scrub sync). Other clients only.
     socket.on('playhead:update', ({ room, time }) => {
-      if (!room || !currentUserId) return;
+      if (!currentUserId || !editorRooms.has(room)) return;
       socket.to(room).emit('playhead:update', { userId: currentUserId, time });
     });
 
-    // Lock a segment for exclusive editing.
-    socket.on('segment:lock', ({ room, contentId, segmentId }) => {
-      if (!room || !contentId || !segmentId || !currentUserId) return;
-      const result = realtimeCollaborationService.lockSegment(contentId, currentUserId, segmentId);
+    // Lock a segment for exclusive editing. Uses the VERIFIED contentId mapped
+    // at join (never the client payload), so a member can only lock segments of
+    // the content the room is authorized for.
+    socket.on('segment:lock', ({ room, segmentId }) => {
+      if (!currentUserId || !segmentId || !editorRooms.has(room)) return;
+      const cid = editorRooms.get(room);
+      const result = realtimeCollaborationService.lockSegment(cid, currentUserId, segmentId);
       if (result.success) {
         io.to(room).emit('segment:lock-state', { segmentId, lockedBy: String(currentUserId) });
       } else {
@@ -160,9 +183,10 @@ function initializeSocket(server) {
     });
 
     // Unlock a segment (only the owner can; service enforces it).
-    socket.on('segment:unlock', ({ room, contentId, segmentId }) => {
-      if (!room || !contentId || !segmentId || !currentUserId) return;
-      const result = realtimeCollaborationService.unlockSegment(contentId, currentUserId, segmentId);
+    socket.on('segment:unlock', ({ room, segmentId }) => {
+      if (!currentUserId || !segmentId || !editorRooms.has(room)) return;
+      const cid = editorRooms.get(room);
+      const result = realtimeCollaborationService.unlockSegment(cid, currentUserId, segmentId);
       if (result.success) {
         io.to(room).emit('segment:lock-state', { segmentId, lockedBy: null });
       }
@@ -171,8 +195,9 @@ function initializeSocket(server) {
     // Add a live comment. Broadcast to the whole room (including sender so
     // their own comment is confirmed). Best-effort persistence is attempted
     // but never blocks the live broadcast.
-    socket.on('comment:add', ({ room, contentId, comment }) => {
-      if (!room || !comment || !currentUserId) return;
+    socket.on('comment:add', ({ room, comment }) => {
+      if (!currentUserId || !comment || !editorRooms.has(room)) return;
+      const cid = editorRooms.get(room);
       const enriched = {
         ...comment,
         userId: String(currentUserId),
@@ -181,11 +206,9 @@ function initializeSocket(server) {
       };
       io.to(room).emit('comment:add', { userId: String(currentUserId), comment: enriched });
       // Best-effort persistence — failures are logged, not surfaced.
-      if (contentId) {
-        Promise.resolve()
-          .then(() => realtimeCollaborationService.sendRealtimeComment(contentId, currentUserId, comment))
-          .catch((error) => logger.error('Realtime comment persist failed', { error: error.message, contentId }));
-      }
+      Promise.resolve()
+        .then(() => realtimeCollaborationService.sendRealtimeComment(cid, currentUserId, comment))
+        .catch((error) => logger.error('Realtime comment persist failed', { error: error.message, contentId: cid }));
     });
 
     // Join agency calendar room
@@ -410,5 +433,6 @@ function emitToUser(userId, event, payload) {
 module.exports = {
   initializeSocket,
   getIO,
-  emitToUser
+  emitToUser,
+  deriveRoomContentId
 };
