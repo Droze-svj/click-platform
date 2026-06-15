@@ -119,6 +119,13 @@ jobs:
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env.local
           echo "VAPID_PUBLIC_KEY=${{ secrets.VAPID_PUBLIC_KEY }}" >> .env.local
           echo "VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}" >> .env.local
+          # Signed media (private /uploads). Controlled entirely via GitHub Actions
+          # secrets so the cutover is "set secret + redeploy", no code change.
+          # SAFE DEFAULTS when the secrets are unset: MEDIA_URL_SECRET empty → the
+          # signer falls back to JWT_SECRET; REQUIRE_SIGNED_MEDIA empty → the gate
+          # stays OFF (it enforces only when the value is exactly 'true').
+          echo "MEDIA_URL_SECRET=${{ secrets.MEDIA_URL_SECRET }}" >> .env.local
+          echo "REQUIRE_SIGNED_MEDIA=${{ secrets.REQUIRE_SIGNED_MEDIA }}" >> .env.local
 
       - name: Build optimized production bundle
         run: cd client && npm run build

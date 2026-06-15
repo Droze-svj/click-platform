@@ -120,22 +120,32 @@ this pattern for genuine *downloads* (already done for renders), not inline medi
 
 ### Cutover checklist
 
-1. **Set the secret first.** Set `MEDIA_URL_SECRET` (32+ random bytes) — identical across
-   ALL app instances/workers — so signatures verify regardless of which node serves the
-   request. (If left unset it falls back to `JWT_SECRET`, which also works but couples the
-   two secrets.) Deploy this with the flag still **off** — no behavior change.
-2. **Staging: set `REQUIRE_SIGNED_MEDIA=true`.** Smoke-test each media surface logged in:
+The plumbing is already wired (no code change needed for the flip):
+
+- **Render (primary backend)** — `render.yaml` declares `MEDIA_URL_SECRET` with
+  `generateValue: true` (Render auto-generates a strong, stable secret shared across the
+  service's instances — nobody handles a secret) and `REQUIRE_SIGNED_MEDIA` as
+  `sync: false` (unset = enforcement OFF).
+- **SSH/PM2 fallback** — `production-deploy.yml` injects both from GitHub Actions secrets,
+  same safe defaults.
+
+Steps:
+
+1. **Deploy this branch.** Render auto-creates `MEDIA_URL_SECRET` on first sync; the gate
+   stays OFF (`REQUIRE_SIGNED_MEDIA` unset). No behavior change — URLs are signed, not enforced.
+2. **Staging / pre-prod: set `REQUIRE_SIGNED_MEDIA=true`** (Render dashboard → the service →
+   Environment; or the GH secret on the SSH path). Smoke-test each media surface logged in:
    editor (source video + clips + waveform/filmstrip), library, player (incl. range/seek),
-   music panel, generated/processed assets, thumbnails, exports/render downloads. Every
-   media URL is now `…?exp&sig`; anything that still renders a bare `/uploads/...` is a
-   missed surface → sign that response (or, if genuinely public, add its prefix to
-   `PUBLIC_MEDIA_PREFIXES`). The global signer should make this empty, but verify.
-3. **Negative checks (staging):** a hand-crafted unsigned/expired `/uploads/...` → 403;
-   a `fonts/` (public-prefix) asset → 200.
-4. **CDN:** include `exp`/`sig` in the cache key for `/uploads/*` (or bypass cache for the
-   private prefixes) so signed URLs aren't served from a stale-key cache.
-5. **Production: set `REQUIRE_SIGNED_MEDIA=true`.**
-6. **Rollback** is instant and safe: set `REQUIRE_SIGNED_MEDIA=false` (or unset). URLs keep
+   music panel, generated/processed assets, thumbnails, exports/render downloads. Every media
+   URL is now `…?exp&sig`; anything still rendering a bare `/uploads/...` is a missed surface →
+   sign that response (or, if genuinely public, add its prefix to `PUBLIC_MEDIA_PREFIXES`). The
+   global `/api` signer should make this empty, but verify.
+3. **Negative checks:** a hand-crafted unsigned/expired `/uploads/...` → 403; a `fonts/`
+   (public-prefix) asset → 200. (Verified locally already; confirm in the real env.)
+4. **CDN/Render cache:** include `exp`/`sig` in the cache key for `/uploads/*` (or bypass cache
+   for the private prefixes) so signed URLs aren't served from a stale-key cache.
+5. **Production: set `REQUIRE_SIGNED_MEDIA=true`** in the Render dashboard.
+6. **Rollback** is instant and safe: set `REQUIRE_SIGNED_MEDIA` back to `false`/blank. URLs keep
    being signed; only enforcement turns off. No data migration either way.
 
 ## Effort
