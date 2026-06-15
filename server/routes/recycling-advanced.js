@@ -34,6 +34,14 @@ const {
 
 const router = express.Router();
 
+// The always-on library service helpers below load a library by bare
+// findById(libraryId) with no owner scope. Assert the caller owns it in the
+// route first so another user's library can't be read/mutated by id.
+async function assertOwnsLibrary(libraryId, userId) {
+  const AlwaysOnLibrary = require('../models/AlwaysOnLibrary');
+  return AlwaysOnLibrary.exists({ _id: libraryId, userId });
+}
+
 /**
  * POST /api/recycling-advanced/evergreen/detect
  * Detect evergreen content
@@ -113,6 +121,9 @@ router.post('/always-on/:libraryId/content', auth, asyncHandler(async (req, res)
  */
 router.post('/always-on/:libraryId/check-performance', auth, asyncHandler(async (req, res) => {
   const { libraryId } = req.params;
+  if (!(await assertOwnsLibrary(libraryId, req.user._id))) {
+    return sendError(res, 'Library not found', 404);
+  }
   const result = await checkContentPerformance(libraryId);
   sendSuccess(res, 'Performance checked', 200, result);
 }));
@@ -123,6 +134,9 @@ router.post('/always-on/:libraryId/check-performance', auth, asyncHandler(async 
  */
 router.post('/always-on/:libraryId/schedule-next', auth, asyncHandler(async (req, res) => {
   const { libraryId } = req.params;
+  if (!(await assertOwnsLibrary(libraryId, req.user._id))) {
+    return sendError(res, 'Library not found', 404);
+  }
   const result = await scheduleNextPost(libraryId);
   sendSuccess(res, 'Next post scheduled', 200, result);
 }));
@@ -234,6 +248,9 @@ router.post('/ab-variants/cross-platform-learning', auth, asyncHandler(async (re
  */
 router.post('/always-on/:libraryId/auto-add', auth, asyncHandler(async (req, res) => {
   const { libraryId } = req.params;
+  if (!(await assertOwnsLibrary(libraryId, req.user._id))) {
+    return sendError(res, 'Library not found', 404);
+  }
   const result = await autoAddHighPerformingContent(libraryId, req.body);
   sendSuccess(res, 'Content auto-added', 200, result);
 }));
@@ -244,6 +261,9 @@ router.post('/always-on/:libraryId/auto-add', auth, asyncHandler(async (req, res
  */
 router.get('/always-on/:libraryId/analytics', auth, asyncHandler(async (req, res) => {
   const { libraryId } = req.params;
+  if (!(await assertOwnsLibrary(libraryId, req.user._id))) {
+    return sendError(res, 'Library not found', 404);
+  }
   const analytics = await getLibraryAnalytics(libraryId);
   sendSuccess(res, 'Library analytics retrieved', 200, analytics);
 }));
@@ -254,6 +274,9 @@ router.get('/always-on/:libraryId/analytics', auth, asyncHandler(async (req, res
  */
 router.post('/always-on/:libraryId/refresh', auth, asyncHandler(async (req, res) => {
   const { libraryId } = req.params;
+  if (!(await assertOwnsLibrary(libraryId, req.user._id))) {
+    return sendError(res, 'Library not found', 404);
+  }
   const result = await refreshExpiredContent(libraryId, req.body);
   sendSuccess(res, 'Content refreshed', 200, result);
 }));

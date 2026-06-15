@@ -38,6 +38,14 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const router = express.Router();
 
+// Several service helpers below load a plan by bare findById(recycleId) with no
+// owner scope. Assert the caller owns the plan in the route before calling them,
+// so a recycleId belonging to another user can't be scheduled/mutated by id.
+async function assertOwnsPlan(recycleId, userId) {
+  const ContentRecycle = require('../models/ContentRecycle');
+  return ContentRecycle.exists({ _id: recycleId, userId });
+}
+
 /**
  * GET /api/recycling/suggestions
  * Get suggested recyclable content
@@ -151,6 +159,10 @@ router.get('/plans/:recycleId', auth, asyncHandler(async (req, res) => {
 router.post('/plans/:recycleId/schedule', auth, asyncHandler(async (req, res) => {
   const { recycleId } = req.params;
 
+  if (!(await assertOwnsPlan(recycleId, req.user._id))) {
+    return sendError(res, 'Recycling plan not found', 404);
+  }
+
   const post = await scheduleNextRepost(recycleId);
   if (!post) {
     return sendError(res, 'No more reposts available or plan completed', 400);
@@ -181,6 +193,10 @@ router.post('/plans/:recycleId/performance', auth, asyncHandler(async (req, res)
 
   if (!postId || !performance) {
     return sendError(res, 'Post ID and performance data are required', 400);
+  }
+
+  if (!(await assertOwnsPlan(recycleId, req.user._id))) {
+    return sendError(res, 'Recycling plan not found', 404);
   }
 
   const plan = await updateRepostPerformance(recycleId, postId, performance);
@@ -229,6 +245,9 @@ router.get('/analytics/advanced', auth, asyncHandler(async (req, res) => {
  */
 router.post('/plans/:recycleId/detect-decay', auth, asyncHandler(async (req, res) => {
   const { recycleId } = req.params;
+  if (!(await assertOwnsPlan(recycleId, req.user._id))) {
+    return sendError(res, 'Recycling plan not found', 404);
+  }
   const result = await detectContentDecay(recycleId);
   sendSuccess(res, 'Decay detection complete', 200, result);
 }));
@@ -239,6 +258,9 @@ router.post('/plans/:recycleId/detect-decay', auth, asyncHandler(async (req, res
  */
 router.post('/plans/:recycleId/auto-adjust', auth, asyncHandler(async (req, res) => {
   const { recycleId } = req.params;
+  if (!(await assertOwnsPlan(recycleId, req.user._id))) {
+    return sendError(res, 'Recycling plan not found', 404);
+  }
   const result = await autoAdjustRecycling(recycleId);
   sendSuccess(res, 'Auto-adjustment complete', 200, result);
 }));

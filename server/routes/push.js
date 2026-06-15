@@ -5,6 +5,8 @@
 
 const express = require('express')
 const webpush = require('web-push')
+const auth = require('../middleware/auth')
+const { requireAdmin } = require('../middleware/admin')
 const router = express.Router()
 
 // VAPID keys for push notifications (generate these for production)
@@ -37,16 +39,19 @@ router.get('/vapid-key', (req, res) => {
 })
 
 // Subscribe to push notifications
-router.post('/subscribe', async (req, res) => {
+router.post('/subscribe', auth, async (req, res) => {
   try {
-    const { subscription, userId } = req.body
+    const { subscription } = req.body
+    // SECURITY: the owner is the authenticated user — NEVER a body-supplied userId
+    // (which previously let anyone hijack/overwrite another user's subscription).
+    const userId = String(req.user._id || req.user.id)
 
     if (!subscription || !subscription.endpoint) {
       return res.status(400).json({ error: 'Invalid subscription data' })
     }
 
-    // Store subscription (use userId as key, or generate unique ID)
-    const subscriptionId = userId || `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    // Key the subscription by the authenticated owner.
+    const subscriptionId = userId
     pushSubscriptions.set(subscriptionId, {
       subscription,
       userId,
@@ -81,18 +86,19 @@ router.post('/subscribe', async (req, res) => {
 })
 
 // Unsubscribe from push notifications
-router.post('/unsubscribe', async (req, res) => {
+router.post('/unsubscribe', auth, async (req, res) => {
   try {
-    const { subscription, userId } = req.body
+    const { subscription } = req.body
+    const userId = String(req.user._id || req.user.id)
 
-    // Find and remove subscription
+    // Find and remove subscription — only the caller's own (match by their userId,
+    // or by an endpoint that actually belongs to them).
     let removed = false
     for (const [id, subData] of pushSubscriptions.entries()) {
-      if (subData.userId === userId ||
-          (subscription && subData.subscription.endpoint === subscription.endpoint)) {
+      if (subData.userId === userId &&
+          (!subscription || !subscription.endpoint || subData.subscription.endpoint === subscription.endpoint)) {
         pushSubscriptions.delete(id)
         removed = true
-        
         break
       }
     }
@@ -109,8 +115,9 @@ router.post('/unsubscribe', async (req, res) => {
   }
 })
 
-// Send notification to specific user
-router.post('/send/:userId', async (req, res) => {
+// Send notification to specific user — admin only (arbitrary push to any user is
+// a phishing/spoofing vector; was previously fully unauthenticated).
+router.post('/send/:userId', auth, requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params
     const { title, body, icon, badge, image, url, action, data, tag, requireInteraction, silent } = req.body
@@ -179,8 +186,8 @@ router.post('/send/:userId', async (req, res) => {
   }
 })
 
-// Send notification to all subscribers
-router.post('/broadcast', async (req, res) => {
+// Send notification to all subscribers — admin only (was unauthenticated spam).
+router.post('/broadcast', auth, requireAdmin, async (req, res) => {
   try {
     const { title, body, icon, badge, image, url, action, data, tag, requireInteraction, silent, userIds } = req.body
 
@@ -256,8 +263,8 @@ router.post('/broadcast', async (req, res) => {
   }
 })
 
-// Get subscription statistics
-router.get('/stats', (req, res) => {
+// Get subscription statistics — admin only (leaks all subscriber ids/endpoints).
+router.get('/stats', auth, requireAdmin, (req, res) => {
   const stats = {
     totalSubscriptions: pushSubscriptions.size,
     activeToday: Array.from(pushSubscriptions.values()).filter(sub =>
@@ -278,14 +285,10 @@ router.get('/stats', (req, res) => {
   res.json(stats)
 })
 
-// Test push notification
-router.post('/test', async (req, res) => {
+// Test push notification — sends only to the authenticated caller's own device.
+router.post('/test', auth, async (req, res) => {
   try {
-    const { userId } = req.body
-
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' })
-    }
+    const userId = String(req.user._id || req.user.id)
 
     // Send test notification
     const testResult = await sendTestNotification(userId)

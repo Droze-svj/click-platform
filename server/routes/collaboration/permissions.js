@@ -100,7 +100,7 @@ router.get('/:contentId/collaborators', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
 
   try {
-    const collaborators = await getCollaborators(contentId);
+    const collaborators = await getCollaborators(contentId, req.user._id);
     sendSuccess(res, 'Collaborators fetched', 200, collaborators);
   } catch (error) {
     logger.error('Get collaborators error', { error: error.message, contentId });

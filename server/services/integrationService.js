@@ -5,6 +5,7 @@ const Integration = require('../models/Integration');
 const IntegrationMarketplace = require('../models/IntegrationMarketplace');
 const axios = require('axios');
 const logger = require('../utils/logger');
+const { assertPublicUrl } = require('../utils/urlGuard');
 
 /**
  * Get marketplace integrations
@@ -119,9 +120,13 @@ async function testIntegrationConnection(integration) {
 
     const headers = getAuthHeaders(integration);
 
+    // SSRF guard: block private/loopback/link-local/metadata targets and disable
+    // redirects so a 30x can't bounce the request to an internal address.
+    await assertPublicUrl(testUrl);
     const response = await axios.get(testUrl, {
       headers,
       timeout: 5000,
+      maxRedirects: 0,
       validateStatus: () => true
     });
 
@@ -221,7 +226,8 @@ async function pushContentToIntegration(integration, content) {
     }
 
     const url = `${integration.config.baseUrl}${endpoint}`;
-    const response = await axios.post(url, payload, { headers });
+    await assertPublicUrl(url);
+    const response = await axios.post(url, payload, { headers, maxRedirects: 0 });
 
     // Update sync status
     integration.sync.lastSync = new Date();
@@ -278,7 +284,8 @@ async function pullContentFromIntegration(integration) {
     }
 
     const url = `${integration.config.baseUrl}${endpoint}`;
-    const response = await axios.get(url, { headers });
+    await assertPublicUrl(url);
+    const response = await axios.get(url, { headers, maxRedirects: 0 });
 
     // Update sync status
     integration.sync.lastSync = new Date();
