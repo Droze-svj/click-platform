@@ -5,6 +5,7 @@ const auth = require('../../middleware/auth');
 const { adaptContent, oneClickRepurpose, getSmartSuggestions } = require('../../services/contentAdaptationService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { guardOwnership } = require('../../utils/ownership');
 const router = express.Router();
 
 /**
@@ -17,6 +18,11 @@ router.post('/adapt-content', auth, asyncHandler(async (req, res) => {
   if (!contentId || !text) {
     return sendError(res, 'Content ID and text are required', 400);
   }
+
+  // IDOR: adaptContent does a bare Content.findByIdAndUpdate(contentId) → ensure
+  // the content belongs to the caller before writing adaptations into it.
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
 
   const targetPlatforms = platforms || ['twitter', 'linkedin', 'instagram', 'facebook', 'youtube', 'tiktok'];
   

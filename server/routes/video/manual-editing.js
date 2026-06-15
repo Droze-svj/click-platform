@@ -8,8 +8,41 @@ const auth = require('../../middleware/auth');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { guardOwnership } = require('../../utils/ownership');
+const { assertPublicUrl } = require('../../utils/urlGuard');
 const logger = require('../../utils/logger');
 const multer = require('multer');
+
+// Resolve a media source for the read-only waveform/filmstrip/beats tools while
+// enforcing ownership on a contentId (was a bare Content.findById → leaked another
+// user's video frames/audio) and SSRF-guarding an attacker-supplied external
+// videoUrl before it reaches ffmpeg's `-i`. Returns the source string, or null
+// after the helper has already sent the error response.
+async function resolveToolSource(req, res, { contentId, videoUrl }) {
+  if (videoUrl) {
+    const u = String(videoUrl);
+    if (/^https?:\/\//i.test(u)) {
+      try {
+        await assertPublicUrl(u);
+      } catch (_) {
+        res.status(400).json({ success: false, error: 'Invalid or disallowed videoUrl' });
+        return null;
+      }
+    }
+    return u;
+  }
+  if (contentId) {
+    const owned = await guardOwnership(req, res, contentId);
+    if (!owned) return null;
+    const src = owned.originalFile?.url || null;
+    if (!src) {
+      res.status(404).json({ success: false, error: 'No source found for contentId' });
+      return null;
+    }
+    return src;
+  }
+  res.status(400).json({ success: false, error: 'contentId or videoUrl is required' });
+  return null;
+}
 const path = require('path');
 const fs = require('fs');
 
@@ -706,6 +739,14 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'videoId or videoUrl is required', 400);
   }
 
+  // A videoId must belong to the caller — resolveInputPath does a bare
+  // Content.findById, so without this any user could render another user's source
+  // video. (A remote videoUrl is SSRF-checked inside videoRenderService.)
+  if (videoId) {
+    const owned = await guardOwnership(req, res, videoId);
+    if (!owned) return;
+  }
+
   // ── Multi-clip TIMELINE STITCHING pre-pass ──
   // When the timeline has multiple primary-video segments (or any segment with
   // reverse / per-segment speed / a transition / a source-trim window), stitch
@@ -1128,23 +1169,10 @@ router.post('/waveform/image', auth, upload.single('video'), asyncHandler(async 
 router.get('/waveform-peaks', auth, asyncHandler(async (req, res) => {
   const { contentId, videoUrl, buckets } = req.query;
 
-  if (!contentId && !videoUrl) {
-    return sendError(res, 'contentId or videoUrl is required', 400);
-  }
+  const source = await resolveToolSource(req, res, { contentId, videoUrl });
+  if (source === null) return;
 
   try {
-    // Resolve the source reference. An explicit videoUrl wins; otherwise look
-    // up the Content's original file URL (mirrors videoRenderService).
-    let source = videoUrl || null;
-    if (!source && contentId) {
-      const Content = require('../../models/Content');
-      const content = await Content.findById(contentId);
-      source = content?.originalFile?.url || null;
-      if (!source) {
-        return sendError(res, 'No audio source found for contentId', 404);
-      }
-    }
-
     const result = await waveformService.extractWaveformPeaks(source, {
       buckets: parseInt(buckets, 10) || 400,
     });
@@ -1170,23 +1198,10 @@ router.get('/waveform-peaks', auth, asyncHandler(async (req, res) => {
 router.get('/filmstrip', auth, asyncHandler(async (req, res) => {
   const { contentId, videoUrl, count } = req.query;
 
-  if (!contentId && !videoUrl) {
-    return sendError(res, 'contentId or videoUrl is required', 400);
-  }
+  const source = await resolveToolSource(req, res, { contentId, videoUrl });
+  if (source === null) return;
 
   try {
-    // Resolve the source reference. An explicit videoUrl wins; otherwise look
-    // up the Content's original file URL (mirrors waveform-peaks).
-    let source = videoUrl || null;
-    if (!source && contentId) {
-      const Content = require('../../models/Content');
-      const content = await Content.findById(contentId);
-      source = content?.originalFile?.url || null;
-      if (!source) {
-        return sendError(res, 'No video source found for contentId', 404);
-      }
-    }
-
     const result = await waveformService.extractFilmstrip(source, {
       count: parseInt(count, 10) || 8,
     });
@@ -1212,23 +1227,10 @@ router.get('/filmstrip', auth, asyncHandler(async (req, res) => {
 router.get('/beats', auth, asyncHandler(async (req, res) => {
   const { contentId, videoUrl } = req.query;
 
-  if (!contentId && !videoUrl) {
-    return sendError(res, 'contentId or videoUrl is required', 400);
-  }
+  const source = await resolveToolSource(req, res, { contentId, videoUrl });
+  if (source === null) return;
 
   try {
-    // Resolve the source reference. An explicit videoUrl wins; otherwise look
-    // up the Content's original file URL (mirrors waveform-peaks).
-    let source = videoUrl || null;
-    if (!source && contentId) {
-      const Content = require('../../models/Content');
-      const content = await Content.findById(contentId);
-      source = content?.originalFile?.url || null;
-      if (!source) {
-        return sendError(res, 'No audio source found for contentId', 404);
-      }
-    }
-
     const result = await waveformService.detectOnsets(source);
     sendSuccess(res, 'Beats detected', 200, result);
   } catch (error) {

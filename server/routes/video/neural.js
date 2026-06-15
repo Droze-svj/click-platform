@@ -8,6 +8,7 @@ const generativeAssetService = require('../../services/generativeAssetService');
 const logger = require('../../utils/logger');
 const auth = require('../../middleware/auth');
 const { resolveTier } = require('../../config/entitlements');
+const { guardOwnership } = require('../../utils/ownership');
 
 /**
  * GET /api/video/neural/trends
@@ -79,6 +80,9 @@ router.post('/audit', auth, async (req, res) => {
 router.post('/dub', auth, async (req, res) => {
   try {
     const { contentId, targetLanguage } = req.body;
+    // IDOR: the dub service does a bare Content.findById(contentId) → gate ownership.
+    const owned = await guardOwnership(req, res, contentId);
+    if (!owned) return;
     const dubbing = await aiVoiceService.generateDubbedContent(contentId, targetLanguage);
 
     res.json({

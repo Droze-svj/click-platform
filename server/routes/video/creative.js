@@ -23,6 +23,8 @@ const path = require('path');
 const fs = require('fs');
 const auth = require('../../middleware/auth');
 const asyncHandler = require('../../middleware/asyncHandler');
+const { guardOwnership } = require('../../utils/ownership');
+const { assertPublicUrl } = require('../../utils/urlGuard');
 const logger = require('../../utils/logger');
 
 const creativeTools = require('../../services/creativeToolsService');
@@ -257,6 +259,19 @@ router.post('/background-swap', auth, express.json(), asyncHandler(async (req, r
     return res.status(400).json({ success: false, error: 'No videoId provided' });
   }
 
+  // IDOR: the service does a bare Content.findById(videoId) → gate ownership.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
+  // SSRF: an external backgroundUrl is handed straight to FFmpeg as an input.
+  if (backgroundUrl && /^https?:\/\//i.test(String(backgroundUrl))) {
+    try {
+      await assertPublicUrl(String(backgroundUrl));
+    } catch (_) {
+      return res.status(400).json({ success: false, error: 'Invalid or disallowed backgroundUrl' });
+    }
+  }
+
   const result = await creativeTools.swapBackground(
     videoId,
     backgroundUrl || bgMode || null,
@@ -278,6 +293,9 @@ router.post('/localize', auth, express.json(), asyncHandler(async (req, res) => 
     return res.status(400).json({ success: false, error: 'No videoId provided' });
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   const result = await aiLocalizationService.localizeVideo(videoId, targetLanguage || 'Spanish');
   res.json(result);
 }));
@@ -292,6 +310,9 @@ router.post('/outpaint', auth, express.json(), asyncHandler(async (req, res) => 
   if (!videoId) {
     return res.status(400).json({ success: false, error: 'No videoId provided' });
   }
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   const result = await aiOutpaintingService.outpaintToVertical(videoId);
   res.json(result);
