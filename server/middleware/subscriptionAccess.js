@@ -31,17 +31,17 @@ const requireActiveSubscription = (req, res, next) => {
       });
     }
 
-    if (!nodeEnv || nodeEnv !== 'production') {
-      // If BYPASS_SUBSCRIPTION is explicitly set, always allow
+    // Bypass ONLY in a local `development` env. On any deployed env (staging
+    // included) the `isLocalhost` signal is derived from spoofable headers, so
+    // a `!== 'production'` gate here was a trivial paywall bypass via
+    // X-Forwarded-For: 127.0.0.1. BYPASS_SUBSCRIPTION is an explicit env opt-out.
+    if (nodeEnv === 'development') {
       if (process.env.BYPASS_SUBSCRIPTION === 'true') {
         return next();
       }
-
-      // Allow localhost requests in non-production
       if (isLocalhost) {
         return next();
       }
-
       if (req.user?.isDevUser) {
         return next();
       }
@@ -85,8 +85,9 @@ const requireActiveSubscription = (req, res, next) => {
         isLocalhost
       });
 
-      // In development or localhost, allow access on error to prevent blocking development
-      if (!nodeEnv || nodeEnv !== 'production' || isLocalhost) {
+      // Fail OPEN only in a local development env; every deployed env fails
+      // closed so a spoofed Host/XFF can't turn a check error into free access.
+      if (nodeEnv === 'development') {
         logger.warn('Allowing access in development mode due to subscription check error');
         return next();
       }
@@ -105,16 +106,11 @@ const requireActiveSubscription = (req, res, next) => {
       stack: outerError.stack
     });
 
-    // In development, allow access to prevent blocking
-    const nodeEnv = process.env.NODE_ENV;
-    const host = (req.headers.host || req.headers['x-forwarded-host'] || '').toLowerCase();
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-
-    if (!nodeEnv || nodeEnv !== 'production' || isLocalhost) {
-      // Fail open in dev/localhost so a subscription-service hiccup doesn't
-      // block local work — but log it at error level so a real bug in the
-      // check isn't silently hidden.
-      logger.error('Subscription check failed open (non-production)', { error: outerError.message });
+    // Fail open ONLY in a local development env so a subscription-service hiccup
+    // doesn't block local work; deployed envs fail closed (no spoofable-header
+    // path to free access). Logged at error level so a real bug isn't hidden.
+    if (process.env.NODE_ENV === 'development') {
+      logger.error('Subscription check failed open (development)', { error: outerError.message });
       return next();
     }
 

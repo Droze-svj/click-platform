@@ -68,9 +68,16 @@ const auth = async (req, res, next) => {
       };
     } else {
       try {
-        decoded = jwt.verify(token, getJwtSecret());
+        decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
       } catch (err) {
         return res.status(401).json({ error: 'Invalid token', details: err.message });
+      }
+      // Token-type confinement: refresh / 2fa_pending / password_reset tokens are
+      // signed with the SAME secret and also carry `userId`, but must NEVER grant
+      // API access. Access tokens have no `type` claim (issueTokenPair signs just
+      // `{ userId }`), so accept only an absent or explicit 'access' type.
+      if (decoded && decoded.type && decoded.type !== 'access') {
+        return res.status(401).json({ error: 'Invalid token' });
       }
     }
 
