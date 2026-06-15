@@ -5,7 +5,15 @@
 // The fix derives the authoritative contentId from the ROOM NAME, so the room
 // and the authorized id can't be decoupled.
 
-const { deriveRoomContentId } = require('../../server/services/socketService');
+const socketService = require('../../server/services/socketService');
+const { deriveRoomContentId } = socketService;
+
+describe('socket H1 — getSocketService export (server-push broadcasts not dead)', () => {
+  test('getSocketService is exported and aliases getIO', () => {
+    expect(typeof socketService.getSocketService).toBe('function');
+    expect(socketService.getSocketService).toBe(socketService.getIO);
+  });
+});
 
 describe('socket join:room — room/contentId cannot be decoupled (C1)', () => {
   test('editor room id comes from the room name, NOT the client contentId', () => {

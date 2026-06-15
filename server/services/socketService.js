@@ -212,8 +212,21 @@ function initializeSocket(server) {
     });
 
     // Join agency calendar room
-    socket.on('join:calendar', ({ agencyWorkspaceId }) => {
+    socket.on('join:calendar', async ({ agencyWorkspaceId }) => {
       if (!currentUserId || !agencyWorkspaceId) return;
+      // Membership gate: only the owner/active members of the workspace may join
+      // its calendar room — otherwise (now that server-push broadcasts are live)
+      // anyone could subscribe to another agency's calendar by guessing the id.
+      try {
+        const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+        const access = await verifyWorkspaceAccess(currentUserId, agencyWorkspaceId);
+        if (!access.allowed) {
+          socket.emit('join:denied', { room: `agency-calendar-${agencyWorkspaceId}`, error: 'No access to this workspace' });
+          return;
+        }
+      } catch (e) {
+        return; // fail closed on lookup error
+      }
       const room = `agency-calendar-${agencyWorkspaceId}`;
       socket.join(room);
       logger.info('User joined calendar room', { agencyWorkspaceId, socketId: socket.id });
@@ -227,8 +240,34 @@ function initializeSocket(server) {
     });
 
     // Join client portal room
-    socket.on('join:portal', ({ portalId }) => {
+    socket.on('join:portal', async ({ portalId }) => {
       if (!currentUserId || !portalId) return;
+      // Membership gate: the joiner must belong to the workspace that owns (or is
+      // the client of) this portal. portalId may be the _id or the subdomain.
+      try {
+        const mongoose = require('mongoose');
+        const WhiteLabelPortal = require('../models/WhiteLabelPortal');
+        const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+        let portal = null;
+        if (mongoose.Types.ObjectId.isValid(String(portalId))) {
+          portal = await WhiteLabelPortal.findById(portalId).select('workspaceId clientId').lean().catch(() => null);
+        }
+        if (!portal) {
+          portal = await WhiteLabelPortal.findOne({ subdomain: String(portalId).toLowerCase() }).select('workspaceId clientId').lean().catch(() => null);
+        }
+        if (!portal) {
+          socket.emit('join:denied', { room: `portal-${portalId}`, error: 'Portal not found' });
+          return;
+        }
+        const owner = await verifyWorkspaceAccess(currentUserId, portal.workspaceId);
+        const client = owner.allowed ? owner : await verifyWorkspaceAccess(currentUserId, portal.clientId);
+        if (!owner.allowed && !client.allowed) {
+          socket.emit('join:denied', { room: `portal-${portalId}`, error: 'No access to this portal' });
+          return;
+        }
+      } catch (e) {
+        return; // fail closed
+      }
       const room = `portal-${portalId}`;
       socket.join(room);
       logger.info('User joined portal room', { portalId, socketId: socket.id });
@@ -433,6 +472,11 @@ function emitToUser(userId, event, payload) {
 module.exports = {
   initializeSocket,
   getIO,
+  // Alias used by realtimeService / calendarRealtimeService / portalRealtimeService.
+  // It was never exported, so every server-push broadcast (calendar/portal/
+  // processing/notification) was a silent no-op. Now that it's live, the
+  // calendar/portal join handlers above enforce workspace membership.
+  getSocketService: getIO,
   emitToUser,
   deriveRoomContentId
 };
