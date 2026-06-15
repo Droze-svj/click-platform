@@ -26,30 +26,40 @@ if (process.env.NODE_ENV === 'production'
   );
 }
 const ENCRYPTION_KEY = process.env.OAUTH_ENCRYPTION_KEY || 'development-secret-key-32-chars-!!';
-const IV_LENGTH = 16;
 
-/**
- * Encrypt a token before storing in DB
- */
-function encrypt(text) {
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY.padEnd(32).substring(0, 32)), iv);
-  let encrypted = cipher.update(text);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
-  return iv.toString('hex') + ':' + encrypted.toString('hex');
+function keyBuf() {
+  return Buffer.from(ENCRYPTION_KEY.padEnd(32).substring(0, 32));
 }
 
 /**
- * Decrypt a token for API use
+ * Encrypt a token before storing in DB. AES-256-GCM (authenticated — gives
+ * integrity, unlike the old unauthenticated CBC). Format: iv:authTag:ciphertext
+ * (all hex), 12-byte GCM nonce.
+ */
+function encrypt(text) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', keyBuf(), iv);
+  const enc = Buffer.concat([cipher.update(String(text), 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString('hex')}:${tag.toString('hex')}:${enc.toString('hex')}`;
+}
+
+/**
+ * Decrypt a token for API use. Reads the new GCM format (iv:tag:ct — 3 parts)
+ * AND the legacy AES-256-CBC format (iv:ct — 2 parts) so tokens stored before
+ * this change keep working while all new writes are authenticated.
  */
 function decrypt(text) {
-  const textParts = text.split(':');
-  const iv = Buffer.from(textParts.shift(), 'hex');
-  const encryptedText = Buffer.from(textParts.join(':'), 'hex');
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY.padEnd(32).substring(0, 32)), iv);
-  let decrypted = decipher.update(encryptedText);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-  return decrypted.toString();
+  const parts = String(text).split(':');
+  if (parts.length === 3) {
+    const decipher = crypto.createDecipheriv('aes-256-gcm', keyBuf(), Buffer.from(parts[0], 'hex'));
+    decipher.setAuthTag(Buffer.from(parts[1], 'hex'));
+    return Buffer.concat([decipher.update(Buffer.from(parts[2], 'hex')), decipher.final()]).toString('utf8');
+  }
+  // Legacy AES-256-CBC (iv:ciphertext).
+  const iv = Buffer.from(parts.shift(), 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', keyBuf(), iv);
+  return Buffer.concat([decipher.update(Buffer.from(parts.join(':'), 'hex')), decipher.final()]).toString('utf8');
 }
 
 /**

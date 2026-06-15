@@ -65,20 +65,16 @@ function getDevUserObjectId(devUserId) {
 /**
  * Compute allowDevMode from request (reusable in routes).
  *
- * Hard rules:
- *   - production: NEVER allow dev mode. The Host / Referer / X-Forwarded-For
- *     headers are user-controlled, so any "production && isLocalhost" check
- *     becomes a Host-spoof auth bypass. Returns false unconditionally.
- *   - test: NEVER allow dev mode either — tests need to exercise the real
- *     auth path, otherwise security tests can't catch regressions.
- *   - development / staging / unset: allow when the request looks like it
- *     came from localhost (host or referer or x-forwarded-for matches), so
- *     contributors can curl the API without juggling tokens.
+ * Hard rule: ONLY a local `development` env may use the dev bypass. The
+ * localhost signals below come from the Host / Referer / X-Forwarded-For
+ * headers, which are ALL attacker-controllable — so on ANY deployed env
+ * (production, staging, preview, or NODE_ENV unset on a host) they'd be a
+ * trivial Host/XFF-spoof path to an unauthenticated mock-admin session.
+ * `production`, `test`, `staging`, and unset therefore ALL return false; the
+ * header heuristic only runs (as a second layer) when NODE_ENV==='development'.
  */
 function allowDevMode(req) {
-  const nodeEnv = process.env.NODE_ENV;
-  if (nodeEnv === 'production') return false;
-  if (nodeEnv === 'test') return false;
+  if (process.env.NODE_ENV !== 'development') return false;
 
   const host = req?.headers?.host || req?.headers?.['x-forwarded-host'] || '';
   const referer = req?.headers?.referer || req?.headers?.origin || '';

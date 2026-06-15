@@ -24,6 +24,16 @@ const { sanitizeString, sanitizeObject, sanitizeMongoQuery, validateInput } = re
 const SANITIZER_BYPASS_PATHS = [
   /^\/api\/oauth\/[^/]+\/callback($|\?)/,
   /^\/api\/oauth\/callback($|\?)/, // legacy single-callback path, just in case
+  // Repurpose Studio: the body is render data consumed by ffmpeg (a source
+  // videoUrl/path + caption text burned into pixels), never reflected as HTML.
+  // HTML-escaping it corrupts both — `/`→`&#x2F;` makes the source path
+  // unreadable and apostrophes in captions become `&#x27;` on screen. The SSRF
+  // guard (utils/urlGuard) — not HTML-escaping — is what protects the URL here.
+  /^\/api\/video\/repurpose(\/|$|\?)/,
+  // AI asset generation: the body is a free-text PROMPT fed to an image/voice
+  // model, never reflected as HTML. Escaping `'`→`&#x27;` would corrupt the
+  // generated speech/image, so pass the prompt through raw.
+  /^\/api\/ai\/generate(\/|$|\?)/,
 ];
 
 function sanitizeInput(req, res, next) {

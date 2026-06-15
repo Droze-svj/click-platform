@@ -1969,6 +1969,14 @@ app.use('/api/video/clips', require('./routes/video/clips'));
 // reaches it. Was previously orphaned (file existed but no mount), which
 // is why the frontend's render button silently 404'd.
 app.use('/api/video', require('./routes/video/render'));
+// Multi-Format Repurpose Studio: POST /api/video/repurpose → one source video
+// to N platform-native, smart-reframed variants. Renders via the render
+// pipeline above, so its /render/:jobId/status + /download endpoints serve the
+// resulting variant jobIds. Mounted under /api/video alongside render.
+app.use('/api/video', require('./routes/video/repurpose'));
+// Repurpose Recipes: save/browse/remix shareable repurpose "formulas".
+// Mounted at the more specific path so it takes precedence over /repurpose.
+app.use('/api/video/repurpose/recipes', require('./routes/video/repurposeRecipes'));
 // Tools hub: silence-removal, filler removal, edit-by-text. Thin wrappers
 // around aiVideoEditingService.js so the Tools UI can hit single endpoints.
 app.use('/api/video/tools', require('./routes/video/tools'));
@@ -1994,6 +2002,9 @@ app.use('/api/ai/predictive', require('./routes/ai/predictive'));
 app.use('/api/ai/advanced', require('./routes/ai/advanced'));
 app.use('/api/ai/content-generation', require('./routes/ai/content-generation'));
 app.use('/api/ai/adapt', require('./routes/ai/adapt'));
+// Unified asset generation (voiceover / SFX / image) for the editor's Generate
+// panel. Specific path so it takes precedence over the general /api/ai routers.
+app.use('/api/ai/generate', require('./routes/ai/generate'));
 app.use('/api/ai', require('./routes/ai/generate-idea'));
 app.use('/api/infrastructure/cache', require('./routes/infrastructure/cache'));
 app.use('/api/infrastructure/load-balancer', require('./routes/infrastructure/load-balancer'));
@@ -2204,6 +2215,10 @@ app.use('/api/support', require('./routes/support-enhanced'));
 
 // Pro mode routes
 app.use('/api/pro-mode', require('./routes/pro-mode'));
+// Per-creator personalization: the learning write-loop (record choices) + the
+// AI voice/brand/defaults controls. Powers personalizationService across every
+// AI surface (repurpose copy, generation, the autonomous pipeline).
+app.use('/api/me', require('./routes/me-personalization'));
 
 // Status page (public)
 

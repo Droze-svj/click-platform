@@ -3,6 +3,20 @@
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
+const personalizationService = require('./personalizationService');
+
+// Personalized system prompt (creator's learned style + saved voice/brand) when
+// we know the user; the generic line otherwise. 'script-writer' persona keeps a
+// single-output (these all return plain text, so no JSON-fragility concern).
+async function personalSystem(userId, fallback, override = null) {
+  if (userId) {
+    try {
+      const s = await personalizationService.buildPersonalizedSystemPrompt({ userId, role: 'script-writer', stage: 'edit', override });
+      if (s) return s;
+    } catch (_) { /* fall through to generic */ }
+  }
+  return fallback;
+}
 
 /**
  * Generate multiple variants
@@ -40,7 +54,8 @@ async function generateSingleVariant(content, index, options) {
   }
 
   const prompt = buildVariantPrompt(content, index, options);
-  const fullPrompt = `You are a creative content writer. Generate variations of content while maintaining the core message.\n\n${prompt}`;
+  const system = await personalSystem(options.userId, 'You are a creative content writer. Generate variations of content while maintaining the core message.');
+  const fullPrompt = `${system}\n\n${prompt}`;
   const response = await geminiGenerate(fullPrompt, {
     temperature: 0.8 + index * 0.1,
     maxTokens: 4000
@@ -103,7 +118,8 @@ async function improveSection(content, section, options = {}) {
       throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const fullPrompt = `You are a content editor. Improve specific sections of content.\n\n${prompt}`;
+    const system = await personalSystem(options.userId, 'You are a content editor. Improve specific sections of content.');
+    const fullPrompt = `${system}\n\n${prompt}`;
     const improved = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 4000 });
 
     return {
@@ -164,7 +180,9 @@ async function rewriteForTone(content, targetTone, options = {}) {
       throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const fullPrompt = `You are a tone specialist. Rewrite content to match specific tones.\n\n${prompt}`;
+    // targetTone drives the rewrite; the creator's vocab/banned/style still apply.
+    const system = await personalSystem(options.userId, 'You are a tone specialist. Rewrite content to match specific tones.', { tone: targetTone });
+    const fullPrompt = `${system}\n\n${prompt}`;
     const rewritten = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 4000 });
 
     return {
@@ -182,13 +200,14 @@ async function rewriteForTone(content, targetTone, options = {}) {
 /**
  * Generate hook variations
  */
-async function generateHookVariations(content, count = 5) {
+async function generateHookVariations(content, count = 5, options = {}) {
   try {
     const hook = content.split('.')[0] || content.substring(0, 100);
 
     const variants = await generateVariants(hook, count, {
       focusArea: 'hook',
-      preserveStructure: false
+      preserveStructure: false,
+      userId: options.userId,
     });
 
     return variants.map((v) => ({

@@ -5,75 +5,81 @@ const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 const logger = require('../utils/logger');
+const { escapeDrawtext, safeColor, safeFontPath, safeExpr, safeNum } = require('../utils/ffmpegSafe');
 
 /**
  * Apply animated text overlay
  */
 async function applyAnimatedText(videoPath, outputPath, textOverlay) {
   return new Promise((resolve, reject) => {
-    const { text, font, style, animation, position, startTime, endTime } = textOverlay;
-    
-    // Build base text filter
-    let xPos = position.x || '(w-text_w)/2';
-    let yPos = position.y || 'h-th-50';
-    
+    const { text, font = {}, style = {}, animation, position = {}, startTime, endTime } = textOverlay;
+    const sT = safeNum(startTime, 0, 0, 1e6);
+    const eT = safeNum(endTime, sT + 5, 0, 1e6);
+
+    // Build base text filter. drawtext is an injection surface, so user text is
+    // escaped, colors whitelisted, paths/expressions sanitized, numbers coerced.
+    let xPos = safeExpr(position.x, '(w-text_w)/2');
+    let yPos = safeExpr(position.y, 'h-th-50');
+
     if (position === 'top') yPos = '50';
     else if (position === 'center') yPos = '(h-text_h)/2';
     else if (position === 'bottom') yPos = 'h-th-50';
-    
-    // Build text filter with style
-    let textFilter = `drawtext=text='${text.replace(/'/g, "’")}'`;
-    textFilter += `:fontfile=${font.family || 'Arial'}`;
-    textFilter += `:fontsize=${font.size || 42}`;
-    textFilter += `:fontcolor=${style.color || '#FFFFFF'}`;
+
+    let textFilter = `drawtext=text='${escapeDrawtext(text)}'`;
+    const fontFile = safeFontPath(font.family);
+    if (fontFile) textFilter += `:fontfile='${fontFile}'`;
+    textFilter += `:fontsize=${safeNum(font.size, 42, 1, 2000)}`;
+    textFilter += `:fontcolor=${safeColor(style.color, 'white')}`;
     textFilter += `:x=${xPos}:y=${yPos}`;
-    
+
     // Add stroke
     if (style.stroke) {
-      textFilter += `:borderw=${style.stroke.width || 2}:bordercolor=${style.stroke.color || '#000000'}`;
+      textFilter += `:borderw=${safeNum(style.stroke.width, 2, 0, 100)}:bordercolor=${safeColor(style.stroke.color, 'black')}`;
     }
-    
+
     // Add shadow
     if (style.shadow) {
-      textFilter += `:shadowx=${style.shadow.x || 2}:shadowy=${style.shadow.y || 2}:shadowcolor=${style.shadow.color || '#000000'}`;
+      textFilter += `:shadowx=${safeNum(style.shadow.x, 2, -100, 100)}:shadowy=${safeNum(style.shadow.y, 2, -100, 100)}:shadowcolor=${safeColor(style.shadow.color, 'black')}`;
     }
-    
+
     // Add background
     if (style.background && style.background.type !== 'none') {
       if (style.background.type === 'solid') {
-        textFilter += `:box=1:boxcolor=${style.background.color || 'black'}@${style.background.opacity || 0.7}:boxborderw=5`;
+        textFilter += `:box=1:boxcolor=${safeColor(style.background.color, 'black')}@${safeNum(style.background.opacity, 0.7, 0, 1)}:boxborderw=5`;
       } else if (style.background.type === 'blur') {
         // Blur background (simplified)
         textFilter += `:box=1:boxcolor=black@0.5:boxborderw=5`;
       }
     }
     
-    // Add animation
+    // Add animation. Times are coerced numbers (sT/eT/dur), so these built
+    // expressions are numeric-only and not injectable.
+    const dur = safeNum(animation && animation.duration, 1, 0.01, 1e6);
     if (animation && animation.type) {
       switch (animation.type) {
       case 'fade':
-        textFilter += `:enable='between(t,${startTime},${endTime})':alpha='if(lt(t,${startTime + animation.duration}), (t-${startTime})/${animation.duration}, if(gt(t,${endTime - animation.duration}), (${endTime}-t)/${animation.duration}, 1))'`;
+        textFilter += `:enable='between(t,${sT},${eT})':alpha='if(lt(t,${sT + dur}), (t-${sT})/${dur}, if(gt(t,${eT - dur}), (${eT}-t)/${dur}, 1))'`;
         break;
       case 'slide':
-        textFilter += `:enable='between(t,${startTime},${endTime})':x='if(lt(t,${startTime + animation.duration}), w+(t-${startTime})*w/${animation.duration}, (w-text_w)/2)'`;
+        textFilter += `:enable='between(t,${sT},${eT})':x='if(lt(t,${sT + dur}), w+(t-${sT})*w/${dur}, (w-text_w)/2)'`;
         break;
       case 'typewriter':
         // Simplified typewriter effect
-        textFilter += `:enable='between(t,${startTime},${endTime})'`;
+        textFilter += `:enable='between(t,${sT},${eT})'`;
         break;
       case 'zoom':
-        textFilter += `:enable='between(t,${startTime},${endTime})'`;
+        textFilter += `:enable='between(t,${sT},${eT})'`;
         break;
       }
     } else {
-      textFilter += `:enable='between(t,${startTime},${endTime})'`;
+      textFilter += `:enable='between(t,${sT},${eT})'`;
     }
-    
+
     ffmpeg(videoPath)
       .videoFilters(textFilter)
       .output(outputPath)
       .on('end', () => {
-        logger.info('Animated text applied', { outputPath, text: text.substring(0, 20) });
+        logger.info('Animated text applied', { outputPath, text: String(text || '').substring(0, 20) });
         resolve(outputPath);
       })
       .on('error', reject)

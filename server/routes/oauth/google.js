@@ -7,6 +7,7 @@ const googleService = require('../../services/googleOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter } = require('../../middleware/oauthRateLimiter');
+const ssx = require('../../utils/oauthServerSideExchange');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
@@ -24,8 +25,11 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
 
   const userId = req.userId || req.user?._id || req.user?.id;
   const { url, state } = await googleService.getAuthorizationUrl(userId, callbackUrl);
+  // When server-side exchange is enabled, sign the userId into the state so the
+  // session-less callback can exchange the code itself (no code in the URL).
+  const finalUrl = ssx.serverSideExchangeEnabled() ? ssx.wrapAuthorizeUrl(url, userId, 'google') : url;
 
-  sendSuccess(res, 'Authorization URL generated', 200, { url, state });
+  sendSuccess(res, 'Authorization URL generated', 200, { url: finalUrl, state });
 }));
 
 /**
@@ -45,12 +49,19 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     return sendError(res, 'Missing authorization code or state', 400);
   }
 
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    // Hardened path: exchange server-side so the single-use code never reaches
+    // the browser URL. Legacy path (flag off) hands the code to /complete.
+    if (ssx.serverSideExchangeEnabled()) {
+      const u = ssx.unwrapCallbackState(state);
+      if (!u) return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent('Invalid OAuth state')}`);
+      await googleService.exchangeCodeForToken(u.userId, code, u.innerState);
+      return res.redirect(`${frontendUrl}/dashboard/social?connected=google&success=true`);
+    }
     res.redirect(`${frontendUrl}/dashboard/social?platform=google&code=${code}&state=${state}`);
   } catch (err) {
     logger.error('Google OAuth callback error', { error: err.message });
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}`);
   }
 }));

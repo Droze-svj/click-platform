@@ -105,6 +105,11 @@ const FEATURES = {
   filters_basic:    { label: 'Basic filters',            category: 'editing', minTier: 'free' },
   text_overlays:    { label: 'Text overlays',            category: 'editing', minTier: 'free' },
   trim_basic:       { label: 'Basic trim & cut',         category: 'editing', minTier: 'free' },
+  // Headline 2026 capability: one source → smart-reframed, re-captioned,
+  // re-hooked platform-native cuts. Available to ALL tiers (so every creator can
+  // taste it) but tiered by DEPTH via LIMITS.repurposeVariantsMax + the existing
+  // resolution clamp + Free watermark, not by hard lockout.
+  multi_format_repurpose: { label: 'Multi-format repurpose studio', category: 'editing', minTier: 'free' },
 
   // ── Creator ──
   export_unlimited: { label: 'Unlimited exports',        category: 'editing', minTier: 'creator' },
@@ -175,6 +180,7 @@ const LIMITS = {
     videoDurationSec: 120,
     retentionDays: 14,
     clipCountPerDay: 6,
+    repurposeVariantsMax: 1,
   },
   creator: {
     exportsPerMonth: 30,
@@ -188,6 +194,7 @@ const LIMITS = {
     videoDurationSec: 1800,
     retentionDays: 14,
     clipCountPerDay: 50,
+    repurposeVariantsMax: 2,
   },
   pro: {
     exportsPerMonth: Infinity,
@@ -201,6 +208,7 @@ const LIMITS = {
     videoDurationSec: 7200,
     retentionDays: 14,
     clipCountPerDay: 200,
+    repurposeVariantsMax: 4,
   },
   agency: {
     exportsPerMonth: Infinity,
@@ -214,6 +222,7 @@ const LIMITS = {
     videoDurationSec: Infinity,
     retentionDays: 14,
     clipCountPerDay: 1000,
+    repurposeVariantsMax: 4,
   },
 };
 

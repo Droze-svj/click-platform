@@ -29,6 +29,7 @@ import {
   Trash2,
   Lock,
   TrendingUp,
+  Share2,
   type LucideIcon,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -61,6 +62,9 @@ import AssetLibraryView from './editor/views/AssetLibraryView'
 import CollaborateView from './editor/views/CollaborateView'
 import EffectsView from './editor/views/EffectsView'
 import ExportView from './editor/views/ExportView'
+import RepurposeView from './editor/views/RepurposeView'
+import GenerateView from './editor/views/GenerateView'
+import PersonalizationView from './editor/views/PersonalizationView'
 import BasicEditorView from './editor/views/BasicEditorView'
 import ScriptGeneratorView from './editor/views/ScriptGeneratorView'
 import ThumbnailGeneratorView from './editor/views/ThumbnailGeneratorView'
@@ -191,6 +195,9 @@ const WORKFLOW_STEPS: { id: EditorCategory; label: string; icon?: React.ElementT
   { id: 'intelligence', label: 'Brand DNA', icon: Database, color: 'text-emerald-600 dark:text-emerald-400' },
   { id: 'timeline', label: 'Timeline', icon: List, color: 'text-surface-600 dark:text-surface-400' },
   { id: 'export', label: 'Export', icon: Send, color: 'text-surface-900 dark:text-white' },
+  { id: 'repurpose', label: 'Repurpose', icon: Share2, color: 'text-indigo-600 dark:text-indigo-400' },
+  { id: 'generate', label: 'Generate', icon: Sparkles, color: 'text-violet-600 dark:text-violet-400' },
+  { id: 'personalize', label: 'Personalize', icon: Fingerprint, color: 'text-fuchsia-600 dark:text-fuchsia-400' },
   { id: 'style-vault', label: 'Asset Library', icon: Orbit, color: 'text-pink-600 dark:text-pink-400' },
 ]
 
@@ -1872,6 +1879,9 @@ const ModernVideoEditor: React.FC<{
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
       case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} selectedSegmentId={selectedSegmentId} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))} />
       case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} videoFilters={videoFilters} videoTransform={videoTransform} videoTransformKeyframes={videoTransformKeyframes} videoCrop={videoCrop} chromaKey={chromaKey} playbackSpeed={playbackSpeed} videoDuration={videoState.duration} showToast={showToast} setActiveCategory={setActiveCategory} projectName={projectName} />
+      case 'repurpose': return <RepurposeView videoUrl={actualVideoUrl || ''} videoId={videoId || undefined} videoFilters={videoFilters} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} videoDuration={videoState.duration} projectName={projectName} showToast={showToast} />
+      case 'generate': return <GenerateView videoId={videoId || undefined} currentTime={videoState.currentTime} setTimelineSegments={setTimelineSegments} showToast={showToast} />
+      case 'personalize': return <PersonalizationView showToast={showToast} />
       case 'ai-analysis': return <AIDirectorView
         videoId={videoId || ''}
         showToast={showToast}

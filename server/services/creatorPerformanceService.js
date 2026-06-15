@@ -32,8 +32,15 @@ function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
  */
 function computeRetentionDelta(metrics = {}) {
   const benchmark = metrics.benchmarkRetention ?? metrics.benchmarkCompletion ?? 0.55;
-  const retention = metrics.retentionRate ?? metrics.completionRate ?? null;
-  if (typeof retention !== 'number') return 0;
+  // Accept a flat retention/completion rate, OR derive it from the nested
+  // `watchTime.averagePercentage` block — that's the raw platform-analytics
+  // shape the 6h performanceLearningCron passes straight through, so the signal
+  // is identical to what the old inline derivation produced.
+  let retention = metrics.retentionRate ?? metrics.completionRate ?? null;
+  if (retention == null && metrics.watchTime?.averagePercentage != null) {
+    retention = Number(metrics.watchTime.averagePercentage) / 100;
+  }
+  if (typeof retention !== 'number' || !Number.isFinite(retention)) return 0;
   return clamp(retention - benchmark, -1, 1);
 }
 

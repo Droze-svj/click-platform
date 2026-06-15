@@ -1,0 +1,224 @@
+/**
+ * repurposeRecipeService — save / browse / apply (remix) Repurpose Studio recipes.
+ *
+ * The pure helpers (sanitizeRecipe, recipeToRequest, summarizeRecipe) carry the
+ * security-relevant logic — they bound and whitelist whatever a user submits so
+ * a recipe can never become an unbounded blob or smuggle unexpected fields into
+ * the render pipeline — and are unit-testable with no DB.
+ */
+
+'use strict';
+
+const mongoose = require('mongoose');
+const RepurposeRecipe = require('../models/RepurposeRecipe');
+const smartReframe = require('./smartReframeService');
+const logger = require('../utils/logger');
+
+const SUPPORTED_RATIOS = Object.keys(smartReframe.RATIO_DIMS);
+const QUALITIES = ['high', 'medium', 'low', 'best'];
+
+// Only these primitive overlay fields are persisted in a recipe — enough to
+// reproduce the look, nothing executable or unbounded.
+const OVERLAY_STRING_FIELDS = { text: 200, style: 40, color: 40, fontFamily: 60, align: 12 };
+const OVERLAY_NUMBER_FIELDS = ['fontSize', 'x', 'y', 'startTime', 'endTime', 'opacity', 'rotation', 'layer'];
+const OVERLAY_BOOL_FIELDS = ['bold', 'italic', 'uppercase'];
+
+const MAX_TARGETS = 8;
+const MAX_OVERLAYS = 20;
+const MAX_FILTER_KEYS = 40;
+
+function clampStr(v, max) {
+  return typeof v === 'string' ? v.slice(0, max) : undefined;
+}
+
+/**
+ * Display-only text (recipe name/description/author) is stored from a body that
+ * BYPASSES the global HTML-sanitizer (the bypass is needed so videoUrl + burned
+ * caption text survive intact). So strip angle brackets + control chars here to
+ * neutralise stored HTML, while keeping normal punctuation (apostrophes etc.)
+ * readable. React escapes on render too — this is defence in depth.
+ */
+function safeText(v, max) {
+  if (typeof v !== 'string') return undefined;
+  // eslint-disable-next-line no-control-regex
+  return v.replace(/[<>\u0000-\u001F\u007F]/g, '').trim().slice(0, max);
+}
+
+/** Keep only primitive (number|string|boolean) filter values, key/size-bounded. */
+function sanitizeFilters(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  const out = {};
+  let keys = 0;
+  for (const [k, v] of Object.entries(input)) {
+    if (keys >= MAX_FILTER_KEYS) break;
+    if (typeof k !== 'string' || k.length > 60) continue;
+    if (typeof v === 'number' && Number.isFinite(v)) out[k] = v;
+    else if (typeof v === 'boolean') out[k] = v;
+    else if (typeof v === 'string') out[k] = v.slice(0, 200);
+    else if (Array.isArray(v)) {
+      // e.g. a vfx string list — keep short string entries only.
+      const arr = v.filter((x) => typeof x === 'string').slice(0, 20).map((x) => x.slice(0, 60));
+      if (arr.length) out[k] = arr;
+    } else {
+      continue;
+    }
+    keys++;
+  }
+  return out;
+}
+
+/** Reduce a text overlay to the whitelisted primitive fields. */
+function sanitizeOverlay(o) {
+  if (!o || typeof o !== 'object') return null;
+  const out = {};
+  for (const [field, max] of Object.entries(OVERLAY_STRING_FIELDS)) {
+    const v = clampStr(o[field], max);
+    if (v !== undefined) out[field] = v;
+  }
+  for (const field of OVERLAY_NUMBER_FIELDS) {
+    if (typeof o[field] === 'number' && Number.isFinite(o[field])) out[field] = o[field];
+  }
+  for (const field of OVERLAY_BOOL_FIELDS) {
+    if (typeof o[field] === 'boolean') out[field] = o[field];
+  }
+  // A text overlay with no text is meaningless in a (source-less) recipe.
+  return out.text ? out : null;
+}
+
+/**
+ * Bound + whitelist arbitrary user input into a safe recipe config. Pure.
+ * @returns {{ targets:Array, niche?:string, quality?:string, videoFilters:object, textOverlays:Array }}
+ */
+function sanitizeRecipe(input) {
+  const r = input && typeof input === 'object' ? input : {};
+
+  const targets = [];
+  for (const t of Array.isArray(r.targets) ? r.targets : []) {
+    if (targets.length >= MAX_TARGETS) break;
+    if (typeof t === 'string' && SUPPORTED_RATIOS.includes(t)) {
+      targets.push(t);
+    } else if (t && typeof t === 'object' && SUPPORTED_RATIOS.includes(t.ratio)) {
+      const entry = { ratio: t.ratio };
+      const platform = clampStr(t.platform, 40);
+      if (platform) entry.platform = platform;
+      targets.push(entry);
+    }
+  }
+
+  const niche = typeof r.niche === 'string' ? r.niche.toLowerCase().trim().slice(0, 40) || undefined : undefined;
+  const quality = QUALITIES.includes(r.quality) ? r.quality : undefined;
+  const videoFilters = sanitizeFilters(r.videoFilters || r.filters);
+  const textOverlays = (Array.isArray(r.textOverlays) ? r.textOverlays : [])
+    .slice(0, MAX_OVERLAYS)
+    .map(sanitizeOverlay)
+    .filter(Boolean);
+
+  return { targets, niche, quality, videoFilters, textOverlays };
+}
+
+/**
+ * Build a repurpose request (tree + targets + niche) from a recipe and a fresh
+ * source video. Pure — the route hands the result to repurposeService.orchestrate.
+ */
+function recipeToRequest(recipe, { videoUrl, duration, title, nicheOverride } = {}) {
+  const r = recipe && typeof recipe === 'object' ? recipe : {};
+  const tree = {
+    videoUrl,
+    duration: typeof duration === 'number' && duration > 0 ? duration : undefined,
+    videoFilters: r.videoFilters || {},
+    textOverlays: Array.isArray(r.textOverlays) ? r.textOverlays : [],
+    quality: r.quality || 'high',
+    metadata: { title: title || undefined },
+  };
+  return {
+    tree,
+    targets: Array.isArray(r.targets) && r.targets.length ? r.targets : undefined,
+    niche: nicheOverride || r.niche || undefined,
+  };
+}
+
+/** A compact, gallery-safe view of a recipe document. */
+function summarizeRecipe(doc, userId) {
+  const recipe = doc.recipe || {};
+  const formats = (recipe.targets || []).map((t) => (typeof t === 'string' ? t : t.ratio));
+  return {
+    id: String(doc._id),
+    name: doc.name,
+    description: doc.description || '',
+    niche: doc.niche || recipe.niche || 'other',
+    createdByName: doc.createdByName || 'Creator',
+    isPublic: !!doc.isPublic,
+    remixCount: doc.remixCount || 0,
+    formats,
+    overlayCount: Array.isArray(recipe.textOverlays) ? recipe.textOverlays.length : 0,
+    forkedFrom: doc.forkedFrom ? String(doc.forkedFrom) : null,
+    mine: userId != null && String(doc.createdBy) === String(userId),
+    createdAt: doc.createdAt,
+  };
+}
+
+// ── DB operations ──────────────────────────────────────────────────────────
+
+async function createRecipe({ userId, userName, name, description, isPublic, recipe, forkedFrom }) {
+  const clean = sanitizeRecipe(recipe);
+  if (!clean.targets.length) {
+    const err = new Error('A recipe needs at least one valid target format');
+    err.statusCode = 400;
+    throw err;
+  }
+  const doc = await RepurposeRecipe.create({
+    name: safeText(name, 120) || 'Untitled recipe',
+    description: safeText(description, 600) || '',
+    niche: clean.niche || 'other',
+    createdBy: userId,
+    createdByName: safeText(userName, 120) || 'Creator',
+    isPublic: !!isPublic,
+    recipe: clean,
+    forkedFrom: forkedFrom && mongoose.Types.ObjectId.isValid(forkedFrom) ? forkedFrom : null,
+  });
+  return doc;
+}
+
+/** List recipes by scope: 'mine' | 'public' | 'all' (own + public). */
+async function listRecipes({ userId, scope = 'all', limit = 30 }) {
+  const lim = Math.min(60, Math.max(1, Number(limit) || 30));
+  let query;
+  if (scope === 'mine') query = { createdBy: userId };
+  else if (scope === 'public') query = { isPublic: true };
+  else query = { $or: [{ createdBy: userId }, { isPublic: true }] };
+
+  const docs = await RepurposeRecipe.find(query)
+    .sort({ remixCount: -1, createdAt: -1 })
+    .limit(lim)
+    .lean();
+  return docs.map((d) => summarizeRecipe(d, userId));
+}
+
+/** Fetch one recipe the user is allowed to see (own, or public). */
+async function getRecipe(id, userId) {
+  if (!mongoose.Types.ObjectId.isValid(id)) return null;
+  const doc = await RepurposeRecipe.findById(id).lean();
+  if (!doc) return null;
+  if (!doc.isPublic && String(doc.createdBy) !== String(userId)) return null; // privacy gate
+  return doc;
+}
+
+/** Best-effort increment of the remix/apply counter. Never throws. */
+async function incrementRemix(id) {
+  try {
+    await RepurposeRecipe.updateOne({ _id: id }, { $inc: { remixCount: 1 } });
+  } catch (e) {
+    logger.warn('[recipe] remix count increment failed', { id: String(id), error: e.message });
+  }
+}
+
+module.exports = {
+  sanitizeRecipe,
+  recipeToRequest,
+  summarizeRecipe,
+  createRecipe,
+  listRecipes,
+  getRecipe,
+  incrementRemix,
+  SUPPORTED_RATIOS,
+};

@@ -21,6 +21,7 @@ client/node_modules/
 *.bak
 uploads/
 uploads_slow/
+render-outputs/
 dist/
 build/
 *.log

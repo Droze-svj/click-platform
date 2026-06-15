@@ -160,6 +160,24 @@ function mustWatermark(tier) {
   return !entitlements.hasFeature(tier, 'export_unlimited') && tier === 'free';
 }
 
+/**
+ * Clamp the number of requested repurpose variants down to the tier's
+ * repurposeVariantsMax (Free 1, Creator 2, Pro/Agency 4). Never errors —
+ * clamps. Always returns at least 1 so a repurpose request can never resolve to
+ * zero work. Returns the allowed count + whether it was clamped (for client
+ * upsell messaging).
+ * @param {string} tier
+ * @param {number} requested - how many variants the caller asked for
+ */
+function clampVariants(tier, requested) {
+  const max = entitlements.limitFor(tier, 'repurposeVariantsMax');
+  const cap = Number.isFinite(max) ? max : Infinity;
+  const req = Math.floor(Number(requested));
+  const want = Number.isFinite(req) && req > 0 ? req : 1;
+  if (want > cap) return { allowed: Math.max(1, cap), clamped: true, max: cap };
+  return { allowed: want, clamped: false, max: cap };
+}
+
 module.exports = {
   UPGRADE_URL,
   nextTierUp,
@@ -168,5 +186,6 @@ module.exports = {
   checkLimit,
   clampResolution,
   clampDimensions,
+  clampVariants,
   mustWatermark,
 };

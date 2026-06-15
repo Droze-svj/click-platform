@@ -32,7 +32,9 @@ router.post('/generate-script', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Topic is required', 400);
   }
 
-  const result = await aiAgentWritingService.generateMasterScript(topic, tone, role);
+  // Personalize: pass the creator so the script is written in their learned voice.
+  const userId = req.user?._id?.toString() || req.user?.id;
+  const result = await aiAgentWritingService.generateMasterScript(topic, tone, role, userId);
   sendSuccess(res, 'Master script generated', 200, result);
 }));
 
@@ -205,7 +207,8 @@ router.post('/variants', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content is required', 400);
   }
 
-  const variants = await generateVariants(content, count, options || {});
+  const userId = req.user?._id?.toString() || req.user?.id;
+  const variants = await generateVariants(content, count, { ...(options || {}), userId });
   sendSuccess(res, 'Variants generated', 200, { variants });
 }));
 
@@ -220,7 +223,8 @@ router.post('/improve', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content and section are required', 400);
   }
 
-  const result = await improveSection(content, section, options || {});
+  const userId = req.user?._id?.toString() || req.user?.id;
+  const result = await improveSection(content, section, { ...(options || {}), userId });
   sendSuccess(res, 'Section improved', 200, result);
 }));
 
@@ -235,7 +239,8 @@ router.post('/rewrite', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content and tone are required', 400);
   }
 
-  const result = await rewriteForTone(content, tone, options || {});
+  const userId = req.user?._id?.toString() || req.user?.id;
+  const result = await rewriteForTone(content, tone, { ...(options || {}), userId });
   sendSuccess(res, 'Content rewritten', 200, result);
 }));
 
@@ -250,7 +255,8 @@ router.post('/hooks', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content is required', 400);
   }
 
-  const variants = await generateHookVariations(content, count);
+  const userId = req.user?._id?.toString() || req.user?.id;
+  const variants = await generateHookVariations(content, count, { userId });
   sendSuccess(res, 'Hook variations generated', 200, { variants });
 }));
 
