@@ -7,14 +7,11 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const MusicProviderConfig = require('../models/MusicProviderConfig');
+// Real admin guard (email allowlist, fail-closed). The previous no-op stub here
+// let ANY authenticated user pass — and these routes write provider apiKey/
+// apiSecret config. If this file is ever mounted, a non-admin must not reach them.
+const { requireAdmin } = require('../middleware/admin');
 const router = express.Router();
-
-// Middleware to check admin access (you may want to enhance this)
-const requireAdmin = (req, res, next) => {
-  // Add your admin check logic here
-  // For now, just pass through
-  next();
-};
 
 /**
  * @route POST /api/admin/music-licensing/provider

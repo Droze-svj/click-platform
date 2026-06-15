@@ -8,16 +8,34 @@ const logger = require('../utils/logger');
 /**
  * Bulk update users
  */
+// Privilege/identity fields that must NEVER be settable through the bulk path —
+// even an admin changes these via the dedicated, audited per-user routes, so a
+// compromised/low-trust admin token can't mass-escalate. (Mongo operator keys
+// like `$where` are stripped too.)
+const BULK_USER_BLOCKED_FIELDS = new Set([
+  'role', 'permissions', 'isAdmin', 'subscription', 'membershipPackage', 'tier',
+  'email', 'password', 'passwordHash', '_id',
+]);
+
 async function bulkUpdateUsers(userIds, updates) {
   try {
+    const safeUpdates = {};
+    for (const [k, v] of Object.entries(updates || {})) {
+      if (!BULK_USER_BLOCKED_FIELDS.has(k) && !k.startsWith('$')) safeUpdates[k] = v;
+    }
+    if (Object.keys(safeUpdates).length === 0) {
+      logger.warn('Bulk update users: no permitted fields after blocklist', { requested: Object.keys(updates || {}) });
+      return { success: true, modified: 0, matched: 0 };
+    }
+
     const result = await User.updateMany(
       { _id: { $in: userIds } },
-      { $set: updates }
+      { $set: safeUpdates }
     );
 
     logger.info('Bulk users updated', {
       count: result.modifiedCount,
-      updates: Object.keys(updates),
+      updates: Object.keys(safeUpdates),
     });
 
     return {
