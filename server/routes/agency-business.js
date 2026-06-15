@@ -5,7 +5,8 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const ClientSatisfaction = require('../models/ClientSatisfaction');
 const { upsertClientRetention, recordChurn, calculateChurnRisk, getRetentionMetrics } = require('../services/clientRetentionService');
 const { createSatisfactionSurvey, submitSatisfactionResponse, calculateNPS, getSatisfactionMetrics } = require('../services/clientSatisfactionService');
 const { upsertCampaignCPA, getCampaignCPAMetrics } = require('../services/campaignCPAService');
@@ -80,8 +81,25 @@ router.post('/:agencyWorkspaceId/clients/:clientWorkspaceId/satisfaction/survey'
  */
 router.post('/:surveyId/response', auth, asyncHandler(async (req, res) => {
   const { surveyId } = req.params;
-  const survey = await submitSatisfactionResponse(surveyId, req.body);
-  sendSuccess(res, 'Satisfaction response submitted', 200, survey);
+
+  // The route is auth-gated (no public token), so the respondent is a logged-in
+  // user — they must belong to the surveyed client workspace (or the agency).
+  // Without this, any authenticated user could inject/overwrite responses on any
+  // survey by id, skewing an agency's NPS/CSAT analytics.
+  const survey = await ClientSatisfaction.findById(surveyId)
+    .select('clientWorkspaceId agencyWorkspaceId').lean().catch(() => null);
+  if (!survey) {
+    return sendError(res, 'Survey not found', 404);
+  }
+  const allowed =
+    (await verifyWorkspaceAccess(req.user._id, survey.clientWorkspaceId)).allowed ||
+    (await verifyWorkspaceAccess(req.user._id, survey.agencyWorkspaceId)).allowed;
+  if (!allowed) {
+    return sendError(res, 'Survey not found', 404);
+  }
+
+  const updated = await submitSatisfactionResponse(surveyId, req.body);
+  sendSuccess(res, 'Satisfaction response submitted', 200, updated);
 }));
 
 /**
