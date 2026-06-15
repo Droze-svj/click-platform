@@ -48,7 +48,7 @@ function portalAuth(req, res, next) {
   const token = bearer || req.headers['x-portal-token'] || null;
   if (!token) return sendError(res, 'Authentication required', 401);
   try {
-    const decoded = jwt.verify(token, getPortalJwtSecret());
+    const decoded = jwt.verify(token, getPortalJwtSecret(), { algorithms: ['HS256'] });
     if (!decoded?.portalUserId || !decoded?.portalId) {
       return sendError(res, 'Invalid portal token', 401);
     }

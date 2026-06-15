@@ -871,7 +871,7 @@ router.get('/validate-reset-token/:token', async (req, res) => {
 
     if (!supabase) {
       try {
-        const decoded = jwt.verify(token, getJwtSecret());
+        const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
         if (decoded.type === 'password_reset') {
           isValid = true;
           message = 'Token is valid';
@@ -926,7 +926,7 @@ router.post('/reset-password',
       // Verify JWT token
       let decoded;
       try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
+        decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
         if (decoded.type !== 'password_reset') {
           return res.status(400).json({ success: false, error: 'Invalid token type' });
         }
@@ -1678,7 +1678,7 @@ router.post('/2fa/verify', authRateLimiter, async (req, res) => {
     // Decode temp token to get user ID
     let decoded;
     try {
-      decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+      decoded = jwt.verify(tempToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
       if (decoded.type !== '2fa_pending') {
         return res.status(400).json({ success: false, error: 'Invalid temporary token' });
       }
@@ -2039,7 +2039,7 @@ router.post('/refresh', async (req, res) => {
     // Verify refresh token
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || getJwtSecret());
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || getJwtSecret(), { algorithms: ['HS256'] });
       if (decoded.type !== 'refresh') {
         return res.status(400).json({ success: false, error: 'Invalid refresh token' });
       }
