@@ -216,7 +216,20 @@ router.get('/history/:postId', auth, asyncHandler(async (req, res) => {
     if (!supabase) {
       return res.json({ success: true, post_id: postId, data: [] });
     }
-    
+
+    // Verify the post belongs to the caller (the service-role key bypasses RLS),
+    // mirroring the /posts/:postId and /insights/:postId handlers. Without this it
+    // leaked another user's per-post engagement time series.
+    const { data: ownedPost, error: ownedErr } = await supabase
+      .from('posts')
+      .select('id, author_id')
+      .eq('id', postId)
+      .eq('author_id', req.user.id)
+      .single();
+    if (ownedErr || !ownedPost) {
+      return res.status(404).json({ success: false, error: 'POST_NODE_NOT_FOUND' });
+    }
+
     let query = supabase
       .from('engagement_history')
       .select(`

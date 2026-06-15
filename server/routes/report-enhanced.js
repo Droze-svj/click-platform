@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { createScheduledReport } = require('../services/scheduledReportService');
 const ScheduledReport = require('../models/ScheduledReport');
 const { createReportComparison } = require('../services/reportComparisonService');
@@ -32,9 +33,17 @@ router.post('/scheduled', auth, asyncHandler(async (req, res) => {
  */
 router.get('/scheduled', auth, asyncHandler(async (req, res) => {
   const { agencyWorkspaceId, clientWorkspaceId } = req.query;
-  const query = {};
 
-  if (agencyWorkspaceId) query.agencyWorkspaceId = agencyWorkspaceId;
+  // Require + authorize a workspace — an empty query previously returned EVERY
+  // tenant's scheduled reports (recipient emails + configs).
+  if (!agencyWorkspaceId) {
+    return sendError(res, 'Agency workspace ID is required', 400);
+  }
+  if (!(await verifyWorkspaceAccess(req.user._id, agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Access denied', 403);
+  }
+
+  const query = { agencyWorkspaceId };
   if (clientWorkspaceId) query.clientWorkspaceId = clientWorkspaceId;
 
   const scheduled = await ScheduledReport.find(query)
@@ -54,6 +63,10 @@ router.post('/compare', auth, asyncHandler(async (req, res) => {
 
   if (!templateId || !clientWorkspaceId || !agencyWorkspaceId || !currentPeriod || !previousPeriod) {
     return sendError(res, 'All fields are required', 400);
+  }
+
+  if (!(await verifyWorkspaceAccess(req.user._id, agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Access denied', 403);
   }
 
   const comparison = await createReportComparison(
@@ -82,6 +95,10 @@ router.get('/compare/:comparisonId', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Comparison not found', 404);
   }
 
+  if (!(await verifyWorkspaceAccess(req.user._id, comparison.agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Comparison not found', 404);
+  }
+
   sendSuccess(res, 'Comparison retrieved', 200, comparison);
 }));
 
@@ -92,6 +109,17 @@ router.get('/compare/:comparisonId', auth, asyncHandler(async (req, res) => {
 router.post('/:reportId/share', auth, asyncHandler(async (req, res) => {
   const { reportId } = req.params;
   const { shareType, password, recipients, access, expiresAt } = req.body;
+
+  // Verify the caller can access the report before minting a (publicly reachable)
+  // share link — otherwise anyone could share another tenant's report.
+  const GeneratedReport = require('../models/GeneratedReport');
+  const report = await GeneratedReport.findById(reportId).select('agencyWorkspaceId').lean();
+  if (!report) {
+    return sendError(res, 'Report not found', 404);
+  }
+  if (!(await verifyWorkspaceAccess(req.user._id, report.agencyWorkspaceId)).allowed) {
+    return sendError(res, 'Report not found', 404);
+  }
 
   const share = new ReportShare({
     reportId,
@@ -161,6 +189,10 @@ router.get('/charts/:metricType/interactive', auth, asyncHandler(async (req, res
     return sendError(res, 'Client workspace ID, start date, and end date are required', 400);
   }
 
+  if (!(await verifyWorkspaceAccess(req.user._id, clientWorkspaceId)).allowed) {
+    return sendError(res, 'Access denied', 403);
+  }
+
   const period = {
     startDate: new Date(startDate),
     endDate: new Date(endDate)
@@ -189,6 +221,10 @@ router.post('/:reportId/summary/enhanced', auth, asyncHandler(async (req, res) =
     .lean();
 
   if (!report) {
+    return sendError(res, 'Report not found', 404);
+  }
+
+  if (!(await verifyWorkspaceAccess(req.user._id, report.agencyWorkspaceId)).allowed) {
     return sendError(res, 'Report not found', 404);
   }
 

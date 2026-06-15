@@ -2,11 +2,18 @@
 
 const express = require('express');
 const auth = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/requireAdmin');
 const { getSlowQueries, getQueryStats, clearSlowQueries } = require('../services/queryPerformanceMonitor');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const router = express.Router();
+
+// The slow-query monitor exposes the actual filter objects of slow queries across
+// ALL users/collections (userIds, emails, search terms) and lets the log be wiped.
+// Admin-only — the equivalent data under /api/monitoring is already admin-gated.
+// (Per-route `auth` below is redundant but harmless.)
+router.use(auth, requireAdmin);
 
 /**
  * @swagger
