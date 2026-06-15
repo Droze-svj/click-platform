@@ -27,12 +27,18 @@ describe('render ownership ACL (mayAccessRender / writeRenderOwner)', () => {
     expect(render._mayAccessRender(JOB, { user: { _id: 'userB', id: 'userB' } })).toBe(false);
   });
 
-  it('fails OPEN when there is no owner sidecar (legacy renders never break)', () => {
+  it('allows when neither sidecar nor output exists yet (owner polling a fresh job; route 404s)', () => {
     expect(render._mayAccessRender('no-such-job-0000', { user: { _id: 'anyone' } })).toBe(true);
   });
 
-  it('fails OPEN when the requester cannot be identified', () => {
-    expect(render._mayAccessRender(JOB, { user: {} })).toBe(true);
-    expect(render._mayAccessRender(JOB, {})).toBe(true);
+  it('fails CLOSED on an orphan output (.mp4 exists but no .owner sidecar) — the IDOR window', () => {
+    const orphan = 'orphan00-0000-4000-8000-000000000009';
+    fs.writeFileSync(path.join(TMP, `${orphan}.mp4`), 'x');
+    expect(render._mayAccessRender(orphan, { user: { _id: 'anyone' } })).toBe(false);
+  });
+
+  it('fails CLOSED when the requester cannot be identified', () => {
+    expect(render._mayAccessRender(JOB, { user: {} })).toBe(false);
+    expect(render._mayAccessRender(JOB, {})).toBe(false);
   });
 });

@@ -167,12 +167,17 @@ function ensureRenderDir() {
 
 // ── Render ownership (IDOR guard) ────────────────────────────────────────────
 // A render is keyed only by jobId, so we stamp a `.owner` sidecar next to each
-// output and check it on status/download. The dir is NOT publicly served, so the
-// sidecar isn't exposed. Fail OPEN when there's no sidecar (legacy renders) or
-// the requester can't be identified — so this never breaks a legitimate request,
-// only blocks a stranger holding someone else's jobId.
+// output (BEFORE the render starts, see runRender) and check it on
+// status/download. The dir is NOT publicly served. The owner is stamped before
+// the output exists, so a `.mp4` with no `.owner` means an unowned render — we
+// fail CLOSED on it. We only fail OPEN when neither the sidecar nor the output
+// exists yet (a freshly-submitted job the owner is polling → the route 404s on
+// the missing file anyway).
 function ownerSidecarPath(jobId) {
   return path.join(RENDER_OUTPUT_DIR, `${jobId}.owner`);
+}
+function renderOutputPath(jobId) {
+  return path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
 }
 function writeRenderOwner(jobId, userId) {
   if (!userId) return;
@@ -180,10 +185,19 @@ function writeRenderOwner(jobId, userId) {
 }
 function mayAccessRender(jobId, req) {
   let owner;
-  try { owner = fs.readFileSync(ownerSidecarPath(jobId), 'utf8').trim(); } catch (_) { return true; }
-  if (!owner) return true;
+  try {
+    owner = fs.readFileSync(ownerSidecarPath(jobId), 'utf8').trim();
+  } catch (_) {
+    // No sidecar. If an output file exists it's an unowned render → deny.
+    // If nothing exists yet, allow (the download/status route 404s on the
+    // missing file; this avoids 404-ing an owner polling their own new job).
+    let outputExists = false;
+    try { outputExists = fs.existsSync(renderOutputPath(jobId)); } catch (_) { /* ignore */ }
+    return !outputExists;
+  }
+  if (!owner) return false; // present-but-empty sidecar → deny
   const ids = [req.user?._id, req.user?.id].filter(Boolean).map(String);
-  if (!ids.length) return true;
+  if (!ids.length) return false; // can't identify the requester → deny
   return ids.includes(owner);
 }
 
@@ -208,6 +222,12 @@ async function getBundleLocation(bundler) {
  * worker variant queues to videoRenderQueue and emits SSE updates.
  */
 async function runRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
+  // Stamp the owner BEFORE any output file lands in RENDER_OUTPUT_DIR. Stamping
+  // only after the render (as before) left a window where the .mp4 existed with
+  // no .owner sidecar, and mayAccessRender failed OPEN on a missing sidecar — so
+  // a stranger polling the jobId could download it. Stamping first closes that.
+  ensureRenderDir();
+  writeRenderOwner(jobId, userId);
   const remotion = tryRequireRemotion();
   if (!remotion.available) {
     // No Remotion → render with the real ffmpeg engine (same one the manual

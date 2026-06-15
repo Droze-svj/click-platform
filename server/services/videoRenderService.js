@@ -765,8 +765,8 @@ async function renderFromEditorState(options) {
     videoId,
     videoUrl,
     videoFilters = {},
-    textOverlays = [],
-    shapeOverlays = [],
+    textOverlays: _textOverlaysRaw = [],
+    shapeOverlays: _shapeOverlaysRaw = [],
     imageOverlays = [],
     svgOverlays = [],
     gradientOverlays = [],
@@ -778,6 +778,19 @@ async function renderFromEditorState(options) {
     chromaKey = null,
     userId,
   } = options
+
+  // Resource caps — these inputs are attacker-influenced (editor state from the
+  // request), so bound them before they reach the ffmpeg filter graph. Without
+  // this, thousands of overlays build a multi-MB complexFilter that explodes
+  // ffmpeg memory/parse time. MAX_OVERLAYS (30) already caps image/svg/gradient
+  // inputs further down; these cap the drawtext/drawbox chains.
+  const MAX_OVERLAYS_PER_KIND = 100
+  const _txtRaw = Array.isArray(_textOverlaysRaw) ? _textOverlaysRaw : []
+  const _shpRaw = Array.isArray(_shapeOverlaysRaw) ? _shapeOverlaysRaw : []
+  if (_txtRaw.length > MAX_OVERLAYS_PER_KIND) logger.warn('[render] textOverlays capped', { from: _txtRaw.length, to: MAX_OVERLAYS_PER_KIND })
+  if (_shpRaw.length > MAX_OVERLAYS_PER_KIND) logger.warn('[render] shapeOverlays capped', { from: _shpRaw.length, to: MAX_OVERLAYS_PER_KIND })
+  const textOverlays = _txtRaw.slice(0, MAX_OVERLAYS_PER_KIND)
+  const shapeOverlays = _shpRaw.slice(0, MAX_OVERLAYS_PER_KIND)
 
   // Playback speed (global). Clamp to ffmpeg-sane bounds. setpts scales video PTS;
   // atempo handles audio (chained for factors outside 0.5–2.0).
@@ -792,8 +805,15 @@ async function renderFromEditorState(options) {
     && timelineSegments.length <= 1
     && timelineSegments.some(s => s && s.reversed)
 
-  const width = exportOptions.width ?? 1920
-  const height = exportOptions.height ?? 1080
+  // Clamp dimensions to sane bounds (even-numbered, ≤ 4096) — an unclamped
+  // width/height (e.g. via the manual-editing route) makes ffmpeg allocate
+  // enormous frame buffers. Round to even for yuv420p.
+  const clampDim = (v, def) => {
+    const n = Math.round(Number(v) || def)
+    return Math.max(16, Math.min(4096, n)) & ~1
+  }
+  const width = clampDim(exportOptions.width, 1920)
+  const height = clampDim(exportOptions.height, 1080)
   // smartReframe: the caller (Repurpose Studio) has already cover-scaled + crop-
   // framed the source to this exact target aspect in a pre-pass, so we must NOT
   // re-apply the legacy forced center/Lissajous crop below — that would override
