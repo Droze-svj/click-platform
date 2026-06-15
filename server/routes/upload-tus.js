@@ -42,12 +42,15 @@ const tusServer = new Server({
   maxSize: MAX_SIZE,
   respectForwardedHeaders: true,
 
-  // Reject obviously-wrong file types up front (best-effort: metadata.filename).
+  // Reject wrong/unknown file types up front. The previous `fname && ext && …`
+  // guard skipped the check entirely when the filename metadata was absent or
+  // had no extension, so an attacker could store arbitrary bytes by omitting it.
+  // Now a valid, allow-listed extension is REQUIRED to create the upload.
   async onUploadCreate(req, res, upload) {
     const fname = upload?.metadata?.filename || '';
     const ext = path.extname(fname).toLowerCase();
-    if (fname && ext && !ALLOWED_EXT.includes(ext)) {
-      throw { status_code: 415, body: `Unsupported file type: ${ext}` };
+    if (!ext || !ALLOWED_EXT.includes(ext)) {
+      throw { status_code: 415, body: `Unsupported or missing file type${ext ? `: ${ext}` : ''}. Allowed: ${ALLOWED_EXT.join(', ')}` };
     }
     return res;
   },

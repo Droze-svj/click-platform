@@ -28,10 +28,30 @@ const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser
 const { classifyUrl, streamDownload } = require('../utils/downloadUtils');
 const urlGuard = require('../utils/urlGuard');
 
+const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
+
 const router = express.Router();
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'videos');
 try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch { /* dir exists */ }
+
+// In-process cap on simultaneous ingest jobs. Each /url or /clipboard request
+// can stream up to 500MB or spawn a yt-dlp transcode, so without this an authed
+// user firing many concurrent requests exhausts disk + process slots. The
+// per-user uploadLimiter throttles request RATE; this bounds CONCURRENCY.
+const MAX_CONCURRENT_INGEST = parseInt(process.env.MAX_CONCURRENT_INGEST || '4', 10);
+let activeIngest = 0;
+function ingestConcurrencyGate(req, res, next) {
+  if (activeIngest >= MAX_CONCURRENT_INGEST) {
+    return res.status(429).json({ success: false, error: 'Server is busy ingesting media; please retry shortly.' });
+  }
+  activeIngest += 1;
+  let released = false;
+  const release = () => { if (!released) { released = true; activeIngest = Math.max(0, activeIngest - 1); } };
+  res.on('finish', release);
+  res.on('close', release);
+  next();
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 // classifyUrl + streamDownload are imported from utils/downloadUtils (above).
@@ -166,12 +186,12 @@ async function ingestUrlHandler(req, res) {
   }
 }
 
-router.post('/url', auth, ingestUrlHandler);
+router.post('/url', auth, uploadLimiter, ingestConcurrencyGate, ingestUrlHandler);
 
 // ── POST /api/ingest/clipboard ─────────────────────────────────────────────
 // Same shape as /url; kept as a separate route so we can attach paste-only
 // rate limits or audit logs later without forking the handler.
-router.post('/clipboard', auth, ingestUrlHandler);
+router.post('/clipboard', auth, uploadLimiter, ingestConcurrencyGate, ingestUrlHandler);
 
 // ── POST /api/ingest/remix ─────────────────────────────────────────────────
 router.post('/remix', auth, async (req, res) => {
