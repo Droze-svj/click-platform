@@ -6,6 +6,7 @@ const ContentFolder = require('../models/ContentFolder');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { escapeRegex } = require('../utils/escapeRegex');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -190,10 +191,11 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
   }
 
   if (search) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } },
-      { tags: { $in: [new RegExp(search, 'i')] } }
+      { title: { $regex: safeSearch, $options: 'i' } },
+      { description: { $regex: safeSearch, $options: 'i' } },
+      { tags: { $in: [new RegExp(safeSearch, 'i')] } }
     ];
   }
 

@@ -5,7 +5,9 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const Conversion = require('../models/Conversion');
+const RevenueGoal = require('../models/RevenueGoal');
 const { calculateAttribution, getAttributionComparison } = require('../services/advancedAttributionService');
 const { forecastRevenue } = require('../services/revenueForecastingService');
 const { updateCustomerLTV, getCustomerLTVAnalytics } = require('../services/customerLTVService');
@@ -22,6 +24,13 @@ router.post('/:conversionId/attribution', auth, asyncHandler(async (req, res) =>
   const { conversionId } = req.params;
   const { model = 'last_touch' } = req.body;
 
+  // Verify the caller can access the conversion's workspace (the service computes
+  // by id with no scope, so without this any user can attribute any conversion).
+  const conv = await Conversion.findById(conversionId).select('workspaceId').lean();
+  if (!conv || !(await verifyWorkspaceAccess(req.user._id, conv.workspaceId)).allowed) {
+    return sendError(res, 'Conversion not found', 404);
+  }
+
   const attribution = await calculateAttribution(conversionId, model);
   sendSuccess(res, 'Attribution calculated', 200, attribution);
 }));
@@ -32,6 +41,12 @@ router.post('/:conversionId/attribution', auth, asyncHandler(async (req, res) =>
  */
 router.get('/:conversionId/attribution/compare', auth, asyncHandler(async (req, res) => {
   const { conversionId } = req.params;
+
+  const conv = await Conversion.findById(conversionId).select('workspaceId').lean();
+  if (!conv || !(await verifyWorkspaceAccess(req.user._id, conv.workspaceId)).allowed) {
+    return sendError(res, 'Conversion not found', 404);
+  }
+
   const comparison = await getAttributionComparison(conversionId);
   sendSuccess(res, 'Attribution comparison retrieved', 200, comparison);
 }));
@@ -124,6 +139,12 @@ router.get('/:workspaceId/revenue-goals', auth, requireWorkspaceAccess('canView'
  */
 router.post('/:goalId/update-progress', auth, asyncHandler(async (req, res) => {
   const { goalId } = req.params;
+
+  const existing = await RevenueGoal.findById(goalId).select('workspaceId').lean();
+  if (!existing || !(await verifyWorkspaceAccess(req.user._id, existing.workspaceId)).allowed) {
+    return sendError(res, 'Revenue goal not found', 404);
+  }
+
   const goal = await updateRevenueGoalProgress(goalId);
   sendSuccess(res, 'Revenue goal progress updated', 200, goal);
 }));

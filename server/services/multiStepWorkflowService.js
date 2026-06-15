@@ -303,7 +303,7 @@ async function advanceToNextStage(approvalId, userId, action, comment = '', acce
 /**
  * Get approval status with audit trail
  */
-async function getApprovalStatus(approvalId) {
+async function getApprovalStatus(approvalId, userId) {
   try {
     const approval = await ContentApproval.findById(approvalId)
       .populate('contentId', 'title type content')
@@ -314,6 +314,19 @@ async function getApprovalStatus(approvalId) {
       .lean();
 
     if (!approval) {
+      throw new Error('Approval not found');
+    }
+
+    // AUTHORIZATION: only a participant (creator, assignee, or approver) may read
+    // the populated approval + audit trail. Without this it leaked any approval by id.
+    const uid = userId != null ? String(userId) : null;
+    const idOf = (v) => (v && v._id ? String(v._id) : v != null ? String(v) : null);
+    const isParticipant = uid && (
+      idOf(approval.createdBy) === uid ||
+      (approval.assignedTo || []).some(a => idOf(a.userId) === uid) ||
+      (approval.stages || []).some(s => (s.approvals || []).some(a => idOf(a.approverId) === uid))
+    );
+    if (!isParticipant) {
       throw new Error('Approval not found');
     }
 

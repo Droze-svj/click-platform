@@ -50,7 +50,7 @@ router.post('/multi-step', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:approvalId/status', auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
-  const status = await getApprovalStatus(approvalId);
+  const status = await getApprovalStatus(approvalId, req.user._id);
   sendSuccess(res, 'Approval status retrieved', 200, status);
 }));
 
@@ -107,8 +107,16 @@ router.get('/', auth, asyncHandler(async (req, res) => {
   if (status) query.status = status;
   if (stage !== undefined) query.currentStage = parseInt(stage, 10);
 
+  // SECURITY: never return the whole collection. Constrain to approvals the
+  // caller participates in (created or is assigned to) — previously an empty
+  // query (no workspaceId, assignedToMe!=true) returned ANY tenant's approvals.
   if (assignedToMe === 'true') {
     query['assignedTo.userId'] = req.user._id;
+  } else {
+    query.$or = [
+      { createdBy: req.user._id },
+      { 'assignedTo.userId': req.user._id },
+    ];
   }
 
   const approvals = await ContentApproval.find(query)
@@ -128,7 +136,16 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:approvalId/audit-trail', auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
-  const approval = await ContentApproval.findById(approvalId)
+  const uid = req.user._id;
+  // Scope to participants (creator / assignee / approver) — was an unscoped leak.
+  const approval = await ContentApproval.findOne({
+    _id: approvalId,
+    $or: [
+      { createdBy: uid },
+      { 'assignedTo.userId': uid },
+      { 'stages.approvals.approverId': uid },
+    ],
+  })
     .populate('history.userId', 'name email')
     .select('history stages')
     .lean();

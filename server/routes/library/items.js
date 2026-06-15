@@ -5,6 +5,7 @@ const auth = require('../../middleware/auth');
 const Content = require('../../models/Content');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { escapeRegex } = require('../../utils/escapeRegex');
 const router = express.Router();
 
 /**
@@ -25,10 +26,11 @@ router.get('/items', auth, asyncHandler(async (req, res) => {
   }
 
   if (search) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { transcript: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
+      { title: { $regex: safeSearch, $options: 'i' } },
+      { transcript: { $regex: safeSearch, $options: 'i' } },
+      { description: { $regex: safeSearch, $options: 'i' } }
     ];
   }
 
@@ -59,10 +61,19 @@ router.get('/items', auth, asyncHandler(async (req, res) => {
 router.post('/items/:itemId/use', auth, asyncHandler(async (req, res) => {
   const { itemId } = req.params;
 
-  await Content.findByIdAndUpdate(itemId, {
-    $inc: { 'metadata.usageCount': 1 },
-    $set: { 'metadata.lastUsed': new Date() }
-  });
+  // Scope to the caller's own content — an unscoped findByIdAndUpdate let any
+  // user bump usageCount/lastUsed on another user's content (tamper + existence oracle).
+  const updated = await Content.findOneAndUpdate(
+    { _id: itemId, userId: req.user._id },
+    {
+      $inc: { 'metadata.usageCount': 1 },
+      $set: { 'metadata.lastUsed': new Date() }
+    }
+  );
+
+  if (!updated) {
+    return sendError(res, 'Item not found', 404);
+  }
 
   sendSuccess(res, 'Item usage tracked', 200);
 }));
