@@ -15,11 +15,28 @@ const ITERATIONS = 100000;
  */
 function getEncryptionKey() {
   const key = process.env.ENCRYPTION_KEY;
+  const isProd = process.env.NODE_ENV === 'production';
   if (!key) {
-    logger.warn('ENCRYPTION_KEY not set, using default (not secure for production)');
+    // Fail CLOSED in production: a world-known default key would make every
+    // token-at-rest trivially decryptable. Dev still derives a usable key.
+    if (isProd) {
+      throw new Error('ENCRYPTION_KEY is required in production (64 hex chars / 32 bytes) for token-at-rest encryption.');
+    }
+    logger.warn('ENCRYPTION_KEY not set, using an insecure dev default (NOT for production)');
     return crypto.scryptSync('default-key-change-in-production', 'salt', KEY_LENGTH);
   }
-  return Buffer.from(key, 'hex');
+  const buf = Buffer.from(key, 'hex');
+  if (buf.length !== KEY_LENGTH) {
+    // A malformed key silently yields the wrong length → createCipheriv throws →
+    // encryptToken's catch would store the token in PLAINTEXT. Reject loudly in
+    // prod; derive a stable dev key from the provided value otherwise.
+    if (isProd) {
+      throw new Error(`ENCRYPTION_KEY must be ${KEY_LENGTH * 2} hex chars (${KEY_LENGTH} bytes); got ${buf.length} bytes.`);
+    }
+    logger.warn(`ENCRYPTION_KEY is ${buf.length} bytes (expected ${KEY_LENGTH}); deriving a dev key from it.`);
+    return crypto.scryptSync(key, 'salt', KEY_LENGTH);
+  }
+  return buf;
 }
 
 /**
@@ -94,7 +111,14 @@ function encryptToken(value) {
     const payload = encrypt(value);
     return ENC_PREFIX + Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
   } catch (error) {
-    logger.error('Token encryption failed; storing value unchanged', { error: error.message });
+    // In production, refuse to silently store a token in plaintext — fail the
+    // write instead (with a valid ENCRYPTION_KEY this path never fires). In dev
+    // we keep working so localhost isn't blocked by a missing key.
+    if (process.env.NODE_ENV === 'production') {
+      logger.error('Token encryption failed; refusing to store plaintext', { error: error.message });
+      throw new Error('Token encryption failed');
+    }
+    logger.error('Token encryption failed; storing value unchanged (dev only)', { error: error.message });
     return value;
   }
 }
