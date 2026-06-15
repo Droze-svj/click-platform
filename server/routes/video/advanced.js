@@ -21,6 +21,7 @@ const fs = require('fs');
 const progressTracker = require('../../services/videoProgressService');
 const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
 const { costGuard } = require('../../middleware/costGuard');
+const { assertPublicUrl } = require('../../utils/urlGuard');
 
 const router = express.Router();
 
@@ -104,11 +105,22 @@ async function downloadToUploadsTemp(videoUrl) {
   }
 
   // Allow relative URLs like "/uploads/clips/xxx.mp4"
-  const resolved = url.startsWith('http')
+  const isExternal = url.startsWith('http');
+  const resolved = isExternal
     ? url
     : `http://127.0.0.1:${process.env.PORT || 5001}${url.startsWith('/') ? '' : '/'}${url}`;
 
-  const resp = await fetch(resolved);
+  // SSRF guard: for attacker-supplied absolute URLs, block private/loopback/
+  // link-local/metadata targets and refuse redirects (which could bounce to an
+  // internal address). The internal relative→loopback fast-path serves our own
+  // /uploads and is intentionally exempt.
+  const fetchOpts = {};
+  if (isExternal) {
+    await assertPublicUrl(resolved);
+    fetchOpts.redirect = 'error';
+  }
+
+  const resp = await fetch(resolved, fetchOpts);
   if (!resp.ok) {
     throw new Error(`Failed to download video (${resp.status})`);
   }

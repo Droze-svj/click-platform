@@ -15,6 +15,7 @@ const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { runOneClickViral } = require('../../services/oneClickViralService');
 const { reformatToPlatforms } = require('../../services/reformatService');
+const { guardOwnership } = require('../../utils/ownership');
 const logger = require('../../utils/logger');
 
 const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
@@ -32,6 +33,11 @@ router.use(costGuard());
 router.post('/one-click', auth, asyncHandler(async (req, res) => {
   const { contentId, niche, platform, language, targetLanguage } = req.body || {};
   if (!contentId) return sendError(res, 'contentId is required', 400);
+  // IDOR + AI-cost guard: the service does a bare Content.findById(contentId) and
+  // writes back to it, so without this any user could read/mutate another user's
+  // video and burn paid LLM calls against it.
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
   try {
     const result = await runOneClickViral(contentId, {
       user: req.user,
@@ -53,6 +59,8 @@ router.post('/reformat', auth, asyncHandler(async (req, res) => {
   if (!Array.isArray(targets) || targets.length === 0) {
     return sendError(res, 'targets must be a non-empty array of platform names', 400);
   }
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
   try {
     const result = await reformatToPlatforms(contentId, targets, { niche, language });
     if (!result.ok) return sendError(res, result.error || 'reformat-failed', 422);

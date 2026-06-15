@@ -10,8 +10,19 @@ const {
 } = require('../../services/videoTranscriptionService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { guardOwnership } = require('../../utils/ownership');
 const logger = require('../../utils/logger');
 const router = express.Router();
+
+// `audioFile` is handed to the transcriber/ffmpeg as an input path. Constrain it
+// to a non-traversal /uploads reference so a caller can't point transcription at
+// an arbitrary server file (or a remote SSRF target).
+function isSafeAudioRef(audioFile) {
+  const s = String(audioFile || '');
+  if (!s || s.includes('..') || s.includes('\0')) return false;
+  const p = s.startsWith('/') ? s : `/${s}`;
+  return p.startsWith('/uploads/');
+}
 
 /**
  * @swagger
@@ -28,6 +39,11 @@ router.post('/', auth, asyncHandler(async (req, res) => {
   if (!videoId || !audioFile) {
     return sendError(res, 'Video ID and audio file are required', 400);
   }
+  if (!isSafeAudioRef(audioFile)) {
+    return sendError(res, 'Invalid audio file reference', 400);
+  }
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const transcript = await transcribeVideo(videoId, {
@@ -58,6 +74,11 @@ router.post('/timestamps', auth, asyncHandler(async (req, res) => {
   if (!videoId || !audioFile) {
     return sendError(res, 'Video ID and audio file are required', 400);
   }
+  if (!isSafeAudioRef(audioFile)) {
+    return sendError(res, 'Invalid audio file reference', 400);
+  }
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const transcript = await transcribeWithTimestamps(videoId, audioFile, language || 'en');

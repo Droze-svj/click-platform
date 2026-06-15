@@ -7,6 +7,7 @@ const express = require('express')
 const router = express.Router()
 const { authenticateToken } = require('../middleware/auth')
 const { requireFeature } = require('../middleware/tierGate')
+const { guardOwnership } = require('../utils/ownership')
 const { startAgentPipeline, getJobStatus, parseClientComment } = require('../services/agenticWorkflowService')
 
 // POST /api/agentic/run — Start the autonomous agent pipeline (Pro+: ai_agent)
@@ -14,6 +15,10 @@ router.post('/run', authenticateToken, requireFeature('ai_agent'), async (req, r
   try {
     const { videoId, goals } = req.body
     if (!videoId) return res.status(400).json({ error: 'videoId is required' })
+    // IDOR: the pipeline does a bare Content.findById(videoId); ensure it's the
+    // caller's own video before running the (autonomous, publish-capable) pipeline.
+    const owned = await guardOwnership(req, res, videoId)
+    if (!owned) return
     const result = await startAgentPipeline(videoId, goals || [], req.user.id)
     res.json(result)
   } catch (err) {
