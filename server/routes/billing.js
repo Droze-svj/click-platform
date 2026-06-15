@@ -12,7 +12,6 @@ const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 const { sendSuccess, sendError } = require('../utils/response');
 const {
   processSubscriptionChange,
-  completeSubscriptionChange,
   applyPromoCode
 } = require('../services/billingService');
 const {
@@ -51,24 +50,22 @@ router.post('/upgrade', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
- * POST /api/billing/change/complete
- * Complete subscription change after payment
+ * POST /api/billing/change/:changeId/complete  — RETIRED (410)
+ *
+ * SECURITY: this endpoint used to flip the user to the purchased tier using only
+ * `paymentIntentId`/`invoiceId` strings taken verbatim from req.body, with NO
+ * call to the payment provider to confirm the payment succeeded — letting any
+ * authenticated user self-grant Pro for free (POST /upgrade → POST /complete with
+ * fake ids). Paid entitlements are granted ONLY by the signed Whop webhook
+ * (whopWebhookService.processEvent), the same rule membership.js enforces. Direct
+ * completion is permanently disabled.
  */
 router.post('/change/:changeId/complete', auth, asyncHandler(async (req, res) => {
-  const { changeId } = req.params;
-  const { paymentIntentId, invoiceId } = req.body;
-
-  const change = await SubscriptionChange.findOne({
-    _id: changeId,
-    userId: req.user._id
-  });
-
-  if (!change) {
-    return sendError(res, 'Subscription change not found', 404);
-  }
-
-  const completed = await completeSubscriptionChange(changeId, paymentIntentId, invoiceId);
-  sendSuccess(res, 'Subscription change completed', 200, completed);
+  return sendError(
+    res,
+    'Direct subscription completion is disabled. Subscriptions are activated by the payment provider after checkout.',
+    410
+  );
 }));
 
 /**

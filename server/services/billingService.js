@@ -234,54 +234,16 @@ async function processSubscriptionChange(userId, newPackageId, newBillingCycle, 
 /**
  * Complete subscription change (after payment)
  */
-async function completeSubscriptionChange(changeId, paymentIntentId = null, invoiceId = null) {
-  try {
-    const change = await SubscriptionChange.findById(changeId);
-    if (!change) {
-      throw new Error('Subscription change not found');
-    }
-
-    if (change.status === 'completed') {
-      return change;
-    }
-
-    const user = await User.findById(change.userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    // Update user subscription
-    user.membershipPackage = change.toPackage;
-    user.subscription.plan = change.toBillingCycle;
-    user.subscription.startDate = change.effectiveDate;
-    
-    // Calculate new end date
-    const periodDays = change.toBillingCycle === 'monthly' ? 30 : 365;
-    user.subscription.endDate = new Date(change.effectiveDate);
-    user.subscription.endDate.setDate(user.subscription.endDate.getDate() + periodDays);
-    
-    user.subscription.status = 'active';
-    await user.save();
-
-    // Update subscription change
-    change.status = 'completed';
-    change.paymentIntentId = paymentIntentId;
-    change.invoiceId = invoiceId;
-    await change.save();
-
-    // Increment promo code usage if used
-    if (change.promoCode) {
-      await PromoCode.findByIdAndUpdate(change.promoCode, {
-        $inc: { usedCount: 1 }
-      });
-    }
-
-    logger.info('Subscription change completed', { changeId, userId: user._id });
-    return change;
-  } catch (error) {
-    logger.error('Error completing subscription change', { error: error.message, changeId });
-    throw error;
-  }
+// SECURITY: DISABLED. This used to grant tier/membershipPackage from
+// caller-supplied paymentIntentId/invoiceId strings WITHOUT verifying the
+// payment with the provider — an authenticated user could self-grant Pro for
+// free. Paid entitlements are applied ONLY by the signed Whop webhook
+// (whopWebhookService.processEvent). Kept as a hard stop so no route can
+// reintroduce an unverified grant path. If a real provider-verified completion
+// is ever needed, it must fetch the PaymentIntent and assert status==='succeeded'
+// + amount matches BEFORE mutating user.subscription.
+async function completeSubscriptionChange() {
+  throw new Error('completeSubscriptionChange is disabled; paid entitlements are granted only by the verified payment webhook.');
 }
 
 module.exports = {
