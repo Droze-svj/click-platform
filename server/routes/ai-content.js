@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { aiLimiter } = require('../middleware/enhancedRateLimiter');
+const { costGuard } = require('../middleware/costGuard');
 const { sendSuccess, sendError } = require('../utils/response');
 const { guardOwnership } = require('../utils/ownership');
 const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
@@ -22,6 +23,30 @@ router.use((req, res, next) => {
   if (req.method === 'POST') return aiLimiter(req, res, next);
   return next();
 });
+
+// Attach req.assertBudget / req.recordAiUsage so each generation handler can
+// enforce the per-tier aiBudgetUsd ceiling (free $0.50 … agency $500) and meter
+// spend. Previously NONE of these routes consulted the budget, so the $ meter
+// stayed 0 forever — rate limiting alone bounded request COUNT, not $ spend.
+router.use(costGuard());
+
+// Gate one AI generation against the caller's remaining budget, then return a
+// recorder to call after the LLM work. Sends a 402 (with the upgrade payload)
+// and returns null when over budget — the caller aborts. These routes call
+// Gemini, so estimate against the gemini rate card. `out` should bound the
+// worst-case output tokens (× count for fan-out routes).
+async function withAiBudget(req, res, { prompt, out, taskType }) {
+  const base = { provider: 'gemini', model: 'default' };
+  let r;
+  try {
+    r = await req.assertBudget({ ...base, prompt: String(prompt || ''), expectedOutputTokens: out });
+  } catch (e) {
+    if (e.statusCode === 402) { res.status(402).json({ success: false, error: e.message, ...e.payload }); return null; }
+    throw e;
+  }
+  const est = r.estimate;
+  return () => req.recordAiUsage({ ...base, inputTokens: est.inputTokens, outputTokens: est.outputTokens, taskType }).catch(() => {});
+}
 
 // Hard cap on per-request variant/hook fan-out. Each variant is one LLM call, so
 // an unclamped `count` from the body (e.g. 100000) was a cost bomb — one allowed
@@ -62,7 +87,10 @@ router.post('/generate-script', auth, asyncHandler(async (req, res) => {
 
   // Personalize: pass the creator so the script is written in their learned voice.
   const userId = req.user?._id?.toString() || req.user?.id;
+  const record = await withAiBudget(req, res, { prompt: topic, out: 4000, taskType: 'generate-script' });
+  if (!record) return;
   const result = await aiAgentWritingService.generateMasterScript(topic, tone, role, userId);
+  record();
   sendSuccess(res, 'Master script generated', 200, result);
 }));
 
@@ -132,7 +160,10 @@ router.post('/extract-quotes', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Transcript is required', 400);
   }
 
+  const record = await withAiBudget(req, res, { prompt: transcript, out: 1500, taskType: 'extract-quotes' });
+  if (!record) return;
   const result = await aiAgentWritingService.extractViralQuotes(transcript, engine, persona);
+  record();
   sendSuccess(res, 'Viral quotes extracted', 200, result);
 }));
 
@@ -245,7 +276,10 @@ router.post('/templates/:templateId/generate', auth, asyncHandler(async (req, re
     return sendError(res, 'Template not found', 404);
   }
 
+  const record = await withAiBudget(req, res, { prompt: input, out: 2000, taskType: 'template-generate' });
+  if (!record) return;
   const result = await generateContentWithTemplate(templateId, input, options || {});
+  record();
   sendSuccess(res, 'Content generated', 200, result);
 }));
 
@@ -261,7 +295,11 @@ router.post('/variants', auth, asyncHandler(async (req, res) => {
   }
 
   const userId = req.user?._id?.toString() || req.user?.id;
-  const variants = await generateVariants(content, clampCount(count), { ...(options || {}), userId });
+  const n = clampCount(count);
+  const record = await withAiBudget(req, res, { prompt: content, out: 4000 * n, taskType: 'variants' });
+  if (!record) return;
+  const variants = await generateVariants(content, n, { ...(options || {}), userId });
+  record();
   sendSuccess(res, 'Variants generated', 200, { variants });
 }));
 
@@ -277,7 +315,10 @@ router.post('/improve', auth, asyncHandler(async (req, res) => {
   }
 
   const userId = req.user?._id?.toString() || req.user?.id;
+  const record = await withAiBudget(req, res, { prompt: content, out: 4000, taskType: 'improve' });
+  if (!record) return;
   const result = await improveSection(content, section, { ...(options || {}), userId });
+  record();
   sendSuccess(res, 'Section improved', 200, result);
 }));
 
@@ -293,7 +334,10 @@ router.post('/rewrite', auth, asyncHandler(async (req, res) => {
   }
 
   const userId = req.user?._id?.toString() || req.user?.id;
+  const record = await withAiBudget(req, res, { prompt: content, out: 4000, taskType: 'rewrite' });
+  if (!record) return;
   const result = await rewriteForTone(content, tone, { ...(options || {}), userId });
+  record();
   sendSuccess(res, 'Content rewritten', 200, result);
 }));
 
@@ -309,7 +353,11 @@ router.post('/hooks', auth, asyncHandler(async (req, res) => {
   }
 
   const userId = req.user?._id?.toString() || req.user?.id;
-  const variants = await generateHookVariations(content, clampCount(count), { userId });
+  const n = clampCount(count);
+  const record = await withAiBudget(req, res, { prompt: content, out: 4000 * n, taskType: 'hooks' });
+  if (!record) return;
+  const variants = await generateHookVariations(content, n, { userId });
+  record();
   sendSuccess(res, 'Hook variations generated', 200, { variants });
 }));
 
