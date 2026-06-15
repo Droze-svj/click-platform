@@ -6,6 +6,7 @@ const ScheduledPost = require('../models/ScheduledPost');
 const User = require('../models/User');
 const { generateSocialContent } = require('./aiService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Semantic search using AI
@@ -188,13 +189,14 @@ async function textSearch(userId, query, options = {}) {
       dateRange = null
     } = options;
 
+    const safeQuery = escapeRegex(query);
     const searchQuery = {
       userId,
       $or: [
-        { title: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-        { transcript: { $regex: query, $options: 'i' } },
-        { tags: { $in: [new RegExp(query, 'i')] } }
+        { title: { $regex: safeQuery, $options: 'i' } },
+        { description: { $regex: safeQuery, $options: 'i' } },
+        { transcript: { $regex: safeQuery, $options: 'i' } },
+        { tags: { $in: [new RegExp(safeQuery, 'i')] } }
       ]
     };
 
@@ -253,11 +255,12 @@ async function facetedSearch(userId, query, filters = {}) {
 
     // Text search
     if (query) {
+      const safeQuery = escapeRegex(query);
       mongoQuery.$or = [
-        { title: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-        { transcript: { $regex: query, $options: 'i' } },
-        { tags: { $in: [new RegExp(query, 'i')] } }
+        { title: { $regex: safeQuery, $options: 'i' } },
+        { description: { $regex: safeQuery, $options: 'i' } },
+        { transcript: { $regex: safeQuery, $options: 'i' } },
+        { tags: { $in: [new RegExp(safeQuery, 'i')] } }
       ];
     }
 
@@ -415,7 +418,7 @@ async function getSearchSuggestions(userId, partialQuery, limit = 10) {
       return [];
     }
 
-    const query = partialQuery.toLowerCase();
+    const query = escapeRegex(partialQuery.toLowerCase());
 
     // Get matching titles
     const matchingTitles = await Content.find({

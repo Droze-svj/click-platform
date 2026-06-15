@@ -190,6 +190,13 @@ async function acknowledgeAlert(alertId, userId) {
       throw new Error('Alert not found');
     }
 
+    // Only someone with access to the owning agency workspace may act on the
+    // alert (the route is auth-only, so without this any user could ack any alert).
+    const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+    if (!(await verifyWorkspaceAccess(userId, alert.agencyWorkspaceId)).allowed) {
+      throw new Error('Alert not found');
+    }
+
     alert.status = 'acknowledged';
     alert.acknowledgedBy = userId;
     alert.acknowledgedAt = new Date();
@@ -209,6 +216,11 @@ async function resolveAlert(alertId, userId) {
   try {
     const alert = await ContentHealthAlert.findById(alertId);
     if (!alert) {
+      throw new Error('Alert not found');
+    }
+
+    const { verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+    if (!(await verifyWorkspaceAccess(userId, alert.agencyWorkspaceId)).allowed) {
       throw new Error('Alert not found');
     }
 

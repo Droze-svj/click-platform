@@ -592,6 +592,20 @@ async function getApprovalDetails(approvalId, userId) {
       throw new Error('Approval not found');
     }
 
+    // AUTHORIZATION: only a participant may read the (fully-populated) approval —
+    // the content creator/owner, an assignee, or an approver. Without this it
+    // leaked content + creator/approver names & emails for any approval id.
+    const uid = String(userId);
+    const idOf = (v) => (v && v._id ? String(v._id) : v != null ? String(v) : null);
+    const isParticipant =
+      idOf(approval.createdBy) === uid ||
+      (approval.contentId && idOf(approval.contentId.userId) === uid) ||
+      (approval.assignedTo || []).some(a => idOf(a.userId) === uid) ||
+      (approval.stages || []).some(s => (s.approvals || []).some(a => idOf(a.approverId) === uid));
+    if (!isParticipant) {
+      throw new Error('Approval not found');
+    }
+
     return approval;
   } catch (error) {
     logger.error('Error getting approval details', { error: error.message, approvalId });
