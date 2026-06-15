@@ -3,7 +3,7 @@
 // gate middleware is OFF by default, enforces when flagged, and honors the
 // public-prefix allowlist.
 
-const { signMediaUrl, verifyMediaUrl } = require('../../server/utils/mediaUrlSigner');
+const { signMediaUrl, verifyMediaUrl, signMediaUrls } = require('../../server/utils/mediaUrlSigner');
 const requireSignedMedia = require('../../server/middleware/requireSignedMedia');
 
 const ORIG = process.env.REQUIRE_SIGNED_MEDIA;
@@ -35,6 +35,34 @@ describe('mediaUrlSigner', () => {
     expect(signMediaUrl('https://cdn.example.com/x.mp4')).toBe('https://cdn.example.com/x.mp4');
     expect(signMediaUrl('data:image/png;base64,xxxx')).toBe('data:image/png;base64,xxxx');
     expect(signMediaUrl('')).toBe('');
+  });
+});
+
+describe('signMediaUrls (deep response signer)', () => {
+  test('signs nested /uploads strings in arrays + objects, leaves others alone', () => {
+    const input = {
+      tracks: [
+        { id: 1, file: { url: '/uploads/user-music/abc.mp3', size: 10 }, isPublic: false },
+        { id: 2, file: { url: 'https://cdn.example.com/x.mp3' } }, // external → unchanged
+      ],
+      cover: '/uploads/thumbnails/c.png',
+      note: 'not a url',
+    };
+    const out = signMediaUrls(input);
+    expect(out.tracks[0].file.url).toMatch(/^\/uploads\/user-music\/abc\.mp3\?exp=\d+&sig=[0-9a-f]{64}$/);
+    expect(out.tracks[1].file.url).toBe('https://cdn.example.com/x.mp3'); // external untouched
+    expect(out.cover).toMatch(/^\/uploads\/thumbnails\/c\.png\?exp=/);
+    expect(out.tracks[0].file.size).toBe(10); // non-url fields preserved
+    expect(out.note).toBe('not a url');
+    // each signed url verifies
+    const u = new URLSearchParams(out.tracks[0].file.url.split('?')[1]);
+    expect(verifyMediaUrl('/uploads/user-music/abc.mp3', u.get('exp'), u.get('sig'))).toBe(true);
+  });
+
+  test('converts a Mongoose-like doc (toObject) and does not mutate the input', () => {
+    const doc = { toObject: () => ({ file: { url: '/uploads/music/m.mp3' } }) };
+    const out = signMediaUrls(doc);
+    expect(out.file.url).toMatch(/\?exp=\d+&sig=/);
   });
 });
 

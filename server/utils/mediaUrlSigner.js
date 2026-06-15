@@ -64,4 +64,27 @@ function verifyMediaUrl(pathOrUrl, exp, sig) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-module.exports = { signMediaUrl, verifyMediaUrl, normalizeUploadsPath, DEFAULT_TTL_SEC };
+/**
+ * Deep-sign every `/uploads/...` string in an API response value (string, array,
+ * or object — Mongoose docs are converted to plain objects first). Non-/uploads
+ * strings pass through, so this is safe to apply to any media-bearing response.
+ * Use at the response boundary: `sendSuccess(res, msg, 200, signMediaUrls(data))`.
+ * Signing is flag-INDEPENDENT and safe: with REQUIRE_SIGNED_MEDIA off the signed
+ * URL still serves (the gate ignores the query); with it on the signature is
+ * present. Returns a NEW value (does not mutate Mongoose docs).
+ */
+function signMediaUrls(value, _depth = 0, ttlSec = DEFAULT_TTL_SEC) {
+  if (_depth > 8) return value; // runaway guard
+  if (typeof value === 'string') return signMediaUrl(value, ttlSec);
+  if (Array.isArray(value)) return value.map((v) => signMediaUrls(v, _depth + 1, ttlSec));
+  if (value && typeof value === 'object') {
+    const obj = typeof value.toObject === 'function' ? value.toObject() : value;
+    if (obj instanceof Date || Buffer.isBuffer(obj)) return obj;
+    const out = {};
+    for (const k of Object.keys(obj)) out[k] = signMediaUrls(obj[k], _depth + 1, ttlSec);
+    return out;
+  }
+  return value;
+}
+
+module.exports = { signMediaUrl, verifyMediaUrl, signMediaUrls, normalizeUploadsPath, DEFAULT_TTL_SEC };

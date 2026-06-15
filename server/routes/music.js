@@ -10,6 +10,7 @@ const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
 const { validateFileExists } = require('../middleware/fileValidator');
 const logger = require('../utils/logger');
 const { uploadFile } = require('../services/storageService');
+const { signMediaUrls } = require('../utils/mediaUrlSigner');
 const router = express.Router();
 
 // Configure multer for audio uploads
@@ -80,7 +81,7 @@ router.get('/', auth, async (req, res) => {
         const music = await Music.find(query)
           .sort({ createdAt: -1 })
           .limit(parseInt(req.query.limit || 50, 10));
-        return res.json({ success: true, data: music || [] });
+        return res.json({ success: true, data: signMediaUrls(music || []) });
       } catch (dbError) {
         // If MongoDB not connected or error, return empty array for dev mode
         if (allowDevMode) {
@@ -114,7 +115,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json({
       success: true,
-      data: music || []
+      data: signMediaUrls(music || [])
     });
   } catch (error) {
     const userId = req.user?._id || req.user?.id;

@@ -10,6 +10,7 @@ const logger = require('../utils/logger');
 const Music = require('../models/Music');
 const multer = require('multer');
 const { uploadFile, getSignedUrlForFile } = require('../services/storageService');
+const { signMediaUrls } = require('../utils/mediaUrlSigner');
 const path = require('path');
 const fs = require('fs');
 const router = express.Router();
@@ -113,7 +114,7 @@ router.post('/user-uploads', auth, upload.single('audio'), asyncHandler(async (r
     // Cleanup temp file
     await fs.promises.unlink(req.file.path).catch(() => {});
 
-    sendSuccess(res, 'Music uploaded successfully', 200, { music });
+    sendSuccess(res, 'Music uploaded successfully', 200, { music: signMediaUrls(music) });
   } catch (error) {
     // Cleanup temp file on error
     if (req.file && req.file.path) {
@@ -202,7 +203,7 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
     const total = await Music.countDocuments(query);
 
     sendSuccess(res, 'User music retrieved', 200, {
-      tracks,
+      tracks: signMediaUrls(tracks),
       pagination: {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10),
