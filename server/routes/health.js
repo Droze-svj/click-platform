@@ -299,6 +299,50 @@ router.get('/light', (req, res) => {
 });
 
 /**
+ * GET /api/health/signed-media
+ *
+ * Readiness probe for the private-media signing/enforcement system, so the
+ * REQUIRE_SIGNED_MEDIA cutover can be confirmed from outside the box.
+ * Reports ONLY non-sensitive booleans/config (never the secret), plus a live
+ * signer self-test: it signs a throwaway probe path with the ACTIVE secret and
+ * verifies it round-trips — proving signing actually works in this environment.
+ *   - enforced:        REQUIRE_SIGNED_MEDIA is on (unsigned /uploads → 403)
+ *   - dedicatedSecret: MEDIA_URL_SECRET is set (vs. falling back to JWT_SECRET)
+ *   - signerSelfTest:  'ok' means sign→verify succeeded with the active secret
+ */
+router.get('/signed-media', (req, res) => {
+  try {
+    const { signMediaUrl, verifyMediaUrl, DEFAULT_TTL_SEC } = require('../utils/mediaUrlSigner');
+    const probePath = '/uploads/_readiness_probe.bin';
+    let signerSelfTest = 'fail';
+    try {
+      const signed = signMediaUrl(probePath, 60);
+      const q = new URLSearchParams((signed.split('?')[1]) || '');
+      signerSelfTest = verifyMediaUrl(probePath, q.get('exp'), q.get('sig')) ? 'ok' : 'fail';
+    } catch (_) { signerSelfTest = 'fail'; }
+
+    const publicPrefixes = String(process.env.PUBLIC_MEDIA_PREFIXES || 'fonts/')
+      .split(',').map((s) => s.trim()).filter(Boolean);
+
+    const enforced = process.env.REQUIRE_SIGNED_MEDIA === 'true';
+    res.status(200).json({
+      status: signerSelfTest === 'ok' ? 'ok' : 'degraded',
+      signedMedia: {
+        enforced,
+        mode: enforced ? 'enforcing (unsigned /uploads → 403)' : 'signing-only (gate off)',
+        dedicatedSecret: !!process.env.MEDIA_URL_SECRET,
+        ttlSeconds: DEFAULT_TTL_SEC,
+        publicPrefixes,
+        signerSelfTest,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'error', error: error.message });
+  }
+});
+
+/**
  * GET /api/health/learning
  *
  * Read-only observability surface for Click's continuous-learning loop.
