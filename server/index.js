@@ -1822,6 +1822,11 @@ if (redisCache && typeof redisCache.middleware === 'function') {
 // have an authenticated, ownership-checked download route
 // (/api/video/render/:jobId/download); output filenames are unguessable.
 const STATIC_OPTS = { dotfiles: 'deny', index: false };
+// Signed-capability gate (flag-gated REQUIRE_SIGNED_MEDIA, default OFF). When on,
+// /uploads/<path> requires a valid ?exp&sig from utils/mediaUrlSigner — so private
+// media is no longer anonymously fetchable by anyone who observes the URL. Mounted
+// BEFORE the static handlers. See docs/security/private-media-access-plan.md.
+app.use('/uploads', require('./middleware/requireSignedMedia'));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), STATIC_OPTS));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), STATIC_OPTS));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), STATIC_OPTS));
