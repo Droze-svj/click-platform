@@ -40,13 +40,16 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
   const [loading, setLoading] = useState(true)
 
   const loadComments = useCallback(async () => {
+    // Comments are team-scoped server-side; without a teamId the API rejects the
+    // request, so render the empty state instead of erroring.
+    if (!teamId) { setComments([]); setLoading(false); return }
     try {
       const token = localStorage.getItem('token')
       const params = new URLSearchParams({
         entityType,
-        entityId
+        entityId,
+        teamId
       })
-      if (teamId) params.append('teamId', teamId)
 
       const response = await axios.get(`${API_URL}/comments?${params.toString()}`, {
       })

@@ -29,9 +29,12 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const loadComments = useCallback(async () => {
+    // Comments are team-scoped server-side; without a teamId the request is rejected.
+    if (!teamId) { setComments([]); setLoading(false); return }
     setLoading(true)
     try {
-      const res = await apiGet(`/comments?entityId=${entityId}`)
+      const params = new URLSearchParams({ entityId, teamId, entityType: 'operation' })
+      const res = await apiGet(`/comments?${params.toString()}`)
       setComments((res as any)?.data || [])
       setTimeout(scrollToBottom, 100)
     } catch (err) {
@@ -39,7 +42,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
     } finally {
       setLoading(false)
     }
-  }, [entityId])
+  }, [entityId, teamId])
 
   useEffect(() => {
     loadComments()
