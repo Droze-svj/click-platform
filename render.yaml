@@ -38,10 +38,15 @@ services:
         value: production
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
+      # Render assigned this service the "-1" URL (the bare name was taken by an
+      # older/orphaned service). These MUST match the real URL or share links,
+      # OAuth callbacks, and email links break. Also set them in the dashboard if
+      # the service's env is dashboard-managed (render.yaml is only authoritative
+      # for a blueprint-linked service).
       - key: FRONTEND_URL
-        value: https://click-platform.onrender.com
+        value: https://click-platform-1.onrender.com
       - key: APP_URL
-        value: https://click-platform.onrender.com
+        value: https://click-platform-1.onrender.com
       - key: PORT
         value: "5001"
       # Beta: auto-verify new accounts so a missing email provider can't lock
