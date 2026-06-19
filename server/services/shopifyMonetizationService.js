@@ -15,13 +15,12 @@ const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
  * Fetch products from Shopify storefront
  */
 async function fetchShopifyProducts() {
+  // HONEST CONTRACT: with no credentials we return an EMPTY catalog (not
+  // fabricated "demo" products with fake cart/checkout URLs that point at a dead
+  // store a user could click). Mirrors whopMonetizationService.
   if (!SHOPIFY_ACCESS_TOKEN || !SHOPIFY_STORE_URL) {
-    logger.warn('SHOPIFY credentials not found, using demo products');
-    return [
-      { id: 'shopify_prod_demo_1', name: 'Sovereign Capsule Tee', price: 35, currency: 'USD', checkout_url: 'https://demo-store.myshopify.com/cart/423423423:1' },
-      { id: 'shopify_prod_demo_2', name: 'Executive AI Planner', price: 25, currency: 'USD', checkout_url: 'https://demo-store.myshopify.com/cart/534534534:1' },
-      { id: 'shopify_prod_demo_3', name: 'Digital Nomad Bundle', price: 150, currency: 'USD', checkout_url: 'https://demo-store.myshopify.com/cart/645645645:1' }
-    ];
+    logger.warn('SHOPIFY credentials not configured — returning empty product catalog');
+    return [];
   }
 
   return new Promise((resolve) => {
@@ -33,10 +32,11 @@ async function fetchShopifyProducts() {
       headers: {
         'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 10000, // never let a hung Shopify API stall the caller
     };
 
-    https.get(options, (res) => {
+    const request = https.get(options, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
@@ -56,7 +56,12 @@ async function fetchShopifyProducts() {
           resolve([]);
         }
       });
-    }).on('error', (err) => {
+    });
+    request.on('timeout', () => {
+      logger.error('Shopify API request timed out');
+      request.destroy(new Error('Shopify API request timed out'));
+    });
+    request.on('error', (err) => {
       logger.error('Shopify API request failed', { error: err.message });
       resolve([]);
     });

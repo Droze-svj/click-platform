@@ -5,6 +5,7 @@
 
 const generativeVideoService = require('../../../server/services/generativeVideoService');
 const whopMonetizationService = require('../../../server/services/whopMonetizationService');
+const shopifyMonetizationService = require('../../../server/services/shopifyMonetizationService');
 const DubbingService = require('../../../server/services/DubbingService');
 const socialPublishing = require('../../../server/services/socialPublishingService');
 const stockFootage = require('../../../server/services/stockFootageService');
@@ -25,6 +26,13 @@ describe('external-provider honesty (no fabrication when unconfigured)', () => {
     const products = await whopMonetizationService.fetchWhopProducts();
     expect(Array.isArray(products)).toBe(true);
     expect(products).toHaveLength(0);
+  });
+
+  it('shopifyMonetizationService.fetchShopifyProducts returns an EMPTY catalog (no demo products) without credentials', async () => {
+    delete process.env.SHOPIFY_ACCESS_TOKEN;
+    delete process.env.SHOPIFY_STORE_URL;
+    const products = await shopifyMonetizationService.fetchShopifyProducts();
+    expect(products).toEqual([]);
   });
 
   it('DubbingService.synthesizeSegment returns unavailable with NO fabricated audio url', async () => {
