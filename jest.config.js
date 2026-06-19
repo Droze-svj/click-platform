@@ -83,6 +83,16 @@ module.exports = {
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
+    {
+      // Render-fidelity — renders known editor states through real ffmpeg and
+      // probes the output. Non-gating (needs an ffmpeg binary; auto-skips
+      // without one). Run via `npm run test:fidelity`.
+      displayName: 'render-fidelity',
+      testMatch: ['<rootDir>/tests/render/**/*.test.js'],
+      setupFiles: ['<rootDir>/tests/setup-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      testTimeout: 120000,
+    },
   ]
 };
 

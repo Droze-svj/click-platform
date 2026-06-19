@@ -1,4 +1,3 @@
-const logger = require('./logger');
 
 class VideoEnhancer {
   /**
@@ -12,21 +11,22 @@ class VideoEnhancer {
   getEnhancementFilters(metadata, targetOptions = {}) {
     const filters = [];
     const videoStream = metadata.streams?.find(s => s.codec_type === 'video');
-    
+
     if (!videoStream) return [];
 
-    // 1. Auto-Upscaling (to 1080p if below)
-    const currentWidth = videoStream.width || 0;
-    if (currentWidth < 1080) {
-      logger.info(`VideoEnhancer: Injecting Upscale Filter (${currentWidth} -> 1080p)`);
-      filters.push('scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2');
-    }
+    // NOTE: do NOT scale/pad here. The caller already prepends
+    // `scale=${exportWidth}:${exportHeight}` to the chain, which sizes the source
+    // to the user's chosen export dimensions. A hardcoded `scale=1920:1080,pad`
+    // here previously OVERRODE that for any source under 1080px wide — turning
+    // every 720p/640p source (and crucially every VERTICAL export) into a
+    // letterboxed 1920x1080 landscape. The enhancement chain is quality-only.
+    void targetOptions;
 
-    // 2. Normalization (hqdn3d + unsharp)
+    // Normalization (hqdn3d + unsharp)
     filters.push('hqdn3d=1.5:1.5:6:6'); // Clean noise
     filters.push('unsharp=3:3:0.5:3:3:0.5'); // Sharpen edges
 
-    // 3. Color Normalization
+    // Color Normalization
     filters.push('colorlevels=rimin=0.05:gimin=0.05:bimin=0.05:rimax=0.95:gimax=0.95:bimax=0.95');
 
     return filters;
