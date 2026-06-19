@@ -182,6 +182,20 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('sentiment-driven effects render through the timelineEffects path', async () => {
+    // Proves the AI sentiment→effects feature composes with the wired render path.
+    const { buildSentimentEffects } = require('../../server/services/aiVideoEditingService');
+    const fx = buildSentimentEffects({ sentimentArc: 'dramatic' }, 4);
+    expect(fx.length).toBeGreaterThan(0);
+    const { outputPath } = await render({
+      exportOptions: { width: 1280, height: 720, duration: 4 },
+      timelineEffects: fx,
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('text overlay → render succeeds, output valid', async () => {
     const { outputPath } = await render({
       exportOptions: { width: 1280, height: 720, duration: 4 },
