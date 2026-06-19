@@ -4463,8 +4463,12 @@ function buildClipPlan(keyMoments = {}, options = {}) {
     if (len > maxLen) end = start + maxLen;
     if (dur > 0) { end = Math.min(end, dur); start = Math.max(0, Math.min(start, Math.max(0, dur - minLen))); }
     if (end <= start) continue;
-    const peakBoost = peaks.reduce((m, p) => (inWin(Number(p && p.time), start, end)
-      ? Math.max(m, (Number(p.confidence) * 100) || Number(p.intensity) || 0) : m), 0);
+    const peakBoost = peaks.reduce((m, p) => {
+      if (!inWin(Number(p && p.time), start, end)) return m;
+      const c = Number(p && p.confidence);
+      const boost = Number.isFinite(c) ? c * 100 : (Number(p && p.intensity) || 0);
+      return Math.max(m, boost);
+    }, 0);
     const react = reactions.find((x) => inWin(Number(x && x.time), start, end));
     const trigBoost = react ? (CLIP_TRIGGER_WEIGHT[String(react.triggerType || '').toLowerCase()] || 0.7) * 20 : 0;
     const score = Math.round(Math.max(1, Math.min(100, 0.6 * hookScore + 0.25 * peakBoost + trigBoost)));

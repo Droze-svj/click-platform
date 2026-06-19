@@ -70,6 +70,14 @@ const workspaceSchema = new mongoose.Schema({
     }
   }],
   settings: {
+    // The agency's purchased scale plan (AgencyScalePlan). When set, tier
+    // enforcement gates clients/profiles/reports/etc. against its limits; when
+    // null, those actions are treated as unlimited (no enforcement).
+    scalePlanId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AgencyScalePlan',
+      default: null
+    },
     branding: {
       logo: String,
       primaryColor: String,

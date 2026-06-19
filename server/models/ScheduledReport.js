@@ -111,35 +111,45 @@ scheduledReportSchema.pre('save', function(next) {
   next();
 });
 
-function calculateNextGeneration(schedule) {
+// NOTE: kept in sync with services/scheduledReportService.calculateNextGeneration.
+// Must handle EVERY frequency enum value (incl. quarterly/yearly) and never
+// return a past time — a past nextGeneration makes the cron re-fire every tick.
+function calculateNextGeneration(schedule = {}) {
   const now = new Date();
-  const [hours, minutes] = schedule.time.split(':').map(Number);
-  
-  let next = new Date();
+  const [hRaw, mRaw] = String((schedule && schedule.time) || '09:00').split(':').map(Number);
+  const hours = Number.isFinite(hRaw) ? hRaw : 9;
+  const minutes = Number.isFinite(mRaw) ? mRaw : 0;
+
+  const next = new Date();
   next.setHours(hours, minutes, 0, 0);
-  
+
   switch (schedule.frequency) {
   case 'daily':
-    if (next <= now) {
-      next.setDate(next.getDate() + 1);
-    }
+    if (next <= now) next.setDate(next.getDate() + 1);
     break;
-  case 'weekly':
-  { const dayDiff = schedule.dayOfWeek - next.getDay();
-    if (dayDiff < 0 || (dayDiff === 0 && next <= now)) {
-      next.setDate(next.getDate() + (7 + dayDiff));
-    } else {
-      next.setDate(next.getDate() + dayDiff);
-    }
-    break; }
-  case 'monthly':
-    next.setDate(schedule.dayOfMonth || 1);
-    if (next <= now) {
-      next.setMonth(next.getMonth() + 1);
-    }
+  case 'weekly': {
+    const target = Number.isFinite(schedule.dayOfWeek) ? schedule.dayOfWeek : next.getDay();
+    let dayDiff = target - next.getDay();
+    if (dayDiff < 0 || (dayDiff === 0 && next <= now)) dayDiff += 7;
+    next.setDate(next.getDate() + dayDiff);
     break;
   }
-  
+  case 'monthly':
+    next.setDate(schedule.dayOfMonth || 1);
+    if (next <= now) next.setMonth(next.getMonth() + 1);
+    break;
+  case 'quarterly':
+    next.setDate(schedule.dayOfMonth || 1);
+    while (next <= now) next.setMonth(next.getMonth() + 3);
+    break;
+  case 'yearly':
+    next.setDate(schedule.dayOfMonth || 1);
+    while (next <= now) next.setFullYear(next.getFullYear() + 1);
+    break;
+  default:
+    if (next <= now) next.setDate(next.getDate() + 1);
+  }
+
   return next;
 }
 

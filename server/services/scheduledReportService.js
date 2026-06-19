@@ -56,6 +56,16 @@ async function processScheduledReports() {
           scheduledReportId: scheduled._id,
           error: error.message
         });
+        // Advance nextGeneration even on failure so a persistently-broken report
+        // retries at its NEXT scheduled slot, not on every hourly cron tick.
+        try {
+          await ScheduledReport.findByIdAndUpdate(scheduled._id, {
+            nextGeneration: calculateNextGeneration(scheduled.schedule),
+            lastError: error.message,
+          });
+        } catch (e) {
+          logger.error('Failed to advance nextGeneration after report error', { error: e.message });
+        }
       }
     }
 

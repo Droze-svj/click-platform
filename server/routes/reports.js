@@ -7,13 +7,15 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { generateClientReport } = require('../services/reportGenerationService');
+const { requireTierLimit } = require('../middleware/tierEnforcement');
+const { loadAgencyTierContext } = require('../services/agencyPlanContext');
 const router = express.Router();
 
 /**
  * POST /api/agency/:agencyWorkspaceId/reports/generate
  * Generate client report
  */
-router.post('/:agencyWorkspaceId/reports/generate', auth, requireWorkspaceAccess('canExportData'), asyncHandler(async (req, res) => {
+router.post('/:agencyWorkspaceId/reports/generate', auth, requireWorkspaceAccess('canExportData'), requireTierLimit('generate_report', loadAgencyTierContext('generate_report')), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId } = req.params;
   const {
     clientWorkspaceId,
