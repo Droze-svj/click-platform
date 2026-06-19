@@ -342,6 +342,66 @@ router.get('/signed-media', (req, res) => {
   }
 });
 
+// Cache the live AI round-trip result for 30s so an unauthenticated `?live=1`
+// can't be spammed into repeated paid calls.
+let _aiProbeCache = { at: 0, result: 'skipped' };
+
+/**
+ * GET /api/health/ai
+ *
+ * Readiness probe for the AI providers — lets you confirm REAL AI is live (not the
+ * hardcoded #viral #trending fallback) after setting GOOGLE_AI_API_KEY. Reports
+ * configuration only by default (fast + free); add `?live=1` for an actual ~8-token
+ * round-trip (throttled to once/30s). Never leaks keys.
+ *   - configured: at least one provider key is set + the SDK initialized
+ *   - mode:       "live AI" vs "FALLBACK (no provider key)" — if FALLBACK, every AI
+ *                 feature is returning canned output, NOT real generation
+ *   - liveTest:   "ok" means a real provider call round-tripped successfully
+ */
+router.get('/ai', async (req, res) => {
+  try {
+    const googleAI = require('../utils/googleAI');
+    const providers = {
+      gemini: !!process.env.GOOGLE_AI_API_KEY && !!googleAI.isConfigured,
+      openai: !!process.env.OPENAI_API_KEY,
+      anthropic: !!process.env.ANTHROPIC_API_KEY,
+    };
+    const configured = Object.values(providers).some(Boolean);
+
+    let liveTest = 'skipped';
+    if (String(req.query.live) === '1' && configured) {
+      const now = Date.now();
+      if (now - _aiProbeCache.at < 30000) {
+        liveTest = _aiProbeCache.result;
+      } else {
+        try {
+          const { aiCall } = require('../utils/aiRouter');
+          const r = await aiCall('Reply with exactly the two letters: OK', { maxTokens: 8, label: 'health-ai-probe' });
+          const text = r && (r.text != null ? r.text : r);
+          liveTest = r && r.provider !== 'none' && /ok/i.test(String(text || '')) ? 'ok' : 'fail';
+        } catch (_) {
+          liveTest = 'fail';
+        }
+        _aiProbeCache = { at: now, result: liveTest };
+      }
+    }
+
+    res.status(configured ? 200 : 503).json({
+      status: configured ? (liveTest === 'fail' ? 'degraded' : 'ok') : 'degraded',
+      ai: {
+        configured,
+        mode: configured ? 'live AI' : 'FALLBACK (no provider key) — AI returns canned output',
+        model: 'gemini-2.5-flash',
+        providers,
+        liveTest,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'error', error: error.message });
+  }
+});
+
 /**
  * GET /api/health/learning
  *
