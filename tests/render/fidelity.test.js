@@ -88,6 +88,28 @@ d('render fidelity', () => {
     expect(p.duration).toBeLessThan(2.7);
   }, 90000);
 
+  it('vertical export WITH manual crop → still 1080x1920 (crop respected, not overridden)', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 4 },
+      videoCrop: { x: 10, y: 10, width: 60, height: 60 },
+    });
+    const p = ffprobe(outputPath);
+    expect(p.width).toBe(1080);
+    expect(p.height).toBe(1920);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
+  it('layered text + shape overlays → render succeeds (z-order sort)', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 1280, height: 720, duration: 4 },
+      shapeOverlays: [{ id: 'sh1', kind: 'box', x: 20, y: 20, width: 40, height: 20, layer: 2, color: '#ff0000' }],
+      textOverlays: [{ id: 't1', text: 'BEHIND', x: 25, y: 25, fontSize: 36, startTime: 0, endTime: 4, layer: 1, color: '#ffffff' }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('text overlay → render succeeds, output valid', async () => {
     const { outputPath } = await render({
       exportOptions: { width: 1280, height: 720, duration: 4 },
