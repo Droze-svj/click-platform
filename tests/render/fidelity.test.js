@@ -7,7 +7,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { hasFfmpeg, ffprobe, makeSource } = require('./probe');
+const { hasFfmpeg, ffprobe, makeSource, frameAvgLuma } = require('./probe');
 const renderService = require('../../server/services/videoRenderService');
 
 const FFMPEG = hasFfmpeg();
@@ -108,6 +108,25 @@ d('render fidelity', () => {
     const p = ffprobe(outputPath);
     expect(p.hasVideo).toBe(true);
     expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
+  it('timelineEffect (vignette) → applied + time-gated to its window', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 1280, height: 720, duration: 4 },
+      timelineEffects: [{
+        id: 'fx1', type: 'overlay', name: 'Cinematic Vignette',
+        startTime: 1.5, endTime: 3.5, params: { strength: 60 }, intensity: 100, enabled: true,
+      }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    // Vignette darkens the frame edges → average luma INSIDE the window should be
+    // measurably lower than OUTSIDE it (proves the effect rendered AND is gated).
+    const inside = frameAvgLuma(outputPath, 2.5);
+    const outside = frameAvgLuma(outputPath, 0.4);
+    if (inside != null && outside != null) {
+      expect(inside).toBeLessThan(outside - 3);
+    }
   }, 90000);
 
   it('text overlay → render succeeds, output valid', async () => {

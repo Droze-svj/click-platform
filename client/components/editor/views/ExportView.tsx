@@ -59,6 +59,7 @@ interface ExportViewProps {
   chromaKey?: any
   playbackSpeed?: number
   timelineSegments?: any[]
+  timelineEffects?: any[]
   videoDuration?: number
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
   setActiveCategory?: (category: import('../../../types/editor').EditorCategory) => void
@@ -68,7 +69,7 @@ interface ExportViewProps {
 
 const glassStyle = "ds-surface-card"
 
-const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, videoCrop, chromaKey, playbackSpeed, timelineSegments = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
+const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, videoCrop, chromaKey, playbackSpeed, timelineSegments = [], timelineEffects = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
   const [connectedAccounts, setConnectedAccounts] = useState<any>({})
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
@@ -534,6 +535,10 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                         duckLevel,
                       },
                       timelineSegments: timelineSegments || [],
+                      // The whole effects layer (vignette/grain/chromatic/glow/
+                      // flash/color, time-ranged) was previously built in the
+                      // editor but never sent — so it never rendered. Forward it.
+                      timelineEffects: timelineEffects || [],
                     },
                     { timeout: 180000 }
                   )
