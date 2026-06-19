@@ -1873,6 +1873,7 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/video', require('./routes/video'));
 app.use('/api/content', require('./routes/content'));
+app.use('/api/autopilot', require('./routes/autopilot'));
 // Revived (Phase F): complete routes the frontend already calls but that were
 // never mounted — so those UI features 404'd. Backing services exist; the breadth
 // smoke sweep verifies they don't 5xx.

@@ -86,8 +86,17 @@ const scheduledPostSchema = new mongoose.Schema({
     // - failed_permanent: auth/invalid_input/quota — no auto-retry, needs user
     // - failed: legacy umbrella, still accepted for older rows
     // - cancelled: user-cancelled inside the grace window
-    enum: ['scheduled', 'pending', 'publishing', 'posted', 'failed', 'failed_retryable', 'failed_permanent', 'cancelled'],
+    // - pending_approval: autopilot drafted it; the scheduler does NOT fire it
+    //   until a human approves (flips it to 'scheduled'). The human-approve gate.
+    enum: ['scheduled', 'pending', 'pending_approval', 'publishing', 'posted', 'failed', 'failed_retryable', 'failed_permanent', 'cancelled'],
     default: 'scheduled'
+  },
+  // Groups all posts created by one autopilot plan, so the human-approve /
+  // cancel actions can act on the whole plan at once.
+  autopilotPlanId: {
+    type: String,
+    default: null,
+    index: true,
   },
   // Retry tracking — when status === 'failed_retryable' the worker bumps
   // attemptCount and reschedules via exponential backoff (1m, 5m, 25m, then
