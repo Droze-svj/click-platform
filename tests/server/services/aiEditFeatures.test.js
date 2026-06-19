@@ -1,5 +1,5 @@
 const {
-  deriveChapters, suggestBrollKeywords, buildSentimentEffects,
+  deriveChapters, suggestBrollKeywords, buildSentimentEffects, buildClipPlan,
 } = require('../../../server/services/aiVideoEditingService');
 
 describe('deriveChapters', () => {
@@ -63,5 +63,54 @@ describe('buildSentimentEffects', () => {
   it('defaults to a single consistent-polish effect; [] with no duration', () => {
     expect(buildSentimentEffects({ sentimentArc: 'consistent' }, 0)).toEqual([]);
     expect(buildSentimentEffects({}, 10)).toHaveLength(1);
+  });
+});
+
+describe('buildClipPlan (batch auto-clip + virality ranking)', () => {
+  it('ranks clips by virality, returns top-N with scores/windows/ranks', () => {
+    const km = {
+      geminiInsights: { hookScore: 80 },
+      clipSuggestions: [
+        { start: 0, end: 20, reason: 'strong opener' },
+        { start: 40, end: 70, reason: 'mid value' },
+        { start: 100, end: 130, reason: 'cta' },
+      ],
+      highlights: [{ time: 50, intensity: 95 }],
+      reactions: [{ time: 105, triggerType: 'shock', text: 'wow', reason: 'shock moment' }],
+    };
+    const clips = buildClipPlan(km, { duration: 140, maxClips: 3 });
+    expect(clips).toHaveLength(3);
+    for (const c of clips) {
+      expect(c.viralityScore).toBeGreaterThan(0);
+      expect(c.viralityScore).toBeLessThanOrEqual(100);
+      expect(c.endTime).toBeGreaterThan(c.startTime);
+      expect(c).toHaveProperty('rank');
+      expect(c).toHaveProperty('hook');
+    }
+    expect(clips[0].viralityScore).toBeGreaterThanOrEqual(clips[1].viralityScore);
+    expect(clips[1].viralityScore).toBeGreaterThanOrEqual(clips[2].viralityScore);
+    expect(clips.map((c) => c.rank)).toEqual([1, 2, 3]);
+  });
+
+  it('clamps clip length to [minLen,maxLen] and bounds to duration', () => {
+    const km = { clipSuggestions: [{ start: 5, end: 8 }, { start: 10, end: 300 }] };
+    const clips = buildClipPlan(km, { duration: 120, minLen: 5, maxLen: 60, maxClips: 5 });
+    for (const c of clips) {
+      expect(c.durationSec).toBeGreaterThanOrEqual(5 - 0.01);
+      expect(c.durationSec).toBeLessThanOrEqual(60 + 0.01);
+      expect(c.endTime).toBeLessThanOrEqual(120);
+    }
+  });
+
+  it('falls back to engagement peaks when no clipSuggestions', () => {
+    const clips = buildClipPlan({ highlights: [{ time: 30, intensity: 80 }, { time: 60, intensity: 70 }] }, { duration: 120 });
+    expect(clips.length).toBeGreaterThan(0);
+    expect(clips[0].endTime).toBeGreaterThan(clips[0].startTime);
+  });
+
+  it('handles empty/missing input safely', () => {
+    expect(buildClipPlan({}, { duration: 60 })).toEqual([]);
+    expect(buildClipPlan(null, {})).toEqual([]);
+    expect(buildClipPlan({ clipSuggestions: [] }, { duration: 60 })).toEqual([]);
   });
 });

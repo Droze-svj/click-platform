@@ -4415,6 +4415,73 @@ function buildSentimentEffects(keyMoments = {}, duration = 0) {
   return [mk('Subtle Polish', 'filter', { saturation: 1.08 }, 0, dur, 50)];
 }
 
+const CLIP_TRIGGER_WEIGHT = { shock: 1.0, curiosity: 0.95, fomo: 0.9, authority: 0.85, social_proof: 0.85, value: 0.8 };
+
+/**
+ * Rank a long-form video's AI moments into a BATCH of short clips (the Opus Clip /
+ * Klap core). Pure: takes detectKeyMoments output + duration, returns clips ranked
+ * by a 0-100 virality score — the opening hookScore blended with in-window
+ * engagement-peak intensity + the viral-trigger weight of any reaction inside it.
+ * The caller renders/captions/reframes each window. No I/O → unit-testable.
+ */
+function buildClipPlan(keyMoments = {}, options = {}) {
+  const { duration = 0, maxClips = 10, minLen = 5, maxLen = 90 } = options;
+  const dur = Number(duration) || 0;
+  const km = keyMoments || {};
+  const gi = km.geminiInsights || {};
+  const hookScore = Number(km.hookScore) || Number(gi.hookScore)
+    || (km.hook && Number(km.hook.confidence) * 100) || 60;
+  const peaks = Array.isArray(km.highlights) ? km.highlights : [];
+  const reactions = Array.isArray(km.reactions) ? km.reactions : [];
+
+  // Source windows: prefer explicit clipSuggestions; else build around engagement peaks.
+  const raw = [];
+  const suggestions = Array.isArray(km.clipSuggestions) ? km.clipSuggestions : [];
+  for (const s of suggestions) {
+    if (!s) continue;
+    let start = Number(s.start != null ? s.start : s.startTime);
+    let end = Number(s.end != null ? s.end : s.endTime);
+    if (!Number.isFinite(start) || start < 0) continue;
+    if (!Number.isFinite(end) || end <= start) end = start + 30;
+    raw.push({ start, end, reason: s.reason || '' });
+  }
+  if (!raw.length) {
+    for (const p of peaks) {
+      const t = Number(p && p.time);
+      if (!Number.isFinite(t)) continue;
+      raw.push({ start: Math.max(0, t - 5), end: t + 25, reason: (p && (p.text || p.type)) || 'engagement peak' });
+    }
+  }
+
+  const inWin = (t, a, b) => Number.isFinite(t) && t >= a && t <= b;
+  const clips = [];
+  for (const r of raw) {
+    let start = r.start;
+    let end = r.end;
+    const len = end - start;
+    if (len < minLen) end = start + minLen;
+    if (len > maxLen) end = start + maxLen;
+    if (dur > 0) { end = Math.min(end, dur); start = Math.max(0, Math.min(start, Math.max(0, dur - minLen))); }
+    if (end <= start) continue;
+    const peakBoost = peaks.reduce((m, p) => (inWin(Number(p && p.time), start, end)
+      ? Math.max(m, (Number(p.confidence) * 100) || Number(p.intensity) || 0) : m), 0);
+    const react = reactions.find((x) => inWin(Number(x && x.time), start, end));
+    const trigBoost = react ? (CLIP_TRIGGER_WEIGHT[String(react.triggerType || '').toLowerCase()] || 0.7) * 20 : 0;
+    const score = Math.round(Math.max(1, Math.min(100, 0.6 * hookScore + 0.25 * peakBoost + trigBoost)));
+    clips.push({
+      startTime: Number(start.toFixed(2)),
+      endTime: Number(end.toFixed(2)),
+      durationSec: Number((end - start).toFixed(2)),
+      viralityScore: score,
+      hook: (react && react.text) || (km.hook && km.hook.text) || r.reason || '',
+      triggerType: (react && react.triggerType) || null,
+      reason: r.reason || (react && react.reason) || '',
+    });
+  }
+  clips.sort((a, b) => b.viralityScore - a.viralityScore);
+  return clips.slice(0, Math.max(1, maxClips)).map((c, i) => ({ id: `clip-${i + 1}`, rank: i + 1, ...c }));
+}
+
 async function detectSmartCuts(videoId, videoMetadata) {
   try {
     const content = await resolveContent(videoId);
@@ -5875,6 +5942,7 @@ module.exports = {
   deriveChapters,
   suggestBrollKeywords,
   buildSentimentEffects,
+  buildClipPlan,
   processChromaKey,
   getInteractiveSuggestions,
   applyVisualEffects,
