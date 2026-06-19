@@ -18,13 +18,15 @@ const indexSrc = fs.readFileSync(path.join(__dirname, '../../server/index.js'), 
 const KNOWN_DEAD = new Set([
   'admin-new', 'ai-content', 'ai-enhanced', 'ai-music-admin', 'ai-music-analytics',
   'ai-music-batch', 'ai-music-generation', 'ai-music-recommendations', 'ai-music-templates',
-  'automation-analytics', 'creative', 'creatorDna', 'digitalTwin', 'dmca', 'dubbing',
+  'automation-analytics', 'creative', 'creatorDna', 'dmca',
   'hookEnsemble', 'music-ai-suggestions', 'music-catalog-playlists', 'music-catalog-sync',
   'music-catalog', 'music-dynamic-generation', 'music-editing', 'music-learning',
   'music-licensing-admin', 'music-licensing-analytics', 'music-licensing-compliance',
   'music-licensing-favorites', 'music-licensing-sync', 'music-licensing-tools',
   'music-licensing-transparency', 'music-licensing', 'music-smart-sync', 'remix',
-  'retention-heatmap', 'style-vault', 'toolbox', 'trust', 'videoSharing',
+  'style-vault', 'videoSharing',
+  // digitalTwin, retention-heatmap, trust, toolbox, dubbing were REVIVED (Phase F)
+  // — mounted because the frontend already calls them; verified by the smoke sweep.
 ]);
 
 const isMounted = (name) =>

@@ -1873,6 +1873,14 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/video', require('./routes/video'));
 app.use('/api/content', require('./routes/content'));
+// Revived (Phase F): complete routes the frontend already calls but that were
+// never mounted — so those UI features 404'd. Backing services exist; the breadth
+// smoke sweep verifies they don't 5xx.
+app.use('/api/digital-twin', require('./routes/digitalTwin'));
+app.use('/api/retention-heatmap', require('./routes/retention-heatmap'));
+app.use('/api/trust', require('./routes/trust'));
+app.use('/api/toolbox', require('./routes/toolbox'));
+app.use('/api/dubbing', require('./routes/dubbing'));
 app.use('/api/quote', require('./routes/quote'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/recurring', require('./routes/recurring'));
