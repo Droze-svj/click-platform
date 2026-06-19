@@ -358,6 +358,10 @@ async function getApprovalStatus(approvalId, userId) {
         percentage: Math.round(((approval.currentStage + 1) / approval.stages.length) * 100)
       },
       auditTrail: approval.history,
+      // Inline collaboration layer (comment threads + revision history) so the
+      // frontend can render/refresh them without a second round-trip.
+      comments: approval.comments || [],
+      revisions: approval.revisions || [],
       canApprove: currentStage?.status === 'in_progress' || currentStage?.status === 'pending',
       canRequestChanges: currentStage?.status === 'in_progress' || currentStage?.status === 'pending'
     };
