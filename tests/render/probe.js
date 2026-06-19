@@ -33,12 +33,17 @@ function ffprobe(file) {
   };
 }
 
-/** Generate a tiny synthetic source clip (color bars + tone) for deterministic tests. */
-function makeSource(file, { duration = 4, size = '640x480', rate = 25 } = {}) {
+/** Generate a tiny synthetic source clip (color bars + tone) for deterministic
+ *  tests. `audio:'silent'` makes a pure-silence track (exercises the loudnorm
+ *  NaN guard); `audio:'tone'` (default) makes a 440Hz sine. */
+function makeSource(file, { duration = 4, size = '640x480', rate = 25, audio = 'tone' } = {}) {
+  const aIn = audio === 'silent'
+    ? `anullsrc=r=44100:cl=stereo`
+    : `sine=frequency=440:duration=${duration}`;
   const r = spawnSync('ffmpeg', [
     '-y',
     '-f', 'lavfi', '-i', `testsrc=duration=${duration}:size=${size}:rate=${rate}`,
-    '-f', 'lavfi', '-i', `sine=frequency=440:duration=${duration}`,
+    '-f', 'lavfi', '-i', aIn,
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', file,
   ], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
   if (r.status !== 0) throw new Error(`ffmpeg source gen failed: ${r.stderr}`);

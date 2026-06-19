@@ -1293,7 +1293,7 @@ async function renderFromEditorState(options) {
 
         if (hasAudio) {
         // Source has audio + background music added -> map both with sidechain compression
-          let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+          let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
           const complexStr = `${vidPart};${audPart}`
           command = command
             .complexFilter(complexStr)
@@ -1317,7 +1317,7 @@ async function renderFromEditorState(options) {
           // would error on the mapped [vout] pad.
             const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
             const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
-            command = command.complexFilter(`${vidPart};[0:a]highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
+            command = command.complexFilter(`${vidPart};[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
               .outputOptions(['-map', '[vout]', '-map', '[aout]'])
             videoMappedViaFiltergraph = true
           } else {
