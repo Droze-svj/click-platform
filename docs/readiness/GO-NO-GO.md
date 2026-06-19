@@ -24,12 +24,19 @@ Until then the app runs, but AI output is the hardcoded fallback.
 
 | Gate | Result |
 |---|---|
-| `jest` full suite | **574 passing**, 0 failing |
+| `jest` full suite | **595 passing**, 0 failing (incl. re-enabled route suites) |
 | `eslint server/` (now the CI gate, whole tree) | **0 errors** |
 | client `tsc --noEmit` (new CI gate) | **clean** |
 | client `next build` | green (91 pages) |
 | server boot + `/api/health/light` + `/api/health/ai` | 200 |
 | live AI round-trip (`?live=1`, with a key) | **`liveTest:"ok"`** |
+
+> **Post-report follow-ups (done):** the UI now visibly flags AI-degraded mode
+> (a dashboard banner driven by `/api/health/ai`), and the four route-integration
+> suites (`auth`/`content`/`video`/`analytics`) are repaired and gating in the unit
+> job (~5s each on an isolated in-memory Mongo). A **hard DB-safety guard** in
+> `tests/setup-env.js` now forces tests onto an in-memory/local DB and fails closed
+> if `MONGODB_URI` ever points at a remote/Atlas host — see the incident note below.
 
 ## What this pass fixed (Phases 0–4)
 
@@ -61,21 +68,45 @@ Until then the app runs, but AI output is the hardcoded fallback.
 
 ## Known gaps / residual risks (honest)
 
-1. **Route-integration tests** (`tests/server/routes/*`) are stale (assertions predate
-   current auth/validation) AND slow (75–150s/suite). Left ignored; repair the fixtures and
-   run them as a **separate, non-gating** job rather than in the fast unit gate.
+1. ~~**Route-integration tests** stale + slow.~~ **RESOLVED.** Fixtures rewritten to the
+   current auth/validation/response contracts (password policy, email-verification gate,
+   `:id` validation → 400, cross-user → 404); connection lifecycle handed to `tests/setup.js`
+   (the cross-file race is gone). With the in-memory guard they run ~5s/suite and now gate in
+   the unit job. Coverage is intentionally focused on the real, deterministic surface —
+   content *generation* (async/queue-backed) is left to service/integration tests.
 2. **`silent DB-empty`** was fixed on the core routes; a full sweep of every
    `isDevUser`/`!isMongoId`/`allowDevMode` branch that returns `[]` isn't exhaustive. Lower
    impact today because prod is **Mongoose-mode** (Supabase disabled → users are real
    ObjectIds), but revisit before enabling Supabase auth.
-3. **UI "AI degraded" surfacing** — the backend now reports degradation (`/api/health/ai`,
-   warn logs); the editor doesn't yet visibly flag when a result is the fallback. Recommended
-   follow-up so a user never mistakes canned text for real output.
+3. ~~**UI "AI degraded" surfacing.**~~ **RESOLVED.** A dashboard-wide banner
+   (`AIHealthBanner` + `useAIHealth`) polls `/api/health/ai` and warns when AI is in
+   fallback mode, so canned output is never mistaken for real generation. (Per-result
+   inline tagging remains a possible enhancement, but the services currently mask
+   fallbacks as normal success, so the global probe is the reliable signal.)
 4. **38 dead route files** remain in the tree (guarded by the mount test, harmless, 404 if
    called). Delete or wire them when their features are wanted.
 5. **913 eslint warnings** (almost all `no-unused-vars`) — non-blocking; clean up opportunistically.
 6. **`validateObjectId`/`getPagination`** applied to the core content route as the pattern;
    roll out to the remaining `:id`/list routes over time.
+
+## Incident note — test DB safety (June 19)
+
+While repairing the route-integration suites, two local test runs connected to the **live
+Atlas `click_v3` database** and their unscoped `User.deleteMany({})` / `Content.deleteMany({})`
+emptied the `users` and `contents` collections (the other 173 collections were untouched).
+Root cause: `.env.test` set no `MONGODB_URI`, so booting `server/index.js` let dotenv load the
+**production Atlas URI from `.env`**, and the suite connected to it.
+
+Fixed so it cannot recur:
+- `tests/setup-env.js` now **pins** `MONGODB_URI` before any app code loads — a genuinely-local
+  `click-test` URI is kept; anything remote/unknown is forced to an **isolated in-memory Mongo**.
+- `tests/setup.js` **fails closed**: it throws (aborts the run) if `MONGODB_URI` ever resolves to
+  a `mongodb+srv` / `*.mongodb.net` host.
+
+**Recovery:** if your Atlas cluster has backups/PITR (M10+ or an enabled snapshot policy), restore
+`users` + `contents` from a snapshot just before this date. If it's a shared/free tier with no
+backups, the emptied collections aren't recoverable — re-register your account(s); content created
+during prior testing is gone. Nothing else was affected.
 
 ## Your pre-test checklist
 
