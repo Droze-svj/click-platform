@@ -10,11 +10,11 @@ import {
   // Zone headers
   Clapperboard, Rocket, TrendingUp, SlidersHorizontal,
   // Studio
-  LayoutDashboard, Video, Sparkles, FileText, BookOpen, Hammer, Film, Wand2,
+  LayoutDashboard, Video, Sparkles, FileText, BookOpen, Hammer, Film, Wand2, Scissors, SplitSquareHorizontal,
   // Publish
-  Send, CalendarDays, Workflow,
+  Send, CalendarDays, Workflow, Bot, Gauge, MessagesSquare,
   // Grow
-  BarChart3, Flame, Brain,
+  BarChart3, Flame, Brain, Recycle,
   // Manage
   FolderKanban, Users, Gem, Boxes, Plug, Compass, Share2, FlaskConical,
   // Settings
@@ -49,7 +49,9 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/forge',       label: t('nav.forge') || 'AI Video Creator', icon: Hammer,       badge: 'AI' },
       { path: '/dashboard/video',       label: t('nav.videoEditor') || 'Video Editor', icon: Video,           badge: 'AI' },
       { path: '/dashboard/clips/hub',   label: t('nav.aiClips') || 'AI Clips',     icon: Film,            badge: 'New' },
+      { path: '/dashboard/clips/auto',  label: t('nav.autoClips') || 'Auto Clips', icon: Scissors,        badge: 'AI' },
       { path: '/dashboard/tools',       label: t('nav.aiTools') || 'AI Tools',     icon: Wand2,           badge: 'New' },
+      { path: '/dashboard/tools/hook-ab', label: t('nav.hookAb') || 'Hook A/B Lab', icon: SplitSquareHorizontal, badge: 'AI' },
       { path: '/dashboard/content',     label: t('nav.content') || 'Content AI',   icon: Sparkles,        badge: null },
       { path: '/dashboard/scripts',     label: t('nav.scripts') || 'Scripts',      icon: FileText,        badge: null },
       { path: '/dashboard/library',     label: t('nav.library') || 'Asset Library',icon: BookOpen,        badge: null },
@@ -64,7 +66,10 @@ const getZones = (t: (k: string) => string): Zone[] => [
     items: [
       { path: '/dashboard/social',        label: t('nav.connectAccounts') || 'Connect Accounts', icon: Share2,    badge: 'Setup' },
       { path: '/dashboard/scheduler',     label: t('nav.scheduler') || 'Scheduler',    icon: Send,         badge: null },
+      { path: '/dashboard/autopilot',     label: t('nav.autopilot') || 'Autopilot',    icon: Bot,          badge: 'AI' },
       { path: '/dashboard/calendar',      label: t('nav.calendar') || 'Calendar',     icon: CalendarDays, badge: null },
+      { path: '/dashboard/calendar/capacity', label: t('nav.capacity') || 'Capacity',  icon: Gauge,        badge: 'New' },
+      { path: '/dashboard/approvals/collaborate', label: t('nav.approvalThreads') || 'Approval Threads', icon: MessagesSquare, badge: null },
       { path: '/dashboard/integrations',  label: t('nav.integrations') || 'Integrations', icon: Plug,         badge: 'New' },
       { path: '/dashboard/workflows',     label: t('nav.workflows') || 'Automations',  icon: Workflow,     badge: null },
     ],
@@ -79,6 +84,7 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/analytics',            label: t('nav.analytics') || 'Analytics',         icon: BarChart3,  badge: null },
       { path: '/dashboard/analytics/creator',    label: t('nav.creatorStats') || 'Creator Stats',     icon: Flame,      badge: 'AI' },
       { path: '/dashboard/trends',               label: t('nav.discover') || 'Discover',          icon: Flame,      badge: 'New' },
+      { path: '/dashboard/trends/repurpose',     label: t('nav.trendRepurpose') || 'Trend Repurpose', icon: Recycle, badge: 'AI' },
       { path: '/dashboard/strategist',           label: t('nav.strategist') || 'Strategist',        icon: Compass,    badge: 'AI' },
       { path: '/dashboard/insights',             label: t('nav.aiInsights') || 'AI Insights',       icon: Brain,      badge: null },
       { path: '/dashboard/roadmap',              label: t('nav.roadmap') || 'Roadmap',           icon: Sparkles,   badge: null },
