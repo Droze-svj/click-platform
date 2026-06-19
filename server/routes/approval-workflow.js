@@ -167,6 +167,34 @@ router.get('/:approvalId/audit-trail', auth, asyncHandler(async (req, res) => {
   });
 }));
 
+// ── Inline collaboration: comment threads + revision history ──
+const approvalCollab = require('../services/approvalCollaborationService');
+
+// POST /api/approvals/:approvalId/comments — add an inline comment (optionally on
+// a specific field / as a threaded reply).
+router.post('/:approvalId/comments', auth, asyncHandler(async (req, res) => {
+  const { text, targetField, parentId, authorRole } = req.body || {};
+  const comment = await approvalCollab.addComment(req.params.approvalId, {
+    authorId: req.user._id, authorName: req.user.name, authorRole, text, targetField, parentId,
+  });
+  sendSuccess(res, 'Comment added', 201, comment);
+}));
+
+// POST /api/approvals/:approvalId/comments/:commentId/resolve
+router.post('/:approvalId/comments/:commentId/resolve', auth, asyncHandler(async (req, res) => {
+  const resolved = !(req.body && req.body.resolved === false);
+  const comment = await approvalCollab.resolveComment(req.params.approvalId, req.params.commentId, resolved);
+  sendSuccess(res, 'Comment updated', 200, comment);
+}));
+
+// POST /api/approvals/:approvalId/revisions — creator re-submits after changes.
+router.post('/:approvalId/revisions', auth, asyncHandler(async (req, res) => {
+  const rev = await approvalCollab.addRevision(req.params.approvalId, {
+    changedBy: req.user._id, note: req.body && req.body.note, changes: req.body && req.body.changes,
+  });
+  sendSuccess(res, 'Revision recorded', 201, rev);
+}));
+
 module.exports = router;
 
 
