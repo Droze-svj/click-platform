@@ -42,6 +42,7 @@ const CASES = [
   { name: 'POST /api/creative/ideation/ideas', method: 'post', path: () => '/api/creative/ideation/ideas', auth: 'user', body: () => ({ topic: 'AI video editing for creators', platform: 'tiktok', count: 3 }), expect: [200], shape: true },
   { name: 'POST /api/video/extract-highlights', method: 'post', path: () => '/api/video/extract-highlights', auth: 'user', body: (fx) => ({ videoId: String(fx.content._id), url: '/uploads/smoke.mp4', duration: 60 }), expect: [200], shape: true },
   { name: 'POST /api/video/generate-captions', method: 'post', path: () => '/api/video/generate-captions', auth: 'user', body: (fx) => ({ videoId: String(fx.content._id), url: '/uploads/smoke.mp4', duration: 60 }), expect: [200], shape: true },
+  { name: 'POST /api/video/:id/auto-clip (batch clips)', method: 'post', path: (fx) => `/api/video/${fx.content._id}/auto-clip`, auth: 'user', body: () => ({ maxClips: 5 }), expect: [200], shape: true },
 
   // --- validation paths (mounted + clean, no heavy work) ---
   { name: 'POST /api/video/extract-highlights (empty → 400)', method: 'post', path: () => '/api/video/extract-highlights', auth: 'user', body: () => ({}), expect: [400] },

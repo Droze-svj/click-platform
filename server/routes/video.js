@@ -1828,6 +1828,30 @@ router.post('/extract-highlights', auth, async (req, res) => {
   }
 });
 
+// Batch AUTO-CLIP: turn one long video into a ranked gallery of short clips,
+// scored 0-100 by AI virality (the Opus Clip / Klap core). Returns the plan
+// (each clip: window + viralityScore + winning hook + "why viral" reason);
+// rendering each clip reuses the existing /render|/export on the window.
+router.post('/:contentId/auto-clip', auth, async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { maxClips, minLen, maxLen, platform, niche } = req.body || {};
+    const { generateAutoClips } = require('../services/autoClipService');
+    const result = await generateAutoClips(contentId, {
+      userId: req.user._id,
+      maxClips: Math.max(1, Math.min(Number(maxClips) || 10, 20)),
+      minLen: Number(minLen) || 5,
+      maxLen: Number(maxLen) || 90,
+      platform: platform || null,
+      niche: niche || null,
+    });
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Auto-clip error', { error: error.message, videoId: req.params.contentId });
+    res.status(error.statusCode || 500).json({ success: false, error: error.message });
+  }
+});
+
 // Generate auto-captions for video
 router.post('/generate-captions', auth, async (req, res) => {
   try {
