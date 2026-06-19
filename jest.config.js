@@ -42,12 +42,12 @@ module.exports = {
         '<rootDir>/tests/server/**/*.test.js',
         '<rootDir>/tests/services/**/*.test.js'
       ],
-      // tests/server/routes/* boot the FULL app per suite (75-150s each) and their
-      // assertions are stale (they predate current auth/validation — register now
-      // 400s the old fixture, etc.). They're too slow for the fast gate AND red, so
-      // they stay ignored. Tracked in docs/readiness/GO-NO-GO.md: repair fixtures +
-      // run them as a separate (non-gating) integration job, not the unit suite.
-      testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/server/routes/'],
+      // tests/server/routes/* boot the full app per suite. They were previously
+      // ignored (stale assertions + 75-150s/suite against a real DB). Now repaired:
+      // fixtures match the current auth/validation/response contracts, and the
+      // DB-safety guard in tests/setup-env.js forces an isolated in-memory Mongo,
+      // so each suite runs in ~5s and they gate like any other unit test.
+      testPathIgnorePatterns: ['/node_modules/'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },

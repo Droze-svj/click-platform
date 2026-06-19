@@ -1,22 +1,20 @@
 // Authentication routes tests
 
 const request = require('supertest');
-const mongoose = require('mongoose');
 const User = require('../../../server/models/User');
 const app = require('../../../server/index');
 
-describe('Authentication Routes', () => {
-  beforeAll(async () => {
-    // Connect to test database
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/click-test');
-    }
-  });
+// Compliant with the register password policy (validateRegister requires
+// lower+upper+digit; validatePasswordPolicy blocklists "password123").
+const PASSWORD = 'TestPass123!';
 
+describe('Authentication Routes', () => {
+  // The shared mongoose connection is owned by tests/setup.js (connect in its
+  // global beforeAll, close in its global afterAll). Per-suite connect/close
+  // here caused the cross-file race where one file closed the connection and
+  // the next file's first query buffer-timed-out. We only clean up our data.
   afterAll(async () => {
-    // Clean up test database
     await User.deleteMany({});
-    await mongoose.connection.close();
   });
 
   beforeEach(async () => {
@@ -28,7 +26,7 @@ describe('Authentication Routes', () => {
     it('should register a new user successfully', async () => {
       const userData = {
         email: 'test@example.com',
-        password: 'password123',
+        password: PASSWORD,
         name: 'Test User',
       };
 
@@ -60,7 +58,7 @@ describe('Authentication Routes', () => {
     it('should reject registration with existing email', async () => {
       const userData = {
         email: 'test@example.com',
-        password: 'password123',
+        password: PASSWORD,
         name: 'Test User',
       };
 
@@ -82,7 +80,7 @@ describe('Authentication Routes', () => {
     it('should hash password before saving', async () => {
       const userData = {
         email: 'test@example.com',
-        password: 'password123',
+        password: PASSWORD,
         name: 'Test User',
       };
 
@@ -102,7 +100,7 @@ describe('Authentication Routes', () => {
       // Create a test user
       const user = new User({
         email: 'test@example.com',
-        password: 'password123',
+        password: PASSWORD,
         name: 'Test User',
       });
       await user.save();
@@ -113,7 +111,7 @@ describe('Authentication Routes', () => {
         .post('/api/auth/login')
         .send({
           email: 'test@example.com',
-          password: 'password123',
+          password: PASSWORD,
         })
         .expect(200);
 
@@ -127,7 +125,7 @@ describe('Authentication Routes', () => {
         .post('/api/auth/login')
         .send({
           email: 'wrong@example.com',
-          password: 'password123',
+          password: PASSWORD,
         })
         .expect(401);
 

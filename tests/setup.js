@@ -53,12 +53,31 @@ mongoose.set('bufferTimeoutMS', 60000);
 // runner's ubuntu version and eats ~60s before failing, by which time
 // the test's first insert has already buffer-timed-out.
 beforeAll(async () => {
+  // Fail-closed DB safety check (defense in depth; setup-env.js already pins a
+  // safe URI). These suites call UNSCOPED deleteMany() — they must NEVER touch a
+  // real/remote database. If anything has pointed us at Atlas, abort the whole
+  // run loudly rather than silently wiping production data.
+  const activeUri = process.env.MONGODB_URI || '';
+  if (/mongodb\+srv:|\.mongodb\.net/i.test(activeUri)) {
+    throw new Error(
+      `[tests/setup] Refusing to run: MONGODB_URI points at a remote database ` +
+      `(${activeUri.replace(/\/\/[^@]*@/, '//***@')}). Tests must use an isolated ` +
+      `local/in-memory DB. See tests/setup-env.js.`
+    );
+  }
+
   // readyState: 0 disconnected, 1 connected, 2 connecting, 3 disconnecting.
   if (mongoose.connection.readyState === 1) return;
 
   let uri = process.env.MONGODB_URI;
 
-  if (!uri) {
+  // USE_INMEMORY_DB is set by setup-env.js whenever the configured MONGODB_URI
+  // was unsafe/unset (e.g. .env's production Atlas URI). In that case the URI
+  // above is only a safe placeholder — ignore it and spin up an isolated
+  // in-memory MongoDB so tests never touch a real database.
+  const forceInMemory = process.env.USE_INMEMORY_DB === '1';
+
+  if (!uri || forceInMemory) {
     try {
       if (!MongoMemoryServer) throw new Error('mongodb-memory-server module not loaded');
       mongoServer = await MongoMemoryServer.create();

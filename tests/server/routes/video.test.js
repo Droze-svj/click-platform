@@ -16,6 +16,7 @@ describe('Video Routes', () => {
       email: 'videotest@example.com',
       password: 'password123',
       name: 'Video Test User',
+      emailVerified: true, // auth middleware 403s unverified users
     });
     await testUser.save();
 

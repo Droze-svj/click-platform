@@ -15,6 +15,7 @@ describe('Analytics Routes', () => {
       email: 'analyticstest@example.com',
       password: 'password123',
       name: 'Analytics Test User',
+      emailVerified: true, // auth middleware 403s unverified users
     });
     await testUser.save();
 
@@ -56,10 +57,13 @@ describe('Analytics Routes', () => {
     });
   });
 
-  describe('GET /api/analytics/performance', () => {
-    it('should get performance metrics', async () => {
+  describe('GET /api/analytics/performance/global', () => {
+    // NOTE: bare GET /api/analytics/performance is admin-only (requireRole).
+    // The per-user metrics surface is /performance/global (auth-only), which
+    // degrades to honest zeros (success:true) when no analytics exist yet.
+    it('should get global performance metrics', async () => {
       const response = await request(app)
-        .get('/api/analytics/performance')
+        .get('/api/analytics/performance/global')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 

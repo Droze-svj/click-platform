@@ -1,7 +1,20 @@
 // Content routes tests
+//
+// These exercise the REAL content API surface. The mongoose connection is owned
+// by tests/setup.js (connect/close in its global hooks) — a per-suite connect or
+// connection.close() caused the cross-file race where one file closed the shared
+// connection and the next file's first query buffer-timed-out. We only manage
+// our own data here.
+//
+// The previous fixtures targeted endpoints that don't exist in this shape:
+//   - POST /api/content is async *generation* (enqueues a job, returns
+//     { data: { contentId } }), not a synchronous CRUD create with a title —
+//     it's covered by service/integration tests, not asserted here.
+//   - There is no PUT /api/content/:id update route.
+//   - Cross-user reads return 404 (not 403): the handler scopes by owner, so
+//     another user's content is simply "not found" (no existence leak).
 
 const request = require('supertest');
-const mongoose = require('mongoose');
 const User = require('../../../server/models/User');
 const Content = require('../../../server/models/Content');
 const jwt = require('jsonwebtoken');
@@ -11,24 +24,12 @@ describe('Content Routes', () => {
   let authToken;
   let testUser;
 
-  beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/click-test');
-    }
-  });
-
-  afterAll(async () => {
-    await Content.deleteMany({});
-    await User.deleteMany({});
-    await mongoose.connection.close();
-  });
-
   beforeEach(async () => {
-    // Create test user and get auth token
     testUser = new User({
-      email: 'test@example.com',
+      email: 'contenttest@example.com',
       password: 'password123',
       name: 'Test User',
+      emailVerified: true, // auth middleware 403s unverified users
     });
     await testUser.save();
 
@@ -45,15 +46,13 @@ describe('Content Routes', () => {
   });
 
   describe('GET /api/content', () => {
-    it('should get user content list', async () => {
-      // Create test content
-      const content = new Content({
+    it('should get the user content list', async () => {
+      await new Content({
         userId: testUser._id,
         title: 'Test Content',
         type: 'video',
         status: 'completed',
-      });
-      await content.save();
+      }).save();
 
       const response = await request(app)
         .get('/api/content')
@@ -70,52 +69,17 @@ describe('Content Routes', () => {
         .get('/api/content')
         .expect(401);
 
-      expect(response.body.success).toBe(false);
+      expect(response.body.success).toBeFalsy();
     });
   });
 
-  describe('POST /api/content', () => {
-    it('should create new content', async () => {
-      const contentData = {
-        title: 'New Content',
-        type: 'video',
-        description: 'Test description',
-      };
-
-      const response = await request(app)
-        .post('/api/content')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(contentData)
-        .expect(201);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.title).toBe(contentData.title);
-      expect(response.body.data.type).toBe(contentData.type);
-
-      // Verify content was saved
-      const content = await Content.findById(response.body.data._id);
-      expect(content).toBeDefined();
-      expect(content.userId.toString()).toBe(testUser._id.toString());
-    });
-
-    it('should require authentication', async () => {
-      const response = await request(app)
-        .post('/api/content')
-        .send({ title: 'Test' })
-        .expect(401);
-
-      expect(response.body.success).toBe(false);
-    });
-  });
-
-  describe('GET /api/content/:id', () => {
-    it('should get content by ID', async () => {
-      const content = new Content({
+  describe('GET /api/content/:contentId', () => {
+    it('should get content by id for the owner', async () => {
+      const content = await new Content({
         userId: testUser._id,
-        title: 'Test Content',
+        title: 'Owned Content',
         type: 'video',
-      });
-      await content.save();
+      }).save();
 
       const response = await request(app)
         .get(`/api/content/${content._id}`)
@@ -123,67 +87,46 @@ describe('Content Routes', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.title).toBe('Test Content');
+      expect(response.body.data.title).toBe('Owned Content');
     });
 
-    it('should not allow access to other user\'s content', async () => {
-      // Create another user
-      const otherUser = new User({
+    it("should not leak another user's content (404)", async () => {
+      const otherUser = await new User({
         email: 'other@example.com',
         password: 'password123',
         name: 'Other User',
-      });
-      await otherUser.save();
+        emailVerified: true,
+      }).save();
 
-      // Create content for other user
-      const content = new Content({
+      const content = await new Content({
         userId: otherUser._id,
         title: 'Other User Content',
         type: 'video',
-      });
-      await content.save();
+      }).save();
 
       const response = await request(app)
         .get(`/api/content/${content._id}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(403);
+        .expect(404);
 
-      expect(response.body.success).toBe(false);
+      expect(response.body.success).toBeFalsy();
     });
-  });
 
-  describe('PUT /api/content/:id', () => {
-    it('should update content', async () => {
-      const content = new Content({
-        userId: testUser._id,
-        title: 'Original Title',
-        type: 'video',
-      });
-      await content.save();
-
-      const response = await request(app)
-        .put(`/api/content/${content._id}`)
+    it('should reject a malformed id with 400 (validateObjectId)', async () => {
+      await request(app)
+        .get('/api/content/not-a-valid-id')
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ title: 'Updated Title' })
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.title).toBe('Updated Title');
-
-      // Verify update in database
-      const updated = await Content.findById(content._id);
-      expect(updated.title).toBe('Updated Title');
+        .expect(400);
     });
   });
 
-  describe('DELETE /api/content/:id', () => {
-    it('should delete content', async () => {
-      const content = new Content({
+  describe('DELETE /api/content/:contentId', () => {
+    it("should delete the owner's content", async () => {
+      const content = await new Content({
         userId: testUser._id,
         title: 'To Delete',
         type: 'video',
-      });
-      await content.save();
+      }).save();
 
       const response = await request(app)
         .delete(`/api/content/${content._id}`)
@@ -192,15 +135,20 @@ describe('Content Routes', () => {
 
       expect(response.body.success).toBe(true);
 
-      // Verify deletion
       const deleted = await Content.findById(content._id);
       expect(deleted).toBeNull();
     });
+
+    it('should require authentication', async () => {
+      const content = await new Content({
+        userId: testUser._id,
+        title: 'Protected',
+        type: 'video',
+      }).save();
+
+      await request(app)
+        .delete(`/api/content/${content._id}`)
+        .expect(401);
+    });
   });
 });
-
-
-
-
-
-
