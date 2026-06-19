@@ -1,5 +1,8 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const { assertPublicUrl } = require('../utils/urlGuard');
+
+const GRAPH_TIMEOUT_MS = 20000;
 
 class MetaSocialService {
   /**
@@ -11,6 +14,9 @@ class MetaSocialService {
     const { igUserId, accessToken } = auth; // Instagram Business Account ID
 
     if (!igUserId) throw new Error('Instagram User ID missing');
+    // SSRF defense-in-depth: never forward an internal/non-public media URL to
+    // the Graph API (which fetches it server-side).
+    await assertPublicUrl(mediaUrl);
 
     logger.info(`[Instagram] Preparing media container: ${mediaUrl}`);
 
@@ -24,7 +30,8 @@ class MetaSocialService {
             image_url: mediaUrl, // or video_url for reels
             caption: description,
             access_token: accessToken
-          }
+          },
+          timeout: GRAPH_TIMEOUT_MS,
         }
       );
 
@@ -39,7 +46,8 @@ class MetaSocialService {
           params: {
             creation_id: containerId,
             access_token: accessToken
-          }
+          },
+          timeout: GRAPH_TIMEOUT_MS,
         }
       );
 
@@ -64,6 +72,7 @@ class MetaSocialService {
     const { pageId, accessToken } = auth;
 
     logger.info(`[Facebook] Posting to page: ${pageId}`);
+    if (mediaUrl) await assertPublicUrl(mediaUrl); // SSRF defense-in-depth
 
     try {
       const endpoint = mediaUrl ? `/${pageId}/photos` : `/${pageId}/feed`;
@@ -75,7 +84,8 @@ class MetaSocialService {
             message: description,
             url: mediaUrl,
             access_token: accessToken
-          }
+          },
+          timeout: GRAPH_TIMEOUT_MS,
         }
       );
 

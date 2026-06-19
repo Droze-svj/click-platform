@@ -180,8 +180,18 @@ class NeuralBroadcasterService {
         return;
       }
 
-      // 2. Update status and record in Governance Ledger
-      post.status = result.status === 'simulated_success' ? 'simulated' : 'posted';
+      // 2. Update status and record in Governance Ledger. NEVER mark a post
+      // 'posted' unless the provider actually confirmed it — an unconfigured
+      // provider returns success:false / 'requires_setup' (no fake postId).
+      if (!result || result.success === false || !result.postId) {
+        post.status = 'failed';
+        post.error = (result && (result.error || result.advisory)) || 'Publish provider not configured';
+        await post.save();
+        logger.warn('Broadcaster: publish not confirmed; marked failed', { platform: post.platform, status: result && result.status });
+        return;
+      }
+
+      post.status = 'posted';
       post.platformId = result.postId;
       post.postedAt = new Date();
       await post.save();

@@ -10,22 +10,17 @@ class DubbingService {
    * @param {string} language - Target language code
    */
   static async synthesizeSegment(segment, language) {
-    logger.info(`[Dubbing] Synthesizing segment: ${segment.translatedText.substring(0, 30)}`);
-    
-    // In production, this would call ElevenLabs / Google TTS
-    // For now, we mock the synthesis result URL
-    const mockAudioUrl = `https://storage.googleapis.com/click-assets/mocks/tts-${language}-${Date.now()}.mp3`;
-    
-    const targetDuration = segment.endTime - segment.startTime;
-    
-    // logic for FFmpeg time-stretching if actual file existed:
-    // ffmpeg -i input.mp3 -filter:a "atempo=1.2" output.mp3
-    
+    // DEPRECATED: the real TTS dubbing path is aiGenerativeDubbingService
+    // (ElevenLabs, honest not_configured fallback). This legacy helper never had
+    // a provider wired, so it returns an HONEST "unavailable" — never a fake
+    // audio URL (owner's #1 rule). Use generateDubbedTrack() instead.
+    logger.warn('[Dubbing] DubbingService.synthesizeSegment is deprecated; use aiGenerativeDubbingService.generateDubbedTrack', { language });
     return {
       ...segment,
-      audioUrl: mockAudioUrl,
-      actualDuration: targetDuration, // Mocked as perfect fit for now
-      status: 'synced'
+      audioUrl: null,
+      actualDuration: segment.endTime - segment.startTime,
+      status: 'unavailable',
+      error: 'TTS dubbing is not configured here. Use aiGenerativeDubbingService.generateDubbedTrack.'
     };
   }
 

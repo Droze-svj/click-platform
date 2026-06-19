@@ -159,4 +159,23 @@ router.post('/magic-b-roll', auth, async (req, res) => {
   }
 });
 
+// GET /magic-b-roll/status/:jobId — poll an async B-roll job started above.
+// Returns the real url only once the provider reports it ready (never a fake).
+router.get('/magic-b-roll/status/:jobId', auth, async (req, res) => {
+  try {
+    const { getBRollStatus } = require('../../services/textToVideoService');
+    const result = await getBRollStatus(req.params.jobId);
+    if (result.status === 'ready' && result.url) {
+      return res.json({ success: true, status: 'ready', data: result });
+    }
+    if (result.status === 'processing') {
+      return res.status(202).json({ success: true, status: 'processing', jobId: result.jobId, data: result });
+    }
+    return res.status(503).json({ success: false, status: result.status, error: result.error || 'unavailable', data: result });
+  } catch (error) {
+    logger.error('Neural b-roll status route error', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

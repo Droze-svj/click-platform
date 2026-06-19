@@ -14,7 +14,7 @@ class StockFootageService {
     const { perPage = 5, orientation = 'vertical' } = options;
     
     if (!this.pexelsKey) {
-      logger.warn('Pexels API key missing, returning high-fidelity fallbacks');
+      logger.warn('Pexels API key missing — no stock footage results');
       return this.getFallbackVideos(query);
     }
 
@@ -25,16 +25,21 @@ class StockFootageService {
           query,
           per_page: perPage,
           orientation: orientation === 'vertical' ? 'portrait' : 'landscape'
-        }
+        },
+        timeout: 10000,
       });
 
-      return response.data.videos.map(v => ({
-        id: v.id,
-        url: v.video_files.find(f => f.quality === 'hd')?.link || v.video_files[0].link,
-        thumbnail: v.image,
-        duration: v.duration,
-        source: 'pexels'
-      }));
+      return (response.data.videos || []).map(v => {
+        const files = Array.isArray(v.video_files) ? v.video_files : [];
+        const link = (files.find(f => f.quality === 'hd') || files[0] || {}).link || null;
+        return {
+          id: v.id,
+          url: link,
+          thumbnail: v.image,
+          duration: v.duration,
+          source: 'pexels'
+        };
+      }).filter(v => v.url);
     } catch (err) {
       logger.error('Pexels API Error', { error: err.message });
       return this.getFallbackVideos(query);
@@ -42,18 +47,12 @@ class StockFootageService {
   }
 
   /**
-   * High-fidelity fallbacks for development/missing keys
+   * No-key / error fallback. Returns an EMPTY list — we do NOT return a
+   * hardcoded unrelated clip mislabeled as a search match (owner's #1 rule).
    */
   getFallbackVideos(query) {
-    return [
-      {
-        id: 'fallback-1',
-        url: 'https://cdn.coverr.co/videos/coverr-a-person-working-on-a-laptop-5221/1080p.mp4',
-        thumbnail: 'https://cdn.coverr.co/videos/coverr-a-person-working-on-a-laptop-5221/thumbnail.jpg',
-        duration: 15,
-        source: 'coverr-fallback'
-      }
-    ];
+    void query;
+    return [];
   }
 }
 

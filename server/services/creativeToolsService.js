@@ -194,18 +194,24 @@ async function fixEyeContact(videoId, userId) {
       message: 'Eye-contact correction needs a gaze-redirection provider. Set EYE_CONTACT_API_URL + EYE_CONTACT_API_KEY (e.g. Sieve eye-contact or NVIDIA Maxine) to enable it.',
     };
   }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const resp = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({ videoId }),
+      signal: controller.signal,
     });
     if (!resp.ok) throw new Error(`provider returned ${resp.status}`);
     const job = await resp.json().catch(() => ({}));
     return { success: true, videoId, provider: 'external', job };
   } catch (err) {
-    logger.error('[CreativeTools] fixEyeContact provider call failed', { error: err.message, videoId });
-    return { success: false, error: err.message };
+    const msg = err && err.name === 'AbortError' ? 'eye-contact provider timed out' : err.message;
+    logger.error('[CreativeTools] fixEyeContact provider call failed', { error: msg, videoId });
+    return { success: false, error: msg };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

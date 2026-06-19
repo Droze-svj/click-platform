@@ -10,13 +10,11 @@ const WHOP_API_URL = process.env.WHOP_API_URL || 'https://api.whop.com/api/v2';
 
 async function fetchWhopProducts() {
   const WHOP_API_KEY = process.env.WHOP_API_KEY;
+  // HONEST CONTRACT: with no key we return an EMPTY catalog (not fabricated
+  // "demo" products with fake checkout URLs that could mislead or mis-charge).
   if (!WHOP_API_KEY) {
-    logger.warn('WHOP_API_KEY not found, using demo products');
-    return [
-      { id: 'whop_prod_demo_1', name: 'Elite AI Course', price: 99, currency: 'USD', checkout_url: 'https://whop.com/checkout/demo-1' },
-      { id: 'whop_prod_demo_2', name: 'Viral Content Masterclass', price: 47, currency: 'USD', checkout_url: 'https://whop.com/checkout/demo-2' },
-      { id: 'whop_prod_demo_3', name: 'The Inner Circle', price: 199, currency: 'USD', checkout_url: 'https://whop.com/checkout/demo-3' }
-    ];
+    logger.warn('WHOP_API_KEY not configured — returning empty product catalog');
+    return [];
   }
 
   return new Promise((resolve) => {
@@ -24,10 +22,11 @@ async function fetchWhopProducts() {
       headers: {
         'Authorization': `Bearer ${WHOP_API_KEY}`,
         'accept': 'application/json'
-      }
+      },
+      timeout: 10000, // never let a hung Whop API stall the caller
     };
 
-    https.get(`${WHOP_API_URL}/biz/products`, options, (res) => {
+    const request = https.get(`${WHOP_API_URL}/biz/products`, options, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
@@ -47,7 +46,12 @@ async function fetchWhopProducts() {
           resolve([]);
         }
       });
-    }).on('error', (err) => {
+    });
+    request.on('timeout', () => {
+      logger.error('Whop API request timed out');
+      request.destroy(new Error('Whop API request timed out'));
+    });
+    request.on('error', (err) => {
       logger.error('Whop API request failed', { error: err.message });
       resolve([]);
     });
