@@ -3058,6 +3058,11 @@
     "offlineFallback": "AI temporarily offline — showing rule-based fallback results. Refresh later for full AI insights.",
     "notConfiguredFallback": "AI not configured — showing rule-based fallback results."
   },
+  "aiHealthBanner": {
+    "title": "AI is in fallback mode.",
+    "message": "Features are returning placeholder results until an AI provider key is configured.",
+    "dismiss": "Dismiss"
+  },
   "accessibilityEnhancements": {
     "skipToMainContent": "Skip to main content"
   },
