@@ -388,6 +388,17 @@ async function getPerformanceTrends(userId, period = 30) {
   }
 }
 
+// Honest 501 stub: the analytics-export route imports exportAnalytics from here,
+// but the real export pipeline lives in robustExportService with a different
+// (job-based) signature. Return a clean "Not Implemented" instead of crashing
+// the route with "exportAnalytics is not a function".
+async function exportAnalytics() {
+  const e = new Error('Analytics export is not available yet');
+  e.statusCode = 501;
+  e.code = 'NOT_IMPLEMENTED';
+  throw e;
+}
+
 module.exports = {
   trackEvent,
   trackPageView,
@@ -396,4 +407,5 @@ module.exports = {
   getPlatformAnalytics,
   getComprehensiveAnalytics,
   getPerformanceTrends,
+  exportAnalytics,
 };

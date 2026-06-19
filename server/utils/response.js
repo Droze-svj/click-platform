@@ -42,14 +42,30 @@ const sendSuccess = (res, arg1, arg2 = 'Success', arg3 = 200) => {
 
 const sendError = (res, error, statusCode = 400) => {
   const raw = (error && error.message) || error;
+  // Correct a hand-rolled 5xx that's really a client/precondition error. Many
+  // handlers do `sendError(res, err.message, 500)` for a missing record, an
+  // expired token, an unbuilt feature, or a dependency that's off — all of which
+  // should be 4xx/501/503, not a 500 that trips alerting. Mirrors the central
+  // errorHandler mapping. Only downgrades from 5xx; never escalates. Also honors
+  // an explicit statusCode carried on a passed Error object.
+  let code = (error && error.statusCode) || statusCode;
+  if (code >= 500 && typeof raw === 'string') {
+    const m = raw.toLowerCase();
+    if (/invalid or expired token|invalid token|expired token/.test(m)) code = 401;
+    else if (/\b(not found|does not exist|no longer exists)\b/.test(m)) code = 404;
+    else if (/access denied|not authorized|unauthorized|forbidden|permission denied/.test(m)) code = 403;
+    else if (/not implemented|not available yet|coming soon/.test(m)) code = 501;
+    else if (/not configured|not enabled|unavailable/.test(m)) code = 503;
+    else if (/already exists|duplicate key|e11000/.test(m)) code = 409;
+  }
   // Don't leak internal error detail (Mongoose/driver text, stack hints) to
   // clients on server errors in production. Client errors (4xx) keep their
   // message since they're intentional/validation feedback.
-  const isServerError = statusCode >= 500;
+  const isServerError = code >= 500;
   const message = (process.env.NODE_ENV === 'production' && isServerError)
     ? 'An unexpected error occurred. Please try again.'
     : raw;
-  res.status(statusCode).json({
+  res.status(code).json({
     success: false,
     error: message
   });

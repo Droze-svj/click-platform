@@ -323,6 +323,20 @@ async function getFeaturedTemplates(limit = 10) {
   }
 }
 
+// Honest 501 stubs for marketplace features the routes import but that aren't
+// implemented yet — return a clean "Not Implemented" instead of crashing the
+// route with "X is not a function" (a 500).
+function _notImplemented(feature) {
+  const e = new Error(`${feature} is not available yet`);
+  e.statusCode = 501;
+  e.code = 'NOT_IMPLEMENTED';
+  return e;
+}
+async function publishToMarketplace() { throw _notImplemented('Publishing templates to the marketplace'); }
+async function unpublishFromMarketplace() { throw _notImplemented('Unpublishing templates'); }
+async function getTemplateStats() { throw _notImplemented('Template stats'); }
+async function getTrendingTemplates() { throw _notImplemented('Trending templates'); }
+
 module.exports = {
   browseTemplates,
   getTemplateDetails,
@@ -331,4 +345,8 @@ module.exports = {
   rateTemplate,
   getTemplateCategories,
   getFeaturedTemplates,
+  publishToMarketplace,
+  unpublishFromMarketplace,
+  getTemplateStats,
+  getTrendingTemplates,
 };

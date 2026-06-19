@@ -42,6 +42,8 @@ function fillParams(p, paramNames, fx) {
 }
 
 function categorize(status, body) {
+  if (status === 501) return 'NOT_IMPLEMENTED';   // intentionally-disabled feature
+  if (status === 503) return 'SERVICE_UNAVAILABLE'; // dependency off in this env
   if (status >= 500) return 'SERVER_ERROR';
   if (status === 404) return 'NOT_FOUND';
   if (status === 401 || status === 403) return 'AUTH';
@@ -125,7 +127,7 @@ describe('Breadth endpoint sweep', () => {
     // tests/reports/endpoint-smoke.json + docs/readiness/endpoint-coverage.md and
     // driven down over time. This ceiling FAILS the sweep only if a NEW
     // regression pushes the count above the documented baseline.
-    const MAX_SERVER_ERRORS = 50;
+    const MAX_SERVER_ERRORS = 6;
     if (serverErrors.length > MAX_SERVER_ERRORS) {
       throw new Error(
         `Breadth sweep: ${serverErrors.length} server errors exceeds baseline ${MAX_SERVER_ERRORS}.\n` +

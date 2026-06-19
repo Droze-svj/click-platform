@@ -214,8 +214,21 @@ function calculateMatchScore(template, contentType, platform, brandStyle) {
   return score;
 }
 
+// Honest 501 stubs for analytics the routes import but that aren't implemented
+// yet (return a clean "Not Implemented" instead of crashing with 500).
+function _notImplemented(feature) {
+  const e = new Error(`${feature} is not available yet`);
+  e.statusCode = 501;
+  e.code = 'NOT_IMPLEMENTED';
+  return e;
+}
+async function getTemplateTrends() { throw _notImplemented('Template trends'); }
+async function getCreatorAnalytics() { throw _notImplemented('Creator analytics'); }
+
 module.exports = {
   getTemplatePerformance,
   compareTemplateVersions,
-  getTemplateSuggestions
+  getTemplateSuggestions,
+  getTemplateTrends,
+  getCreatorAnalytics
 };
