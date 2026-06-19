@@ -42,12 +42,11 @@ module.exports = {
         '<rootDir>/tests/server/**/*.test.js',
         '<rootDir>/tests/services/**/*.test.js'
       ],
-      // Route tests in tests/server/routes/ now have a working app
-      // (server/index.js exports it, jest-loaded require skips the boot
-      // block via JEST_WORKER_ID). They still fail because the test
-      // assertions don't match current auth behavior — /api/analytics/*
-      // returns 200 without a token, /api/auth/me ignores Bearer headers
-      // in test mode, etc. Re-enable per-file as those are fixed.
+      // tests/server/routes/* boot the FULL app per suite (75-150s each) and their
+      // assertions are stale (they predate current auth/validation — register now
+      // 400s the old fixture, etc.). They're too slow for the fast gate AND red, so
+      // they stay ignored. Tracked in docs/readiness/GO-NO-GO.md: repair fixtures +
+      // run them as a separate (non-gating) integration job, not the unit suite.
       testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/server/routes/'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],

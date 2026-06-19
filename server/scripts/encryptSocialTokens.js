@@ -43,7 +43,12 @@ async function run() {
     const doc = await SocialConnection.findById(row._id);
     if (!doc) continue;
     // Reassign through the setter using the decrypted/plaintext getter value.
+    // NOT a no-op: the field has a Mongoose getter (decrypts) + setter (encrypts),
+    // so reading then re-assigning re-runs the setter, marks it modified, and save()
+    // persists freshly-encrypted ciphertext. eslint can't see the setter side effect.
+    // eslint-disable-next-line no-self-assign
     doc.accessToken = doc.accessToken;
+    // eslint-disable-next-line no-self-assign
     if (doc.refreshToken != null) doc.refreshToken = doc.refreshToken;
     await doc.save();
     updated += 1;
