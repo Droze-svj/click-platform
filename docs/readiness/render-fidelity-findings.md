@@ -16,7 +16,31 @@ every chosen export size (1280×720, etc.) was overridden. The render already sc
 the target dims, so the block was redundant + destructive. **Removed.** The harness now asserts
 vertical → 1080×1920 (green).
 
-## Verification status of the audit's reported bugs (drives Phases 2–4)
+## Outcomes (Phases 2–5, all merged + fidelity-tested)
+
+- **Vertical force-rescale** → fixed (Phase 1, above).
+- **timelineEffects** (vignette/grain/chromatic/glow/flash/color) → wired end-to-end,
+  time-gated; proven by a luma test.
+- **Per-segment crop + volume** → applied in the stitch pre-pass.
+- **Manual vertical crop** → respected (no longer overridden).
+- **Overlay z-order** → text+shape sorted by layer.
+- **freeze-frame** + **speed-ramp** (avg) → implemented; J/L-cut still deferred (needs
+  cross-segment audio mixing).
+- **Silent-audio loudnorm NaN** → fixed (any silent video failed to export; dither floor).
+- **atempo final-factor clamp** → fixed.
+- **commerce-inlay corruption** + **resurrection-hook dead input** → disabled safely.
+- **style-profile create race** → atomic upsert (stabilized the double-run).
+- **Filler-word removal** (Phase 5a) → `detectFillerWords` via word timings (conservative).
+
+Harness grew to **12 fidelity tests** (all green ×2) + 4 filler unit tests. Double-run is
+clean per-project (`test:unit` 498 ×2, `test:fidelity` 12/12 ×2, `smoke:full` ×2); the bare
+`npx jest` all-projects-concurrent run can flake on a CPU-contention timeout (ffmpeg + the
+984-endpoint sweep) — a test-infra artifact, not a product bug (CI runs them separately).
+
+**Remaining AI features (scoped follow-up):** auto-chaptering, AI b-roll suggestions,
+sentiment-driven effects (the last now easy via the wired timelineEffects path).
+
+## Verification status of the audit's reported bugs (historical — now mostly resolved above)
 
 VERIFIED real (confirmed against code):
 - **timelineEffects dropped** — `ExportView.tsx` POST body omits it; no render param. (Phase 2)
