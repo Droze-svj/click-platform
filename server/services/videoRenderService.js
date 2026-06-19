@@ -1564,6 +1564,9 @@ function segmentHasSpecial(s) {
   if (s.crop && typeof s.crop === 'object' &&
     (Number(s.crop.left) || Number(s.crop.right) || Number(s.crop.top) || Number(s.crop.bottom))) return true
   if (Number.isFinite(Number(s.volume)) && Number(s.volume) !== 1) return true
+  if (s.freezeFrame || s.freeze) return true
+  if (Number.isFinite(Number(s.playbackSpeedStart)) && Number.isFinite(Number(s.playbackSpeedEnd)) &&
+    Number(s.playbackSpeedStart) > 0 && Number(s.playbackSpeedStart) !== Number(s.playbackSpeedEnd)) return true
   return false
 }
 
@@ -1657,21 +1660,41 @@ async function stitchSegments(inputPath, segments, opts = {}) {
     const trimLen = se != null && se > ss ? (se - ss) : null
     const speed = normSegSpeed(seg.playbackSpeed)
     const reversed = !!seg.reversed
-    // TODO(deferred): freezeFrame (hold a frame for N seconds) and J-cut/L-cut
-    // audio leads & tails (audio of one clip overlapping the neighbour's video)
-    // are NOT handled here. They require per-segment freeze synthesis and audio-
-    // offset modelling beyond the straight concat/acrossfade fold below.
+    const isFreeze = !!(seg.freezeFrame || seg.freeze)
+    const freezeDur = isFreeze
+      ? Math.max(0.1, Number(seg.freezeDuration) || (trimLen != null ? trimLen : Number(seg.duration)) || 2)
+      : 0
+    // Speed ramp: when start/end speeds differ, approximate the segment as its
+    // AVERAGE speed (correct overall timing; a true per-frame ramp needs a setpts
+    // time-expression — tracked). J-cut/L-cut audio leads/tails (audio overlapping
+    // the NEIGHBOUR clip) still need a cross-segment mixing model and remain
+    // deferred — they can't be expressed in this per-segment concat fold.
+    let effSpeed = speed
+    {
+      const sR0 = Number(seg.playbackSpeedStart), sR1 = Number(seg.playbackSpeedEnd)
+      if (Number.isFinite(sR0) && Number.isFinite(sR1) && sR0 > 0 && sR1 > 0 && sR0 !== sR1) {
+        effSpeed = normSegSpeed((sR0 + sR1) / 2)
+      }
+    }
 
     // ── VIDEO sub-graph ──
     const vParts = []
-    if (trimLen != null) {
-      vParts.push(`trim=start=${ss.toFixed(3)}:end=${se.toFixed(3)}`)
-    } else if (ss > 0) {
-      vParts.push(`trim=start=${ss.toFixed(3)}`)
+    if (isFreeze) {
+      // Freeze-frame: hold one frame (at sourceStartTime) for freezeDur via a
+      // tpad clone. A clip flagged freezeFrame now actually holds (was a no-op).
+      vParts.push(`trim=start=${ss.toFixed(3)}:duration=${(1 / FPS).toFixed(4)}`)
+      vParts.push('setpts=PTS-STARTPTS')
+      vParts.push(`tpad=stop_mode=clone:stop_duration=${freezeDur.toFixed(3)}`)
+    } else {
+      if (trimLen != null) {
+        vParts.push(`trim=start=${ss.toFixed(3)}:end=${se.toFixed(3)}`)
+      } else if (ss > 0) {
+        vParts.push(`trim=start=${ss.toFixed(3)}`)
+      }
+      vParts.push('setpts=PTS-STARTPTS')
+      if (reversed) vParts.push('reverse')
+      if (effSpeed !== 1) vParts.push(`setpts=${(1 / effSpeed).toFixed(6)}*PTS`)
     }
-    vParts.push('setpts=PTS-STARTPTS')
-    if (reversed) vParts.push('reverse')
-    if (speed !== 1) vParts.push(`setpts=${(1 / speed).toFixed(6)}*PTS`)
     // Per-segment CROP ({top,right,bottom,left} % insets from the editor). Was
     // defined on TimelineSegment but never applied. Crop the kept region BEFORE
     // the W:H normalization so it's then scaled to fill the frame.
@@ -1695,9 +1718,9 @@ async function stitchSegments(inputPath, segments, opts = {}) {
     // uniform; silent segments synthesize silence via the anullsrc source filter). ──
     const isSilence = !hasAudio[idx]
     if (isSilence) {
-      // anullsrc filter node generates silence bounded to the POST-speed kept
-      // length so it lines up with the (sped-up) video. No input ref needed.
-      const silLen = trimLen != null ? (trimLen / speed) : 1
+      // anullsrc generates silence bounded to the kept length (or the freeze
+      // duration) so it lines up with the video.
+      const silLen = isFreeze ? freezeDur : (trimLen != null ? (trimLen / effSpeed) : 1)
       graph.push(
         `anullsrc=channel_layout=stereo:sample_rate=44100,` +
         `atrim=end=${silLen.toFixed(3)},asetpts=PTS-STARTPTS,` +
@@ -1705,18 +1728,26 @@ async function stitchSegments(inputPath, segments, opts = {}) {
       )
     } else {
       const aParts = []
-      if (trimLen != null) {
-        aParts.push(`atrim=start=${ss.toFixed(3)}:end=${se.toFixed(3)}`)
-      } else if (ss > 0) {
-        aParts.push(`atrim=start=${ss.toFixed(3)}`)
-      }
-      aParts.push('asetpts=PTS-STARTPTS')
-      if (reversed) aParts.push('areverse')
-      if (speed !== 1) {
-        let s = speed
-        while (s > 2.0) { aParts.push('atempo=2.0'); s /= 2.0 }
-        while (s < 0.5) { aParts.push('atempo=0.5'); s /= 0.5 }
-        aParts.push(`atempo=${Math.max(0.5, Math.min(2.0, s)).toFixed(6)}`)
+      if (isFreeze) {
+        // Freeze holds the VIDEO frame but audio keeps playing: take the source
+        // audio from sourceStartTime for freezeDur. (Also avoids the pure-silence
+        // dynaudnorm NaN that broke the downstream render.)
+        aParts.push(`atrim=start=${ss.toFixed(3)}:duration=${freezeDur.toFixed(3)}`)
+        aParts.push('asetpts=PTS-STARTPTS')
+      } else {
+        if (trimLen != null) {
+          aParts.push(`atrim=start=${ss.toFixed(3)}:end=${se.toFixed(3)}`)
+        } else if (ss > 0) {
+          aParts.push(`atrim=start=${ss.toFixed(3)}`)
+        }
+        aParts.push('asetpts=PTS-STARTPTS')
+        if (reversed) aParts.push('areverse')
+        if (effSpeed !== 1) {
+          let s = effSpeed
+          while (s > 2.0) { aParts.push('atempo=2.0'); s /= 2.0 }
+          while (s < 0.5) { aParts.push('atempo=0.5'); s /= 0.5 }
+          aParts.push(`atempo=${Math.max(0.5, Math.min(2.0, s)).toFixed(6)}`)
+        }
       }
       // Per-segment VOLUME (0-1, or 0-100 if >2). Was defined on TimelineSegment
       // but never applied — a clip's level change had no effect on export.
@@ -1732,7 +1763,7 @@ async function stitchSegments(inputPath, segments, opts = {}) {
     // Effective kept duration after speed (for xfade offset). When trimLen is
     // unknown we can't compute an xfade offset — those segments fall back to
     // plain concat (handled below).
-    segDurations.push(trimLen != null ? trimLen / speed : null)
+    segDurations.push(isFreeze ? freezeDur : (trimLen != null ? trimLen / effSpeed : null))
   })
 
   // ── Concatenate, applying xfade/acrossfade where a transition is requested. ──

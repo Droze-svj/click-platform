@@ -110,6 +110,28 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('freeze-frame → holds a still for its duration (was a no-op)', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 640, height: 480, duration: 4 },
+      timelineSegments: [{ id: 'fz', type: 'video', startTime: 0, sourceStartTime: 0.5, freezeFrame: true, freezeDuration: 2 }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.duration).toBeGreaterThan(1.4);
+    expect(p.duration).toBeLessThan(2.8);
+  }, 90000);
+
+  it('speed ramp → duration reflects the average speed', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 640, height: 480, duration: 4 },
+      timelineSegments: [{ id: 'sr', type: 'video', startTime: 0, sourceStartTime: 0, sourceEndTime: 3, playbackSpeedStart: 1, playbackSpeedEnd: 3 }],
+    });
+    const p = ffprobe(outputPath);
+    // avg(1,3)=2 → a 3s source becomes ~1.5s
+    expect(p.duration).toBeGreaterThan(1.0);
+    expect(p.duration).toBeLessThan(2.2);
+  }, 90000);
+
   it('per-segment crop + volume → renders cleanly (was dropped)', async () => {
     const { outputPath } = await render({
       exportOptions: { width: 640, height: 480, duration: 4 },
