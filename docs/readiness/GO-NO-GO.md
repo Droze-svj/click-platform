@@ -31,6 +31,11 @@ Until then the app runs, but AI output is the hardcoded fallback.
 | server boot + `/api/health/light` + `/api/health/ai` | 200 |
 | live AI round-trip (`?live=1`, with a key) | **`liveTest:"ok"`** |
 
+> **Endpoint/AI/edit/workflow sweep (done):** a full verification + hardening pass drove the
+> broad surface from **49 server-errors + 52 malformed** to **2–3 edge 5xx + 0 malformed**,
+> with a permanent smoke harness (gating core test + on-demand breadth sweep). Details +
+> residual list in [endpoint-coverage.md](./endpoint-coverage.md).
+>
 > **Post-report follow-ups (done):** the UI now visibly flags AI-degraded mode
 > (a dashboard banner driven by `/api/health/ai`), and the four route-integration
 > suites (`auth`/`content`/`video`/`analytics`) are repaired and gating in the unit
