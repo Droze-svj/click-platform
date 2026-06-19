@@ -166,6 +166,22 @@ d('render fidelity', () => {
     }
   }, 90000);
 
+  it('silent-audio source → renders (loudnorm NaN guard)', async () => {
+    // A pure-silence track made loudnorm emit NaN → the aac encoder failed (234),
+    // so ANY silent video failed to export. The dither floor fixes it.
+    const silent = path.join(TMP, 'silent.mp4');
+    makeSource(silent, { duration: 3, audio: 'silent' });
+    const res = await renderService.renderFromEditorState({
+      videoId: 'fidelity-silent', videoUrl: silent, userId: 'fidelity-user',
+      exportOptions: { width: 640, height: 480, duration: 3 },
+    });
+    outputs.push(res.outputPath, silent);
+    const p = ffprobe(res.outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.hasAudio).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('text overlay → render succeeds, output valid', async () => {
     const { outputPath } = await render({
       exportOptions: { width: 1280, height: 720, duration: 4 },
