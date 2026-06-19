@@ -2679,6 +2679,21 @@ if (process.env.JEST_WORKER_ID) {
             }
           });
 
+          // Scheduled white-label client reports (hourly). Generates due
+          // ScheduledReport rows from their template + delivers branded
+          // email/portal/webhook, then advances each row's nextGeneration. The
+          // per-row query gate (isActive + nextGeneration<=now) means an empty
+          // queue is a no-op.
+          cron.schedule('0 * * * *', async () => {
+            try {
+              const { processScheduledReports } = require('./services/scheduledReportService');
+              const { processed } = await processScheduledReports();
+              if (processed > 0) logger.info('📑 Scheduled client reports processed', { processed });
+            } catch (err) {
+              logger.error('❌ Failed to process scheduled reports', { error: err.message });
+            }
+          });
+
           // Autonomous content agent — hands-off trigger. OPT-IN via
           // AGENT_AUTORUN=true (default OFF) so it never mass-runs by surprise;
           // even when on, each run's PUBLISH stage is still gated by

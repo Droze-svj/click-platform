@@ -5,8 +5,9 @@ const ScheduledReport = require('../models/ScheduledReport');
 const { generateReport } = require('./reportBuilderService');
 const { generateReportSummary } = require('./aiReportSummaryService');
 const GeneratedReport = require('../models/GeneratedReport');
+const Workspace = require('../models/Workspace');
+const { sendEmail } = require('./emailService');
 const logger = require('../utils/logger');
-const nodemailer = require('nodemailer');
 
 /**
  * Create scheduled report
@@ -108,25 +109,30 @@ async function generateAndDeliverReport(scheduled) {
 /**
  * Calculate period based on config
  */
-function calculatePeriod(periodConfig) {
+function calculatePeriod(periodConfig = {}) {
   const now = new Date();
+  const DAY = 24 * 60 * 60 * 1000;
   let startDate, endDate;
 
-  switch (periodConfig.type) {
-  case 'last_period':
-    // Last 30 days
-    endDate = now;
-    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    break;
+  switch (periodConfig && periodConfig.type) {
   case 'rolling':
     endDate = now;
-    startDate = new Date(now.getTime() - periodConfig.days * 24 * 60 * 60 * 1000);
+    startDate = new Date(now.getTime() - (Number(periodConfig.days) || 30) * DAY);
     break;
   case 'custom':
-    startDate = periodConfig.customStart;
-    endDate = periodConfig.customEnd;
+    startDate = periodConfig.customStart ? new Date(periodConfig.customStart) : null;
+    endDate = periodConfig.customEnd ? new Date(periodConfig.customEnd) : null;
     break;
+  case 'last_period':
+  default:
+    // Last 30 days
+    endDate = now;
+    startDate = new Date(now.getTime() - 30 * DAY);
   }
+
+  // Fail-safe: GeneratedReport.period requires both bounds — never return undefined.
+  if (!startDate || isNaN(startDate.getTime())) startDate = new Date(now.getTime() - 30 * DAY);
+  if (!endDate || isNaN(endDate.getTime())) endDate = now;
 
   return {
     startDate,
@@ -138,36 +144,44 @@ function calculatePeriod(periodConfig) {
 /**
  * Calculate next generation time
  */
-function calculateNextGeneration(schedule) {
+function calculateNextGeneration(schedule = {}) {
   const now = new Date();
-  const [hours, minutes] = schedule.time.split(':').map(Number);
-  
-  let next = new Date();
+  const [hRaw, mRaw] = String((schedule && schedule.time) || '09:00').split(':').map(Number);
+  const hours = Number.isFinite(hRaw) ? hRaw : 9;
+  const minutes = Number.isFinite(mRaw) ? mRaw : 0;
+
+  const next = new Date();
   next.setHours(hours, minutes, 0, 0);
-  
+
   switch (schedule.frequency) {
   case 'daily':
-    if (next <= now) {
-      next.setDate(next.getDate() + 1);
-    }
+    if (next <= now) next.setDate(next.getDate() + 1);
     break;
   case 'weekly': {
-    const dayDiff = schedule.dayOfWeek - next.getDay();
-    if (dayDiff < 0 || (dayDiff === 0 && next <= now)) {
-      next.setDate(next.getDate() + (7 + dayDiff));
-    } else {
-      next.setDate(next.getDate() + dayDiff);
-    }
+    const target = Number.isFinite(schedule.dayOfWeek) ? schedule.dayOfWeek : next.getDay();
+    let dayDiff = target - next.getDay();
+    if (dayDiff < 0 || (dayDiff === 0 && next <= now)) dayDiff += 7;
+    next.setDate(next.getDate() + dayDiff);
     break;
   }
   case 'monthly':
     next.setDate(schedule.dayOfMonth || 1);
-    if (next <= now) {
-      next.setMonth(next.getMonth() + 1);
-    }
+    if (next <= now) next.setMonth(next.getMonth() + 1);
     break;
+  case 'quarterly':
+    next.setDate(schedule.dayOfMonth || 1);
+    while (next <= now) next.setMonth(next.getMonth() + 3);
+    break;
+  case 'yearly':
+    next.setDate(schedule.dayOfMonth || 1);
+    while (next <= now) next.setFullYear(next.getFullYear() + 1);
+    break;
+  default:
+    // Unknown/unset frequency — fall back to daily so we NEVER return a time in
+    // the past, which would re-fire the report on every cron tick (email storm).
+    if (next <= now) next.setDate(next.getDate() + 1);
   }
-  
+
   return next;
 }
 
@@ -176,36 +190,66 @@ function calculateNextGeneration(schedule) {
  */
 async function deliverViaEmail(report, scheduled) {
   try {
-    const transporter = nodemailer.createTransport({
-      // Email configuration
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+    const recipients = (scheduled.delivery.email && scheduled.delivery.email.recipients) || [];
+    if (!recipients.length) {
+      logger.warn('Scheduled report has email delivery enabled but no recipients', { scheduledReportId: scheduled._id });
+      return;
+    }
 
-    const reportUrl = `${process.env.APP_URL}/reports/${report._id}`;
-    
-    for (const recipient of scheduled.delivery.email.recipients) {
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM,
+    const html = await buildBrandedReportEmail(report, scheduled);
+    const reportName = report.templateId?.name || 'Performance Report';
+
+    // Reuse the project emailService (sendgrid/SMTP-aware, honest unavailable
+    // fallback) instead of an ad-hoc nodemailer transport.
+    for (const recipient of recipients) {
+      await sendEmail({
         to: recipient,
-        subject: `Report: ${report.templateId?.name || 'Monthly Report'}`,
-        html: `
-          <h2>Your Report is Ready</h2>
-          <p>View your report: <a href="${reportUrl}">${reportUrl}</a></p>
-          ${report.aiSummary ? `<p>${report.aiSummary.text}</p>` : ''}
-        `
+        subject: `${reportName} is ready`,
+        html
       });
     }
 
-    logger.info('Report delivered via email', { reportId: report._id });
+    logger.info('Report delivered via email', { reportId: report._id, recipients: recipients.length });
   } catch (error) {
     logger.error('Error delivering report via email', { error: error.message });
   }
+}
+
+/**
+ * Build a white-label branded HTML email for a generated report: the agency's
+ * logo + name and the client's name, per the agency Workspace branding settings.
+ */
+async function buildBrandedReportEmail(report, scheduled) {
+  let agency = null;
+  let client = null;
+  try {
+    [agency, client] = await Promise.all([
+      Workspace.findById(scheduled.agencyWorkspaceId).select('name settings.branding').lean(),
+      Workspace.findById(scheduled.clientWorkspaceId).select('name').lean()
+    ]);
+  } catch (e) {
+    logger.warn('Could not load workspace branding for report email', { error: e.message });
+  }
+
+  const branding = (agency && agency.settings && agency.settings.branding) || {};
+  const agencyName = (agency && agency.name) || 'Your Agency';
+  const clientName = (client && client.name) || 'your account';
+  const accent = branding.primaryColor || '#4f46e5';
+  const reportUrl = `${process.env.APP_URL || ''}/reports/${report._id}`;
+  const logoTag = branding.logo
+    ? `<img src="${branding.logo}" alt="${agencyName}" style="max-height:48px;margin-bottom:16px" />`
+    : `<h3 style="color:${accent};margin:0 0 16px">${agencyName}</h3>`;
+
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1f2937">
+      ${logoTag}
+      <h2 style="margin:0 0 8px">Your report for ${clientName} is ready</h2>
+      <p style="color:#6b7280;margin:0 0 16px">Prepared by ${agencyName}</p>
+      ${report.aiSummary?.text ? `<div style="background:#f9fafb;border-left:4px solid ${accent};padding:12px 16px;margin:0 0 16px">${report.aiSummary.text}</div>` : ''}
+      <p><a href="${reportUrl}" style="display:inline-block;background:${accent};color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none">View full report</a></p>
+      <p style="color:#9ca3af;font-size:12px;margin-top:24px">${reportUrl}</p>
+    </div>
+  `;
 }
 
 /**
@@ -240,7 +284,10 @@ async function deliverViaWebhook(report, scheduled) {
 
 module.exports = {
   createScheduledReport,
-  processScheduledReports
+  processScheduledReports,
+  // Exported for unit testing of the (pure) scheduling math.
+  calculateNextGeneration,
+  calculatePeriod
 };
 
 
