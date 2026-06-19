@@ -1743,8 +1743,11 @@ router.post('/extract-highlights', auth, async (req, res) => {
           endTime: moment.endTime || ((index + 1) * duration / highlightsResult.moments.length),
           title: moment.title || `Highlight ${index + 1}`,
           description: moment.description || 'AI-detected engaging moment',
-          score: moment.score || Math.floor(Math.random() * 30) + 70,
-          type: moment.type || ['action', 'dialogue', 'emotional'][Math.floor(Math.random() * 3)],
+          // Honest, DETERMINISTIC fallbacks (was Math.random()): the AI returns
+          // moments best-first, so rank by position rather than inventing a score;
+          // don't fabricate a random "type".
+          score: typeof moment.score === 'number' ? moment.score : Math.max(60, 90 - index * 4),
+          type: moment.type || 'highlight',
           tags: moment.tags || ['highlight']
         });
       });
@@ -1762,8 +1765,10 @@ router.post('/extract-highlights', auth, async (req, res) => {
           endTime,
           title: `Highlight ${i + 1}`,
           description: 'Automatically detected engaging moment',
-          score: Math.floor(Math.random() * 30) + 60,
-          type: ['action', 'dialogue', 'emotional', 'funny'][Math.floor(Math.random() * 4)],
+          // Duration-based heuristic fallback (no AI ran): deterministic score by
+          // position so the same video always ranks the same way (was Math.random()).
+          score: Math.max(55, 85 - i * 4),
+          type: ['action', 'dialogue', 'emotional', 'funny'][i % 4],
           tags: ['highlight', 'auto-generated']
         });
       }

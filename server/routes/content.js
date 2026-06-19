@@ -9,6 +9,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { trackAction } = require('../services/workflowService');
 const { sendSuccess, sendError } = require('../utils/response');
 const { signMediaUrls } = require('../utils/mediaUrlSigner');
+const { validateObjectId, getPagination } = require('../middleware/validateObjectId');
 const router = express.Router();
 
 /**
@@ -149,7 +150,7 @@ router.get('/:contentId/status', auth, async (req, res) => {
 });
 
 // Get generated content
-router.get('/:contentId', auth, async (req, res) => {
+router.get('/:contentId', auth, validateObjectId('contentId'), async (req, res) => {
   try {
     const content = await Content.findOne({
       _id: req.params.contentId,
@@ -225,13 +226,13 @@ router.get('/', auth, async (req, res) => {
       });
     }
 
-    const { type, status, limit = 50, page = 1 } = req.query;
+    const { type, status } = req.query;
+    // Clamp pagination (?limit=999999 / ?page=-1 → safe bounds; was unclamped).
+    const { page, limit, skip } = getPagination(req.query, { defaultLimit: 50, maxLimit: 100 });
     const query = { userId };
 
     if (type) query.type = type;
     if (status) query.status = status;
-
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
     // Try to execute queries, but handle all errors gracefully
     let contents = [];
@@ -358,7 +359,7 @@ router.delete('/:contentId', auth, async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:contentId/duplicate', auth, asyncHandler(async (req, res) => {
+router.post('/:contentId/duplicate', auth, validateObjectId('contentId'), asyncHandler(async (req, res) => {
   const content = await Content.findOne({
     _id: req.params.contentId,
     userId: req.user._id,

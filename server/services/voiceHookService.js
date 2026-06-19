@@ -562,53 +562,50 @@ async function createVoiceHookSequence(videoDuration, contentType, engagementPoi
  */
 async function analyzeVoiceHookPerformance(voiceHookId, videoMetrics, comparisonData = null) {
   try {
-    // Enhanced analytics with more detailed metrics
-    const baseEngagement = Math.random() * 0.3 + 0.1;
-    const retentionBoost = Math.random() * 0.2 + 0.05;
-    const ctrImprovement = Math.random() * 0.15 + 0.02;
+    // Ground the analysis in the caller-supplied videoMetrics (this used to be 100%
+    // Math.random()). Where a real signal isn't provided we return null — an honest
+    // "no data" the UI can render as such — instead of inventing a number. The
+    // categoryMultiplier is real signal derived from the hook id.
+    const m = videoMetrics || {};
+    const num = (v) => (typeof v === 'number' && isFinite(v) ? v : null);
+    const firstNum = (...vs) => { for (const v of vs) { const n = num(v); if (n != null) return n; } return null; };
 
-    // Category-specific performance modifiers
     let categoryMultiplier = 1;
     if (voiceHookId.includes('intro')) categoryMultiplier = 1.2;
     if (voiceHookId.includes('cta')) categoryMultiplier = 1.3;
     if (voiceHookId.includes('hook')) categoryMultiplier = 1.4;
 
+    const engagement = firstNum(m.engagementRate, m.engagement);
+    const retention = firstNum(m.retentionRate, m.retention);
+    const ctr = firstNum(m.ctr, m.clickThroughRate);
+    const scale = (v) => (v == null ? null : Math.min(0.95, Number((v * categoryMultiplier).toFixed(3))));
+    const grounded = engagement != null || retention != null || ctr != null;
+
     return {
       hookId: voiceHookId,
+      grounded, // false → the metrics below are UNAVAILABLE (not estimated/faked)
       performance: {
-        engagement: Math.min(0.95, baseEngagement * categoryMultiplier),
-        retention: Math.min(0.8, retentionBoost * categoryMultiplier),
-        ctr: Math.min(0.5, ctrImprovement * categoryMultiplier),
-        watchTime: Math.random() * 0.3 + 0.7, // 70-100% watch time
-        dropOffReduction: Math.random() * 0.4 + 0.1 // 10-50% drop-off reduction
+        engagement: scale(engagement),
+        retention: scale(retention),
+        ctr: scale(ctr),
+        watchTime: firstNum(m.watchTime, m.avgWatchPercent),
+        dropOffReduction: null,
       },
-      audience: {
-        ageGroups: {
-          '18-24': Math.random() * 0.3 + 0.2,
-          '25-34': Math.random() * 0.4 + 0.3,
-          '35-44': Math.random() * 0.3 + 0.2,
-          '45+': Math.random() * 0.2 + 0.1
-        },
-        interests: ['technology', 'education', 'entertainment'][Math.floor(Math.random() * 3)],
-        engagement: Math.random() > 0.5 ? 'high' : 'medium'
-      },
+      audience: m.audience || null, // pass real audience data through; null if absent
       optimization: {
-        bestTime: Math.floor(Math.random() * 30) + 's',
-        bestPlatform: ['youtube', 'tiktok', 'instagram'][Math.floor(Math.random() * 3)],
-        contentMatch: Math.random() * 0.3 + 0.7, // 70-100% content match
+        bestPlatform: m.platform || null,
         recommendations: [
           'Consider using this hook earlier in the video',
-          'This hook performs well with your audience demographic',
-          'Try combining with visual cues for even better engagement',
-          'Test this hook on different platforms for comparison'
-        ]
+          'Try combining with visual cues for better engagement',
+          'Test this hook on different platforms for comparison',
+        ],
       },
-      comparison: comparisonData ? {
+      comparison: (comparisonData && grounded) ? {
         vsAverage: {
-          engagement: (baseEngagement * categoryMultiplier - 0.15) / 0.15 * 100,
-          retention: (retentionBoost * categoryMultiplier - 0.1) / 0.1 * 100
-        }
-      } : null
+          engagement: engagement != null ? Number((((engagement * categoryMultiplier) - 0.15) / 0.15 * 100).toFixed(1)) : null,
+          retention: retention != null ? Number((((retention * categoryMultiplier) - 0.1) / 0.1 * 100).toFixed(1)) : null,
+        },
+      } : null,
     };
   } catch (error) {
     logger.error('Voice hook performance analysis failed', { error: error.message });
