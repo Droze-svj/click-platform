@@ -1831,7 +1831,7 @@ router.post('/extract-highlights', auth, async (req, res) => {
 // Generate auto-captions for video
 router.post('/generate-captions', auth, async (req, res) => {
   try {
-    const { videoId, url, duration, language = 'en' } = req.body;
+    const { videoId, url, duration } = req.body;
 
     if (!videoId || !url) {
       return res.status(400).json({
@@ -1847,45 +1847,31 @@ router.post('/generate-captions', auth, async (req, res) => {
       type: 'video'
     }).catch(() => null); // Ignore database errors
 
-    // Use AI service to generate captions
-    let captionsResult;
-
-    try {
-      const { generateCaptions } = require('../services/aiService');
-      captionsResult = await generateCaptions({ videoId, url, duration, language });
-    } catch (aiError) {
-      
-      captionsResult = null;
-    }
-
-    // Generate captions using Whisper or fallback
+    // Build captions from the video's REAL transcript by segmenting it evenly
+    // across the duration. The word-accurate path is POST
+    // /api/video/captions/generate (transcription). Previously this handler
+    // called the social-caption generator with the wrong args, and when that
+    // (always) produced nothing it fabricated "Sample caption N for the video
+    // content" — placeholder text presented as real captions. Now: real text, or
+    // an honest empty result telling the caller to transcribe first.
+    const transcriptText = ((content && content.transcript) || '').trim();
     const captions = [];
 
-    if (captionsResult && captionsResult.captions) {
-      captionsResult.captions.forEach((caption, index) => {
-        captions.push({
-          id: `caption-${videoId}-${index}`,
-          text: caption.text,
-          start: caption.start,
-          end: caption.end,
-          confidence: caption.confidence || 0.9
-        });
-      });
-    } else {
-      // Fallback: Generate sample captions based on duration
-      const numCaptions = Math.floor(duration / 10); // Caption every 10 seconds
-      for (let i = 0; i < numCaptions; i++) {
-        const start = i * 10;
-        const end = Math.min(start + 8, duration);
-        captions.push({
-          id: `fallback-caption-${videoId}-${i}`,
-          text: `Sample caption ${i + 1} for the video content`,
-          start,
-          end,
-          confidence: 0.8
-        });
+    if (transcriptText && duration > 0) {
+      const words = transcriptText.split(/\s+/).filter(Boolean);
+      const SEG_SECONDS = 4;
+      const segCount = Math.max(1, Math.min(Math.ceil(duration / SEG_SECONDS), Math.ceil(words.length / 6) || 1));
+      const wordsPerSeg = Math.ceil(words.length / segCount);
+      const segDuration = duration / segCount;
+      for (let i = 0; i < segCount; i++) {
+        const text = words.slice(i * wordsPerSeg, (i + 1) * wordsPerSeg).join(' ');
+        if (!text) break;
+        const start = Number((i * segDuration).toFixed(2));
+        const end = Number(Math.min(start + segDuration, duration).toFixed(2));
+        captions.push({ id: `caption-${videoId}-${i}`, text, start, end, confidence: 0.9 });
       }
     }
+    const captionsSource = captions.length ? 'transcript' : 'none';
 
     // Update content with captions (only if content exists)
     if (content) {
@@ -1900,14 +1886,16 @@ router.post('/generate-captions', auth, async (req, res) => {
         entityType: 'video',
         entityId: content._id,
         captionsCount: captions.length,
-        method: captionsResult ? 'ai' : 'fallback'
+        method: captionsSource
       });
     }
 
     res.json({
       success: true,
-      data: { captions },
-      message: `Generated ${captions.length} captions successfully`
+      data: { captions, source: captionsSource },
+      message: captions.length
+        ? `Generated ${captions.length} captions from transcript`
+        : 'No transcript available yet — run transcription first via POST /api/video/captions/generate'
     });
 
   } catch (error) {
