@@ -839,7 +839,28 @@ async function getSearchResultPreview(contentId, userId) {
   }
 }
 
+// Available search filter OPTIONS for the UI (a static taxonomy — distinct from
+// getSearchFacets, which returns data-derived counts). Backs
+// GET /api/search/advanced/filters, which imported a missing export and 500'd.
+function getSearchFilters() {
+  return {
+    platforms: ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin', 'facebook'],
+    contentTypes: ['video', 'image', 'article', 'post', 'short', 'reel'],
+    statuses: ['draft', 'processing', 'completed', 'published', 'scheduled', 'failed'],
+    dateRanges: [
+      { id: 'today', label: 'Today' },
+      { id: 'week', label: 'This week' },
+      { id: 'month', label: 'This month' },
+      { id: 'quarter', label: 'This quarter' },
+      { id: 'year', label: 'This year' },
+      { id: 'all', label: 'All time' },
+    ],
+    sortBy: ['relevance', 'newest', 'oldest', 'engagement', 'views'],
+  };
+}
+
 module.exports = {
+  getSearchFilters,
   semanticSearch,
   textSearch,
   facetedSearch,

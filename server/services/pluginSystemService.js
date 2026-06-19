@@ -186,6 +186,21 @@ function validateManifest(manifest) {
   return required.every((field) => manifest[field]);
 }
 
+// Static plugin category taxonomy for the marketplace UI. Backs
+// GET /api/video/manual-editing/plugins/categories, which called a missing
+// method and 500'd.
+function getPluginCategories() {
+  return [
+    { id: 'effects', name: 'Effects & Filters', description: 'Visual effects, color grading, filters' },
+    { id: 'transitions', name: 'Transitions', description: 'Scene and clip transitions' },
+    { id: 'audio', name: 'Audio', description: 'Music, sound effects, audio processing' },
+    { id: 'captions', name: 'Captions & Text', description: 'Subtitles, titles, text overlays' },
+    { id: 'ai', name: 'AI Tools', description: 'AI-powered editing and generation' },
+    { id: 'export', name: 'Export & Publishing', description: 'Format conversion and distribution' },
+    { id: 'utility', name: 'Utilities', description: 'Workflow and productivity helpers' },
+  ];
+}
+
 module.exports = {
   loadPlugin,
   registerPlugin,
@@ -194,4 +209,5 @@ module.exports = {
   executeHook,
   unloadPlugin,
   validateManifest,
+  getPluginCategories,
 };
