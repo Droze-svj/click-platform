@@ -4269,6 +4269,41 @@ async function detectScenes(videoId, videoMetadata = {}) {
 /**
  * Smart cut detection (enhanced)
  */
+
+// Unambiguous spoken disfluencies — safe to auto-flag for removal. Deliberately
+// EXCLUDES ambiguous words like "like"/"so"/"actually" (often meaningful) since
+// we have no POS tagging; removing those would corrupt real speech.
+const FILLER_WORDS = new Set(['um', 'umm', 'uh', 'uhh', 'uhm', 'er', 'erm', 'ah', 'ahh', 'hmm', 'mhm', 'eh']);
+
+/**
+ * Flag filler words for removal using word-level transcript timings. Returns cut
+ * suggestions ({type:'filler', timestamp, duration, paddingMs, ...}) the editor's
+ * apply flow turns into timeline cuts (with a little breathing room so words
+ * don't run together). Pure + deterministic — easy to unit test.
+ */
+function detectFillerWords(transcript) {
+  const words = transcript && Array.isArray(transcript.words) ? transcript.words : [];
+  const cuts = [];
+  for (const w of words) {
+    if (!w) continue;
+    const raw = w.word != null ? w.word : w.text;
+    const text = String(raw == null ? '' : raw).toLowerCase().replace(/[^a-z']/g, '');
+    if (!text || !FILLER_WORDS.has(text)) continue;
+    const start = Number(w.start);
+    if (!Number.isFinite(start)) continue;
+    const end = Number.isFinite(Number(w.end)) ? Number(w.end) : start + 0.4;
+    cuts.push({
+      type: 'filler',
+      timestamp: start,
+      duration: Math.max(0.08, end - start),
+      confidence: 0.8,
+      reason: `Filler word: "${text}"`,
+      paddingMs: 60, // keep a little silence so the kept words don't run together
+    });
+  }
+  return cuts;
+}
+
 async function detectSmartCuts(videoId, videoMetadata) {
   try {
     const content = await resolveContent(videoId);
@@ -4312,6 +4347,11 @@ async function detectSmartCuts(videoId, videoMetadata) {
         });
       });
     }
+
+    // Filler-word removal — uses the word-level timings the repetition block
+    // above lacked. Each becomes a precise cut the apply flow can remove.
+    const fillerCuts = detectFillerWords(transcript);
+    if (fillerCuts.length) cuts.push(...fillerCuts);
 
     // Scene changes
     scenes.forEach((scene, index) => {
@@ -5720,6 +5760,7 @@ module.exports = {
   computeVideoScore,
   detectScenes,
   detectSmartCuts,
+  detectFillerWords,
   processChromaKey,
   getInteractiveSuggestions,
   applyVisualEffects,
