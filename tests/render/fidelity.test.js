@@ -110,6 +110,21 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('per-segment crop + volume → renders cleanly (was dropped)', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 640, height: 480, duration: 4 },
+      timelineSegments: [{
+        id: 's1', type: 'video', startTime: 0, sourceStartTime: 0, sourceEndTime: 3,
+        crop: { left: 10, right: 10, top: 5, bottom: 5 }, volume: 0.5,
+      }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.hasAudio).toBe(true);
+    expect(p.duration).toBeGreaterThan(2.4);
+    expect(p.duration).toBeLessThan(3.6);
+  }, 90000);
+
   it('timelineEffect (vignette) → applied + time-gated to its window', async () => {
     const { outputPath } = await render({
       exportOptions: { width: 1280, height: 720, duration: 4 },

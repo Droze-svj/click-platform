@@ -1560,6 +1560,10 @@ function segmentHasSpecial(s) {
   // to materialize the kept range before the main render.
   if (Number(s.sourceStartTime) > 0) return true
   if (Number.isFinite(Number(s.sourceEndTime))) return true
+  // A per-segment crop or volume change also needs the stitch pre-pass to apply.
+  if (s.crop && typeof s.crop === 'object' &&
+    (Number(s.crop.left) || Number(s.crop.right) || Number(s.crop.top) || Number(s.crop.bottom))) return true
+  if (Number.isFinite(Number(s.volume)) && Number(s.volume) !== 1) return true
   return false
 }
 
@@ -1668,6 +1672,16 @@ async function stitchSegments(inputPath, segments, opts = {}) {
     vParts.push('setpts=PTS-STARTPTS')
     if (reversed) vParts.push('reverse')
     if (speed !== 1) vParts.push(`setpts=${(1 / speed).toFixed(6)}*PTS`)
+    // Per-segment CROP ({top,right,bottom,left} % insets from the editor). Was
+    // defined on TimelineSegment but never applied. Crop the kept region BEFORE
+    // the W:H normalization so it's then scaled to fill the frame.
+    if (seg.crop && typeof seg.crop === 'object') {
+      const fr = (v) => { const n = Number(v) || 0; return Math.max(0, Math.min(0.95, n > 1 ? n / 100 : n)) }
+      const L = fr(seg.crop.left), R = fr(seg.crop.right), T = fr(seg.crop.top), B = fr(seg.crop.bottom)
+      if ((L + R) < 0.99 && (T + B) < 0.99 && (L || R || T || B)) {
+        vParts.push(`crop=w=iw*${(1 - L - R).toFixed(4)}:h=ih*${(1 - T - B).toFixed(4)}:x=iw*${L.toFixed(4)}:y=ih*${T.toFixed(4)}`)
+      }
+    }
     // Normalize geometry/timebase BEFORE concat/xfade (avoids size/SAR/fps
     // mismatch errors on stable ffmpeg). scale→pad keeps aspect, SAR=1, fps fixed.
     vParts.push(`scale=${W}:${H}:force_original_aspect_ratio=decrease`)
@@ -1702,7 +1716,13 @@ async function stitchSegments(inputPath, segments, opts = {}) {
         let s = speed
         while (s > 2.0) { aParts.push('atempo=2.0'); s /= 2.0 }
         while (s < 0.5) { aParts.push('atempo=0.5'); s /= 0.5 }
-        aParts.push(`atempo=${s.toFixed(6)}`)
+        aParts.push(`atempo=${Math.max(0.5, Math.min(2.0, s)).toFixed(6)}`)
+      }
+      // Per-segment VOLUME (0-1, or 0-100 if >2). Was defined on TimelineSegment
+      // but never applied — a clip's level change had no effect on export.
+      const segVol = Number(seg.volume)
+      if (Number.isFinite(segVol) && segVol >= 0 && segVol !== 1) {
+        aParts.push(`volume=${(segVol > 2 ? segVol / 100 : segVol).toFixed(3)}`)
       }
       aParts.push('aresample=44100')
       aParts.push('aformat=sample_fmts=fltp:channel_layouts=stereo')
