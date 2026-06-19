@@ -1720,12 +1720,19 @@ router.post('/extract-highlights', auth, async (req, res) => {
       type: 'video'
     }).catch(() => null); // Ignore database errors
 
-    // Use AI service to detect highlights
+    // Use AI service to detect highlights.
+    // detectHighlights(transcript, duration) takes the transcript STRING and
+    // returns an ARRAY of { startTime, text, platform, reason }. The previous
+    // call passed the request object (→ `transcript.substring is not a function`)
+    // and read a non-existent `.moments`, so highlights NEVER used real AI — they
+    // always fell through to the duration heuristic below. Pass the real
+    // transcript and consume the returned array.
     const { detectHighlights } = require('../services/aiService');
-    let highlightsResult;
+    const transcript = (content && (content.transcript || content.description)) || title || '';
+    let highlights = [];
 
     try {
-      highlightsResult = await detectHighlights({ videoId, url, duration, title });
+      highlights = (await detectHighlights(transcript, duration)) || [];
     } catch (aiError) {
       logger.warn('AI highlight detection failed, using fallback', {
         error: aiError.message,
@@ -1736,19 +1743,24 @@ router.post('/extract-highlights', auth, async (req, res) => {
     // Generate highlight moments based on analysis
     const highlightMoments = [];
 
-    if (highlightsResult && highlightsResult.moments) {
-      highlightsResult.moments.forEach((moment, index) => {
+    if (Array.isArray(highlights) && highlights.length > 0) {
+      highlights.forEach((moment, index) => {
+        const startTime = typeof moment.startTime === 'number'
+          ? moment.startTime
+          : (index * duration / highlights.length);
+        const endTime = typeof moment.endTime === 'number'
+          ? moment.endTime
+          : Math.min(startTime + Math.min(duration / highlights.length, 25), duration);
         highlightMoments.push({
-          startTime: moment.startTime || (index * duration / highlightsResult.moments.length),
-          endTime: moment.endTime || ((index + 1) * duration / highlightsResult.moments.length),
-          title: moment.title || `Highlight ${index + 1}`,
-          description: moment.description || 'AI-detected engaging moment',
+          startTime,
+          endTime,
+          title: moment.title || (moment.text ? String(moment.text).slice(0, 60) : `Highlight ${index + 1}`),
+          description: moment.reason || moment.description || 'AI-detected engaging moment',
           // Honest, DETERMINISTIC fallbacks (was Math.random()): the AI returns
-          // moments best-first, so rank by position rather than inventing a score;
-          // don't fabricate a random "type".
+          // moments best-first, so rank by position rather than inventing a score.
           score: typeof moment.score === 'number' ? moment.score : Math.max(60, 90 - index * 4),
           type: moment.type || 'highlight',
-          tags: moment.tags || ['highlight']
+          tags: moment.tags || (moment.platform ? [moment.platform] : ['highlight'])
         });
       });
     } else {
@@ -1787,7 +1799,7 @@ router.post('/extract-highlights', auth, async (req, res) => {
         entityType: 'video',
         entityId: content._id,
         highlightsCount: highlightMoments.length,
-        method: highlightsResult ? 'ai' : 'fallback'
+        method: (Array.isArray(highlights) && highlights.length > 0) ? 'ai' : 'fallback'
       });
     }
 
