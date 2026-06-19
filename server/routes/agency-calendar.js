@@ -11,6 +11,7 @@ const {
   getCalendarView
 } = require('../services/masterCalendarService');
 const { requireWorkspaceAccess, requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
+const { analyzeCalendar } = require('../services/agencyCalendarService');
 const router = express.Router();
 
 /**
@@ -62,6 +63,34 @@ router.get('/:agencyWorkspaceId/calendar/conflicts', auth, requireWorkspaceAcces
 
   const conflicts = await getCalendarConflicts(agencyWorkspaceId, filters);
   sendSuccess(res, 'Calendar conflicts retrieved', 200, { conflicts });
+}));
+
+/**
+ * GET /api/agency/:agencyWorkspaceId/calendar/capacity
+ * Capacity + workload intelligence: conflicts, per-client/platform/day overflow,
+ * and team-member workload across the agency's master calendar.
+ */
+router.get('/:agencyWorkspaceId/calendar/capacity', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
+  const { agencyWorkspaceId } = req.params;
+  const filters = {
+    startDate: req.query.startDate,
+    endDate: req.query.endDate,
+    clientWorkspaceIds: req.query.clientIds ? req.query.clientIds.split(',') : [],
+    platforms: req.query.platforms ? req.query.platforms.split(',') : []
+  };
+  const calendar = await getMasterCalendar(agencyWorkspaceId, filters);
+  const posts = (calendar.posts || []).map(post => ({
+    id: post._id,
+    clientWorkspaceId: post.clientWorkspaceId?._id || post.clientWorkspaceId,
+    platform: post.platform,
+    assignee: post.userId?._id || post.userId,
+    scheduledTime: post.scheduledTime
+  }));
+  const analysis = analyzeCalendar(posts, {
+    conflictWindowMin: Number(req.query.conflictWindowMin) || 30,
+    maxPerPlatformPerDay: Number(req.query.maxPerPlatformPerDay) || 3
+  });
+  sendSuccess(res, 'Calendar capacity retrieved', 200, analysis);
 }));
 
 /**
