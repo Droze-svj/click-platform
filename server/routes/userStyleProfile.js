@@ -97,12 +97,13 @@ router.get('/', auth, async (req, res) => {
     // for that _id; .lean() eliminates the cache layer entirely.
     // .read('primary') makes sure we don't read from a stale Atlas
     // secondary right after a write.
-    let profile = await UserStyleProfile.findOne({ userId }).read('primary').lean();
-    if (!profile) {
-      // No doc yet for this user — create one. This is the first-visit path.
-      const created = await UserStyleProfile.create({ userId });
-      profile = created.toObject();
-    }
+    // Atomic upsert avoids a find-then-create race on the unique userId index.
+    // .read('primary') + new:true returns the up-to-date doc, never a stale read.
+    const profile = await UserStyleProfile.findOneAndUpdate(
+      { userId },
+      { $setOnInsert: { userId } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).read('primary').lean();
     res.json({ success: true, data: profile });
   } catch (err) {
     logger.error('[style-profile] GET failed', err);
@@ -308,8 +309,13 @@ router.get('/insights', auth, async (req, res) => {
       });
     }
 
-    let profile = await UserStyleProfile.findOne({ userId });
-    if (!profile) profile = await UserStyleProfile.create({ userId });
+    // Atomic upsert — a find-then-create race (two concurrent GETs both see no
+    // profile and both create) hit the unique userId index with E11000.
+    const profile = await UserStyleProfile.findOneAndUpdate(
+      { userId },
+      { $setOnInsert: { userId } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
     const performance = await performancePromise;
     res.json({
       success: true,
