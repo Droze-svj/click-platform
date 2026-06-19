@@ -36,6 +36,10 @@ function withAgentSpan(agentName, fn, model = 'gemini-2.5-flash') {
 }
 
 const { safeJsonParse, applyClicheShield } = require('../utils/aiHelper');
+// Bound user-supplied text before it goes into a prompt — prevents the input from
+// eating Gemini's token budget and silently truncating the real output, plus a
+// light prompt-injection defuse. See utils/promptSafe.
+const { capForPrompt } = require('../utils/promptSafe');
 
 // Generate captions for video clips
 // `userId` (optional) — when provided, we pull the creator's top-performing
@@ -104,7 +108,7 @@ Write ONE caption for the post below. Constraints:
 - Include 3–5 hashtags chosen from the niche/platform playbook above.
 - Match the niche voice exactly. Do not flatten it.
 
-Content context: ${text}
+Content context: ${capForPrompt(text)}
 
 Return only the caption text — no preamble, no explanation.`;
 
@@ -205,7 +209,7 @@ Analyze this transcript and identify the most engaging, shareable moments per th
 - platform (tiktok, instagram, or youtube)
 - reason (which retention principle from above makes it work — be specific)
 
-Transcript: ${transcript}
+Transcript: ${capForPrompt(transcript)}
 Total duration: ${duration} seconds
 
 Return only valid JSON with a "highlights" array.`;
@@ -263,7 +267,7 @@ CREATIVE RULES:
 - Include a specific call-to-value (not just "like this").
 - Match the ${niche} expertise level.
 
-Original content: ${text}`;
+Original content: ${capForPrompt(text)}`;
 
       const response = await geminiGenerate(prompt, { temperature: 0.9, maxTokens: 400 });
       content[platform] = {
@@ -294,7 +298,7 @@ async function generateBlogSummary(text, niche) {
 - Engaging introduction
 - Clear conclusion
 
-Content: ${text}`;
+Content: ${capForPrompt(text)}`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 500 });
     return response || `Summary: ${text.substring(0, 300)}...`;
@@ -482,7 +486,7 @@ async function extractQuotes(text, niche, options = {}) {
     - nicheRelevance (why this matters for ${niche} creators)
     - originalityScore (0-100 based on uniqueness of the statement)
 
-    Content: ${text}
+    Content: ${capForPrompt(text)}
 
     Return only valid JSON.`;
 
@@ -628,7 +632,7 @@ async function generateContentAdaptation(data) {
 
 Original Content:
 Title: ${title}
-Text: ${text}
+Text: ${capForPrompt(text)}
 
 Platform Rules:
 - Max length: ${rules.maxLength} characters
