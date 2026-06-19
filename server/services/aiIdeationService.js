@@ -2,6 +2,7 @@
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
+const { capForPrompt } = require('../utils/promptSafe');
 
 async function callGemini(systemPrompt, userPrompt, options = {}) {
   if (!geminiConfigured) {
@@ -17,11 +18,19 @@ async function callGemini(systemPrompt, userPrompt, options = {}) {
 async function generateContentIdeas(userId, options = {}) {
   try {
     const { topic = null, platform = 'general', count = 10, style = 'engaging', audience = 'general' } = options;
+    // Bound + sanitize caller-supplied strings before prompt interpolation
+    // (were raw — unbounded text starves the token budget / risks injection),
+    // and clamp count so "generate 10000 ideas" can't blow up the call.
+    const safeTopic = topic ? capForPrompt(String(topic), 500) : null;
+    const safePlatform = capForPrompt(String(platform), 60);
+    const safeStyle = capForPrompt(String(style), 60);
+    const safeAudience = capForPrompt(String(audience), 80);
+    const safeCount = Math.max(1, Math.min(Number(count) || 10, 50));
 
-    const prompt = `Generate ${count} creative and engaging content ideas for ${platform} platform.
-${topic ? `Topic: ${topic}` : 'General content ideas'}
-Style: ${style}
-Target audience: ${audience}
+    const prompt = `Generate ${safeCount} creative and engaging content ideas for ${safePlatform} platform.
+${safeTopic ? `Topic: ${safeTopic}` : 'General content ideas'}
+Style: ${safeStyle}
+Target audience: ${safeAudience}
 
 For each idea, provide:
 1. A catchy title

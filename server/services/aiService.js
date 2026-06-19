@@ -310,17 +310,22 @@ Content: ${capForPrompt(text)}`;
 
 // Generate viral post ideas (Consolidated for Phase 11/12)
 async function generateViralIdeas(topic, niche, count = 3, options = {}) {
+  // Bound + sanitize the caller-supplied topic before it goes into the prompt
+  // (was interpolated raw — unbounded text starves the token budget and a
+  // crafted topic could inject instructions). capForPrompt strips control chars
+  // and defuses "ignore previous instructions"-style overrides.
+  const safeTopic = capForPrompt(String(topic == null ? '' : topic), 500);
   const framework = await getUniversalStrategicFramework(niche, options.contentType || 'video');
   const predictionService = require('./predictionService');
   const marketTrends = await predictionService.ingestMarketTrends();
-  
+
   const varianceSeed = Math.random().toString(36).substring(7);
 
   if (!geminiConfigured) {
     logger.warn('Google AI API key not configured, using fallback ideas');
     return Array(count).fill(0).map((_, i) => ({
       title: `${niche} Idea ${i + 1}`,
-      description: `Engaging strategy for "${topic}"`,
+      description: `Engaging strategy for "${safeTopic}"`,
       platform: ['tiktok', 'instagram', 'twitter'][i % 3],
       potential: 75,
       integrityVerified: false
@@ -329,7 +334,7 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
 
   const trendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
   try {
-    const prompt = `Generate ${count} viral content ideas for the ${niche} niche about "${topic}".
+    const prompt = `Generate ${count} viral content ideas for the ${niche} niche about "${safeTopic}".
     Strategic Framework: ${JSON.stringify(framework)}
     Market Trends: ${trendingTopicsList.join(', ')}
     Generative Seed: ${varianceSeed}
@@ -358,7 +363,7 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
     let ideas = result.ideas || [];
 
     // Phase 12: Sovereignty Refinement & Cliche Shield
-    const refinedIdeas = await validateAndRefineOutput(ideas, topic, 'viral-ideas');
+    const refinedIdeas = await validateAndRefineOutput(ideas, safeTopic, 'viral-ideas');
     
     return refinedIdeas.map(id => ({
       ...id,
