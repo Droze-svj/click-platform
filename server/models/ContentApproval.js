@@ -143,6 +143,28 @@ const contentApprovalSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+  // Inline comment threads on the CONTENT (distinct from stage approve/reject
+  // notes) — a reviewer/client comments on a specific field/copy and resolves it,
+  // with threaded replies. The collaboration layer agencies expect (Planable/Loomly).
+  comments: [{
+    id: { type: String },
+    authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    authorName: { type: String, default: '' },
+    authorRole: { type: String, default: 'reviewer' },
+    text: { type: String, required: true },
+    targetField: { type: String, default: null },
+    parentId: { type: String, default: null },
+    resolved: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+  }],
+  // Revision history — each creator re-submission after changes-requested.
+  revisions: [{
+    version: { type: Number, required: true },
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    note: { type: String, default: '' },
+    changes: { type: mongoose.Schema.Types.Mixed, default: {} },
+    createdAt: { type: Date, default: Date.now },
+  }],
   assignedTo: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
