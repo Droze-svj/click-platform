@@ -3,7 +3,9 @@
 const SocialConnection = require('../models/SocialConnection');
 const ScheduledPost = require('../models/ScheduledPost');
 const { getValidAccessToken } = require('./tokenRefreshService');
-const axios = require('axios');
+const axiosLib = require('axios');
+// Timeout-defaulted instance so a hung provider can't stall the analytics sync.
+const axios = axiosLib.create({ timeout: 15000 });
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 

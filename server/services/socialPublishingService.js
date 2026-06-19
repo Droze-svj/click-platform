@@ -144,16 +144,19 @@ class SocialPublishingService {
   }
 
   /**
-   * Internal Mock Failsafe
+   * Honest "not configured" result. Returns success:false with no fabricated
+   * postId so an unconfigured provider is NEVER reported as a real publish
+   * (owner's #1 rule). Callers surface this as "requires setup".
    */
   mockSuccess(platform, message) {
-    logger.warn(`Sovereign Caution: ${message}`, { platform });
+    logger.warn(`Publish unavailable: ${message}`, { platform });
     return {
-      success: true,
+      success: false,
       platform,
-      postId: `mock-${platform}-${Date.now()}`,
-      status: 'simulated_success',
-      advisory: message
+      postId: null,
+      status: 'requires_setup',
+      advisory: message,
+      error: message,
     };
   }
 

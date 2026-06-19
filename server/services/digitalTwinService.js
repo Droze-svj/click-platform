@@ -119,26 +119,30 @@ class DigitalTwinService {
       // Using expected OpenAI-style generation pattern
       logger.info('Sora generation initiated (Enterprise Tier)', { jobId: job.id });
       
-      // Since Sora API is in limited release, we use the enterprise gateway or placeholder
-      if (process.env.SORA_GATEWAY_URL) {
-        const response = await axios.post(process.env.SORA_GATEWAY_URL, {
-          model: "sora-1",
-          input: {
-            audio_url: job.voiceNoteUrl,
-            avatar_id: job.options?.avatarId
-          },
-          quality: "high",
-          aspect_ratio: "16:9"
-        }, {
-          headers: { 'Authorization': `Bearer ${this.soraApiKey}` }
-        });
-        job.externalId = response.data.id;
-      } else {
-        // Simulated production response if gateway not set
-        logger.info('Sora Gateway not configured, using high-fidelity simulation', { jobId: job.id });
-        job.externalId = `SORA-${job.id}`;
+      // Sora API is in limited release and is reached only via an enterprise
+      // gateway. Without SORA_GATEWAY_URL there is no real provider to call, so
+      // we report HONEST unavailability instead of inventing a fake job id that
+      // could never complete (owner's #1 rule).
+      if (!process.env.SORA_GATEWAY_URL) {
+        logger.warn('Sora gateway not configured — generation unavailable', { jobId: job.id });
+        job.status = 'unavailable';
+        job.error = 'Sora generation is not configured (set SORA_GATEWAY_URL).';
+        return job;
       }
 
+      const response = await axios.post(process.env.SORA_GATEWAY_URL, {
+        model: "sora-1",
+        input: {
+          audio_url: job.voiceNoteUrl,
+          avatar_id: job.options?.avatarId
+        },
+        quality: "high",
+        aspect_ratio: "16:9"
+      }, {
+        headers: { 'Authorization': `Bearer ${this.soraApiKey}` },
+        timeout: 30000,
+      });
+      job.externalId = response.data.id;
       job.status = 'processing';
       return job;
     } catch (error) {

@@ -1,5 +1,5 @@
 const {
-  isTTVConfigured, buildProviderRequest, parseProviderResponse, generateBRollVideo,
+  isTTVConfigured, buildProviderRequest, parseProviderResponse, generateBRollVideo, getBRollStatus,
 } = require('../../../server/services/textToVideoService');
 
 const REPLICATE = { provider: 'replicate', key: 'r8_test', model: 'owner/model:abc123' };
@@ -70,5 +70,59 @@ describe('generateBRollVideo (orchestrator, honest fallback)', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(r.status).toBe('ready');
     expect(r.url).toBe('https://cdn/clip.mp4');
+  });
+
+  it('polls a processing job until it succeeds (real url, never fabricated)', async () => {
+    process.env.TTV_PROVIDER = 'replicate';
+    process.env.REPLICATE_API_TOKEN = 'r8_test';
+    process.env.TTV_MODEL_VERSION = 'owner/model:abc123';
+    const fetchImpl = jest.fn()
+      .mockResolvedValueOnce({ json: async () => ({ id: 'p1', status: 'processing', urls: { get: 'https://api/p1' } }) })
+      .mockResolvedValueOnce({ json: async () => ({ id: 'p1', status: 'succeeded', output: ['https://cdn/final.mp4'] }) });
+    const r = await generateBRollVideo('a city at night', { fetchImpl, pollMs: 1 });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(r.status).toBe('ready');
+    expect(r.url).toBe('https://cdn/final.mp4');
+  });
+
+  it('returns processing + jobId (no url) when the budget elapses', async () => {
+    process.env.TTV_PROVIDER = 'replicate';
+    process.env.REPLICATE_API_TOKEN = 'r8_test';
+    process.env.TTV_MODEL_VERSION = 'owner/model:abc123';
+    const fetchImpl = jest.fn().mockResolvedValue({
+      json: async () => ({ id: 'pX', status: 'processing', urls: { get: 'https://api/pX' } }),
+    });
+    const r = await generateBRollVideo('slow render', { fetchImpl, pollMs: 1, timeoutMs: -1 });
+    expect(r.status).toBe('processing');
+    expect(r.jobId).toBe('pX');
+    expect(r.url).toBeNull();
+  });
+});
+
+describe('getBRollStatus', () => {
+  const OLD = { ...process.env };
+  afterEach(() => { process.env = { ...OLD }; });
+
+  it('is unavailable when not configured', async () => {
+    delete process.env.TTV_PROVIDER;
+    const r = await getBRollStatus('job1');
+    expect(r.status).toBe('unavailable');
+    expect(r.url).toBeNull();
+  });
+
+  it('returns the ready url for a finished job', async () => {
+    process.env.TTV_PROVIDER = 'replicate';
+    process.env.REPLICATE_API_TOKEN = 'r8_test';
+    process.env.TTV_MODEL_VERSION = 'owner/model:abc123';
+    const fetchImpl = jest.fn().mockResolvedValue({
+      json: async () => ({ id: 'job1', status: 'succeeded', output: ['https://cdn/done.mp4'] }),
+    });
+    const r = await getBRollStatus('job1', { fetchImpl });
+    expect(r.status).toBe('ready');
+    expect(r.url).toBe('https://cdn/done.mp4');
+  });
+
+  it('requires a jobId', async () => {
+    expect((await getBRollStatus('')).status).toBe('error');
   });
 });

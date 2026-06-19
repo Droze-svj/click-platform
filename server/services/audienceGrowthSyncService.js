@@ -4,7 +4,9 @@
 const SocialConnection = require('../models/SocialConnection');
 const { recordAudienceGrowth } = require('./socialPerformanceMetricsService');
 const { getValidAccessToken } = require('./tokenRefreshService');
-const axios = require('axios');
+const axiosLib = require('axios');
+// Timeout-defaulted instance so a hung provider can't stall the growth sync.
+const axios = axiosLib.create({ timeout: 15000 });
 const logger = require('../utils/logger');
 
 /**
