@@ -224,6 +224,28 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Map well-known CLIENT-error messages thrown as plain Errors to the right
+  // status. Many services throw `new Error('X not found')` / 'Invalid or expired
+  // token' / 'access denied' with no statusCode; default-casing those as 500 is
+  // wrong (a missing resource is a 404, not a server fault — and it trips 5xx
+  // alerting). Genuine server bugs (e.g. 'x is not a function') don't match these
+  // patterns and correctly fall through to 500.
+  if (!err.statusCode && typeof err.message === 'string') {
+    const m = err.message.toLowerCase();
+    if (/invalid or expired token|invalid token|expired token/.test(m)) {
+      return res.status(401).json({ success: false, error: err.message, code: 'INVALID_TOKEN' });
+    }
+    if (/\b(not found|does not exist|no longer exists)\b/.test(m)) {
+      return res.status(404).json({ success: false, error: err.message, code: 'NOT_FOUND' });
+    }
+    if (/access denied|not authorized|unauthorized|forbidden|permission denied/.test(m)) {
+      return res.status(403).json({ success: false, error: err.message, code: 'FORBIDDEN' });
+    }
+    if (/already exists|duplicate key|e11000/.test(m)) {
+      return res.status(409).json({ success: false, error: 'Resource already exists', code: 'CONFLICT' });
+    }
+  }
+
   // Default error - wrap in try-catch to ensure we always send a response
   try {
     const statusCode = err.statusCode || 500;
