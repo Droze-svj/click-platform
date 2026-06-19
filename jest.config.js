@@ -75,6 +75,14 @@ module.exports = {
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
+    {
+      // Breadth endpoint sweep — hits every safe GET endpoint. Non-gating
+      // (not in the `unit` CI gate); run on demand via `npm run smoke:full`.
+      displayName: 'smoke-full',
+      testMatch: ['<rootDir>/tests/smoke/smokeFull.test.js'],
+      setupFiles: ['<rootDir>/tests/setup-env.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+    },
   ]
 };
 

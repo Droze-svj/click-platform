@@ -34,6 +34,8 @@
     "test:e2e:update-snapshots": "playwright test --update-snapshots",
     "test:performance": "jest --selectProjects performance",
     "test:security": "jest --selectProjects security --forceExit",
+    "smoke:full": "jest --selectProjects smoke-full --forceExit",
+    "smoke:ai": "node scripts/ai-smoke.js",
     "deploy:production": "node scripts/production-deploy.js",
     "monitor:production": "node scripts/production-monitoring.js",
     "performance:regression": "node scripts/performance-regression-check.js",

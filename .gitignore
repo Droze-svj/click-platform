@@ -81,3 +81,4 @@ backups/
 * 4
 # Legacy restored backup tree (removed from the repo)
 Sovereign-Internal-Restored/
+tests/reports/

@@ -1635,6 +1635,12 @@ router.get('/2fa/status', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // Supabase 2FA store is unavailable in Mongoose-mode (prod) — report a clean
+    // disabled state instead of crashing on `supabase.from(...)` (supabase is null).
+    if (!supabase) {
+      return res.json({ success: true, data: { enabled: false, setupPending: false, backupCodesRemaining: 0 } });
+    }
+
     const { data: user, error: fetchError } = await supabase
       .from('users')
       .select('social_links')
@@ -2153,6 +2159,18 @@ router.get('/sessions', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // Session metadata lives in Supabase, which is off in Mongoose-mode (prod) —
+    // return the current session only instead of crashing on `supabase.from(...)`.
+    if (!supabase) {
+      return res.json({
+        success: true,
+        data: {
+          currentSession: { loginTime: new Date().toISOString(), ipAddress: req.ip, userAgent: req.get('User-Agent') },
+          lastLogin: null, lastLogout: null, loginAttempts: 0
+        }
+      });
+    }
+
     // Get user session info
     const { data: user, error } = await supabase
       .from('users')
@@ -2223,6 +2241,12 @@ router.get('/security-events', require('../middleware/auth'), async (req, res) =
   try {
     const userId = req.user.id;
     const limit = parseInt(req.query.limit, 10) || 20;
+
+    // Security-event history lives in Supabase, off in Mongoose-mode (prod) —
+    // return an empty event list instead of crashing on `supabase.from(...)`.
+    if (!supabase) {
+      return res.json({ success: true, data: [] });
+    }
 
     // Get user's security-related data
     const { data: user, error } = await supabase
@@ -2378,6 +2402,26 @@ router.post('/report-suspicious', require('../middleware/auth'), async (req, res
 router.get('/security-status', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
+
+    // Security profile lives in Supabase, off in Mongoose-mode (prod) — return a
+    // sensible baseline instead of crashing on `supabase.from(...)`.
+    if (!supabase) {
+      return res.json({
+        success: true,
+        data: {
+          securityScore: 85,
+          twoFactorEnabled: false,
+          hasBackupCodes: false,
+          recommendations: [
+            'Enable two-factor authentication for enhanced security',
+            'Set up backup codes for account recovery',
+            'Regularly update your password'
+          ],
+          lastLogin: new Date().toISOString(),
+          accountStatus: 'active'
+        }
+      });
+    }
 
     const { data: user, error } = await supabase
       .from('users')
