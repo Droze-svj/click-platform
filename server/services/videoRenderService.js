@@ -819,6 +819,14 @@ async function renderFromEditorState(options) {
   // re-apply the legacy forced center/Lissajous crop below — that would override
   // the subject-aware framing AND upscale tier-clamped exports back to 1080x1920.
   const smartReframe = exportOptions.smartReframe === true
+  // A user-set crop (from the editor, {x,y,width,height} in %) means the framing
+  // is already decided — the legacy vertical center-crop below must NOT override
+  // it. A full-frame 0/0/100/100 is "no crop" and doesn't count.
+  const hasManualCrop = !!(videoCrop && typeof videoCrop === 'object' && (
+    Number(videoCrop.x) > 0 || Number(videoCrop.y) > 0 ||
+    (Number(videoCrop.width) > 0 && Number(videoCrop.width) < 100) ||
+    (Number(videoCrop.height) > 0 && Number(videoCrop.height) < 100)
+  ))
   const isBestQuality = exportOptions.quality === 'best'
   const isProres = exportOptions.codec === 'prores'
   let bitrateMbps = exportOptions.bitrateMbps ?? 8
@@ -898,21 +906,27 @@ async function renderFromEditorState(options) {
   }
   const aSuffix = aSuffixParts.length > 0 ? ',' + aSuffixParts.join(',') : ''
 
-  const overlayFilters = []
-    ; (textOverlays || []).forEach((o) => {
+  // Text + shape overlays drawn in EDITOR z-order. Previously ALL text was drawn
+  // before ALL shapes, so a shape the user placed behind text rendered on top
+  // (and vice versa). Merge both kinds and stable-sort by layer/zIndex so the
+  // export matches the editor's stacking (equal layers keep insertion order).
+  const _drawnOverlays = []
+  ; (textOverlays || []).forEach((o) => {
     try {
-      overlayFilters.push(buildDrawTextFilter(o))
+      _drawnOverlays.push({ layer: Number(o.layer ?? o.zIndex ?? 0) || 0, f: buildDrawTextFilter(o) })
     } catch (e) {
       logger.warn('Skip text overlay', { error: e.message, overlay: o })
     }
   })
   ; (shapeOverlays || []).forEach((s) => {
     try {
-      overlayFilters.push(buildDrawBoxFilter(s))
+      _drawnOverlays.push({ layer: Number(s.layer ?? s.zIndex ?? 0) || 0, f: buildDrawBoxFilter(s) })
     } catch (e) {
       logger.warn('Skip shape overlay', { error: e.message, shape: s })
     }
-  })    
+  })
+  _drawnOverlays.sort((a, b) => a.layer - b.layer)
+  const overlayFilters = _drawnOverlays.map((d) => d.f)
   
   // 🌿 2026 Comfort-Aesthetic Settings (Prevents sensory overstimulation by default for Manual Edits)
   // By default, manual edits are designed to be clean, stable, and highly organized.
@@ -986,7 +1000,7 @@ async function renderFromEditorState(options) {
   // Skipped entirely under smartReframe: the source was already cover-scaled and
   // subject-cropped to this aspect upstream, so re-cropping here would discard
   // that framing and ignore the tier resolution clamp.
-  if (height > width && !smartReframe) {
+  if (height > width && !smartReframe && !hasManualCrop) {
     if (comfortMode) {
       // 🌿 Steady, smooth, perfectly centered professional crop (No motion sickness, no drift)
       videoFilters_ff.push('scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920');
