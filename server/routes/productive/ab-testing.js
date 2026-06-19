@@ -147,5 +147,30 @@ router.get('/:testId/advanced', auth, asyncHandler(async (req, res) => {
   }
 }));
 
+// ── Hook/CTA A/B auto-generation (curiosity / authority / FOMO) ──
+const {
+  generateHookExperiment,
+  evaluateHookExperiment,
+} = require('../../services/hookExperimentService');
+
+// POST /api/productive/ab-testing/hook-experiment
+// Body: { text, spacingHours?, windows? } → 3 angle variants ready to schedule.
+router.post('/hook-experiment', auth, asyncHandler(async (req, res) => {
+  const { text, spacingHours, windows } = req.body || {};
+  if (!text || !String(text).trim()) return sendError(res, 'text is required', 400);
+  const result = await generateHookExperiment(String(text), {
+    userId: req.user._id, spacingHours, windows,
+  });
+  sendSuccess(res, 'Hook experiment generated', 200, result);
+}));
+
+// POST /api/productive/ab-testing/hook-experiment/evaluate
+// Body: { variantResults: [{ id|angle, impressions, engagement }] } → winner.
+router.post('/hook-experiment/evaluate', auth, asyncHandler(async (req, res) => {
+  const { variantResults, minImpressions, minLiftPct } = req.body || {};
+  const result = evaluateHookExperiment(variantResults, { minImpressions, minLiftPct });
+  sendSuccess(res, 'Hook experiment evaluated', 200, result);
+}));
+
 module.exports = router;
 
