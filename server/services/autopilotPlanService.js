@@ -93,6 +93,13 @@ async function createAutopilotPlan(userId, opts = {}) {
   const planId = `ap_${crypto.randomBytes(6).toString('hex')}`;
   const plan = buildAutopilotPlan(items, { platforms: targetPlatforms, baseTime: Date.now(), status });
 
+  // full_auto posts go straight to `scheduled`, so guarantee a minimum
+  // cancellation grace window: the scheduler won't fire a post before its
+  // holdUntil even if the slot is otherwise due. (pending_approval posts don't
+  // need this — they can't fire until a human approves.)
+  const SAFETY_HOLD_MS = 10 * 60 * 1000;
+  const holdUntil = autonomyMode === 'full_auto' ? new Date(Date.now() + SAFETY_HOLD_MS) : null;
+
   const rows = plan.map((p) => ({
     userId: String(userId),
     autopilotPlanId: planId,
@@ -102,6 +109,7 @@ async function createAutopilotPlan(userId, opts = {}) {
     niche: niche || undefined,
     scheduledTime: p.scheduledTime ? new Date(p.scheduledTime) : new Date(Date.now() + 3600 * 1000),
     status: p.status,
+    holdUntil,
     dryRun: !!dryRun,
   }));
   const created = await ScheduledPost.insertMany(rows);

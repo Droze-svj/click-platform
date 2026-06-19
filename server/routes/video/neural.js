@@ -125,10 +125,22 @@ router.post('/magic-b-roll', auth, async (req, res) => {
 
     const result = await generativeAssetService.magicBRollFill(prompt, duration);
 
+    // Async providers may return a job still rendering — surface that honestly
+    // (202) with the jobId so the client can poll, rather than a 503.
+    if (result && result.status === 'processing') {
+      return res.status(202).json({
+        success: true,
+        status: 'processing',
+        jobId: result.jobId || null,
+        data: result,
+      });
+    }
+
     // Honest surfacing: when text-to-video isn't configured the service returns
     // status 'unavailable' (no fabricated clip). Report that truthfully (503)
-    // instead of dressing a non-result up as a successful generation.
-    if (!result || result.status !== 'minted' || !result.url) {
+    // instead of dressing a non-result up as a successful generation. A real
+    // success is status 'ready' with a provider-returned url.
+    if (!result || result.status !== 'ready' || !result.url) {
       return res.status(503).json({
         success: false,
         status: result?.status || 'unavailable',

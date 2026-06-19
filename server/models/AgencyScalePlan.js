@@ -45,7 +45,8 @@ const agencyScalePlanSchema = new mongoose.Schema({
   limits: {
     teamMembers: { type: Number, default: 5 },
     storage: { type: Number, default: 100 }, // GB
-    apiCalls: { type: Number, default: 10000 } // Per month
+    apiCalls: { type: Number, default: 10000 }, // Per month
+    reports: { type: Number, default: 50 } // Generated reports per month
   },
   // Agency-specific features
   features: {

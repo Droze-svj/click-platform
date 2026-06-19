@@ -21,6 +21,8 @@ const {
   getLatestAutonomousReports
 } = require('../services/agencyService');
 const { checkPermission } = require('../services/workspaceService');
+const { requireTierLimit } = require('../middleware/tierEnforcement');
+const { loadAgencyTierContext } = require('../services/agencyPlanContext');
 
 const router = express.Router();
 
@@ -172,7 +174,7 @@ router.get('/benchmarking', auth, asyncHandler(async (req, res) => {
  * POST /api/agency/onboarding/start
  * Start client onboarding
  */
-router.post('/onboarding/start', auth, asyncHandler(async (req, res) => {
+router.post('/onboarding/start', auth, requireTierLimit('add_client', loadAgencyTierContext('add_client')), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId, ...clientData } = req.body;
 
   if (!agencyWorkspaceId) {
@@ -205,7 +207,7 @@ router.post('/onboarding/:onboardingId/step', auth, asyncHandler(async (req, res
  * POST /api/agency/reports/generate
  * Generate white-label client report
  */
-router.post('/reports/generate', auth, asyncHandler(async (req, res) => {
+router.post('/reports/generate', auth, requireTierLimit('generate_report', loadAgencyTierContext('generate_report')), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId, clientWorkspaceId, ...reportData } = req.body;
 
   if (!agencyWorkspaceId || !clientWorkspaceId) {
