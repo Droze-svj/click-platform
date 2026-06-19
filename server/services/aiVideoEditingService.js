@@ -4304,6 +4304,117 @@ function detectFillerWords(transcript) {
   return cuts;
 }
 
+// ── Advanced AI-edit features (pure mappers over detectKeyMoments output) ──
+
+const NARRATIVE_CHAPTERS = {
+  'hook-story-reveal': ['Hook', 'Story', 'Reveal'],
+  'problem-solution': ['Problem', 'Solution', 'Proof'],
+  list: ['Intro', 'Key Points', 'Recap'],
+  educational: ['Hook', 'Teaching', 'Application', 'Recap'],
+  rant: ['Setup', 'Build', 'Climax'],
+  entertaining: ['Hook', 'Build', 'Payoff'],
+  documentary: ['Setup', 'Development', 'Resolution'],
+  default: ['Intro', 'Main', 'Wrap-up'],
+};
+const CHAPTER_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#a855f7'];
+
+/**
+ * Auto-chaptering: partition the timeline into labelled chapters from the AI
+ * narrative structure, using engagement-peak times as boundaries when available
+ * (else even splits). Returns TimelineChapter[] for markers + navigation. Pure.
+ */
+function deriveChapters(keyMoments = {}, duration = 0) {
+  const dur = Number(duration) || 0;
+  if (!(dur > 0)) return [];
+  const structure = String((keyMoments && keyMoments.narrativeStructure) || '').toLowerCase();
+  const labels = NARRATIVE_CHAPTERS[structure] || NARRATIVE_CHAPTERS.default;
+  const n = labels.length;
+  const peaks = (Array.isArray(keyMoments.highlights) ? keyMoments.highlights : [])
+    .map((p) => Number(p && p.time)).filter((t) => Number.isFinite(t) && t > 0 && t < dur)
+    .sort((a, b) => a - b);
+  const bounds = [];
+  for (let i = 1; i < n; i++) {
+    bounds.push(peaks.length >= n - 1 ? peaks[Math.floor((i * peaks.length) / n)] : (i * dur) / n);
+  }
+  const chapters = [];
+  let start = 0;
+  for (let i = 0; i < n; i++) {
+    const end = i < n - 1 ? Math.min(Number(bounds[i]) || ((i + 1) * dur) / n, dur) : dur;
+    if (end <= start) continue;
+    chapters.push({
+      id: `ch-${i}`, index: chapters.length, label: labels[i],
+      startTime: Number(start.toFixed(2)), endTime: Number(end.toFixed(2)),
+      color: CHAPTER_COLORS[i % CHAPTER_COLORS.length],
+    });
+    start = end;
+  }
+  return chapters;
+}
+
+const TRIGGER_BROLL = {
+  curiosity: ['person thinking', 'mystery reveal', 'question mark'],
+  authority: ['expert speaking', 'certificate', 'data chart'],
+  fomo: ['crowd rushing', 'countdown timer', 'limited offer'],
+  social_proof: ['happy customers', 'five star review', 'crowd cheering'],
+  shock: ['surprised reaction', 'jaw drop', 'plot twist'],
+  value: ['checklist', 'before and after', 'money saving'],
+};
+
+/**
+ * AI b-roll suggestions: map each viral moment's trigger type to stock-search
+ * keywords the user can drop a clip onto. Returns [{time,triggerType,keywords,reason}].
+ * Pure — the actual stock search/injection is the caller's job.
+ */
+function suggestBrollKeywords(keyMoments = {}) {
+  const reactions = Array.isArray(keyMoments && keyMoments.reactions) ? keyMoments.reactions : [];
+  const out = [];
+  for (const r of reactions.slice(0, 12)) {
+    const t = Number(r && r.time);
+    if (!Number.isFinite(t) || t < 0) continue;
+    const trig = String((r && r.triggerType) || '').toLowerCase().replace(/[^a-z_]/g, '');
+    out.push({
+      time: Number(t.toFixed(2)),
+      triggerType: trig || 'general',
+      keywords: TRIGGER_BROLL[trig] || ['cinematic b-roll', 'establishing shot'],
+      reason: (r && (r.reason || r.text)) || '',
+    });
+  }
+  return out;
+}
+
+/**
+ * Sentiment-driven effects: turn the AI sentiment arc into timelineEffects
+ * (color/vignette presets) — emitted in the EXACT shape compileTimelineEffects
+ * consumes, so applying them flows through the wired render path and actually
+ * appears in the export. Pure.
+ */
+function buildSentimentEffects(keyMoments = {}, duration = 0) {
+  const dur = Number(duration) || 0;
+  if (!(dur > 0)) return [];
+  const arc = String((keyMoments && keyMoments.sentimentArc) || 'consistent').toLowerCase();
+  const mk = (name, type, params, start, end, intensity = 70) => ({
+    id: `sfx-${name.replace(/\s+/g, '-').toLowerCase()}-${Math.round(start)}`,
+    type, name, params, intensity, enabled: true, color: '#f59e0b',
+    startTime: Number(Math.max(0, start).toFixed(2)), endTime: Number(Math.min(dur, end).toFixed(2)),
+  });
+  if (arc === 'rising') {
+    return [
+      mk('Warm Lift', 'filter', { brightness: 0.04, saturation: 1.15 }, dur * 0.5, dur, 70),
+      mk('Cinematic Vignette', 'overlay', { strength: 40 }, dur * 0.7, dur, 60),
+    ];
+  }
+  if (arc === 'falling') {
+    return [mk('Cool Fade', 'filter', { brightness: -0.02, saturation: 0.85 }, dur * 0.5, dur, 60)];
+  }
+  if (arc === 'dramatic') {
+    return [
+      mk('High Contrast', 'filter', { contrast: 1.2, saturation: 1.1 }, 0, dur, 75),
+      mk('Cinematic Vignette', 'overlay', { strength: 55 }, 0, dur, 70),
+    ];
+  }
+  return [mk('Subtle Polish', 'filter', { saturation: 1.08 }, 0, dur, 50)];
+}
+
 async function detectSmartCuts(videoId, videoMetadata) {
   try {
     const content = await resolveContent(videoId);
@@ -5761,6 +5872,9 @@ module.exports = {
   detectScenes,
   detectSmartCuts,
   detectFillerWords,
+  deriveChapters,
+  suggestBrollKeywords,
+  buildSentimentEffects,
   processChromaKey,
   getInteractiveSuggestions,
   applyVisualEffects,
