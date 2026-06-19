@@ -83,21 +83,14 @@ async function autoSoundDesign(timeline) {
  */
 async function magicBRollFill(prompt, duration = 3) {
   try {
-    logger.info('Starting Magic B-Roll prompt refinement', { originalPrompt: prompt, duration });
+    logger.info('Starting Magic B-Roll fill', { originalPrompt: prompt, duration });
 
-    // Real step: refine the prompt for downstream video generation.
-    const refinedPrompt = await refineBRollPrompt(prompt);
-    logger.info('Prompt refined for video gen', { refinedPrompt });
-
-    // No text-to-video provider is wired up — return honestly, never a fake URL.
-    return {
-      url: null,
-      originalPrompt: prompt,
-      refinedPrompt,
-      duration,
-      status: 'unavailable',
-      error: 'Text-to-video generation is not configured yet. Your refined prompt is ready for when it is.',
-    };
+    // Delegate to the flag-gated text-to-video provider. When configured it
+    // performs REAL generation; otherwise it returns the refined prompt + an
+    // honest `unavailable` status (never a fabricated URL). Lazy require avoids
+    // a circular dependency.
+    const { generateBRollVideo } = require('./textToVideoService');
+    return await generateBRollVideo(prompt, { duration });
   } catch (error) {
     logger.error('Magic B-Roll fill error', { error: error.message });
     return {
