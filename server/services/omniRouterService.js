@@ -149,26 +149,27 @@ class OmniModelRouterService {
   }
 
   /**
-   * Simulator: Mimic a real generation output
+   * Cost/latency PLANNER only — this router estimates which model to use; it does
+   * NOT generate media. It returns an honest `unavailable` (no fabricated asset
+   * URL — owner's #1 rule). Real generation goes through the provider-wired
+   * services (textToVideoService, imageGenerationService, etc.).
    */
   async simulateGeneration(modelId, prompt) {
     const model = MODEL_REGISTRY[modelId];
     if (!model) throw new Error(`Model ${modelId} not found in registry`);
 
-    logger.info(`Omni-Router: Simulating generation for ${modelId}`, { prompt });
-
-    // Artificial Latency
-    await new Promise(resolve => setTimeout(resolve, 2000)); 
+    logger.info(`Omni-Router: generation requested for ${modelId} (planner only)`, { prompt });
 
     return {
-      success: true,
-      assetUrl: `https://simulator.sovereign.ai/assets/${crypto.randomBytes(8).toString('hex')}.mp4`,
+      success: false,
+      status: 'unavailable',
+      assetUrl: null,
       model: model.label,
       provider: model.provider,
-      generationId: `gen_${crypto.randomBytes(8).toString('hex')}`,
+      error: 'Omni-Router is a model planner; route generation to a provider-wired service (textToVideoService / imageGenerationService).',
       metrics: {
-        latencyMs: model.avgLatencyMs + (Math.random() - 0.5) * 1000,
-        cost: model.costPerSegment
+        estLatencyMs: model.avgLatencyMs,
+        estCost: model.costPerSegment
       }
     };
   }

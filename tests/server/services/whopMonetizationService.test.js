@@ -17,21 +17,20 @@ describe('WhopMonetizationService Unit Tests', () => {
   });
 
   describe('fetchWhopProducts', () => {
-    it('should return demo products if WHOP_API_KEY is missing', async () => {
+    it('should return an EMPTY catalog (no fabricated demo products) if WHOP_API_KEY is missing', async () => {
       // Temporarily delete env var if exists
       const originalKey = process.env.WHOP_API_KEY;
       delete process.env.WHOP_API_KEY;
-      
+
       const products = await fetchWhopProducts();
-      expect(products).toHaveLength(3);
-      expect(products[0].id).toContain('demo');
-      
+      expect(products).toEqual([]);
+
       process.env.WHOP_API_KEY = originalKey;
     });
 
     it('should fetch products from Whop API if key is present', async () => {
       process.env.WHOP_API_KEY = 'test-key';
-      
+
       const mockRes = {
         on: jest.fn((event, cb) => {
           if (event === 'data') cb(JSON.stringify({ products: [{ id: 'p1', name: 'Real Product' }] }));
@@ -40,6 +39,7 @@ describe('WhopMonetizationService Unit Tests', () => {
         })
       };
 
+      // The request object now also registers 'timeout' + 'error' listeners.
       https.get.mockImplementation((url, opts, cb) => {
         cb(mockRes);
         return { on: jest.fn() };
