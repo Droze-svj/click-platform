@@ -49,10 +49,12 @@ function categorize(status, body) {
   if (status === 401 || status === 403) return 'AUTH';
   if (status === 400 || status === 422) return 'BAD_REQUEST';
   if (status >= 200 && status < 300) {
-    // Standard surface should carry the success envelope; tolerate a couple of
-    // intentionally-bare shapes (e.g. /me returns {user}, health returns {status}).
-    if (body && (body.success === true || body.user || body.status || Array.isArray(body))) return 'OK';
-    return 'MALFORMED';
+    // A 2xx is healthy unless it CONTRADICTS itself by claiming failure. Many
+    // endpoints legitimately return non-envelope payloads (CSS, Prometheus text,
+    // raw arrays/objects, the VAPID key, booleans), so only flag the genuine
+    // contradiction `2xx + {success:false}`.
+    if (body && body.success === false) return 'MALFORMED';
+    return 'OK';
   }
   return 'OTHER';
 }
