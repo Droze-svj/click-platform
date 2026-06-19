@@ -1221,9 +1221,16 @@ async function renderFromEditorState(options) {
               id: trigger.productId
             });
 
-            command = command.input(overlayUrl);
-            const inputIndex = hasMusic ? 2 : 1; 
-            finalFilterList.push(`[${inputIndex}:v]scale=400:-1[comm];[qv][comm]overlay=x=(W-w)/2:y=H*0.7:enable='between(t,${trigger.startTime},${trigger.startTime + trigger.duration})'[qv]`);
+            // DISABLED: this can't be expressed in finalFilterList (which is
+            // comma-joined into ONE chain). The previous push referenced an
+            // UNDEFINED [qv] label + a hardcoded input index (every inlay used the
+            // same index), which corrupts the whole filter graph when a
+            // monetizationPlan is supplied. A multi-input overlay must go through
+            // the overlayGraph/image-overlay path. Skip cleanly until rewired so a
+            // monetizationPlan can never break the export. (overlayUrl is already
+            // generated above; not added as an input here.)
+            void overlayUrl;
+            logger.warn('Commerce inlay requested but not wired (needs overlay-input path) — skipping', { productId: trigger.productId });
           } catch (err) {
             logger.warn('Failed to inject commerce inlay', { error: err.message });
           }
@@ -1232,12 +1239,11 @@ async function renderFromEditorState(options) {
 
       // 🕰️ Phase 19: Long-Tail Resurrection (Hook Injection)
       if (exportOptions.resurrectionHookPath && fs.existsSync(exportOptions.resurrectionHookPath)) {
-        logger.info('Phase 19: Injecting Resurrection Hook', { path: exportOptions.resurrectionHookPath });
-        // We'll use the concat demuxer or filter-based concat
-        // For this pipeline, we prepend the hook as an input and concat
-        command = command.input(exportOptions.resurrectionHookPath);
-      // Construct concat filter logic if needed, but for MVP we'll assume the hook is prepended
-      // This requires complex filter adjustment. For Phase 19 implementation, we'll mark this as active.
+        // DISABLED: the hook was added as an input but NEVER mapped/concatenated
+        // into the output (a dangling unused input → the hook never appeared).
+        // Prepending it needs a concat-demuxer/filter pass. Skip cleanly rather
+        // than add a dead input.
+        logger.warn('Resurrection hook requested but concat not wired — skipping', { path: exportOptions.resurrectionHookPath });
       }
 
       const finalFilterStr = finalFilterList.length > 0 ? finalFilterList.join(',') : null;
