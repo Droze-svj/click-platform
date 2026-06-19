@@ -11,6 +11,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess } = require('../utils/response');
 const TrendSnapshot = require('../models/TrendSnapshot');
 const liveTrendService = require('../services/liveTrendService');
+const { getRepurposeSuggestions } = require('../services/trendJackService');
 const { resolveTier } = require('../config/entitlements');
 
 const router = express.Router();
@@ -59,6 +60,27 @@ router.get(
       items: (kindFilter ? live.filter((i) => i.kind === kindFilter) : live).slice(0, limit),
       source: 'live',
     });
+  })
+);
+
+/**
+ * GET /api/trends/repurpose — trend-jacking suggestions: rank live trends and
+ * pair each with one of the creator's recent clips, with a draft caption +
+ * merged hashtags ready to schedule. Honest `available:false` when no live data.
+ */
+router.get(
+  '/repurpose',
+  auth,
+  asyncHandler(async (req, res) => {
+    const platform = String(req.query.platform || 'tiktok').toLowerCase();
+    const limit = Math.min(10, Math.max(1, parseInt(req.query.limit, 10) || 5));
+    const result = await getRepurposeSuggestions(req.user._id, {
+      platform,
+      niche: req.query.niche,
+      limit,
+      tier: resolveTier(req.user),
+    });
+    return sendSuccess(res, result);
   })
 );
 
