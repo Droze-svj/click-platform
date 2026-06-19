@@ -11,7 +11,9 @@ const userActionSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: ['upload_video', 'generate_content', 'generate_script', 'create_quote', 'schedule_post', 'apply_effects', 'add_music', 'export', 'view', 'edit', 'delete']
+    // Keep in sync with the action strings passed to workflowService.trackAction
+    // (an unknown value fails schema validation and the action goes untracked).
+    enum: ['upload_video', 'generate_content', 'generate_script', 'create_quote', 'schedule_post', 'apply_effects', 'add_music', 'export', 'view', 'edit', 'delete', 'extract_highlights', 'generate_captions', 'analyze_video', 'analyze_pacing', 'detect_scenes', 'create_workflow', 'execute_workflow']
   },
   entityType: {
     type: String,
