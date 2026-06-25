@@ -107,6 +107,7 @@ import CommandK from './CommandK'
 import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
+import { buildBeatCutPlan, planToSegments } from '../lib/beatCuts'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useBrandKit } from './BrandKit'
 import {
@@ -1574,6 +1575,41 @@ const ModernVideoEditor: React.FC<{
     showToast(t('modernVideoEditor.beatSyncAligned'), 'success')
   }, [timelineSegments, showToast, setTimelineSegments, actualVideoUrl, videoId, t])
 
+  // One-click beat-CUT: re-segment the source into beat-aligned clips (montage).
+  // Reuses the same real onset endpoint, then the shared client beat-cut planner.
+  const handleBeatCut = useCallback(async () => {
+    const dur = videoState.duration
+    if (!dur || dur <= 0) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'error'); return }
+    if (!actualVideoUrl && !videoId) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'error'); return }
+
+    showToast(t('modernVideoEditor.beatSyncAnalyzing'), 'info')
+    let beats: number[] = []
+    try {
+      const params = new URLSearchParams()
+      if (actualVideoUrl) params.set('videoUrl', actualVideoUrl)
+      else if (videoId) params.set('contentId', videoId)
+      const res = await apiGet<{ data?: { beats?: number[]; hasAudio?: boolean } }>(
+        `/video/manual-editing/beats?${params.toString()}`
+      )
+      const payload = (res?.data ?? (res as any)) || {}
+      if (!payload.hasAudio) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'info'); return }
+      beats = Array.isArray(payload.beats) ? payload.beats.filter((b: any) => typeof b === 'number') : []
+      if (beats.length === 0) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'info'); return }
+    } catch {
+      showToast(t('modernVideoEditor.beatSyncFailed'), 'error')
+      return
+    }
+
+    const plan = buildBeatCutPlan(beats, { duration: dur, minClip: 0.6, maxClip: 4, everyNthBeat: 2 })
+    if (plan.count < 2) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'info'); return }
+    const newSegs = planToSegments(plan, { sourceUrl: actualVideoUrl || undefined })
+    // Replace existing VIDEO segments with the beat-aligned clips; keep audio/text/etc.
+    setTimelineSegments((prev: TimelineSegment[]) =>
+      [...prev.filter((s: TimelineSegment) => s.type !== 'video'), ...newSegs]
+    )
+    showToast(`✦ Cut into ${plan.count} beat-synced clips`, 'success')
+  }, [videoState.duration, actualVideoUrl, videoId, setTimelineSegments, showToast, t])
+
   const handleUpdateOverlay = useCallback((type: string, id: string, updates: any) => {
     if (type === 'text') {
       setTextOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o))
@@ -1855,7 +1891,7 @@ const ModernVideoEditor: React.FC<{
         onApplyStyleProfile={handleApplyStyleProfile}
         onBeatSync={handleBeatSync}
       />
-      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} hasSegmentSelection={!!selectedSegmentId} />
+      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} onBeatCut={handleBeatCut} hasSegmentSelection={!!selectedSegmentId} />
       case 'short-clips': return <ShortClipsView videoState={videoState} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} setActiveCategory={setActiveCategory} showToast={showToast} transcript={transcript} />
       case 'growth': return <GrowthInsightsView isOledTheme={true} />
       case 'predict': return <PredictionEngineView videoId={videoId || ''} timelineSegments={timelineSegments} transcript={transcript} showToast={showToast} />
@@ -2027,7 +2063,7 @@ const ModernVideoEditor: React.FC<{
         />
       }
 
-      default: return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} hasSegmentSelection={!!selectedSegmentId} />
+      default: return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} onBeatCut={handleBeatCut} hasSegmentSelection={!!selectedSegmentId} />
     }
   }
 

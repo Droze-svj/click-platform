@@ -282,6 +282,8 @@ interface BasicEditorViewProps {
   onJCutSelected?: (leadSec?: number) => void
   /** Toggle an L-Cut on the selected segment (audio tail past visual cut) */
   onLCutSelected?: (tailSec?: number) => void
+  /** One-click: re-segment the source into beat-aligned clips (montage). */
+  onBeatCut?: () => void
   /** Whether a segment is currently selected (for enabling segment-only ops) */
   hasSegmentSelection?: boolean
 }
@@ -376,6 +378,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   onTrimSelectedToRange,
   onJCutSelected,
   onLCutSelected,
+  onBeatCut,
   hasSegmentSelection = false,
 }) => {
   const { t } = useTranslation()
@@ -1585,6 +1588,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               {[
                 { icon: RotateCcw, label: 'Reverse', sub: hasSegmentSelection ? 'Flip selected clip' : 'Select a clip first', color: 'text-violet-400', action: () => onReverseSelected?.(), comingSoon: !onReverseSelected, requiresSelection: true },
                 { icon: Split, label: 'Split at Playhead', sub: `@ ${currentTime.toFixed(1)}s`, color: 'text-indigo-400', action: () => onSplitAtPlayhead?.(), comingSoon: !onSplitAtPlayhead, requiresSelection: false },
+                { icon: Music, label: 'Beat Cut', sub: 'Cut the clip on every beat', color: 'text-pink-400', action: () => onBeatCut?.(), comingSoon: !onBeatCut, requiresSelection: false },
                 { icon: Maximize, label: 'Freeze Frame', sub: `Hold 1s @ ${currentTime.toFixed(1)}s`, color: 'text-amber-400', action: () => onFreezeAtPlayhead?.(1.0), comingSoon: !onFreezeAtPlayhead, requiresSelection: false },
                 { icon: Scissors, label: 'Trim to In/Out', sub: trimInPoint != null && trimOutPoint != null ? `${(trimOutPoint - trimInPoint).toFixed(2)}s` : 'Set In + Out below', color: 'text-emerald-400', action: () => {
                   if (trimInPoint == null || trimOutPoint == null) {
