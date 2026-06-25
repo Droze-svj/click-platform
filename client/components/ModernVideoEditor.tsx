@@ -1603,12 +1603,20 @@ const ModernVideoEditor: React.FC<{
     const plan = buildBeatCutPlan(beats, { duration: dur, minClip: 0.6, maxClip: 4, everyNthBeat: 2 })
     if (plan.count < 2) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'info'); return }
     const newSegs = planToSegments(plan, { sourceUrl: actualVideoUrl || undefined })
-    // Replace existing VIDEO segments with the beat-aligned clips; keep audio/text/etc.
+    // Re-segment the SOURCE into beat-aligned clips: replace existing video
+    // segments (keep audio/text/b-roll). Be HONEST when this replaces prior video
+    // edits so it's never a silent data loss.
+    const replacedVideoClips = timelineSegments.filter((s: TimelineSegment) => s.type === 'video').length
     setTimelineSegments((prev: TimelineSegment[]) =>
       [...prev.filter((s: TimelineSegment) => s.type !== 'video'), ...newSegs]
     )
-    showToast(`✦ Cut into ${plan.count} beat-synced clips`, 'success')
-  }, [videoState.duration, actualVideoUrl, videoId, setTimelineSegments, showToast, t])
+    showToast(
+      replacedVideoClips > 1
+        ? `✦ Re-cut into ${plan.count} beat clips (replaced ${replacedVideoClips} video clips)`
+        : `✦ Cut into ${plan.count} beat-synced clips`,
+      'success'
+    )
+  }, [videoState.duration, actualVideoUrl, videoId, timelineSegments, setTimelineSegments, showToast, t])
 
   const handleUpdateOverlay = useCallback((type: string, id: string, updates: any) => {
     if (type === 'text') {
