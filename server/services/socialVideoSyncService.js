@@ -88,4 +88,32 @@ async function listVideos(userId, options = {}) {
   return { platform: q.platform, total: videos.length, videos };
 }
 
-module.exports = { buildVideoRecord, syncYouTubeVideos, listVideos };
+/**
+ * Scheduled sync: refresh SocialVideo for every user with an active YouTube
+ * connection. Bounded + best-effort (one user's failure never blocks the rest).
+ */
+async function runScheduledSync(options = {}) {
+  const SocialConnection = require('../models/SocialConnection');
+  const max = Math.max(1, Math.min(Number(options.limit) || 500, 5000));
+  let userIds = [];
+  try {
+    userIds = await SocialConnection.distinct('userId', { platform: 'youtube', isActive: true });
+  } catch (err) {
+    logger.warn('[socialVideoSync] scheduled sync: connection query failed', { error: err.message });
+    return { users: 0, synced: 0 };
+  }
+  let users = 0;
+  let synced = 0;
+  for (const uid of userIds.slice(0, max)) {
+    try {
+      const r = await syncYouTubeVideos(uid, {});
+      if (r && r.available) { users += 1; synced += r.synced || 0; }
+    } catch (err) {
+      logger.warn('[socialVideoSync] scheduled sync failed for user', { userId: String(uid), error: err.message });
+    }
+  }
+  logger.info('[socialVideoSync] scheduled sync complete', { users, synced });
+  return { users, synced };
+}
+
+module.exports = { buildVideoRecord, syncYouTubeVideos, listVideos, runScheduledSync };

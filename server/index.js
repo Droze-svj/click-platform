@@ -2695,6 +2695,20 @@ if (process.env.JEST_WORKER_ID) {
             }
           });
 
+          // Channel video sync (daily at 5 AM) — refresh the SocialVideo store
+          // for connected YouTube channels so the Growth layer (outliers,
+          // retention) stays current across each creator's WHOLE channel,
+          // including videos published outside Click.
+          cron.schedule('0 5 * * *', async () => {
+            try {
+              const { runScheduledSync } = require('./services/socialVideoSyncService');
+              const { users, synced } = await runScheduledSync();
+              if (synced > 0) logger.info('📹 Channel video sync complete', { users, synced });
+            } catch (err) {
+              logger.error('❌ Failed channel video sync', { error: err.message });
+            }
+          });
+
           // Autonomous content agent — hands-off trigger. OPT-IN via
           // AGENT_AUTORUN=true (default OFF) so it never mass-runs by surprise;
           // even when on, each run's PUBLISH stage is still gated by
