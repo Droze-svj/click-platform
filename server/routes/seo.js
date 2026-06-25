@@ -10,6 +10,7 @@ const Content = require('../models/Content');
 const { scoreVideoSeo, generateSeoRewrite } = require('../services/seoScorecardService');
 const { getKeywordIdeas } = require('../services/keywordIntelService');
 const { getOutliers } = require('../services/velocityOutlierService');
+const { getRetentionInsights } = require('../services/retentionAnalysisService');
 
 const router = express.Router();
 
@@ -92,6 +93,12 @@ router.get('/outliers', auth, asyncHandler(async (req, res) => {
     limit: Number(req.query.limit) || 100,
   });
   sendSuccess(res, 'Performance outliers', 200, result);
+}));
+
+// GET /api/seo/retention/:contentId — retention curve → edit recommendations.
+router.get('/retention/:contentId', auth, asyncHandler(async (req, res) => {
+  const result = await getRetentionInsights(req.params.contentId, req.user._id);
+  sendSuccess(res, 'Retention insights', 200, result);
 }));
 
 module.exports = router;
