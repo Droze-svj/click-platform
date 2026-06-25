@@ -189,7 +189,36 @@ function wrapTextToLines(text, maxChars, maxLines = 3) {
   return lines.slice(0, maxLines)
 }
 
+/**
+ * Word-by-word ("karaoke") caption: each word flashes on, centered + synced to
+ * its spoken timing — the viral single-word style. Reuses buildDrawTextFilter
+ * per word so every word inherits the auto-fit / wrap / safe-zone treatment.
+ */
+function buildWordByWordFilter(overlay, dims) {
+  const words = Array.isArray(overlay.words) ? overlay.words : []
+  const filters = []
+  for (const w of words) {
+    if (!w) continue
+    const text = String(w.word ?? w.text ?? '').trim()
+    if (!text) continue
+    const start = Number(w.start ?? w.startTime)
+    const end = Number(w.end ?? w.endTime ?? (start + 0.4))
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue
+    // Strip the word-mode markers so the per-word call renders a normal caption.
+    const single = { ...overlay, text, startTime: start, endTime: end, words: undefined, captionMode: undefined, karaoke: undefined }
+    const f = buildDrawTextFilter(single, dims)
+    if (f) filters.push(f)
+  }
+  return filters.length ? filters.join(',') : null
+}
+
 function buildDrawTextFilter(overlay, dims = {}) {
+  // Word-by-word mode: expand into per-word, time-synced single-word captions.
+  if (Array.isArray(overlay.words) && overlay.words.length &&
+      (overlay.captionMode === 'word' || overlay.karaoke === true)) {
+    return buildWordByWordFilter(overlay, dims)
+  }
+
   const rawText = (overlay.text || '').toUpperCase().trim()
   if (!rawText) return null
 
@@ -318,7 +347,15 @@ function buildDrawTextFilter(overlay, dims = {}) {
     const safeLine = escapeFfmpegText(lineText)
     const offset = Math.round((idx - (renderLines.length - 1) / 2) * lineHeight)
     const lineY = offset === 0 ? finalYExpr : `(${finalYExpr})+(${offset})`
-    return `drawtext=text='${safeLine}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${lineY}'${alphaOpt}:box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
+    // ── Safe-zone clamp ──
+    // Keep every line inside [4%, 92%] of the frame height so captions never go
+    // off the top or collide with the TikTok/Reels bottom UI band. Gentle: only
+    // bites at the extremes; normal lower-third captions are unaffected. Opt out
+    // with overlay.safeZone === false (explicit editor placement).
+    const safeY = overlay.safeZone === false
+      ? lineY
+      : `max(h*0.04\\,min((${lineY})\\,h*0.92-text_h))`
+    return `drawtext=text='${safeLine}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${safeY}'${alphaOpt}:box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
   }
   return renderLines.map(drawForLine).join(',')
 }
