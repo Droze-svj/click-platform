@@ -86,10 +86,12 @@ function evaluateHookExperiment(variantResults = [], options = {}) {
  */
 async function generateHookExperiment(baseText, opts = {}) {
   const topic = topicFrom(baseText);
+  const keyword = opts.keyword ? String(opts.keyword).trim() : '';
   let aiHooks = null;
 
   const prompt =
     `Write 3 short, scroll-stopping video hooks for this content: "${String(baseText || '').slice(0, 400)}".\n` +
+    (keyword ? `Naturally work in the SEO keyword "${keyword}" where it fits (don't force it).\n` : '') +
     `One per angle — curiosity, authority, FOMO. Each under 120 characters, no hashtags.\n` +
     `Return JSON: {"hooks":[{"angle":"curiosity","hook":"..."},{"angle":"authority","hook":"..."},{"angle":"fomo","hook":"..."}]}`;
 
@@ -102,13 +104,15 @@ async function generateHookExperiment(baseText, opts = {}) {
     logger.warn('[hookExperiment] AI generation failed, using templates', { error: err.message });
   }
 
+  // For the template fallback, lead with the SEO keyword when one is set.
+  const templateTopic = keyword || topic;
   const variants = HOOK_ANGLES.map((a) => {
     const match = aiHooks && aiHooks.find((h) => h && String(h.angle || '').toLowerCase() === a.key);
     const aiHook = match && typeof match.hook === 'string' ? match.hook.trim() : '';
     return {
       angle: a.key,
       label: a.label,
-      hook: aiHook ? aiHook.slice(0, 200) : a.template(topic),
+      hook: aiHook ? aiHook.slice(0, 200) : a.template(templateTopic),
       source: aiHook ? 'ai' : 'template',
     };
   });

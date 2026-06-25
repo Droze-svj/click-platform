@@ -12,6 +12,7 @@ const { getKeywordIdeas } = require('../services/keywordIntelService');
 const { getOutliers } = require('../services/velocityOutlierService');
 const { getRetentionInsights } = require('../services/retentionAnalysisService');
 const { getChannelAudit } = require('../services/channelAuditService');
+const { getContentGrowthBrief } = require('../services/growthBriefService');
 
 const router = express.Router();
 
@@ -100,6 +101,14 @@ router.get('/outliers', auth, asyncHandler(async (req, res) => {
 router.get('/retention/:contentId', auth, asyncHandler(async (req, res) => {
   const result = await getRetentionInsights(req.params.contentId, req.user._id);
   sendSuccess(res, 'Retention insights', 200, result);
+}));
+
+// GET /api/seo/brief/:contentId — the closed-loop "do this next" brief.
+router.get('/brief/:contentId', auth, asyncHandler(async (req, res) => {
+  const brief = await getContentGrowthBrief(req.params.contentId, req.user._id, {
+    targetKeyword: req.query.keyword, platform: req.query.platform,
+  });
+  sendSuccess(res, 'Growth brief', 200, brief);
 }));
 
 // GET /api/seo/channel-audit — channel-level scorecard from real YouTube data.
