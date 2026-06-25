@@ -64,7 +64,13 @@ async function generateBeatCuts(inputPath, options = {}) {
     return { segments: [], cutPoints: [], count: 0, available: false, reason: 'detect_failed' };
   }
   const plan = buildBeatCutPlan(beats, options);
-  return { ...plan, available: plan.count > 0, beatCount: Array.isArray(beats) ? beats.length : 0 };
+  let segments = plan.segments;
+  // Optionally drop an animated transition on every cut (montage feel).
+  if (options.transition) {
+    const { applyTransitionToSegments } = require('./transitionPresetService');
+    segments = applyTransitionToSegments(segments, options.transition, { duration: options.transitionDuration });
+  }
+  return { ...plan, segments, available: plan.count > 0, beatCount: Array.isArray(beats) ? beats.length : 0 };
 }
 
 module.exports = { buildBeatCutPlan, generateBeatCuts };

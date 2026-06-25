@@ -9,6 +9,7 @@ const os = require('os');
 const path = require('path');
 const { hasFfmpeg, ffprobe, makeSource, frameAvgLuma } = require('./probe');
 const renderService = require('../../server/services/videoRenderService');
+const { resolveTransition } = require('../../server/services/transitionPresetService');
 
 const FFMPEG = hasFfmpeg();
 const d = FFMPEG ? describe : describe.skip;
@@ -58,6 +59,21 @@ d('render fidelity', () => {
     expect(p.width).toBe(1280);
     expect(p.height).toBe(720);
     expect(p.duration).toBeGreaterThan(3);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
+  it('animated transition preset (whip) between 2 segments → renders through ffmpeg (xfade)', async () => {
+    const t = resolveTransition('whip-left'); // → slideleft xfade
+    const { outputPath } = await render({
+      exportOptions: { width: 1280, height: 720, duration: 4 },
+      timelineSegments: [
+        { id: 'a', type: 'video', startTime: 0, sourceStartTime: 0, sourceEndTime: 2,
+          transitionOut: t.transitionOut, transitionType: t.transitionType, transitionDuration: t.transitionDuration },
+        { id: 'b', type: 'video', startTime: 2, sourceStartTime: 2, sourceEndTime: 4 },
+      ],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 

@@ -357,6 +357,12 @@ router.post('/metadata', auth, upload.single('video'), asyncHandler(async (req, 
   sendSuccess(res, { videoId, operation }, 'Metadata started', 202);
 }));
 
+// GET /api/video/advanced/transitions — the animated transition preset library.
+router.get('/transitions', auth, asyncHandler(async (req, res) => {
+  const { TRANSITION_PRESETS } = require('../../services/transitionPresetService');
+  sendSuccess(res, { presets: TRANSITION_PRESETS }, 'Transition presets', 200);
+}));
+
 // POST /api/video/advanced/beat-cuts — detect audio beats and return a
 // beat-synced cut/segment plan the editor can apply. Returns the plan in the
 // response (fast: ebur128 probe only, no re-encode).
@@ -371,6 +377,8 @@ router.post('/beat-cuts', auth, upload.single('video'), guardVideoUrl, asyncHand
       maxClip: Number(req.body.maxClip) || 4,
       everyNthBeat: Number(req.body.everyNthBeat) || 2,
       duration: Number(req.body.duration) || 0,
+      transition: req.body.transition || null, // optional preset id
+      transitionDuration: Number(req.body.transitionDuration) || undefined,
     });
     sendSuccess(res, plan, 'Beat-synced cut plan', 200);
   } finally {
