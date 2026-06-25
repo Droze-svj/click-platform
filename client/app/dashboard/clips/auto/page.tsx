@@ -112,7 +112,7 @@ export default function AutoClipsPage() {
   useEffect(() => {
     let cancelled = false
     setContentLoading(true)
-    apiGet<{ success?: boolean; message?: string; data?: ContentItem[] }>('/api/content?limit=20')
+    apiGet<{ success?: boolean; message?: string; data?: ContentItem[] }>('/content?limit=20')
       .then((res) => {
         if (cancelled) return
         const list = Array.isArray(res?.data) ? res.data : []
@@ -142,7 +142,7 @@ export default function AutoClipsPage() {
     setGenerating(true)
     try {
       const res = await apiPost<{ data?: AutoClipResponse }>(
-        `/api/video/${contentId}/auto-clip`,
+        `/video/${contentId}/auto-clip`,
         { maxClips: 10 }
       )
       setResult(res?.data ?? null)

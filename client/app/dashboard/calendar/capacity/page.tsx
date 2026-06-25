@@ -71,7 +71,7 @@ function CapacityInner() {
     if (isRefresh) setRefreshing(true); else setLoading(true)
     try {
       const res = await apiGet<CapacityEnvelope>(
-        `/api/agency/${agencyWorkspaceId}/calendar/capacity`
+        `/agency/${agencyWorkspaceId}/calendar/capacity`
       )
       setCapacity(res?.data ?? null)
     } catch {

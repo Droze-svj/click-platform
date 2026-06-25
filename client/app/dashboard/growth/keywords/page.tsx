@@ -130,7 +130,7 @@ export default function KeywordExplorerPage() {
     setLoading(true)
     try {
       const res = await apiGet<{ data: KeywordResponse }>(
-        '/api/seo/keywords?seed=' + encodeURIComponent(trimmed) +
+        '/seo/keywords?seed=' + encodeURIComponent(trimmed) +
           '&platform=' + platform + '&limit=15',
       )
       setData(res?.data ?? null)

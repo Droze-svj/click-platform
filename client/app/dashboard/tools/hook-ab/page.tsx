@@ -131,7 +131,7 @@ export default function HookABPage() {
     setEvaluation(null)
     try {
       const res = await apiPost<ApiEnvelope<HookExperimentResponse>>(
-        '/api/productive/ab-testing/hook-experiment',
+        '/productive/ab-testing/hook-experiment',
         { text: trimmed },
       )
       const data = res?.data ?? null
@@ -176,7 +176,7 @@ export default function HookABPage() {
         engagement: Number(metrics[i]?.engagement) || 0,
       }))
       const res = await apiPost<ApiEnvelope<EvalResponse>>(
-        '/api/productive/ab-testing/hook-experiment/evaluate',
+        '/productive/ab-testing/hook-experiment/evaluate',
         { variantResults },
       )
       const data = res?.data ?? null

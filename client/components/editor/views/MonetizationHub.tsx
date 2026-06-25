@@ -73,7 +73,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
       setIsLoadingProducts(true)
       setError(null)
       try {
-        const result = await apiGet<any>(`/video/advanced/monetization/products?provider=${provider}`)
+        const result = await apiGet<any>(`/monetization/products?provider=${provider}`)
         if (result?.success) {
           setProducts(result.data)
         } else if (Array.isArray(result?.data)) {

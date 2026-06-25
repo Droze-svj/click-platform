@@ -75,7 +75,7 @@ export default function TrendRepurposePage() {
     setLoading(true)
     try {
       const res = await apiGet<{ data: RepurposeResponse }>(
-        `/api/trends/repurpose?platform=${encodeURIComponent(platform)}&limit=6`
+        `/trends/repurpose?platform=${encodeURIComponent(platform)}&limit=6`
       )
       setData(res?.data ?? null)
     } catch (err) {

@@ -35,7 +35,7 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const res = await apiGet('/projects')
+                const res = await apiGet('/pm/projects')
                 if (res.success) {
                     setProjects(res.data)
                 }
