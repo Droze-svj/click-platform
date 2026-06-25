@@ -357,6 +357,29 @@ router.post('/metadata', auth, upload.single('video'), asyncHandler(async (req, 
   sendSuccess(res, { videoId, operation }, 'Metadata started', 202);
 }));
 
+// POST /api/video/advanced/beat-cuts — detect audio beats and return a
+// beat-synced cut/segment plan the editor can apply. Returns the plan in the
+// response (fast: ebur128 probe only, no re-encode).
+router.post('/beat-cuts', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
+  const { videoUrl } = req.body || {};
+  const inputPath = req.file?.path || (videoUrl ? await downloadToUploadsTemp(videoUrl) : null);
+  if (!inputPath) return sendError(res, 'Video file or videoUrl is required', 400);
+  try {
+    const { generateBeatCuts } = require('../../services/beatSyncCutService');
+    const plan = await generateBeatCuts(inputPath, {
+      minClip: Number(req.body.minClip) || 0.6,
+      maxClip: Number(req.body.maxClip) || 4,
+      everyNthBeat: Number(req.body.everyNthBeat) || 2,
+      duration: Number(req.body.duration) || 0,
+    });
+    sendSuccess(res, plan, 'Beat-synced cut plan', 200);
+  } finally {
+    if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
+      await fs.promises.unlink(inputPath).catch(() => { /* ignore */ });
+    }
+  }
+}));
+
 /**
  * @swagger
  * /api/video/advanced/convert:

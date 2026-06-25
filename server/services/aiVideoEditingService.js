@@ -5947,6 +5947,7 @@ module.exports = {
   suggestBrollKeywords,
   buildSentimentEffects,
   buildClipPlan,
+  detectBeats,
   processChromaKey,
   getInteractiveSuggestions,
   applyVisualEffects,
