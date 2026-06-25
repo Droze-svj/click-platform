@@ -9,6 +9,7 @@ const { sendSuccess, sendError } = require('../utils/response');
 const Content = require('../models/Content');
 const { scoreVideoSeo, generateSeoRewrite } = require('../services/seoScorecardService');
 const { getKeywordIdeas } = require('../services/keywordIntelService');
+const { getOutliers } = require('../services/velocityOutlierService');
 
 const router = express.Router();
 
@@ -82,6 +83,15 @@ router.get('/keywords', auth, asyncHandler(async (req, res) => {
     userId: req.user._id,
   });
   sendSuccess(res, 'Keyword ideas', 200, result);
+}));
+
+// GET /api/seo/outliers — videos overperforming the creator's own baseline.
+router.get('/outliers', auth, asyncHandler(async (req, res) => {
+  const result = await getOutliers(req.user._id, {
+    overMultiplier: Number(req.query.overMultiplier) || 2,
+    limit: Number(req.query.limit) || 100,
+  });
+  sendSuccess(res, 'Performance outliers', 200, result);
 }));
 
 module.exports = router;
