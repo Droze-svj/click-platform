@@ -250,6 +250,19 @@ function TextOverlayInspector({
         </FieldRow>
       )}
 
+      {/* Emoji — auto-picked, editable. Renders with the caption (export uses an
+          emoji font; preview shows it in the browser). Clear to remove. */}
+      <FieldRow label="Emoji">
+        <Input
+          value={overlay.emoji || ''}
+          onChange={(e) => onUpdate({ emoji: e.target.value })}
+          aria-label="Caption emoji"
+          placeholder="🔥 (auto)"
+          className="w-20 text-center text-[14px]"
+          maxLength={8}
+        />
+      </FieldRow>
+
       <FieldRow label="Font size" suffix="px">
         <NumberField value={overlay.fontSize} step={1} min={8} max={200}
           onChange={(v) => onUpdate({ fontSize: Math.round(v) })} />

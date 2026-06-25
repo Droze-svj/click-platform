@@ -892,6 +892,11 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             const presetColor = (text as any).captionPreset ? CAPTION_PRESET_COLORS[(text as any).captionPreset] : null
             const isWordMode = (text as any).captionMode === 'word' && Array.isArray((text as any).words) && (text as any).words.length
             const displayText = isWordMode ? activeKaraokeWord((text as any).words, currentTime) : text.text
+            // Auto-emoji: show it appended in the preview (browser renders emoji;
+            // export uses an emoji font). Kept separate so it never affects the
+            // keyword-highlight matching below.
+            const captionEmoji = (text as any).emoji as string | undefined
+            const displayWithEmoji = displayText && captionEmoji ? `${displayText} ${captionEmoji}` : displayText
             // Highlight: if the active word is a designated keyword, use the accent.
             const hlSet: string[] = Array.isArray((text as any).highlightWords) ? (text as any).highlightWords : []
             const hlNorm = String(displayText || '').toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -1035,7 +1040,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                           transformOrigin: 'center center'
                         }}
                       >
-                        {displayText}
+                        {displayWithEmoji}
                       </div>
                     </div>
                   )}
