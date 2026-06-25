@@ -77,6 +77,20 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('expanded transition (glitch friendly name → pixelize xfade) renders through ffmpeg', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 1280, height: 720, duration: 4 },
+      timelineSegments: [
+        { id: 'a', type: 'video', startTime: 0, sourceStartTime: 0, sourceEndTime: 2,
+          transitionOut: 'glitch', transitionDuration: 0.2 },
+        { id: 'b', type: 'video', startTime: 2, sourceStartTime: 2, sourceEndTime: 4 },
+      ],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('vertical export → output is 1080x1920', async () => {
     const { outputPath } = await render({ exportOptions: { width: 1080, height: 1920, duration: 4 } });
     const p = ffprobe(outputPath);

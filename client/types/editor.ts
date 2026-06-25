@@ -143,7 +143,9 @@ export interface AutoEditClip {
 export type TimelineSegmentType = 'video' | 'audio' | 'text' | 'transition' | 'image' | 'cut' | 'broll' | 'gif'
 
 /** Transition at end of segment to next segment */
-export type SegmentTransitionType = 'none' | 'crossfade' | 'dip' | 'wipe-left' | 'wipe-right' | 'wipe-up' | 'wipe-down' | 'zoom'
+export type SegmentTransitionType = 'none' | 'crossfade' | 'dip' | 'wipe-left' | 'wipe-right'
+  | 'wipe-up' | 'wipe-down' | 'zoom' | 'flash' | 'dissolve' | 'slide-up' | 'slide-down'
+  | 'whip-left' | 'whip-right' | 'iris' | 'radial' | 'glitch'
 
 export interface TimelineSegment {
   id: string

@@ -201,6 +201,8 @@ const XFADE_ALIASES = {
   crossfade: 'fade', dip: 'fadeblack', 'dip-to-black': 'fadeblack',
   'wipe-left': 'wipeleft', 'wipe-right': 'wiperight', 'wipe-up': 'wipeup', 'wipe-down': 'wipedown',
   zoom: 'pixelize', whip: 'slideleft', 'whip-left': 'slideleft', 'whip-right': 'slideright',
+  flash: 'fadewhite', 'slide-up': 'smoothup', 'slide-down': 'smoothdown',
+  iris: 'circleopen', glitch: 'pixelize',
 }
 
 /**
