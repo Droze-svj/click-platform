@@ -78,19 +78,35 @@ function detectOutliers(videos = [], options = {}) {
 }
 
 /**
- * Orchestrator: read the creator's real VideoMetrics, compute average VPH per
- * video, and surface outliers vs their own baseline. `nowMs` is injectable for
- * tests (no ambient Date in the pure path).
+ * Orchestrator: surface the creator's overperformers vs their OWN baseline.
+ * Ownership is grounded on Content (VideoMetrics is keyed by workspaceId/
+ * contentId only); we read the user's Content, then join VideoMetrics by
+ * contentId. Content.createdAt is the publish-time proxy for VPH. `nowMs` is
+ * injectable for tests.
  */
 async function getOutliers(userId, options = {}) {
   const VideoMetrics = require('../models/VideoMetrics');
+  const Content = require('../models/Content');
   const nowMs = Number.isFinite(options.nowMs) ? options.nowMs : Date.now();
+
+  let contents = [];
+  try {
+    contents = await Content.find({ userId })
+      .select('_id createdAt')
+      .sort({ createdAt: -1 })
+      .limit(Number(options.limit) || 200)
+      .lean();
+  } catch (err) {
+    logger.warn('[velocityOutlier] content query failed', { error: err.message });
+    return { baseline: null, outliers: [], underperformers: [], count: 0, available: false };
+  }
+  if (!contents.length) return { baseline: null, outliers: [], underperformers: [], count: 0, available: false };
+
+  const publishById = new Map(contents.map((c) => [String(c._id), c.createdAt]));
   let docs = [];
   try {
-    docs = await VideoMetrics.find({ userId })
-      .select('contentId platform views publishedAt createdAt')
-      .sort({ createdAt: -1 })
-      .limit(Number(options.limit) || 100)
+    docs = await VideoMetrics.find({ contentId: { $in: contents.map((c) => c._id) } })
+      .select('contentId platform views createdAt')
       .lean();
   } catch (err) {
     logger.warn('[velocityOutlier] metrics query failed', { error: err.message });
@@ -99,7 +115,7 @@ async function getOutliers(userId, options = {}) {
 
   const videos = (docs || []).map((d) => {
     const views = (d.views && (d.views.total || d.views.unique)) || 0;
-    const publishedAt = d.publishedAt || d.createdAt;
+    const publishedAt = publishById.get(String(d.contentId)) || d.createdAt;
     return {
       contentId: d.contentId,
       platform: d.platform,
