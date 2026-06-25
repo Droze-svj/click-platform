@@ -1983,6 +1983,10 @@ app.use('/api/video/ai-editing', require('./routes/video/ai-editing'));
 app.use('/api/video/viral', require('./routes/video/viral'));
 app.use('/api/video/manual-editing', require('./routes/video/manual-editing'));
 app.use('/api/video/creative', require('./routes/video/creative'));
+// Hook analysis + sentence-timed auto-captions. The router existed but was never
+// mounted, so POST /api/video/hook-analysis/auto-caption (used by the editor's
+// "Add captions" button, the one-click AutomateView, and Auto Viral Edit) 404'd.
+app.use('/api/video/hook-analysis', require('./routes/video/hook-analysis'));
 app.use('/api/agentic', require('./routes/agentic'));
 app.use('/api/assets', require('./routes/assets'));
 app.use('/api/video/voice-hooks', require('./routes/video/voice-hooks'));

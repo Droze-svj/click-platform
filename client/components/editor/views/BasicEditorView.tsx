@@ -1178,13 +1178,15 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     setCaptionSuccess(null)
     try {
       const yPct = captionY === 'top' ? 18 : captionY === 'mid' ? 50 : 82
-      const data = await apiPost('/video/hook-analysis/auto-caption', {
+      const resp = await apiPost('/video/hook-analysis/auto-caption', {
         transcript: transcriptText,
         videoId,
         style: captionStyle,
         wordsPerCaption: wordsPerCap,
         duration,
-      }) as { captions: Array<{ id: string; text: string; startTime: number; endTime: number; style: string }>; totalCaptions: number }
+      }) as { data?: { captions?: Array<{ id: string; text: string; startTime: number; endTime: number; style: string }>; totalCaptions?: number }; captions?: Array<{ id: string; text: string; startTime: number; endTime: number; style: string }>; totalCaptions?: number }
+      // Envelope-aware: the route wraps the payload as { data: { captions } }.
+      const data = (resp?.data ?? resp) || {}
 
       if (!data?.captions?.length) {
         setCaptionError('No captions generated — transcript may be too short.')
@@ -1239,8 +1241,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
       pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
       setTextOverlays((prev: TextOverlay[]) => [...prev, ...newOverlays])
-      setCaptionSuccess(data.totalCaptions)
-      showToast(`✦ ${data.totalCaptions} captions added — ${captionStyle} style`, 'success')
+      const captionCount = data.totalCaptions ?? data.captions?.length ?? 0
+      setCaptionSuccess(captionCount)
+      showToast(`✦ ${captionCount} captions added — ${captionStyle} style`, 'success')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Caption generation failed'
       setCaptionError(msg)
