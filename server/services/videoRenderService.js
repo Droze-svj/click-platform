@@ -89,13 +89,18 @@ function buildLUTApproximation(lutId) {
  * 2026 Caption Style Map — shared with Auto-Edit for consistency
  * Ensures manual edits look identical to AI auto-edits
  */
+// fontSize values are the baseline for a 1080-WIDE frame; they are scaled to the
+// real output width in buildDrawTextFilter so text is proportional on every
+// aspect (9:16 / 1:1 / 16:9). y-offsets are expressed as a fraction of frame
+// HEIGHT (not fixed px) so the vertical placement is correct on any frame
+// height — a fixed `-360px` would land mid-frame on a 1080-tall output.
 const CAPTION_STYLE_MAP = {
-  hook:     { fontColor: '#FFD700', bgColor: 'black@0.9', fontSize: 82, y: 'h-text_h-360', borderColor: '#FFD700', borderw: 4, shadow: 4 },
-  stat:     { fontColor: '#00FFFF', bgColor: 'black@0.85', fontSize: 72, y: 'h-text_h-320', borderColor: '#00FFFF', borderw: 3, shadow: 3 },
-  question: { fontColor: '#FFFFFF', bgColor: 'black@0.85', fontSize: 64, y: 'h/2.2',         borderColor: '#FFFFFF', borderw: 2, shadow: 2 },
-  punchline: { fontColor: '#FF3366', bgColor: 'black@0.9', fontSize: 76, y: 'h-text_h-320', borderColor: '#FF3366', borderw: 3, shadow: 4 },
-  CTA:      { fontColor: '#FFD700', bgColor: 'black@0.95', fontSize: 60, y: 'h-text_h-240', borderColor: '#FFD700', borderw: 2, shadow: 2 },
-  default:  { fontColor: '#FFFFFF', bgColor: 'black@0.8',  fontSize: 58, y: 'h-text_h-320', borderColor: 'black',   borderw: 2, shadow: 2 },
+  hook:     { fontColor: '#FFD700', bgColor: 'black@0.9', fontSize: 82, y: 'h-text_h-(h*0.1875)', borderColor: '#FFD700', borderw: 4, shadow: 4 },
+  stat:     { fontColor: '#00FFFF', bgColor: 'black@0.85', fontSize: 72, y: 'h-text_h-(h*0.1667)', borderColor: '#00FFFF', borderw: 3, shadow: 3 },
+  question: { fontColor: '#FFFFFF', bgColor: 'black@0.85', fontSize: 64, y: 'h/2.2',                borderColor: '#FFFFFF', borderw: 2, shadow: 2 },
+  punchline: { fontColor: '#FF3366', bgColor: 'black@0.9', fontSize: 76, y: 'h-text_h-(h*0.1667)', borderColor: '#FF3366', borderw: 3, shadow: 4 },
+  CTA:      { fontColor: '#FFD700', bgColor: 'black@0.95', fontSize: 60, y: 'h-text_h-(h*0.125)',  borderColor: '#FFD700', borderw: 2, shadow: 2 },
+  default:  { fontColor: '#FFFFFF', bgColor: 'black@0.8',  fontSize: 58, y: 'h-text_h-(h*0.1667)', borderColor: 'black',   borderw: 2, shadow: 2 },
 };
 
 /**
@@ -156,11 +161,18 @@ function escapeFfmpegText(text) {
  * Build drawtext filter for a text overlay — fully 2026-compatible
  * Applies same visual treatment as AI auto-edit for brand consistency
  */
-function buildDrawTextFilter(overlay) {
+function buildDrawTextFilter(overlay, dims = {}) {
   const rawText = (overlay.text || '').toUpperCase().trim()
   if (!rawText) return null
 
+  // Output frame dimensions — text auto-fits/auto-adjusts to these. Default to
+  // the canonical 9:16 the px baselines were tuned for, so legacy callers that
+  // don't pass dims are unchanged.
+  const frameW = Math.max(2, Math.round(Number(dims.width) || 1080))
+  const frameH = Math.max(2, Math.round(Number(dims.height) || 1920))
+
   const safeText = escapeFfmpegText(rawText)
+  const textLen = safeText.length
   const style = overlay.style || overlay.type || 'default'
   const sty = CAPTION_STYLE_MAP[style] || CAPTION_STYLE_MAP.default
 
@@ -171,19 +183,37 @@ function buildDrawTextFilter(overlay) {
   const rawBg = overlay.backgroundColor || overlay.background || null
   const bgColor = rawBg ? ffColor(rawBg, sty.bgColor) : sty.bgColor
 
-  // Positioning: support explicit x/y (percentage-based from editor) or style defaults
+  // Positioning: explicit x/y (percentage-based from editor) or style defaults.
+  // Percentages are clamped to a safe margin [2,98] so text never renders flush
+  // to / off the frame edge. The (w-text_w)*pct form already keeps text on-frame
+  // for pct in [0,100] (text_w is subtracted), so clamping the pct + fitting the
+  // font width below guarantees text stays inside the frame on every aspect.
+  const safePct = (v, def) => {
+    const n = Number(v)
+    return Math.max(2, Math.min(98, Number.isFinite(n) ? n : def))
+  }
   const x = overlay.x !== undefined
-    ? `(w-text_w)*${(Number(overlay.x) ?? 50) / 100}`
+    ? `(w-text_w)*${safePct(overlay.x, 50) / 100}`
     : '(w-text_w)/2'
 
   const y = overlay.y !== undefined
-    ? `(h-text_h)*${(Number(overlay.y) ?? 50) / 100}`
+    ? `(h-text_h)*${safePct(overlay.y, 50) / 100}`
     : sty.y
 
-  // Dynamic font size: scale based on text length for maximum punch
-  let fontSize = overlay.fontSize ?? sty.fontSize
-  if (rawText.length < 10) fontSize = Math.round(fontSize * 1.2)
-  else if (rawText.length > 35) fontSize = Math.round(fontSize * 0.82)
+  // ── Font size: AUTO-FIT / AUTO-ADJUST to the output frame ──
+  // 1) Scale the px baseline (tuned for 1080w) to the real frame width so text
+  //    is the same proportion on 9:16 / 1:1 / 16:9.
+  // 2) Length-based punch (short = bigger, long = smaller).
+  // 3) Shrink-to-fit: cap the size so the text width never exceeds ~92% of the
+  //    frame — this is what stops long captions overflowing off both edges.
+  // 4) Clamp to a readable floor and a ceiling of ~1/6 frame height.
+  let fontSize = (Number(overlay.fontSize) || sty.fontSize) * (frameW / 1080)
+  if (textLen < 10) fontSize *= 1.2
+  else if (textLen > 35) fontSize *= 0.82
+  const GLYPH_ADVANCE = 0.58 // uppercase bold ≈ 0.58em average advance
+  const maxByWidth = (frameW * 0.92) / Math.max(1, textLen) / GLYPH_ADVANCE
+  fontSize = Math.min(fontSize, maxByWidth)
+  fontSize = Math.round(Math.max(14, Math.min(fontSize, frameH / 6)))
 
   const start = Number(overlay.startTime ?? 0).toFixed(3)
   const end   = Number(overlay.endTime   ?? (Number(overlay.startTime ?? 0) + 3)).toFixed(3)
@@ -966,7 +996,7 @@ async function renderFromEditorState(options) {
   const _drawnOverlays = []
   ; (textOverlays || []).forEach((o) => {
     try {
-      _drawnOverlays.push({ layer: Number(o.layer ?? o.zIndex ?? 0) || 0, f: buildDrawTextFilter(o) })
+      _drawnOverlays.push({ layer: Number(o.layer ?? o.zIndex ?? 0) || 0, f: buildDrawTextFilter(o, { width, height }) })
     } catch (e) {
       logger.warn('Skip text overlay', { error: e.message, overlay: o })
     }
