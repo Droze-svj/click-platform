@@ -230,7 +230,9 @@ function buildDrawTextFilter(overlay, dims = {}) {
 
   const safeText = escapeFfmpegText(rawText)
   const textLen = safeText.length
-  const style = overlay.style || overlay.type || 'default'
+  // captionPreset (editor's one-click caption style) takes precedence over the
+  // generic visual `style`/`type` for the CAPTION_STYLE_MAP lookup.
+  const style = overlay.captionPreset || overlay.style || overlay.type || 'default'
   const sty = CAPTION_STYLE_MAP[style] || CAPTION_STYLE_MAP.default
 
   // If manual color explicitly set, use it; otherwise use style preset. User

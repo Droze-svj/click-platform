@@ -449,7 +449,18 @@ export interface TextOverlay {
   layer?: number
   /** Keyframes for position, scale, rotation, opacity. Time = absolute seconds within overlay visibility. */
   keyframes?: TransformKeyframe[]
+  /** One-click viral caption preset → drives the render CAPTION_STYLE_MAP. */
+  captionPreset?: CaptionPreset
+  /** 'word' renders one synced word at a time (karaoke). Needs `words`. */
+  captionMode?: 'block' | 'word'
+  /** Word-level timings for karaoke captions. */
+  words?: { word?: string; text?: string; start?: number; end?: number; startTime?: number; endTime?: number }[]
+  /** Keep the caption inside the platform safe-zone (default true). */
+  safeZone?: boolean
 }
+
+/** Viral caption presets, mirrored from the render service CAPTION_STYLE_MAP. */
+export type CaptionPreset = 'hook' | 'stat' | 'question' | 'punchline' | 'CTA' | 'default'
 
 /** Shape or sticker overlay (rectangle, circle, line) */
 export type ShapeOverlayKind = 'rect' | 'circle' | 'line'
