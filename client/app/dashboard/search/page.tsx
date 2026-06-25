@@ -44,13 +44,17 @@ export default function SearchPage() {
     setError('')
     setSearched(true)
     try {
+      // The mounted endpoint is GET /api/search (textSearch): it reads `query`
+      // + `type` and replies { data: { results } }. (There is no /search/content
+      // route, and the param is `query`, not `q`.)
       const params = new URLSearchParams()
-      if (query) params.append('q', query)
+      if (query) params.append('query', query)
       if (type) params.append('type', type)
-      if (status) params.append('status', status)
-      const response = await apiGet<any>(`/search/content?${params.toString()}`)
-      const data = response?.data || response
-      setResults(Array.isArray(data) ? data : [])
+      if (status) params.append('status', status) // currently ignored server-side
+      const response = await apiGet<any>(`/search?${params.toString()}`)
+      const data = response?.data ?? response
+      const list = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : [])
+      setResults(list)
     } catch (err: any) {
       const e = extractApiError(err)
       setError(typeof e === 'string' ? e : e?.message || t('searchPage.reconFailed'))
