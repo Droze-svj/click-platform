@@ -1657,14 +1657,17 @@ const ModernVideoEditor: React.FC<{
       const transcriptText = transcript?.fullText?.trim()
       if (transcriptText) {
         try {
-          const data = await apiPost('/video/hook-analysis/auto-caption', {
+          const resp = await apiPost('/video/hook-analysis/auto-caption', {
             transcript: transcriptText,
             videoId,
             style: 'hormozi-bold',
             wordsPerCaption: 4,
             duration: dur,
-          }) as { captions?: Array<{ text: string; startTime: number; endTime: number }> }
-          if (Array.isArray(data?.captions)) captions = data.captions
+          }) as { data?: { captions?: Array<{ text: string; startTime: number; endTime: number }> }; captions?: Array<{ text: string; startTime: number; endTime: number }> }
+          // Envelope-aware: sendSuccess wraps as { data: { captions } }; tolerate
+          // both shapes (mirrors the beats endpoint's res?.data ?? res pattern).
+          const payload = (resp?.data ?? resp) || {}
+          if (Array.isArray(payload.captions)) captions = payload.captions
         } catch { /* honest fallback — proceed with cut only */ }
       }
 
@@ -1924,12 +1927,17 @@ const ModernVideoEditor: React.FC<{
             e.preventDefault()
             setZenMode(p => !p)
             break
+          case 'g':
+            // One-tap Auto Viral Edit (matches the QuickActionsBar hotkey badge).
+            e.preventDefault()
+            handleAutoViralEdit()
+            break
         }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [setActiveCategory, layoutPrefs.focusMode, updateLayout])
+  }, [setActiveCategory, layoutPrefs.focusMode, updateLayout, handleAutoViralEdit])
 
   const handleAssetDrop = useCallback((asset: any, trackIndex: number, time: number) => {
     // Respect locked tracks: reject drops onto a lane the user has locked.

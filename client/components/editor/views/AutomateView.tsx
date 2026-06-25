@@ -163,7 +163,8 @@ const AutomateView: React.FC<AutomateViewProps> = ({
       const captionRes = await apiPost('/video/hook-analysis/auto-caption', {
         videoId, transcript: transcriptText, style: 'tiktok-pop', wordsPerCaption: 4,
       }) as any
-      const captions = captionRes?.captions ?? []
+      // Envelope-aware: the route wraps the payload as { data: { captions } }.
+      const captions = (captionRes?.data ?? captionRes)?.captions ?? []
       if (captions.length && setTextOverlays) {
         const overlays = captions.map((c: any, i: number) => ({
           id: `oneclick-${Date.now()}-${i}`,

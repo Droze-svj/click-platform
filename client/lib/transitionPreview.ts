@@ -60,11 +60,14 @@ export function transitionOverlayStyle(type: SegmentTransitionType, progress: nu
     case 'wipe-down':
       return { ...base, background: '#000', clipPath: `inset(0 0 ${100 - p * 100}% 0)` }
     case 'slide-up':
-    case 'whip-right':
       return { ...base, background: '#000', transform: `translateY(${(1 - p) * 100}%)` }
     case 'slide-down':
-    case 'whip-left':
       return { ...base, background: '#000', transform: `translateY(${-(1 - p) * 100}%)` }
+    case 'whip-right':
+      // Horizontal whip — content sweeps in from the right (matches the xfade).
+      return { ...base, background: '#000', transform: `translateX(${(1 - p) * 100}%)` }
+    case 'whip-left':
+      return { ...base, background: '#000', transform: `translateX(${-(1 - p) * 100}%)` }
     case 'zoom':
     case 'iris':
     case 'radial':

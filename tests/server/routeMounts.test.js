@@ -52,3 +52,51 @@ describe('route mount coverage', () => {
     expect(nowMounted).toEqual([]);
   });
 });
+
+// The video/ sub-routers are mounted EITHER directly in server/index.js
+// (app.use('/api/video/x', require('./routes/video/x'))) OR inside the parent
+// routes/video.js aggregator (router.use('/x', require('./video/x'))). The
+// original coverage test only scanned top-level routes/*.js, which is exactly
+// how POST /api/video/hook-analysis/auto-caption shipped unmounted (a 404 that
+// silently broke the editor's "Add captions" button + Auto Viral Edit). This
+// block closes that gap.
+const VIDEO_DIR = path.join(ROUTES_DIR, 'video');
+const videoParentSrc = fs.readFileSync(path.join(ROUTES_DIR, 'video.js'), 'utf8');
+
+// Genuinely unmounted experimental files (an in-progress "scenes" pipeline +
+// openshorts), confirmed not referenced anywhere in server/. Wire one up? Mount
+// it and prune it from here.
+const VIDEO_KNOWN_DEAD = new Set([
+  'openshorts', 'scenes',
+  'scenes-advanced', 'scenes-analytics', 'scenes-audio-change-points',
+  'scenes-audio-features', 'scenes-audio-visualization', 'scenes-editing',
+  'scenes-job', 'scenes-quality', 'scenes-settings', 'scenes-shot-clustering',
+  'scenes-visual-audio-fusion', 'scenes-workflow',
+]);
+
+const isVideoMounted = (name) =>
+  indexSrc.includes(`video/${name}'`) || indexSrc.includes(`video/${name}"`) ||
+  videoParentSrc.includes(`./video/${name}'`) || videoParentSrc.includes(`./video/${name}"`);
+
+const videoRoutes = fs.readdirSync(VIDEO_DIR)
+  .filter((f) => f.endsWith('.js'))
+  .filter((f) => !/\s\d+\.js$/.test(f) && !/\scopy/i.test(f))
+  .map((f) => f.replace(/\.js$/, ''));
+
+describe('video/ sub-router mount coverage', () => {
+  test('every routes/video/*.js is mounted OR explicitly VIDEO_KNOWN_DEAD', () => {
+    const unexpectedlyDead = videoRoutes.filter((f) => !isVideoMounted(f) && !VIDEO_KNOWN_DEAD.has(f));
+    // If this fails: mount it in server/index.js (or routes/video.js), or add it
+    // to VIDEO_KNOWN_DEAD on purpose.
+    expect(unexpectedlyDead).toEqual([]);
+  });
+
+  test('hook-analysis (auto-caption) stays mounted — regression guard', () => {
+    expect(isVideoMounted('hook-analysis')).toBe(true);
+  });
+
+  test('VIDEO_KNOWN_DEAD has no stale entries (got mounted → prune it)', () => {
+    const nowMounted = [...VIDEO_KNOWN_DEAD].filter((f) => isVideoMounted(f));
+    expect(nowMounted).toEqual([]);
+  });
+});
