@@ -13,6 +13,7 @@ import {
 import { usePreviewRecorder } from '../../hooks/usePreviewRecorder'
 import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
+import { activeTransitionAt, transitionOverlayStyle } from '../../lib/transitionPreview'
 import { Rnd } from 'react-rnd'
 import { getAssetUrl } from '../../utils/url'
 
@@ -864,6 +865,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               style={{ top: `${snapLines.y}%` }}
             />
           )}
+
+          {/* Live transition preview — a CSS approximation of the export xfade,
+              shown while the playhead is inside a clip's transition window. */}
+          {(() => {
+            const at = activeTransitionAt(timelineSegments, currentTime)
+            return at ? <div aria-hidden style={transitionOverlayStyle(at.type, at.progress)} /> : null
+          })()}
 
           {/* Text Overlays */}
           {textOverlays.map((text) => {
