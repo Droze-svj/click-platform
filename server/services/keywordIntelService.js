@@ -85,6 +85,23 @@ async function estimateCompetition(keywords, opts = {}) {
 async function getKeywordIdeas(seed, options = {}) {
   const platform = options.platform || 'youtube';
   const limit = Math.max(1, Math.min(Number(options.limit) || 15, 30));
+
+  // The real path (external autocomplete + an AI competition call) is cached per
+  // (platform, seed, limit) for 6h so identical seeds don't re-hit Google or
+  // re-bill AI. Bypassed when a fetchImpl is injected (tests) or noCache is set.
+  if (!options.fetchImpl && !options.noCache) {
+    const cache = require('../utils/cache');
+    const seedLc = String(seed || '').trim().toLowerCase();
+    return cache.wrap(
+      `kw:${platform}:${limit}:${seedLc}`,
+      () => computeKeywordIdeas(seed, options, platform, limit),
+      Number(options.ttlMs) || 6 * 60 * 60 * 1000,
+    );
+  }
+  return computeKeywordIdeas(seed, options, platform, limit);
+}
+
+async function computeKeywordIdeas(seed, options, platform, limit) {
   const suggestions = await fetchAutocomplete(seed, options);
 
   const candidates = suggestions.slice(0, limit);

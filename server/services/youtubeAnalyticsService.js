@@ -17,6 +17,15 @@ const OAuthService = require('./oauthService');
 
 const LOG_CONTEXT = { service: 'youtube-analytics' };
 
+/** Parse a YouTube ISO-8601 duration ("PT1M30S") to seconds. 0 on absent/garbage. */
+function parseIso8601Duration(iso) {
+  if (typeof iso !== 'string') return 0;
+  const m = iso.match(/^P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  if (!m) return 0;
+  const [, d, h, min, s] = m.map((x) => Number(x) || 0);
+  return d * 86400 + h * 3600 + min * 60 + s;
+}
+
 /**
  * Build an OAuth2 client preloaded with the user's stored credentials.
  * Returns null when Google is not connected for this user — every caller
@@ -136,16 +145,19 @@ async function getTopVideos(userId, { days = 28, limit = 10, accountId = null } 
     if (rows.length === 0) return { connected: true, videos: [], window: { startDate, endDate, days } };
 
     const videoIds = rows.map((r) => r[0]).filter(Boolean);
-    const videosResp = await youtube.videos.list({ part: ['snippet'], id: videoIds });
+    const videosResp = await youtube.videos.list({ part: ['snippet', 'contentDetails'], id: videoIds });
     const meta = new Map((videosResp.data?.items || []).map((v) => [v.id, v]));
 
     const videos = rows.map((r) => {
       const v = meta.get(r[0]);
+      const thumbnail = v?.snippet?.thumbnails?.medium?.url || null;
       return {
         videoId: r[0],
         title: v?.snippet?.title || null,
-        thumbnail: v?.snippet?.thumbnails?.medium?.url || null,
+        thumbnail,
+        hasThumbnail: !!(v?.snippet?.thumbnails?.maxres || v?.snippet?.thumbnails?.high || thumbnail),
         publishedAt: v?.snippet?.publishedAt || null,
+        durationSec: parseIso8601Duration(v?.contentDetails?.duration),
         views: Number(r[1] || 0),
         watchTimeMinutes: Number(r[2] || 0),
         averageViewDuration: Number(r[3] || 0),
@@ -198,4 +210,5 @@ module.exports = {
   getChannelMetrics,
   getTopVideos,
   getVideoRetention,
+  parseIso8601Duration,
 };

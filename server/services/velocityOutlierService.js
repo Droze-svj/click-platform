@@ -89,12 +89,13 @@ async function getOutliers(userId, options = {}) {
   const Content = require('../models/Content');
   const nowMs = Number.isFinite(options.nowMs) ? options.nowMs : Date.now();
 
+  const limit = Math.max(1, Math.min(Number(options.limit) || 200, 1000));
   let contents = [];
   try {
     contents = await Content.find({ userId })
       .select('_id createdAt')
       .sort({ createdAt: -1 })
-      .limit(Number(options.limit) || 200)
+      .limit(limit)
       .lean();
   } catch (err) {
     logger.warn('[velocityOutlier] content query failed', { error: err.message });
@@ -113,17 +114,31 @@ async function getOutliers(userId, options = {}) {
     return { baseline: null, outliers: [], underperformers: [], count: 0, available: false };
   }
 
-  const videos = (docs || []).map((d) => {
+  // A content can have multiple VideoMetrics docs (one per platform/post).
+  // Aggregate by contentId so a multi-platform repost isn't counted N times in
+  // the baseline median.
+  const byContent = new Map();
+  for (const d of (docs || [])) {
+    const cid = String(d.contentId);
     const views = (d.views && (d.views.total || d.views.unique)) || 0;
-    const publishedAt = publishById.get(String(d.contentId)) || d.createdAt;
-    return {
-      contentId: d.contentId,
-      platform: d.platform,
-      views,
-      vph: velocityFromPublish(publishedAt, views, nowMs),
-      publishedAt,
-    };
-  });
+    const publishedAt = publishById.get(cid) || d.createdAt;
+    const cur = byContent.get(cid);
+    if (cur) {
+      cur.views += views;
+      if (publishedAt && (!cur.publishedAt || new Date(publishedAt) < new Date(cur.publishedAt))) cur.publishedAt = publishedAt;
+      if (d.platform && !cur.platforms.includes(d.platform)) cur.platforms.push(d.platform);
+    } else {
+      byContent.set(cid, { contentId: d.contentId, platforms: d.platform ? [d.platform] : [], views, publishedAt });
+    }
+  }
+  const videos = Array.from(byContent.values()).map((v) => ({
+    contentId: v.contentId,
+    platform: v.platforms[0] || null,
+    platforms: v.platforms,
+    views: v.views,
+    vph: velocityFromPublish(v.publishedAt, v.views, nowMs),
+    publishedAt: v.publishedAt,
+  }));
 
   const result = detectOutliers(videos, { metric: 'views', overMultiplier: options.overMultiplier, underMultiplier: options.underMultiplier });
   return { ...result, available: videos.length >= 3 };

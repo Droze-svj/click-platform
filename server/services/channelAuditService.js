@@ -79,32 +79,50 @@ function auditChannel(input = {}, options = {}) {
   };
 }
 
-/** Orchestrator: pull real channel metrics + top videos and audit them. */
+/**
+ * Orchestrator: pull real channel metrics + top videos and audit them — per
+ * connected account (accountId), cached 1h to protect YouTube Data API quota.
+ * Honest available:false when the account isn't connected (no fake F-grade).
+ */
 async function getChannelAudit(userId, options = {}) {
   const yt = require('./youtubeAnalyticsService');
-  let channel = null;
-  let videos = [];
-  try {
-    channel = await yt.getChannelMetrics(userId, { days: options.days || 28 });
-    const top = await yt.getTopVideos(userId, { days: options.days || 28, limit: 25 }).catch(() => []);
-    videos = (Array.isArray(top) ? top : (top && top.videos) || []).map((v) => ({
-      publishedAt: v.publishedAt || v.published || null,
-      views: Number(v.views) || 0,
-      durationSec: Number(v.durationSec || v.duration) || 0,
-      hasThumbnail: v.hasThumbnail !== false,
-    }));
-  } catch (err) {
-    logger.warn('[channelAudit] data fetch failed', { error: err.message });
-    return { available: false, reason: 'no_channel_connected' };
-  }
-  if (!channel) return { available: false, reason: 'no_channel_connected' };
+  const cache = require('../utils/cache');
+  const days = Number(options.days) || 28;
+  const accountId = options.accountId || null;
+  const key = `channelAudit:${userId}:${accountId || 'default'}:${days}`;
 
-  const audit = auditChannel({
-    subscriberCount: channel.subscriberCount,
-    metrics: channel.metrics || channel,
-    videos,
-  });
-  return { available: true, period: `${options.days || 28}d`, ...audit };
+  return cache.wrap(key, async () => {
+    let channel = null;
+    let videos = [];
+    try {
+      channel = await yt.getChannelMetrics(userId, { days, accountId });
+      // getChannelMetrics returns an OBJECT even when disconnected — must check
+      // the `connected` flag, NOT truthiness (else we'd audit empty data).
+      if (!channel || channel.connected === false) {
+        return { available: false, reason: (channel && channel.reason) || 'no_channel_connected' };
+      }
+      if (channel.error) return { available: false, reason: 'channel_error', error: channel.error };
+
+      const top = await yt.getTopVideos(userId, { days, limit: 25, accountId }).catch(() => null);
+      const list = (top && Array.isArray(top.videos)) ? top.videos : (Array.isArray(top) ? top : []);
+      videos = list.map((v) => ({
+        publishedAt: v.publishedAt || null,
+        views: Number(v.views) || 0,
+        durationSec: Number(v.durationSec) || 0,
+        hasThumbnail: v.hasThumbnail !== false,
+      }));
+    } catch (err) {
+      logger.warn('[channelAudit] data fetch failed', { error: err.message });
+      return { available: false, reason: 'no_channel_connected' };
+    }
+
+    const audit = auditChannel({
+      subscriberCount: channel.subscriberCount,
+      metrics: channel.metrics || channel,
+      videos,
+    });
+    return { available: true, period: `${days}d`, accountId, ...audit };
+  }, Number(options.ttlMs) || 60 * 60 * 1000);
 }
 
 module.exports = { auditChannel, getChannelAudit };

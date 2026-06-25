@@ -5,7 +5,7 @@
 
 const logger = require('../utils/logger');
 
-const PRIO = { high: 0, medium: 1, low: 2 };
+const PRIO = { critical: 0, high: 1, medium: 2, low: 3 };
 
 /**
  * PURE: merge a scorecard + retention analysis into a sorted, deduped action

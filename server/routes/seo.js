@@ -5,6 +5,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
 const Content = require('../models/Content');
 const { scoreVideoSeo, generateSeoRewrite } = require('../services/seoScorecardService');
@@ -45,7 +46,8 @@ router.post('/scorecard', auth, asyncHandler(async (req, res) => {
 }));
 
 // POST /api/seo/rewrite — AI-optimized title/description/tags (suggestion only).
-router.post('/rewrite', auth, asyncHandler(async (req, res) => {
+// aiLimiter: this spends LLM tokens, so gate it tighter than the global limiter.
+router.post('/rewrite', auth, aiLimiter, asyncHandler(async (req, res) => {
   const { meta, contentId } = await resolveMeta(req);
   const before = scoreVideoSeo(meta, { targetKeyword: req.body.targetKeyword, platform: req.body.platform });
   const rewrite = await generateSeoRewrite(meta, {
@@ -77,7 +79,8 @@ router.post('/apply', auth, asyncHandler(async (req, res) => {
 }));
 
 // GET /api/seo/keywords?seed=...&platform=... — scored keyword ideas.
-router.get('/keywords', auth, asyncHandler(async (req, res) => {
+// aiLimiter: hits external autocomplete + an AI competition call (cached 6h).
+router.get('/keywords', auth, aiLimiter, asyncHandler(async (req, res) => {
   const seed = String(req.query.seed || '').trim();
   if (!seed) return sendError(res, 'seed is required', 400);
   const result = await getKeywordIdeas(seed, {
@@ -111,9 +114,14 @@ router.get('/brief/:contentId', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Growth brief', 200, brief);
 }));
 
-// GET /api/seo/channel-audit — channel-level scorecard from real YouTube data.
-router.get('/channel-audit', auth, asyncHandler(async (req, res) => {
-  const result = await getChannelAudit(req.user._id, { days: Number(req.query.days) || 28 });
+// GET /api/seo/channel-audit?days=&accountId= — channel-level scorecard from
+// real YouTube data, per connected account (accountId). aiLimiter + 1h cache
+// protect the YouTube Data API quota.
+router.get('/channel-audit', auth, aiLimiter, asyncHandler(async (req, res) => {
+  const result = await getChannelAudit(req.user._id, {
+    days: Number(req.query.days) || 28,
+    accountId: req.query.accountId || null,
+  });
   sendSuccess(res, 'Channel audit', 200, result);
 }));
 
