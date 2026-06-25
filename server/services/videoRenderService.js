@@ -161,6 +161,34 @@ function escapeFfmpegText(text) {
  * Build drawtext filter for a text overlay — fully 2026-compatible
  * Applies same visual treatment as AI auto-edit for brand consistency
  */
+/**
+ * Greedy word-wrap into at most `maxLines` lines of ≤ maxChars. The final line
+ * absorbs any overflow so no words are dropped. Returns [] for empty input.
+ */
+function wrapTextToLines(text, maxChars, maxLines = 3) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean)
+  if (!words.length) return []
+  const mc = Math.max(4, Math.round(maxChars))
+  const lines = []
+  let cur = ''
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i]
+    const candidate = cur ? `${cur} ${word}` : word
+    if (candidate.length <= mc || !cur) {
+      cur = candidate
+    } else {
+      lines.push(cur)
+      cur = word
+      if (lines.length === maxLines - 1) {
+        lines.push(words.slice(i).join(' '))
+        return lines
+      }
+    }
+  }
+  if (cur) lines.push(cur)
+  return lines.slice(0, maxLines)
+}
+
 function buildDrawTextFilter(overlay, dims = {}) {
   const rawText = (overlay.text || '').toUpperCase().trim()
   if (!rawText) return null
@@ -200,20 +228,30 @@ function buildDrawTextFilter(overlay, dims = {}) {
     ? `(h-text_h)*${safePct(overlay.y, 50) / 100}`
     : sty.y
 
-  // ── Font size: AUTO-FIT / AUTO-ADJUST to the output frame ──
-  // 1) Scale the px baseline (tuned for 1080w) to the real frame width so text
-  //    is the same proportion on 9:16 / 1:1 / 16:9.
-  // 2) Length-based punch (short = bigger, long = smaller).
-  // 3) Shrink-to-fit: cap the size so the text width never exceeds ~92% of the
-  //    frame — this is what stops long captions overflowing off both edges.
-  // 4) Clamp to a readable floor and a ceiling of ~1/6 frame height.
-  let fontSize = (Number(overlay.fontSize) || sty.fontSize) * (frameW / 1080)
-  if (textLen < 10) fontSize *= 1.2
-  else if (textLen > 35) fontSize *= 0.82
+  // ── Font size + multi-line WRAP: AUTO-FIT / AUTO-ADJUST to the output frame ──
+  // 1) Desired display size = px baseline (tuned for 1080w) scaled to real width,
+  //    so text is the same proportion on 9:16 / 1:1 / 16:9. Short single words
+  //    get a punch; very-long single lines are handled by wrapping, not shrinking.
+  // 2) Wrap into ≤3 big readable lines that each fit ~92% of the frame width
+  //    (the pro caption look) instead of shrinking one long line to tiny text.
+  // 3) Size the font to the LONGEST wrapped line so it always fits horizontally.
+  // 4) Clamp to a readable floor (14) and a per-line ceiling (~1/7 frame height
+  //    so up to 3 lines stay on-frame).
   const GLYPH_ADVANCE = 0.58 // uppercase bold ≈ 0.58em average advance
-  const maxByWidth = (frameW * 0.92) / Math.max(1, textLen) / GLYPH_ADVANCE
-  fontSize = Math.min(fontSize, maxByWidth)
-  fontSize = Math.round(Math.max(14, Math.min(fontSize, frameH / 6)))
+  let baseFont = (Number(overlay.fontSize) || sty.fontSize) * (frameW / 1080)
+  if (textLen < 10) baseFont *= 1.2
+  baseFont = Math.max(14, Math.min(baseFont, frameH / 7))
+
+  const maxCharsPerLine = Math.max(8, Math.floor((frameW * 0.92) / (baseFont * GLYPH_ADVANCE)))
+  const lines = wrapTextToLines(rawText, maxCharsPerLine, 3)
+  const longestLen = lines.reduce((m, l) => Math.max(m, l.length), 1)
+
+  // Shrink only if the longest line still can't fit (e.g. one very long word).
+  const maxByWidth = (frameW * 0.92) / longestLen / GLYPH_ADVANCE
+  let fontSize = Math.min(baseFont, maxByWidth)
+  fontSize = Math.round(Math.max(14, Math.min(fontSize, frameH / 7)))
+  const lineCount = Math.max(1, lines.length)
+  const lineHeight = Math.round(fontSize * 1.22)
 
   const start = Number(overlay.startTime ?? 0).toFixed(3)
   const end   = Number(overlay.endTime   ?? (Number(overlay.startTime ?? 0) + 3)).toFixed(3)
@@ -271,7 +309,18 @@ function buildDrawTextFilter(overlay, dims = {}) {
     alphaOpt = `:alpha='min(${a}\\,${o})'`
   }
 
-  return `drawtext=text='${safeText}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${finalYExpr}'${alphaOpt}:box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
+  // Emit one drawtext per wrapped line, vertically centered around the base y so
+  // a 2–3 line caption stays a tidy block. All lines share the size / color /
+  // box / border / shadow / animation; only the text + y offset differ. Stacking
+  // separate drawtext filters avoids the (filter-breaking) newline-in-text path.
+  const renderLines = (lines.length ? lines : [rawText])
+  const drawForLine = (lineText, idx) => {
+    const safeLine = escapeFfmpegText(lineText)
+    const offset = Math.round((idx - (renderLines.length - 1) / 2) * lineHeight)
+    const lineY = offset === 0 ? finalYExpr : `(${finalYExpr})+(${offset})`
+    return `drawtext=text='${safeLine}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${lineY}'${alphaOpt}:box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
+  }
+  return renderLines.map(drawForLine).join(',')
 }
 
 /**

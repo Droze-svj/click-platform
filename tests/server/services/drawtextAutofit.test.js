@@ -14,14 +14,30 @@ describe('buildDrawTextFilter — auto-fit / auto-adjust across aspect ratios', 
     expect(large).toBeGreaterThan(small);
   });
 
-  it('shrinks long text so it fits the frame width (no off-edge overflow)', () => {
+  it('WRAPS long text into multiple stacked lines (big + readable, not shrunk tiny)', () => {
     const W = 1080;
     const longText = 'THIS IS A VERY LONG CAPTION THAT WOULD OVERFLOW THE FRAME WIDTH';
-    const shortF = fontsizeOf(buildDrawTextFilter({ text: 'GO', style: 'default' }, { width: W, height: 1920 }));
-    const longF = fontsizeOf(buildDrawTextFilter({ text: longText, style: 'default' }, { width: W, height: 1920 }));
-    expect(longF).toBeLessThan(shortF);
-    // The rendered line width (≈ fontSize * chars * 0.58) must stay inside the frame.
-    expect(longF * longText.length * 0.58).toBeLessThanOrEqual(W);
+    const f = buildDrawTextFilter({ text: longText, style: 'default' }, { width: W, height: 1920 });
+    // Multiple stacked drawtext filters = wrapped into lines.
+    const lineCount = (f.match(/drawtext=/g) || []).length;
+    expect(lineCount).toBeGreaterThan(1);
+    expect(lineCount).toBeLessThanOrEqual(3);
+    // Font stays readable (wrapping keeps it big rather than shrinking to tiny).
+    expect(fontsizeOf(f)).toBeGreaterThanOrEqual(40);
+  });
+
+  it('keeps short text on a single line', () => {
+    const f = buildDrawTextFilter({ text: 'GO VIRAL', style: 'hook' }, { width: 1080, height: 1920 });
+    expect((f.match(/drawtext=/g) || []).length).toBe(1);
+  });
+
+  it('stacks wrapped lines around the base y (vertical offsets present)', () => {
+    const f = buildDrawTextFilter(
+      { text: 'WRAP THIS LONGER CAPTION ACROSS A FEW LINES PLEASE NOW', style: 'default' },
+      { width: 720, height: 1280 },
+    );
+    // At least one line is offset from the base y (a +(NNN) or +(-NNN) shift).
+    expect(f).toMatch(/\)\+\(-?\d+\)/);
   });
 
   it('positions vertically relative to frame HEIGHT (not a fixed px offset)', () => {
