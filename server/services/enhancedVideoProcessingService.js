@@ -5,6 +5,7 @@ const path = require('path')
 const fs = require('fs')
 const { v4: uuidv4 } = require('uuid')
 const logger = require('../utils/logger')
+const { escapeDrawtext, safeColor, safeNum } = require('../utils/ffmpegSafe')
 const OpenAI = require('openai')
 
 let openai = null;
@@ -85,26 +86,25 @@ async function addTextOverlays(videoPath, textOverlays, options = {}) {
       logger.debug('Text overlay progress', { jobId, progress: progress.percent })
     });
 
-  // Chain text overlays correctly in FFmpeg
-  if (textOverlays.length > 0) {
+  // Chain text overlays correctly in FFmpeg. Skip overlays with no text (a
+  // missing `text` previously crashed on `.replace`), and sanitize EVERY field
+  // (text/color/x/y/time) so a crafted value can't break out of / inject into
+  // the filter graph.
+  const safeOverlays = (textOverlays || []).filter((o) => o && typeof o.text === 'string' && o.text.trim());
+  if (safeOverlays.length > 0) {
     let filterGraph = '[0:v]';
-    textOverlays.forEach((overlay, index) => {
-      const fontSize = overlay.fontSize || 24;
-      const color = overlay.color || '#ffffff';
-      const x = `(${overlay.x || 50}*w/100)`;
-      const y = `(${overlay.y || 50}*h/100)`;
-      const startTime = overlay.startTime || 0;
-      const endTime = overlay.endTime || (startTime + 5);
-      
-      // Escape for FFmpeg drawtext
-      const escapedText = overlay.text
-        .replace(/\\/g, '\\\\\\\\')
-        .replace(/'/g, '’')
-        .replace(/:/g, '\\:');
+    safeOverlays.forEach((overlay, index) => {
+      const fontSize = Math.round(safeNum(overlay.fontSize, 24, 8, 400));
+      const color = safeColor(overlay.color, 'white');
+      const x = `(${safeNum(overlay.x, 50, 0, 100)}*w/100)`;
+      const y = `(${safeNum(overlay.y, 50, 0, 100)}*h/100)`;
+      const startTime = safeNum(overlay.startTime, 0, 0, 360000);
+      const endTime = Math.max(startTime + 0.1, safeNum(overlay.endTime, startTime + 5, 0, 360000));
+      const escapedText = escapeDrawtext(overlay.text);
 
-      const nextLabel = index === textOverlays.length - 1 ? '[v]' : `[v${index}]`;
+      const nextLabel = index === safeOverlays.length - 1 ? '[v]' : `[v${index}]`;
       filterGraph += `drawtext=text='${escapedText}':fontsize=${fontSize}:fontcolor=${color}:x=${x}:y=${y}:enable='between(t,${startTime},${endTime})'${nextLabel}`;
-      if (index < textOverlays.length - 1) {
+      if (index < safeOverlays.length - 1) {
         filterGraph += `;${nextLabel}`;
       }
     });
@@ -276,19 +276,32 @@ async function splitAndMergeVideo(videoPath, segments, options = {}) {
   const outputFilename = `split-merge-${uuidv4()}.mp4`
   const outputPath = getOutputPath(outputFilename)
 
-  logger.info('Starting split and merge', { jobId, userId, segmentCount: segments.length })
+  // Validate every segment: numeric, non-negative, start < end. An invalid
+  // segment (start>end / negative / non-number) would make the trim/concat
+  // filter fail or yield a corrupt zero-frame output.
+  const validSegments = (Array.isArray(segments) ? segments : [])
+    .map((s) => ({ start: Number(s && s.start), end: Number(s && s.end) }))
+    .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.start >= 0 && s.end > s.start)
+    .map((s) => ({ start: safeNum(s.start, 0, 0, 360000), end: safeNum(s.end, s.start + 0.1, 0, 360000) }))
+  if (validSegments.length === 0) {
+    const e = new Error('No valid segments (each needs numeric start>=0 and end>start)')
+    e.statusCode = 400
+    throw e
+  }
 
-  const segmentFilters = segments.map((segment, index) =>
+  logger.info('Starting split and merge', { jobId, userId, segmentCount: validSegments.length })
+
+  const segmentFilters = validSegments.map((segment, index) =>
     `[0:v]trim=${segment.start}:${segment.end},setpts=PTS-STARTPTS[v${index}];` +
     `[0:a]atrim=${segment.start}:${segment.end},asetpts=PTS-STARTPTS[a${index}];`
   ).join('')
 
-  const concatInputs = segments.map((_, index) => `[v${index}][a${index}]`).join('')
+  const concatInputs = validSegments.map((_, index) => `[v${index}][a${index}]`).join('')
 
   const command = ffmpeg(videoPath)
     .complexFilter([
       segmentFilters,
-      `${concatInputs}concat=n=${segments.length}:v=1:a=1[v][a]`
+      `${concatInputs}concat=n=${validSegments.length}:v=1:a=1[v][a]`
     ])
     .outputOptions([
       '-map', '[v]',
