@@ -8,6 +8,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const Content = require('../models/Content');
 const { scoreVideoSeo, generateSeoRewrite } = require('../services/seoScorecardService');
+const { getKeywordIdeas } = require('../services/keywordIntelService');
 
 const router = express.Router();
 
@@ -69,6 +70,18 @@ router.post('/apply', auth, asyncHandler(async (req, res) => {
   if (Array.isArray(tags)) { content.tags = tags.map((t) => String(t)).filter(Boolean).slice(0, 30); applied.tags = content.tags; }
   await content.save();
   sendSuccess(res, 'SEO metadata applied', 200, { contentId, applied });
+}));
+
+// GET /api/seo/keywords?seed=...&platform=... — scored keyword ideas.
+router.get('/keywords', auth, asyncHandler(async (req, res) => {
+  const seed = String(req.query.seed || '').trim();
+  if (!seed) return sendError(res, 'seed is required', 400);
+  const result = await getKeywordIdeas(seed, {
+    platform: String(req.query.platform || 'youtube').toLowerCase(),
+    limit: Number(req.query.limit) || 15,
+    userId: req.user._id,
+  });
+  sendSuccess(res, 'Keyword ideas', 200, result);
 }));
 
 module.exports = router;
