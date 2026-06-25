@@ -1,5 +1,6 @@
 const { TRANSITION_PRESETS, resolveTransition, applyTransitionToSegments } = require('../../../server/services/transitionPresetService');
 const { buildBeatCutPlan } = require('../../../server/services/beatSyncCutService');
+const { resolveXfadeName } = require('../../../server/services/videoRenderService');
 
 // The xfade modes the render engine (stitchSegments XFADE_OK) accepts.
 const RENDER_XFADE = new Set(['fade', 'fadeblack', 'fadewhite', 'wipeleft', 'wiperight',
@@ -54,5 +55,25 @@ describe('applyTransitionToSegments (pure)', () => {
 
   it('is safe on empty input', () => {
     expect(applyTransitionToSegments([], 'fade')).toEqual([]);
+  });
+});
+
+describe('resolveXfadeName (render: friendly names → valid xfade)', () => {
+  it('maps the editor SegmentTransitionType friendly names to valid xfade modes', () => {
+    expect(resolveXfadeName('crossfade')).toBe('fade');
+    expect(resolveXfadeName('dip')).toBe('fadeblack');
+    expect(resolveXfadeName('wipe-left')).toBe('wipeleft');
+    expect(resolveXfadeName('wipe-right')).toBe('wiperight');
+    expect(resolveXfadeName('zoom')).toBe('pixelize');
+    expect(RENDER_XFADE.has(resolveXfadeName('zoom'))).toBe(true);
+  });
+  it('returns null for none/empty (→ plain concat, no fake fade)', () => {
+    expect(resolveXfadeName('none')).toBeNull();
+    expect(resolveXfadeName('')).toBeNull();
+    expect(resolveXfadeName(undefined)).toBeNull();
+  });
+  it('passes raw xfade names through and falls back to fade for unknowns', () => {
+    expect(resolveXfadeName('slideleft')).toBe('slideleft');
+    expect(resolveXfadeName('bogus')).toBe('fade');
   });
 });

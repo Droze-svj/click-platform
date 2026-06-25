@@ -192,6 +192,29 @@ function wrapTextToLines(text, maxChars, maxLines = 3) {
 // Power/curiosity words that earn an auto-highlight in a caption.
 const POWER_RE = /\b(how|why|secret|proven|ultimate|fast|easy|free|best|stop|never|always|mistake|worst|insane|crazy|nobody|everyone|now|new|first|biggest|money|viral|hack|trick|truth|warning)\b/i
 
+// Valid ffmpeg xfade modes + friendly-name aliases used by the editor.
+const XFADE_OK = new Set(['fade', 'fadeblack', 'fadewhite', 'wipeleft', 'wiperight',
+  'wipeup', 'wipedown', 'slideleft', 'slideright', 'slideup', 'slidedown', 'dissolve',
+  'circleopen', 'circleclose', 'pixelize', 'radial', 'smoothleft', 'smoothright',
+  'smoothup', 'smoothdown'])
+const XFADE_ALIASES = {
+  crossfade: 'fade', dip: 'fadeblack', 'dip-to-black': 'fadeblack',
+  'wipe-left': 'wipeleft', 'wipe-right': 'wiperight', 'wipe-up': 'wipeup', 'wipe-down': 'wipedown',
+  zoom: 'pixelize', whip: 'slideleft', 'whip-left': 'slideleft', 'whip-right': 'slideright',
+}
+
+/**
+ * PURE: resolve a transition name (raw xfade OR an editor friendly name) to a
+ * VALID xfade mode, or null for none/empty (→ plain concat, no transition).
+ */
+function resolveXfadeName(name) {
+  const n = String(name || '').toLowerCase().trim()
+  if (!n || n === 'none') return null
+  if (XFADE_OK.has(n)) return n
+  if (XFADE_ALIASES[n]) return XFADE_ALIASES[n]
+  return 'fade'
+}
+
 /** Normalize a word for keyword matching (lowercase, strip punctuation). */
 function normWord(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -1731,7 +1754,7 @@ function segmentHasSpecial(s) {
   if (!s) return false
   if (s.reversed) return true
   if (normSegSpeed(s.playbackSpeed) !== 1) return true
-  if (s.transitionOut && Number(s.transitionDuration) > 0) return true
+  if (s.transitionOut && s.transitionOut !== 'none' && Number(s.transitionDuration) > 0) return true
   // An explicit source-trim window (other than "from 0") also needs the pre-pass
   // to materialize the kept range before the main render.
   if (Number(s.sourceStartTime) > 0) return true
@@ -1952,7 +1975,8 @@ async function stitchSegments(inputPath, segments, opts = {}) {
 
   for (let i = 1; i < segs.length; i++) {
     const prev = segs[i - 1]
-    const wantXfade = prev.transitionOut && Number(prev.transitionDuration) > 0
+    const xt = resolveXfadeName(prev.transitionType || prev.transitionOut)
+    const wantXfade = !!xt && Number(prev.transitionDuration) > 0
     const canXfade = wantXfade && Number.isFinite(accDur) && Number.isFinite(segDurations[i])
 
     const outV = `vx${lbl}`
@@ -1964,13 +1988,6 @@ async function stitchSegments(inputPath, segments, opts = {}) {
         // keep transition shorter than either clip
         Math.max(0.05, Math.min(accDur, segDurations[i]) - 0.05)))
       const offset = Math.max(0, accDur - dur)
-      const tname = String(prev.transitionType || prev.transitionOut || 'fade')
-      // Map common editor names to valid xfade transitions; default fade.
-      const XFADE_OK = new Set(['fade', 'fadeblack', 'fadewhite', 'wipeleft',
-        'wiperight', 'wipeup', 'wipedown', 'slideleft', 'slideright', 'slideup',
-        'slidedown', 'dissolve', 'circleopen', 'circleclose', 'pixelize',
-        'radial', 'smoothleft', 'smoothright', 'smoothup', 'smoothdown'])
-      const xt = XFADE_OK.has(tname) ? tname : 'fade'
       graph.push(`[${accV}][v${i}]xfade=transition=${xt}:duration=${dur.toFixed(3)}:offset=${offset.toFixed(3)}[${outV}]`)
       graph.push(`[${accA}][a${i}]acrossfade=d=${dur.toFixed(3)}[${outA}]`)
       // xfade overlaps the two clips → combined dur = accDur + segDur - overlap.
@@ -2017,6 +2034,7 @@ module.exports = {
   buildVideoFilterChain,
   buildDrawTextFilter,
   pickHighlightWords,
+  resolveXfadeName,
   buildDrawBoxFilter,
   buildImageOverlaySegment,
   buildVideoTransformChain,

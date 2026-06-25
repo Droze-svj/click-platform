@@ -2,12 +2,24 @@
 
 import React from 'react'
 import { Type, Film, AlignLeft, Trash2, Lock, Unlock, X, type LucideIcon } from 'lucide-react'
-import type { TextOverlay, TimelineSegment, CaptionPreset } from '../../types/editor'
+import type { TextOverlay, TimelineSegment, CaptionPreset, SegmentTransitionType } from '../../types/editor'
 import { Button, IconButton, Input, Textarea, Slider, Switch, EmptyState } from '../ui'
 import { pickHighlightWords, DEFAULT_HIGHLIGHT_COLOR } from '../../lib/captions'
 
 // Viral caption presets (mirror the render CAPTION_STYLE_MAP). The colour is the
 // preset's signature fill — used as a live swatch in the picker.
+// Clip-to-clip transitions (render maps these friendly names to xfade modes).
+const SEGMENT_TRANSITIONS: { value: SegmentTransitionType; label: string }[] = [
+  { value: 'none', label: 'None' },
+  { value: 'crossfade', label: 'Crossfade' },
+  { value: 'dip', label: 'Dip to Black' },
+  { value: 'wipe-left', label: 'Whip / Wipe Left' },
+  { value: 'wipe-right', label: 'Whip / Wipe Right' },
+  { value: 'wipe-up', label: 'Wipe Up' },
+  { value: 'wipe-down', label: 'Wipe Down' },
+  { value: 'zoom', label: 'Zoom Blur' },
+]
+
 const CAPTION_PRESETS: { key: CaptionPreset; label: string; color: string }[] = [
   { key: 'hook', label: 'Hook', color: '#FFD700' },
   { key: 'stat', label: 'Stat', color: '#00FFFF' },
@@ -111,6 +123,30 @@ function ClipInspector({
         <RangeField value={(clip as any).volume ?? 1} min={0} max={1} step={0.05}
           onChange={(v) => onUpdate({ volume: v } as any)} />
       </FieldRow>
+
+      {/* Animated transition INTO the next clip (renders as an xfade). */}
+      <FieldRow label="Transition">
+        <select
+          value={(clip.transitionOut as SegmentTransitionType) || 'none'}
+          onChange={(e) => onUpdate({
+            transitionOut: e.target.value as SegmentTransitionType,
+            transitionDuration: clip.transitionDuration || 0.4,
+          })}
+          aria-label="Transition to the next clip"
+          className="w-full rounded-md ds-surface-subtle border border-subtle px-2 py-1.5 text-[12px] text-theme-primary"
+        >
+          {SEGMENT_TRANSITIONS.map((tt) => (
+            <option key={tt.value} value={tt.value}>{tt.label}</option>
+          ))}
+        </select>
+      </FieldRow>
+      {clip.transitionOut && clip.transitionOut !== 'none' && (
+        <FieldRow label="Trans. length" suffix="s">
+          <NumberField value={clip.transitionDuration ?? 0.4} step={0.05} min={0.1} max={2}
+            onChange={(v) => onUpdate({ transitionDuration: v })} />
+        </FieldRow>
+      )}
+
       <FieldRow label="Locked">
         <ToggleField value={!!(clip as any).locked}
           onChange={(v) => onUpdate({ locked: v } as any)}
