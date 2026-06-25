@@ -457,6 +457,10 @@ export interface TextOverlay {
   words?: { word?: string; text?: string; start?: number; end?: number; startTime?: number; endTime?: number }[]
   /** Keep the caption inside the platform safe-zone (default true). */
   safeZone?: boolean
+  /** Words to highlight in the accent colour (karaoke captions). */
+  highlightWords?: string[]
+  /** Accent colour for highlighted keywords. */
+  highlightColor?: string
 }
 
 /** Viral caption presets, mirrored from the render service CAPTION_STYLE_MAP. */

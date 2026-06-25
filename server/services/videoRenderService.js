@@ -189,13 +189,53 @@ function wrapTextToLines(text, maxChars, maxLines = 3) {
   return lines.slice(0, maxLines)
 }
 
+// Power/curiosity words that earn an auto-highlight in a caption.
+const POWER_RE = /\b(how|why|secret|proven|ultimate|fast|easy|free|best|stop|never|always|mistake|worst|insane|crazy|nobody|everyone|now|new|first|biggest|money|viral|hack|trick|truth|warning)\b/i
+
+/** Normalize a word for keyword matching (lowercase, strip punctuation). */
+function normWord(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+/**
+ * PURE: pick the most "punchy" words in a caption to auto-highlight (power words,
+ * numbers, and longer content words). Returns up to `max` normalized words.
+ */
+function pickHighlightWords(text, max = 2) {
+  const words = String(text || '').split(/\s+/).filter(Boolean)
+  const scored = words.map((w) => {
+    const n = normWord(w)
+    if (!n) return null
+    let score = 0
+    if (POWER_RE.test(w)) score += 3
+    if (/\d/.test(w)) score += 3
+    if (n.length >= 6) score += 2
+    else if (n.length >= 4) score += 1
+    if (w === w.toUpperCase() && n.length > 2) score += 1
+    return { n, score }
+  }).filter(Boolean).filter((x) => x.score > 0)
+  scored.sort((a, b) => b.score - a.score)
+  const out = []
+  const seen = new Set()
+  for (const s of scored) {
+    if (seen.has(s.n)) continue
+    seen.add(s.n)
+    out.push(s.n)
+    if (out.length >= Math.max(1, max)) break
+  }
+  return out
+}
+
 /**
  * Word-by-word ("karaoke") caption: each word flashes on, centered + synced to
  * its spoken timing — the viral single-word style. Reuses buildDrawTextFilter
  * per word so every word inherits the auto-fit / wrap / safe-zone treatment.
+ * Designated keywords (overlay.highlightWords) render in overlay.highlightColor.
  */
 function buildWordByWordFilter(overlay, dims) {
   const words = Array.isArray(overlay.words) ? overlay.words : []
+  const highlightSet = new Set((Array.isArray(overlay.highlightWords) ? overlay.highlightWords : []).map(normWord).filter(Boolean))
+  const highlightColor = overlay.highlightColor
   const filters = []
   for (const w of words) {
     if (!w) continue
@@ -204,8 +244,14 @@ function buildWordByWordFilter(overlay, dims) {
     const start = Number(w.start ?? w.startTime)
     const end = Number(w.end ?? w.endTime ?? (start + 0.4))
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue
+    // Keyword → highlight colour for this word; others keep the base colour.
+    const isKey = highlightColor && highlightSet.has(normWord(text))
     // Strip the word-mode markers so the per-word call renders a normal caption.
-    const single = { ...overlay, text, startTime: start, endTime: end, words: undefined, captionMode: undefined, karaoke: undefined }
+    const single = {
+      ...overlay, text, startTime: start, endTime: end,
+      words: undefined, captionMode: undefined, karaoke: undefined, highlightWords: undefined,
+      ...(isKey ? { color: highlightColor } : {}),
+    }
     const f = buildDrawTextFilter(single, dims)
     if (f) filters.push(f)
   }
@@ -1970,6 +2016,7 @@ module.exports = {
   resolveInputPath,
   buildVideoFilterChain,
   buildDrawTextFilter,
+  pickHighlightWords,
   buildDrawBoxFilter,
   buildImageOverlaySegment,
   buildVideoTransformChain,

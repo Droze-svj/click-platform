@@ -239,6 +239,24 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('keyword-highlighted karaoke (accent colour per word) renders through ffmpeg', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 4 },
+      textOverlays: [{
+        id: 'hl', captionMode: 'word', color: '#FFFFFF',
+        highlightWords: ['money', 'now'], highlightColor: '#39FF14',
+        words: [
+          { word: 'MAKE', start: 0.2, end: 0.6 },
+          { word: 'MONEY', start: 0.6, end: 1.1 },
+          { word: 'NOW', start: 1.1, end: 1.6 },
+        ],
+      }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('LONG caption wraps into multiple stacked drawtext lines → renders through ffmpeg', async () => {
     // A long phrase forces the multi-line wrap path (several comma-joined
     // drawtext filters). This proves the stacked filter graph is valid ffmpeg —

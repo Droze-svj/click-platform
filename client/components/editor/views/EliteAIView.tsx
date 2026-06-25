@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { Lock } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
+import { pickHighlightWords, DEFAULT_HIGHLIGHT_COLOR } from '../../../lib/captions'
 import { getDefaultTrackForSegmentType, Asset, StyleProfile } from '../../../types/editor'
 import DirectorLog from '../DirectorLog'
 import StyleMimicView from './StyleMimicView'
@@ -399,6 +400,9 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
           start: w.start,
           end: w.end,
         })),
+        // Auto-highlight the punchy keywords (viral accent). Block mode ignores it.
+        highlightWords: pickHighlightWords(phraseText, 2),
+        highlightColor: DEFAULT_HIGHLIGHT_COLOR,
       }
     })
 
