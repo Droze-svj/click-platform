@@ -7,6 +7,21 @@ const fs = require('fs');
 const logger = require('../utils/logger');
 
 /**
+ * Build a chained atempo filter list for ANY speed. ffmpeg's atempo only accepts
+ * 0.5–2.0 per instance, so a 4x speed must be atempo=2.0,atempo=2.0. Returns []
+ * for speed 1 / invalid. (Mirrors the proven chaining in videoRenderService.)
+ */
+function buildAtempoChain(speed) {
+  let s = Number(speed);
+  if (!Number.isFinite(s) || s <= 0 || s === 1) return [];
+  const parts = [];
+  while (s > 2.0) { parts.push('atempo=2.0'); s /= 2.0; }
+  while (s < 0.5) { parts.push('atempo=0.5'); s /= 0.5; }
+  parts.push(`atempo=${s.toFixed(4)}`);
+  return parts;
+}
+
+/**
  * Apply variable speed to video segment
  */
 async function applyVariableSpeed(videoPath, outputPath, speedOptions) {
@@ -26,22 +41,25 @@ async function applyVariableSpeed(videoPath, outputPath, speedOptions) {
       const videoFilters = [];
       const audioFilters = [];
       
+      // Clamp to a sane range so setpts can't divide by zero and the chain stays bounded.
+      const spd = Math.max(0.1, Math.min(Number(speed) || 1, 16));
+
       // Video speed
-      if (speed !== 1.0) {
-        videoFilters.push(`setpts=${1.0 / speed}*PTS`);
-        
+      if (spd !== 1.0) {
+        videoFilters.push(`setpts=${(1.0 / spd).toFixed(6)}*PTS`);
+
         // Motion blur for fast motion
-        if (motionBlur && speed > 1.5) {
+        if (motionBlur && spd > 1.5) {
           videoFilters.push('minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1');
         }
       }
-      
-      // Audio speed with pitch correction
-      if (audioPitchCorrection && speed !== 1.0) {
-        audioFilters.push(`atempo=${speed}`);
-      } else if (speed !== 1.0) {
-        audioFilters.push(`atempo=${speed}`);
+
+      // Audio tempo — chained so speeds outside 0.5–2.0 (e.g. 4x/8x presets)
+      // don't crash ffmpeg. (audioPitchCorrection is implicit in atempo.)
+      if (spd !== 1.0) {
+        audioFilters.push(...buildAtempoChain(spd));
       }
+      void audioPitchCorrection;
       
       // Apply to segment only
       let command = ffmpeg(videoPath);
@@ -81,11 +99,12 @@ async function applySpeedRamp(videoPath, outputPath, rampOptions) {
     const duration = end - start;
     const speedChange = endSpeed - startSpeed;
     
-    // Simplified: use average speed
-    const avgSpeed = (startSpeed + endSpeed) / 2;
-    
-    const videoFilters = [`setpts=${1.0 / avgSpeed}*PTS`];
-    const audioFilters = audioPitchCorrection ? [`atempo=${avgSpeed}`] : [];
+    // Simplified: use average speed (clamped so setpts can't divide by zero).
+    const avgSpeed = Math.max(0.1, Math.min(((Number(startSpeed) || 1) + (Number(endSpeed) || 1)) / 2, 16));
+
+    const videoFilters = [`setpts=${(1.0 / avgSpeed).toFixed(6)}*PTS`];
+    // Chained atempo so a >2x or <0.5x ramp doesn't crash ffmpeg.
+    const audioFilters = audioPitchCorrection ? buildAtempoChain(avgSpeed) : [];
     
     ffmpeg(videoPath)
       .inputOptions([`-ss ${start}`, `-t ${duration}`])
@@ -134,9 +153,17 @@ async function freezeFrame(videoPath, outputPath, freezeOptions) {
       .frames(1)
       .output(framePath)
       .on('end', () => {
-        // Create video from frozen frame
+        // Create video from frozen frame — must encode a browser-playable stream
+        // (libx264 + yuv420p + even dims + fps); a raw loop output is unplayable.
         ffmpeg(framePath)
-          .inputOptions([`-loop 1`, `-t ${duration}`])
+          .inputOptions([`-loop 1`, `-t ${Math.max(0.1, Number(duration) || 2)}`])
+          .outputOptions([
+            '-c:v libx264',
+            '-pix_fmt yuv420p',
+            '-r 30',
+            '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+            '-movflags', '+faststart',
+          ])
           .output(outputPath)
           .on('end', () => {
             // Clean up
@@ -222,4 +249,5 @@ module.exports = {
   freezeFrame,
   applyTimeRemapping,
   getSpeedPresets,
+  buildAtempoChain,
 };
