@@ -9,6 +9,13 @@ let databaseStatus = {
   prisma: false
 };
 
+// True when a MongoDB URI points at a remote/Atlas (i.e. PRODUCTION) host. Used
+// by the dev DB-safety guard to refuse connecting a non-production boot to the
+// live prod database. Kept pure + exported so it can be unit-tested. Mirrors the
+// test-suite guard in tests/setup-env.js / tests/setup.js.
+const isRemoteProdUri = (uri) =>
+  /mongodb\+srv:/i.test(uri || '') || /\.mongodb\.net/i.test(uri || '');
+
 // Initialize Supabase connection
 const initSupabase = async () => {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -55,9 +62,34 @@ const initMongoDB = async () => {
     databaseStatus.mongodb = true;
     return true;
   }
+  const logger = require('../utils/logger');
+
+  const startInMemory = async () => {
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    const mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+    databaseStatus.mongodb = true;
+    logger.info('✅ In-Memory MongoDB successfully initialized.');
+    return true;
+  };
+
   try {
     let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/click';
-    
+
+    // ── DEV DB SAFETY GUARD ─────────────────────────────────────────────────
+    // A non-production boot must NEVER connect to the remote/Atlas PRODUCTION
+    // database. dotenv loads the prod MONGODB_URI from .env, so a bare
+    // `node server/index.js` (or `npm run dev`) would otherwise connect straight
+    // to live prod data — exactly how the June-19 incident emptied users/contents.
+    // Mirror the test-suite guard (tests/setup-env.js): if we are not in
+    // production and the URI is a remote Atlas host, refuse it and use an
+    // isolated in-memory MongoDB instead. To test against a persistent local DB,
+    // point MONGODB_URI at a localhost URI (e.g. mongodb://localhost:27017/click_local).
+    if (process.env.NODE_ENV !== 'production' && isRemoteProdUri(mongoUri)) {
+      logger.warn('🛡️  DB SAFETY: refusing to connect a non-production boot to a REMOTE/Atlas database (prod-data protection). Using an isolated in-memory MongoDB. Set MONGODB_URI to a localhost URI for a persistent local DB.');
+      return await startInMemory();
+    }
+
     try {
       await mongoose.connect(mongoUri, {
         // 2s was too tight for cold Atlas cluster wake-ups — the
@@ -71,18 +103,9 @@ const initMongoDB = async () => {
       return true;
     } catch (primaryError) {
       if (process.env.NODE_ENV !== 'production') {
-        const logger = require('../utils/logger');
         logger.warn('⚠️ Local MongoDB connection failed. Falling back to In-Memory DB for development...', { reason: primaryError.message });
-        
         try {
-          const { MongoMemoryServer } = require('mongodb-memory-server');
-          const mongoServer = await MongoMemoryServer.create();
-          mongoUri = mongoServer.getUri();
-          
-          await mongoose.connect(mongoUri);
-          databaseStatus.mongodb = true;
-          logger.info('✅ In-Memory MongoDB successfully initialized.');
-          return true;
+          return await startInMemory();
         } catch (memError) {
           logger.error('❌ In-Memory DB fallback failed.', { error: memError.message });
           return false;
@@ -177,6 +200,7 @@ module.exports = {
   initDatabases,
   getDatabaseClient,
   getDatabaseHealth,
+  isRemoteProdUri,
   supabase,
   prisma,
   mongoose
