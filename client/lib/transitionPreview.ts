@@ -28,7 +28,10 @@ export function activeTransitionAt(segments: TimelineSegment[] | undefined, curr
     if (!Number.isFinite(end)) continue
     const start = end - dur
     if (t >= start && t <= end) {
-      return { type: out, progress: Math.max(0, Math.min(1, (t - start) / dur)), segmentId: s.id }
+      // Round before clamping so float drift at the window edges (e.g. end-dur
+      // reintroducing 0.999…) snaps cleanly to exactly 0 and 1.
+      const raw = Math.round(((t - start) / dur) * 1e6) / 1e6
+      return { type: out, progress: Math.max(0, Math.min(1, raw)), segmentId: s.id }
     }
   }
   return null

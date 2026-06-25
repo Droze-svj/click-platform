@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Wand2, Scissors, Type, Palette, Zap, Sparkles, Loader2, Brain, Eraser, Shuffle, Film, TrendingUp } from 'lucide-react'
+import { Wand2, Scissors, Type, Palette, Zap, Sparkles, Loader2, Brain, Eraser, Shuffle, Film, TrendingUp, Rocket } from 'lucide-react'
 import { apiGet, apiPost } from '../../lib/api'
 import type { EditorCategory } from '../../types/editor'
 import { Badge } from '../ui'
@@ -69,6 +69,14 @@ interface Props {
    * inside the editor instead of bouncing the user to a separate page.
    */
   onOpenSmartCleanup?: () => void
+  /**
+   * The one-click catalyst. Runs the full Auto Viral Edit (beat-synced cuts +
+   * varied transitions + karaoke captions with keyword-highlight + auto-emoji)
+   * in a single tap. When unset, the headline button is hidden.
+   */
+  onAutoViralEdit?: () => void | Promise<void>
+  /** True while the Auto Viral Edit is running (drives the spinner). */
+  autoViralBusy?: boolean
   /** Optional toast callback so we can surface "Applied X" feedback. */
   showToast?: (msg: string, type?: 'info' | 'success' | 'error') => void
 }
@@ -80,6 +88,8 @@ export default function QuickActionsBar({
   onSplitAtPlayhead,
   onApplyMyStyle,
   onOpenSmartCleanup,
+  onAutoViralEdit,
+  autoViralBusy,
   showToast,
 }: Props) {
   const [insight, setInsight] = useState<StyleInsight | null>(null)
@@ -254,6 +264,14 @@ export default function QuickActionsBar({
     // every action. The min-w-max trick keeps actions from squishing.
     <div className="flex items-center gap-3 px-4 sm:px-6 py-3 ds-surface-card rounded-none border-x-0 border-t-0 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden relative z-40">
       <div className="flex items-center gap-3 min-w-max">
+        {/* The headline: one tap = beat-cut + varied transitions + karaoke
+            captions w/ keyword-highlight + auto-emoji. The whole creative
+            engine fired at once. */}
+        {onAutoViralEdit && (
+          <Action icon={Rocket} label="Viral Edit" longLabel="Auto Viral Edit — one-tap full edit"
+                  onClick={onAutoViralEdit} loading={!!autoViralBusy} accent="primary" hotkey="G" />
+        )}
+
         <Action icon={Wand2} label="Apply style" loading={busy === 'apply'}
                 onClick={handleApplyStyle} accent="primary" />
 
