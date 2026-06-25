@@ -138,6 +138,36 @@ function getSystemFontPath() {
   return null;
 }
 
+// ── Emoji support ──────────────────────────────────────────────────────────
+// Emoji are ALWAYS stripped from the main text drawtext so the body font never
+// renders a tofu box; they're re-rendered as a separate drawtext using a colour
+// emoji font ONLY when one is available (else honestly omitted on export — the
+// editor preview still shows them via the browser).
+const EMOJI_RE = /\p{Extended_Pictographic}/gu;
+let _emojiFontResolved;
+function getEmojiFontPath() {
+  if (_emojiFontResolved !== undefined) return _emojiFontResolved;
+  const candidates = [
+    process.env.EMOJI_FONT_PATH,
+    '/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf',
+    '/usr/share/fonts/NotoColorEmoji.ttf',
+    '/usr/share/fonts/google-noto-emoji/NotoColorEmoji.ttf',
+    '/usr/share/fonts/truetype/ancient-scripts/Symbola_hint.ttf',
+  ].filter(Boolean);
+  _emojiFontResolved = null;
+  for (const p of candidates) {
+    try { if (fs.existsSync(p)) { _emojiFontResolved = p; break; } } catch (_) { /* ignore */ }
+  }
+  return _emojiFontResolved;
+}
+function stripEmoji(s) {
+  return String(s == null ? '' : s).replace(EMOJI_RE, '').replace(/[️‍]/gu, '').replace(/\s+/g, ' ').trim();
+}
+function extractEmoji(s) {
+  const m = String(s == null ? '' : s).match(EMOJI_RE);
+  return m ? m.join('') : '';
+}
+
 /**
  * Safely escape text for FFmpeg drawtext filter.
  * Escapes characters like commas, semicolons, backticks, and brackets to prevent filtergraph breakups.
@@ -223,6 +253,25 @@ function normWord(s) {
 }
 
 /**
+ * One drawtext for a caption's emoji, rendered with a colour emoji font BELOW
+ * the caption. Returns null when there's no emoji OR no emoji font (honest skip
+ * — never a tofu box). ctx provides the caption geometry/timing.
+ */
+function buildEmojiDrawtext(emoji, ctx) {
+  if (!emoji) return null
+  const fontPath = getEmojiFontPath()
+  if (!fontPath) return null
+  const safe = escapeFfmpegText(emoji)
+  if (!safe) return null
+  const fontfileOpt = `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'`
+  const size = Math.round(ctx.fontSize * 1.05)
+  // Below the caption block, centered.
+  const yExpr = `(${ctx.baseYExpr})+${Math.round(ctx.lineHeight * Math.max(1, ctx.lineCount) * 0.95)}`
+  const safeY = ctx.safeZone === false ? yExpr : `max(h*0.04\\,min((${yExpr})\\,h*0.95-text_h))`
+  return `drawtext=text='${safe}'${fontfileOpt}:fontsize=${size}:x='(w-text_w)/2':y='${safeY}':enable='between(t\\,${ctx.start}\\,${ctx.end})'`
+}
+
+/**
  * PURE: pick the most "punchy" words in a caption to auto-highlight (power words,
  * numbers, and longer content words). Returns up to `max` normalized words.
  */
@@ -264,7 +313,7 @@ function buildWordByWordFilter(overlay, dims) {
   const filters = []
   for (const w of words) {
     if (!w) continue
-    const text = String(w.word ?? w.text ?? '').trim()
+    const text = stripEmoji(String(w.word ?? w.text ?? ''))
     if (!text) continue
     const start = Number(w.start ?? w.startTime)
     const end = Number(w.end ?? w.endTime ?? (start + 0.4))
@@ -274,11 +323,27 @@ function buildWordByWordFilter(overlay, dims) {
     // Strip the word-mode markers so the per-word call renders a normal caption.
     const single = {
       ...overlay, text, startTime: start, endTime: end,
-      words: undefined, captionMode: undefined, karaoke: undefined, highlightWords: undefined,
+      words: undefined, captionMode: undefined, karaoke: undefined, highlightWords: undefined, emoji: undefined,
       ...(isKey ? { color: highlightColor } : {}),
     }
     const f = buildDrawTextFilter(single, dims)
     if (f) filters.push(f)
+  }
+
+  // One emoji for the whole karaoke caption (spanning all words), below it.
+  const emoji = overlay.emoji || extractEmoji(overlay.text)
+  if (emoji && words.length) {
+    const fw = Math.max(2, Math.round(Number(dims.width) || 1080))
+    const starts = words.map((w) => Number(w && (w.start ?? w.startTime))).filter(Number.isFinite)
+    const ends = words.map((w) => Number(w && (w.end ?? w.endTime))).filter(Number.isFinite)
+    if (starts.length && ends.length) {
+      const ef = buildEmojiDrawtext(emoji, {
+        fontSize: Math.round((Number(overlay.fontSize) || 70) * (fw / 1080)),
+        baseYExpr: 'h-text_h-(h*0.1667)', lineHeight: 0, lineCount: 0,
+        start: Math.min(...starts).toFixed(3), end: Math.max(...ends).toFixed(3), safeZone: overlay.safeZone,
+      })
+      if (ef) filters.push(ef)
+    }
   }
   return filters.length ? filters.join(',') : null
 }
@@ -290,8 +355,21 @@ function buildDrawTextFilter(overlay, dims = {}) {
     return buildWordByWordFilter(overlay, dims)
   }
 
-  const rawText = (overlay.text || '').toUpperCase().trim()
-  if (!rawText) return null
+  // Strip emoji from the body text (rendered separately with an emoji font so the
+  // body font never shows a tofu box). An overlay may also carry an explicit emoji.
+  const overlayEmoji = overlay.emoji || extractEmoji(overlay.text)
+  const rawText = stripEmoji((overlay.text || '').toUpperCase())
+  if (!rawText) {
+    // Emoji-only caption: render just the emoji (if a font exists), else nothing.
+    const startN = Number(overlay.startTime ?? 0).toFixed(3)
+    const endN = Number(overlay.endTime ?? (Number(overlay.startTime ?? 0) + 3)).toFixed(3)
+    const fW = Math.max(2, Math.round(Number(dims.width) || 1080))
+    const ef = overlayEmoji ? buildEmojiDrawtext(overlayEmoji, {
+      fontSize: Math.round(58 * (fW / 1080)), baseYExpr: 'h-text_h-(h*0.1667)',
+      lineHeight: 0, lineCount: 0, start: startN, end: endN, safeZone: overlay.safeZone,
+    }) : null
+    return ef
+  }
 
   // Output frame dimensions — text auto-fits/auto-adjusts to these. Default to
   // the canonical 9:16 the px baselines were tuned for, so legacy callers that
@@ -430,7 +508,14 @@ function buildDrawTextFilter(overlay, dims = {}) {
       : `max(h*0.04\\,min((${lineY})\\,h*0.92-text_h))`
     return `drawtext=text='${safeLine}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${safeY}'${alphaOpt}:box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
   }
-  return renderLines.map(drawForLine).join(',')
+  const out = renderLines.map(drawForLine)
+  // Append the emoji (rendered with the emoji font, below the caption) — honest
+  // no-op when there's no emoji or no emoji font.
+  const ef = buildEmojiDrawtext(overlayEmoji, {
+    fontSize, baseYExpr: finalYExpr, lineHeight, lineCount: renderLines.length, start, end, safeZone: overlay.safeZone,
+  })
+  if (ef) out.push(ef)
+  return out.join(',')
 }
 
 /**
@@ -2037,6 +2122,9 @@ module.exports = {
   buildDrawTextFilter,
   pickHighlightWords,
   resolveXfadeName,
+  stripEmoji,
+  extractEmoji,
+  getEmojiFontPath,
   buildDrawBoxFilter,
   buildImageOverlaySegment,
   buildVideoTransformChain,

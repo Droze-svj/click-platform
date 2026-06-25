@@ -287,6 +287,16 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('caption WITH an emoji renders through ffmpeg (emoji stripped from body, no tofu/crash)', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 3 },
+      textOverlays: [{ id: 'emo', text: 'GET RICH 💰🔥', style: 'hook', emoji: '💰', startTime: 0, endTime: 2 }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('LONG caption wraps into multiple stacked drawtext lines → renders through ffmpeg', async () => {
     // A long phrase forces the multi-line wrap path (several comma-joined
     // drawtext filters). This proves the stacked filter graph is valid ffmpeg —

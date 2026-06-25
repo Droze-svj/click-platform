@@ -1,4 +1,4 @@
-const { buildDrawTextFilter, pickHighlightWords } = require('../../../server/services/videoRenderService');
+const { buildDrawTextFilter, pickHighlightWords, stripEmoji, extractEmoji, getEmojiFontPath } = require('../../../server/services/videoRenderService');
 
 function fontsizeOf(filter) {
   const m = /fontsize=(\d+)/.exec(filter || '');
@@ -147,6 +147,34 @@ describe('caption keyword highlighting (karaoke)', () => {
   it('does nothing without a highlightColor', () => {
     const f = buildDrawTextFilter({ captionMode: 'word', words, highlightWords: ['money'] }, { width: 1080, height: 1920 });
     expect(f).not.toMatch(/0x39ff14/i);
+  });
+});
+
+describe('caption emoji (export safety)', () => {
+  it('strips emoji from the body text so the body font never renders a tofu box', () => {
+    expect(stripEmoji('MAKE MONEY 💰🔥')).toBe('MAKE MONEY');
+    expect(extractEmoji('MAKE MONEY 💰🔥')).toBe('💰🔥');
+  });
+
+  it('a caption WITH an emoji renders the body text WITHOUT the emoji (no tofu)', () => {
+    const f = buildDrawTextFilter({ text: 'GET RICH 💰', style: 'hook' }, { width: 1080, height: 1920 });
+    expect(f).toContain('GET RICH');
+    // The body drawtext text must not include the emoji codepoint.
+    const bodyText = /text='([^']*)'/.exec(f)[1];
+    expect(/\p{Extended_Pictographic}/u.test(bodyText)).toBe(false);
+  });
+
+  it('emoji rendering is gated on an emoji font (honest skip when absent)', () => {
+    const f = buildDrawTextFilter({ text: 'WORDS', emoji: '🔥' }, { width: 1080, height: 1920 });
+    const drawCount = (f.match(/drawtext=/g) || []).length;
+    // 1 body line; +1 emoji drawtext ONLY when an emoji font exists on this host.
+    expect(drawCount).toBe(getEmojiFontPath() ? 2 : 1);
+  });
+
+  it('never returns a broken/empty filter for an emoji-only caption', () => {
+    const f = buildDrawTextFilter({ text: '🔥🔥' }, { width: 1080, height: 1920 });
+    // emoji-only → either a single emoji drawtext (font present) or null (no font) — never ',,'.
+    expect(f === null || /^drawtext=/.test(f)).toBe(true);
   });
 });
 

@@ -463,6 +463,8 @@ export interface TextOverlay {
   highlightWords?: string[]
   /** Accent colour for highlighted keywords. */
   highlightColor?: string
+  /** A relevant emoji rendered with the caption (auto-picked, editable). */
+  emoji?: string
 }
 
 /** Viral caption presets, mirrored from the render service CAPTION_STYLE_MAP. */

@@ -70,7 +70,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getMatchingEmojiForChunk } from '../../../utils/captionEmojiMap'
-import { pickHighlightWords, DEFAULT_HIGHLIGHT_COLOR } from '../../../lib/captions'
+import { pickHighlightWords, pickCaptionEmoji, DEFAULT_HIGHLIGHT_COLOR } from '../../../lib/captions'
 import { VideoFilter, TextOverlay, TemplateLayout, TEMPLATE_LAYOUTS, ShapeOverlay, ShapeOverlayKind, MOTION_GRAPHIC_TEMPLATES, MotionGraphicTemplate, ImageOverlay, GradientOverlay, GradientOverlayDirection, SvgOverlay, MotionCompound, TransformKeyframe, CAPTION_FONTS } from '../../../types/editor'
 import {
   TextPresetConfig,
@@ -1233,6 +1233,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         // Auto-highlight the punchy keywords (viral accent). Block mode ignores it.
         highlightWords: pickHighlightWords(c.text, 2),
         highlightColor: DEFAULT_HIGHLIGHT_COLOR,
+        // Auto-pick a relevant emoji (rendered with the caption; '' = none).
+        emoji: pickCaptionEmoji(c.text),
       }))
 
       pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
