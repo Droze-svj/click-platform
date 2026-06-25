@@ -2,8 +2,19 @@
 
 import React from 'react'
 import { Type, Film, AlignLeft, Trash2, Lock, Unlock, X, type LucideIcon } from 'lucide-react'
-import type { TextOverlay, TimelineSegment } from '../../types/editor'
-import { Button, IconButton, Input, Textarea, Slider, EmptyState } from '../ui'
+import type { TextOverlay, TimelineSegment, CaptionPreset } from '../../types/editor'
+import { Button, IconButton, Input, Textarea, Slider, Switch, EmptyState } from '../ui'
+
+// Viral caption presets (mirror the render CAPTION_STYLE_MAP). The colour is the
+// preset's signature fill — used as a live swatch in the picker.
+const CAPTION_PRESETS: { key: CaptionPreset; label: string; color: string }[] = [
+  { key: 'hook', label: 'Hook', color: '#FFD700' },
+  { key: 'stat', label: 'Stat', color: '#00FFFF' },
+  { key: 'question', label: 'Question', color: '#FFFFFF' },
+  { key: 'punchline', label: 'Punch', color: '#FF3366' },
+  { key: 'CTA', label: 'CTA', color: '#FFD700' },
+  { key: 'default', label: 'Clean', color: '#FFFFFF' },
+]
 
 /**
  * Inspector — single right-side panel that switches its body based on what
@@ -128,6 +139,52 @@ function TextOverlayInspector({
           className="min-h-0 resize-none text-[12px]"
         />
       </FieldRow>
+
+      {/* One-click viral caption presets — live colour swatch per preset. */}
+      <FieldRow label="Caption style" stack>
+        <div className="grid grid-cols-3 gap-1.5">
+          {CAPTION_PRESETS.map((p) => {
+            const active = (overlay.captionPreset || 'default') === p.key
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => onUpdate({ captionPreset: p.key })}
+                aria-pressed={active ? 'true' : 'false'}
+                title={`${p.label} caption style`}
+                className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] font-semibold transition-colors ${
+                  active ? 'border-primary ds-surface-subtle text-theme-primary' : 'border-subtle text-theme-secondary hover:text-theme-primary'
+                }`}
+              >
+                <span className="h-3 w-3 rounded-full border border-black/20 flex-shrink-0" style={{ backgroundColor: p.color }} />
+                {p.label}
+              </button>
+            )
+          })}
+        </div>
+      </FieldRow>
+
+      {/* Word-by-word (karaoke) — only meaningful when word timings exist. */}
+      <FieldRow label="Word-by-word">
+        <Switch
+          checked={overlay.captionMode === 'word'}
+          onCheckedChange={(v: boolean) => onUpdate({ captionMode: v ? 'word' : 'block' })}
+          aria-label="Word-by-word karaoke captions"
+        />
+      </FieldRow>
+      {overlay.captionMode === 'word' && !(overlay.words && overlay.words.length) && (
+        <p className="text-[10px] text-theme-muted -mt-3">Add auto-captions to get word timings for karaoke.</p>
+      )}
+
+      {/* Safe-zone: keep clear of the platform UI band (default on). */}
+      <FieldRow label="Safe zone">
+        <Switch
+          checked={overlay.safeZone !== false}
+          onCheckedChange={(v: boolean) => onUpdate({ safeZone: v })}
+          aria-label="Keep caption inside the platform safe zone"
+        />
+      </FieldRow>
+
       <FieldRow label="Font size" suffix="px">
         <NumberField value={overlay.fontSize} step={1} min={8} max={200}
           onChange={(v) => onUpdate({ fontSize: Math.round(v) })} />

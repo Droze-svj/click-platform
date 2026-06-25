@@ -112,3 +112,16 @@ describe('buildDrawTextFilter — word-by-word (karaoke) captions', () => {
     expect((f.match(/drawtext=/g) || []).length).toBe(1); // only GOOD is valid
   });
 });
+
+describe('buildDrawTextFilter — captionPreset (editor one-click style)', () => {
+  it('captionPreset drives the CAPTION_STYLE_MAP look (hook = gold)', () => {
+    const f = buildDrawTextFilter({ text: 'BUY NOW', captionPreset: 'hook' }, { width: 1080, height: 1920 });
+    expect(f).toMatch(/fontcolor='#FFD700'/);
+  });
+
+  it('captionPreset takes precedence over a generic visual style', () => {
+    // style:'neon' isn't a caption key; captionPreset:'stat' should win → cyan.
+    const f = buildDrawTextFilter({ text: '10X ROI', style: 'neon', captionPreset: 'stat' }, { width: 1080, height: 1920 });
+    expect(f).toMatch(/fontcolor='#00FFFF'/);
+  });
+});
