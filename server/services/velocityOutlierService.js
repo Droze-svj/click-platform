@@ -43,7 +43,9 @@ function computeVelocity(snapshots = []) {
 function velocityFromPublish(publishedAt, views, now) {
   const start = new Date(publishedAt).getTime();
   const nowMs = Number.isFinite(now) ? now : new Date(now).getTime();
-  if (!Number.isFinite(start) || !Number.isFinite(nowMs) || nowMs <= start) return 0;
+  // start <= 0 catches a null/absent publishedAt (new Date(null) === epoch 0),
+  // which would otherwise yield a misleading near-zero rate over "55 years".
+  if (!Number.isFinite(start) || start <= 0 || !Number.isFinite(nowMs) || nowMs <= start) return 0;
   const hours = (nowMs - start) / 3600000;
   return hours > 0 ? Math.round(clampNum(views) / hours) : 0;
 }
