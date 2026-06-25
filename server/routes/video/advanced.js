@@ -159,6 +159,21 @@ function runInBackground({ videoId, operation, handler }) {
   });
 }
 
+// SSRF guard for routes that hand a user-supplied videoUrl straight to ffmpeg
+// (which fetches it server-side). Runs AFTER multer so req.body is populated.
+// Routes that already resolve via downloadToUploadsTemp don't need this.
+const guardVideoUrl = asyncHandler(async (req, res, next) => {
+  const url = req.body && req.body.videoUrl;
+  if (url) {
+    try {
+      await assertPublicUrl(url);
+    } catch (e) {
+      return sendError(res, 'videoUrl is not allowed (must be a public http(s) URL)', 400);
+    }
+  }
+  return next();
+});
+
 /**
  * @swagger
  * /api/video/advanced/compress:
@@ -404,8 +419,13 @@ router.post('/trim', auth, upload.single('video'), asyncHandler(async (req, res)
   const operation = 'trim';
   const videoId = bodyVideoId || `video-${Date.now()}`;
 
-  if (!startTime || !duration) {
-    return sendError(res, 'Start time and duration are required', 400);
+  // Validate numerically: startTime:0 is the most common trim (from the start)
+  // and must be allowed; negatives / non-numbers must be rejected (a truthiness
+  // check `!startTime` wrongly 400s on 0 and lets a negative duration through).
+  const sTime = Number(startTime);
+  const dur = Number(duration);
+  if (!Number.isFinite(sTime) || sTime < 0 || !Number.isFinite(dur) || dur <= 0) {
+    return sendError(res, 'startTime (>= 0) and duration (> 0) are required', 400);
   }
 
   const uploadsRoot = getUploadsRoot();
@@ -423,7 +443,7 @@ router.post('/trim', auth, upload.single('video'), asyncHandler(async (req, res)
     videoId,
     operation,
     handler: async (onProgress) => {
-      const resultPath = await trimVideo(inputPath, outputPath, startTime, duration, {
+      const resultPath = await trimVideo(inputPath, outputPath, sTime, dur, {
         onProgress: (pct) => onProgress(Math.max(5, Math.min(99, pct || 0)), 'Trimming'),
       });
 
@@ -431,7 +451,7 @@ router.post('/trim', auth, upload.single('video'), asyncHandler(async (req, res)
         await fs.promises.unlink(inputPath).catch(() => { /* ignore deletion error */ });
       }
 
-      return { videoId, operation, startTime, duration, resultUrl: toUploadsUrl(resultPath) };
+      return { videoId, operation, startTime: sTime, duration: dur, resultUrl: toUploadsUrl(resultPath) };
     },
   });
 
@@ -492,7 +512,7 @@ router.post('/extract-audio', auth, upload.single('video'), asyncHandler(async (
  *     security:
  *       - bearerAuth: []
  */
-router.post('/add-text', auth, upload.single('video'), asyncHandler(async (req, res) => {
+router.post('/add-text', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('add_text_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl, textOverlays } = req.body
@@ -534,7 +554,7 @@ router.post('/add-text', auth, upload.single('video'), asyncHandler(async (req, 
  *     security:
  *       - bearerAuth: []
  */
-router.post('/apply-filters', auth, upload.single('video'), asyncHandler(async (req, res) => {
+router.post('/apply-filters', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('apply_filters_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl, filters } = req.body
@@ -578,7 +598,7 @@ router.post('/apply-filters', auth, upload.single('video'), asyncHandler(async (
 router.post('/add-audio', auth, upload.fields([
   { name: 'video', maxCount: 1 },
   { name: 'audio', maxCount: 1 }
-]), asyncHandler(async (req, res) => {
+]), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('add_audio_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl, audioUrl, audioVolume } = req.body
@@ -620,7 +640,7 @@ router.post('/add-audio', auth, upload.fields([
  *     security:
  *       - bearerAuth: []
  */
-router.post('/crop', auth, upload.single('video'), asyncHandler(async (req, res) => {
+router.post('/crop', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('crop_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl, cropArea } = req.body
@@ -661,7 +681,7 @@ router.post('/crop', auth, upload.single('video'), asyncHandler(async (req, res)
  *     security:
  *       - bearerAuth: []
  */
-router.post('/split-merge', auth, upload.single('video'), asyncHandler(async (req, res) => {
+router.post('/split-merge', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('split_merge_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl, segments } = req.body
@@ -702,7 +722,7 @@ router.post('/split-merge', auth, upload.single('video'), asyncHandler(async (re
  *     security:
  *       - bearerAuth: []
  */
-router.post('/transitions', auth, upload.single('video'), asyncHandler(async (req, res) => {
+router.post('/transitions', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('transitions_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl, transitionType } = req.body
@@ -783,7 +803,7 @@ router.post('/voiceover', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/stabilize', auth, upload.single('video'), asyncHandler(async (req, res) => {
+router.post('/stabilize', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('stabilize_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl } = req.body
@@ -862,7 +882,7 @@ router.post('/analyze', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/color-correct', auth, upload.single('video'), asyncHandler(async (req, res) => {
+router.post('/color-correct', auth, upload.single('video'), guardVideoUrl, asyncHandler(async (req, res) => {
   logVideoEditServer('color_correct_start', { userId: req.user._id, videoId: req.body.videoId })
 
   const { videoId, videoUrl } = req.body
