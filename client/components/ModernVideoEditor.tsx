@@ -108,6 +108,7 @@ import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
 import { buildBeatCutPlan, planToSegments } from '../lib/beatCuts'
+import { planAutoViralEdit } from '../lib/autoViralEdit'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useBrandKit } from './BrandKit'
 import {
@@ -424,6 +425,7 @@ const ModernVideoEditor: React.FC<{
   }, [])
 
   const [isMakingViral, setIsMakingViral] = useState(false)
+  const [isAutoViralEditing, setIsAutoViralEditing] = useState(false)
   // Bumped by Make Viral to tell AIDirectorView to auto-run Generate when
   // the AI tab opens. A counter (not a bool) so repeat clicks re-trigger.
   const [aiDirectorAutoGen, setAiDirectorAutoGen] = useState(0)
@@ -1618,6 +1620,100 @@ const ModernVideoEditor: React.FC<{
     )
   }, [videoState.duration, actualVideoUrl, videoId, timelineSegments, setTimelineSegments, showToast, t])
 
+  // ── Auto Viral Edit (the one-click catalyst) ──────────────────────────────
+  // Fires the whole creative engine in one tap: beat-synced cuts + varied
+  // transitions + karaoke captions (keyword-highlight + auto-emoji + viral
+  // preset). Reuses the existing beats + auto-caption endpoints and the PURE
+  // planAutoViralEdit orchestrator, so the result is deterministic + tested.
+  // Every stage degrades HONESTLY (no beats → captions-only; no transcript →
+  // cut-only) and the change is one history entry (Ctrl+Z undoes the whole
+  // edit via the auto-recording engine).
+  const handleAutoViralEdit = useCallback(async () => {
+    if (isAutoViralEditing) return
+    const dur = videoState.duration
+    if (!dur || dur <= 0) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'error'); return }
+    if (!actualVideoUrl && !videoId) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'error'); return }
+
+    setIsAutoViralEditing(true)
+    showToast('✦ Auto Viral Edit — analysing beats + captions…', 'info')
+    try {
+      // 1) Beats (best-effort; a missing/silent track just means captions-only).
+      let beats: number[] = []
+      try {
+        const params = new URLSearchParams()
+        if (actualVideoUrl) params.set('videoUrl', actualVideoUrl)
+        else if (videoId) params.set('contentId', videoId)
+        const res = await apiGet<{ data?: { beats?: number[]; hasAudio?: boolean } }>(
+          `/video/manual-editing/beats?${params.toString()}`
+        )
+        const payload = (res?.data ?? (res as any)) || {}
+        if (payload.hasAudio && Array.isArray(payload.beats)) {
+          beats = payload.beats.filter((b: any) => typeof b === 'number')
+        }
+      } catch { /* honest fallback — proceed with captions only */ }
+
+      // 2) Captions (best-effort; needs a transcript — otherwise cut-only).
+      let captions: Array<{ text?: string; startTime?: number; endTime?: number }> = []
+      const transcriptText = transcript?.fullText?.trim()
+      if (transcriptText) {
+        try {
+          const data = await apiPost('/video/hook-analysis/auto-caption', {
+            transcript: transcriptText,
+            videoId,
+            style: 'hormozi-bold',
+            wordsPerCaption: 4,
+            duration: dur,
+          }) as { captions?: Array<{ text: string; startTime: number; endTime: number }> }
+          if (Array.isArray(data?.captions)) captions = data.captions
+        } catch { /* honest fallback — proceed with cut only */ }
+      }
+
+      // 3) The pure plan: beat-cut + varied transitions + karaoke captions.
+      const words = Array.isArray((transcript as any)?.words) ? (transcript as any).words : []
+      const result = planAutoViralEdit({
+        beats,
+        duration: dur,
+        captions,
+        words,
+        sourceUrl: actualVideoUrl || undefined,
+        captionPreset: 'hook',
+      })
+
+      if (!result.summary.didCut && !result.summary.didCaption) {
+        showToast(
+          transcriptText
+            ? 'Auto Viral Edit needs music beats or a usable transcript — neither was found.'
+            : 'Auto Viral Edit needs a transcript for captions or music for cuts. Transcribe first, then retry.',
+          'info'
+        )
+        return
+      }
+
+      // 4) Apply. Re-cut replaces VIDEO clips only (keep audio/text/b-roll);
+      // captions append. Both setters fire → the history engine records ONE
+      // undoable step.
+      if (result.summary.didCut && result.segments.length) {
+        setTimelineSegments((prev: TimelineSegment[]) =>
+          [...prev.filter((s: TimelineSegment) => s.type !== 'video'), ...result.segments]
+        )
+      }
+      if (result.overlays.length) {
+        setTextOverlays((prev: TextOverlay[]) => [...prev, ...(result.overlays as TextOverlay[])])
+      }
+
+      // Honest, specific summary of what actually happened.
+      const parts: string[] = []
+      if (result.summary.didCut) parts.push(`${result.summary.clips} beat clips · ${result.summary.transitions} transitions`)
+      if (result.summary.didCaption) parts.push(`${result.summary.captions} karaoke captions`)
+      showToast(`✦ Auto Viral Edit: ${parts.join(' + ')}`, 'success')
+      if (result.summary.notes.length) showToast(result.summary.notes[0], 'info')
+    } catch {
+      showToast('Auto Viral Edit failed — your timeline is unchanged.', 'error')
+    } finally {
+      setIsAutoViralEditing(false)
+    }
+  }, [isAutoViralEditing, videoState.duration, actualVideoUrl, videoId, transcript, setTimelineSegments, setTextOverlays, showToast, t])
+
   const handleUpdateOverlay = useCallback((type: string, id: string, updates: any) => {
     if (type === 'text') {
       setTextOverlays(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o))
@@ -2233,6 +2329,8 @@ const ModernVideoEditor: React.FC<{
             onSplitAtPlayhead={handleSplitAtPlayhead}
             onApplyMyStyle={handleApplyMyStyle}
             onOpenSmartCleanup={() => setSmartCleanupOpen(true)}
+            onAutoViralEdit={handleAutoViralEdit}
+            autoViralBusy={isAutoViralEditing}
             showToast={showToast}
           />
 
