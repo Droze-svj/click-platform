@@ -59,3 +59,23 @@ describe('parseIso8601Duration', () => {
     expect(real.parseIso8601Duration('nonsense')).toBe(0);
   });
 });
+
+describe('mapRetentionCurve', () => {
+  const real = jest.requireActual('../../../server/services/youtubeAnalyticsService');
+  it('maps YouTube ratio points to { second, percentage } using duration', () => {
+    const out = real.mapRetentionCurve([
+      { elapsedRatio: 0, audienceWatchRatio: 1 },
+      { elapsedRatio: 0.5, audienceWatchRatio: 0.7 },
+      { elapsedRatio: 1, audienceWatchRatio: 0.4 },
+    ], 60);
+    expect(out).toEqual([
+      { second: 0, percentage: 100 },
+      { second: 30, percentage: 70 },
+      { second: 60, percentage: 40 },
+    ]);
+  });
+  it('returns [] when duration is unknown (can\'t place a ratio in time)', () => {
+    expect(real.mapRetentionCurve([{ elapsedRatio: 0.5, audienceWatchRatio: 0.8 }], 0)).toEqual([]);
+    expect(real.mapRetentionCurve(null, 60)).toEqual([]);
+  });
+});
