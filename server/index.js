@@ -2287,6 +2287,7 @@ app.use('/api/oauth', require('./routes/oauth'));
 // platform. Wired here so the editor's "TRENDS" Quick Action and any
 // niche dashboards can read fresh feeds without hammering external APIs.
 app.use('/api/trends', require('./routes/trends'));
+app.use('/api/seo', require('./routes/seo'));
 // Google integrations — YouTube Data + Analytics + Search Console reads.
 // All routes return `{ connected: false }` when Google isn't linked, so
 // the client can render a "Connect Google" CTA without an error toast.
