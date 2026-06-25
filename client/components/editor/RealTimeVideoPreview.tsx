@@ -28,6 +28,27 @@ function clampNum(n: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n))
 }
 
+// Caption preset signature colours — mirror the render CAPTION_STYLE_MAP so the
+// editor PREVIEW matches the EXPORT (preview↔export parity).
+const CAPTION_PRESET_COLORS: Record<string, string> = {
+  hook: '#FFD700', stat: '#00FFFF', question: '#FFFFFF',
+  punchline: '#FF3366', CTA: '#FFD700', default: '#FFFFFF',
+}
+
+/** The word active at time t for a word-by-word (karaoke) caption, or '' in a gap. */
+function activeKaraokeWord(words: any[], t: number): string {
+  if (!Array.isArray(words)) return ''
+  for (const w of words) {
+    if (!w) continue
+    const start = Number(w.start ?? w.startTime)
+    const end = Number(w.end ?? w.endTime)
+    if (Number.isFinite(start) && Number.isFinite(end) && t >= start && t < end) {
+      return String(w.word ?? w.text ?? '')
+    }
+  }
+  return ''
+}
+
 /**
  * Interpolate a text/shape/image/svg overlay's keyframed transform at the
  * current playhead time, returning per-frame {x,y,scale,rotation,opacity}.
@@ -856,7 +877,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             if (opacity === 0) return null
             // Fix #2: guard NaN/undefined coords before percent→px conversion.
             const safeX = clampNum(kfm ? kfm.x : safeNum(text.x, 50), -50, 150)
-            const safeY = clampNum(kfm ? kfm.y : safeNum(text.y, 50), -50, 150)
+            const rawSafeY = clampNum(kfm ? kfm.y : safeNum(text.y, 50), -50, 150)
+            // Preview parity: keep captions inside the safe band unless opted out.
+            const safeY = (text as any).safeZone === false ? rawSafeY : clampNum(rawSafeY, 4, 92)
+            // Preview parity: preset colour + word-by-word (karaoke) active word.
+            const presetColor = (text as any).captionPreset ? CAPTION_PRESET_COLORS[(text as any).captionPreset] : null
+            const displayColor = presetColor || text.color
+            const displayText = ((text as any).captionMode === 'word' && Array.isArray((text as any).words) && (text as any).words.length)
+              ? activeKaraokeWord((text as any).words, currentTime)
+              : text.text
             const kfTransform = kfm
               ? ` scale(${kfm.scale}) rotate(${kfm.rotation}deg)`
               : ''
@@ -981,12 +1010,12 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                         className="whitespace-pre-wrap break-words flex flex-col justify-center text-center drop-shadow-lg max-w-[90vw]"
                         style={{
                           fontSize: `${text.fontSize}px`,
-                          color: text.color,
+                          color: displayColor,
                           fontFamily: text.fontFamily,
                           letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : 'normal',
                           lineHeight: text.lineHeight || 1.2,
                           textShadow: text.style === 'shadow' ? `2px 2px 4px ${text.shadowColor || 'rgba(0,0,0,0.5)'}` :
-                                     text.style === 'neon' ? `0 0 10px ${text.color}, 0 0 20px ${text.color}` :
+                                     text.style === 'neon' ? `0 0 10px ${displayColor}, 0 0 20px ${displayColor}` :
                                      text.style === 'outline' ? `-1px -1px 0 ${text.outlineColor || '#000'}, 1px -1px 0 ${text.outlineColor || '#000'}, -1px 1px 0 ${text.outlineColor || '#000'}, 1px 1px 0 ${text.outlineColor || '#000'}` : 'none',
                           backgroundColor: text.backgroundColor || 'transparent',
                           padding: text.backgroundColor ? '4px 8px' : '0',
@@ -995,7 +1024,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                           transformOrigin: 'center center'
                         }}
                       >
-                        {text.text}
+                        {displayText}
                       </div>
                     </div>
                   )}

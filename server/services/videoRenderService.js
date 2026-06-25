@@ -1145,8 +1145,10 @@ async function renderFromEditorState(options) {
       cinematicEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),1.8,${cinematicEQ})`;
       brightnessEQ = `if(between(t,${s.toFixed(2)},${eFlash.toFixed(2)}),0.3,${brightnessEQ})`;
 
-      // Only shake & glitch on high-impact styles
-      if (o.style === 'hook' || o.style === 'punchline' || o.type === 'hook') {
+      // Only shake & glitch on high-impact styles (captionPreset included, so a
+      // one-click Hook/Punch preset gets the frame kinetics too).
+      const hi = o.captionPreset || o.style || o.type
+      if (hi === 'hook' || hi === 'punchline') {
         const eShake = s + 0.4; // 400ms shake
         const jitterX = `(random(1)*40-20)`;
         const jitterY = `(random(1)*40-20)`;
