@@ -14,6 +14,7 @@ const { getOutliers } = require('../services/velocityOutlierService');
 const { getRetentionInsights } = require('../services/retentionAnalysisService');
 const { getChannelAudit } = require('../services/channelAuditService');
 const { getContentGrowthBrief } = require('../services/growthBriefService');
+const { syncYouTubeVideos, listVideos } = require('../services/socialVideoSyncService');
 
 const router = express.Router();
 
@@ -123,6 +124,22 @@ router.get('/channel-audit', auth, aiLimiter, asyncHandler(async (req, res) => {
     accountId: req.query.accountId || null,
   });
   sendSuccess(res, 'Channel audit', 200, result);
+}));
+
+// POST /api/seo/sync — import/refresh the user's channel videos (Click + external)
+// into the canonical SocialVideo store. aiLimiter: hits the YouTube API.
+router.post('/sync', auth, aiLimiter, asyncHandler(async (req, res) => {
+  const result = await syncYouTubeVideos(req.user._id, { accountId: req.body && req.body.accountId });
+  sendSuccess(res, 'Video sync', 200, result);
+}));
+
+// GET /api/seo/videos?accountId= — list the user's synced videos (for pickers).
+router.get('/videos', auth, asyncHandler(async (req, res) => {
+  const result = await listVideos(req.user._id, {
+    accountId: req.query.accountId || null,
+    limit: Number(req.query.limit) || 50,
+  });
+  sendSuccess(res, 'Synced videos', 200, result);
 }));
 
 module.exports = router;
