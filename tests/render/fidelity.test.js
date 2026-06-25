@@ -206,6 +206,23 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('word-by-word (karaoke) caption → per-word synced drawtext renders through ffmpeg', async () => {
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 4 },
+      textOverlays: [{
+        id: 'kara', style: 'hook', captionMode: 'word',
+        words: [
+          { word: 'WATCH', start: 0.2, end: 0.7 },
+          { word: 'THIS', start: 0.7, end: 1.1 },
+          { word: 'NOW', start: 1.1, end: 1.6 },
+        ],
+      }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('LONG caption wraps into multiple stacked drawtext lines → renders through ffmpeg', async () => {
     // A long phrase forces the multi-line wrap path (several comma-joined
     // drawtext filters). This proves the stacked filter graph is valid ffmpeg —

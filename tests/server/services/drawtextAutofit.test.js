@@ -66,4 +66,49 @@ describe('buildDrawTextFilter — auto-fit / auto-adjust across aspect ratios', 
   it('returns null for empty text', () => {
     expect(buildDrawTextFilter({ text: '   ' }, { width: 1080, height: 1920 })).toBeNull();
   });
+
+  it('applies a safe-zone clamp to keep captions clear of the UI band', () => {
+    const f = buildDrawTextFilter({ text: 'CAPTION', style: 'default' }, { width: 1080, height: 1920 });
+    expect(f).toMatch(/max\(h\*0\.04/);
+    expect(f).toMatch(/h\*0\.92-text_h/);
+  });
+
+  it('safeZone:false opts out of the clamp (explicit editor placement)', () => {
+    const f = buildDrawTextFilter({ text: 'EXACT', x: 50, y: 95, safeZone: false }, { width: 1080, height: 1920 });
+    expect(f).not.toMatch(/max\(h\*0\.04/);
+  });
+});
+
+describe('buildDrawTextFilter — word-by-word (karaoke) captions', () => {
+  const words = [
+    { word: 'GO', start: 0.0, end: 0.4 },
+    { word: 'VIRAL', start: 0.4, end: 0.9 },
+    { word: 'NOW', start: 0.9, end: 1.3 },
+  ];
+
+  it('emits one synced drawtext per word, timed to its window', () => {
+    const f = buildDrawTextFilter({ words, captionMode: 'word', style: 'hook' }, { width: 1080, height: 1920 });
+    const count = (f.match(/drawtext=/g) || []).length;
+    expect(count).toBe(3); // one per word (each short word = single line)
+    // each word is gated to its own time window
+    expect(f).toMatch(/between\(t\\,0\.000\\,0\.400\)/);
+    expect(f).toMatch(/between\(t\\,0\.400\\,0\.900\)/);
+    expect(f).toMatch(/between\(t\\,0\.900\\,1\.300\)/);
+  });
+
+  it('also accepts the karaoke flag + {text,startTime,endTime} word shape', () => {
+    const f = buildDrawTextFilter({
+      karaoke: true,
+      words: [{ text: 'HELLO', startTime: 1, endTime: 1.5 }, { text: 'WORLD', startTime: 1.5, endTime: 2 }],
+    }, { width: 720, height: 1280 });
+    expect((f.match(/drawtext=/g) || []).length).toBe(2);
+  });
+
+  it('skips words with missing text or invalid timing (no crash)', () => {
+    const f = buildDrawTextFilter({
+      captionMode: 'word',
+      words: [{ word: '', start: 0, end: 1 }, { word: 'OK', start: 2, end: 1 }, { word: 'GOOD', start: 3, end: 3.5 }],
+    }, { width: 1080, height: 1920 });
+    expect((f.match(/drawtext=/g) || []).length).toBe(1); // only GOOD is valid
+  });
 });
