@@ -1205,6 +1205,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       }
       const def = captionStyleMap[captionStyle] ?? captionStyleMap['tiktok-pop']
 
+      // Attach the transcript's word-level timings to each caption so the
+      // "Word-by-word" (karaoke) toggle has data to sync to (block mode ignores it).
+      const tWords: any[] = Array.isArray((transcript as any)?.words) ? (transcript as any).words : []
+      const wordsFor = (s: number, e: number) => tWords
+        .filter((w) => w && Number(w.start) >= s - 0.05 && Number(w.end) <= e + 0.05)
+        .map((w) => ({ word: w.text || w.word || '', start: w.start, end: w.end }))
+
       const newOverlays: TextOverlay[] = data.captions.map((c, i) => ({
         id: `autocap-${ts}-${i}`,
         text: c.text,
@@ -1218,6 +1225,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         style: def.style,
         animationIn: 'fade' as const,
         animationOut: 'fade' as const,
+        words: wordsFor(c.startTime, c.endTime),
       }))
 
       pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
