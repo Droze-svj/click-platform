@@ -87,11 +87,38 @@ async function getRetentionInsights(contentId, userId, options = {}) {
   } catch (err) {
     logger.warn('[retention] metrics query failed', { error: err.message });
   }
-  if (!doc) return { available: false, reason: 'no_metrics', contentId };
 
-  const curve = (doc.retention && doc.retention.curve) || [];
-  const analysis = analyzeRetention(curve, options);
-  return { available: curve.length >= 2, contentId, platform: doc.platform, ...analysis };
+  // Local-first: use the stored curve when we have one.
+  const localCurve = (doc && doc.retention && doc.retention.curve) || [];
+  if (localCurve.length >= 2) {
+    const analysis = analyzeRetention(localCurve, options);
+    return { available: true, source: 'local', contentId, platform: doc.platform, ...analysis };
+  }
+
+  // Fallback: pull LIVE YouTube retention for a published YouTube video. Mapped
+  // to { second, percentage } via the video duration. Honest at every step.
+  try {
+    const live = await getLiveYouTubeRetention(contentId, userId, options);
+    if (live && Array.isArray(live.curve) && live.curve.length >= 2) {
+      const analysis = analyzeRetention(live.curve, options);
+      return { available: true, source: 'youtube_live', contentId, platform: 'youtube', durationSec: live.durationSec, ...analysis };
+    }
+  } catch (err) {
+    logger.warn('[retention] live YouTube fallback failed', { error: err.message });
+  }
+
+  return { available: false, reason: 'no_metrics', contentId };
+}
+
+/** Resolve a content's published YouTube videoId, then fetch+map its live curve. */
+async function getLiveYouTubeRetention(contentId, userId, options = {}) {
+  const ScheduledPost = require('../models/ScheduledPost');
+  const yt = require('./youtubeAnalyticsService');
+  const sp = await ScheduledPost.findOne({
+    contentId, platform: 'youtube', platformPostId: { $nin: [null, ''] },
+  }).select('platformPostId').sort({ postedAt: -1 }).lean().catch(() => null);
+  if (!sp || !sp.platformPostId) return null;
+  return yt.getMappedVideoRetention(userId, sp.platformPostId, { accountId: options.accountId || null });
 }
 
 module.exports = { analyzeRetention, getRetentionInsights };

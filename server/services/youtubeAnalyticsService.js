@@ -206,9 +206,50 @@ async function getVideoRetention(userId, videoId, { accountId = null } = {}) {
   }
 }
 
+/**
+ * PURE: map YouTube's retention curve [{ elapsedRatio, audienceWatchRatio }]
+ * (ratios 0–1) into the analyzer's [{ second, percentage }] shape using the
+ * video's duration. Empty when duration is unknown (can't place a ratio in time).
+ */
+function mapRetentionCurve(ytCurve, durationSec) {
+  const d = Number(durationSec) || 0;
+  if (!d || !Array.isArray(ytCurve)) return [];
+  return ytCurve
+    .map((p) => ({
+      second: Math.round((Number(p && p.elapsedRatio) || 0) * d),
+      percentage: Math.round((Number(p && p.audienceWatchRatio) || 0) * 100),
+    }))
+    .filter((p) => Number.isFinite(p.second) && Number.isFinite(p.percentage))
+    .sort((a, b) => a.second - b.second);
+}
+
+/**
+ * Live YouTube retention, mapped to the analyzer's { second, percentage } shape.
+ * Fetches the video duration (contentDetails) to place ratios in time, then the
+ * retention curve. Honest connected:false / empty curve when unavailable.
+ */
+async function getMappedVideoRetention(userId, videoId, { accountId = null } = {}) {
+  const auth = await buildOAuthClient(userId, accountId);
+  if (!auth) return { connected: false, reason: 'google_not_connected', curve: [], durationSec: 0 };
+  if (!videoId) return { connected: true, curve: [], durationSec: 0, reason: 'videoId_required' };
+  try {
+    const youtube = google.youtube({ version: 'v3', auth });
+    const vresp = await youtube.videos.list({ part: ['contentDetails'], id: [videoId] });
+    const durationSec = parseIso8601Duration(vresp.data?.items?.[0]?.contentDetails?.duration);
+    const ret = await getVideoRetention(userId, videoId, { accountId });
+    const curve = mapRetentionCurve(ret.curve, durationSec);
+    return { connected: true, videoId, durationSec, curve };
+  } catch (err) {
+    logger.error('YouTube mapped-retention fetch failed', { ...LOG_CONTEXT, userId, videoId, error: err.message });
+    return { connected: true, error: err.message, curve: [], durationSec: 0 };
+  }
+}
+
 module.exports = {
   getChannelMetrics,
   getTopVideos,
   getVideoRetention,
+  getMappedVideoRetention,
+  mapRetentionCurve,
   parseIso8601Duration,
 };

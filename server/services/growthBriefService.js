@@ -69,7 +69,7 @@ async function getContentGrowthBrief(contentId, userId, options = {}) {
 
   let retention = { available: false };
   try {
-    retention = await getRetentionInsights(contentId, userId);
+    retention = await getRetentionInsights(contentId, userId, { accountId: options.accountId || null });
   } catch (err) {
     logger.warn('[growthBrief] retention lookup failed', { error: err.message });
   }

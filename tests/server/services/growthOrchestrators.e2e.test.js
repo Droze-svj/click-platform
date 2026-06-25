@@ -1,6 +1,13 @@
+// Mock the YouTube service so the live-retention fallback is deterministic.
+jest.mock('../../../server/services/youtubeAnalyticsService', () => ({
+  getMappedVideoRetention: jest.fn().mockResolvedValue({ connected: true, curve: [], durationSec: 0 }),
+}));
+
 const mongoose = require('mongoose');
 const Content = require('../../../server/models/Content');
 const VideoMetrics = require('../../../server/models/VideoMetrics');
+const ScheduledPost = require('../../../server/models/ScheduledPost');
+const yt = require('../../../server/services/youtubeAnalyticsService');
 const { getRetentionInsights } = require('../../../server/services/retentionAnalysisService');
 const { getOutliers } = require('../../../server/services/velocityOutlierService');
 
@@ -23,7 +30,8 @@ async function makeMetrics(contentId, { views = 100, curve = [] } = {}) {
 }
 
 afterEach(async () => {
-  await Promise.all([Content.deleteMany({}), VideoMetrics.deleteMany({})]);
+  await Promise.all([Content.deleteMany({}), VideoMetrics.deleteMany({}), ScheduledPost.deleteMany({})]);
+  jest.clearAllMocks();
 });
 
 describe('getRetentionInsights (E2E, ownership-grounded)', () => {
@@ -44,11 +52,41 @@ describe('getRetentionInsights (E2E, ownership-grounded)', () => {
     expect(r.reason).toBe('not_found');
   });
 
-  it('is honest when there is content but no metrics', async () => {
+  it('is honest when there is content but no metrics and no published video', async () => {
     const c = await makeContent(uidA);
     const r = await getRetentionInsights(c._id, uidA);
     expect(r.available).toBe(false);
     expect(r.reason).toBe('no_metrics');
+  });
+
+  it('falls back to LIVE YouTube retention for a published video (no local curve)', async () => {
+    const c = await makeContent(uidA);
+    await ScheduledPost.create({
+      userId: String(uidA), contentId: c._id, platform: 'youtube',
+      platformPostId: 'yt_vid_123', scheduledTime: new Date(), postedAt: new Date(), status: 'posted',
+    });
+    yt.getMappedVideoRetention.mockResolvedValueOnce({
+      connected: true, durationSec: 60,
+      curve: [{ second: 0, percentage: 100 }, { second: 3, percentage: 58 }, { second: 30, percentage: 50 }],
+    });
+    const r = await getRetentionInsights(c._id, uidA, { accountId: 'acc-1' });
+    expect(r.available).toBe(true);
+    expect(r.source).toBe('youtube_live');
+    expect(r.hookScore).toBeLessThan(70);
+    expect(yt.getMappedVideoRetention).toHaveBeenCalledWith(String(uidA), 'yt_vid_123', { accountId: 'acc-1' });
+  });
+
+  it('prefers the LOCAL curve over the live fallback when both exist', async () => {
+    const c = await makeContent(uidA);
+    await makeMetrics(c._id, { curve: [{ second: 0, percentage: 100 }, { second: 10, percentage: 90 }, { second: 20, percentage: 80 }] });
+    await ScheduledPost.create({
+      userId: String(uidA), contentId: c._id, platform: 'youtube',
+      platformPostId: 'yt_vid_123', scheduledTime: new Date(), status: 'posted',
+    });
+    const r = await getRetentionInsights(c._id, uidA);
+    expect(r.available).toBe(true);
+    expect(r.source).toBe('local');
+    expect(yt.getMappedVideoRetention).not.toHaveBeenCalled();
   });
 });
 

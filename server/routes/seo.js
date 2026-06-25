@@ -102,14 +102,14 @@ router.get('/outliers', auth, asyncHandler(async (req, res) => {
 
 // GET /api/seo/retention/:contentId — retention curve → edit recommendations.
 router.get('/retention/:contentId', auth, asyncHandler(async (req, res) => {
-  const result = await getRetentionInsights(req.params.contentId, req.user._id);
+  const result = await getRetentionInsights(req.params.contentId, req.user._id, { accountId: req.query.accountId || null });
   sendSuccess(res, 'Retention insights', 200, result);
 }));
 
 // GET /api/seo/brief/:contentId — the closed-loop "do this next" brief.
 router.get('/brief/:contentId', auth, asyncHandler(async (req, res) => {
   const brief = await getContentGrowthBrief(req.params.contentId, req.user._id, {
-    targetKeyword: req.query.keyword, platform: req.query.platform,
+    targetKeyword: req.query.keyword, platform: req.query.platform, accountId: req.query.accountId || null,
   });
   sendSuccess(res, 'Growth brief', 200, brief);
 }));
