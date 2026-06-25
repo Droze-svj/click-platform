@@ -11,6 +11,7 @@ const { scoreVideoSeo, generateSeoRewrite } = require('../services/seoScorecardS
 const { getKeywordIdeas } = require('../services/keywordIntelService');
 const { getOutliers } = require('../services/velocityOutlierService');
 const { getRetentionInsights } = require('../services/retentionAnalysisService');
+const { getChannelAudit } = require('../services/channelAuditService');
 
 const router = express.Router();
 
@@ -99,6 +100,12 @@ router.get('/outliers', auth, asyncHandler(async (req, res) => {
 router.get('/retention/:contentId', auth, asyncHandler(async (req, res) => {
   const result = await getRetentionInsights(req.params.contentId, req.user._id);
   sendSuccess(res, 'Retention insights', 200, result);
+}));
+
+// GET /api/seo/channel-audit — channel-level scorecard from real YouTube data.
+router.get('/channel-audit', auth, asyncHandler(async (req, res) => {
+  const result = await getChannelAudit(req.user._id, { days: Number(req.query.days) || 28 });
+  sendSuccess(res, 'Channel audit', 200, result);
 }));
 
 module.exports = router;
