@@ -32,6 +32,13 @@ import {
 type IssueSeverity = 'high' | 'medium' | 'low'
 
 // One actionable issue surfaced by the scorecard.
+interface YouTubeAccount {
+  accountId: string
+  platformUsername?: string | null
+  isPrimary?: boolean
+  isActive?: boolean
+}
+
 interface AuditIssue {
   area: string
   severity: IssueSeverity
@@ -115,14 +122,28 @@ export default function ChannelAuditPage() {
   const [days, setDays] = useState<DayOption>(28)
   const [loading, setLoading] = useState(true)
   const [audit, setAudit] = useState<ChannelAudit | null>(null)
+  const [accounts, setAccounts] = useState<YouTubeAccount[]>([])
+  const [accountId, setAccountId] = useState<string>('')
+
+  // Load the user's connected YouTube channels so multi-channel creators can
+  // audit each one (not just whichever is active/primary).
+  useEffect(() => {
+    apiGet<{ accounts?: YouTubeAccount[] }>('/api/oauth/youtube/accounts')
+      .then((res) => {
+        const list = Array.isArray(res?.accounts) ? res.accounts : []
+        setAccounts(list)
+        const active = list.find((a) => a.isActive) || list.find((a) => a.isPrimary) || list[0]
+        if (active?.accountId) setAccountId(String(active.accountId))
+      })
+      .catch(() => setAccounts([]))
+  }, [])
 
   const loadAudit = useCallback(
-    async (window: DayOption) => {
+    async (window: DayOption, acct: string) => {
       setLoading(true)
       try {
-        const res = await apiGet<ApiEnvelope<ChannelAudit>>(
-          `/api/seo/channel-audit?days=${window}`,
-        )
+        const qs = `days=${window}${acct ? `&accountId=${encodeURIComponent(acct)}` : ''}`
+        const res = await apiGet<ApiEnvelope<ChannelAudit>>(`/api/seo/channel-audit?${qs}`)
         setAudit(res?.data ?? null)
       } catch {
         showToast('Could not load your channel audit. Please try again.', 'error')
@@ -135,8 +156,8 @@ export default function ChannelAuditPage() {
   )
 
   useEffect(() => {
-    loadAudit(days)
-  }, [days, loadAudit])
+    loadAudit(days, accountId)
+  }, [days, accountId, loadAudit])
 
   const available = audit?.available === true
   const subscores = audit?.subscores
@@ -156,6 +177,22 @@ export default function ChannelAuditPage() {
         />
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Channel picker — only when the creator has >1 connected channel. */}
+          {accounts.length > 1 && (
+            <select
+              value={accountId}
+              onChange={(e) => setAccountId(e.target.value)}
+              aria-label="Select YouTube channel"
+              className="rounded-lg ds-surface-subtle px-3 py-1.5 text-xs font-medium text-theme-primary"
+            >
+              {accounts.map((a) => (
+                <option key={a.accountId} value={a.accountId}>
+                  {a.platformUsername || a.accountId}{a.isActive ? ' (active)' : ''}
+                </option>
+              ))}
+            </select>
+          )}
+
           {/* Days selector */}
           <div className="inline-flex rounded-lg ds-surface-subtle p-1">
             {DAY_OPTIONS.map((opt) => {
@@ -185,7 +222,7 @@ export default function ChannelAuditPage() {
             variant="secondary"
             size="sm"
             loading={loading}
-            onClick={() => loadAudit(days)}
+            onClick={() => loadAudit(days, accountId)}
             leftIcon={<RefreshCw className="h-4 w-4" aria-hidden />}
           >
             Refresh
@@ -389,7 +426,7 @@ export default function ChannelAuditPage() {
           action={
             <Button
               variant="secondary"
-              onClick={() => loadAudit(days)}
+              onClick={() => loadAudit(days, accountId)}
               leftIcon={<RefreshCw className="h-4 w-4" aria-hidden />}
             >
               Try again
