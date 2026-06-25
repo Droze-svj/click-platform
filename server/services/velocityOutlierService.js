@@ -79,17 +79,43 @@ function detectOutliers(videos = [], options = {}) {
 
 /**
  * Orchestrator: surface the creator's overperformers vs their OWN baseline.
- * Ownership is grounded on Content (VideoMetrics is keyed by workspaceId/
- * contentId only); we read the user's Content, then join VideoMetrics by
- * contentId. Content.createdAt is the publish-time proxy for VPH. `nowMs` is
- * injectable for tests.
+ * Prefers the synced SocialVideo channel data (covers the WHOLE channel, incl.
+ * videos published outside Click); falls back to Click Content + VideoMetrics
+ * for users who haven't synced. `nowMs` is injectable for tests.
  */
 async function getOutliers(userId, options = {}) {
   const VideoMetrics = require('../models/VideoMetrics');
   const Content = require('../models/Content');
+  const SocialVideo = require('../models/SocialVideo');
   const nowMs = Number.isFinite(options.nowMs) ? options.nowMs : Date.now();
 
   const limit = Math.max(1, Math.min(Number(options.limit) || 200, 1000));
+
+  // Preferred source: the synced channel (real data for ALL the user's videos).
+  let sv = [];
+  try {
+    sv = await SocialVideo.find({ userId: String(userId), platform: options.platform || 'youtube' })
+      .select('externalId contentId platform title views publishedAt')
+      .sort({ views: -1 })
+      .limit(limit)
+      .lean();
+  } catch (err) {
+    logger.warn('[velocityOutlier] SocialVideo query failed', { error: err.message });
+  }
+  if (sv.length >= 3) {
+    const videos = sv.map((d) => ({
+      contentId: d.contentId || null,
+      externalId: d.externalId,
+      platform: d.platform,
+      title: d.title || null,
+      views: Number(d.views) || 0,
+      vph: velocityFromPublish(d.publishedAt, d.views, nowMs),
+      publishedAt: d.publishedAt,
+    }));
+    const result = detectOutliers(videos, { metric: 'views', overMultiplier: options.overMultiplier, underMultiplier: options.underMultiplier });
+    return { ...result, source: 'channel', available: true };
+  }
+
   let contents = [];
   try {
     contents = await Content.find({ userId })
@@ -141,7 +167,7 @@ async function getOutliers(userId, options = {}) {
   }));
 
   const result = detectOutliers(videos, { metric: 'views', overMultiplier: options.overMultiplier, underMultiplier: options.underMultiplier });
-  return { ...result, available: videos.length >= 3 };
+  return { ...result, source: 'click_content', available: videos.length >= 3 };
 }
 
 module.exports = { computeVelocity, velocityFromPublish, detectOutliers, getOutliers };
