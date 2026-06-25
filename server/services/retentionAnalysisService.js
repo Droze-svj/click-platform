@@ -67,23 +67,31 @@ function analyzeRetention(curve = [], options = {}) {
   return { avgViewPercent, hookScore, dropOffs, rewatchPeaks, recommendations };
 }
 
-/** Orchestrator: load a video's real retention curve and analyze it. */
+/**
+ * Orchestrator: load a video's real retention curve and analyze it. Ownership is
+ * grounded on Content (which carries userId) — VideoMetrics is keyed by
+ * workspaceId/contentId only, so authorizing on the metrics doc would be a no-op
+ * (and naively querying by contentId alone would be a cross-tenant IDOR).
+ */
 async function getRetentionInsights(contentId, userId, options = {}) {
   const VideoMetrics = require('../models/VideoMetrics');
+  const Content = require('../models/Content');
+
+  const content = await Content.findById(contentId).select('userId').lean().catch(() => null);
+  if (!content) return { available: false, reason: 'no_content', contentId };
+  if (userId && String(content.userId) !== String(userId)) return { available: false, reason: 'not_found', contentId };
+
   let doc = null;
   try {
-    const query = { contentId };
-    if (userId) query.userId = userId;
-    doc = await VideoMetrics.findOne(query).select('retention userId contentId platform').sort({ createdAt: -1 }).lean();
+    doc = await VideoMetrics.findOne({ contentId }).select('retention platform').sort({ createdAt: -1 }).lean();
   } catch (err) {
     logger.warn('[retention] metrics query failed', { error: err.message });
   }
   if (!doc) return { available: false, reason: 'no_metrics', contentId };
-  if (userId && doc.userId && String(doc.userId) !== String(userId)) {
-    return { available: false, reason: 'not_found', contentId };
-  }
-  const analysis = analyzeRetention(doc.retention || [], options);
-  return { available: (doc.retention || []).length >= 2, contentId, platform: doc.platform, ...analysis };
+
+  const curve = (doc.retention && doc.retention.curve) || [];
+  const analysis = analyzeRetention(curve, options);
+  return { available: curve.length >= 2, contentId, platform: doc.platform, ...analysis };
 }
 
 module.exports = { analyzeRetention, getRetentionInsights };
