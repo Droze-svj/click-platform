@@ -12,12 +12,21 @@ import { pickHighlightWords, DEFAULT_HIGHLIGHT_COLOR } from '../../lib/captions'
 const SEGMENT_TRANSITIONS: { value: SegmentTransitionType; label: string }[] = [
   { value: 'none', label: 'None' },
   { value: 'crossfade', label: 'Crossfade' },
+  { value: 'dissolve', label: 'Dissolve' },
+  { value: 'flash', label: 'Flash' },
   { value: 'dip', label: 'Dip to Black' },
-  { value: 'wipe-left', label: 'Whip / Wipe Left' },
-  { value: 'wipe-right', label: 'Whip / Wipe Right' },
+  { value: 'whip-left', label: 'Whip Left' },
+  { value: 'whip-right', label: 'Whip Right' },
+  { value: 'wipe-left', label: 'Wipe Left' },
+  { value: 'wipe-right', label: 'Wipe Right' },
   { value: 'wipe-up', label: 'Wipe Up' },
   { value: 'wipe-down', label: 'Wipe Down' },
+  { value: 'slide-up', label: 'Slide Up' },
+  { value: 'slide-down', label: 'Slide Down' },
   { value: 'zoom', label: 'Zoom Blur' },
+  { value: 'glitch', label: 'Glitch' },
+  { value: 'iris', label: 'Iris' },
+  { value: 'radial', label: 'Radial' },
 ]
 
 const CAPTION_PRESETS: { key: CaptionPreset; label: string; color: string }[] = [

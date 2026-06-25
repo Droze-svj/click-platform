@@ -67,6 +67,24 @@ describe('resolveXfadeName (render: friendly names → valid xfade)', () => {
     expect(resolveXfadeName('zoom')).toBe('pixelize');
     expect(RENDER_XFADE.has(resolveXfadeName('zoom'))).toBe(true);
   });
+
+  it('maps the EXPANDED creative set (flash/dissolve/slide/whip/iris/radial/glitch)', () => {
+    const EDITOR_TRANSITIONS = ['none', 'crossfade', 'dissolve', 'flash', 'dip', 'whip-left',
+      'whip-right', 'wipe-left', 'wipe-right', 'wipe-up', 'wipe-down', 'slide-up', 'slide-down',
+      'zoom', 'glitch', 'iris', 'radial'];
+    for (const name of EDITOR_TRANSITIONS) {
+      const xt = resolveXfadeName(name);
+      if (name === 'none') { expect(xt).toBeNull(); continue; }
+      // EVERY editor transition resolves to a render-VALID xfade (never a silent typo).
+      expect(RENDER_XFADE.has(xt)).toBe(true);
+    }
+    expect(resolveXfadeName('flash')).toBe('fadewhite');
+    expect(resolveXfadeName('slide-up')).toBe('smoothup');
+    expect(resolveXfadeName('iris')).toBe('circleopen');
+    expect(resolveXfadeName('glitch')).toBe('pixelize');
+    expect(resolveXfadeName('dissolve')).toBe('dissolve');
+    expect(resolveXfadeName('radial')).toBe('radial');
+  });
   it('returns null for none/empty (→ plain concat, no fake fade)', () => {
     expect(resolveXfadeName('none')).toBeNull();
     expect(resolveXfadeName('')).toBeNull();
