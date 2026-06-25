@@ -11,7 +11,7 @@ const Content = require('../models/Content');
 const { scoreVideoSeo, generateSeoRewrite } = require('../services/seoScorecardService');
 const { getKeywordIdeas } = require('../services/keywordIntelService');
 const { getOutliers } = require('../services/velocityOutlierService');
-const { getRetentionInsights } = require('../services/retentionAnalysisService');
+const { getRetentionInsights, getExternalVideoRetention } = require('../services/retentionAnalysisService');
 const { getChannelAudit } = require('../services/channelAuditService');
 const { getContentGrowthBrief } = require('../services/growthBriefService');
 const { syncYouTubeVideos, listVideos } = require('../services/socialVideoSyncService');
@@ -105,6 +105,13 @@ router.get('/outliers', auth, asyncHandler(async (req, res) => {
 router.get('/retention/:contentId', auth, asyncHandler(async (req, res) => {
   const result = await getRetentionInsights(req.params.contentId, req.user._id, { accountId: req.query.accountId || null });
   sendSuccess(res, 'Retention insights', 200, result);
+}));
+
+// GET /api/seo/video-retention/:externalId — retention for ANY synced channel
+// video (incl. videos published outside Click). Ownership via SocialVideo.
+router.get('/video-retention/:externalId', auth, asyncHandler(async (req, res) => {
+  const result = await getExternalVideoRetention(req.params.externalId, req.user._id, { accountId: req.query.accountId || null });
+  sendSuccess(res, 'Video retention insights', 200, result);
 }));
 
 // GET /api/seo/brief/:contentId — the closed-loop "do this next" brief.

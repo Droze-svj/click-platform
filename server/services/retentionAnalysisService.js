@@ -121,4 +121,27 @@ async function getLiveYouTubeRetention(contentId, userId, options = {}) {
   return yt.getMappedVideoRetention(userId, sp.platformPostId, { accountId: options.accountId || null });
 }
 
-module.exports = { analyzeRetention, getRetentionInsights };
+/**
+ * Retention insights for an EXTERNAL video (one synced from the channel, not
+ * necessarily published through Click). Ownership is grounded on SocialVideo;
+ * the curve comes live from YouTube. Honest available:false at each missing step.
+ */
+async function getExternalVideoRetention(externalId, userId, options = {}) {
+  const SocialVideo = require('../models/SocialVideo');
+  const yt = require('./youtubeAnalyticsService');
+
+  const sv = await SocialVideo.findOne({ userId: String(userId), externalId: String(externalId) })
+    .select('externalId accountId platform title').lean().catch(() => null);
+  if (!sv) return { available: false, reason: 'not_found', externalId };
+
+  const mapped = await yt.getMappedVideoRetention(userId, sv.externalId, {
+    accountId: options.accountId || sv.accountId || null,
+  }).catch(() => null);
+  const curve = mapped && Array.isArray(mapped.curve) ? mapped.curve : [];
+  if (curve.length < 2) return { available: false, reason: 'no_retention', externalId, title: sv.title };
+
+  const analysis = analyzeRetention(curve, options);
+  return { available: true, source: 'youtube_live', externalId, title: sv.title, durationSec: mapped.durationSec, ...analysis };
+}
+
+module.exports = { analyzeRetention, getRetentionInsights, getExternalVideoRetention };
