@@ -391,7 +391,14 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
         shadowColor: config.shadowColor,
         outlineColor: config.outlineColor,
         animationIn: config.animationIn,
-        animationOut: config.animationOut
+        animationOut: config.animationOut,
+        // Attach word-level timings so the "Word-by-word" (karaoke) caption
+        // toggle has data to sync to. Block mode ignores it.
+        words: (phrase.words || []).map((w: any) => ({
+          word: w.text || w.word || '',
+          start: w.start,
+          end: w.end,
+        })),
       }
     })
 

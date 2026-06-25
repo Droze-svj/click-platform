@@ -1097,7 +1097,11 @@ async function renderFromEditorState(options) {
     }
   })
   _drawnOverlays.sort((a, b) => a.layer - b.layer)
-  const overlayFilters = _drawnOverlays.map((d) => d.f)
+  // Drop null/empty filters — a builder returns null for empty text or an
+  // all-invalid word list. An unfiltered null becomes a `,,` in the joined
+  // filter chain, which is invalid ffmpeg and crashes the ENTIRE export (taking
+  // down every other valid overlay), so it must never reach the join.
+  const overlayFilters = _drawnOverlays.map((d) => d.f).filter(Boolean)
   
   // 🌿 2026 Comfort-Aesthetic Settings (Prevents sensory overstimulation by default for Manual Edits)
   // By default, manual edits are designed to be clean, stable, and highly organized.

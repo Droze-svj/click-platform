@@ -206,6 +206,22 @@ d('render fidelity', () => {
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
 
+  it('an empty-text overlay does NOT crash the export (null filter is dropped)', async () => {
+    // Regression: a null filter (empty text / all-invalid karaoke words) used to
+    // become a `,,` in the joined chain and fail the entire render.
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 3 },
+      textOverlays: [
+        { id: 'empty', text: '   ', startTime: 0, endTime: 2 },
+        { id: 'karaEmpty', captionMode: 'word', words: [{ word: '', start: 0, end: 1 }], startTime: 0, endTime: 2 },
+        { id: 'ok', text: 'STILL RENDERS', style: 'hook', startTime: 0, endTime: 2 },
+      ],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
+
   it('word-by-word (karaoke) caption → per-word synced drawtext renders through ffmpeg', async () => {
     const { outputPath } = await render({
       exportOptions: { width: 1080, height: 1920, duration: 4 },
