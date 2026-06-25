@@ -882,10 +882,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             const safeY = (text as any).safeZone === false ? rawSafeY : clampNum(rawSafeY, 4, 92)
             // Preview parity: preset colour + word-by-word (karaoke) active word.
             const presetColor = (text as any).captionPreset ? CAPTION_PRESET_COLORS[(text as any).captionPreset] : null
-            const displayColor = presetColor || text.color
-            const displayText = ((text as any).captionMode === 'word' && Array.isArray((text as any).words) && (text as any).words.length)
-              ? activeKaraokeWord((text as any).words, currentTime)
-              : text.text
+            const isWordMode = (text as any).captionMode === 'word' && Array.isArray((text as any).words) && (text as any).words.length
+            const displayText = isWordMode ? activeKaraokeWord((text as any).words, currentTime) : text.text
+            // Highlight: if the active word is a designated keyword, use the accent.
+            const hlSet: string[] = Array.isArray((text as any).highlightWords) ? (text as any).highlightWords : []
+            const hlNorm = String(displayText || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+            const isHighlightWord = isWordMode && (text as any).highlightColor && hlSet.includes(hlNorm)
+            const displayColor = isHighlightWord ? (text as any).highlightColor : (presetColor || text.color)
             const kfTransform = kfm
               ? ` scale(${kfm.scale}) rotate(${kfm.rotation}deg)`
               : ''

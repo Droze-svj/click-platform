@@ -1,4 +1,4 @@
-const { buildDrawTextFilter } = require('../../../server/services/videoRenderService');
+const { buildDrawTextFilter, pickHighlightWords } = require('../../../server/services/videoRenderService');
 
 function fontsizeOf(filter) {
   const m = /fontsize=(\d+)/.exec(filter || '');
@@ -123,5 +123,41 @@ describe('buildDrawTextFilter — captionPreset (editor one-click style)', () =>
     // style:'neon' isn't a caption key; captionPreset:'stat' should win → cyan.
     const f = buildDrawTextFilter({ text: '10X ROI', style: 'neon', captionPreset: 'stat' }, { width: 1080, height: 1920 });
     expect(f).toMatch(/fontcolor='#00FFFF'/);
+  });
+});
+
+describe('caption keyword highlighting (karaoke)', () => {
+  const words = [
+    { word: 'this', start: 0, end: 0.3 },
+    { word: 'MONEY', start: 0.3, end: 0.7 },
+    { word: 'hack', start: 0.7, end: 1.1 },
+  ];
+
+  it('renders highlighted keywords in the accent colour, others in base', () => {
+    const f = buildDrawTextFilter({
+      captionMode: 'word', words, color: '#FFFFFF',
+      highlightWords: ['money', 'hack'], highlightColor: '#39FF14',
+    }, { width: 1080, height: 1920 });
+    // 3 per-word drawtext; the two keywords use the accent colour (ffmpeg 0x form).
+    expect((f.match(/drawtext=/g) || []).length).toBe(3);
+    expect((f.match(/fontcolor='0x39ff14'/gi) || []).length).toBe(2);
+    expect(f).toMatch(/fontcolor='0xffffff'/i); // the non-keyword stays base
+  });
+
+  it('does nothing without a highlightColor', () => {
+    const f = buildDrawTextFilter({ captionMode: 'word', words, highlightWords: ['money'] }, { width: 1080, height: 1920 });
+    expect(f).not.toMatch(/0x39ff14/i);
+  });
+});
+
+describe('pickHighlightWords (pure)', () => {
+  it('picks power words / numbers / longer content words', () => {
+    const picks = pickHighlightWords('this is the secret to make 10000 dollars fast', 3);
+    expect(picks).toEqual(expect.arrayContaining(['secret', '10000']));
+    expect(picks.length).toBeLessThanOrEqual(3);
+  });
+  it('is safe + deduped on empty / filler-only text', () => {
+    expect(pickHighlightWords('')).toEqual([]);
+    expect(Array.isArray(pickHighlightWords('a an the of to is'))).toBe(true);
   });
 });

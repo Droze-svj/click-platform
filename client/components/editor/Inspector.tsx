@@ -4,6 +4,7 @@ import React from 'react'
 import { Type, Film, AlignLeft, Trash2, Lock, Unlock, X, type LucideIcon } from 'lucide-react'
 import type { TextOverlay, TimelineSegment, CaptionPreset } from '../../types/editor'
 import { Button, IconButton, Input, Textarea, Slider, Switch, EmptyState } from '../ui'
+import { pickHighlightWords, DEFAULT_HIGHLIGHT_COLOR } from '../../lib/captions'
 
 // Viral caption presets (mirror the render CAPTION_STYLE_MAP). The colour is the
 // preset's signature fill — used as a live swatch in the picker.
@@ -150,8 +151,8 @@ function TextOverlayInspector({
                 key={p.key}
                 type="button"
                 onClick={() => onUpdate({ captionPreset: p.key })}
-                aria-pressed={active ? 'true' : 'false'}
                 title={`${p.label} caption style`}
+                aria-label={`${p.label} caption style${active ? ' (selected)' : ''}`}
                 className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] font-semibold transition-colors ${
                   active ? 'border-primary ds-surface-subtle text-theme-primary' : 'border-subtle text-theme-secondary hover:text-theme-primary'
                 }`}
@@ -184,6 +185,25 @@ function TextOverlayInspector({
           aria-label="Keep caption inside the platform safe zone"
         />
       </FieldRow>
+
+      {/* Keyword highlight — pops the punchy words in an accent colour (karaoke). */}
+      <FieldRow label="Highlight">
+        <Switch
+          checked={!!(overlay.highlightWords && overlay.highlightWords.length && overlay.highlightColor)}
+          onCheckedChange={(v: boolean) => onUpdate(v
+            ? { highlightWords: pickHighlightWords(overlay.text || '', 2), highlightColor: overlay.highlightColor || DEFAULT_HIGHLIGHT_COLOR }
+            : { highlightWords: [] })}
+          aria-label="Highlight keywords in an accent colour"
+        />
+      </FieldRow>
+      {overlay.highlightWords && overlay.highlightWords.length > 0 && (
+        <FieldRow label="Accent">
+          <input type="color" value={overlay.highlightColor || DEFAULT_HIGHLIGHT_COLOR}
+            onChange={(e) => onUpdate({ highlightColor: e.target.value })}
+            aria-label="Keyword highlight colour"
+            className="h-8 w-12 bg-transparent border border-subtle rounded cursor-pointer" />
+        </FieldRow>
+      )}
 
       <FieldRow label="Font size" suffix="px">
         <NumberField value={overlay.fontSize} step={1} min={8} max={200}
