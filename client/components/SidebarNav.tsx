@@ -14,7 +14,7 @@ import {
   // Publish
   Send, CalendarDays, Workflow, Bot, Gauge, MessagesSquare,
   // Grow
-  BarChart3, Flame, Brain, Recycle,
+  BarChart3, Flame, Brain, Recycle, Award, Target, LineChart,
   // Manage
   FolderKanban, Users, Gem, Boxes, Plug, Compass, Share2, FlaskConical,
   // Settings
@@ -85,6 +85,10 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/analytics/creator',    label: t('nav.creatorStats') || 'Creator Stats',     icon: Flame,      badge: 'AI' },
       { path: '/dashboard/trends',               label: t('nav.discover') || 'Discover',          icon: Flame,      badge: 'New' },
       { path: '/dashboard/trends/repurpose',     label: t('nav.trendRepurpose') || 'Trend Repurpose', icon: Recycle, badge: 'AI' },
+      { path: '/dashboard/growth/seo',           label: t('nav.seoScorecard') || 'SEO Scorecard', icon: Award,      badge: 'New' },
+      { path: '/dashboard/growth/keywords',      label: t('nav.keywords') || 'Keywords',         icon: Target,     badge: 'New' },
+      { path: '/dashboard/growth/outliers',      label: t('nav.outliers') || 'Outliers',         icon: LineChart,  badge: 'AI' },
+      { path: '/dashboard/growth/channel',       label: t('nav.channelAudit') || 'Channel Audit', icon: Gauge,      badge: 'New' },
       { path: '/dashboard/strategist',           label: t('nav.strategist') || 'Strategist',        icon: Compass,    badge: 'AI' },
       { path: '/dashboard/insights',             label: t('nav.aiInsights') || 'AI Insights',       icon: Brain,      badge: null },
       { path: '/dashboard/roadmap',              label: t('nav.roadmap') || 'Roadmap',           icon: Sparkles,   badge: null },
