@@ -205,4 +205,21 @@ d('render fidelity', () => {
     expect(p.hasVideo).toBe(true);
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
+
+  it('LONG caption wraps into multiple stacked drawtext lines → renders through ffmpeg', async () => {
+    // A long phrase forces the multi-line wrap path (several comma-joined
+    // drawtext filters). This proves the stacked filter graph is valid ffmpeg —
+    // the real risk of multi-line captions — on a vertical frame.
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 4 },
+      textOverlays: [{
+        id: 'long', style: 'hook',
+        text: 'THIS IS A LONG VIRAL HOOK THAT MUST WRAP ACROSS MULTIPLE LINES TO FIT',
+        startTime: 0, endTime: 4,
+      }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 90000);
 });
