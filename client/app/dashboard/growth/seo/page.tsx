@@ -212,7 +212,7 @@ export default function SeoScorecardPage() {
     setAnalyzing(true)
     setRewrite(null)
     try {
-      const res = await apiPost<ApiEnvelope<Scorecard>>('/api/seo/scorecard', buildBody())
+      const res = await apiPost<ApiEnvelope<Scorecard>>('/seo/scorecard', buildBody())
       const data = res?.data ?? null
       setScorecard(data)
       if (data) {
@@ -234,7 +234,7 @@ export default function SeoScorecardPage() {
     }
     setRewriting(true)
     try {
-      const res = await apiPost<ApiEnvelope<Rewrite>>('/api/seo/rewrite', buildBody())
+      const res = await apiPost<ApiEnvelope<Rewrite>>('/seo/rewrite', buildBody())
       const data = res?.data ?? null
       setRewrite(data)
       if (data?.suggestion) {
@@ -259,7 +259,7 @@ export default function SeoScorecardPage() {
     }
     setApplying(true)
     try {
-      await apiPost<ApiEnvelope<unknown>>('/api/seo/apply', {
+      await apiPost<ApiEnvelope<unknown>>('/seo/apply', {
         contentId: resolvedContentId,
         title: draftTitle.trim(),
         description: draftDescription.trim(),

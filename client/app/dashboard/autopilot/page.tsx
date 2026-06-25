@@ -103,7 +103,7 @@ export default function AutopilotPage() {
     setBuilding(true)
     setEmptyMessage(null)
     try {
-      const res = await apiPost<AutopilotResponse>('/api/autopilot', {
+      const res = await apiPost<AutopilotResponse>('/autopilot', {
         autonomyMode,
         niche: niche.trim() || undefined,
       })
@@ -138,7 +138,7 @@ export default function AutopilotPage() {
     if (!plan?.planId) return
     setApproving(true)
     try {
-      await apiPost(`/api/autopilot/${plan.planId}/approve`)
+      await apiPost(`/autopilot/${plan.planId}/approve`)
       showToast('Plan approved — posts are now scheduled.', 'success')
       // Reflect the new state locally without a refetch.
       setPlan(prev =>
@@ -162,7 +162,7 @@ export default function AutopilotPage() {
     if (!plan?.planId) return
     setCancelling(true)
     try {
-      await apiPost(`/api/autopilot/${plan.planId}/cancel`)
+      await apiPost(`/autopilot/${plan.planId}/cancel`)
       showToast('Plan cancelled.', 'info')
       setPlan(null)
       setEmptyMessage(null)

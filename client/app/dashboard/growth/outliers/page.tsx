@@ -289,7 +289,7 @@ export default function OutliersPage() {
   const loadOutliers = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true)
     try {
-      const res = await apiGet<OutlierEnvelope>('/api/seo/outliers')
+      const res = await apiGet<OutlierEnvelope>('/seo/outliers')
       setReport(res?.data ?? null)
     } catch {
       toast.error('Failed to load performance outliers.')
@@ -305,7 +305,7 @@ export default function OutliersPage() {
   const handleSync = useCallback(async () => {
     setSyncing(true)
     try {
-      const res = await apiPost<SyncEnvelope>('/api/seo/sync', {})
+      const res = await apiPost<SyncEnvelope>('/seo/sync', {})
       const data = res?.data
       const available = data?.available
       const synced = Number(data?.synced) || 0
@@ -340,7 +340,7 @@ export default function OutliersPage() {
       setRetentionLoadingId(externalId)
       try {
         const res = await apiGet<RetentionEnvelope>(
-          '/api/seo/video-retention/' + encodeURIComponent(externalId)
+          '/seo/video-retention/' + encodeURIComponent(externalId)
         )
         const insight = res?.data ?? { available: false }
         setRetentionById((prev) => ({ ...prev, [externalId]: insight }))

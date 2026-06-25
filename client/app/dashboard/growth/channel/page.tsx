@@ -128,9 +128,11 @@ export default function ChannelAuditPage() {
   // Load the user's connected YouTube channels so multi-channel creators can
   // audit each one (not just whichever is active/primary).
   useEffect(() => {
-    apiGet<{ accounts?: YouTubeAccount[] }>('/api/oauth/youtube/accounts')
+    // /oauth/accounts returns a per-platform map ({ accounts: { youtube: [...] } }),
+    // so pull the youtube list out of it. (There is no /oauth/youtube/accounts route.)
+    apiGet<{ accounts?: { youtube?: YouTubeAccount[] } }>('/oauth/accounts')
       .then((res) => {
-        const list = Array.isArray(res?.accounts) ? res.accounts : []
+        const list = Array.isArray(res?.accounts?.youtube) ? res.accounts.youtube : []
         setAccounts(list)
         const active = list.find((a) => a.isActive) || list.find((a) => a.isPrimary) || list[0]
         if (active?.accountId) setAccountId(String(active.accountId))
@@ -143,7 +145,7 @@ export default function ChannelAuditPage() {
       setLoading(true)
       try {
         const qs = `days=${window}${acct ? `&accountId=${encodeURIComponent(acct)}` : ''}`
-        const res = await apiGet<ApiEnvelope<ChannelAudit>>(`/api/seo/channel-audit?${qs}`)
+        const res = await apiGet<ApiEnvelope<ChannelAudit>>(`/seo/channel-audit?${qs}`)
         setAudit(res?.data ?? null)
       } catch {
         showToast('Could not load your channel audit. Please try again.', 'error')

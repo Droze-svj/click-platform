@@ -80,7 +80,7 @@ function CollaborateInner() {
     if (!id) return
     setLoading(true)
     try {
-      const res = await apiGet<{ data: ApprovalStatus }>(`/api/approvals/${id}/status`)
+      const res = await apiGet<{ data: ApprovalStatus }>(`/approvals/${id}/status`)
       setStatus(res?.data || null)
     } catch (err) {
       toast.error(extractApiError(err).message || 'Could not load approval')
@@ -103,7 +103,7 @@ function CollaborateInner() {
     if (!commentText.trim() || !approvalId) return
     setPostingComment(true)
     try {
-      await apiPost(`/api/approvals/${approvalId}/comments`, {
+      await apiPost(`/approvals/${approvalId}/comments`, {
         text: commentText.trim(),
         targetField: targetField.trim() || undefined,
         parentId: replyTo || undefined,
@@ -122,7 +122,7 @@ function CollaborateInner() {
 
   const toggleResolve = async (commentId: string, resolved: boolean) => {
     try {
-      await apiPost(`/api/approvals/${approvalId}/comments/${commentId}/resolve`, { resolved: !resolved })
+      await apiPost(`/approvals/${approvalId}/comments/${commentId}/resolve`, { resolved: !resolved })
       await load(approvalId)
     } catch (err) {
       toast.error(extractApiError(err).message || 'Could not update comment')
@@ -133,7 +133,7 @@ function CollaborateInner() {
     if (!approvalId) return
     setPostingRevision(true)
     try {
-      await apiPost(`/api/approvals/${approvalId}/revisions`, { note: revisionNote.trim() || undefined })
+      await apiPost(`/approvals/${approvalId}/revisions`, { note: revisionNote.trim() || undefined })
       toast.success('Revision recorded')
       setRevisionNote('')
       await load(approvalId)
