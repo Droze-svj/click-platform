@@ -5,6 +5,27 @@ AI key in prod, below). The deep-hardening pass (Phases 0–4) is complete and m
 `main`; the security campaign (rounds 8–18) is already live on `click-platform-1.onrender.com`
 with signed-media enforcing.
 
+## Update — latest pass (creative-editor + endpoint-integrity)
+
+Since this doc was first written the system moved further forward:
+
+- **Creative editor**: live transition preview, auto-emoji captions, and a one-click
+  "Auto Viral Edit" (beat-cut + transitions + karaoke captions) — all merged, render-fidelity
+  tested (20/20 through real ffmpeg).
+- **Endpoint integrity sweep**: enumerated the full **2,286-route** mounted table and
+  cross-checked every literal client API call. Fixed **19 broken endpoints** that were
+  silently 404-ing live dashboards — a double-`/api/`-prefix class (autopilot, approvals,
+  agency calendar, the SEO suite, trends, hook A/B, auto-clip) plus wrong-path calls
+  (monetization, projects, search, oauth accounts) and the never-mounted auto-caption route.
+  Two committed regression tests (`clientApiPrefix.test.js`, extended `routeMounts.test.js`)
+  make these classes impossible to silently reship.
+- **Safe local testing**: a dev DB-safety guard (`isRemoteProdUri`) now refuses to connect a
+  non-production boot to the Atlas prod DB — see **"Run Click locally (safely)"** below.
+
+**Current gates (this pass, on `main`):** full server suite **690 passing / 0 failing** ·
+`eslint server/` **0 errors** · client `tsc` **clean** · `next build` **101/101 pages** ·
+local boot → `/api/health` **ok** on isolated in-memory Mongo (prod Atlas untouched).
+
 ## The one thing that gates "real AI"
 
 Your prod AI is currently **mock** — `GOOGLE_AI_API_KEY` is unset in Render, so every AI
@@ -112,6 +133,36 @@ Fixed so it cannot recur:
 `users` + `contents` from a snapshot just before this date. If it's a shared/free tier with no
 backups, the emptied collections aren't recoverable — re-register your account(s); content created
 during prior testing is gone. Nothing else was affected.
+
+## Run Click locally (safely) — test before you publish
+
+Local testing is now **safe-by-default**: a non-production boot can no longer connect to the
+Atlas prod DB (the dev guard forces an isolated in-memory MongoDB; verified — boot logs
+`🛡️ DB SAFETY: refusing…`). To run the whole stack on your machine:
+
+```bash
+# 1. Backend (in-memory DB, never touches prod). Pick any free port.
+NODE_ENV=development PORT=5050 npm run start:server
+#   → expect: "🛡️ DB SAFETY: refusing…", "🚀 Server running on port 5050",
+#             "✅ In-Memory MongoDB successfully initialized."
+
+# 2. Frontend (in another terminal) — proxies /api to the backend.
+cd client && npm run dev    # http://localhost:3010
+```
+
+Then exercise the core paid flow at `http://localhost:3010`: sign up → upload a video →
+AI highlights/captions → edit (try the one-tap **Auto Viral Edit**, hotkey **G**) →
+render/export → download. Local AI runs **live** (your `.env` has the key), so you see real
+generation, not the prod fallback.
+
+Notes:
+- In-memory Mongo is **ephemeral** — data resets on restart. For a persistent local DB, run a
+  local Mongo and `export MONGODB_URI=mongodb://localhost:27017/click_local` first (the guard
+  allows localhost).
+- Boot still opens **read-only** Supabase/Redis clients from `.env` (non-destructive). For a
+  fully-isolated sandbox, unset `SUPABASE_URL`/`REDIS_URL` in your shell before booting.
+- This is for *your* pre-launch click-through. The thing real users hit is the Render deploy —
+  do the live checklist below against `click-platform-1.onrender.com` too.
 
 ## Your pre-test checklist
 
