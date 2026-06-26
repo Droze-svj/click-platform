@@ -43,10 +43,18 @@ const STEP_TYPES = new Set([
   'cut', 'broll', 'hook', 'transition', 'audio', 'effect', 'caption', 'color', 'pacing', 'cta',
 ]);
 
-// Allowed color grades + pacing strategies — kept in sync with the prompt
-// schema and client. The model is told to pick from these sets.
-const COLOR_GRADES = ['cinematic', 'warm', 'cool', 'vibrant', 'moody', 'bw'];
+// Color grades come from the SHARED registry so the Director's vocabulary always
+// matches what actually renders (manual editor + forge + export). 6 → 26 grades =
+// far richer, more varied AI direction, with zero risk of an un-renderable grade.
+const { gradeIds: _gradeIds, resolveGrade: _resolveGrade } = require('./colorGradeRegistry');
+const COLOR_GRADES = _gradeIds();
 const PACING_STRATEGIES = ['punchy', 'steady', 'dynamic'];
+// Renderable vocab HINTS surfaced to the model so it picks names the engine can
+// actually execute (lenient — unknown values fall back to a default downstream, they
+// don't drop the step). Sourced from the xfade/vfx/caption sets in videoRenderService.
+const TRANSITION_STYLES = ['fade', 'crossfade', 'dissolve', 'wipeleft', 'wiperight', 'wipeup', 'wipedown', 'slideleft', 'slideright', 'slideup', 'slidedown', 'whip', 'glitch', 'zoom', 'radial', 'pixelize', 'circleopen', 'circleclose'];
+const EFFECT_NAMES = ['film-grain', 'vhs-glitch', 'chromatic-aberration', 'film-burn', 'light-leak', 'vignette'];
+const CAPTION_STYLES = ['bold', 'bold-kinetic', 'outline', 'neon', 'minimal', 'kinetic', 'cinematic', 'karaoke', 'gradient', 'pop', 'bubble', 'professional'];
 
 /**
  * M3: clamp a free-form object (req.body goals/constraints) down to a
@@ -298,10 +306,10 @@ function buildPrompts({
     '  - cut: { "start": number, "end": number, "reason"?: string }  (a silence window; both within [0,duration], start < end)',
     '  - hook: { "text": string, "style"?: string }',
     '  - broll: { "keyword": string }',
-    '  - transition: { "style": string, "duration"?: number }',
+    `  - transition: { "style": string, "duration"?: number }  (style e.g.: ${TRANSITION_STYLES.join(' | ')})`,
     '  - audio: { "action"?: string }',
-    '  - effect: { "name"?: string }',
-    '  - caption: { "text": string, "style"?: string, "duration"?: number }',
+    `  - effect: { "name"?: string }  (name e.g.: ${EFFECT_NAMES.join(' | ')})`,
+    `  - caption: { "text": string, "style"?: string, "duration"?: number }  (style e.g.: ${CAPTION_STYLES.join(' | ')})`,
     `  - color: { "grade": string }  (grade MUST be one of: ${COLOR_GRADES.join(' | ')})`,
     `  - pacing: { "strategy": string, "speed"?: number }  (strategy MUST be one of: ${PACING_STRATEGIES.join(' | ')}; speed optional 0.5–2)`,
     '  - cta: { "text": string, "duration"?: number }',
@@ -363,6 +371,17 @@ function validateDirections(raw, duration) {
         params.start = start;
         params.end = end;
       }
+
+      // color: the grade MUST resolve in the shared registry — otherwise it renders
+      // a no-op. Normalize aliases (moody-dark→moody) to the canonical id, or drop
+      // the whole color step (a color step with no valid grade is useless).
+      if (step.type === 'color') {
+        const g = _resolveGrade(params.grade);
+        if (!g) return;
+        params.grade = g.id;
+      }
+      // pacing: strategy must be a known renderable strategy, else drop.
+      if (step.type === 'pacing' && !PACING_STRATEGIES.includes(String(params.strategy))) return;
 
       // "time" — derive from cut start when present, else from step.time.
       let time = Number(step.type === 'cut' ? params.start : step.time);
