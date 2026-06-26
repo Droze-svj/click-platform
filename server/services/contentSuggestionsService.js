@@ -80,6 +80,11 @@ async function analyzeContentGaps(userId) {
       .sort({ createdAt: -1 })
       .limit(50);
 
+    // Honesty: with NO content there's nothing to be "under-posting" relative to —
+    // return no gaps rather than flag every platform at 0 (a false "you're neglecting
+    // twitter" nudge for a brand-new creator).
+    if (!contents.length) return [];
+
     const platforms = contents.reduce((acc, c) => {
       if (c.generatedContent?.socialPosts) {
         c.generatedContent.socialPosts.forEach(post => {

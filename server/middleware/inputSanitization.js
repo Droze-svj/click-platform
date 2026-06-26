@@ -34,6 +34,11 @@ const SANITIZER_BYPASS_PATHS = [
   // model, never reflected as HTML. Escaping `'`→`&#x27;` would corrupt the
   // generated speech/image, so pass the prompt through raw.
   /^\/api\/ai\/generate(\/|$|\?)/,
+  // AI feedback: the body is categorical learning tokens (genre "R&B", "lo-fi/chill")
+  // + a free-text reason fed into the personalization prompt, never reflected as
+  // HTML. Escaping fragments the learned keys (`&`→`&amp;`) so the same trait never
+  // accumulates weight; pass it through raw (no HTML sink here).
+  /^\/api\/ai\/feedback(\/|$|\?)/,
 ];
 
 function sanitizeInput(req, res, next) {

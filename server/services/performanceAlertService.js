@@ -34,8 +34,12 @@ const RECENT_DAYS = parseInt(process.env.PERF_ALERT_RECENT_DAYS || '7', 10);
 const BASELINE_DAYS = parseInt(process.env.PERF_ALERT_BASELINE_DAYS || '90', 10);
 // A drop of ≥20% vs baseline trips the alert (clamped to a sane band).
 const DROP_THRESHOLD = Math.min(0.9, Math.max(0.05, Number(process.env.PERF_ALERT_DROP_THRESHOLD || '0.2')));
-// Need at least this many posts in BOTH windows or we stay silent (honesty).
-const MIN_SAMPLE = parseInt(process.env.PERF_ALERT_MIN_SAMPLE || '3', 10);
+// Need at least this many COMPARABLE posts (ones with a real engagement RATE) in
+// BOTH windows or we stay silent — 3 is statistical noise, 5 is the floor.
+const MIN_SAMPLE = parseInt(process.env.PERF_ALERT_MIN_SAMPLE || '5', 10);
+// Below this baseline rate the signal is too weak to call a "drop" off of (guards
+// the degenerate tiny-positive baseline that would saturate dropPct → false alert).
+const MIN_MEANINGFUL_RATE = Number(process.env.PERF_ALERT_MIN_RATE || '0.001');
 const ALERT_COOLDOWN_DAYS = parseInt(process.env.PERF_ALERT_COOLDOWN_DAYS || '7', 10);
 const MAX_USERS_PER_TICK = parseInt(process.env.PERF_ALERT_MAX_USERS || '2000', 10);
 // Stable marker on the Notification so we can dedupe without a new model field.
@@ -46,11 +50,15 @@ let lastRunStats = null;
 
 const DAY_MS = 86400000;
 
+// Engagement RATE in [0,1]. REQUIRES a denominator (reach, else impressions) so we
+// never blend a raw count with a ratio — mixing the two units across the recent vs
+// baseline windows produced false "you're slipping" alerts. A post whose analytics
+// haven't settled a denominator yet is EXCLUDED (returns null), not counted raw.
 function engagementRate(post) {
   const a = post.analytics || {};
   const denom = a.reach || a.impressions || 0;
   if (denom > 0) return (a.engagement || 0) / denom;
-  return a.engagement || 0;
+  return null;
 }
 
 function mean(arr) {
@@ -71,6 +79,7 @@ function evaluateSlip(posts, now = Date.now()) {
     const t = p.postedAt ? new Date(p.postedAt).getTime() : NaN;
     if (isNaN(t)) continue;
     const er = engagementRate(p);
+    if (er == null) continue;   // no comparable rate yet — skip, don't blend units
     if (t >= recentCut) recent.push({ er, platform: p.platform });
     else if (t >= baselineCut) baseline.push({ er, platform: p.platform });
   }
@@ -79,7 +88,7 @@ function evaluateSlip(posts, now = Date.now()) {
   }
   const recentRate = mean(recent.map((r) => r.er));
   const baselineRate = mean(baseline.map((r) => r.er));
-  if (baselineRate <= 0) return { slipping: false, reason: 'no-baseline-signal' };
+  if (baselineRate < MIN_MEANINGFUL_RATE) return { slipping: false, reason: 'baseline-too-weak' };
   const dropPct = (baselineRate - recentRate) / baselineRate;
   const platforms = [...new Set(recent.map((r) => r.platform).filter(Boolean))];
   return {

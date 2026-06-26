@@ -38,6 +38,7 @@ export default function WhatToMakeNext() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setVotes({})  // votes are bound to the rendered list; a refresh returns a new one
     try {
       const res = await apiGet<unknown>('/me/next-best?count=4')
       const payload = ((res as { data?: unknown })?.data ?? res) as NextBestResponse
@@ -116,7 +117,7 @@ export default function WhatToMakeNext() {
       ) : (
         <ul className="space-y-3">
           {ideas.map((idea, index) => (
-            <li key={index} className="ds-surface-subtle p-4">
+            <li key={`${index}-${idea.title}`} className="ds-surface-subtle p-4">
               <div className="flex items-start gap-2">
                 <Lightbulb size={18} className="mt-0.5 flex-shrink-0 text-amber-500" aria-hidden />
                 <div className="min-w-0 flex-1">

@@ -160,7 +160,8 @@ router.get(
   '/next-best',
   auth,
   asyncHandler(async (req, res) => {
-    const count = Math.max(1, Math.min(8, parseInt(req.query.count, 10) || 4));
+    const rawCount = Array.isArray(req.query.count) ? req.query.count[0] : req.query.count;
+    const count = Math.max(1, Math.min(8, parseInt(rawCount, 10) || 4));
     const niche = typeof req.query.niche === 'string' ? req.query.niche.trim() : undefined;
     const platform = typeof req.query.platform === 'string' ? req.query.platform.trim() : undefined;
     let result = { hasRealData: false, reason: 'need-more-data', ideas: [] };

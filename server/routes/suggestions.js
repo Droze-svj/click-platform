@@ -5,13 +5,33 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { generateDailyContentIdeas, analyzeContentGaps } = require('../services/contentSuggestionsService');
+const { isDevUser } = require('../utils/devUser');
 const logger = require('../utils/logger');
 const router = express.Router();
 
 // Light per-user TTL cache so the "daily" panel doesn't hit the AI on every poll
-// (these ideas only need to change ~hourly). In-process; resets on deploy.
+// (these ideas only need to change ~hourly). In-process; resets on deploy. Bounded
+// + insertion-order evicted (like personalizationService._personaCache) so it can't
+// grow without limit as unique users accumulate over a deploy's lifetime.
 const _dailyCache = new Map(); // userId → { value, expires }
 const DAILY_TTL_MS = 60 * 60 * 1000;
+const DAILY_CACHE_MAX = 5000;
+
+function dailyCacheSet(key, value) {
+  if (!_dailyCache.has(key) && _dailyCache.size >= DAILY_CACHE_MAX) {
+    const oldest = _dailyCache.keys().next().value;
+    if (oldest !== undefined) _dailyCache.delete(oldest);
+  }
+  _dailyCache.set(key, { value, expires: Date.now() + DAILY_TTL_MS });
+}
+
+// Coerce a possibly-array query param (?count=1&count=2 → ['1','2']) to one int.
+function intParam(v, def, lo, hi) {
+  const raw = Array.isArray(v) ? v[0] : v;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return def;
+  return Math.max(lo, Math.min(hi, n));
+}
 
 /**
  * @swagger
@@ -30,8 +50,9 @@ router.get('/daily', auth, asyncHandler(async (req, res) => {
       return sendSuccess(res, 'Suggestions fetched', 200, []);
     }
 
-    // Dev users (non-ObjectId ids) have no real content → honest cold-start.
-    if (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123') {
+    // Dev/mock user → honest cold-start. isDevUser catches both the string id and
+    // its ObjectId form (req.user._id is the ObjectId at runtime).
+    if (isDevUser(userId)) {
       return sendSuccess(res, 'Suggestions fetched', 200, []);
     }
 
@@ -84,7 +105,7 @@ router.get('/daily', auth, asyncHandler(async (req, res) => {
     }] : [];
 
     const suggestions = [...ideaSuggestions, ...gapSuggestion];
-    _dailyCache.set(cacheKey, { value: suggestions, expires: Date.now() + DAILY_TTL_MS });
+    dailyCacheSet(cacheKey, suggestions);
     sendSuccess(res, 'Suggestions fetched', 200, suggestions);
   } catch (error) {
     const userId = req.user?._id || req.user?.id;
@@ -97,8 +118,8 @@ router.get('/daily', auth, asyncHandler(async (req, res) => {
 // description, platforms, hashtags, contentType). Honest fallback inside the service.
 router.get('/daily-ideas', auth, asyncHandler(async (req, res) => {
   const userId = req.user?._id || req.user?.id;
-  if (!userId) return sendSuccess(res, 'Ideas fetched', 200, []);
-  const count = Math.max(1, Math.min(10, parseInt(req.query.count, 10) || 5));
+  if (!userId || isDevUser(userId)) return sendSuccess(res, 'Ideas fetched', 200, []);
+  const count = intParam(req.query.count, 5, 1, 10);
   const ideas = await generateDailyContentIdeas(userId, count).catch(() => []);
   return sendSuccess(res, 'Ideas fetched', 200, Array.isArray(ideas) ? ideas : []);
 }));
