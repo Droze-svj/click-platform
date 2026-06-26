@@ -66,10 +66,26 @@ const initMongoDB = async () => {
 
   const startInMemory = async () => {
     const { MongoMemoryServer } = require('mongodb-memory-server');
-    const mongoServer = await MongoMemoryServer.create();
+    // Optional PERSISTENT local DB for testing: when INMEMORY_DB_PATH is set, the
+    // in-memory mongod stores its data files there so they SURVIVE restarts — a real
+    // local test DB without installing MongoDB. Still fully isolated; the dev-safety
+    // guard above guarantees this path is only ever taken for a non-prod boot.
+    let opts;
+    const dbPath = (process.env.INMEMORY_DB_PATH || '').trim();
+    if (dbPath) {
+      const fsMod = require('fs');
+      const pathMod = require('path');
+      const abs = pathMod.isAbsolute(dbPath) ? dbPath : pathMod.join(process.cwd(), dbPath);
+      fsMod.mkdirSync(abs, { recursive: true });
+      // doCleanup:false keeps our data on disk when the server stops/restarts.
+      opts = { instance: { dbPath: abs, storageEngine: 'wiredTiger' }, cleanup: { doCleanup: false } };
+    }
+    const mongoServer = await MongoMemoryServer.create(opts);
     await mongoose.connect(mongoServer.getUri());
     databaseStatus.mongodb = true;
-    logger.info('✅ In-Memory MongoDB successfully initialized.');
+    logger.info(dbPath
+      ? `✅ Persistent local MongoDB initialized (data persists across restarts; dbPath: ${dbPath}).`
+      : '✅ In-Memory MongoDB successfully initialized.');
     // Dev convenience: seed a small categorized demo music catalog so the editor's
     // Music browser/picker isn't empty. ONLY runs here (in-memory) → never a real DB.
     // Opt out with SEED_DEMO_MUSIC=false. Best-effort; never blocks boot.
