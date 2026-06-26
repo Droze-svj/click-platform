@@ -223,14 +223,17 @@ function applyTransition(
   if (bestIdx < 0) {
     return { segments: ctx.segments, textOverlays: ctx.textOverlays, changed: false, description: 'No segment boundary near suggestion time' }
   }
+  // Honor the AI's chosen transition style (glitch/whip/zoom/wipe/…) — the renderer's
+  // resolveXfadeName maps them all and falls back to fade for anything unknown.
+  const style = (typeof s.style === 'string' && s.style.trim()) ? s.style.trim() : 'crossfade'
   const next = ctx.segments.map((seg, i) => i === bestIdx
-    ? { ...seg, transitionOut: 'crossfade' as any, transitionDuration: Math.min(duration, 0.6) }
+    ? { ...seg, transitionOut: style as any, transitionDuration: Math.min(duration, 0.6) }
     : seg)
   return {
     segments: next,
     textOverlays: ctx.textOverlays,
     changed: true,
-    description: `Added crossfade at ${start.toFixed(1)}s`,
+    description: `Added ${style} at ${start.toFixed(1)}s`,
   }
 }
 

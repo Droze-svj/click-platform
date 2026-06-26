@@ -185,6 +185,10 @@ function stepToSuggestion(
     type: step.type as AIDirectorSuggestion['type'],
     label: step.type.toUpperCase(),
     description: String(desc),
+    // Carry the AI's categorical choice so the apply path can honor it (transition
+    // style / effect name) instead of always defaulting.
+    style: typeof p.style === 'string' ? p.style : undefined,
+    name: typeof p.name === 'string' ? p.name : undefined,
     confidence: Number.isFinite(step.confidence as number) ? (step.confidence as number) : 0.8,
     impact: (step.impact as any) || 'medium',
   }

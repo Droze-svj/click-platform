@@ -688,9 +688,12 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const hueAdj = (effectiveFiltersAtTime.hue ?? 0) + (temp < 100 ? 8 : temp > 100 ? -4 : 0)
   const sat = effectiveFiltersAtTime.vibrance != null ? Math.round((effectiveFiltersAtTime.saturation ?? 100) * (effectiveFiltersAtTime.vibrance / 100)) : (effectiveFiltersAtTime.saturation ?? 100)
   const bright = effectiveFiltersAtTime.brightness ?? 100
-  const shadowLift = (effectiveFiltersAtTime.shadows ?? 100) - 100
-  const highCrush = 100 - (effectiveFiltersAtTime.highlights ?? 100)
-  const dehazeAdj = ((effectiveFiltersAtTime.dehaze ?? 100) - 100) / 100 * 0.04
+  // shadows / highlights / dehaze are 0-CENTERED (RESET_FILTER + presets + the server
+  // render chain), so a neutral state must contribute 0 — reading them as 100-centered
+  // made "reset" non-neutral and inverted shadow presets in the preview.
+  const shadowLift = effectiveFiltersAtTime.shadows ?? 0
+  const highCrush = effectiveFiltersAtTime.highlights ?? 0
+  const dehazeAdj = ((effectiveFiltersAtTime.dehaze ?? 0) / 100) * 0.04
   const brightnessAdj = bright + shadowLift * 0.2 + highCrush * 0.15
   const contrastBase = effectiveFiltersAtTime.contrast ?? 100
   const sharpenAdj = (effectiveFiltersAtTime.sharpen ?? 0) / 100
