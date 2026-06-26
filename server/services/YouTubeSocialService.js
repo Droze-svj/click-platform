@@ -2,7 +2,8 @@ const { google } = require('googleapis');
 const logger = require('../utils/logger');
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
+const crypto = require('crypto');
+const downloadUtils = require('../utils/downloadUtils');
 
 class YouTubeSocialService {
   /**
@@ -26,27 +27,31 @@ class YouTubeSocialService {
       return { stream: fs.createReadStream(mediaPath), cleanup: () => {} };
     }
 
-    // Stream from a URL. We materialize to a temp file rather than
-    // piping the response straight into google's resumable upload —
-    // googleapis sometimes retries the request body, and a one-shot
-    // network stream can't be replayed without ECONNRESET.
     if (mediaUrl) {
-      let url = mediaUrl;
-      if (url.startsWith('/')) {
-        const baseUrl = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 5001}`;
-        url = `${baseUrl}${url}`;
+      // Our OWN media (an "/uploads/..." URL) lives on local disk — read it
+      // directly. This removes an HTTP round-trip AND the SSRF risk of fetching
+      // a "/"-path through PUBLIC_BASE_URL (which is localhost in dev, and could
+      // be coerced toward internal services). A path-traversal guard keeps the
+      // resolved file inside uploads/.
+      if (mediaUrl.startsWith('/')) {
+        const projectRoot = path.join(__dirname, '..', '..');
+        const uploadsRoot = path.join(projectRoot, 'uploads');
+        const localFile = path.resolve(projectRoot, '.' + mediaUrl); // "/uploads/x.mp4" → <root>/uploads/x.mp4
+        if (localFile.startsWith(uploadsRoot + path.sep) && fs.existsSync(localFile)) {
+          return { stream: fs.createReadStream(localFile), cleanup: () => {} };
+        }
+        throw new Error(`YouTube upload: media file not found for ${mediaUrl}`);
       }
+
+      // A REMOTE http(s) URL → download via the SSRF-hardened streamDownload
+      // (re-guards every redirect hop against private/internal IPs, requires a
+      // video content-type, size-capped) instead of a raw, unguarded axios GET.
+      // We materialize to a temp file because googleapis' resumable upload can
+      // retry the request body, which a one-shot network stream can't replay.
       const tmpDir = path.join(__dirname, '..', '..', 'uploads', 'tmp');
       if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-      const tmpPath = path.join(tmpDir, `yt-upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`);
-      const resp = await axios({ method: 'GET', url, responseType: 'stream', timeout: 60_000 });
-      await new Promise((resolve, reject) => {
-        const w = fs.createWriteStream(tmpPath);
-        resp.data.pipe(w);
-        w.on('finish', resolve);
-        w.on('error', reject);
-        resp.data.on('error', reject);
-      });
+      const tmpPath = path.join(tmpDir, `yt-upload-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.mp4`);
+      await downloadUtils.streamDownload(mediaUrl, tmpPath);
       return {
         stream: fs.createReadStream(tmpPath),
         cleanup: () => { try { fs.unlinkSync(tmpPath); } catch (_) { /* best effort */ } },
