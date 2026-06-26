@@ -22,6 +22,12 @@ export interface VideoFilter {
   /** Optional LUT id or URL for professional color (applied in export) */
   lutId?: string | null
   lutUrl?: string | null
+  /**
+   * Cinematic VFX tags baked at render time (consumed by buildVideoFilterChain):
+   * 'vhs-glitch' | 'chromatic-aberration' | 'rgb-split' | 'film-burn' | 'film-grain'.
+   * Color grades in the shared registry (lib/colorGrades.ts) may set these.
+   */
+  vfx?: string[]
 }
 
 export interface TranscriptWord {

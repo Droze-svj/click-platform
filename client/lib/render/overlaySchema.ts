@@ -63,6 +63,13 @@ export interface RenderTree {
   /** Total duration in seconds. */
   duration: number
   filters: VideoFilter
+  /**
+   * Optional named color grade from the shared registry (lib/colorGrades.ts /
+   * server colorGradeRegistry.js). When set, the renderer merges the grade's
+   * filter deltas + vfx before building the chain — the explicit named path that
+   * also records the grade for learning. Baking the grade into `filters` works too.
+   */
+  colorGrade?: string | null
   segments: TimelineSegment[]
   effects: TimelineEffect[]
   textOverlays: TextOverlay[]

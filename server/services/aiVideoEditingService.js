@@ -2778,25 +2778,15 @@ Transcript: "${transcript.substring(0, 3500)}"`;
           logger.warn('Failed to save selected theme to SuggestionHistory', { error: err.message });
         }
       }
-      if (theme === 'cyberpunk_neon') {
-        videoFilters.push('eq=contrast=1.2:brightness=0.01:saturation=1.4:gamma_b=1.2:gamma_g=0.9');
-        appliedEdits.push('Cyberpunk Neon Grade');
-      } else if (theme === 'vintage_film') {
-        videoFilters.push('eq=contrast=0.95:brightness=0.05:saturation=0.8:gamma_r=1.1');
-        appliedEdits.push('Vintage Film Grade');
-      } else if (theme === 'dreamy_pastel') {
-        videoFilters.push('eq=contrast=0.9:brightness=0.08:saturation=1.1:gamma=1.1');
-        appliedEdits.push('Dreamy Pastel Grade');
-      } else if (theme === 'hyper_pop') {
-        videoFilters.push('eq=contrast=1.25:brightness=0.03:saturation=1.5');
-        appliedEdits.push('Hyper Pop Grade');
-      } else if (theme === 'bw') {
-        videoFilters.push('hue=s=0,eq=contrast=1.2:brightness=0.02');
-        appliedEdits.push('Black & White Grade');
-      } else {
-        videoFilters.push('eq=contrast=1.15:brightness=0.02:saturation=1.25');
-        appliedEdits.push('Luma-Cinematic Grade');
-      }
+      // Color grade via the shared registry (single source of truth) so the
+      // autonomous forge renders the SAME grades as the manual editor + AI Director.
+      // Unknown/legacy theme names resolve via aliases; anything else falls back to
+      // luma-cinematic (the prior `else` default).
+      const gradeReg = require('./colorGradeRegistry');
+      const gradeDef = gradeReg.resolveGrade(theme) || gradeReg.resolveGrade('luma-cinematic');
+      const gradeChain = videoRenderService.buildVideoFilterChain(gradeReg.gradeToVideoFilter(gradeDef.id));
+      if (gradeChain.length) videoFilters.push(gradeChain.join(','));
+      appliedEdits.push(`${gradeDef.label} Grade`);
     }
 
     // Build cut filter only when pacing speed-ramp is OFF.

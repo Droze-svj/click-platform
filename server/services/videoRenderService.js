@@ -21,9 +21,17 @@ const urlGuard = require('../utils/urlGuard')
 function buildVideoFilterChain(filters) {
   if (!filters || typeof filters !== 'object') return []
   const f = filters
-  const brightness = ((f.brightness ?? 100) - 100) / 100
-  const contrast = (f.contrast ?? 100) / 100
-  const saturation = (f.saturation ?? 100) / 100
+  // These inputs are attacker-influenced (editor state from the request) and are
+  // interpolated into the ffmpeg graph — clamp every numeric to a sane band before
+  // use. clamp() returns the default for non-finite values.
+  const clamp = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d }
+  const brightness = (clamp(f.brightness, 0, 300, 100) - 100) / 100
+  const contrast = clamp(f.contrast, 0, 300, 100) / 100
+  // Vibrance (100-centered) gently amplifies saturation — folded in so warm/vivid/
+  // neon grades that lean on it actually render in the export, not just the preview.
+  const satBase = clamp(f.saturation, 0, 300, 100) / 100
+  const vib = (clamp(f.vibrance, 0, 300, 100) - 100) / 100
+  const saturation = Math.max(0, satBase * (1 + vib * 0.4))
   const filters_out = []
 
   const eqParts = []
@@ -34,19 +42,31 @@ function buildVideoFilterChain(filters) {
     filters_out.push(`eq=${eqParts.join(':')}`)
   }
 
-  const hue = f.hue ?? 0
+  const hue = clamp(f.hue, -180, 180, 0)
   if (hue !== 0) filters_out.push(`hue=h=${hue}`)
 
-  const sepia = (f.sepia ?? 0) / 100
+  // Temperature (100-centered) + tint (0-centered) via colorbalance: warmer = more
+  // red / less blue; tint shifts green↔magenta. Previously ignored, so warm vs cool
+  // grades looked identical in the export — now they don't.
+  const temp = (clamp(f.temperature, 0, 200, 100) - 100) / 100
+  const tint = clamp(f.tint, -100, 100, 0) / 100
+  if (temp !== 0 || tint !== 0) {
+    const rm = (temp * 0.3).toFixed(3)
+    const gm = (tint * 0.3).toFixed(3)
+    const bm = (-temp * 0.3).toFixed(3)
+    filters_out.push(`colorbalance=rm=${rm}:gm=${gm}:bm=${bm}`)
+  }
+
+  const sepia = clamp(f.sepia, 0, 100, 0) / 100
   if (sepia > 0) {
     const s = 1 - sepia * 0.5
     filters_out.push(`colorchannelmixer=rr=${s}:gg=${s}:bb=${s}`)
   }
 
-  const vignette = f.vignette ?? 0
+  const vignette = clamp(f.vignette, 0, 100, 0)
   if (vignette > 0) filters_out.push('vignette=angle=PI/4')
 
-  const blur = f.blur ?? 0
+  const blur = clamp(f.blur, 0, 100, 0)
   if (blur > 0) filters_out.push(`boxblur=lr=${Math.max(1, Math.round(blur / 10))}:lp=1`)
 
   // 2026 Advanced Cinematic VFX Injections
@@ -1103,6 +1123,7 @@ async function renderFromEditorState(options) {
     timelineSegments = [],
     timelineEffects = [],
     chromaKey = null,
+    colorGrade = null,
     userId,
   } = options
 
@@ -1186,7 +1207,26 @@ async function renderFromEditorState(options) {
   const outputFilename = `render-${videoId || 'export'}-${Date.now()}.${ext}`
   const outputPath = path.join(outputDir, outputFilename)
 
-  const videoFilters_ff = buildVideoFilterChain(videoFilters)
+  // Named color grade (shared registry): merge its VideoFilter deltas + vfx INTO the
+  // editor filters before building the chain, so a grade renders identically to the
+  // manual preview. Explicit `colorGrade` deltas layer on top of any baked filters.
+  let effectiveFilters = videoFilters
+  if (colorGrade) {
+    try {
+      const { gradeToVideoFilter } = require('./colorGradeRegistry')
+      const g = gradeToVideoFilter(colorGrade)
+      const { vfx: gradeVfx, ...gradeFields } = g
+      effectiveFilters = {
+        ...videoFilters,
+        ...gradeFields,
+        vfx: [...(Array.isArray(videoFilters.vfx) ? videoFilters.vfx : []), ...(Array.isArray(gradeVfx) ? gradeVfx : [])],
+      }
+    } catch (e) {
+      logger.warn('[render] color grade merge failed', { colorGrade, error: e.message })
+    }
+  }
+
+  const videoFilters_ff = buildVideoFilterChain(effectiveFilters)
   const lutFilters = buildLUTApproximation(videoFilters.lutId)
 
   // ── Editor parity: BASE video transform / crop (applied to [0:v] before
