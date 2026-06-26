@@ -7,6 +7,7 @@ import { useTranslation } from '../../../hooks/useTranslation'
 import { Panel, Button, Badge, Slider, SectionHeader } from '../../ui'
 import { cn } from '../../../lib/utils'
 import { COLOR_GRADES } from '../../../lib/colorGrades'
+import SavedLooksPanel from '../SavedLooksPanel'
 
 // Per-grade UI metadata (group + one-line desc) for the preset grid. The grade
 // id/label/filter/swatch come from the SHARED registry (lib/colorGrades.ts) so the
@@ -451,6 +452,9 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
           </Button>
         </div>
       </Panel>
+
+      {/* Save / reuse the current grade as a named look (per-user). */}
+      <SavedLooksPanel currentFilters={videoFilters} onApply={(f) => setVideoFilters(f)} showToast={showToast} />
     </div>
   )
 }

@@ -1920,6 +1920,8 @@ app.use('/api/music', require('./routes/music-user-uploads'));
 // music-* family stays intentionally KNOWN_DEAD per the security audit).
 app.use('/api/music', require('./routes/music-browse'));
 app.use('/api/music', require('./routes/music-generate'));
+// Saved editor "looks" (filters + grade + audio + caption) — per-user, allowlisted.
+app.use('/api/editor', require('./routes/editor-presets'));
 app.use('/api/competitive', require('./routes/competitive-benchmark'));
 app.use('/api/video/effects', require('./routes/video/effects'));
 app.use('/api/video/enhance', require('./routes/video/enhance'));
