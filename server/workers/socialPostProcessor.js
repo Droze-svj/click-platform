@@ -5,6 +5,7 @@ const { postToLinkedIn } = require('../services/linkedinOAuthService');
 const { postToFacebook } = require('../services/facebookOAuthService');
 const { postToInstagram } = require('../services/instagramOAuthService');
 const twitterOAuth = require('../services/twitterOAuthService');
+const tiktokOAuth = require('../services/tiktokOAuthService');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
@@ -134,6 +135,23 @@ async function processSocialPostJob(jobData, job) {
               content.text,
               options
             );
+            break;
+          case 'tiktok':
+            // TikTok was previously unhandled here → every scheduled TikTok post
+            // failed with a generic "Unsupported platform". Route it to the real
+            // Content Posting API. postToTikTok uploads a LOCAL video file
+            // (videoPath) and throws a specific, honest error if no usable file
+            // is present — it never reports a fake success.
+            // NOTE: posts that only carry a remote `mediaUrl` need that video
+            // downloaded to a local path first (a follow-up); until then those
+            // fail honestly rather than silently no-op.
+            if (!tiktokOAuth.isConfigured()) {
+              throw new Error('TikTok OAuth not configured. Set TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET.');
+            }
+            postResult = await tiktokOAuth.postToTikTok(userId, {
+              videoPath: content.videoPath || options.videoPath,
+              mediaUrl: content.mediaUrl || content.videoUrl || options.mediaUrl,
+            });
             break;
           default:
             throw new Error(`Unsupported platform: ${platform}`);
