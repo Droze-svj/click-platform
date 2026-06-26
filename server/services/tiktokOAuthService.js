@@ -4,20 +4,12 @@
 const OAuthService = require('./oauthService');
 const OAuthStorage = require('../utils/oauthStorage');
 const logger = require('../utils/logger');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
 const crypto = require('crypto');
-const axios = require('axios');
-const downloadUtils = require('../utils/downloadUtils');
 
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const API_BASE = 'https://open.tiktokapis.com/v2';
 const DEFAULT_SCOPE = 'user.info.basic,video.upload,video.publish';
 const LOG_CONTEXT = { service: 'tiktok-oauth' };
-// TikTok publishing accepts short-form video; cap the source download well under
-// the platform limits so a hostile/oversized URL can't exhaust disk.
-const TIKTOK_MAX_DOWNLOAD_BYTES = 300 * 1024 * 1024; // 300 MB
 
 function defaultRedirectUri() {
   return process.env.TIKTOK_REDIRECT_URI ||
@@ -52,6 +44,20 @@ class TikTokOAuthService {
   async getAuthorizationUrl(userId, state, callbackUrl) {
     if (!this.isConfigured()) throw new Error('TikTok OAuth not configured');
 
+    // Argument disambiguation:
+    // If state is not provided or looks like a URL (since legacy callers pass callbackUrl as 2nd arg),
+    // we generate a random state.
+    let oauthState = state;
+    let finalCallbackUrl = callbackUrl;
+
+    if (!callbackUrl && typeof state === 'string' && state.includes('://')) {
+      // 2-argument call: getAuthorizationUrl(userId, callbackUrl)
+      oauthState = crypto.randomBytes(32).toString('hex');
+      finalCallbackUrl = state;
+    } else if (!state) {
+      oauthState = crypto.randomBytes(32).toString('hex');
+    }
+
     // Persist state. Supabase users (UUID) can't hit User.findById without a
     // CastError, so route them through OAuthStorage like the other 5
     // platforms. Mongo (ObjectId) users still use the legacy User.oauth
@@ -63,24 +69,25 @@ class TikTokOAuthService {
       if (!user) throw new Error('User not found');
       if (!user.oauth) user.oauth = {};
       if (!user.oauth.tiktok) user.oauth.tiktok = {};
-      user.oauth.tiktok.state = state;
+      user.oauth.tiktok.state = oauthState;
       user.oauth.tiktok.stateCreatedAt = new Date();
       user.markModified('oauth');
       await user.save();
     } else {
       // Supabase user — namespaced state map so concurrent flows don't
       // overwrite each other (multi-account opens this risk).
-      await OAuthStorage.putState(userId, 'tiktok', state, { startedAt: new Date().toISOString() });
+      await OAuthStorage.putState(userId, 'tiktok', oauthState, { startedAt: new Date().toISOString() });
     }
 
     const params = new URLSearchParams({
       client_key: this.clientKey,
       scope: this.getScope(),
       response_type: 'code',
-      redirect_uri: callbackUrl || this.redirectUri,
-      state,
+      redirect_uri: finalCallbackUrl || this.redirectUri,
+      state: oauthState,
     });
-    return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
+    const url = `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
+    return { url, state: oauthState };
   }
 
   async exchangeCodeForToken(code) {
@@ -220,99 +227,30 @@ class TikTokOAuthService {
     return data.access_token;
   }
 
-  async uploadVideoToTikTok(userId, videoPath) {
-    try {
-      logger.info('TikTok: Starting video upload initialization...', { userId, videoPath });
-      
-      const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
-      if (!creds?.accessToken) {
-        throw new Error('No TikTok account connected or token missing');
-      }
-
-      const videoStats = fs.statSync(videoPath);
-      
-      // Phase 1: Initialize the upload
-      const initResponse = await axios.post(`${API_BASE}/post/publish/video/init/`, {
-        post_info: {
-          title: "Uploaded from Sovereign",
-          privacy_level: "PUBLIC_TO_EVERYONE",
-          disable_duet: false,
-          disable_comment: false,
-          disable_stitch: false,
-          video_ad_tag: false
-        },
-        source_info: {
-          source: "FILE_UPLOAD",
-          video_size: videoStats.size,
-          chunk_size: videoStats.size,
-          total_chunk_count: 1
-        }
-      }, {
-        headers: {
-          'Authorization': `Bearer ${creds.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const { publish_id, upload_url } = initResponse.data.data;
-      logger.info('TikTok: Upload initialized', { userId, publish_id });
-
-      // Phase 2: Upload the video file
-      const videoData = fs.readFileSync(videoPath);
-      await axios.put(upload_url, videoData, {
-        headers: {
-          'Content-Type': 'video/mp4',
-          'Content-Length': videoStats.size
-        }
-      });
-
-      logger.info('TikTok: video uploaded; TikTok is processing it (not live yet)', { userId, publish_id });
-      // HONEST status: the upload + init succeeded, but TikTok processes/reviews
-      // the video ASYNCHRONOUSLY — it is NOT published/live at this point (and for
-      // unaudited apps it may land in the creator's drafts). Reporting 'published'
-      // here would be a lie. Poll /v2/post/publish/status/fetch/ with publish_id
-      // for the real outcome. TikTok also does NOT return a public video URL at
-      // upload time, so we don't fabricate one (url: null until it's known).
-      return {
-        id: publish_id,
-        postId: publish_id,
-        publishId: publish_id,
-        status: 'processing',
-        url: null,
-      };
-    } catch (error) {
-      logger.error('TikTok: Upload failed', { userId, error: error.response?.data || error.message });
-      throw error;
+  // The actual TikTok Content Posting upload (init → chunked PUT with
+  // Content-Range → honest 'processing' result) lives in the single canonical
+  // implementation `TikTokSocialService`, which the LIVE publish path
+  // (socialMediaService → TikTokSocialService.postToTikTok) also uses. These two
+  // methods just resolve the user's stored token and delegate, so there is ONE
+  // source of truth (no drift, one place to fix bugs).
+  async uploadVideoToTikTok(userId, videoPath, caption) {
+    const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
+    if (!creds?.accessToken) {
+      throw new Error('No TikTok account connected or token missing');
     }
+    return require('./TikTokSocialService').uploadVideoToTikTok(creds.accessToken, videoPath, { caption });
   }
 
   async postToTikTok(userId, postData) {
-    const { videoPath, mediaUrl } = postData || {};
-    const isRemote = (v) => typeof v === 'string' && /^https?:\/\//i.test(v);
-
-    // 1. A local file already on disk → upload it directly.
-    const local = videoPath || mediaUrl;
-    if (local && !isRemote(local) && fs.existsSync(local)) {
-      return this.uploadVideoToTikTok(userId, local);
+    const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
+    if (!creds?.accessToken) {
+      throw new Error('No TikTok account connected or token missing');
     }
-
-    // 2. A remote URL → download it to a temp file (SSRF-guarded on every hop,
-    //    content-type + size capped via downloadUtils.streamDownload), upload,
-    //    then ALWAYS clean up the temp file. The TikTok Content Posting API
-    //    requires the bytes, not a URL — without this step remote posts fail.
-    const remote = isRemote(mediaUrl) ? mediaUrl : (isRemote(videoPath) ? videoPath : null);
-    if (remote) {
-      const tmpPath = path.join(os.tmpdir(), `tiktok-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.mp4`);
-      try {
-        await downloadUtils.streamDownload(remote, tmpPath, { maxBytes: TIKTOK_MAX_DOWNLOAD_BYTES });
-        logger.info('TikTok: source downloaded for upload', { userId, tmpPath });
-        return await this.uploadVideoToTikTok(userId, tmpPath);
-      } finally {
-        try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch { /* already gone */ }
-      }
-    }
-
-    throw new Error('TikTok requires a local video file or a downloadable mediaUrl for publishing');
+    const data = postData || {};
+    return require('./TikTokSocialService').postToTikTok(
+      { accessToken: creds.accessToken },
+      { videoPath: data.videoPath, mediaUrl: data.mediaUrl, title: data.caption || data.title },
+    );
   }
 
   async disconnectTikTok(userId) {
