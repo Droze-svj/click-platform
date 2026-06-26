@@ -70,6 +70,12 @@ const initMongoDB = async () => {
     await mongoose.connect(mongoServer.getUri());
     databaseStatus.mongodb = true;
     logger.info('✅ In-Memory MongoDB successfully initialized.');
+    // Dev convenience: seed a small categorized demo music catalog so the editor's
+    // Music browser/picker isn't empty. ONLY runs here (in-memory) → never a real DB.
+    // Opt out with SEED_DEMO_MUSIC=false. Best-effort; never blocks boot.
+    if (process.env.SEED_DEMO_MUSIC !== 'false') {
+      try { await require('../utils/seedDemoMusic').seedDemoMusic(); } catch (_) { /* non-fatal */ }
+    }
     return true;
   };
 
