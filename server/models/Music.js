@@ -23,6 +23,25 @@ const musicSchema = new mongoose.Schema({
     enum: ['happy', 'sad', 'energetic', 'calm', 'dramatic', 'inspiring', 'funny', 'serious'],
     default: 'energetic'
   },
+  // ── Organized-catalog facets (all optional → honest cold-start) ──
+  energy: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: undefined
+  },
+  vocals: {
+    type: String,
+    enum: ['instrumental', 'vocal', 'vocal-light'],
+    default: undefined
+  },
+  // Where in a video the track fits best (a track can suit several).
+  usageContext: {
+    type: [String],
+    enum: ['intro', 'background', 'hook', 'outro', 'transition', 'highlight'],
+    default: undefined
+  },
+  bpm: { type: Number, default: undefined },
+  instrumentation: { type: [String], default: undefined },
   file: {
     url: String,
     filename: String,
@@ -90,6 +109,8 @@ musicSchema.index({ workspaceId: 1, createdAt: -1 });
 musicSchema.index({ genre: 1 });
 musicSchema.index({ mood: 1 });
 musicSchema.index({ isPublic: 1 });
+musicSchema.index({ isPublic: 1, genre: 1, mood: 1 });
+musicSchema.index({ userId: 1, energy: 1 });
 musicSchema.index({ licenseAttestation: 1 });
 
 // Ensure user uploads stay private

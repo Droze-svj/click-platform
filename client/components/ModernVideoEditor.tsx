@@ -59,6 +59,7 @@ import PredictionEngineView from './editor/views/PredictionEngineView'
 import AutomateView from './editor/views/AutomateView'
 import ColorGradingView from './editor/views/ColorGradingView'
 import AudioPanel from './editor/AudioPanel'
+import MusicPicker from './editor/MusicPicker'
 const AdvancedTimelineView = dynamic(() => import('./editor/views/AdvancedTimelineView'), { ssr: false })
 import AssetLibraryView from './editor/views/AssetLibraryView'
 import CollaborateView from './editor/views/CollaborateView'
@@ -195,6 +196,7 @@ const WORKFLOW_STEPS: { id: EditorCategory; label: string; icon?: React.ElementT
   { id: 'edit', label: 'Manual Edit', icon: EditToolIcon, color: 'text-surface-900 dark:text-white' },
   { id: 'color', label: 'Color Grading', icon: Video, color: 'text-blue-600 dark:text-blue-400' },
   { id: 'audio', label: 'Audio Mix', icon: Volume2, color: 'text-rose-600 dark:text-rose-400' },
+  { id: 'music', label: 'Music', icon: Radio, color: 'text-emerald-600 dark:text-emerald-400' },
   { id: 'ai', label: 'AI Auto Edit', icon: AiIcon, color: 'text-primary-600 dark:text-primary-400' },
   { id: 'effects', label: 'Visual Effects', icon: LayersIcon, color: 'text-amber-600 dark:text-amber-400' },
   { id: 'remix', label: 'Auto Remix', icon: Sparkles, color: 'text-fuchsia-600 dark:text-fuchsia-400' },
@@ -2022,6 +2024,7 @@ const ModernVideoEditor: React.FC<{
       />
       case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} onRecordPick={styleProfile.recordPick} topPerformers={performerInsights.insights.colorGrades} insightsLoaded={performerInsights.loaded} />
       case 'audio': return <AudioPanel audio={audioMix} onChange={setAudioMix} />
+      case 'music': return <MusicPicker currentTime={videoState.currentTime} setTimelineSegments={setTimelineSegments} showToast={showToast} />
       case 'timeline': return <AdvancedTimelineView useProfessionalTimeline={useProfessionalTimeline} setUseProfessionalTimeline={setUseProfessionalTimeline} videoState={videoState} setVideoState={setVideoState} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} selectedSegmentId={selectedSegmentId} onSegmentSelect={(id) => setSelectedSegmentIds(id ? [id] : [])} videoUrl={actualVideoUrl || ''} aiSuggestions={aiSuggestions} showAiPreviews={true} showToast={showToast} setActiveCategory={setActiveCategory} />
       case 'assets': return <AssetLibraryView currentTime={videoState.currentTime} videoDuration={videoState.duration} setTimelineSegments={setTimelineSegments} showToast={showToast} myBroll={userAssets.filter(a => a.type === 'broll')} myMusic={userAssets.filter(a => a.type === 'music')} />
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
