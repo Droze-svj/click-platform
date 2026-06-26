@@ -30,6 +30,39 @@ export interface VideoFilter {
   vfx?: string[]
 }
 
+/** One parametric-EQ band for the master audio chain. */
+export interface AudioEQBand {
+  /** Center frequency in Hz (20–20000). */
+  frequency: number
+  /** Gain in dB (−24..24). */
+  gain: number
+  /** Q / bandwidth (0.1–10). */
+  q?: number
+}
+
+/**
+ * AudioMix — the editor's master audio bus, threaded through the RenderTree into the
+ * FFmpeg audio chain (server clamps every value before use). Absent → neutral.
+ */
+export interface AudioMix {
+  /** Background-music volume, 0–2 (1 = unchanged). */
+  musicVolume?: number
+  /** How hard music ducks under voice, in dB (−40..0; more negative = quieter). */
+  duckingAmount?: number
+  /** Music fade-in seconds (0–10). */
+  fadeInSec?: number
+  /** Music fade-out seconds (0–10). */
+  fadeOutSec?: number
+  /** Voice-clarity preset for the spoken track. */
+  audioPreset?: 'podcast-clean' | 'music-forward' | 'voice-boost' | 'none'
+  /** Parametric EQ on the master chain. */
+  eq?: { bands: AudioEQBand[] }
+  /** Master compression. */
+  compression?: { threshold?: number; ratio?: number; attack?: number; release?: number; makeupGain?: number }
+  /** Master reverb. */
+  reverb?: { roomSize?: number; damping?: number }
+}
+
 export interface TranscriptWord {
   text: string
   start: number
@@ -903,7 +936,7 @@ export interface EditorProject {
   styleDNASnapshot?: StyleDNA // Snapshot of the creator's DNA when this project was started
 }
 
-export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'repurpose' | 'generate' | 'personalize' | 'ai' | 'color' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips' | 'predict' | 'distribution' | 'style-vault' | 'spatial' | 'agent' | 'dub' | 'thumbnails' | 'insights' | 'creative-tools' | 'stock-library' | 'creative-packs' | 'text-motion'
+export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'repurpose' | 'generate' | 'personalize' | 'ai' | 'color' | 'audio' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips' | 'predict' | 'distribution' | 'style-vault' | 'spatial' | 'agent' | 'dub' | 'thumbnails' | 'insights' | 'creative-tools' | 'stock-library' | 'creative-packs' | 'text-motion'
 
 export interface StyleProfile {
   id: string

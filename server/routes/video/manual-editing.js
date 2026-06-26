@@ -732,7 +732,7 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
   const {
     videoId, videoUrl, videoFilters, textOverlays, shapeOverlays, exportOptions, timelineSegments,
     imageOverlays, svgOverlays, gradientOverlays, videoTransform, videoTransformKeyframes, videoCrop,
-    chromaKey, playbackSpeed, timelineEffects,
+    chromaKey, playbackSpeed, timelineEffects, audio, colorGrade,
   } = req.body;
 
   if (!videoId && !videoUrl) {
@@ -785,6 +785,8 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       videoId: effectiveVideoId,
       videoUrl: effectiveVideoUrl,
       videoFilters: videoFilters || {},
+      colorGrade: (typeof colorGrade === 'string' && colorGrade.trim()) ? colorGrade.trim() : null,
+      audio: (audio && typeof audio === 'object') ? audio : null,
       textOverlays: Array.isArray(textOverlays) ? textOverlays : [],
       shapeOverlays: Array.isArray(shapeOverlays) ? shapeOverlays : [],
       // Full editor→export parity: forward every overlay/transform type so no

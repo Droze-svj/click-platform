@@ -39,6 +39,7 @@ export type {
 } from '../../types/editor'
 
 import type {
+  AudioMix,
   GradientOverlay,
   ImageOverlay,
   ShapeOverlay,
@@ -70,6 +71,8 @@ export interface RenderTree {
    * also records the grade for learning. Baking the grade into `filters` works too.
    */
   colorGrade?: string | null
+  /** Master audio bus (music volume / ducking / fades / voice preset / EQ-comp-reverb). */
+  audio?: AudioMix
   segments: TimelineSegment[]
   effects: TimelineEffect[]
   textOverlays: TextOverlay[]

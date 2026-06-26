@@ -87,6 +87,85 @@ function buildVideoFilterChain(filters) {
   return filters_out
 }
 
+const _audClamp = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d }
+
+/**
+ * Build the optional master audio-FX chain (EQ → compression → reverb) from a
+ * sanitized AudioMix. EVERY numeric is clamped HERE before the (string-building)
+ * audioEffectsService helpers interpolate it, so request data can never inject into
+ * the ffmpeg filter graph. Returns '' when no FX requested. Pure + testable.
+ */
+function buildMasterFx(a = {}) {
+  const parts = []
+  let svc
+  try { svc = require('./audioEffectsService') } catch (_) { return '' }
+  if (a.eq && Array.isArray(a.eq.bands) && a.eq.bands.length) {
+    const bands = a.eq.bands.slice(0, 8).map((b) => ({
+      frequency: _audClamp(b.frequency, 20, 20000, 1000),
+      gain: _audClamp(b.gain != null ? b.gain : b.g, -24, 24, 0),
+      q: _audClamp(b.q, 0.1, 10, 1),
+    }))
+    parts.push(svc.buildEQFilter({ bands }))
+  }
+  if (a.compression && typeof a.compression === 'object') {
+    parts.push(svc.buildCompressionFilter({
+      threshold: _audClamp(a.compression.threshold, -60, 0, -12),
+      ratio: _audClamp(a.compression.ratio, 1, 20, 4),
+      attack: _audClamp(a.compression.attack, 0, 2000, 5),
+      release: _audClamp(a.compression.release, 0, 5000, 50),
+      makeupGain: _audClamp(a.compression.makeupGain, 0, 24, 0),
+    }))
+  }
+  if (a.reverb && typeof a.reverb === 'object') {
+    parts.push(svc.buildReverbFilter({
+      roomSize: _audClamp(a.reverb.roomSize, 0, 1, 0.5),
+      damping: _audClamp(a.reverb.damping, 0, 1, 0.5),
+    }))
+  }
+  return parts.filter(Boolean).join(',')
+}
+
+// Voice-clarity chains per audio preset (the part after the de-hum aeval prefix).
+const VOICE_PRESETS = {
+  'podcast-clean': 'highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100',
+  'music-forward': 'highpass=f=90,dynaudnorm=p=0.85:m=80',
+  'voice-boost': 'highpass=f=80,lowpass=f=13000,dynaudnorm=p=0.95:m=120,acompressor=threshold=-18dB:ratio=3:attack=20:release=200:makeup=3',
+  'none': 'anull',
+}
+const DEFAULT_VOICE = 'highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100'
+
+/**
+ * Resolve an AudioMix (from the RenderTree, attacker-influenced) into clamped,
+ * splice-ready pieces. Absent/empty → all neutral so the rendered graph is BYTE-
+ * IDENTICAL to the pre-feature behavior. Pure + exported for tests.
+ *   musicVolume: number|null  (null → use the per-segment default)
+ *   duckLevel:   number|null  (dB, null → exportOptions default)
+ *   musicFade:   string       (',afade=…' to append to the music input, or '')
+ *   voice:       string|null  (voice-clarity chain, null → DEFAULT_VOICE)
+ *   masterFx:    string       ('eq…,acompressor…' or '')
+ */
+function buildAudioMix(audio, { duration } = {}) {
+  const a = (audio && typeof audio === 'object') ? audio : {}
+  const musicVolume = _audClamp(a.musicVolume, 0, 2, null)
+  const duckLevel = _audClamp(a.duckingAmount, -40, 0, null)
+  const fadeIn = _audClamp(a.fadeInSec, 0, 10, 0)
+  const fadeOut = _audClamp(a.fadeOutSec, 0, 10, 0)
+  const preset = Object.prototype.hasOwnProperty.call(VOICE_PRESETS, a.audioPreset) ? a.audioPreset : null
+  let musicFade = ''
+  if (fadeIn > 0) musicFade += `,afade=t=in:d=${fadeIn}`
+  if (fadeOut > 0 && Number.isFinite(duration) && duration > fadeOut) {
+    musicFade += `,afade=t=out:st=${(duration - fadeOut).toFixed(2)}:d=${fadeOut}`
+  }
+  return {
+    musicVolume,
+    duckLevel,
+    musicFade,
+    voice: preset ? VOICE_PRESETS[preset] : null,
+    masterFx: buildMasterFx(a),
+    preset,
+  }
+}
+
 /**
  * Build LUT approximation filter (colorchannelmixer/curves) for preset LUTs
  * Uses FFmpeg colorchannelmixer/curves since we don't have .cube files
@@ -1124,6 +1203,7 @@ async function renderFromEditorState(options) {
     timelineEffects = [],
     chromaKey = null,
     colorGrade = null,
+    audio = null,
     userId,
   } = options
 
@@ -1609,9 +1689,16 @@ async function renderFromEditorState(options) {
       // chain must terminate at [vbase] and the overlay graph carries it to [vout].
       const baseVidLabel = hasOverlayGraph ? 'vbase' : 'vout'
 
+      // Pro audio mix (music volume / ducking / fades / voice preset / EQ-comp-reverb)
+      // resolved from the RenderTree. Neutral when `audio` is absent, so the rendered
+      // graph stays byte-identical to the prior behavior.
+      const audioMix = buildAudioMix(audio, { duration: exportOptions.duration })
+      const _voice = audioMix.voice || DEFAULT_VOICE
+      const _masterFx = audioMix.masterFx ? `${audioMix.masterFx},` : ''
+
       if (hasMusic) {
-        const musicVolume = firstMusic?.properties?.volume ?? 0.5
-        const duckLevel = exportOptions.duckLevel ?? -12
+        const musicVolume = audioMix.musicVolume != null ? audioMix.musicVolume : (firstMusic?.properties?.volume ?? 0.5)
+        const duckLevel = audioMix.duckLevel != null ? audioMix.duckLevel : (exportOptions.duckLevel ?? -12)
         const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
         const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
         videoMappedViaFiltergraph = true
@@ -1619,14 +1706,14 @@ async function renderFromEditorState(options) {
 
         if (hasAudio) {
         // Source has audio + background music added -> map both with sidechain compression
-          let audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+          let audPart = `[1:a]volume=${musicVolume}${audioMix.musicFade}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice}[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
           const complexStr = `${vidPart};${audPart}`
           command = command
             .complexFilter(complexStr)
             .outputOptions(['-map', '[vout]', '-map', '[aout]'])
         } else {
         // Silent source + background music added -> map only music track directly (skip sidechain amix)
-          let audPart = `[1:a]volume=${musicVolume},${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+          let audPart = `[1:a]volume=${musicVolume}${audioMix.musicFade},${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
           const complexStr = `${vidPart};${audPart}`
           command = command
             .complexFilter(complexStr)
@@ -1643,13 +1730,13 @@ async function renderFromEditorState(options) {
           // would error on the mapped [vout] pad.
             const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
             const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
-            command = command.complexFilter(`${vidPart};[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
+            command = command.complexFilter(`${vidPart};[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice},${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
               .outputOptions(['-map', '[vout]', '-map', '[aout]'])
             videoMappedViaFiltergraph = true
           } else {
           // Source has audio, no music, no video filters -> apply audioFilters directly.
           // No complexFilter here, so .size() (-s W:H) below performs the scaling.
-            command = command.audioFilters(`highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100,${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}`)
+            command = command.audioFilters(`${_voice},${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}`)
           }
         } else {
         // Source is completely silent and no background music added -> render as video only
@@ -2159,6 +2246,8 @@ module.exports = {
   selectPrimarySegments,
   resolveInputPath,
   buildVideoFilterChain,
+  buildAudioMix,
+  buildMasterFx,
   buildDrawTextFilter,
   pickHighlightWords,
   resolveXfadeName,
