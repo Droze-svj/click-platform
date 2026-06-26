@@ -25,7 +25,9 @@ function buildVideoFilterChain(filters) {
   // interpolated into the ffmpeg graph — clamp every numeric to a sane band before
   // use. clamp() returns the default for non-finite values.
   const clamp = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d }
-  const brightness = (clamp(f.brightness, 0, 300, 100) - 100) / 100
+  // ffmpeg eq brightness is only valid in [-1,1] — clamp the centered delta so an
+  // extreme slider / payload can't emit an out-of-range (rejected) brightness.
+  const brightness = Math.max(-1, Math.min(1, (clamp(f.brightness, 0, 300, 100) - 100) / 100))
   const contrast = clamp(f.contrast, 0, 300, 100) / 100
   // Vibrance (100-centered) gently amplifies saturation — folded in so warm/vivid/
   // neon grades that lean on it actually render in the export, not just the preview.
@@ -57,14 +59,40 @@ function buildVideoFilterChain(filters) {
     filters_out.push(`colorbalance=rm=${rm}:gm=${gm}:bm=${bm}`)
   }
 
+  // Real sepia: blend the classic warm sepia matrix by amount (the old rr=gg=bb
+  // mixer just darkened uniformly with NO hue shift, so "vintage" wasn't warm).
   const sepia = clamp(f.sepia, 0, 100, 0) / 100
   if (sepia > 0) {
-    const s = 1 - sepia * 0.5
-    filters_out.push(`colorchannelmixer=rr=${s}:gg=${s}:bb=${s}`)
+    const mix = (id, sep) => ((1 - sepia) * id + sepia * sep).toFixed(3)
+    filters_out.push(
+      `colorchannelmixer=rr=${mix(1, 0.393)}:rg=${mix(0, 0.769)}:rb=${mix(0, 0.189)}`
+      + `:gr=${mix(0, 0.349)}:gg=${mix(1, 0.686)}:gb=${mix(0, 0.168)}`
+      + `:br=${mix(0, 0.272)}:bg=${mix(0, 0.534)}:bb=${mix(1, 0.131)}`,
+    )
   }
 
+  // Vignette INTENSITY now scales (was a fixed angle=PI/4 for every value, so
+  // noir/cinematic/low-key all darkened identically). Higher value → larger angle
+  // → stronger corner darkening (ffmpeg vignette default is PI/5).
   const vignette = clamp(f.vignette, 0, 100, 0)
-  if (vignette > 0) filters_out.push('vignette=angle=PI/4')
+  if (vignette > 0) {
+    const ang = (Math.PI / 5) + (vignette / 100) * (Math.PI / 2 - Math.PI / 5)
+    filters_out.push(`vignette=angle=${ang.toFixed(4)}`)
+  }
+
+  // Shadows / highlights (0-centered) via curves; clarity (>100) via local-contrast
+  // unsharp. Previously these rendered in the live preview but were dropped at export.
+  const shadows = clamp(f.shadows, -100, 100, 0) / 100
+  const highlights = clamp(f.highlights, -100, 100, 0) / 100
+  if (shadows !== 0 || highlights !== 0) {
+    const sp = Math.min(0.5, Math.max(0.05, 0.25 + shadows * 0.15)).toFixed(3)
+    const hp = Math.min(0.95, Math.max(0.5, 0.75 + highlights * 0.15)).toFixed(3)
+    filters_out.push(`curves=all='0/0 0.25/${sp} 0.75/${hp} 1/1'`)
+  }
+  const clarity = clamp(f.clarity, 0, 200, 0)
+  if (clarity > 100) {
+    filters_out.push(`unsharp=lx=5:ly=5:la=${Math.min(1.5, (clarity - 100) / 100).toFixed(2)}`)
+  }
 
   const blur = clamp(f.blur, 0, 100, 0)
   if (blur > 0) filters_out.push(`boxblur=lr=${Math.max(1, Math.round(blur / 10))}:lp=1`)
