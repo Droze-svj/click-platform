@@ -58,6 +58,8 @@ ffmpeg-*.log
 
 # Local scratch
 scratch/
+# Persistent local test DB (dev:test:server INMEMORY_DB_PATH) — never commit
+.local-test-db/
 output.mp4
 debug-startup.js
 error-catch-startup.js
