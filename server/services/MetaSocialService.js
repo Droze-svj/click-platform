@@ -98,6 +98,23 @@ class MetaSocialService {
       throw error;
     }
   }
+
+  /**
+   * Delete an Instagram/Facebook post. Called by socialMediaService's delete
+   * switch (the A/B auto-killer). Automatic deletion isn't wired yet, so we
+   * report this HONESTLY (no fake success) instead of crashing the caller with
+   * "deletePost is not a function". Mirrors the TikTok deletePost contract.
+   */
+  static async deletePost(_auth, postId) {
+    logger.info('[Meta] delete requested — automatic deletion not wired', { postId });
+    return {
+      success: false,
+      platform: 'meta',
+      unsupported: true,
+      postId: postId || null,
+      message: 'Automatic deletion is not wired for Instagram/Facebook yet. Remove the post manually in the app.',
+    };
+  }
 }
 
 module.exports = MetaSocialService;
