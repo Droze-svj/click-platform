@@ -86,3 +86,5 @@ tests/reports/
 # Claude Code harness — ephemeral session lock (do NOT track; contains pid/sessionId).
 # Other .claude/ files (skills, settings, plans) stay tracked intentionally.
 .claude/scheduled_tasks.lock
+# Machine-local Claude permissions (absolute paths, per-machine) — keep out of the repo.
+.claude/settings.local.json
