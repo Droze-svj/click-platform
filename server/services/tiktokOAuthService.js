@@ -5,12 +5,19 @@ const OAuthService = require('./oauthService');
 const OAuthStorage = require('../utils/oauthStorage');
 const logger = require('../utils/logger');
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const crypto = require('crypto');
 const axios = require('axios');
+const downloadUtils = require('../utils/downloadUtils');
 
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const API_BASE = 'https://open.tiktokapis.com/v2';
 const DEFAULT_SCOPE = 'user.info.basic,video.upload,video.publish';
 const LOG_CONTEXT = { service: 'tiktok-oauth' };
+// TikTok publishing accepts short-form video; cap the source download well under
+// the platform limits so a hostile/oversized URL can't exhaust disk.
+const TIKTOK_MAX_DOWNLOAD_BYTES = 300 * 1024 * 1024; // 300 MB
 
 function defaultRedirectUri() {
   return process.env.TIKTOK_REDIRECT_URI ||
@@ -272,14 +279,32 @@ class TikTokOAuthService {
   }
 
   async postToTikTok(userId, postData) {
-    const { videoPath, mediaUrl } = postData;
-    const path = videoPath || mediaUrl;
-    
-    if (path && fs.existsSync(path)) {
-      return this.uploadVideoToTikTok(userId, path);
+    const { videoPath, mediaUrl } = postData || {};
+    const isRemote = (v) => typeof v === 'string' && /^https?:\/\//i.test(v);
+
+    // 1. A local file already on disk → upload it directly.
+    const local = videoPath || mediaUrl;
+    if (local && !isRemote(local) && fs.existsSync(local)) {
+      return this.uploadVideoToTikTok(userId, local);
     }
-    
-    throw new Error('TikTok requires a valid video file path for publishing');
+
+    // 2. A remote URL → download it to a temp file (SSRF-guarded on every hop,
+    //    content-type + size capped via downloadUtils.streamDownload), upload,
+    //    then ALWAYS clean up the temp file. The TikTok Content Posting API
+    //    requires the bytes, not a URL — without this step remote posts fail.
+    const remote = isRemote(mediaUrl) ? mediaUrl : (isRemote(videoPath) ? videoPath : null);
+    if (remote) {
+      const tmpPath = path.join(os.tmpdir(), `tiktok-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.mp4`);
+      try {
+        await downloadUtils.streamDownload(remote, tmpPath, { maxBytes: TIKTOK_MAX_DOWNLOAD_BYTES });
+        logger.info('TikTok: source downloaded for upload', { userId, tmpPath });
+        return await this.uploadVideoToTikTok(userId, tmpPath);
+      } finally {
+        try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch { /* already gone */ }
+      }
+    }
+
+    throw new Error('TikTok requires a local video file or a downloadable mediaUrl for publishing');
   }
 
   async disconnectTikTok(userId) {

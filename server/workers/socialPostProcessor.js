@@ -138,13 +138,11 @@ async function processSocialPostJob(jobData, job) {
             break;
           case 'tiktok':
             // TikTok was previously unhandled here → every scheduled TikTok post
-            // failed with a generic "Unsupported platform". Route it to the real
-            // Content Posting API. postToTikTok uploads a LOCAL video file
-            // (videoPath) and throws a specific, honest error if no usable file
-            // is present — it never reports a fake success.
-            // NOTE: posts that only carry a remote `mediaUrl` need that video
-            // downloaded to a local path first (a follow-up); until then those
-            // fail honestly rather than silently no-op.
+            // failed with a generic "Unsupported platform". Routed to the real
+            // Content Posting API: postToTikTok uploads a local videoPath directly,
+            // OR downloads a remote mediaUrl to a temp file first (SSRF-guarded,
+            // size-capped, auto-cleaned) since the API needs the bytes. It throws
+            // a specific, honest error if neither is usable — never a fake success.
             if (!tiktokOAuth.isConfigured()) {
               throw new Error('TikTok OAuth not configured. Set TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET.');
             }
