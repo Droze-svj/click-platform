@@ -242,13 +242,21 @@ function nextOccurrenceISO(window, timezone) {
   // If a timezone is provided, shift so the local hour matches.
   if (timezone) {
     try {
-      const localHour = parseInt(
+      const raw = parseInt(
         new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hour12: false })
           .format(result),
         10
       );
+      // Some ICU builds emit "24" for midnight — normalise to 0..23. If parsing
+      // somehow fails, fall back to window.hour (no shift) rather than NaN.
+      const localHour = Number.isFinite(raw) ? raw % 24 : window.hour;
       const offsetHours = window.hour - localHour;
       if (offsetHours !== 0) result.setHours(result.getHours() + offsetHours);
+      // The shift can push the slot into the past (or across midnight) — bump it
+      // forward so we never suggest a time that has already passed.
+      if (result.getTime() <= now.getTime()) {
+        result.setDate(result.getDate() + (window.dayOfWeek == null ? 1 : 7));
+      }
     } catch (err) {
       logger.warn('Invalid timezone in optimal-time suggestion', { timezone, error: err.message });
     }

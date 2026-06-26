@@ -57,6 +57,17 @@ describe('getOptimalPostingWindows — personalized + honest niche fallback', ()
     expect(typeof w[0].meanEngagement).toBe('number');  // a REAL measured rate
   });
 
+  it('produces a valid FUTURE ISO suggestion even with a timezone (no NaN / past slot)', async () => {
+    mockPosts([]);
+    mockNiche('finance');
+    const r = await getOptimalPostingWindows('6a3500000000000000000ddd', { timezone: 'America/New_York' });
+    const iso = r.nextSuggested.tiktok;
+    expect(typeof iso).toBe('string');
+    const t = Date.parse(iso);
+    expect(Number.isFinite(t)).toBe(true);         // not Invalid Date from the tz shift
+    expect(t).toBeGreaterThan(Date.now() - 1000);  // never a slot already in the past
+  });
+
   it('includeNicheFallback:false keeps the strict legacy behavior (empty, source none)', async () => {
     mockPosts([]);
     const r = await getOptimalPostingWindows('6a3500000000000000000ccc', { platform: 'tiktok', includeNicheFallback: false });
