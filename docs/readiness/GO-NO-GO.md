@@ -32,10 +32,55 @@ Since this doc was first written the system moved further forward:
   TikTok post died as "Unsupported platform"); now wired to the real upload, failing honestly
   when no video file is present. Removed a dead fabricated-metrics module (`devAnalyticsStore.js`).
 
-**Current gates (this pass, on `main`):** unit + integration **806 passing / 0 failing (×2)** ·
-`smoke:full` green (no GET 5xx) · `security` green · `eslint server/` **0 errors** · client `tsc`
-**clean** · `next build` **101/101 pages** · live two-user boot on isolated in-memory Mongo (prod
-Atlas untouched, verified by the `🛡️ DB SAFETY` refusal).
+## Update — final readiness pass (whole-system verify + GO/NO-GO)
+
+A fresh bug-hunt + service-wiring audit (every flagged item validated against the code):
+
+- **Social-delete crash fixed.** `socialMediaService`'s delete switch (the A/B "auto-killer",
+  reachable via `abSwarmService.js:117`) called `YouTubeSocialService.deleteVideo` and
+  `MetaSocialService.deletePost` — neither method existed → a runtime "is not a function" crash for
+  youtube/instagram/facebook. Added honest `deleteVideo`/`deletePost` (no crash, no fake success —
+  "automatic deletion not wired; remove manually"), matching the TikTok `deletePost` contract. A
+  cross-check of EVERY `*SocialService` method the dispatcher calls vs. each service's exports
+  confirms these were the only two missing. 5 regression tests in `tests/server/socialDelete.test.js`.
+- **Whop webhook verified SECURE (not a bug).** `whopWebhookService.verifySignature` returns
+  `false` when the secret/signature is missing, and `routes/webhooks/whop.js` rejects when
+  `WHOP_WEBHOOK_SECRET` is unset — **fails closed**. Paid tiers are granted only by a validly-signed
+  webhook.
+- **Service wiring healthy.** Boot starts DB (retry + dev in-memory fallback), Redis-guarded
+  queues/workers, and all crons (SLA, performance-learning 6h, token-refresh 30m, recurring-posts
+  5m, trends, value-tracking, platform-ingestion) — each gated by the `autonomousModeEnabled()`
+  kill-switch and wrapped fail-safe. Hard-fail boot gates for missing `MONGODB_URI`/`JWT_SECRET` in
+  prod. No dead/half-wired core service.
+- **Endpoint-reachability re-sweep**: the mounted 2,286-route table vs. every literal client call —
+  no NEW broken endpoints from the social/TikTok work; the only unmatched calls are the
+  already-known dead components + variable-mounted `phase*`/`sovereign` dashboards (false positives
+  for the inline-require detector) + URL-template artifacts. The committed `routeMounts` +
+  `clientApiPrefix` guards (which catch the real classes) are green.
+- **Live deploy verified**: `/api/health` → `status:ok` (prod, Mongo connected) · `/api/health/ai?
+  live=1` → `mode:"live AI", liveTest:"ok"` (gemini-2.5-flash) · `POST /social/post`,
+  `/oauth/tiktok/post`, `/scheduler/schedule` all 401 (reachable, auth-gated — not 404).
+
+**Current gates (this pass, on `main`):** unit **717 / 0 (×2)** · integration **113 / 0** (one
+parallel-load flake in `error-scenarios` cleared on isolation + run-2) · `security` green ·
+`smoke:full` green (no GET 5xx) · `test:fidelity` **20/20** (real ffmpeg) · `eslint server/`
+**0 errors** · `node --check` all server files clean · client `tsc` **0** · `next build`
+**101/101 pages** · safe in-memory boot (the `🛡️ DB SAFETY` refusal fired — Atlas untouched).
+
+### Operational checklist before opening to the public (owner-only)
+
+These are **config/ops toggles + live smokes**, not code — the code is green:
+
+- [ ] **TikTok live smoke** — connect a TikTok account → publish one real short video → confirm it
+      lands (shows `processing` first; TikTok reviews asynchronously). The upload is spec-correct +
+      unit-tested, but only your app creds can confirm the live API.
+- [ ] **Backup AI provider (optional)** — only `GOOGLE_AI_API_KEY` is set; add `OPENAI_API_KEY` or
+      `ANTHROPIC_API_KEY` so AI doesn't 503 if Gemini quota is exhausted (the `AIHealthBanner` will
+      surface a degraded state either way).
+- [ ] **`AUTO_VERIFY_EMAIL=false`** in Render for a public launch (it's `true` for beta) — so new
+      signups must verify their email (needs `SENDGRID_API_KEY`).
+- [ ] **`REQUIRE_SIGNED_MEDIA=true`** — enable + E2E in staging first (private media is currently
+      protected by crypto-random filenames; signed-media is the stronger gate).
 
 ## Real AI in prod — DONE ✅ (was the one operational gate)
 

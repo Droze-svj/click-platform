@@ -129,6 +129,23 @@ class YouTubeSocialService {
       throw error;
     }
   }
+
+  /**
+   * Delete a YouTube video. Called by socialMediaService's delete switch (the
+   * A/B auto-killer). Automatic deletion isn't wired yet, so we report this
+   * HONESTLY (no fake success) instead of crashing the caller with "deleteVideo
+   * is not a function". Mirrors the TikTok deletePost contract.
+   */
+  static async deleteVideo(_auth, videoId) {
+    logger.info('[YouTube] delete requested — automatic deletion not wired', { videoId });
+    return {
+      success: false,
+      platform: 'youtube',
+      unsupported: true,
+      videoId: videoId || null,
+      message: 'Automatic deletion is not wired for YouTube yet. Remove the video in YouTube Studio.',
+    };
+  }
 }
 
 module.exports = YouTubeSocialService;
