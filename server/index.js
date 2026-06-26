@@ -2503,6 +2503,11 @@ function __installShutdownHooks() {
       }
       // #endregion
 
+      // Stop background crons so their node-cron timers don't survive a nodemon
+      // restart or keep the process alive. Best-effort — never block shutdown.
+      try { require('./services/performanceLearningCron').stopLearningCron?.(); } catch (err) { /* ignore */ }
+      try { require('./services/performanceAlertService').stopAlertCron?.(); } catch (err) { /* ignore */ }
+
       // Flush Sentry events before shutdown
       if (Sentry && typeof Sentry.close === 'function') {
         try {
