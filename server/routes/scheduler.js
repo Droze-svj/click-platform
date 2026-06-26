@@ -50,8 +50,10 @@ async function emitFailureNotification(post, reason) {
 }
 
 // Get optimal posting windows derived from a user's real per-platform engagement.
-// Returns `confident: false` (and empty windows) if the user has fewer than the
-// minimum required posts — the UI should NOT show a recommendation in that case.
+// `confident: true` means at least one platform's windows came from the creator's
+// OWN posts (source:'your-history'). When history is thin it falls back to a
+// clearly-labeled generic niche default (source:'niche-default', usedFallback:true)
+// so the UI can still suggest a slot — honestly flagged as not-yet-personalized.
 router.get('/optimal-times', auth, asyncHandler(async (req, res) => {
   const { platform, timezone, lookbackDays } = req.query;
   const result = await getOptimalPostingWindows(req.user._id || req.user.id, {
