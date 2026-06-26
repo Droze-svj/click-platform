@@ -43,6 +43,23 @@ router.post('/learning/feedback', auth, asyncHandler(async (req, res) => {
       outcome
     }, req.user._id);
 
+    // Also feed the UNIFIED learning profile so music taste biases the rest of the
+    // AI (previously music feedback lived in its own silo). Best-effort — must
+    // never block the music-specific record.
+    try {
+      const genre = suggestionDetails?.genre || suggestionDetails?.mood;
+      if (genre) {
+        const act = (action === 'selected' || action === 'used' || action === 'applied' || action === 'accepted')
+          ? 'accept'
+          : ((action === 'rejected' || action === 'skipped' || action === 'removed') ? 'reject' : 'dismiss');
+        await require('../services/aiFeedbackService').recordFeedback({
+          userId: req.user._id, surface: 'music-suggest', itemType: 'music', action: act, value: genre, contentId,
+        });
+      }
+    } catch (e) {
+      logger.warn('[music-learning] unified-profile nudge failed', { error: e.message });
+    }
+
     sendSuccess(res, 'Feedback recorded', 200, { feedback });
   } catch (error) {
     logger.error('Error recording feedback', { error: error.message });
