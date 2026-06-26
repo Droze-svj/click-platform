@@ -76,6 +76,8 @@ interface RepurposeViewProps {
   gradientOverlays?: any[]
   svgOverlays?: any[]
   timelineSegments?: any[]
+  /** Master audio bus → tree.audio, so each repurposed variant carries the mix. */
+  audio?: import('../../../types/editor').AudioMix
   videoDuration?: number
   projectName?: string
   showToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
@@ -181,6 +183,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
         gradientOverlays: props.gradientOverlays || [],
         svgOverlays: props.svgOverlays || [],
         timelineSegments: props.timelineSegments || [],
+        audio: props.audio || undefined,
         duration: props.videoDuration,
         metadata: { contentId: videoId, title: projectName },
         targets: selected,
