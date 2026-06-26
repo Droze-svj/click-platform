@@ -105,10 +105,13 @@ function buildReverbFilter(reverbConfig) {
 
   // Use aecho filter for simple reverb
   // Format: aecho=in_gain:out_gain:delays:decays
-  const delay = Math.round(roomSize * 500); // 0-500ms
-  const decay = 1.0 - damping;
+  // ffmpeg requires delay > 0 and a non-zero decay — clamp both so roomSize=0 /
+  // damping=1 (the slider extremes) can't emit an invalid filter that errors the
+  // whole render.
+  const delay = Math.max(1, Math.round(roomSize * 500)); // 1-500ms
+  const decay = Math.min(0.9, Math.max(0.1, 1.0 - damping));
 
-  return `aecho=0.8:0.88:${delay}:0.${Math.round(decay * 10)}`;
+  return `aecho=0.8:0.88:${delay}:${decay.toFixed(2)}`;
 }
 
 /**
