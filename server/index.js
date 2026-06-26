@@ -1916,6 +1916,10 @@ app.use('/api/batch', require('./routes/batch'));
 app.use('/api/templates', require('./routes/templates'));
 app.use('/api/music', require('./routes/music'));
 app.use('/api/music', require('./routes/music-user-uploads'));
+// Organized categorized browse + AI generation (fresh LIVE routes — the rest of the
+// music-* family stays intentionally KNOWN_DEAD per the security audit).
+app.use('/api/music', require('./routes/music-browse'));
+app.use('/api/music', require('./routes/music-generate'));
 app.use('/api/competitive', require('./routes/competitive-benchmark'));
 app.use('/api/video/effects', require('./routes/video/effects'));
 app.use('/api/video/enhance', require('./routes/video/enhance'));
