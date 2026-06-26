@@ -82,3 +82,7 @@ backups/
 # Legacy restored backup tree (removed from the repo)
 Sovereign-Internal-Restored/
 tests/reports/
+
+# Claude Code harness — ephemeral session lock (do NOT track; contains pid/sessionId).
+# Other .claude/ files (skills, settings, plans) stay tracked intentionally.
+.claude/scheduled_tasks.lock
