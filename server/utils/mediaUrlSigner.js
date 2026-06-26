@@ -78,6 +78,10 @@ function signMediaUrls(value, _depth = 0, ttlSec = DEFAULT_TTL_SEC) {
   if (typeof value === 'string') return signMediaUrl(value, ttlSec);
   if (Array.isArray(value)) return value.map((v) => signMediaUrls(v, _depth + 1, ttlSec));
   if (value && typeof value === 'object') {
+    // bson ObjectId / Decimal128 etc. — never recurse into them. Object.keys() on an
+    // ObjectId mangles it into { buffer: … } (breaking _id in the JSON response);
+    // return as-is so res.json serializes the proper hex string.
+    if (value._bsontype || typeof value.toHexString === 'function') return value;
     const obj = typeof value.toObject === 'function' ? value.toObject() : value;
     if (obj instanceof Date || Buffer.isBuffer(obj)) return obj;
     const out = {};
