@@ -1,11 +1,9 @@
 // Social media posting worker
 
 const { createWorker } = require('../services/jobQueueService');
-const { postToLinkedIn } = require('../services/linkedinOAuthService');
-const { postToFacebook } = require('../services/facebookOAuthService');
-const { postToInstagram } = require('../services/instagramOAuthService');
-const twitterOAuth = require('../services/twitterOAuthService');
-const tiktokOAuth = require('../services/tiktokOAuthService');
+// Per-platform publishing is delegated to services/socialMediaService (required
+// lazily in the loop) — the single canonical publisher shared with routes/social
+// and the scheduler cron. (This worker's queue currently has no producer.)
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
@@ -115,52 +113,34 @@ async function processSocialPostJob(jobData, job) {
           logger.info('[DRY_RUN] simulating publish', { platform, userId, scheduledPostId });
           postResult = simulatedResult(platform);
         } else {
-          switch (platform.toLowerCase()) {
-          case 'twitter':
-            postResult = await twitterOAuth.postTweetForUser(userId, content.text, options, options.platform_user_id);
-            break;
-          case 'linkedin':
-            postResult = await postToLinkedIn(userId, content.text, options);
-            break;
-          case 'facebook':
-            postResult = await postToFacebook(userId, content.text, options);
-            break;
-          case 'instagram':
-            if (!content.imageUrl) {
-              throw new Error('Image URL required for Instagram');
-            }
-            postResult = await postToInstagram(
-              userId,
-              content.imageUrl,
-              content.text,
-              options
-            );
-            break;
-          case 'tiktok':
-            // TikTok was previously unhandled here → every scheduled TikTok post
-            // failed with a generic "Unsupported platform". Routed to the real
-            // Content Posting API: postToTikTok uploads a local videoPath directly,
-            // OR downloads a remote mediaUrl to a temp file first (SSRF-guarded,
-            // size-capped, auto-cleaned) since the API needs the bytes. It throws
-            // a specific, honest error if neither is usable — never a fake success.
-            if (!tiktokOAuth.isConfigured()) {
-              throw new Error('TikTok OAuth not configured. Set TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET.');
-            }
-            postResult = await tiktokOAuth.postToTikTok(userId, {
-              videoPath: content.videoPath || options.videoPath,
-              mediaUrl: content.mediaUrl || content.videoUrl || options.mediaUrl,
-            });
-            break;
-          default:
-            throw new Error(`Unsupported platform: ${platform}`);
+          // Canonical publish path. This worker's `social-posting` queue
+          // currently has NO producer (dead), and its old per-platform switch had
+          // drifted out of sync with the live publisher (a non-existent Twitter
+          // method, no YouTube case, an Instagram field mismatch). Delegate to
+          // socialMediaService.postToSocialMedia — the SAME path routes/social.js
+          // + the scheduler cron use — so IF anything ever enqueues here it runs
+          // the one correct, honest, per-user implementation (TikTok → the honest
+          // "coming soon", YouTube SSRF-safe, token-refresh on 401, etc.).
+          const { postToSocialMedia } = require('../services/socialMediaService');
+          postResult = await postToSocialMedia(userId, platform, {
+            title: content.title || content.text || '',
+            description: content.description || '',
+            mediaUrl: content.mediaUrl || content.imageUrl || content.videoUrl,
+            tags: content.hashtags || content.tags || [],
+          }, options);
+          // postToSocialMedia returns { success:false, error } on failure (it does
+          // NOT throw) — surface it as a throw so the shared catch below records a
+          // failed result + drives the retry/backoff logic.
+          if (!postResult.success) {
+            throw new Error(postResult.error || `Publish failed for ${platform}`);
           }
         }
 
         results.push({
           platform,
           success: true,
-          postId: postResult.id,
-          url: postResult.url,
+          postId: postResult.id || postResult.externalId,
+          url: postResult.url || postResult.postUrl,
           dryRun: !!postResult.dryRun,
         });
 

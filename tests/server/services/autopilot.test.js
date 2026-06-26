@@ -48,7 +48,7 @@ describe('autopilot human-approve gate (E2E)', () => {
 
   it('drafts pending_approval (NOT scheduled) until approved', async () => {
     await conn();
-    const plan = await createAutopilotPlan(userId, { items: [{ contentId: 'c1', hook: 'h' }], autonomyMode: 'human_approve' });
+    const plan = await createAutopilotPlan(userId, { items: [{ contentId: 'c1', hook: 'h', mediaUrl: '/uploads/c1.mp4' }], autonomyMode: 'human_approve' });
     expect(plan.planId).toBeTruthy();
 
     const drafted = await ScheduledPost.find({ autopilotPlanId: plan.planId });
@@ -63,7 +63,7 @@ describe('autopilot human-approve gate (E2E)', () => {
 
   it('full_auto opt-in schedules immediately', async () => {
     await conn();
-    const plan = await createAutopilotPlan(userId, { items: [{ contentId: 'c1' }], autonomyMode: 'full_auto' });
+    const plan = await createAutopilotPlan(userId, { items: [{ contentId: 'c1', mediaUrl: '/uploads/c1.mp4' }], autonomyMode: 'full_auto' });
     expect(await ScheduledPost.countDocuments({ autopilotPlanId: plan.planId, status: 'scheduled' })).toBeGreaterThan(0);
   });
 
@@ -71,5 +71,24 @@ describe('autopilot human-approve gate (E2E)', () => {
     const plan = await createAutopilotPlan(userId, { items: [{ contentId: 'c1' }] });
     expect(plan.posts).toEqual([]);
     expect(plan.planId).toBeNull();
+  });
+
+  it('SKIPS a media-required platform when the source has no media (no doomed posts)', async () => {
+    await conn(); // tiktok (media-required)
+    const plan = await createAutopilotPlan(userId, { items: [{ contentId: 'c1', hook: 'h' }], autonomyMode: 'full_auto' });
+    // tiktok needs a video → with no media it is skipped, not persisted.
+    expect(await ScheduledPost.countDocuments({ autopilotPlanId: plan.planId })).toBe(0);
+    expect(plan.skipped.some((s) => s.platform === 'tiktok')).toBe(true);
+    expect(plan.message).toMatch(/skipped/i);
+  });
+
+  it('attaches the source media to created posts (content.mediaUrl)', async () => {
+    await conn(); // tiktok
+    const plan = await createAutopilotPlan(userId, {
+      items: [{ contentId: 'c1', hook: 'h', mediaUrl: '/uploads/c1.mp4' }], autonomyMode: 'full_auto',
+    });
+    const posts = await ScheduledPost.find({ autopilotPlanId: plan.planId });
+    expect(posts.length).toBeGreaterThan(0);
+    expect(posts.every((p) => p.content.mediaUrl === '/uploads/c1.mp4')).toBe(true);
   });
 });

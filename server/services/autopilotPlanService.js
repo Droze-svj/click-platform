@@ -59,6 +59,9 @@ function buildAutopilotPlan(items = [], options = {}) {
         scheduledTime,
         hook: typeof hookByPlatform === 'function' ? hookByPlatform(item, platform) : (item.hook || ''),
         caption: item.caption || item.text || item.hook || '',
+        // Thread the source clip/asset media so image/video platforms have
+        // something to post (previously dropped → guaranteed publish failure).
+        mediaUrl: item.mediaUrl || item.videoUrl || item.url || item.clipUrl || item.assetUrl || null,
         status,
         slot: slot + 1,
       });
@@ -100,21 +103,37 @@ async function createAutopilotPlan(userId, opts = {}) {
   const SAFETY_HOLD_MS = 10 * 60 * 1000;
   const holdUntil = autonomyMode === 'full_auto' ? new Date(Date.now() + SAFETY_HOLD_MS) : null;
 
-  const rows = plan.map((p) => ({
+  // Image/video platforms cannot post text-only. Rather than persist posts that
+  // are guaranteed to fail at publish, SKIP media-required platforms when the
+  // source has no media, and report it honestly.
+  const MEDIA_REQUIRED = new Set(['instagram', 'tiktok', 'youtube', 'pinterest', 'snapchat']);
+  const skipped = [];
+  const publishable = plan.filter((p) => {
+    if (MEDIA_REQUIRED.has(p.platform) && !p.mediaUrl) {
+      skipped.push({ platform: p.platform, reason: 'no media (image/video required)' });
+      return false;
+    }
+    return true;
+  });
+
+  const rows = publishable.map((p) => ({
     userId: String(userId),
     autopilotPlanId: planId,
     contentId: p.contentId || undefined,
     platform: p.platform,
-    content: { text: p.caption || p.hook || '', hashtags: [] },
+    content: { text: p.caption || p.hook || '', mediaUrl: p.mediaUrl || undefined, hashtags: [] },
     niche: niche || undefined,
     scheduledTime: p.scheduledTime ? new Date(p.scheduledTime) : new Date(Date.now() + 3600 * 1000),
     status: p.status,
     holdUntil,
     dryRun: !!dryRun,
   }));
-  const created = await ScheduledPost.insertMany(rows);
-  logger.info('[autopilot] plan created', { planId, posts: created.length, autonomyMode, status });
-  return { planId, autonomyMode, status, posts: plan, count: created.length };
+  const created = rows.length ? await ScheduledPost.insertMany(rows) : [];
+  logger.info('[autopilot] plan created', { planId, posts: created.length, skipped: skipped.length, autonomyMode, status });
+  const message = skipped.length
+    ? `Scheduled ${created.length} post(s); skipped ${skipped.length} (media required — attach a clip/image).`
+    : undefined;
+  return { planId, autonomyMode, status, posts: publishable, count: created.length, skipped, message };
 }
 
 /** Human-approve gate: flip a plan's pending_approval posts to scheduled so the
