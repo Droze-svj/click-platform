@@ -334,21 +334,6 @@ export default function SchedulerPage() {
                     {PLATFORMS.map(p => {
                       const active = form.platform === p.id
                       const PIcon = p.icon
-                      if (p.id === 'tiktok') {
-                        return (
-                          <button
-                            type="button"
-                            key={p.id}
-                            onClick={() => showToast(t('schedulerPage.tiktokSoonToast'), 'info')}
-                            aria-label={t('schedulerPage.tiktokSoonAria')}
-                            className="relative flex flex-col items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-amber-500 transition-colors hover:bg-amber-500/10"
-                          >
-                            <PIcon size={20} aria-hidden />
-                            <span className="text-[9px] font-semibold capitalize">{p.id}</span>
-                            <span className="absolute -top-1.5 -right-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[7px] font-bold uppercase leading-none text-black">{t('schedulerPage.soon')}</span>
-                          </button>
-                        )
-                      }
                       return (
                         <button type="button" key={p.id} onClick={() => setForm(f => ({ ...f, platform: p.id }))}
                           aria-label={t('schedulerPage.selectPlatform', { platform: p.label })}

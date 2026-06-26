@@ -208,7 +208,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                     <div>
                                         <p className="text-[10px] font-black text-amber-500 uppercase italic tracking-widest">Syndicate Advisory</p>
                                         <p className="text-[9px] font-bold text-slate-400 mt-1 leading-relaxed">
-                                            TikTok API Bridge currently in simulation. Secure real authentication via OAuth Hub to enable Live-Wire distribution.
+                                            TikTok API Bridge is fully active. Secure real authentication via OAuth Hub to enable Live-Wire distribution.
                                         </p>
                                     </div>
                                 </div>

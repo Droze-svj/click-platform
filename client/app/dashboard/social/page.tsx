@@ -269,12 +269,10 @@ export default function SocialPage() {
                     className={cn(
                       isActive
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : isTikTok
-                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                          : 'ds-surface-subtle text-theme-muted'
+                        : 'ds-surface-subtle text-theme-muted'
                     )}
                   >
-                    {isActive ? t('socialPage.statusUplinked') : isTikTok ? t('socialPage.statusComingSoon') : t('socialPage.statusOffline')}
+                    {isActive ? t('socialPage.statusUplinked') : t('socialPage.statusOffline')}
                   </Badge>
                 </div>
 
@@ -349,14 +347,8 @@ export default function SocialPage() {
                   </div>
                 ) : (
                   <div className="mt-auto pt-5 border-t border-[var(--border-subtle)] space-y-3">
-                    {isTikTok && (
-                      <div className="ds-surface-subtle p-3">
-                        <p className="ds-text-label text-amber-600 dark:text-amber-400 mb-1">{t('socialPage.pendingApiApproval')}</p>
-                        <p className="ds-text-caption">{t('socialPage.tiktokPendingBody')}</p>
-                      </div>
-                    )}
                     <Button
-                      variant={isTikTok ? 'secondary' : 'primary'}
+                      variant="primary"
                       size="md"
                       className="w-full"
                       onClick={() => connectAccount(id)}
@@ -365,7 +357,7 @@ export default function SocialPage() {
                     >
                       {isConnecting
                         ? t('socialPage.negotiating')
-                        : isTikTok ? t('socialPage.preConnectAccount') : t('socialPage.establishUplink')}
+                        : t('socialPage.establishUplink')}
                     </Button>
                   </div>
                 )}

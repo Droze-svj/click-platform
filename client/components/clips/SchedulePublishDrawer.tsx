@@ -41,7 +41,7 @@ const PLATFORMS = [
   // surfaces this as a badge AND blocks Schedule when the active
   // platform is unavailable, so the user is never deceived by the
   // server-side typed error after-the-fact.
-  { id: 'tiktok',  label: 'TikTok',          comingSoon: true  },
+  { id: 'tiktok',  label: 'TikTok',          comingSoon: false },
   { id: 'shorts',  label: 'YouTube Shorts',  comingSoon: false },
   { id: 'reels',   label: 'Instagram Reels', comingSoon: false },
 ] as const
