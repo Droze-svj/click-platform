@@ -18,6 +18,7 @@ import { cn } from '../../lib/utils'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import ToastContainer from '../../components/ToastContainer'
 import SubscriptionBanner from '../../components/SubscriptionBanner'
+import WhatToMakeNext from '../../components/WhatToMakeNext'
 import {
   Panel,
   StatCard,
@@ -501,6 +502,9 @@ export default function DashboardHome() {
               </Link>
             </div>
           </Panel>
+
+          {/* ── What to make next (real /me/next-best, grounded in proven data) ── */}
+          <WhatToMakeNext />
 
           {/* ── Recent content (real recent_posts) (2x1) ───────────────── */}
           <Panel variant="bento" className="ds-bento-2x1 ds-anim-rise p-6">
