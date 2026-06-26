@@ -110,6 +110,9 @@ export interface AIDirectorSuggestion {
   type: 'cut' | 'broll' | 'hook' | 'transition' | 'audio' | 'effect' | 'caption' | 'cta'
   label: string
   description: string
+  /** Categorical value the AI chose — transition style (glitch/whip/…) or effect name. */
+  style?: string
+  name?: string
   confidence: number
   impact: 'low' | 'medium' | 'high'
 }

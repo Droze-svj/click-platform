@@ -893,8 +893,8 @@ const ModernVideoEditor: React.FC<{
   // ── Computed Values (useMemo) ──
   const editorState: any = useMemo(() => ({
     videoFilters, textOverlays, timelineSegments, timelineMarkers, timelineEffects, colorGradeSettings, captionStyle, templateLayout,
-    filterStrength, projectName, videoId: videoId || 'temp-id'
-  }), [videoFilters, textOverlays, timelineSegments, timelineMarkers, timelineEffects, colorGradeSettings, captionStyle, templateLayout, filterStrength, projectName, videoId])
+    filterStrength, projectName, audioMix, videoId: videoId || 'temp-id'
+  }), [videoFilters, textOverlays, timelineSegments, timelineMarkers, timelineEffects, colorGradeSettings, captionStyle, templateLayout, filterStrength, projectName, audioMix, videoId])
 
   const effectiveFilters = useMemo(() => videoFilters, [videoFilters])
 
@@ -925,6 +925,7 @@ const ModernVideoEditor: React.FC<{
       if (stateToLoad.timelineMarkers) setTimelineMarkers(stateToLoad.timelineMarkers)
       if (stateToLoad.timelineEffects) setTimelineEffects(stateToLoad.timelineEffects)
       if (stateToLoad.colorGradeSettings) setColorGradeSettings(stateToLoad.colorGradeSettings)
+      if (stateToLoad.audioMix && typeof stateToLoad.audioMix === 'object') setAudioMix(stateToLoad.audioMix)
       if (stateToLoad.captionStyle) setCaptionStyle(stateToLoad.captionStyle)
       if (stateToLoad.templateLayout) setTemplateLayout(stateToLoad.templateLayout)
       if (stateToLoad.projectName) setProjectName(stateToLoad.projectName)
