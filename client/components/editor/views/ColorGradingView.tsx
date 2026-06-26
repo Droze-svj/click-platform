@@ -6,20 +6,51 @@ import { VideoFilter } from '../../../types/editor'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { Panel, Button, Badge, Slider, SectionHeader } from '../../ui'
 import { cn } from '../../../lib/utils'
+import { COLOR_GRADES } from '../../../lib/colorGrades'
 
-/** Color swatch hint for each preset (Tailwind gradient) */
-const COLOR_PRESETS: { id: string; label: string; f: Partial<VideoFilter>; desc: string; swatch?: string; group: string }[] = [
-  { id: 'warm', label: 'Warm', f: { saturation: 110, temperature: 115, vibrance: 108 }, desc: 'Golden hour', swatch: 'from-amber-400 to-orange-500', group: 'Atmosphere' },
-  { id: 'cold', label: 'Cold', f: { saturation: 105, temperature: 85, tint: 8 }, desc: 'Cool tones', swatch: 'from-cyan-300 to-blue-600', group: 'Atmosphere' },
-  { id: 'retro', label: 'Retro', f: { sepia: 35, saturation: 80, contrast: 110, vignette: 25 }, desc: 'Vintage film', swatch: 'from-amber-800 to-yellow-700', group: 'Cinematic' },
-  { id: 'cinematic', label: 'Cinematic', f: { contrast: 108, saturation: 95, vignette: 35, sepia: 8 }, desc: 'Film look', swatch: 'from-amber-900/60 to-slate-800', group: 'Cinematic' },
-  { id: 'teal-orange', label: 'Teal & Orange', f: { saturation: 120, temperature: 105, tint: -5, vibrance: 115 }, desc: 'Hollywood', swatch: 'from-teal-500 to-orange-500', group: 'Cinematic' },
-  { id: 'cyberpunk', label: 'Cyberpunk', f: { saturation: 140, temperature: 80, tint: 25, contrast: 115, vibrance: 130 }, desc: 'Neon night', swatch: 'from-fuchsia-600 to-cyan-500', group: 'Cinematic' },
-  { id: 'earthly', label: 'Earthly', f: { saturation: 90, temperature: 110, tint: -10, contrast: 105, shadows: 15 }, desc: 'Natural tones', swatch: 'from-emerald-800 to-amber-900', group: 'Atmosphere' },
-  { id: 'vivid', label: 'Vivid', f: { saturation: 135, contrast: 108, vibrance: 125 }, desc: 'High pop', swatch: 'from-pink-400 via-purple-500 to-cyan-400', group: 'Vibrance' },
-  { id: 'high-key', label: 'High Key', f: { brightness: 125, contrast: 90, shadows: -10, saturation: 105 }, desc: 'Bright & Airy', swatch: 'from-white to-slate-200', group: 'Stylistic' },
-  { id: 'noir', label: 'Noir', f: { saturation: 0, contrast: 135, vignette: 55, brightness: 85 }, desc: 'B&W dramatic', swatch: 'from-gray-400 to-black', group: 'Stylistic' },
-]
+// Per-grade UI metadata (group + one-line desc) for the preset grid. The grade
+// id/label/filter/swatch come from the SHARED registry (lib/colorGrades.ts) so the
+// manual editor offers exactly what the AI Director + forge + export render.
+const GRADE_META: Record<string, { group: string; desc: string }> = {
+  natural: { group: 'Basics', desc: 'No grade' },
+  vibrant: { group: 'Vibrance', desc: 'Punchy colors' },
+  vivid: { group: 'Vibrance', desc: 'High pop' },
+  'hyper-pop': { group: 'Vibrance', desc: 'Max saturation' },
+  warm: { group: 'Atmosphere', desc: 'Golden warmth' },
+  cool: { group: 'Atmosphere', desc: 'Cool tones' },
+  'golden-hour': { group: 'Atmosphere', desc: 'Sunset glow' },
+  'sunset-warm': { group: 'Atmosphere', desc: 'Amber hour' },
+  earthly: { group: 'Atmosphere', desc: 'Natural tones' },
+  'arctic-cool': { group: 'Atmosphere', desc: 'Icy & clean' },
+  'kdrama-soft': { group: 'Atmosphere', desc: 'Soft glow' },
+  cinematic: { group: 'Cinematic', desc: 'Film look' },
+  'luma-cinematic': { group: 'Cinematic', desc: 'Luma contrast' },
+  'teal-orange': { group: 'Cinematic', desc: 'Hollywood' },
+  moody: { group: 'Cinematic', desc: 'Dark & rich' },
+  'low-key': { group: 'Cinematic', desc: 'Shadowed drama' },
+  'bleach-bypass': { group: 'Cinematic', desc: 'Harsh & raw' },
+  vintage: { group: 'Stylistic', desc: 'Retro film' },
+  cyberpunk: { group: 'Stylistic', desc: 'Neon night' },
+  vaporwave: { group: 'Stylistic', desc: 'Pink & cyan' },
+  'matrix-green': { group: 'Stylistic', desc: 'Green tech' },
+  'dreamy-pastel': { group: 'Stylistic', desc: 'Soft pastel' },
+  bw: { group: 'Mono', desc: 'Black & white' },
+  noir: { group: 'Mono', desc: 'B&W dramatic' },
+  'film-noir': { group: 'Mono', desc: 'Gritty noir' },
+  'high-key': { group: 'Stylistic', desc: 'Bright & airy' },
+}
+
+/** Preset grid sourced from the shared color-grade registry. */
+const COLOR_PRESETS: { id: string; label: string; f: Partial<VideoFilter>; vfx?: string[]; desc: string; swatch?: string; group: string }[] =
+  COLOR_GRADES.map((g) => ({
+    id: g.id,
+    label: g.label,
+    f: g.filter,
+    vfx: g.vfx,
+    swatch: g.swatch,
+    desc: GRADE_META[g.id]?.desc || '',
+    group: GRADE_META[g.id]?.group || 'Signature',
+  }))
 
 const INITIAL_FILTERS: VideoFilter = {
   brightness: 100,
@@ -210,7 +241,12 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
   }
 
   const applyPreset = (preset: typeof COLOR_PRESETS[0]) => {
-    setVideoFilters((prev: any) => ({ ...prev, ...preset.f }))
+    setVideoFilters((prev: any) => ({
+      ...prev,
+      ...preset.f,
+      // Union vfx so grades like cyberpunk/vaporwave/film-noir carry their baked effects.
+      vfx: Array.from(new Set([...(Array.isArray(prev?.vfx) ? prev.vfx : []), ...(preset.vfx || [])])),
+    }))
     onRecordPick?.('colorGrades', preset.id)
     showToast(`${preset.label} applied`, 'success')
   }

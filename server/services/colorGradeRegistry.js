@@ -38,6 +38,19 @@ const GRADES = [
   { id: 'cyberpunk',      label: 'Cyberpunk',      filter: { contrast: 120, saturation: 140, temperature: 88, tint: 8, vibrance: 120 }, vfx: ['chromatic-aberration'], swatch: 'from-fuchsia-500 via-purple-500 to-cyan-400' },
   { id: 'hyper-pop',      label: 'Hyper Pop',      filter: { saturation: 150, contrast: 125, brightness: 103, vibrance: 130 },          swatch: 'from-pink-500 via-rose-400 to-amber-400' },
   { id: 'dreamy-pastel',  label: 'Dreamy Pastel',  filter: { saturation: 85, contrast: 92, vibrance: 105, vignette: 35, temperature: 106 }, swatch: 'from-rose-200 via-pink-200 to-violet-200' },
+  // ── Phase 2: advanced creative grades ──────────────────────────────────────
+  { id: 'teal-orange',    label: 'Teal & Orange',  filter: { saturation: 120, temperature: 106, tint: -6, vibrance: 115, contrast: 106 }, swatch: 'from-teal-500 via-cyan-500 to-orange-500' },
+  { id: 'golden-hour',    label: 'Golden Hour',    filter: { saturation: 118, temperature: 128, vibrance: 115, brightness: 104 },        swatch: 'from-amber-400 via-orange-500 to-rose-500' },
+  { id: 'sunset-warm',    label: 'Sunset',         filter: { saturation: 122, temperature: 125, vibrance: 118, sepia: 6 },               swatch: 'from-orange-500 via-rose-500 to-amber-700' },
+  { id: 'earthly',        label: 'Earthly',        filter: { saturation: 90, temperature: 110, tint: -10, contrast: 105 },               swatch: 'from-emerald-800 via-amber-800 to-stone-700' },
+  { id: 'arctic-cool',    label: 'Arctic',         filter: { saturation: 92, temperature: 80, tint: 6, contrast: 108, brightness: 104 }, swatch: 'from-sky-200 via-cyan-300 to-blue-400' },
+  { id: 'high-key',       label: 'High Key',       filter: { brightness: 120, contrast: 90, saturation: 105 },                           swatch: 'from-white via-slate-100 to-slate-300' },
+  { id: 'low-key',        label: 'Low Key',        filter: { brightness: 82, contrast: 122, saturation: 95, vignette: 45 },              swatch: 'from-slate-800 via-zinc-900 to-black' },
+  { id: 'bleach-bypass',  label: 'Bleach Bypass',  filter: { saturation: 55, contrast: 130, brightness: 103 },                          swatch: 'from-stone-300 via-stone-500 to-slate-700' },
+  { id: 'vaporwave',      label: 'Vaporwave',      filter: { saturation: 135, temperature: 92, tint: 18, hue: 8, vibrance: 120 }, vfx: ['chromatic-aberration'], swatch: 'from-fuchsia-400 via-purple-400 to-cyan-300' },
+  { id: 'kdrama-soft',    label: 'K-Drama Soft',   filter: { saturation: 102, contrast: 94, brightness: 106, temperature: 108, vibrance: 108 }, swatch: 'from-rose-200 via-amber-100 to-orange-200' },
+  { id: 'matrix-green',   label: 'Matrix',         filter: { saturation: 80, hue: 35, contrast: 115, tint: 20 },                         swatch: 'from-green-600 via-emerald-700 to-black' },
+  { id: 'film-noir',      label: 'Film Noir',      filter: { saturation: 0, contrast: 140, vignette: 55, brightness: 88 }, vfx: ['film-grain'], swatch: 'from-zinc-300 via-zinc-600 to-black' },
 ];
 
 // Legacy / alternate spellings → canonical id, so the Director, clipStylePresets,

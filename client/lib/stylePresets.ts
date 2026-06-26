@@ -22,6 +22,18 @@ export const STYLE_PRESETS: StylePreset[] = [
   { id: 'casual-vlog',       label: 'Casual Vlog',       description: 'Friendly hook, ambient music, soft cuts, handwritten-feel captions.', color: '#ec4899', accent: 'pink' },
   { id: 'mystery-hook',      label: 'Mystery Hook',      description: 'Cliffhanger openers, suspenseful soundtrack, minimal cuts in the first 3s.', color: '#0ea5e9', accent: 'sky' },
   { id: 'gym-grit',          label: 'Gym Grit',          description: 'Short bursts, hard hits on the beat, neon captions, raw color.', color: '#f97316', accent: 'orange' },
+  { id: 'neon-glitch-speed', label: 'Neon Glitch Speed', description: 'Ultra-modern energetic pacing, cyber neon grades, glowing captions, chromatic glitch transitions.', color: '#39FF14', accent: 'green' },
+  { id: 'minimalist-mindset-luma', label: 'Minimalist Mindset Luma', description: 'Luma cinematic contrasts, lowercase serif subtitles, relaxed organic drift.', color: '#0f172a', accent: 'slate' },
+  { id: 'adhd-overload',     label: 'ADHD Overload',     description: 'Ultra-fast cuts, constant text pop-ins, 3+ VFX per minute, max FYP energy.', color: '#FF0055', accent: 'rose' },
+  { id: 'podcast-goldmine',  label: 'Podcast Goldmine',  description: 'Multi-speaker chapter overlays, warm documentary grade, slower authority pacing.', color: '#D97706', accent: 'amber' },
+  { id: 'retention-machine', label: 'Retention Machine', description: 'Heavy B-roll, cliffhanger text at intervals, chapter markers, open-loop technique.', color: '#6D28D9', accent: 'violet' },
+  // ── Phase 2: new creative style presets ──
+  { id: 'luxury-lifestyle',  label: 'Luxury Lifestyle',  description: 'Aspirational slow-burn, golden-hour grade, minimal serif captions, ambient score.', color: '#b45309', accent: 'amber' },
+  { id: 'true-crime',        label: 'True Crime',        description: 'Cliffhanger openers, low-key dramatic grade, outline captions, suspenseful score.', color: '#7f1d1d', accent: 'red' },
+  { id: 'asmr-soft',         label: 'ASMR Soft',         description: 'Calm gentle pacing, soft k-drama glow grade, minimal captions, lo-fi ambience.', color: '#a78bfa', accent: 'violet' },
+  { id: 'sports-hype',       label: 'Sports Hype',       description: 'Hard hits on the beat, teal-orange grade, kinetic captions, phonk energy.', color: '#16a34a', accent: 'emerald' },
+  { id: 'tech-review-clean', label: 'Tech Review Clean', description: 'Crisp arctic-cool grade, modern captions, no-fluff cuts, corporate-clean score.', color: '#0ea5e9', accent: 'sky' },
+  { id: 'storytime-cozy',    label: 'Storytime Cozy',    description: 'Warm sunset grade, friendly modern captions, soft fades, relaxed chill score.', color: '#ea580c', accent: 'orange' },
 ]
 
 export const PRESET_BY_ID: Record<string, StylePreset> = Object.fromEntries(

@@ -360,6 +360,109 @@ const STYLE_PRESETS = [
       { id: 'cliffhang',      label: 'Cliffhanger',   overrides: { hookStyle: 'question',  captionStyle: 'bold', pacingIntensity: 'medium' } },
     ],
   },
+  // ── Phase 2: new creative style presets ────────────────────────────────────
+  {
+    id: 'luxury-lifestyle',
+    label: 'Luxury Lifestyle',
+    description: 'Aspirational slow-burn, golden-hour grade, minimal serif captions, ambient score.',
+    color: '#b45309',
+    accent: 'amber',
+    defaults: {
+      hookStyle: 'story', musicGenre: 'chill', pacingIntensity: 'medium', captionStyle: 'minimal',
+      targetPlatform: 'reels', transitionStyle: 'crossfade', colorGrade: 'golden-hour',
+      brollAutoInsert: true, hookDuration: 2, ctaStyle: 'follow', voiceTone: 'inspirational',
+    },
+    variations: [
+      { id: 'quiet-flex',   label: 'Quiet Flex',    overrides: { hookStyle: 'mystery', colorGrade: 'sunset-warm' } },
+      { id: 'soft-reveal',  label: 'Soft Reveal',   overrides: { hookStyle: 'question', captionStyle: 'modern' } },
+      { id: 'day-in-life',  label: 'Day In Life',   overrides: { hookStyle: 'story',   transitionStyle: 'fade' } },
+    ],
+  },
+  {
+    id: 'true-crime',
+    label: 'True Crime',
+    description: 'Cliffhanger openers, low-key dramatic grade, outline captions, suspenseful score.',
+    color: '#7f1d1d',
+    accent: 'red',
+    defaults: {
+      hookStyle: 'mystery', musicGenre: 'dramatic', pacingIntensity: 'medium', captionStyle: 'outline',
+      targetPlatform: 'shorts', transitionStyle: 'fade', colorGrade: 'low-key',
+      brollAutoInsert: true, hookDuration: 2, ctaStyle: 'follow', voiceTone: 'inspirational',
+    },
+    variations: [
+      { id: 'cold-open',    label: 'Cold Open',     overrides: { hookStyle: 'mystery', colorGrade: 'film-noir' } },
+      { id: 'case-file',    label: 'Case File',     overrides: { hookStyle: 'stat',    captionStyle: 'professional' } },
+      { id: 'the-twist',    label: 'The Twist',     overrides: { hookStyle: 'question', transitionStyle: 'cut' } },
+    ],
+  },
+  {
+    id: 'asmr-soft',
+    label: 'ASMR Soft',
+    description: 'Calm gentle pacing, soft k-drama glow grade, minimal captions, lo-fi ambience.',
+    color: '#a78bfa',
+    accent: 'violet',
+    defaults: {
+      hookStyle: 'story', musicGenre: 'lofi', pacingIntensity: 'medium', captionStyle: 'minimal',
+      targetPlatform: 'reels', transitionStyle: 'crossfade', colorGrade: 'kdrama-soft',
+      brollAutoInsert: false, hookDuration: 2, ctaStyle: 'follow', voiceTone: 'inspirational',
+    },
+    variations: [
+      { id: 'whisper',      label: 'Whisper',       overrides: { colorGrade: 'dreamy-pastel' } },
+      { id: 'slow-hands',   label: 'Slow Hands',    overrides: { transitionStyle: 'fade' } },
+      { id: 'cozy-corner',  label: 'Cozy Corner',   overrides: { colorGrade: 'sunset-warm' } },
+    ],
+  },
+  {
+    id: 'sports-hype',
+    label: 'Sports Hype',
+    description: 'Hard hits on the beat, teal-orange grade, kinetic captions, phonk energy.',
+    color: '#16a34a',
+    accent: 'emerald',
+    defaults: {
+      hookStyle: 'bold-claim', musicGenre: 'phonk', pacingIntensity: 'intense', captionStyle: 'bold-kinetic',
+      targetPlatform: 'shorts', transitionStyle: 'whip', colorGrade: 'teal-orange',
+      brollAutoInsert: true, hookDuration: 1, ctaStyle: 'subscribe', voiceTone: 'inspirational',
+    },
+    variations: [
+      { id: 'highlight-reel', label: 'Highlight Reel', overrides: { captionStyle: 'bold', transitionStyle: 'glitch' } },
+      { id: 'beat-sync',      label: 'Beat Sync',      overrides: { hookStyle: 'stat', colorGrade: 'hyper-pop' } },
+      { id: 'underdog',       label: 'Underdog',       overrides: { hookStyle: 'story', colorGrade: 'low-key' } },
+    ],
+  },
+  {
+    id: 'tech-review-clean',
+    label: 'Tech Review Clean',
+    description: 'Crisp arctic-cool grade, modern captions, no-fluff cuts, corporate-clean score.',
+    color: '#0ea5e9',
+    accent: 'sky',
+    defaults: {
+      hookStyle: 'question', musicGenre: 'corporate', pacingIntensity: 'medium', captionStyle: 'modern',
+      targetPlatform: 'shorts', transitionStyle: 'cut', colorGrade: 'arctic-cool',
+      brollAutoInsert: true, hookDuration: 1, ctaStyle: 'subscribe', voiceTone: 'inspirational',
+    },
+    variations: [
+      { id: 'spec-drop',    label: 'Spec Drop',     overrides: { hookStyle: 'stat', captionStyle: 'professional' } },
+      { id: 'first-look',   label: 'First Look',    overrides: { hookStyle: 'bold-claim' } },
+      { id: 'vs-battle',    label: 'VS Battle',     overrides: { transitionStyle: 'whip', colorGrade: 'teal-orange' } },
+    ],
+  },
+  {
+    id: 'storytime-cozy',
+    label: 'Storytime Cozy',
+    description: 'Warm sunset grade, friendly modern captions, soft fades, relaxed chill score.',
+    color: '#ea580c',
+    accent: 'orange',
+    defaults: {
+      hookStyle: 'story', musicGenre: 'chill', pacingIntensity: 'medium', captionStyle: 'modern',
+      targetPlatform: 'reels', transitionStyle: 'fade', colorGrade: 'sunset-warm',
+      brollAutoInsert: false, hookDuration: 2, ctaStyle: 'follow', voiceTone: 'inspirational',
+    },
+    variations: [
+      { id: 'plot-twist',   label: 'Plot Twist',    overrides: { hookStyle: 'mystery' } },
+      { id: 'heartfelt',    label: 'Heartfelt',     overrides: { colorGrade: 'kdrama-soft' } },
+      { id: 'wholesome',    label: 'Wholesome',     overrides: { colorGrade: 'dreamy-pastel', transitionStyle: 'crossfade' } },
+    ],
+  },
 ];
 
 const PRESETS_BY_ID = Object.fromEntries(STYLE_PRESETS.map(p => [p.id, p]));
