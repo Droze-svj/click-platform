@@ -1980,6 +1980,10 @@ app.use('/api/disaster-recovery/encryption', require('./routes/disaster-recovery
 app.use('/api/microservices', require('./routes/microservices'));
 app.use('/api/database', require('./routes/database/sharding'));
 app.use('/api/database/rebalancing', require('./routes/database/rebalancing'));
+// AI input-size cap (M1): reject oversized free-text BEFORE it reaches a model, so a
+// single huge transcript/content/prompt can't burn a user's AI budget. Applies to
+// every AI surface; tighter than the 10mb body limit (token-level).
+app.use(['/api/ai', '/api/creative'], require('./middleware/aiInputCap'));
 // Sentry AI Agent Monitoring: group multi-step AI calls by conversation/session/user.
 const sentryConversation = require('./middleware/sentryConversation');
 app.use('/api/ai', sentryConversation);
