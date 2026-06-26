@@ -150,6 +150,29 @@ router.get(
   })
 );
 
+// ── GET /next-best ───────────────────────────────────────────────────────────
+// "What should I make next?" — a ranked make-next list GROUNDED in the creator's
+// OWN proven top performers (hooks/captions/color/platforms the loop learned),
+// shaped by the LLM. Honest { hasRealData:false, reason:'need-more-data' } until
+// the loop has enough samples — no fabricated ideas or lift. Cached upstream by
+// getPersona's 60s cache; the AI call only fires once there's real data.
+router.get(
+  '/next-best',
+  auth,
+  asyncHandler(async (req, res) => {
+    const count = Math.max(1, Math.min(8, parseInt(req.query.count, 10) || 4));
+    const niche = typeof req.query.niche === 'string' ? req.query.niche.trim() : undefined;
+    const platform = typeof req.query.platform === 'string' ? req.query.platform.trim() : undefined;
+    let result = { hasRealData: false, reason: 'need-more-data', ideas: [] };
+    try {
+      result = await require('../services/nextBestContentService').getNextBest(uid(req), { count, niche, platform });
+    } catch (e) {
+      logger.warn('[me] next-best failed', { error: e.message });
+    }
+    return sendSuccess(res, result);
+  })
+);
+
 // ── GET /ai-preferences ──────────────────────────────────────────────────────
 router.get(
   '/ai-preferences',
