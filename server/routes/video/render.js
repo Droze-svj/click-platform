@@ -100,6 +100,7 @@ async function runFfmpegRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
     videoUrl: tree.videoUrl,
     videoFilters: tree.filters || tree.videoFilters || {},
     colorGrade: (typeof tree.colorGrade === 'string' && tree.colorGrade.trim()) ? tree.colorGrade.trim() : null,
+    audio: (tree.audio && typeof tree.audio === 'object') ? tree.audio : null,
     textOverlays,
     shapeOverlays: Array.isArray(tree.shapeOverlays) ? tree.shapeOverlays : [],
     timelineSegments: Array.isArray(tree.timelineSegments) ? tree.timelineSegments : (tree.segments || []),

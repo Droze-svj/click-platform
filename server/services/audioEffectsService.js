@@ -234,7 +234,12 @@ function getEffectPresets() {
 module.exports = {
   applyAudioEffects,
   processTrackWithEffects,
-  getEffectPresets
+  getEffectPresets,
+  // Pure FFmpeg-string builders (no DB / dead deps) — reused by videoRenderService's
+  // master audio chain. Callers MUST clamp inputs before passing them in.
+  buildEQFilter,
+  buildReverbFilter,
+  buildCompressionFilter,
 };
 
 

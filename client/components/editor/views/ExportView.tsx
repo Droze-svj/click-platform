@@ -53,6 +53,8 @@ interface ExportViewProps {
   gradientOverlays?: any[]
   svgOverlays?: any[]
   videoFilters: any
+  /** Master audio bus (volume/duck/fades/voice preset/EQ-comp-reverb) → tree.audio. */
+  audio?: import('../../../types/editor').AudioMix
   videoTransform?: { scale?: number, positionX?: number, positionY?: number, rotation?: number }
   videoTransformKeyframes?: any[]
   videoCrop?: any
@@ -69,7 +71,7 @@ interface ExportViewProps {
 
 const glassStyle = "ds-surface-card"
 
-const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, videoTransform, videoTransformKeyframes, videoCrop, chromaKey, playbackSpeed, timelineSegments = [], timelineEffects = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
+const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, audio, videoTransform, videoTransformKeyframes, videoCrop, chromaKey, playbackSpeed, timelineSegments = [], timelineEffects = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
   const [connectedAccounts, setConnectedAccounts] = useState<any>({})
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
@@ -504,6 +506,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                       videoId: videoId || undefined,
                       videoUrl: videoUrl || undefined,
                       videoFilters: videoFilters || {},
+                      audio: audio || undefined,
                       videoTransform: videoTransform || {},
                       videoTransformKeyframes: videoTransformKeyframes || [],
                       textOverlays: textOverlays || [],

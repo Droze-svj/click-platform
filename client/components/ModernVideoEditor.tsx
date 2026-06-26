@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import {
   Download,
   Video,
+  Volume2,
   Cpu,
   Smartphone,
   Upload as UploadCloudIcon,
@@ -57,6 +58,7 @@ import GrowthInsightsView from './editor/views/GrowthInsightsView'
 import PredictionEngineView from './editor/views/PredictionEngineView'
 import AutomateView from './editor/views/AutomateView'
 import ColorGradingView from './editor/views/ColorGradingView'
+import AudioPanel from './editor/AudioPanel'
 const AdvancedTimelineView = dynamic(() => import('./editor/views/AdvancedTimelineView'), { ssr: false })
 import AssetLibraryView from './editor/views/AssetLibraryView'
 import CollaborateView from './editor/views/CollaborateView'
@@ -114,6 +116,7 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { useBrandKit } from './BrandKit'
 import {
   VideoFilter,
+  AudioMix,
   TextOverlay,
   TimelineSegment,
   TimelineEffect,
@@ -191,6 +194,7 @@ function getSnappedTime(
 const WORKFLOW_STEPS: { id: EditorCategory; label: string; icon?: React.ElementType; color?: string }[] = [
   { id: 'edit', label: 'Manual Edit', icon: EditToolIcon, color: 'text-surface-900 dark:text-white' },
   { id: 'color', label: 'Color Grading', icon: Video, color: 'text-blue-600 dark:text-blue-400' },
+  { id: 'audio', label: 'Audio Mix', icon: Volume2, color: 'text-rose-600 dark:text-rose-400' },
   { id: 'ai', label: 'AI Auto Edit', icon: AiIcon, color: 'text-primary-600 dark:text-primary-400' },
   { id: 'effects', label: 'Visual Effects', icon: LayersIcon, color: 'text-amber-600 dark:text-amber-400' },
   { id: 'remix', label: 'Auto Remix', icon: Sparkles, color: 'text-fuchsia-600 dark:text-fuchsia-400' },
@@ -331,6 +335,8 @@ const ModernVideoEditor: React.FC<{
   const [showBeforeAfter, setShowBeforeAfter] = useState(true)
   const [compareMode, setCompareMode] = useState<'after' | 'before' | 'split'>('after')
   const [colorGradeSettings, setColorGradeSettings] = useState<any>({})
+  // Master audio bus (volume/duck/fades/voice preset/EQ-comp-reverb) → tree.audio on export.
+  const [audioMix, setAudioMix] = useState<AudioMix>({})
   const [chromaKey, setChromaKey] = useState<ChromaKeySettings>({
     enabled: false, color: '#00ff00', tolerance: 40, spill: 50, edge: 25, opacity: 100,
   })
@@ -2015,11 +2021,12 @@ const ModernVideoEditor: React.FC<{
         transcript={transcript}
       />
       case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} onRecordPick={styleProfile.recordPick} topPerformers={performerInsights.insights.colorGrades} insightsLoaded={performerInsights.loaded} />
+      case 'audio': return <AudioPanel audio={audioMix} onChange={setAudioMix} />
       case 'timeline': return <AdvancedTimelineView useProfessionalTimeline={useProfessionalTimeline} setUseProfessionalTimeline={setUseProfessionalTimeline} videoState={videoState} setVideoState={setVideoState} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} selectedSegmentId={selectedSegmentId} onSegmentSelect={(id) => setSelectedSegmentIds(id ? [id] : [])} videoUrl={actualVideoUrl || ''} aiSuggestions={aiSuggestions} showAiPreviews={true} showToast={showToast} setActiveCategory={setActiveCategory} />
       case 'assets': return <AssetLibraryView currentTime={videoState.currentTime} videoDuration={videoState.duration} setTimelineSegments={setTimelineSegments} showToast={showToast} myBroll={userAssets.filter(a => a.type === 'broll')} myMusic={userAssets.filter(a => a.type === 'music')} />
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
       case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} selectedSegmentId={selectedSegmentId} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))} />
-      case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} timelineEffects={timelineEffects} videoFilters={videoFilters} videoTransform={videoTransform} videoTransformKeyframes={videoTransformKeyframes} videoCrop={videoCrop} chromaKey={chromaKey} playbackSpeed={playbackSpeed} videoDuration={videoState.duration} showToast={showToast} setActiveCategory={setActiveCategory} projectName={projectName} />
+      case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} timelineEffects={timelineEffects} videoFilters={videoFilters} audio={audioMix} videoTransform={videoTransform} videoTransformKeyframes={videoTransformKeyframes} videoCrop={videoCrop} chromaKey={chromaKey} playbackSpeed={playbackSpeed} videoDuration={videoState.duration} showToast={showToast} setActiveCategory={setActiveCategory} projectName={projectName} />
       case 'repurpose': return <RepurposeView videoUrl={actualVideoUrl || ''} videoId={videoId || undefined} videoFilters={videoFilters} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} videoDuration={videoState.duration} projectName={projectName} showToast={showToast} />
       case 'generate': return <GenerateView videoId={videoId || undefined} currentTime={videoState.currentTime} setTimelineSegments={setTimelineSegments} showToast={showToast} />
       case 'personalize': return <PersonalizationView showToast={showToast} />
