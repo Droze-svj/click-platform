@@ -420,6 +420,13 @@ setImmediate(() => {
         const { startLearningCron } = require('./services/performanceLearningCron');
         startLearningCron();
 
+        // Performance-alert cron — daily, raises ONE honest "you're slipping"
+        // notification when a creator's rolling 7-day engagement drops >20% below
+        // their own baseline. Read-only on analytics (the 6h cron stays the only
+        // EMA writer); same kill-switch + cronLock guards.
+        const { startAlertCron } = require('./services/performanceAlertService');
+        startAlertCron();
+
         // OAuth token refresh cron — every 30m, refresh any access token
         // that expires within the next 90m. Without this, scheduled posts
         // queued for off-hours would fail when the token silently expires
