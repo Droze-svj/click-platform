@@ -109,6 +109,7 @@ import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
 import { buildBeatCutPlan, planToSegments } from '../lib/beatCuts'
 import { planAutoViralEdit } from '../lib/autoViralEdit'
+import { resolveGrade, applyGrade } from '../lib/colorGrades'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useBrandKit } from './BrandKit'
 import {
@@ -1349,23 +1350,15 @@ const ModernVideoEditor: React.FC<{
    * the rest of the editor uses, so the preview matches.
    */
   const handleApplyColorGrade = useCallback((grade: string) => {
-    const g = (grade || '').toString().trim().toLowerCase()
-    // Director grade set → existing editor VideoFilter presets.
-    const GRADE_PRESETS: Record<string, Partial<VideoFilter>> = {
-      cinematic: { contrast: 120, brightness: 95, saturation: 90, temperature: 95 },
-      warm:      { contrast: 110, brightness: 102, saturation: 110, temperature: 120 },
-      cool:      { contrast: 110, brightness: 100, saturation: 105, temperature: 80 },
-      vibrant:   { contrast: 115, brightness: 102, saturation: 125 },
-      moody:     { contrast: 118, brightness: 90, saturation: 85, temperature: 92, vignette: 25 },
-      bw:        { contrast: 115, brightness: 100, saturation: 0 },
-    }
-    const preset = GRADE_PRESETS[g]
-    if (!preset) {
-      showToast(t('modernVideoEditor.aiDirector.gradeUnknown', { grade: g || '—' }), 'info')
+    // Resolve against the SHARED color-grade registry (26 grades, alias-aware) so
+    // EVERY grade the AI Director can suggest actually applies — not just the legacy 6.
+    const g = resolveGrade(grade)
+    if (!g) {
+      showToast(t('modernVideoEditor.aiDirector.gradeUnknown', { grade: (grade || '—').toString() }), 'info')
       return false
     }
-    setVideoFilters((prev) => ({ ...prev, ...preset }))
-    showToast(t('modernVideoEditor.gradeLabel', { grade: g }), 'success')
+    setVideoFilters((prev) => applyGrade(prev, g))
+    showToast(t('modernVideoEditor.gradeLabel', { grade: g.label }), 'success')
     return true
   }, [setVideoFilters, showToast, t])
 
