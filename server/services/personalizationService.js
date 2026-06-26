@@ -16,6 +16,7 @@
 const mongoose = require('mongoose');
 const UserStyleProfile = require('../models/UserStyleProfile');
 const UserPreferences = require('../models/UserPreferences');
+const SuggestionFeedback = require('../models/SuggestionFeedback');
 const marketingKnowledge = require('./marketingKnowledge');
 const logger = require('../utils/logger');
 
@@ -57,9 +58,33 @@ function emptyPersona(niche, platform) {
     voice: { tone: '', hookStyle: '', pacing: '', vocab: [], banned: [] },
     brand: { colors: { primary: '', accent: '' }, fonts: { title: '', body: '' }, colorGrade: '', transition: '' },
     preferences: null,
+    avoidSignals: [],
     niche: niche || null,
     platform: platform || null,
   };
+}
+
+/**
+ * Recent things the creator told us were WRONG (negative feedback with a reason),
+ * deduped + ranked by frequency, capped — so the prompt can add an explicit
+ * "avoid …" line. This is the "learn from mistakes" surface.
+ */
+async function getAvoidSignals(userId) {
+  if (!isObjectId(userId)) return [];
+  try {
+    const rows = await SuggestionFeedback
+      .find({ userId, signal: 'negative', reason: { $ne: null } })
+      .sort({ createdAt: -1 }).limit(40).select('reason').lean();
+    const counts = new Map();
+    for (const r of rows) {
+      const reason = typeof r.reason === 'string' ? r.reason.trim() : '';
+      if (reason) counts.set(reason, (counts.get(reason) || 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([reason]) => reason);
+  } catch (e) {
+    logger.warn('[personalization] avoid-signals read failed', { error: e.message });
+    return [];
+  }
 }
 
 /**
@@ -74,15 +99,17 @@ async function getPersona(userId, { niche, platform } = {}) {
   const cached = _personaCache.get(cacheKey);
   if (cached && cached.expires > Date.now()) return cached.value;
 
-  const [profileR, topR, prefsR] = await Promise.allSettled([
+  const [profileR, topR, prefsR, avoidR] = await Promise.allSettled([
     isObjectId(userId) ? UserStyleProfile.findOne({ userId }).lean() : Promise.resolve(null),
     marketingKnowledge.getTopPerformingPlaybook(userId, niche, platform, { minSamples: 3 }),
     UserPreferences.findOne({ userId }).lean(),
+    getAvoidSignals(userId),
   ]);
 
   const styleProfile = profileR.status === 'fulfilled' ? profileR.value : null;
   const topPerformers = topR.status === 'fulfilled' ? topR.value : null;
   const prefs = prefsR.status === 'fulfilled' ? prefsR.value : null;
+  const avoidSignals = avoidR.status === 'fulfilled' && Array.isArray(avoidR.value) ? avoidR.value : [];
   if (profileR.status === 'rejected') logger.warn('[personalization] style profile read failed', { error: profileR.reason?.message });
 
   const ve = prefs?.videoEditing || {};
@@ -104,6 +131,7 @@ async function getPersona(userId, { niche, platform } = {}) {
       transition: ve.aestheticTransition || '',
     },
     preferences: prefs || null,
+    avoidSignals,
     niche: niche || prefs?.marketingIntelligence?.niche || null,
     platform: platform || null,
   };
@@ -154,6 +182,10 @@ async function buildPersonalizedSystemPrompt({ userId, niche, platform, role = '
     }
     if (p.voice.hookStyle) brandLines.push(`The creator's go-to hook framework is "${p.voice.hookStyle}" — favour it unless another clearly fits the clip better.`);
     if (p.voice.pacing) brandLines.push(`Preferred pacing intensity: ${p.voice.pacing}.`);
+    // Learn from mistakes: things the creator recently told us were wrong.
+    if (Array.isArray(p.avoidSignals) && p.avoidSignals.length) {
+      brandLines.push(`AVOID — the creator recently rejected these (don't repeat): ${p.avoidSignals.join('; ')}.`);
+    }
     const extraBlock = [extra, brandLines.join('\n')].filter(Boolean).join('\n');
 
     return marketingKnowledge.buildSystemPrompt({

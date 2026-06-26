@@ -2035,6 +2035,9 @@ app.use('/api/ai/predictive', require('./routes/ai/predictive'));
 app.use('/api/ai/advanced', require('./routes/ai/advanced'));
 app.use('/api/ai/content-generation', require('./routes/ai/content-generation'));
 app.use('/api/ai/adapt', require('./routes/ai/adapt'));
+// Universal AI feedback (every surface) — closes the learn-from-feedback loop.
+// Specific path, mounted before the general /api/ai routers.
+app.use('/api/ai/feedback', require('./routes/ai/feedback'));
 // Unified asset generation (voiceover / SFX / image) for the editor's Generate
 // panel. Specific path so it takes precedence over the general /api/ai routers.
 app.use('/api/ai/generate', require('./routes/ai/generate'));

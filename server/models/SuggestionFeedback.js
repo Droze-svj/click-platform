@@ -20,6 +20,10 @@ const suggestionFeedbackSchema = new mongoose.Schema(
       enum: ['positive', 'negative', 'dismiss'],
       required: true,
     },
+    // When the creator tells us WHY a suggestion was wrong (regenerate / "bad:
+    // wrong tone / weak hook / too long"), we keep the reason so the personalized
+    // prompt can add an explicit "avoid …" line — i.e. learn from the mistake.
+    reason: { type: String, default: null },
     segmentId: { type: String, default: null },
     contentId: {
       type: mongoose.Schema.Types.ObjectId,
