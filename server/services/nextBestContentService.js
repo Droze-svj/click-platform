@@ -19,6 +19,7 @@
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const personalizationService = require('./personalizationService');
+const { isDevUser } = require('../utils/devUser');
 const logger = require('../utils/logger');
 
 const NEED_DATA = (reason = 'need-more-data') => ({ hasRealData: false, reason, ideas: [] });
@@ -43,13 +44,17 @@ function shapeIdea(raw, fallbackPlatform) {
   if (!raw || typeof raw !== 'object') return null;
   const title = typeof raw.title === 'string' ? raw.title.trim().slice(0, 160) : '';
   if (!title) return null;
+  // Drop sentinel junk a temperature>0 model can emit as free text, so the UI never
+  // renders "null potential" / "n/a".
+  const lift = typeof raw.expectedLift === 'string' ? raw.expectedLift.trim().slice(0, 80) : '';
+  const liftClean = /^(null|none|n\/?a|undefined|unknown)$/i.test(lift) ? '' : lift;
   return {
     title,
     hook: typeof raw.hook === 'string' ? raw.hook.trim().slice(0, 240) : '',
     platform: (typeof raw.platform === 'string' && raw.platform.trim()) || fallbackPlatform || 'tiktok',
     why: typeof raw.why === 'string' ? raw.why.trim().slice(0, 240) : '',
     // The model's qualitative estimate ONLY — we never fabricate a numeric lift.
-    expectedLift: typeof raw.expectedLift === 'string' ? raw.expectedLift.trim().slice(0, 80) : null,
+    expectedLift: liftClean || null,
   };
 }
 
@@ -63,7 +68,10 @@ function shapeIdea(raw, fallbackPlatform) {
  * @returns {Promise<{hasRealData:boolean, reason?:string, sampleSize?:number, niche?:string, groundedOn?:object, ideas:Array}>}
  */
 async function getNextBest(userId, { count = 4, niche, platform } = {}) {
-  if (!userId || String(userId).startsWith('dev-')) return NEED_DATA();
+  // isDevUser handles BOTH the 'dev-user-123' string AND its ObjectId form
+  // (000…001) — req.user._id is the ObjectId at runtime, so startsWith('dev-')
+  // alone would let the dev/mock user reach the live AI path.
+  if (!userId || isDevUser(userId)) return NEED_DATA();
   const n = Math.max(1, Math.min(8, Number(count) || 4));
 
   let persona;

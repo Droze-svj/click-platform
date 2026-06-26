@@ -40,11 +40,15 @@ function nicheDefaultWindows(niche) {
  * Engagement rate for a post: prefer engagement / reach when reach is known,
  * otherwise engagement / impressions, otherwise raw engagement.
  */
+// Engagement RATE in [0,1]. Requires a denominator (reach, else impressions) — a
+// post with neither returns null and is EXCLUDED from bucketing, so a raw count
+// (e.g. 100) can never be averaged against a ratio (e.g. 0.1) and dominate the
+// window ranking.
 function engagementRate(post) {
   const a = post.analytics || {};
   const denom = a.reach || a.impressions || 0;
   if (denom > 0) return (a.engagement || 0) / denom;
-  return a.engagement || 0;
+  return null;
 }
 
 /**
@@ -66,11 +70,14 @@ function bucketize(posts, timezone) {
     const dow = localized.getDay();         // 0 = Sun, 6 = Sat
     const hour = localized.getHours();      // 0..23
 
+    const er = engagementRate(post);
+    if (er == null) continue;   // no comparable rate — exclude, don't blend units
+
     if (!buckets[platform]) buckets[platform] = {};
     if (!buckets[platform][dow]) buckets[platform][dow] = {};
     if (!buckets[platform][dow][hour]) buckets[platform][dow][hour] = { score: 0, count: 0 };
 
-    buckets[platform][dow][hour].score += engagementRate(post);
+    buckets[platform][dow][hour].score += er;
     buckets[platform][dow][hour].count += 1;
   }
   return buckets;

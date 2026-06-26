@@ -110,8 +110,12 @@ async function recordFeedback(ev = {}) {
         userId,
         suggestionId: surface || null,
         facet: map.fbFacet,
-        key: key || (surface || itemType || 'unknown'),
-        signal: signal === 'edit' ? 'negative' : signal,
+        // Fall back to a CLEAN bounded string — never a raw (possibly non-string)
+        // body field — so a junk `surface`/`itemType` can't poison the row key.
+        key: key || categorical(surface) || categorical(itemType) || 'unknown',
+        // `signal` is already a valid enum value ('positive'|'negative'|'dismiss')
+        // at this point — the 'edit' case was reassigned to 'negative'/null above.
+        signal,
         reason: signal === 'negative' ? cleanReason : null,
         contentId: contentId || null,
         metadata: { surface: surface || null, itemType: itemType || null, action, magnitude: magnitude ?? null },

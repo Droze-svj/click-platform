@@ -65,6 +65,15 @@ describe('nextBestContentService.getNextBest', () => {
     expect(googleAI.generateContent).not.toHaveBeenCalled();
   });
 
+  it('catches the dev user by its OBJECTID form too (req.user._id at runtime)', async () => {
+    // The dev session's _id is the ObjectId 000…001, not the 'dev-user-123' string —
+    // a startsWith('dev-') check would miss it and hit the live AI path.
+    const r = await getNextBest('000000000000000000000001', { count: 4 });
+    expect(r.hasRealData).toBe(false);
+    expect(personalization.getPersona).not.toHaveBeenCalled();
+    expect(googleAI.generateContent).not.toHaveBeenCalled();
+  });
+
   it('degrades honestly when the AI returns unparseable junk', async () => {
     personalization.getPersona.mockResolvedValue(PROVEN_PERSONA);
     googleAI.generateContent.mockResolvedValue('sorry, no JSON here');
