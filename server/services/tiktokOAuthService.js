@@ -266,11 +266,19 @@ class TikTokOAuthService {
         }
       });
 
-      logger.info('TikTok: Video file uploaded successfully', { userId, publish_id });
-      return { 
-        id: publish_id, 
-        status: 'published',
-        url: 'https://www.tiktok.com/@user/video/' + publish_id // Placeholder URL pattern
+      logger.info('TikTok: video uploaded; TikTok is processing it (not live yet)', { userId, publish_id });
+      // HONEST status: the upload + init succeeded, but TikTok processes/reviews
+      // the video ASYNCHRONOUSLY — it is NOT published/live at this point (and for
+      // unaudited apps it may land in the creator's drafts). Reporting 'published'
+      // here would be a lie. Poll /v2/post/publish/status/fetch/ with publish_id
+      // for the real outcome. TikTok also does NOT return a public video URL at
+      // upload time, so we don't fabricate one (url: null until it's known).
+      return {
+        id: publish_id,
+        postId: publish_id,
+        publishId: publish_id,
+        status: 'processing',
+        url: null,
       };
     } catch (error) {
       logger.error('TikTok: Upload failed', { userId, error: error.response?.data || error.message });
