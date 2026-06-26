@@ -9,9 +9,32 @@
 
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
+const { NICHE_POSTING_WINDOWS } = require('./marketingKnowledge');
 
 const MIN_POSTS_FOR_RECOMMENDATION = parseInt(process.env.OPTIMAL_TIME_MIN_POSTS || '8', 10);
 const DEFAULT_LOOKBACK_DAYS = parseInt(process.env.OPTIMAL_TIME_LOOKBACK_DAYS || '90', 10);
+// Platforms to surface a generic niche-default for when the creator has no
+// history at all (so a brand-new user still sees a sensible, clearly-generic slot).
+const COLD_START_PLATFORMS = ['tiktok', 'instagram', 'youtube'];
+
+/**
+ * Generic niche-default windows (NOT the creator's data). Each carries
+ * `source:'niche-default'` + `meanEngagement:null` so the UI labels it honestly
+ * ("typical {niche} audience times — not yet personalized") and never presents a
+ * generic slot as a measured personal best.
+ */
+function nicheDefaultWindows(niche) {
+  const key = String(niche || 'other').toLowerCase();
+  const table = NICHE_POSTING_WINDOWS[key] || NICHE_POSTING_WINDOWS.other || [];
+  return table.map((w) => ({
+    dayOfWeek: null,          // the generic table isn't day-specific
+    hour: w.start,
+    label: w.label,
+    sampleSize: 0,
+    meanEngagement: null,     // honest: no measured engagement behind a default
+    source: 'niche-default',
+  }));
+}
 
 /**
  * Engagement rate for a post: prefer engagement / reach when reach is known,
@@ -73,6 +96,7 @@ function topWindowsForPlatform(platformBuckets, totalPostsOnPlatform, topN = 3) 
         hour,
         sampleSize: count,
         meanEngagement: score / count,
+        source: 'your-history',   // measured from THIS creator's real posts
       });
     }
   }
@@ -103,6 +127,8 @@ async function getOptimalPostingWindows(userId, opts = {}) {
     platform = null,
     timezone = null,
     lookbackDays = DEFAULT_LOOKBACK_DAYS,
+    niche = null,
+    includeNicheFallback = true,
   } = opts;
 
   const startDate = new Date(Date.now() - lookbackDays * 86400000);
@@ -119,27 +145,65 @@ async function getOptimalPostingWindows(userId, opts = {}) {
     .lean();
 
   const buckets = bucketize(posts, timezone);
-  const platformsConsidered = platform ? [platform.toLowerCase()] : Object.keys(buckets);
+
+  // Which platforms to report on: an explicit filter, else the ones the creator
+  // has actually posted to, else (cold start) a small default set so the niche
+  // fallback still has somewhere to land.
+  let platformsConsidered = platform ? [platform.toLowerCase()] : Object.keys(buckets);
+  if (!platformsConsidered.length && includeNicheFallback) platformsConsidered = COLD_START_PLATFORMS.slice();
+
+  // Resolve the niche once (only needed for the fallback) — best-effort, never fatal.
+  let resolvedNiche = niche;
+  if (includeNicheFallback && !resolvedNiche) {
+    try {
+      const User = require('../models/User');
+      const u = await User.findById(userId).select('niche').lean();
+      resolvedNiche = u?.niche || 'other';
+    } catch (_) {
+      resolvedNiche = 'other';
+    }
+  }
 
   const windowsByPlatform = {};
   const nextSuggested = {};
+  const source = {};                 // per-platform: 'your-history' | 'niche-default' | 'none'
   let anyConfident = false;
+  let usedFallback = false;
 
   for (const plat of platformsConsidered) {
     const platBuckets = buckets[plat] || {};
     const platCount = posts.filter(p => p.platform === plat).length;
     const tops = topWindowsForPlatform(platBuckets, platCount);
-    windowsByPlatform[plat] = tops;
-    nextSuggested[plat] = tops.length > 0 ? nextOccurrenceISO(tops[0], timezone) : null;
-    if (tops.length > 0) anyConfident = true;
+
+    if (tops.length > 0) {
+      // Personalized: real measured windows from this creator's own posts.
+      windowsByPlatform[plat] = tops;
+      nextSuggested[plat] = nextOccurrenceISO(tops[0], timezone);
+      source[plat] = 'your-history';
+      anyConfident = true;
+    } else if (includeNicheFallback) {
+      // Honest generic fallback — clearly labeled, never presented as personal data.
+      const fb = nicheDefaultWindows(resolvedNiche);
+      windowsByPlatform[plat] = fb;
+      nextSuggested[plat] = fb.length > 0 ? nextOccurrenceISO(fb[0], timezone) : null;
+      source[plat] = fb.length > 0 ? 'niche-default' : 'none';
+      if (fb.length > 0) usedFallback = true;
+    } else {
+      windowsByPlatform[plat] = [];
+      nextSuggested[plat] = null;
+      source[plat] = 'none';
+    }
   }
 
   return {
-    confident: anyConfident,
+    confident: anyConfident,        // true only when at least one platform used REAL data
+    usedFallback,                   // true when any platform fell back to the niche default
+    niche: includeNicheFallback ? resolvedNiche : null,
     sampleSize: posts.length,
     minRequired: MIN_POSTS_FOR_RECOMMENDATION,
     windows: windowsByPlatform,
     nextSuggested,
+    source,
   };
 }
 
@@ -150,15 +214,22 @@ async function getOptimalPostingWindows(userId, opts = {}) {
 function nextOccurrenceISO(window, timezone) {
   if (!window) return null;
   const now = new Date();
-  // Find the next date matching `window.dayOfWeek`.
   const result = new Date(now);
-  const daysAhead = (window.dayOfWeek - now.getDay() + 7) % 7;
-  result.setDate(now.getDate() + daysAhead);
-  result.setHours(window.hour, 0, 0, 0);
 
-  // If the slot is today but already past, jump to next week.
-  if (result.getTime() <= now.getTime()) {
-    result.setDate(result.getDate() + 7);
+  if (window.dayOfWeek == null) {
+    // Any-day suggestion (generic niche default): next occurrence of this hour —
+    // today if it's still ahead, otherwise tomorrow.
+    result.setHours(window.hour, 0, 0, 0);
+    if (result.getTime() <= now.getTime()) result.setDate(result.getDate() + 1);
+  } else {
+    // Find the next date matching `window.dayOfWeek`.
+    const daysAhead = (window.dayOfWeek - now.getDay() + 7) % 7;
+    result.setDate(now.getDate() + daysAhead);
+    result.setHours(window.hour, 0, 0, 0);
+    // If the slot is today but already past, jump to next week.
+    if (result.getTime() <= now.getTime()) {
+      result.setDate(result.getDate() + 7);
+    }
   }
 
   // If a timezone is provided, shift so the local hour matches.
