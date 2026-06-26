@@ -21,25 +21,30 @@ Since this doc was first written the system moved further forward:
   make these classes impossible to silently reship.
 - **Safe local testing**: a dev DB-safety guard (`isRemoteProdUri`) now refuses to connect a
   non-production boot to the Atlas prod DB — see **"Run Click locally (safely)"** below.
+- **Per-user uniqueness — proven, not assumed.** A whole-system audit confirmed strong data
+  isolation + real personalization; the gap was that nothing *proved* it. New
+  `tests/integration/userIsolation.test.js` (5 tests) seeds two users and asserts read isolation
+  (A's list excludes B's; B's content by id → 404, no existence leak), write isolation, and
+  **personalization uniqueness** (each user's learned `UserStyleProfile` + the AI system prompt
+  built from it reflect their own picks and differ from the other user's and from the generic
+  cold-start). Live two-user boot also confirmed AI returns per-user results.
+- **TikTok publish fixed**: the social-posting worker never handled `tiktok` (every scheduled
+  TikTok post died as "Unsupported platform"); now wired to the real upload, failing honestly
+  when no video file is present. Removed a dead fabricated-metrics module (`devAnalyticsStore.js`).
 
-**Current gates (this pass, on `main`):** full server suite **690 passing / 0 failing** ·
-`eslint server/` **0 errors** · client `tsc` **clean** · `next build` **101/101 pages** ·
-local boot → `/api/health` **ok** on isolated in-memory Mongo (prod Atlas untouched).
+**Current gates (this pass, on `main`):** unit + integration **806 passing / 0 failing (×2)** ·
+`smoke:full` green (no GET 5xx) · `security` green · `eslint server/` **0 errors** · client `tsc`
+**clean** · `next build` **101/101 pages** · live two-user boot on isolated in-memory Mongo (prod
+Atlas untouched, verified by the `🛡️ DB SAFETY` refusal).
 
-## The one thing that gates "real AI"
+## Real AI in prod — DONE ✅ (was the one operational gate)
 
-Your prod AI is currently **mock** — `GOOGLE_AI_API_KEY` is unset in Render, so every AI
-feature returns canned text (verified). To go live:
-
-1. Render → `click-platform-1` → Environment → add **`GOOGLE_AI_API_KEY`** (from
-   https://aistudio.google.com/apikey) → save (redeploys).
-2. Confirm from anywhere:
-   ```bash
-   curl "https://click-platform-1.onrender.com/api/health/ai?live=1"
-   ```
-   Want: `"mode":"live AI"`, `"liveTest":"ok"`. (`"FALLBACK"` = key still missing.)
-
-Until then the app runs, but AI output is the hardcoded fallback.
+`GOOGLE_AI_API_KEY` is now **set in Render** and verified live:
+`curl "https://click-platform-1.onrender.com/api/health/ai?live=1"` →
+`"mode":"live AI"`, `"liveTest":"ok"`. Prod AI is real Gemini (gemini-2.5-flash), not the
+fallback. (If it ever flips to `"FALLBACK"`/`"mode":"mock"`, the key was removed or the quota
+ran out — the dashboard `AIHealthBanner` surfaces this, and in prod the AI helpers return `null`
+honestly rather than serving generic content.)
 
 ## Verification (this pass, on `main`)
 
