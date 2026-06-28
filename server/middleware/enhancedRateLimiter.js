@@ -292,10 +292,21 @@ const endpointLimiters = {
   }),
 };
 
+// Build the per-tier limiters ONCE at module load. Previously the middleware
+// called getSubscriptionLimiter() per request, creating a brand-new limiter with
+// a fresh MemoryStore every time — so the count never accumulated and the limiter
+// was a silent no-op. Memoizing makes it actually enforce.
+const subscriptionLimiters = {
+  free: getSubscriptionLimiter('free'),
+  basic: getSubscriptionLimiter('basic'),
+  pro: getSubscriptionLimiter('pro'),
+  enterprise: getSubscriptionLimiter('enterprise'),
+};
+
 // Middleware to apply subscription-based rate limiting
 function subscriptionRateLimiter(req, res, next) {
   const tier = req.user?.subscription?.plan || 'free';
-  const limiter = getSubscriptionLimiter(tier);
+  const limiter = subscriptionLimiters[tier] || subscriptionLimiters.free;
   return limiter(req, res, next);
 }
 

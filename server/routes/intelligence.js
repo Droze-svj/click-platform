@@ -266,7 +266,7 @@ router.post('/factory/save', async (req, res) => {
     const { manifest, topic, platform } = req.body;
     
     const newScript = new Script({
-      userId: req.user.id,
+      userId: req.user._id,
       title: `${topic || 'Untitled'} - ${platform}`,
       type: 'social-media',
       topic: topic,

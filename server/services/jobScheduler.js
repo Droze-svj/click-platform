@@ -364,5 +364,9 @@ module.exports = {
   processScheduledPosts,
   cleanupOldJobs,
   initializeScheduler,
+  // Exported so the LIVE scheduler cron (routes/scheduler.js) can recover posts
+  // stranded in 'publishing' by a crashed worker, even though this module's own
+  // cron (initializeScheduler) isn't started.
+  resetStuckPublishing,
 };
 

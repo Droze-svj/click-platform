@@ -65,14 +65,19 @@ async function postToSocialMedia(userId, platform, contentData, options = {}) {
     if (contentId && result.success) {
       await Content.findByIdAndUpdate(contentId, {
         $push: {
+          // Cap the embedded array (keep the latest 100) so a piece republished
+          // many times can't grow the Content doc toward the 16MB BSON limit.
           'generatedContent.socialPosts': {
-            platform,
-            content: description,
-            hashtags: tags,
-            mediaUrl: mediaUrl,
-            externalId: result.externalId,
-            postUrl: result.postUrl,
-            postedAt: new Date()
+            $each: [{
+              platform,
+              content: description,
+              hashtags: tags,
+              mediaUrl: mediaUrl,
+              externalId: result.externalId,
+              postUrl: result.postUrl,
+              postedAt: new Date()
+            }],
+            $slice: -100
           }
         }
       });

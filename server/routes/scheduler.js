@@ -404,6 +404,19 @@ cron.schedule('* * * * *', async () => {
     }
 
     const now = new Date();
+
+    // Recover posts stranded in 'publishing' by a crashed/killed worker — the
+    // claim flips scheduled→publishing, so a crash mid-post leaves the row
+    // unselectable forever (this cron only scans 'scheduled'). Sweep ~every 5
+    // min back to 'scheduled' so the next tick re-queues them.
+    if (now.getMinutes() % 5 === 0) {
+      try {
+        await require('../services/jobScheduler').resetStuckPublishing();
+      } catch (e) {
+        logger.warn('stuck-publishing recovery failed', { error: e.message });
+      }
+    }
+
     const posts = await ScheduledPost.find({
       status: 'scheduled',
       scheduledTime: { $lte: now }

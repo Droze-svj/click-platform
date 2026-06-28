@@ -184,11 +184,16 @@ async function batchAnalyzeConfidence(contentIds, context = {}) {
   try {
     const results = [];
 
-    for (const contentId of contentIds) {
+    // Fetch all documents in ONE query instead of a serial findById per id (N+1).
+    const Content = require('../models/Content');
+    const ids = Array.isArray(contentIds) ? contentIds : [];
+    const docs = ids.length ? await Content.find({ _id: { $in: ids } }).lean() : [];
+    const byId = new Map(docs.map((d) => [String(d._id), d]));
+
+    for (const contentId of ids) {
       try {
-        const Content = require('../models/Content');
-        const content = await Content.findById(contentId).lean();
-        
+        const content = byId.get(String(contentId));
+
         if (content) {
           const score = await analyzeContentConfidence(contentId, content, context);
           results.push({
