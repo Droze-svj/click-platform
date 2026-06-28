@@ -17,8 +17,9 @@ const User = require('../models/User');
 logger.debug('📦 User model loaded');
 const auth = require('../middleware/auth');
 logger.debug('📦 auth middleware loaded');
-const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
+const { uploadLimiter, aiLimiter } = require('../middleware/enhancedRateLimiter');
 logger.debug('📦 uploadLimiter loaded');
+const captionStore = require('../services/captionStore');
 const { generateCaptions, detectHighlights } = require('../services/aiService');
 logger.debug('📦 aiService loaded');
 logger.debug('📦 whisperService skipped (legacy, superceded by aiTranscriptionService)');
@@ -644,13 +645,19 @@ async function processVideo(contentId, videoPath, user, options = {}) {
     const transcriptLanguage = content.language || 'auto';
     const transcript = await generateTranscript(videoPath, transcriptLanguage, user._id.toString(), contentId);
     
-    // Save structured data to both legacy and 2026-precise fields
+    // Save structured data: heavy word timing → Caption collection (off Content,
+    // no 16MB risk); a slim marker stays embedded for content.save() below.
     content.transcript = transcript.text;
-    content.captions = {
+    await captionStore.saveSource(contentId, {
       text: transcript.text,
       words: transcript.words,
       language: transcript.language,
-      generatedAt: new Date()
+      generatedAt: new Date(),
+    }, { embedSlim: false });
+    content.captions = {
+      text: transcript.text,
+      language: transcript.language,
+      generatedAt: new Date(),
     };
     
     // Persist the language we transcribed in so downstream AI services
@@ -989,7 +996,15 @@ router.get('/', auth, async (req, res) => {
       });
     }
 
-    const videos = await Content.find({ userId, type: 'video' }).sort({ createdAt: -1 });
+    // Exclude the heavy, unbounded blobs the list view never reads (captions.words
+    // can be megabytes on long videos; editorState/transcript likewise) and cap +
+    // lean the query so a large library can't load tens of MB into memory.
+    // TODO(scale): replace the 200 cap with cursor pagination (page/limit params).
+    const videos = await Content.find({ userId, type: 'video' })
+      .select('-captions -editorState -transcript')
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
     res.json({
       success: true,
       data: videos
@@ -2231,7 +2246,7 @@ router.post('/editor/save', auth, async (req, res) => {
  * Uses Whisper verbose_json + word timestamps. Video must be a local upload.
  * Requirements: OPENAI_API_KEY set; video is a local upload (not remote/sample).
  */
-router.post('/transcribe-editor', auth, async (req, res) => {
+router.post('/transcribe-editor', auth, aiLimiter, async (req, res) => {
   try {
     if (!isTranscriptionConfigured()) {
       return res.status(503).json({
@@ -2254,6 +2269,7 @@ router.post('/transcribe-editor', auth, async (req, res) => {
 
     let video = null;
     let fileUrl = null;
+    let contentDoc = null;
 
     if (allowDevMode && (videoId.startsWith('dev-content-') || videoId.startsWith('dev-'))) {
       video = devVideoStore.get(videoId);
@@ -2264,16 +2280,38 @@ router.post('/transcribe-editor', auth, async (req, res) => {
       try {
         const mongoose = require('mongoose');
         if (mongoose.Types.ObjectId.isValid(videoId)) {
-          const content = await Content.findOne({
+          contentDoc = await Content.findOne({
             _id: videoId,
             userId,
             type: 'video'
           });
-          if (content?.originalFile?.url) fileUrl = content.originalFile.url;
+          if (contentDoc?.originalFile?.url) fileUrl = contentDoc.originalFile.url;
         }
       } catch (e) {
         logger.warn('Transcribe-editor content lookup failed', { videoId, error: e?.message });
       }
+    }
+
+    // Cache short-circuit: if we already transcribed this video (upload job or a
+    // prior call persisted captions), reuse the stored words instead of re-running
+    // the paid transcription on every editor open. Only for the same/auto language.
+    // Read via captionStore (Caption collection, with embedded fallback).
+    const cachedSrc = await captionStore.getSource(videoId, { content: contentDoc });
+    const cacheLangOk = language === 'auto' || !cachedSrc?.language ||
+      String(cachedSrc.language).toLowerCase() === String(language).toLowerCase();
+    if (cachedSrc && Array.isArray(cachedSrc.words) && cachedSrc.words.length && cacheLangOk) {
+      return res.json({
+        success: true,
+        cached: true,
+        data: {
+          text: cachedSrc.text || '',
+          words: cachedSrc.words.map((w) => ({
+            word: w.word || '',
+            start: typeof w.start === 'number' ? w.start : parseFloat(w.start) || 0,
+            end: typeof w.end === 'number' ? w.end : parseFloat(w.end) || 0,
+          })),
+        },
+      });
     }
 
     if (!fileUrl || typeof fileUrl !== 'string') {
@@ -2319,6 +2357,22 @@ router.post('/transcribe-editor', auth, async (req, res) => {
       start: typeof w.start === 'number' ? w.start : parseFloat(w.start) || 0,
       end: typeof w.end === 'number' ? w.end : parseFloat(w.end) || 0
     }));
+
+    // Persist so the next editor open (or auto-caption) reuses these words and
+    // never re-bills transcription for the same video. Heavy words → Caption
+    // collection (off Content). Best-effort, non-blocking.
+    if (contentDoc && words.length) {
+      try {
+        await captionStore.saveSource(videoId, {
+          text: result.text || '',
+          words,
+          language: result.language || (language !== 'auto' ? language : undefined) || 'en',
+          generatedAt: new Date(),
+        });
+      } catch (persistErr) {
+        logger.warn('Transcribe-editor persist failed', { videoId, error: persistErr.message });
+      }
+    }
 
     return res.json({
       success: true,

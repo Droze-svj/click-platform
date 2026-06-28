@@ -6,6 +6,7 @@ const cache = require('../utils/cache');
 const { toAbsolutePath } = require('../utils/pathUtils');
 const { captureException } = require('../utils/sentry');
 const Content = require('../models/Content');
+const captionStore = require('./captionStore');
 
 // Whisper transcription can legitimately take a while for long videos, but
 // "forever" is never right. 120s per request, overridable.
@@ -117,20 +118,16 @@ async function generateCaptionsForContent(contentId, videoFilePath, options = {}
     // Format captions based on requested format
     const formattedCaptions = formatCaptions(transcript, format);
 
-    // Save captions to content
-    await Content.findByIdAndUpdate(contentId, {
-      $set: {
-        transcript: transcript.text,
-        captions: {
-          text: transcript.text,
-          language: transcript.language,
-          format,
-          segments: transcript.segments,
-          words: transcript.words,
-          formatted: formattedCaptions,
-          generatedAt: new Date(),
-        },
-      },
+    // Persist via captionStore: heavy fields (words/segments/formatted) go to the
+    // Caption collection, a slim marker stays on Content (no 16MB BSON risk).
+    await captionStore.saveSource(contentId, {
+      text: transcript.text,
+      language: transcript.language,
+      format,
+      segments: transcript.segments,
+      words: transcript.words,
+      formatted: formattedCaptions,
+      generatedAt: new Date(),
     });
 
     logger.info('Captions saved to content', { contentId, format, language: transcript.language });
@@ -142,6 +139,8 @@ async function generateCaptionsForContent(contentId, videoFilePath, options = {}
       format,
       captions: formattedCaptions,
       segments: transcript.segments,
+      // Surface word-level timing so the client can one-click "snap to speech".
+      words: transcript.words || [],
     };
   } catch (error) {
     logger.error('Error generating captions for content', {
@@ -419,52 +418,53 @@ Segment: "${originalSeg.text}"`;
  * directly to a video player or burn-in pipeline.
  */
 async function ensureCaptionsInLanguage(contentId, targetLanguage, format = 'srt') {
-  const content = await Content.findById(contentId);
-  if (!content) throw new Error('Content not found');
-  if (!content.captions?.text) {
-    throw new Error('Captions have not been generated yet. Generate base captions first.');
-  }
   const target = String(targetLanguage || '').toLowerCase();
   if (!target) throw new Error('targetLanguage required');
 
-  const sourceLang = String(content.captions.language || 'en').toLowerCase();
-  // Already in the right language → no-op.
+  // Source captions (collection, with embedded fallback for un-migrated content).
+  const source = await captionStore.getSource(contentId);
+  if (!source || !source.text) {
+    throw new Error('Captions have not been generated yet. Generate base captions first.');
+  }
+  const sourceLang = String(source.language || 'en').toLowerCase();
+
+  // Already in the right language → return the source captions.
   if (sourceLang === target || sourceLang.split('-')[0] === target.split('-')[0]) {
     return {
       language: sourceLang,
-      text: content.captions.text,
-      segments: content.captions.segments || [],
-      formatted: content.captions.formatted || formatCaptions({ text: content.captions.text, segments: content.captions.segments || [] }, format),
+      text: source.text,
+      segments: source.segments || [],
+      // Original-language word timings (translations are segment-level only).
+      words: source.words || [],
+      formatted: source.formatted || formatCaptions({ text: source.text, segments: source.segments || [] }, format),
       cached: true,
     };
   }
+
   // Cached translation exists → return it.
-  const cached = content.captions.translations?.[target];
-  if (cached?.text && Array.isArray(cached.segments)) {
+  const existing = await captionStore.getInLanguage(contentId, target);
+  if (existing && !existing.isSource && existing.text) {
     return {
       language: target,
-      text: cached.text,
-      segments: cached.segments,
-      formatted: cached.formatted || formatCaptions({ text: cached.text, segments: cached.segments }, format),
+      text: existing.text,
+      segments: existing.segments || [],
+      formatted: existing.formatted || formatCaptions({ text: existing.text, segments: existing.segments || [] }, format),
       cached: true,
     };
   }
 
   // Generate the translation, preserving per-segment timing.
-  const translatedSegments = await translateSegments(content.captions.segments || [], target);
+  const translatedSegments = await translateSegments(source.segments || [], target);
   const translatedText = translatedSegments.map(s => s.text).join(' ').trim();
   const formatted = formatCaptions({ text: translatedText, segments: translatedSegments }, format);
 
-  // Persist into captions.translations[target].
-  const update = {};
-  update[`captions.translations.${target}`] = {
+  await captionStore.saveTranslation(contentId, target, {
     text: translatedText,
     segments: translatedSegments,
     formatted,
     format,
     translatedAt: new Date(),
-  };
-  await Content.findByIdAndUpdate(contentId, { $set: update });
+  });
 
   return { language: target, text: translatedText, segments: translatedSegments, formatted, cached: false };
 }
@@ -492,7 +492,7 @@ async function generateAutoCaptions(videoId, options = {}) {
     const duration = content?.originalFile?.duration || content?.metadata?.duration || 60;
     const language = content?.language || 'en';
 
-    let words = content?.captions?.words;
+    let words = await captionStore.getWords(videoId, { content });
     if (Array.isArray(words) && words.length > 0 && stripFillerWords) {
       // Drop "um/uh/eh/etc." while preserving every other word's
       // original timing — caption density goes up without changing the
@@ -646,22 +646,23 @@ async function getCaptions(contentId, format = 'srt') {
     if (!content) {
       throw new Error('Content not found');
     }
-
-    if (!content.captions) {
+    // Read via captionStore (Caption collection, embedded fallback for un-migrated).
+    const src = await captionStore.getSource(contentId, { content });
+    if (!src || !src.text) {
       throw new Error('Captions not generated for this content');
     }
 
     // Return formatted captions in requested format
-    if (format && content.captions.format !== format) {
+    if (format && src.format !== format) {
       // Re-format if different format requested
       return {
-        text: content.captions.text,
-        language: content.captions.language,
+        text: src.text,
+        language: src.language,
         format,
         captions: formatCaptions(
           {
-            segments: content.captions.segments,
-            text: content.captions.text,
+            segments: src.segments,
+            text: src.text,
           },
           format
         ),
@@ -669,11 +670,11 @@ async function getCaptions(contentId, format = 'srt') {
     }
 
     return {
-      text: content.captions.text,
-      language: content.captions.language,
-      format: content.captions.format,
-      captions: content.captions.formatted,
-      segments: content.captions.segments,
+      text: src.text,
+      language: src.language,
+      format: src.format,
+      captions: src.formatted,
+      segments: src.segments,
     };
   } catch (error) {
     logger.error('Error getting captions', { contentId, error: error.message });
@@ -690,15 +691,16 @@ async function generateTranslatedCaptions(contentId, targetLang) {
   
   try {
     const content = await Content.findById(contentId);
-    if (!content || !content.captions?.segments) {
+    const sourceSegments = await captionStore.getSegments(contentId, { content });
+    if (!content || !sourceSegments?.length) {
       throw new Error('Original captions not found');
     }
 
     logger.info(`Phase 15: Generating ${targetLang} translation for content ${contentId}`);
-    
+
     // Translate segments
     const translatedSegments = await translationService.translateSegments(
-      content.captions.segments,
+      sourceSegments,
       targetLang
     );
 
