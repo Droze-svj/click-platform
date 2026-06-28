@@ -1,4 +1,20 @@
 {
+  "captionSetup": {
+    "stepBadge": "Step \u00b7 Captions",
+    "title": "Set up your captions",
+    "subtitle": "Pick a look \u2014 your auto-captions open in the editor already styled, synced word-for-word to speech.",
+    "platformsLabel": "Where do you post?",
+    "styleLabel": "Caption style",
+    "sampleWord": "Caption",
+    "snapTitle": "Snap captions to speech",
+    "snapDesc": "Lock every caption to the exact spoken word \u2014 auto-fixes drift.",
+    "snapAria": "Toggle snap captions to speech",
+    "saving": "Saving\u2026",
+    "save": "Save & continue",
+    "skip": "Skip for now",
+    "generating": "Generating captions\u2026",
+    "ready": "Captions ready \u2014 snapped to speech"
+  },
   "calendarPage": {
     "title": "Content Calendar",
     "subtitle": "Manage and review your cross-platform content schedule.",

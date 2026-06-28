@@ -227,9 +227,12 @@ export default function Register() {
           }
         }
         // Carry the niche into the dashboard so the welcome banner can greet
-        // the user with their real, chosen workspace.
+        // the user with their real, chosen workspace. Route brand-new users
+        // through the one-step caption setup first, then on to the welcome
+        // dashboard (passed as `next`) so onboarding starts with their captions.
         const nicheParam = chosenNiche ? `&niche=${encodeURIComponent(chosenNiche)}` : ''
-        router.push(`/dashboard?welcome=1${nicheParam}`)
+        const welcomeDest = `/dashboard?welcome=1${nicheParam}`
+        router.push(`/dashboard/onboarding/captions?next=${encodeURIComponent(welcomeDest)}`)
       } else if (response.data?.requiresVerification || response.success) {
         router.push(`/registration-success?verification=required&email=${encodeURIComponent(email)}`)
       }

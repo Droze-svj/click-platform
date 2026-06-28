@@ -33,7 +33,7 @@ import {
   Share2,
   type LucideIcon,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
 
 // Clinical Utilities
 import { getStatusColor, loadEditorContentPreferences, pushRecentSection } from '../utils/editorUtils'
@@ -111,7 +111,8 @@ import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
 import { buildBeatCutPlan, planToSegments } from '../lib/beatCuts'
-import { planAutoViralEdit } from '../lib/autoViralEdit'
+import { planAutoViralEdit, buildViralCaptions } from '../lib/autoViralEdit'
+import { realignOverlaysToSpeech } from '../utils/captionAlign'
 import { resolveGrade, applyGrade } from '../lib/colorGrades'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useBrandKit } from './BrandKit'
@@ -246,21 +247,28 @@ const ModernVideoEditor: React.FC<{
    * landing in the editor.
    */
   initialAiTool?: 'silence' | 'fillers' | 'edit-by-text' | null;
-}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool }) => {
+  /** Build a speech-synced caption track on first open (set after a fresh upload). */
+  autoGenerateCaptions?: boolean;
+}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool, autoGenerateCaptions }) => {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const brandKit = useBrandKit()
   const actualVideoUrl = getAssetUrl(videoUrl || videoPath || '')
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  // Decorative parallax nebula. Driven by MotionValues, NOT React state, so mouse
+  // movement updates the transform directly without re-rendering this 3k-line editor
+  // (and the preview/timeline beneath it) on every mousemove.
+  const nebulaX = useMotionValue(0)
+  const nebulaY = useMotionValue(0)
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY })
+      nebulaX.set(e.clientX / 100)
+      nebulaY.set(e.clientY / 100)
     }
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
+  }, [nebulaX, nebulaY])
 
   // ── Consolidated UI & Interaction State ──
   const [activeCategoryState, setActiveCategoryState] = useState<EditorCategory>(() => {
@@ -322,6 +330,9 @@ const ModernVideoEditor: React.FC<{
   // state rather than showing fake content as real.
   const [transcript, setTranscript] = useState<Transcript | null>(null)
   const [editingWords, setEditingWords] = useState<any[]>([])
+  // Detected music beats (seconds) for end-to-end beat-sync snapping on the timeline.
+  const [beatTimes, setBeatTimes] = useState<number[]>([])
+  const beatsFetchedForRef = useRef<string | null>(null)
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([])
   const [videoState, setVideoState] = useState({ currentTime: 0, duration: 0, isPlaying: false, volume: 1, isMuted: false })
   const [videoFilters, setVideoFilters] = useState<VideoFilter>(NEUTRAL_FILTER)
@@ -876,9 +887,11 @@ const ModernVideoEditor: React.FC<{
     if (typeof window === 'undefined') return false
     try { return localStorage.getItem(SNAP_TO_KEYFRAMES_KEY) === '1' } catch { return false }
   })
-  const [captionStyle, setCaptionStyle] = useState<CaptionStyle | null>({
-    enabled: true, size: 'medium', font: 'Inter, sans-serif', layout: 'bottom-center', textStyle: 'default'
-  })
+  const [captionStyle, setCaptionStyle] = useState<CaptionStyle | null>(() => ({
+    enabled: true, size: 'medium', font: 'Inter, sans-serif', layout: 'bottom-center',
+    // Honour the caption look the creator picked during onboarding.
+    textStyle: loadEditorContentPreferences().defaultCaptionStyle || 'default',
+  }))
   const [templateLayout, setTemplateLayout] = useState<TemplateLayout>('standard')
   const [useProfessionalTimeline, setUseProfessionalTimeline] = useState(true)
   const [visitedWorkflowSteps, setVisitedWorkflowSteps] = useState<Set<EditorCategory>>(new Set())
@@ -959,6 +972,77 @@ const ModernVideoEditor: React.FC<{
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actualVideoUrl, loadSavedState, showToast, videoState.duration, setTimelineSegments]) // Runs on mount or when URL changes
+
+  // Auto-captions on first open after a fresh upload (?autoCaptions=1): fetch the
+  // Whisper words (generating them if needed), build a word-mode caption track in
+  // the creator's chosen style, snap it to speech, and drop it on the timeline —
+  // so they land ready to edit. Runs once; never clobbers an existing caption track.
+  const autoCaptionDoneRef = useRef(false)
+  useEffect(() => {
+    if (!autoGenerateCaptions || autoCaptionDoneRef.current || !videoId) return
+    if (textOverlays.some((o: TextOverlay) => !!o.captionMode)) { autoCaptionDoneRef.current = true; return }
+    autoCaptionDoneRef.current = true
+    let cancelled = false
+    const rowsFromWords = (ws: any[]) => {
+      const rows: { text: string; startTime: number; endTime: number }[] = []
+      for (let i = 0; i < ws.length; i += 7) {
+        const slice = ws.slice(i, i + 7)
+        if (!slice.length) continue
+        rows.push({
+          text: slice.map((w: any) => w.text || w.word || '').join(' ').trim(),
+          startTime: Number(slice[0].start),
+          endTime: Number(slice[slice.length - 1].end),
+        })
+      }
+      return rows
+    }
+    ;(async () => {
+      try {
+        let payload: any = null
+        try {
+          const got = await apiGet<any>(`/video/captions/${videoId}?format=srt`)
+          payload = (got?.data ?? got) || null
+        } catch { /* not generated yet — fall through */ }
+        let words: any[] = Array.isArray(payload?.words) ? payload.words : []
+        let segments: any[] = Array.isArray(payload?.segments) ? payload.segments : []
+        if (!words.length) {
+          showToast(t('captionSetup.generating'), 'info')
+          const gen = await apiPost<any>('/video/captions/generate', { contentId: videoId })
+          const gp = (gen?.data ?? gen) || {}
+          words = Array.isArray(gp.words) ? gp.words : []
+          segments = Array.isArray(gp.segments) ? gp.segments : segments
+          if (!payload) payload = gp
+        }
+        if (cancelled || !words.length) return
+        const rows = segments
+          .map((s: any) => ({ text: s.text, startTime: Number(s.start), endTime: Number(s.end) }))
+          .filter((r: any) => r.text && Number.isFinite(r.startTime) && Number.isFinite(r.endTime))
+        const built = buildViralCaptions(rows.length ? rows : rowsFromWords(words), words, { idPrefix: 'auto-caption' })
+        // Apply the creator's chosen caption look (from onboarding) ONLY when they
+        // picked a real style — otherwise keep buildViralCaptions' viral default so
+        // 'default' doesn't silently flatten the look.
+        const desiredStyle = captionStyle?.textStyle
+        const styled = (desiredStyle && desiredStyle !== 'default')
+          ? built.map((o) => ({ ...o, style: desiredStyle as any }))
+          : built
+        const speechWords = words
+          .map((w: any) => ({ start: Number(w.start), end: Number(w.end) }))
+          .filter((w) => Number.isFinite(w.start) && Number.isFinite(w.end))
+        const { overlays: aligned } = realignOverlaysToSpeech(styled, speechWords)
+        if (cancelled || !aligned.length) return
+        // Apply-time guard so we never clobber a project's existing captions.
+        setTextOverlays((prev: TextOverlay[]) =>
+          prev.some((o) => !!o.captionMode) ? prev : [...prev, ...(aligned as TextOverlay[])],
+        )
+        setTranscript((prev) => prev || ({ words, segments, fullText: payload?.text || '' } as any))
+        showToast(t('captionSetup.ready'), 'success')
+      } catch {
+        // Non-blocking: the creator can still generate captions manually.
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerateCaptions, videoId])
 
   // ── Effects ──
   useEffect(() => {
@@ -1553,6 +1637,8 @@ const ModernVideoEditor: React.FC<{
     }
 
     const sortedBeats = [...beats].sort((a, b) => a - b)
+    // Feed the magnet too: after a manual beat-sync, the timeline snaps to beats.
+    setBeatTimes(sortedBeats)
     const nearestBeat = (time: number): number => {
       let best = sortedBeats[0]
       let bestDist = Math.abs(time - best)
@@ -1578,6 +1664,33 @@ const ModernVideoEditor: React.FC<{
 
     showToast(t('modernVideoEditor.beatSyncAligned'), 'success')
   }, [timelineSegments, showToast, setTimelineSegments, actualVideoUrl, videoId, t])
+
+  // Beat-sync goes live end-to-end: lazily detect beats ONCE per source so the
+  // timeline magnet can snap clips/captions to the music (sibling of Snap-to-Speech).
+  // Background + silent — the manual "Beat Sync" action still surfaces errors/toasts.
+  useEffect(() => {
+    const src = actualVideoUrl || videoId
+    if (!src || beatsFetchedForRef.current === src) return
+    beatsFetchedForRef.current = src
+    let cancelled = false
+    ;(async () => {
+      try {
+        const params = new URLSearchParams()
+        if (actualVideoUrl) params.set('videoUrl', actualVideoUrl)
+        else if (videoId) params.set('contentId', videoId)
+        const res = await apiGet<{ data?: { beats?: number[]; hasAudio?: boolean } }>(
+          `/video/manual-editing/beats?${params.toString()}`
+        )
+        const payload = (res?.data ?? (res as any)) || {}
+        const beats = Array.isArray(payload.beats) ? payload.beats.filter((b: any) => typeof b === 'number') : []
+        if (!cancelled && beats.length) setBeatTimes([...beats].sort((a, b) => a - b))
+      } catch {
+        // Allow a retry if the source changes later.
+        if (beatsFetchedForRef.current === src) beatsFetchedForRef.current = null
+      }
+    })()
+    return () => { cancelled = true }
+  }, [actualVideoUrl, videoId])
 
   // One-click beat-CUT: re-segment the source into beat-aligned clips (montage).
   // Reuses the same real onset endpoint, then the shared client beat-cut planner.
@@ -2191,7 +2304,7 @@ const ModernVideoEditor: React.FC<{
 
       {/* Background nebula */}
       <motion.div
-        animate={{ x: mousePos.x / 100, y: mousePos.y / 100 }}
+        style={{ x: nebulaX, y: nebulaY }}
         className="fixed inset-0 pointer-events-none opacity-30 mix-blend-screen z-0"
       >
         <div className="absolute top-1/4 left-1/4 w-[800px] h-[800px] bg-indigo-500/[0.08] blur-[160px] rounded-full animate-pulse" />
@@ -2810,6 +2923,7 @@ const ModernVideoEditor: React.FC<{
                       imageOverlays={imageOverlays}
                       onAssetDrop={handleAssetDrop}
                       transcript={transcript}
+                      beatTimes={beatTimes}
                       aiDirectorSuggestions={aiDirectorSuggestions}
                       engagementScore={engagementScore}
                       videoSrc={actualVideoUrl || null}

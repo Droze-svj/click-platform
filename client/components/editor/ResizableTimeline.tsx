@@ -53,8 +53,10 @@ import {
   AIDirectorSuggestion,
   EngagementScore
 } from '../../types/editor'
-import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS, resolveTimelineOverlaps, rippleDeleteAcrossTracks, intersectsRange } from '../../utils/editorUtils'
+import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, SNAP_STEPS, resolveTimelineOverlaps, rippleDeleteAcrossTracks, intersectsRange } from '../../utils/editorUtils'
 import { getSegmentColor } from '../../utils/editorUtils'
+import { buildSnapIndex, snapWithIndex, speechStopsFromWords, SPEECH_KINDS, type SnapIndex, type SnapKind, type SnapResult } from '../../utils/snapIndex'
+import { realignOverlaysToSpeech } from '../../utils/captionAlign'
 import { apiGet } from '../../lib/api'
 
 /** Per-lane track state: locked rejects edits, muted hides from preview, solo isolates. */
@@ -95,6 +97,9 @@ interface ResizableTimelineProps {
   onMarkersChange?: (fn: (prev: TimelineMarker[]) => TimelineMarker[]) => void
   onAssetDrop?: (asset: any, trackIndex: number, time: number) => void
   transcript?: Transcript | null
+  /** Detected music beat times (seconds). When provided, clips/captions also snap
+   *  to the beat grid — a differentiator no major competitor ships. */
+  beatTimes?: number[]
   aiDirectorSuggestions?: AIDirectorSuggestion[]
   engagementScore?: EngagementScore | null
   /** Source the waveform peaks are decoded from. Either is enough; videoSrc wins. */
@@ -108,11 +113,22 @@ const STORAGE_KEY_TIME_FORMAT = 'click-timeline-time-format'
 const STORAGE_KEY_FPS = 'click-timeline-fps'
 const STORAGE_KEY_ZOOM = 'click-timeline-zoom'
 const STORAGE_KEY_SNAP = 'click-timeline-snap'
+const STORAGE_KEY_SNAP_SPEECH = 'click-timeline-snap-speech'
 type TimeFormatPreference = 'short' | 'tenths' | 'frames'
 
 const glassStyle = "backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl"
 
-const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, aiDirectorSuggestions = [], engagementScore = null, videoSrc = null, contentId = null }) => {
+/** Colour + label for the live active-snap guideline, by snapped stop kind. */
+const SNAP_KIND_COLOR: Record<SnapKind, string> = {
+  word: '#34d399', silence: '#22d3ee', beat: '#f472b6', marker: '#fbbf24',
+  edge: '#818cf8', playhead: '#a78bfa', boundary: '#94a3b8',
+}
+const SNAP_KIND_LABEL: Record<SnapKind, string> = {
+  word: 'Word', silence: 'Pause', beat: 'Beat', marker: 'Marker',
+  edge: 'Edge', playhead: 'Playhead', boundary: 'Bound',
+}
+
+const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, beatTimes = [], aiDirectorSuggestions = [], engagementScore = null, videoSrc = null, contentId = null }) => {
   const [timelineMode, setTimelineMode] = useState<'hybrid' | 'visual' | 'text'>('hybrid')
   const [focusLane, setFocusLane] = useState<string | null>(null)
 
@@ -152,6 +168,12 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     if (typeof window === 'undefined') return true
     const v = localStorage.getItem(STORAGE_KEY_SNAP)
     return v !== 'false'
+  })
+  // Snap-to-Speech: magnetically lock clips/captions to Whisper word boundaries.
+  // Default ON (matches CapCut per-word sync / VEED "Snap to Speech"); persisted.
+  const [snapToSpeech, setSnapToSpeech] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem(STORAGE_KEY_SNAP_SPEECH) !== 'false'
   })
   const [snapStepIndex, setSnapStepIndex] = useState(2)
   const [isScrubbing, setIsScrubbing] = useState(false)
@@ -439,8 +461,9 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     localStorage.setItem(STORAGE_KEY_TIME_FORMAT, timeFormat)
     localStorage.setItem(STORAGE_KEY_FPS, String(framesPerSecond))
     localStorage.setItem(STORAGE_KEY_SNAP, String(snapEnabled))
+    localStorage.setItem(STORAGE_KEY_SNAP_SPEECH, String(snapToSpeech))
     localStorage.setItem(STORAGE_KEY_ZOOM, String(zoom))
-  }, [timeFormat, framesPerSecond, snapEnabled, zoom])
+  }, [timeFormat, framesPerSecond, snapEnabled, snapToSpeech, zoom])
 
   const displayTime = useCallback((time: number) => {
     if (timeFormat === 'short') return formatTime(time)
@@ -516,6 +539,74 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     return edges
   }, [maxDur, segments, effects])
 
+  // Phase 2 — Snap-to-Speech: derive word + silence-gap stops from the Whisper
+  // transcript once per transcript change (NOT per drag frame).
+  const speechStops = useMemo(
+    () => (snapToSpeech ? speechStopsFromWords(transcript?.words) : { words: [], silences: [] }),
+    [snapToSpeech, transcript?.words],
+  )
+
+  // The precomputed, sorted, de-duped snap index queried per frame with a binary
+  // search. Replaces the legacy per-frame Set-build + full re-sort inside
+  // snapToNearestEdge — O(log n) per query instead of O(n·log n).
+  const snapIndex: SnapIndex = useMemo(
+    () => buildSnapIndex({
+      edges: magneticEdges,
+      words: speechStops.words,
+      silences: speechStops.silences,
+      beats: beatTimes,
+      duration: maxDur,
+    }),
+    [magneticEdges, speechStops, beatTimes, maxDur],
+  )
+
+  // Active-snap guideline: the stop the current drag is locked onto (word/beat/edge…).
+  // Updated only when the snapped stop CHANGES, so it adds no per-frame re-renders.
+  const [activeSnap, setActiveSnap] = useState<{ time: number; kind: SnapKind } | null>(null)
+  const activeSnapKeyRef = useRef<string>('')
+  const noteSnap = useCallback((r: SnapResult | null) => {
+    const key = r && r.snapped && r.kind ? `${r.kind}:${r.stop.toFixed(3)}` : ''
+    if (key === activeSnapKeyRef.current) return
+    activeSnapKeyRef.current = key
+    setActiveSnap(r && r.snapped && r.kind ? { time: r.stop, kind: r.kind } : null)
+  }, [])
+
+  // Snap one point to the nearest stop (speech-preferred), grid as the fallback.
+  const snapPoint = useCallback((value: number, threshold: number, exclude?: number[]): number => {
+    const r = snapWithIndex(value, snapIndex, threshold, { exclude, preferKinds: SPEECH_KINDS })
+    noteSnap(r)
+    return r.snapped ? r.time : snapToGrid(value, snapStep)
+  }, [snapIndex, snapStep, noteSnap])
+
+  // Snap a moved block: try snapping BOTH its start and end to stops, keep whichever
+  // edge lands nearer a stop, else fall back to grid. Returns the new start time.
+  // `exclude` holds the block's own original edges so it never snaps to itself.
+  const snapMovedBlockStart = useCallback((rawStart: number, dur: number, exclude: number[]): number => {
+    const th = snapStep * 1.5
+    const rStart = snapWithIndex(rawStart, snapIndex, th, { exclude, preferKinds: SPEECH_KINDS })
+    const rEnd = snapWithIndex(rawStart + dur, snapIndex, th, { exclude, preferKinds: SPEECH_KINDS })
+    const dStart = rStart.snapped ? Math.abs(rStart.time - rawStart) : Infinity
+    const dEnd = rEnd.snapped ? Math.abs(rEnd.time - (rawStart + dur)) : Infinity
+    if (dStart === Infinity && dEnd === Infinity) { noteSnap(null); return snapToGrid(rawStart, snapStep) }
+    const chosen = dStart <= dEnd ? rStart : rEnd
+    noteSnap(chosen)
+    return dStart <= dEnd ? rStart.time : rEnd.time - dur
+  }, [snapIndex, snapStep, noteSnap])
+
+  // One-click "Re-align ALL captions to speech": re-time every text/caption overlay
+  // to the Whisper word boundaries at once — the fix competitors only do per-line.
+  const [captionRealignNote, setCaptionRealignNote] = useState<string | null>(null)
+  const captionRealignNoteTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleRealignCaptions = useCallback(() => {
+    const words = transcript?.words
+    if (!onTextOverlaysChange || !words?.length || textOverlays.length === 0) return
+    const { overlays, changed } = realignOverlaysToSpeech(textOverlays, words)
+    onTextOverlaysChange(() => overlays)
+    setCaptionRealignNote(changed > 0 ? `Snapped ${changed} caption${changed === 1 ? '' : 's'} to speech` : 'Captions already aligned')
+    if (captionRealignNoteTimeout.current) clearTimeout(captionRealignNoteTimeout.current)
+    captionRealignNoteTimeout.current = setTimeout(() => setCaptionRealignNote(null), 2600)
+  }, [transcript?.words, onTextOverlaysChange, textOverlays])
+
   const segmentAtPlayhead = useMemo(() =>
     segments.find((s) => currentTime >= s.startTime && currentTime < s.endTime),
     [segments, currentTime])
@@ -533,9 +624,9 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     let t = x * maxDur
 
     if (snapEnabled && !live) {
-      const tEdge = snapToNearestEdge(t, magneticEdges, snapStep * 1.2)
-      if (tEdge !== t) {
-        t = tEdge
+      const r = snapWithIndex(t, snapIndex, snapStep * 1.2, { preferKinds: SPEECH_KINDS })
+      if (r.snapped) {
+        t = r.time
         triggerSnapPulse()
       } else {
         const tGrid = snapToGrid(t, snapStep)
@@ -545,7 +636,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     }
     userSeekRef.current = true
     onTimeUpdate(Math.max(0, Math.min(maxDur, t)))
-  }, [maxDur, snapEnabled, snapStep, magneticEdges, onTimeUpdate, triggerSnapPulse])
+  }, [maxDur, snapEnabled, snapStep, snapIndex, onTimeUpdate, triggerSnapPulse])
 
   useEffect(() => {
     const scrollEl = scrollRef.current
@@ -570,8 +661,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   const handleGoToTimestamp = () => {
     let t = parseTime(timestampInput, maxDur)
     if (snapEnabled) {
-      const tEdge = snapToNearestEdge(t, magneticEdges, snapStep * 1.2)
-      t = tEdge !== t ? tEdge : snapToGrid(t, snapStep)
+      t = snapPoint(t, snapStep * 1.2)
     }
     userSeekRef.current = true
     onTimeUpdate(Math.max(0, Math.min(maxDur, t)))
@@ -742,25 +832,26 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   const [draggingEffectEdgeId, setDraggingEffectEdgeId] = useState<string | null>(null)
   const dragEffectEdgeStartRef = useRef<{ id: string; edge: 'start' | 'end'; startX: number; startTime: number; endTime: number } | null>(null)
 
+  // Hide the active-snap guideline once nothing is being dragged.
+  useEffect(() => {
+    if (!draggingSegmentId && !draggingEffectId && !draggingEffectEdgeId) {
+      activeSnapKeyRef.current = ''
+      setActiveSnap(null)
+    }
+  }, [draggingSegmentId, draggingEffectId, draggingEffectEdgeId])
+
   // Move an effect block by a delta, keeping its duration and snapping like segments.
   const moveEffectTo = useCallback((id: string, originalStart: number, originalEnd: number, deltaTime: number) => {
     if (!onEffectsChange) return
     const effDur = originalEnd - originalStart
     let newStart = originalStart + deltaTime
     if (snapEnabled) {
-      const otherEdges = magneticEdges.filter(e => Math.abs(e - originalStart) > 0.01 && Math.abs(e - originalEnd) > 0.01)
-      const edgeSnapStart = snapToNearestEdge(newStart, otherEdges, snapStep * 1.5)
-      const edgeSnapEnd = snapToNearestEdge(newStart + effDur, otherEdges, snapStep * 1.5)
-      if (Math.abs(edgeSnapStart - newStart) <= Math.abs(edgeSnapEnd - (newStart + effDur))) {
-        newStart = edgeSnapStart !== newStart ? edgeSnapStart : snapToGrid(newStart, snapStep)
-      } else {
-        newStart = edgeSnapEnd !== (newStart + effDur) ? (edgeSnapEnd - effDur) : snapToGrid(newStart, snapStep)
-      }
+      newStart = snapMovedBlockStart(newStart, effDur, [originalStart, originalEnd])
     }
     newStart = Math.max(0, Math.min(maxDur - effDur, newStart))
     const newEnd = newStart + effDur
     onEffectsChange((prev) => prev.map((eff) => eff.id === id ? { ...eff, startTime: newStart, endTime: Math.min(newEnd, maxDur) } : eff))
-  }, [onEffectsChange, snapEnabled, magneticEdges, snapStep, maxDur])
+  }, [onEffectsChange, snapEnabled, snapMovedBlockStart, snapStep, maxDur])
 
   const handleEffectBodyMouseDown = useCallback((e: React.MouseEvent, eff: TimelineEffect) => {
     if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
@@ -905,8 +996,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       if (!onTextOverlaysChange) return
       let v = value
       if (snapEnabled) {
-        const edgeSnap = snapToNearestEdge(v, magneticEdges, snapStep * 1.5)
-        v = edgeSnap !== v ? edgeSnap : snapToGrid(v, snapStep)
+        v = snapPoint(v, snapStep * 1.5)
       }
       v = Math.max(0, Math.min(maxDur, v))
       onTextOverlaysChange((prev) => prev.map(o => {
@@ -928,8 +1018,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     if (isSegmentLocked(id)) return // Bug 6: locked tracks reject trim
     let v = value
     if (snapEnabled) {
-      const edgeSnap = snapToNearestEdge(v, magneticEdges, snapStep * 1.5)
-      v = edgeSnap !== v ? edgeSnap : snapToGrid(v, snapStep)
+      v = snapPoint(v, snapStep * 1.5)
     }
     v = Math.max(0, Math.min(maxDur, v))
 
@@ -971,7 +1060,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
       return next
     })
-  }, [maxDur, snapEnabled, snapStep, magneticEdges, onSegmentsChange, rippleOnDelete, textOverlays, onTextOverlaysChange, isSegmentLocked, isTrackLocked])
+  }, [maxDur, snapEnabled, snapStep, snapPoint, onSegmentsChange, rippleOnDelete, textOverlays, onTextOverlaysChange, isSegmentLocked, isTrackLocked])
 
   const trimSegmentStartToPlayhead = useCallback((seg: TimelineSegment) => {
     if (!onSegmentsChange || currentTime <= seg.startTime || currentTime >= seg.endTime) return
@@ -1006,15 +1095,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       let newStart = originalStart + deltaTime
 
       if (snapEnabled) {
-        const otherEdges = magneticEdges.filter(e => Math.abs(e - originalStart) > 0.01 && Math.abs(e - originalEnd) > 0.01)
-        const edgeSnapStart = snapToNearestEdge(newStart, otherEdges, snapStep * 1.5)
-        const edgeSnapEnd = snapToNearestEdge(newStart + segDur, otherEdges, snapStep * 1.5)
-
-        if (Math.abs(edgeSnapStart - newStart) <= Math.abs(edgeSnapEnd - (newStart + segDur))) {
-          newStart = edgeSnapStart !== newStart ? edgeSnapStart : snapToGrid(newStart, snapStep)
-        } else {
-          newStart = edgeSnapEnd !== (newStart + segDur) ? (edgeSnapEnd - segDur) : snapToGrid(newStart, snapStep)
-        }
+        newStart = snapMovedBlockStart(newStart, segDur, [originalStart, originalEnd])
       }
 
       newStart = Math.max(0, Math.min(maxDur - segDur, newStart))
@@ -1033,17 +1114,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     let newStart = originalStart + deltaTime
 
     if (snapEnabled) {
-      // Create a filtered list of edges that excludes the current segment's own edges to prevent snapping to itself
-      const otherEdges = magneticEdges.filter(e => Math.abs(e - originalStart) > 0.01 && Math.abs(e - originalEnd) > 0.01)
-      const edgeSnapStart = snapToNearestEdge(newStart, otherEdges, snapStep * 1.5)
-      const edgeSnapEnd = snapToNearestEdge(newStart + segDur, otherEdges, snapStep * 1.5)
-
-      // Determine which edge (start or end) is closer to a magnetic edge
-      if (Math.abs(edgeSnapStart - newStart) <= Math.abs(edgeSnapEnd - (newStart + segDur))) {
-        newStart = edgeSnapStart !== newStart ? edgeSnapStart : snapToGrid(newStart, snapStep)
-      } else {
-        newStart = edgeSnapEnd !== (newStart + segDur) ? (edgeSnapEnd - segDur) : snapToGrid(newStart, snapStep)
-      }
+      // Exclude the segment's own edges so it can't snap to itself; prefer speech stops.
+      newStart = snapMovedBlockStart(newStart, segDur, [originalStart, originalEnd])
     }
 
     newStart = Math.max(0, Math.min(maxDur - segDur, newStart))
@@ -1099,7 +1171,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
       return next
     })
-  }, [maxDur, snapEnabled, snapStep, magneticEdges, onSegmentsChange, rippleOnDelete, textOverlays, onTextOverlaysChange, isSegmentLocked, isTrackLocked])
+  }, [maxDur, snapEnabled, snapStep, snapMovedBlockStart, onSegmentsChange, rippleOnDelete, textOverlays, onTextOverlaysChange, isSegmentLocked, isTrackLocked])
 
   const splitSegmentAt = useCallback((seg: TimelineSegment, atTime: number) => {
     if (!onSegmentsChange) return
@@ -1465,8 +1537,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
         // Snap drop time to grid or playhead
         let t = rawTime
         if (snapEnabled) {
-          const tEdge = snapToNearestEdge(t, magneticEdges, snapStep * 1.5)
-          t = tEdge !== t ? tEdge : snapToGrid(t, snapStep)
+          t = snapPoint(t, snapStep * 1.5)
         }
         t = Math.max(0, Math.min(maxDur, t))
         onAssetDrop?.(data.asset, trackIndex, t)
@@ -1474,7 +1545,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     } catch {
       // Ignore invalid drag data
     }
-  }, [maxDur, snapEnabled, snapStep, magneticEdges, onAssetDrop])
+  }, [maxDur, snapEnabled, snapStep, snapPoint, onAssetDrop])
 
   const isCompact = density === 'compact'
 
@@ -2678,6 +2749,25 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         }}
                       />
                     ))}
+
+                    {/* ACTIVE SNAP GUIDELINE — shows what the drag locked onto (Word / Beat / Edge…) */}
+                    {snapEnabled && activeSnap && maxDur > 0 && (
+                      <div
+                        className="absolute top-0 bottom-0 pointer-events-none z-50"
+                        style={{ left: `${(activeSnap.time / maxDur) * 100}%` }}
+                      >
+                        <div
+                          className="absolute top-0 bottom-0 w-0.5 -translate-x-1/2"
+                          style={{ background: SNAP_KIND_COLOR[activeSnap.kind], boxShadow: `0 0 12px ${SNAP_KIND_COLOR[activeSnap.kind]}` }}
+                        />
+                        <div
+                          className="absolute top-1 -translate-x-1/2 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider text-black whitespace-nowrap"
+                          style={{ background: SNAP_KIND_COLOR[activeSnap.kind] }}
+                        >
+                          {SNAP_KIND_LABEL[activeSnap.kind]}
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
            </div>
@@ -2774,6 +2864,38 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <motion.div animate={{ x: snapEnabled ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
                  </button>
               </div>
+
+              {/* Snap-to-Speech: magnet captions/clips to Whisper word boundaries. */}
+              <div className={`flex items-center gap-4 px-6 py-3 bg-white/5 rounded-2xl border border-white/5 ${transcript?.words?.length ? '' : 'opacity-40'}`}>
+                 <div className="flex items-center gap-2">
+                    <MessageSquare className={`w-4 h-4 ${snapToSpeech && transcript?.words?.length ? 'text-emerald-400 animate-pulse' : 'text-slate-600'}`} />
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest hidden sm:inline">Snap to Speech</span>
+                 </div>
+                 <button
+                   type="button"
+                   title={transcript?.words?.length ? 'Magnet clips & captions to spoken words' : 'Generate captions to enable speech snapping'}
+                   disabled={!transcript?.words?.length}
+                   onClick={() => setSnapToSpeech(!snapToSpeech)}
+                   className={`w-12 h-6 rounded-full border transition-all relative disabled:cursor-not-allowed ${snapToSpeech ? 'bg-emerald-600 border-emerald-400' : 'bg-black/40 border-white/10'}`}
+                 >
+                    <motion.div animate={{ x: snapToSpeech ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
+                 </button>
+              </div>
+
+              {/* One-click: re-time every caption overlay to the spoken words. */}
+              {!!transcript?.words?.length && textOverlays.length > 0 && onTextOverlaysChange && (
+                <button
+                  type="button"
+                  onClick={handleRealignCaptions}
+                  title="Re-align all captions to the spoken words"
+                  className="flex items-center gap-2 px-4 py-3 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-2xl border border-emerald-400/40 transition-all"
+                >
+                   <Wand2 className="w-4 h-4" />
+                   <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">
+                     {captionRealignNote || 'Realign Captions'}
+                   </span>
+                </button>
+              )}
 
               <div className="flex flex-col items-end">
                  <div className="flex items-center gap-2">

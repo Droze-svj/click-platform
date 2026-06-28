@@ -17,6 +17,7 @@ import {
 import { extractApiData } from '../utils/apiResponse'
 import { apiGet, apiPost, apiPut, handleApiError } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { realignCaptionsToSpeech, type SpeechWord } from '../utils/captionAlign'
 
 interface CaptionSegment {
   id: number
@@ -31,6 +32,8 @@ interface CaptionData {
   format: string
   captions: string
   segments?: CaptionSegment[]
+  /** Whisper word-level timings, when available — powers one-click "snap to speech". */
+  words?: SpeechWord[]
 }
 
 interface VideoCaptionEditorProps {
@@ -55,6 +58,9 @@ export default function VideoCaptionEditor({
   const [currentTime, setCurrentTime] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [wordTimings, setWordTimings] = useState<SpeechWord[]>([])
+  const [isRealigning, setIsRealigning] = useState(false)
+  const [realignNote, setRealignNote] = useState<string | null>(null)
 
   const loadCaptions = useCallback(async () => {
     try {
@@ -64,6 +70,9 @@ export default function VideoCaptionEditor({
         setCaptions(captionData)
         if (captionData.segments) {
           setEditedSegments(captionData.segments)
+        }
+        if (Array.isArray(captionData.words) && captionData.words.length) {
+          setWordTimings(captionData.words)
         }
       }
     } catch (err) {
@@ -91,6 +100,9 @@ export default function VideoCaptionEditor({
         if (captionData.segments) {
           setEditedSegments(captionData.segments)
         }
+        if (Array.isArray(captionData.words) && captionData.words.length) {
+          setWordTimings(captionData.words)
+        }
         if (onSave) {
           onSave(captionData)
         }
@@ -113,6 +125,44 @@ export default function VideoCaptionEditor({
       setError(handleApiError(err) || t('videoCaptionEditor.translateFailed'))
     } finally {
       setIsTranslating(false)
+    }
+  }
+
+  // One-click "Snap to Speech": re-time the ENTIRE caption track to the Whisper
+  // word boundaries. Competitors (VEED/CapCut) only fix one line at a time.
+  const handleRealignToSpeech = async () => {
+    if (!editedSegments.length) return
+    setIsRealigning(true)
+    setRealignNote(null)
+    setError(null)
+    try {
+      let words = wordTimings
+      if (!words.length) {
+        // Lazily fetch word-level timings if we didn't get them with the captions.
+        const lang = captions?.language || selectedLanguage || 'en'
+        const data = await apiGet<any>(`/video/captions/${contentId}/in-language?language=${encodeURIComponent(lang)}`)
+        const payload = extractApiData<{ words?: SpeechWord[] }>(data)
+        if (Array.isArray(payload?.words) && payload.words.length) {
+          words = payload.words
+          setWordTimings(payload.words)
+        }
+      }
+      if (!words.length) {
+        setError(t('videoCaptionEditor.noWordTimings') || 'Word-level timing unavailable — regenerate captions to enable Snap to Speech.')
+        return
+      }
+      const { segments, changed } = realignCaptionsToSpeech(editedSegments, words)
+      setEditedSegments(segments)
+      setIsEditing(true)
+      setRealignNote(
+        changed > 0
+          ? (t('videoCaptionEditor.realignedCount')?.replace('{count}', String(changed)) || `Snapped ${changed} caption${changed === 1 ? '' : 's'} to speech`)
+          : (t('videoCaptionEditor.alreadyAligned') || 'Captions already aligned to speech'),
+      )
+    } catch (err: any) {
+      setError(handleApiError(err) || 'Failed to snap captions to speech')
+    } finally {
+      setIsRealigning(false)
     }
   }
 
@@ -324,15 +374,33 @@ export default function VideoCaptionEditor({
                   </span>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsEditing(!isEditing)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                <Edit3 className="w-4 h-4" />
-                {isEditing ? t('videoCaptionEditor.cancelEdit') : t('videoCaptionEditor.edit')}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleRealignToSpeech}
+                  disabled={isRealigning || editedSegments.length === 0}
+                  title={t('videoCaptionEditor.snapToSpeechHint') || 'Re-time every caption to the spoken words in one click'}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRealigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  {t('videoCaptionEditor.snapToSpeech') || 'Snap to Speech'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  {isEditing ? t('videoCaptionEditor.cancelEdit') : t('videoCaptionEditor.edit')}
+                </button>
+              </div>
             </div>
+            {realignNote && (
+              <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {realignNote}
+              </div>
+            )}
 
             {/* Caption Text */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto">

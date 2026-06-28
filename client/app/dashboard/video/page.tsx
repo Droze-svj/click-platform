@@ -123,7 +123,10 @@ export default function VideoStudioPage() {
     if (!contentId) { setError(tr('studio.missingContentId', 'PARAM_ERR: MISSING_CONTENT_ID')); return }
     setSuccess(tr('studio.uploadStable', '✓ UPLOAD_STABLE: ANALYZING_VECTORS...'))
     await loadVideos()
-    router.push(editLink(contentId))
+    // Ask the editor to auto-generate captions (snapped to speech) on first open
+    // for a just-uploaded video, so the creator lands ready to edit.
+    const base = editLink(contentId)
+    router.push(`${base}${base.includes('?') ? '&' : '?'}autoCaptions=1`)
   }, [loadVideos, router, editLink, tr])
 
   // Classic multipart upload — used as the fallback when resumable (tus) fails.

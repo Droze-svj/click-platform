@@ -257,6 +257,9 @@ export default function VideoEditPage({ params }: PageProps) {
   const aiTool = searchParams?.get('aiTool') as ('silence' | 'fillers' | 'edit-by-text' | null) || null
   const modeParam = searchParams?.get('mode') || null
   const clipUrl = searchParams?.get('clipUrl') || null
+  // Just-uploaded videos arrive with ?autoCaptions=1 so the editor builds a
+  // speech-synced caption track on first open.
+  const autoCaptions = searchParams?.get('autoCaptions') === '1'
   const videoId = params.videoId
   const { user } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
@@ -700,7 +703,7 @@ export default function VideoEditPage({ params }: PageProps) {
         <button type="button" onClick={() => setEditMode('selection')} title="Back to Workflow Selection" aria-label="Back to Workflow Selection" className="absolute top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
           <ChevronLeft size={16} /> Workflow Selection
         </button>
-        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} />
+        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} />
       </div>
     )
   }

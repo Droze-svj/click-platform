@@ -162,6 +162,7 @@ const DEFAULT_CONTENT_PREFS: EditorContentPreferences = {
   previewQuality: 'full',
   showExportPlatformHints: true,
   recentSections: [],
+  defaultCaptionStyle: 'default',
 }
 
 /** Load editor content/quality preferences from localStorage */

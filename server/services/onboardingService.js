@@ -27,6 +27,14 @@ const ONBOARDING_STEPS = [
     required: true,
   },
   {
+    id: 'captions',
+    title: 'Set Up Your Captions',
+    description: 'Pick a caption look and keep Snap-to-Speech on for word-perfect captions',
+    href: '/dashboard/onboarding/captions',
+    component: 'CaptionSetupStep',
+    required: false,
+  },
+  {
     id: 'connect-social',
     title: 'Connect Social Media',
     description: 'Link your social media accounts to start posting',
