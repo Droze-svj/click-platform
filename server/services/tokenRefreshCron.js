@@ -101,16 +101,22 @@ async function runOnce() {
   }
   const stats = { scanned: 0, refreshed: 0, failed: 0, skipped: 0 };
   try {
-    const { data: users, error } = await supabase()
-      .from('users')
-      .select('id, social_links')
-      .not('social_links', 'is', null);
-    if (error) {
-      logger.error('Token refresh: Supabase fetch failed', { error: error.message });
-      return;
-    }
+    // Paginate the scan so a large user base isn't loaded into memory all at once.
+    const PAGE = 500;
+    let _page = 0;
+    while (true) {
+      const { data: users, error } = await supabase()
+        .from('users')
+        .select('id, social_links')
+        .not('social_links', 'is', null)
+        .range(_page * PAGE, _page * PAGE + PAGE - 1);
+      if (error) {
+        logger.error('Token refresh: Supabase fetch failed', { error: error.message });
+        break;
+      }
+      if (!users || users.length === 0) break;
 
-    for (const user of users || []) {
+      for (const user of users) {
       const oauth = user.social_links?.oauth || {};
       for (const [platform, row] of Object.entries(oauth)) {
         if (!row || typeof row !== 'object') continue;
@@ -142,6 +148,9 @@ async function runOnce() {
           }
         }
       }
+      }
+      if (users.length < PAGE) break; // last page
+      _page += 1;
     }
     logger.info('Token refresh cron complete', stats);
   } catch (err) {

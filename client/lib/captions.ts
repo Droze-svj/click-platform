@@ -32,8 +32,14 @@ export function pickCaptionEmoji(text: string): string {
 
 const POWER_RE = /\b(how|why|secret|proven|ultimate|fast|easy|free|best|stop|never|always|mistake|worst|insane|crazy|nobody|everyone|now|new|first|biggest|money|viral|hack|trick|truth|warning)\b/i
 
-function normWord(s: string): string {
-  return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+/**
+ * Normalize a word for highlight matching. Unicode-aware: keeps letters/digits
+ * of ANY script (CJK, Cyrillic, Arabic, accented Latin…) and strips punctuation,
+ * so highlighting works in every language — not just a–z. MUST stay identical to
+ * the preview's `hlNorm` (RealTimeVideoPreview) so editor matches export.
+ */
+export function normWord(s: string): string {
+  return String(s || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
 }
 
 /**
@@ -45,7 +51,9 @@ export function pickHighlightWords(text: string, max = 2): string[] {
   const scored = words
     .map((w) => {
       const n = normWord(w)
-      if (!n) return null
+      // Skip empties and whole-line tokens (e.g. space-less CJK text where the
+      // splitter yields one giant "word") so we never highlight an entire line.
+      if (!n || n.length > 24) return null
       let score = 0
       if (POWER_RE.test(w)) score += 3
       if (/\d/.test(w)) score += 3

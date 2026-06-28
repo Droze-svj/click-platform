@@ -128,7 +128,7 @@ function checkContentRulesCompliance(content, contentRules) {
 
   // Check hashtags
   if (contentRules.requireHashtags) {
-    const hashtags = content.match(/#\w+/g) || [];
+    const hashtags = content.match(/#[\p{L}\p{N}_]+/gu) || [];
     if (hashtags.length < (contentRules.minHashtags || 1)) {
       violations.push({
         type: 'content_rules',

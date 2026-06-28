@@ -130,7 +130,7 @@ function extractPicks(content) {
   // 4. Hashtag Extractor
   let hashtags = content?.metadata?.hashtags || content?.hashtags;
   if ((!hashtags || hashtags.length === 0) && scriptText) {
-    const matches = scriptText.match(/#\w+/g);
+    const matches = scriptText.match(/#[\p{L}\p{N}_]+/gu);
     if (matches) {
       hashtags = matches.map(tag => tag.toLowerCase().slice(1));
     }

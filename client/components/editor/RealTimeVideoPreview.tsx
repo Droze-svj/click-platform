@@ -12,6 +12,8 @@ import {
 } from '../../types/editor'
 import { usePreviewRecorder } from '../../hooks/usePreviewRecorder'
 import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
+import { resolveCaptionTextStyle, buildKaraokeTokens } from '../../utils/captionStyler'
+import { normWord } from '../../lib/captions'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
 import { activeTransitionAt, transitionOverlayStyle } from '../../lib/transitionPreview'
 import { Rnd } from 'react-rnd'
@@ -554,6 +556,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   // Performance Monitoring
   const frameTimes = useRef<number[]>([])
   const lastTimeRef = useRef<number>(performance.now())
+  const lastHudUpdateRef = useRef<number>(0)
 
   // Timeline time is tracked independently from video.currentTime so that
   // segment ops (split/reorder/trim/freeze) can be honored — see
@@ -596,8 +599,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
       while (frameTimes.current.length > 0 && frameTimes.current[0] <= now - 1000) {
         frameTimes.current.shift()
       }
-      setFps(frameTimes.current.length)
-      setLatency(Math.round(delta))
+      // Throttle the FPS/latency HUD to ~2 Hz. Writing these to state every frame
+      // re-rendered this whole (large, overlay-mapping) preview component 60×/sec.
+      if (now - lastHudUpdateRef.current >= 500) {
+        lastHudUpdateRef.current = now
+        setFps(frameTimes.current.length)
+        setLatency(Math.round(delta))
+      }
 
       // Advance timeline cursor independently from <video>.currentTime so
       // freeze segments hold the video while the timeline still moves, and
@@ -878,6 +886,11 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
           {/* Text Overlays */}
           {textOverlays.map((text) => {
+            // Cheap cull FIRST: skip overlays clearly outside their time window
+            // (±2s buffer covers any enter/exit animation) before doing the
+            // per-overlay animation + keyframe math. With karaoke captions this is
+            // hundreds–thousands of overlays, only a few on screen at once.
+            if (currentTime < (text.startTime ?? 0) - 2 || currentTime > (text.endTime ?? Infinity) + 2) return null
             const { opacity: animOpacity, transform, filter } = getTextOverlayAnimationStyle(text, currentTime)
             // Fix #1: live keyframe interpolation (parity: server buildTextOverlay
             // — positionX/Y are % offsets on base x/y, scale/rotation/opacity
@@ -891,20 +904,32 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             const rawSafeY = clampNum(kfm ? kfm.y : safeNum(text.y, 50), -50, 150)
             // Preview parity: keep captions inside the safe band unless opted out.
             const safeY = (text as any).safeZone === false ? rawSafeY : clampNum(rawSafeY, 4, 92)
-            // Preview parity: preset colour + word-by-word (karaoke) active word.
+            // Preview parity: preset colour + word-by-word (karaoke) FULL line.
             const presetColor = (text as any).captionPreset ? CAPTION_PRESET_COLORS[(text as any).captionPreset] : null
             const isWordMode = (text as any).captionMode === 'word' && Array.isArray((text as any).words) && (text as any).words.length
-            const displayText = isWordMode ? activeKaraokeWord((text as any).words, currentTime) : text.text
-            // Auto-emoji: show it appended in the preview (browser renders emoji;
-            // export uses an emoji font). Kept separate so it never affects the
-            // keyword-highlight matching below.
+            const captionWords: any[] = isWordMode ? (text as any).words : []
+            // Gradient fill clips on the whole element, so per-word spans would break
+            // it — fall back to the full string for gradient; tokens elsewhere.
+            const isGradientLike = (text as any).style === 'gradient'
+            const useTokens = !!(isWordMode && !isGradientLike)
+            // Full line with the spoken word emphasised (CapCut-style), not one word.
+            const karaokeTokens = useTokens ? buildKaraokeTokens(captionWords, currentTime) : null
             const captionEmoji = (text as any).emoji as string | undefined
-            const displayWithEmoji = displayText && captionEmoji ? `${displayText} ${captionEmoji}` : displayText
-            // Highlight: if the active word is a designated keyword, use the accent.
             const hlSet: string[] = Array.isArray((text as any).highlightWords) ? (text as any).highlightWords : []
-            const hlNorm = String(displayText || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-            const isHighlightWord = isWordMode && (text as any).highlightColor && hlSet.includes(hlNorm)
-            const displayColor = isHighlightWord ? (text as any).highlightColor : (presetColor || text.color)
+            const highlightColor = (text as any).highlightColor as string | undefined
+            // Unicode-aware + shared with the export so highlight matches in every language.
+            const hlNorm = (s: string) => normWord(s)
+            // Non-token text: word-mode+gradient → whole line; block mode → its text.
+            const nonTokenText = useTokens ? '' : (isWordMode ? captionWords.map((w) => w.word ?? w.text ?? '').join(' ') : text.text)
+            const displayWithEmoji = nonTokenText && captionEmoji ? `${nonTokenText} ${captionEmoji}` : nonTokenText
+            const displayColor = presetColor || text.color
+            // Live preview parity for ALL caption styles (was only neon/outline/shadow).
+            const captionCss = resolveCaptionTextStyle((text as any).style, {
+              color: displayColor,
+              accentColor: (text as any).highlightColor || displayColor,
+              backgroundColor: (text as any).backgroundColor,
+              outlineColor: (text as any).outlineColor,
+            }) as React.CSSProperties
             const kfTransform = kfm
               ? ` scale(${kfm.scale}) rotate(${kfm.rotation}deg)`
               : ''
@@ -1029,21 +1054,46 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                         className="whitespace-pre-wrap break-words flex flex-col justify-center text-center drop-shadow-lg max-w-[90vw]"
                         style={{
                           fontSize: `${text.fontSize}px`,
-                          color: displayColor,
-                          fontFamily: text.fontFamily,
-                          letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : 'normal',
                           lineHeight: text.lineHeight || 1.2,
-                          textShadow: text.style === 'shadow' ? `2px 2px 4px ${text.shadowColor || 'rgba(0,0,0,0.5)'}` :
-                                     text.style === 'neon' ? `0 0 10px ${displayColor}, 0 0 20px ${displayColor}` :
-                                     text.style === 'outline' ? `-1px -1px 0 ${text.outlineColor || '#000'}, 1px -1px 0 ${text.outlineColor || '#000'}, -1px 1px 0 ${text.outlineColor || '#000'}, 1px 1px 0 ${text.outlineColor || '#000'}` : 'none',
-                          backgroundColor: text.backgroundColor || 'transparent',
-                          padding: text.backgroundColor ? '4px 8px' : '0',
-                          borderRadius: text.backgroundColor ? '4px' : '0',
+                          // Full style set (pill, bubble, gradient, kinetic, retro, …) via resolver.
+                          ...captionCss,
+                          // Explicit per-overlay font/spacing win over the style preset.
+                          ...(text.fontFamily ? { fontFamily: text.fontFamily } : {}),
+                          letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : ((captionCss.letterSpacing as any) ?? 'normal'),
+                          // Keep the user's explicit background when the preset didn't set one.
+                          backgroundColor: (captionCss.backgroundColor as string) ?? (text.backgroundColor || 'transparent'),
+                          padding: (captionCss.padding as string) ?? (text.backgroundColor ? '4px 8px' : '0'),
+                          borderRadius: (captionCss.borderRadius as string) ?? (text.backgroundColor ? '4px' : '0'),
                           transform: `${transform.replace('translate(-50%, -50%)', '')}${kfTransform}`, // Rnd handles base positioning; kfTransform = live keyframe scale/rotation
                           transformOrigin: 'center center'
                         }}
                       >
-                        {displayWithEmoji}
+                        {karaokeTokens ? (
+                          <>
+                            {karaokeTokens.map((tok, ti) => {
+                              const norm = hlNorm(tok.text)
+                              // Guard the empty string so emoji/punctuation/space-less tokens
+                              // (which normalize to '') never all match a stray '' in hlSet.
+                              const isHL = !!highlightColor && norm !== '' && hlSet.includes(norm)
+                              return (
+                                <span
+                                  key={ti}
+                                  style={{
+                                    display: 'inline-block',
+                                    marginRight: '0.28em',
+                                    color: isHL ? highlightColor : undefined,
+                                    opacity: tok.active ? 1 : tok.spoken ? 0.5 : 0.82,
+                                    transform: tok.active ? 'scale(1.08)' : 'none',
+                                    transition: 'opacity 90ms linear, transform 90ms ease',
+                                  }}
+                                >
+                                  {tok.text}
+                                </span>
+                              )
+                            })}
+                            {captionEmoji ? <span style={{ marginLeft: '0.05em' }}>{captionEmoji}</span> : null}
+                          </>
+                        ) : displayWithEmoji}
                       </div>
                     </div>
                   )}

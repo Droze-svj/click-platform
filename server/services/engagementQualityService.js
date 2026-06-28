@@ -176,13 +176,21 @@ async function getTopQualityContent(workspaceId, filters = {}) {
       .populate('contentId')
       .lean();
 
+    // Fetch all quality docs in ONE $in query instead of a findOne per post (N+1);
+    // only fall back to the heavier per-post analysis for the ones still missing.
+    const postIds = posts.map((p) => p._id);
+    const qualityDocs = postIds.length
+      ? await EngagementQuality.find({ postId: { $in: postIds } }).lean()
+      : [];
+    const qualityByPost = new Map(qualityDocs.map((q) => [String(q.postId), q]));
+
     const qualityScores = await Promise.all(
       posts.map(async post => {
         try {
-          const quality = await EngagementQuality.findOne({ postId: post._id }).lean();
+          const quality = qualityByPost.get(String(post._id)) || await analyzeEngagementQuality(post._id);
           return {
             post,
-            quality: quality || await analyzeEngagementQuality(post._id)
+            quality
           };
         } catch (error) {
           return null;

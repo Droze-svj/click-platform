@@ -119,8 +119,11 @@ async function sendSLANotification(sla, status) {
       await ApprovalSLA.findByIdAndUpdate(sla._id, {
         $push: {
           reminders: {
-            sentAt: new Date(),
-            type: status === 'overdue' ? 'overdue' : status === 'at_risk' ? 'at_risk' : 'warning'
+            $each: [{
+              sentAt: new Date(),
+              type: status === 'overdue' ? 'overdue' : status === 'at_risk' ? 'at_risk' : 'warning'
+            }],
+            $slice: -50 // cap the reminders array (latest 50)
           }
         }
       }, { maxTimeMS: 5000 }).exec();

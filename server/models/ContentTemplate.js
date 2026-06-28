@@ -97,6 +97,9 @@ const templateSchema = new mongoose.Schema({
 templateSchema.index({ category: 1, niche: 1 });
 templateSchema.index({ isPublic: 1, usageCount: -1 });
 templateSchema.index({ createdBy: 1 });
+// $or:[{createdBy},{isSystemTemplate}] can only use indexes if BOTH branches are
+// indexed; without this the system-template branch forced a collection scan.
+templateSchema.index({ isSystemTemplate: 1 });
 
 templateSchema.pre('save', function(next) {
   this.updatedAt = Date.now();

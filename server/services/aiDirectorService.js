@@ -20,6 +20,7 @@
 // available, the prompt instructs Claude to make NO silence-based cuts.
 
 const Content = require('../models/Content');
+const captionStore = require('./captionStore');
 const UserStyleProfile = require('../models/UserStyleProfile');
 const EditPlanMemory = require('../models/EditPlanMemory');
 const { getActiveBlueprint } = require('./continuousLearningService');
@@ -465,7 +466,8 @@ async function generateEditPlan({ contentId, userId, goals = {}, constraints = {
     return { ok: false, error: 'Add a transcript first — transcribe the video before running the AI Director.' };
   }
 
-  const words = content.captions?.words || content.transcript?.words || [];
+  const captionWords = await captionStore.getWords(contentId, { content });
+  const words = (captionWords && captionWords.length) ? captionWords : (content.transcript?.words || []);
   const wordCount = Array.isArray(words) && words.length
     ? words.length
     : String(transcript).trim().split(/\s+/).length;

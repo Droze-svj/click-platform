@@ -16,6 +16,46 @@ function deriveRoomContentId(room, contentId) {
   return contentId ? String(contentId) : null;
 }
 
+/**
+ * Horizontal scaling: attach the Socket.IO Redis adapter so an `emit` / room
+ * broadcast on ONE instance reaches sockets connected to OTHER instances. Without
+ * it, a load-balanced deployment silently drops cross-instance events (a worker
+ * finishing a render on instance B can't notify a browser on instance A).
+ *
+ * Deliberately GUARDED so it is a complete no-op — and the existing single-node
+ * in-memory adapter is untouched — unless BOTH (a) REDIS_URL is set and (b) the
+ * `@socket.io/redis-adapter` package is installed. So dev/single-instance is
+ * unaffected; multi-instance "just works" once Redis is provisioned.
+ */
+async function attachRedisAdapter(io) {
+  const logger = require('../utils/logger');
+  const redisUrl = process.env.REDIS_URL || process.env.REDISCLOUD_URL;
+  if (!redisUrl) return false; // single-instance: keep the default in-memory adapter
+
+  let createAdapter, createClient;
+  try {
+    ({ createAdapter } = require('@socket.io/redis-adapter'));
+    ({ createClient } = require('redis'));
+  } catch (e) {
+    logger.warn('REDIS_URL is set but @socket.io/redis-adapter is not installed — realtime stays single-instance. Run `npm i @socket.io/redis-adapter`.', { error: e.message });
+    return false;
+  }
+
+  try {
+    const pubClient = createClient({ url: redisUrl });
+    const subClient = pubClient.duplicate();
+    pubClient.on('error', (err) => logger.error('socket.io redis pub error', { error: err.message }));
+    subClient.on('error', (err) => logger.error('socket.io redis sub error', { error: err.message }));
+    await Promise.all([pubClient.connect(), subClient.connect()]);
+    io.adapter(createAdapter(pubClient, subClient));
+    logger.info('Socket.IO Redis adapter attached — realtime events now fan out across all instances');
+    return true;
+  } catch (e) {
+    logger.error('Failed to attach Socket.IO Redis adapter; falling back to in-memory (single-instance)', { error: e.message });
+    return false;
+  }
+}
+
 function initializeSocket(server) {
   // In dev, accept any localhost/127.0.0.1 origin so we don't have to keep the
   // explicit list in lock-step with whatever port `next dev` picks.
@@ -39,6 +79,10 @@ function initializeSocket(server) {
       credentials: true
     }
   });
+
+  // Attach the cross-instance Redis adapter (guarded no-op without REDIS_URL +
+  // the adapter package). Async + non-blocking — Socket.IO buffers until ready.
+  attachRedisAdapter(io).catch(() => {});
 
   // Handshake authentication. The client sends its JWT in
   // socket.handshake.auth.token (see client/hooks/useSocket.ts). We verify it

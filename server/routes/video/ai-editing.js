@@ -23,6 +23,7 @@ const {
 } = require('../../services/aiVideoEditingService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const captionStore = require('../../services/captionStore');
 const logger = require('../../utils/logger');
 const User = require('../../models/User');
 const Content = require('../../models/Content');
@@ -955,7 +956,9 @@ router.post('/marketing-brief', auth, asyncHandler(async (req, res) => {
     const { generateMarketingStrategy, scoreAndRankClips } = require('../../services/aiAssistedEditingService');
     const content = await resolveContent(videoId);
     const transcript = content?.captions?.text || content?.transcript?.text || content?.transcription?.text || '';
-    const transcriptWords = content?.captions?.words || content?.transcript?.words || null;
+    // Word-level timing now lives in the Caption collection (read-through to embedded).
+    const captionWords = await captionStore.getWords(videoId, { content });
+    const transcriptWords = (captionWords && captionWords.length) ? captionWords : (content?.transcript?.words || null);
     const duration = content?.originalFile?.duration || content?.metadata?.duration || 0;
     const resolvedNiche = niche || content?.niche || 'general';
     const metadata = { duration };

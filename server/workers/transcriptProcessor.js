@@ -2,6 +2,7 @@
 const { createWorker } = require('../services/jobQueueService');
 const { transcribeVideo: realTranscribe } = require('../services/aiTranscriptionService');
 const Content = require('../models/Content');
+const captionStore = require('../services/captionStore');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
@@ -32,13 +33,17 @@ async function processTranscriptJob(jobData, job) {
 
     await job.updateProgress(80);
 
-    // Save transcript and words to content
-    // We now save structured word-level data to enable Kinetic Typography
+    // Heavy word-level data → Caption collection (off Content, no 16MB risk).
+    await captionStore.saveSource(contentId, {
+      text: transResult.text,
+      words: transResult.words || [],
+      language: transResult.language,
+    }, { embedSlim: false });
+    // Slim marker + processing status stay embedded on Content.
     await Content.findByIdAndUpdate(contentId, {
       $set: {
         transcript: transResult.text,
         'captions.text': transResult.text,
-        'captions.words': transResult.words || [],
         'captions.language': transResult.language,
         'processing.transcriptStatus': 'completed',
         'processing.transcriptCompletedAt': new Date(),

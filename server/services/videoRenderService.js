@@ -6,6 +6,7 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const crypto = require('crypto')
+const { notoFontForText } = require('../utils/scriptFont')
 let sharp = null
 try { sharp = require('sharp') } catch (_) { /* sharp optional; svg/gradient overlays degrade gracefully */ }
 const Content = require('../models/Content')
@@ -571,7 +572,9 @@ function buildDrawTextFilter(overlay, dims = {}) {
     finalY = `(${y})-15*sin(2*PI*t/0.4)`
   }
 
-  const fontPath = getSystemFontPath()
+  // Script-aware: a Noto font when the caption is CJK/Arabic/Thai/Devanagari and
+  // one is installed, else the Latin default — so non-Latin captions aren't tofu.
+  const fontPath = notoFontForText(rawText) || getSystemFontPath()
   const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : ''
 
   // ── Editor parity: animationIn/Out + per-overlay keyframes ──

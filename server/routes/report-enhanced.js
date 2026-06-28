@@ -160,13 +160,17 @@ router.get('/shared/:token', asyncHandler(async (req, res) => {
     return sendError(res, 'Invalid password', 401);
   }
 
-  // Record view
+  // Record view — cap the embedded array so a widely-shared link can't grow the
+  // document toward the 16MB BSON limit (keep the most recent 500 views).
   await ReportShare.findByIdAndUpdate(share._id, {
     $push: {
       views: {
-        viewedAt: new Date(),
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent')
+        $each: [{
+          viewedAt: new Date(),
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent')
+        }],
+        $slice: -500
       }
     }
   });

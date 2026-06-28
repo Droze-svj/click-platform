@@ -7,6 +7,8 @@ const logger = require('../utils/logger');
 const Content = require('../models/Content');
 const { uploadFile } = require('./storageService');
 const ffmpeg = require('fluent-ffmpeg');
+const { escapeDrawtext } = require('../utils/ffmpegSafe');
+const captionStore = require('./captionStore');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
@@ -1110,6 +1112,21 @@ function getSystemFontPath() {
   return null;
 }
 
+// Script-aware caption font: a Noto font covering the line's script (CJK/Arabic/
+// Thai/Devanagari) when installed, else the Latin default — so non-Latin captions
+// render real glyphs instead of tofu boxes. Detection + Noto candidates are shared
+// via utils/scriptFont so this service and videoRenderService stay in lock-step.
+const { notoFontForText } = require('../utils/scriptFont');
+
+function getFontPathForText(text) {
+  return notoFontForText(text) || getSystemFontPath();
+}
+
+function fontfileOptFor(text) {
+  const p = getFontPathForText(text);
+  return p ? `:fontfile='${p.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+}
+
 /**
  * Word-Level Karaoke Caption System — the #1 differentiator over Submagic/Captions.ai.
  * Groups transcript words into 4-word display lines. Each line is rendered dim,
@@ -1131,9 +1148,9 @@ function generateWordLevelCaptionFilters(transcriptWords, style = 'modern', glob
   // ~28px per character at fontSize 52-56 is a good monospace approximation
   const charWidth = fontSize === 56 ? 30 : 28;
 
-  const fontPath = getSystemFontPath();
-  const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
-
+  // Font is resolved PER LINE from the line's script (fontfileOptFor) so a
+  // CJK/Arabic/Thai/Devanagari line gets a glyph-covering font even inside a
+  // mixed-language video, instead of one Latin font that boxes them all.
   for (let i = 0; i < transcriptWords.length; i += WORDS_PER_LINE) {
     const group = transcriptWords.slice(i, i + WORDS_PER_LINE);
     const groupStart = (group[0].start ?? 0) - globalTimeOffset;
@@ -1145,9 +1162,12 @@ function generateWordLevelCaptionFilters(transcriptWords, style = 'modern', glob
     const gs = Math.max(0, groupStart).toFixed(3);
     const ge = Math.min(groupEnd, globalDuration).toFixed(3);
 
-    const lineText = group.map(w => (w.word || w.text || '').replace(/[^a-zA-Z0-9 ',.!?-]/g, '')).join(' ').toUpperCase();
-    if (!lineText.trim()) continue;
-    const safeLine = lineText.replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+    const rawLine = group.map(w => (w.word || w.text || '')).join(' ').trim();
+    if (!rawLine) continue;
+    const fontfileOpt = fontfileOptFor(rawLine); // script-aware (CJK/Arabic/… → Noto)
+    // Keep ALL scripts (CJK/Arabic/Cyrillic/accented Latin); UPPERCASE only affects Latin.
+    const lineText = /[a-z]/.test(rawLine) ? rawLine.toUpperCase() : rawLine;
+    const safeLine = escapeDrawtext(lineText);
 
     // Dim base line — full group, low opacity
     filters.push(
@@ -1167,9 +1187,10 @@ function generateWordLevelCaptionFilters(transcriptWords, style = 'modern', glob
       const ws = Math.max(0, wStart).toFixed(3);
       const we = Math.min(wEnd, globalDuration).toFixed(3);
 
-      const wordText = (wordObj.word || wordObj.text || '').replace(/[^a-zA-Z0-9 ',.!?-]/g, '').toUpperCase();
-      if (!wordText.trim()) { charsAccumulated += wordText.length + 1; return; }
-      const safeWord = wordText.replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
+      const rawWord = (wordObj.word || wordObj.text || '').trim();
+      const wordText = /[a-z]/.test(rawWord) ? rawWord.toUpperCase() : rawWord;
+      if (!wordText.trim()) { charsAccumulated += rawWord.length + 1; return; }
+      const safeWord = escapeDrawtext(wordText);
 
       // x offset: centre the full line, then shift right by chars-before-word
       const totalChars = lineText.length;
@@ -1611,12 +1632,11 @@ function renderManualEditIntermediate({ inputPath, editorState, outputDir, video
     // additional filters. We now escape the full set FFmpeg recognises
     // PLUS strip newlines (which would terminate the filter line).
     const overlays = Array.isArray(editorState?.textOverlays) ? editorState.textOverlays : [];
-    const fontPath = getSystemFontPath();
-    const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
 
     for (const o of overlays.slice(0, 10)) { // cap to avoid runaway filter chains
       const text = String(o?.text || '').trim();
       if (!text) continue;
+      const fontfileOpt = fontfileOptFor(text); // script-aware font (CJK/Arabic/… → Noto)
       const escaped = text
         .replace(/[\r\n]+/g, ' ')          // newlines → space
         .replace(/\\/g, '\\\\')             // backslash first (everything below adds backslashes)
@@ -2130,7 +2150,9 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let globalTimeOffset = 0;
     let globalDuration = duration;
     let transcript = content.captions?.text || (typeof content.transcript === 'string' ? content.transcript : content.transcript?.text) || content.metadata?.transcript || null;
-    let transcriptWords = content.captions?.words || content.transcript?.words || null;
+    // Word timing now lives in the Caption collection (read-through to embedded).
+    const _capWords = await captionStore.getWords(videoId, { content });
+    let transcriptWords = (_capWords && _capWords.length) ? _capWords : (content.transcript?.words || null);
 
     // Auto-transcribe when no transcript exists yet. Without this every
     // dev-uploaded video skipped Gemini's smart caption / hook / viral
@@ -2170,9 +2192,15 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
               // Persist onto content so subsequent runs skip retranscription.
               if (!content.metadata) content.metadata = {};
               content.transcript = transcript;
-              content.captions = {
+              // Heavy words → Caption collection; slim marker in-memory for save().
+              await captionStore.saveSource(videoId, {
                 text: transcript,
                 words: transcriptWords,
+                language: txResult.language,
+                generatedAt: new Date(),
+              }, { embedSlim: false });
+              content.captions = {
+                text: transcript,
                 language: txResult.language,
                 generatedAt: new Date()
               };
@@ -2629,7 +2657,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       if (editingOptions.enableBRoll !== false && brollFreq !== 'off') {
         try {
           emitProgress('b-roll', 28, 'Orchestrating AI B-roll variety...');
-          bRollPlan = await bRollIntelligenceService.orchestrateBRoll(videoId, { segments: content.captions?.segments || [] });
+          bRollPlan = await bRollIntelligenceService.orchestrateBRoll(videoId, { segments: (await captionStore.getSegments(videoId, { content })) || [] });
           if (bRollPlan.length > 0) {
             content.metadata = { ...content.metadata, bRollPlan };
             await commitContent(content);
@@ -3169,8 +3197,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
         // Safe-escape for drawtext: single quotes must be \’ in the filter string
         const safeText = drawableText.replace(/\\/g, '\\\\').replace(/'/g, '\u2019').replace(/:/g, '\\:').replace(/%/g, '\\%');
 
-        const fontPath = getSystemFontPath();
-        const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+        const fontfileOpt = fontfileOptFor(drawableText); // script-aware (CJK/Arabic/\u2026 \u2192 Noto)
 
         const captionFilter = `drawtext=text='${safeText}'${fontfileOpt}:fontsize=${fontSize}:fontcolor='${sty.fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${sty.bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow}:shadowy=${sty.shadow}:enable='between(t\\,${s}\\,${e})'`;
         videoFilters.push(captionFilter);
@@ -3225,8 +3252,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
         if (Number(s) >= globalDuration || Number(e) <= 0) return;
 
         const safeText = (overlay.text || '').replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
-        const fontPath = getSystemFontPath();
-        const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+        const fontfileOpt = fontfileOptFor(overlay.text || ''); // script-aware (CJK/Arabic/… → Noto)
 
         const textFilter = `drawtext=text='${safeText}'${fontfileOpt}:fontsize=${fontSize}:fontcolor='${color}':x='${x}':y='${y}':box=1:boxcolor='${bgColor}':borderw=2:bordercolor='black':enable='between(t\\,${s}\\,${e})'`;
         videoFilters.push(textFilter);
@@ -3248,9 +3274,8 @@ Transcript: "${transcript.substring(0, 3500)}"`;
 
         const prodName = (inlay.product || 'Product').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
         const prodPrice = (inlay.price || 'Link in bio').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
-        const fontPath = getSystemFontPath();
-        const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
-          
+        const fontfileOpt = fontfileOptFor(`${inlay.product || ''} ${inlay.price || ''}`); // script-aware
+
         // Outer glass border box (160px tall card, positioned 280px above bottom edge)
         videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=white@0.8:thickness=4:enable='between(t\\,${startT}\\,${endT})'`);
         // Inner glass fill

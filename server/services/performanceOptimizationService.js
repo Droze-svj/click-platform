@@ -83,7 +83,6 @@ function getOptimalSettings() {
 class RenderQueue {
   constructor() {
     this.queue = [];
-    this.processing = false;
     this.maxConcurrent = getOptimalSettings().maxConcurrentJobs;
     this.activeJobs = 0;
   }
@@ -98,53 +97,60 @@ class RenderQueue {
     this.process();
   }
 
-  async process() {
-    if (this.processing || this.activeJobs >= this.maxConcurrent) {
-      return;
-    }
-
-    if (this.queue.length === 0) {
-      return;
-    }
-
-    this.processing = true;
-
+  // Fill every free concurrency slot from the queue. Synchronous + idempotent —
+  // safe to call from add() and from each finishing job. Jobs now run in PARALLEL
+  // up to maxConcurrent (cores/2); previously the in-loop `await` serialized the
+  // whole queue — activeJobs never exceeded 1 and the concurrency cap was dead.
+  process() {
     while (this.queue.length > 0 && this.activeJobs < this.maxConcurrent) {
       const job = this.queue.shift();
       this.activeJobs++;
-
-      job.status = 'processing';
-      job.startedAt = new Date().toISOString();
-
-      try {
-        // Capture and forward the execute() result. Previously this discarded
-        // the result and called onComplete(job) with the queue's own job object,
-        // so callers (e.g. videoRenderService) never received the render output
-        // ({ outputPath, url }) — manual exports completed but returned no
-        // downloadable URL.
-        const result = await job.execute();
-        job.status = 'completed';
-        job.completedAt = new Date().toISOString();
-        job.result = result;
-        if (job.onComplete) {
-          job.onComplete(result);
-        }
-      } catch (error) {
-        job.status = 'failed';
-        job.error = error.message;
-        if (job.onError) {
-          job.onError(error);
-        }
-      } finally {
-        this.activeJobs--;
-      }
+      // Fire WITHOUT awaiting so the loop can fill the remaining slots; the job
+      // releases its slot (and pulls the next queued one) in _runJob's finally.
+      this._runJob(job);
     }
+  }
 
-    this.processing = false;
+  async _runJob(job) {
+    job.status = 'processing';
+    job.startedAt = new Date().toISOString();
 
-    // Continue processing if queue not empty
-    if (this.queue.length > 0) {
-      setImmediate(() => this.process());
+    // Hard timeout so a single hung ffmpeg job (corrupt input, stalled remote
+    // source, codec deadlock) can NEVER wedge its slot forever. Generous default
+    // (20 min) so real long renders aren't killed; tune via RENDER_JOB_TIMEOUT_MS.
+    const RENDER_JOB_TIMEOUT_MS = Number(process.env.RENDER_JOB_TIMEOUT_MS) || 20 * 60 * 1000;
+    let timeoutHandle = null;
+    try {
+      // Capture and forward the execute() result. Previously the queue discarded
+      // the result and called onComplete(job) with the queue's own job object, so
+      // callers (e.g. videoRenderService) never received the render output
+      // ({ outputPath, url }) — manual exports completed but returned no URL.
+      const result = await Promise.race([
+        job.execute(),
+        new Promise((_, reject) => {
+          timeoutHandle = setTimeout(
+            () => reject(new Error(`Render job timed out after ${RENDER_JOB_TIMEOUT_MS}ms`)),
+            RENDER_JOB_TIMEOUT_MS,
+          );
+        }),
+      ]);
+      job.status = 'completed';
+      job.completedAt = new Date().toISOString();
+      job.result = result;
+      if (job.onComplete) {
+        job.onComplete(result);
+      }
+    } catch (error) {
+      job.status = 'failed';
+      job.error = error.message;
+      if (job.onError) {
+        job.onError(error);
+      }
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+      this.activeJobs--;
+      // A slot just freed — pull the next queued job (if any).
+      if (this.queue.length > 0) this.process();
     }
   }
 
@@ -165,4 +171,5 @@ module.exports = {
   optimizeFFmpegCommand,
   getOptimalSettings,
   renderQueue,
+  RenderQueue, // exported for tests (construct with a controlled maxConcurrent)
 };

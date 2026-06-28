@@ -45,7 +45,7 @@ Provide as JSON array with fields: hashtag, category (trending/niche/popular), e
         hashtags = JSON.parse(jsonMatch[0]);
       } else {
         hashtags = (hashtagsText || '')
-          .match(/#\w+/g)
+          .match(/#[\p{L}\p{N}_]+/gu)
           ?.map((tag) => ({
             hashtag: tag.replace('#', ''),
             category: 'general',

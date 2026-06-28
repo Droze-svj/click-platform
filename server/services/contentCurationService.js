@@ -30,7 +30,9 @@ async function scoreContentForCuration(userId, content, options = {}) {
 
     // Performance score (0-30 points)
     if (considerPerformance) {
-      const posts = await ScheduledPost.find({
+      // Callers scoring many candidates for one user can pass pre-fetched posts
+      // (one $in query) instead of forcing a query per candidate (N+1).
+      const posts = options.posts || await ScheduledPost.find({
         userId,
         contentId: content._id,
         status: 'posted'
@@ -49,7 +51,9 @@ async function scoreContentForCuration(userId, content, options = {}) {
 
     // Relevance score (0-25 points)
     if (considerRelevance) {
-      const user = await User.findById(userId).select('niche preferences').lean();
+      // The user is invariant across a candidate set — callers can pass it once
+      // instead of re-fetching it for every candidate (N+1).
+      const user = options.user || await User.findById(userId).select('niche preferences').lean();
       
       if (user) {
         let relevanceScore = 0;
@@ -260,6 +264,20 @@ async function discoverContentForCuration(userId, options = {}) {
       .limit(limit * 3) // Get more for scoring
       .lean();
 
+    // Batch the two per-candidate queries into one each (kills the N+1): fetch the
+    // user once, and all posted posts for every candidate via a single $in, grouped.
+    const userForScoring = await User.findById(userId).select('niche preferences').lean();
+    const candidateIds = candidates.map((c) => c._id);
+    const allPosts = candidateIds.length
+      ? await ScheduledPost.find({ userId, contentId: { $in: candidateIds }, status: 'posted' }).lean()
+      : [];
+    const postsByContent = new Map();
+    for (const p of allPosts) {
+      const k = String(p.contentId);
+      if (!postsByContent.has(k)) postsByContent.set(k, []);
+      postsByContent.get(k).push(p);
+    }
+
     // Score each content
     const scoredContent = await Promise.all(
       candidates.map(async (content) => {
@@ -267,7 +285,9 @@ async function discoverContentForCuration(userId, options = {}) {
           considerPerformance: true,
           considerRelevance: true,
           considerRecency: true,
-          considerEngagement: true
+          considerEngagement: true,
+          user: userForScoring,
+          posts: postsByContent.get(String(content._id)) || []
         });
 
         return {

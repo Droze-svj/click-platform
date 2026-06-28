@@ -13,7 +13,7 @@ function clamp(n, min, max) {
 
 function estimateFromText(text = '', platform = 'instagram') {
   const len = (text || '').trim().length;
-  const hashtagCount = (text.match(/#\w+/g) || []).length;
+  const hashtagCount = (text.match(/#[\p{L}\p{N}_]+/gu) || []).length;
   const hasQuestion = /\?/.test(text);
   const hasCTA = /\b(follow|subscribe|comment|share|like|save|dm|link in bio)\b/i.test(text);
   const hasEmoji = /\p{Emoji}/u.test(text);

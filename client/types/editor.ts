@@ -1179,6 +1179,8 @@ export interface EditorContentPreferences {
   showExportPlatformHints?: boolean
   /** Last N category ids for "Recent" in sidebar */
   recentSections?: EditorCategory[]
+  /** Default caption look applied to new captions (set during onboarding). */
+  defaultCaptionStyle?: CaptionTextStyle
 }
 
 export const EDITOR_CONTENT_PREFS_KEY = 'editor-content-preferences'
