@@ -146,8 +146,8 @@ async function optimizeHashtagsForPlatform(hashtags, platform, language) {
       if (!h.startsWith('#')) {
         h = '#' + h;
       }
-      // Remove special characters (keep only alphanumeric and underscore)
-      h = h.replace(/[^#\w]/g, '');
+      // Remove special characters (keep Unicode letters/digits of any script + underscore)
+      h = h.replace(/[^#\p{L}\p{N}_]/gu, '');
       return h;
     }).filter(h => h.length > 1); // Filter out empty or single character
 

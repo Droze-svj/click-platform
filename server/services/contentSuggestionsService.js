@@ -230,7 +230,7 @@ function extractPlatforms(text) {
 
 function extractHashtags(text) {
   const hashtags = [];
-  const matches = text.match(/#\w+/g);
+  const matches = text.match(/#[\p{L}\p{N}_]+/gu);
   if (matches) {
     hashtags.push(...matches.map(h => h.replace('#', '')));
   }

@@ -35,9 +35,10 @@ async function getSmartBRollSuggestions(transcript, words = []) {
     for (const chunk of chunks) {
       // Extract main noun/verb (heuristic simulation)
       const keywords = chunk.text.toLowerCase()
-        .replace(/[^\w\s]/g, '')
+        .replace(/[^\p{L}\p{N}\s]/gu, '') // keep letters/digits of any script (was \w = ASCII only)
         .split(/\s+/)
-        .filter(w => w.length > 5);
+        // Latin content words are >5 chars; CJK/Hangul words are short — keep them too.
+        .filter(w => w.length > 5 || /[\u3040-\u9FFF\uAC00-\uD7AF]/.test(w));
       
       const query = keywords.length > 0 ? keywords[0] : 'cinematic';
       

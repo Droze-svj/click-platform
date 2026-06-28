@@ -361,7 +361,7 @@ async function executeStep(stepId, job, isRetry = false) {
       return {
         title: caption.substring(0, 40) + '...',
         description: caption,
-        hashtags: caption.match(/#\w+/g) || ['#viral', '#trending']
+        hashtags: caption.match(/#[\p{L}\p{N}_]+/gu) || ['#viral', '#trending']
       };
     }
 

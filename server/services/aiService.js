@@ -614,7 +614,7 @@ async function generateDiagnosticMatrix(postData, niche = 'general') {
 }
 
 function extractHashtags(text) {
-  const hashtagRegex = /#\w+/g;
+  const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
   return text.match(hashtagRegex) || [];
 }
 

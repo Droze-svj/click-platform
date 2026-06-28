@@ -13,7 +13,7 @@
 // Escape a string for safe interpolation inside drawtext `text='...'`.
 // Mirrors the thorough escaping in videoRenderService.escapeFfmpegText.
 function escapeDrawtext(text, maxLen = 200) {
-  return String(text == null ? '' : text)
+  const escaped = String(text == null ? '' : text)
     .replace(/[\r\n]+/g, ' ') // newlines → space (drawtext treats \n literally)
     .replace(/\\/g, '\\\\') // backslash FIRST (everything below adds backslashes)
     .replace(/'/g, '’') // single quote → typographic quote (can't close the literal)
@@ -23,8 +23,10 @@ function escapeDrawtext(text, maxLen = 200) {
     .replace(/\[/g, '\\[') // brackets (filter-link labels)
     .replace(/\]/g, '\\]')
     .replace(/:/g, '\\:') // colon (option separator)
-    .replace(/%/g, '\\%') // percent (drawtext format/strftime spec)
-    .slice(0, maxLen);
+    .replace(/%/g, '\\%'); // percent (drawtext format/strftime spec)
+  // Truncate by CODE POINT so we never split a surrogate pair (emoji / CJK
+  // extension chars) into a lone half → a corrupt '�' in the burned-in text.
+  return Array.from(escaped).slice(0, maxLen).join('');
 }
 
 // Whitelist a color to a safe ffmpeg token, falling back when it isn't one.
