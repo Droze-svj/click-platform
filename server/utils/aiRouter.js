@@ -30,7 +30,9 @@ let openai = null;
 try {
   if (process.env.OPENAI_API_KEY) {
     const OpenAI = require('openai');
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // Explicit timeout + single retry (matches anthropicAI). The SDK default is
+    // 10 MINUTES, so a stuck OpenAI call could pin a render/AI worker that long.
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 90_000, maxRetries: 1 });
   }
 } catch (err) {
   logger.warn('aiRouter: openai package not loadable', { error: err.message });
