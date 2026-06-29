@@ -29,6 +29,11 @@ const webhookEventSchema = new mongoose.Schema(
     },
     eventType: { type: String },
     receivedAt: { type: Date, default: Date.now },
+    // false = claimed but processing didn't finish (a crash/transient error).
+    // A retry of an UNPROCESSED event is allowed to re-run, so a failure between
+    // claim and apply can't permanently drop a paid entitlement. Set true only
+    // after processEvent succeeds → true duplicates then skip.
+    processed: { type: Boolean, default: false },
     result: { type: mongoose.Schema.Types.Mixed },
   },
   { timestamps: true }

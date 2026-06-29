@@ -31,15 +31,39 @@ const router = express.Router();
 async function claimEvent(provider, eventId, eventType) {
   if (!eventId) return { claimed: true, missingId: true };
   try {
-    await WebhookEvent.create({ provider, eventId, eventType });
+    await WebhookEvent.create({ provider, eventId, eventType, processed: false });
     return { claimed: true };
   } catch (err) {
-    if (err && err.code === 11000) return { claimed: false, duplicate: true };
-    // Unexpected DB error — let the caller decide. We err on the side of
-    // processing (return claimed: true) so a Mongo blip doesn't drop a
-    // payment event.
+    if (err && err.code === 11000) {
+      // Already claimed. Only a record that was actually PROCESSED is a true
+      // duplicate to skip; an unprocessed one means a prior attempt died between
+      // claim and apply (or two retries raced) — let this attempt re-process so a
+      // paid entitlement is never permanently dropped. Re-applies are idempotent
+      // for our handlers (set subscription.status=active, etc.).
+      try {
+        const existing = await WebhookEvent.findOne({ provider, eventId }).select('processed').lean();
+        if (existing && existing.processed) return { claimed: false, duplicate: true };
+        return { claimed: true, retryUnprocessed: true };
+      } catch (lookupErr) {
+        logger.warn('[whop-webhook] claim lookup failed, allowing through', { error: lookupErr.message });
+        return { claimed: true, claimError: lookupErr.message };
+      }
+    }
+    // Unexpected DB error — err on the side of processing so a Mongo blip
+    // doesn't drop a payment event.
     logger.warn('[whop-webhook] claimEvent error, allowing through', { error: err.message });
     return { claimed: true, claimError: err.message };
+  }
+}
+
+// Mark the claimed event processed (idempotent) once apply succeeded, so future
+// retries of the SAME event become safe no-ops.
+async function markProcessed(provider, eventId, result) {
+  if (!eventId) return;
+  try {
+    await WebhookEvent.updateOne({ provider, eventId }, { $set: { processed: true, result } });
+  } catch (err) {
+    logger.warn('[whop-webhook] markProcessed failed', { eventId, error: err.message });
   }
 }
 
@@ -94,6 +118,8 @@ router.post('/', async (req, res) => {
       logger.info('[whop-webhook] event-skipped', result);
       return res.json({ received: true, ...result });
     }
+    // Apply succeeded → mark processed so retries of this exact event no-op.
+    await markProcessed('whop', eventId, result);
     logger.info('[whop-webhook] event-applied', result);
     return res.json({ received: true, ...result });
   } catch (err) {
@@ -104,3 +130,6 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
+// Exported for tests (two-phase idempotency).
+module.exports.claimEvent = claimEvent;
+module.exports.markProcessed = markProcessed;
