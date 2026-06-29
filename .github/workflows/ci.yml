@@ -125,6 +125,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # test:security boots the app + hits the DB; without a mongo service every
+    # security suite failed with ECONNREFUSED (the job set a localhost MONGODB_URI
+    # but provided no server). Mirror the `test` job's services. Redis stays
+    # optional (caching degrades gracefully) but is provided for parity.
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
 

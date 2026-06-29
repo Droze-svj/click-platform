@@ -104,7 +104,8 @@ async function runOnce() {
     // Paginate the scan so a large user base isn't loaded into memory all at once.
     const PAGE = 500;
     let _page = 0;
-    while (true) {
+    let hasMore = true;
+    while (hasMore) {
       const { data: users, error } = await supabase()
         .from('users')
         .select('id, social_links')
@@ -117,39 +118,39 @@ async function runOnce() {
       if (!users || users.length === 0) break;
 
       for (const user of users) {
-      const oauth = user.social_links?.oauth || {};
-      for (const [platform, row] of Object.entries(oauth)) {
-        if (!row || typeof row !== 'object') continue;
-        // Walk accounts[] if it exists; fall back to the legacy flat shape
-        // (single primary token at the row root) so legacy users get
-        // refreshed too while their data migrates over time.
-        const accounts = Array.isArray(row.accounts) && row.accounts.length > 0
-          ? row.accounts
-          : (row.accessToken ? [{ accountId: row.platformUserId || 'primary', expiresAt: row.expiresAt, refreshToken: row.refreshToken }] : []);
-        for (const acc of accounts) {
-          stats.scanned += 1;
-          if (!acc.refreshToken) { stats.skipped += 1; continue; }
-          if (!isExpiringSoon(acc.expiresAt)) { stats.skipped += 1; continue; }
-          const refreshFn = getRefreshFn(platform);
-          if (!refreshFn) { stats.skipped += 1; continue; }
-          try {
-            await refreshFn(user.id, acc.accountId);
-            stats.refreshed += 1;
-            logger.info('Token refreshed', { userId: user.id, platform, accountId: acc.accountId });
-          } catch (err) {
-            stats.failed += 1;
-            logger.warn('Token refresh failed', {
-              userId: user.id,
-              platform,
-              accountId: acc.accountId,
-              error: err.message,
-            });
+        const oauth = user.social_links?.oauth || {};
+        for (const [platform, row] of Object.entries(oauth)) {
+          if (!row || typeof row !== 'object') continue;
+          // Walk accounts[] if it exists; fall back to the legacy flat shape
+          // (single primary token at the row root) so legacy users get
+          // refreshed too while their data migrates over time.
+          const accounts = Array.isArray(row.accounts) && row.accounts.length > 0
+            ? row.accounts
+            : (row.accessToken ? [{ accountId: row.platformUserId || 'primary', expiresAt: row.expiresAt, refreshToken: row.refreshToken }] : []);
+          for (const acc of accounts) {
+            stats.scanned += 1;
+            if (!acc.refreshToken) { stats.skipped += 1; continue; }
+            if (!isExpiringSoon(acc.expiresAt)) { stats.skipped += 1; continue; }
+            const refreshFn = getRefreshFn(platform);
+            if (!refreshFn) { stats.skipped += 1; continue; }
+            try {
+              await refreshFn(user.id, acc.accountId);
+              stats.refreshed += 1;
+              logger.info('Token refreshed', { userId: user.id, platform, accountId: acc.accountId });
+            } catch (err) {
+              stats.failed += 1;
+              logger.warn('Token refresh failed', {
+                userId: user.id,
+                platform,
+                accountId: acc.accountId,
+                error: err.message,
+              });
             // No re-throw — keep walking the queue.
+            }
           }
         }
       }
-      }
-      if (users.length < PAGE) break; // last page
+      hasMore = users.length === PAGE; // a full page may mean more remain; a short page is the last
       _page += 1;
     }
     logger.info('Token refresh cron complete', stats);

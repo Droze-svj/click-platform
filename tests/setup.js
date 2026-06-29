@@ -87,6 +87,20 @@ beforeAll(async () => {
       console.warn('Failed to start MongoMemoryServer, falling back to local MongoDB:', error.message);
       uri = 'mongodb://localhost:27017/click-test';
     }
+  } else {
+    // Real (shared) MongoDB — the CI path, where the MongoMemoryServer binary
+    // download 404s on the runner so each job points jest at one mongo service.
+    // Jest runs suites across PARALLEL workers that all share this single DB, and
+    // several route suites call UNSCOPED Content/User.deleteMany({}) in afterEach
+    // — so one worker wipes another worker's freshly-saved user mid-request and
+    // that request 401s ("user not found"). Give each worker its OWN database
+    // (…/click-test-w<id>) on the shared server so parallel suites are isolated,
+    // exactly like the per-worker in-memory DBs are locally. No-op single-worker.
+    const workerId = process.env.JEST_WORKER_ID;
+    if (workerId) {
+      uri = uri.replace(/(mongodb(?:\+srv)?:\/\/[^/]+\/)([^/?]+)(\?|$)/i, (_m, head, db, tail) => `${head}${db}-w${workerId}${tail}`);
+      process.env.MONGODB_URI = uri;
+    }
   }
 
   if (mongoose.connection.readyState !== 0) {

@@ -68,8 +68,11 @@ describe('Core-flow endpoint smoke', () => {
 
       const res = await req;
 
-      // The non-negotiable gate: no endpoint on the core flow may 5xx.
-      if (res.status >= 500) {
+      // The non-negotiable gate: no endpoint on the core flow may 5xx — UNLESS
+      // the case explicitly expects it (e.g. GET /api/health/ai honestly reports
+      // 503 "degraded" when no AI provider key is configured, which is exactly the
+      // case in a keyless CI env — that's correct behavior, not a crash).
+      if (res.status >= 500 && !c.expect.includes(res.status)) {
         throw new Error(
           `${c.name} returned ${res.status}: ${JSON.stringify(res.body).slice(0, 300)}`
         );
