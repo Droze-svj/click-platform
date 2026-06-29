@@ -31,6 +31,7 @@ logger.info('📝 NODE_ENV (after .env): ' + (process.env.NODE_ENV || 'NOT SET (
 // Initialize logger early (needed for error handlers)
 // logger is already required at the top
 
+const isProductionLikeEnv = () => process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
 let Sentry = null;
 if (process.env.SENTRY_DSN) {
   try {
@@ -43,9 +44,15 @@ if (process.env.SENTRY_DSN) {
     });
     logger.info('✅ Sentry error tracking initialized');
   } catch (sentryInitErr) {
-    logger.warn('⚠️ Sentry initialization failed — continuing without error tracking', { error: sentryInitErr.message });
+    // Fail LOUD in prod: a silent Sentry=null means crashes vanish unseen.
+    const msg = '⚠️ Sentry initialization FAILED — error tracking is OFF';
+    if (isProductionLikeEnv()) logger.error(`${msg} (PRODUCTION — fix SENTRY_DSN/network)`, { error: sentryInitErr.message });
+    else logger.warn(`${msg} — continuing without it`, { error: sentryInitErr.message });
     Sentry = null;
   }
+} else if (isProductionLikeEnv()) {
+  // SENTRY_DSN unset on a deployed host = no crash/error visibility. Loud, not info.
+  logger.error('❌ SENTRY_DSN is not set in PRODUCTION — crash/error visibility is OFF. Set SENTRY_DSN.');
 } else {
   logger.info('ℹ️ SENTRY_DSN not set — error tracking disabled');
 }
@@ -2571,12 +2578,19 @@ function __installShutdownHooks() {
         }
         // #endregion
 
-        // Force-close idle/active keep-alive connections so the port is released promptly.
-        // (prevents nodemon restart races where the old process is still holding the listen socket)
-        try { server.closeIdleConnections && server.closeIdleConnections(); } catch (err) { /* ignore */ }
-        try { server.closeAllConnections && server.closeAllConnections(); } catch (err) { /* ignore */ }
-
+        // Graceful drain: stop accepting NEW connections (server.close), let
+        // in-flight requests finish, and close only IDLE keep-alive sockets now.
+        // After a grace window, force-close any stragglers so the deploy can't
+        // hang. Previously closeAllConnections() ran FIRST, aborting in-flight
+        // renders/webhooks/writes. Nodemon restarts (dev) skip the wait.
+        global.__shuttingDown = true; // readiness probe now sheds traffic (503)
         server.close(() => finish());
+        try { server.closeIdleConnections && server.closeIdleConnections(); } catch (err) { /* ignore */ }
+        const graceMs = isNodemonRestart ? 0 : parseInt(process.env.SHUTDOWN_DRAIN_MS || '15000', 10);
+        const forceTimer = setTimeout(() => {
+          try { server.closeAllConnections && server.closeAllConnections(); } catch (err) { /* ignore */ }
+        }, graceMs);
+        if (typeof forceTimer.unref === 'function') forceTimer.unref();
         return;
       }
     } catch { /* intentionally empty */ }

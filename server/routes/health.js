@@ -308,6 +308,11 @@ router.get('/light', (req, res) => {
  * replicas), which is a prod misconfiguration to alert on.
  */
 router.get('/ready', async (req, res) => {
+  // During graceful shutdown, immediately report not-ready so the load balancer
+  // drains this instance before its connections are force-closed.
+  if (global.__shuttingDown) {
+    return res.status(503).json({ status: 'shutting_down', timestamp: new Date().toISOString() });
+  }
   const isTest = process.env.NODE_ENV === 'test';
   const [mongo, redis] = await Promise.all([
     withTimeout(checkMongo(), 3000, 'Mongo').catch(() => ({ connected: false })),
