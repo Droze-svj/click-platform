@@ -10,13 +10,19 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env.production') });
 
 const logger = require('../server/utils/logger');
+const { assertSafeScriptDbUri } = require('../server/utils/dbSafety');
 
 async function runMigrations() {
   try {
     console.log('🔄 Starting database migrations...');
-    
-    // Connect to database
-    const mongoUri = process.env.MONGODB_URI;
+
+    // Connect to database. This is a prod-deployment migration; require an
+    // explicit --prod (or NODE_ENV=production) so it can't run against prod by
+    // accident from a dev shell that happens to have a remote MONGODB_URI loaded.
+    const mongoUri = assertSafeScriptDbUri(process.env.MONGODB_URI, {
+      allowProd: process.argv.includes('--prod') || process.argv.includes('--confirm-prod'),
+      scriptName: 'migrate-database',
+    });
     if (!mongoUri) {
       throw new Error('MONGODB_URI not set');
     }

@@ -23,7 +23,7 @@ const { isEncryptedToken } = require('../utils/dataEncryption');
 const logger = require('../utils/logger');
 
 async function run() {
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/click';
+  const uri = require('../utils/dbSafety').assertSafeScriptDbUri(process.env.MONGODB_URI || 'mongodb://localhost:27017/click', { allowProd: process.argv.includes('--prod'), scriptName: 'encryptSocialTokens' });
   await mongoose.connect(uri);
 
   let scanned = 0;

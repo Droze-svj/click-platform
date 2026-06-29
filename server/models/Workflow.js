@@ -3,6 +3,12 @@
 const mongoose = require('mongoose');
 
 const workflowSchema = new mongoose.Schema({
+  // NOTE: kept as String. The agentic pipeline (routes/agentic.js →
+  // agenticWorkflowService) keys Workflow/AgenticJob by a STRING userId; flipping
+  // to ObjectId would CastError on the UUID-form ids that subsystem threads
+  // through. Consistency is enforced instead by routing those writes through the
+  // canonical id (see server/utils/userKey.js) so the stored string is always the
+  // hex form — never a raw UUID.
   userId: {
     type: String,
     required: true

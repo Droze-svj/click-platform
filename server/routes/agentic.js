@@ -19,7 +19,10 @@ router.post('/run', authenticateToken, requireFeature('ai_agent'), async (req, r
     // caller's own video before running the (autonomous, publish-capable) pipeline.
     const owned = await guardOwnership(req, res, videoId)
     if (!owned) return
-    const result = await startAgentPipeline(videoId, goals || [], req.user.id)
+    // Canonical Mongo identity (ObjectId) — NOT req.user.id (the Supabase UUID),
+    // which previously keyed AgenticJob/Workflow by a UUID string and split a
+    // user's agent data from the rest of their (ObjectId-keyed) records.
+    const result = await startAgentPipeline(videoId, goals || [], req.user._id)
     res.json(result)
   } catch (err) {
     

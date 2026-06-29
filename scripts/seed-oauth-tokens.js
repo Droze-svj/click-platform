@@ -39,7 +39,7 @@ async function runSeeding() {
   }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click');
+    await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(process.env.MONGODB_URI || 'mongodb://localhost:27017/click', { allowProd: process.argv.includes('--prod'), scriptName: 'seed-oauth-tokens' }));
     const user = await User.findOne({ email: userEmail });
 
     if (!user) {

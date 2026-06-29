@@ -25,15 +25,22 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
+const { assertSafeScriptDbUri } = require('../server/utils/dbSafety');
 const Content = require('../server/models/Content');
 const Caption = require('../server/models/Caption');
 const captionStore = require('../server/services/captionStore');
 
 const APPLY = process.argv.includes('--apply');
 const CLEANUP = process.argv.includes('--cleanup');
+// This migration intentionally targets the LIVE prod DB — require an explicit
+// acknowledgement (--prod) or NODE_ENV=production so it can't run by accident.
+const ALLOW_PROD = process.argv.includes('--prod') || process.argv.includes('--confirm-prod');
 
 async function main() {
-  const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  const uri = assertSafeScriptDbUri(process.env.MONGODB_URI || process.env.MONGO_URI, {
+    allowProd: ALLOW_PROD,
+    scriptName: 'migrate-captions-off-content',
+  });
   if (!uri) throw new Error('MONGODB_URI not set');
   await mongoose.connect(uri);
   console.log(`[migrate-captions] mode=${APPLY ? 'APPLY' : 'DRY-RUN'} cleanup=${CLEANUP}`);

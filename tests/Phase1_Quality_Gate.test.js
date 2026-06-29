@@ -11,10 +11,9 @@ describe('Phase 1 Quality Gate: Core Infrastructure Integration', () => {
   let authToken;
 
   beforeAll(async () => {
-    // Connect to test database if not already connected
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click_test');
-    }
+    // Refuse any remote/Atlas URI; reuse the shared in-memory connection owned by
+    // tests/setup.js (defense-in-depth — never let a test touch the prod DB).
+    await require('./helpers/connectTestDb')();
     
     // Clean up test data
     await User.deleteMany({ email: 'test_quality@example.com' });

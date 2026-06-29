@@ -101,7 +101,7 @@ router.post('/generate-script', auth, asyncHandler(async (req, res) => {
 router.post('/save-master-script', auth, asyncHandler(async (req, res) => {
   const { topic, tone, role, script } = req.body;
   const userId = req.user?._id || req.user?.id;
-  const isDevUser = userId && String(userId).startsWith('dev-');
+  const isDevUser = require('../utils/devUser').isDevUser(userId);
 
   if (!topic || !script || typeof script !== 'object') {
     return sendError(res, 'Topic and script (hook/body/cta) are required', 400);

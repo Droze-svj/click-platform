@@ -34,6 +34,46 @@ const NOTO_FONT_CANDIDATES = {
 
 const _scriptFontCache = {};
 
+// Latin default-font candidates (macOS / Linux / Windows), tried in order. Used
+// when text has no special script (detectTextScript → null), and as the fallback
+// when a Noto font for a non-Latin script isn't installed. Previously duplicated
+// verbatim in videoRenderService.js AND aiVideoEditingService.js — now ONE list.
+const SYSTEM_FONT_CANDIDATES = [
+  // macOS Supplemental Fonts
+  '/System/Library/Fonts/Supplemental/Arial.ttf',
+  '/System/Library/Fonts/Supplemental/Helvetica.ttf',
+  '/System/Library/Fonts/Supplemental/Verdana.ttf',
+  '/System/Library/Fonts/Supplemental/Georgia.ttf',
+  '/System/Library/Fonts/Supplemental/Impact.ttf',
+  // macOS Core Fonts
+  '/System/Library/Fonts/Helvetica.dfont',
+  '/System/Library/Fonts/Arial.ttf',
+  '/Library/Fonts/Arial.ttf',
+  '/Library/Fonts/Microsoft/Arial.ttf',
+  // Linux truetype Fonts
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+  '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf',
+  '/usr/share/fonts/truetype/msttcorefonts/arial.ttf',
+  // Windows Fonts
+  'C:\\Windows\\Fonts\\arial.ttf',
+];
+
+let _systemFontPath; // undefined = not resolved yet; null/string after.
+
+/**
+ * Resolves a valid TTF/OTF Latin font on the server's filesystem (to avoid
+ * FFmpeg drawtext crashes when Sans/Arial defaults are missing). Cached.
+ */
+function getSystemFontPath() {
+  if (_systemFontPath === undefined) {
+    _systemFontPath = SYSTEM_FONT_CANDIDATES
+      .find((p) => { try { return fs.existsSync(p); } catch (_) { return false; } }) || null;
+  }
+  return _systemFontPath;
+}
+
 function detectTextScript(text) {
   const s = String(text || '');
   if (/[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uAC00-\uD7AF\uFF66-\uFF9D]/.test(s)) return 'cjk';
@@ -54,4 +94,4 @@ function notoFontForText(text) {
   return _scriptFontCache[script];
 }
 
-module.exports = { detectTextScript, notoFontForText };
+module.exports = { detectTextScript, notoFontForText, getSystemFontPath, SYSTEM_FONT_CANDIDATES };

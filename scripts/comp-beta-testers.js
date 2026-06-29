@@ -44,7 +44,7 @@ async function main() {
   }
 
   const oneYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(process.env.MONGODB_URI, { allowProd: process.argv.includes('--prod'), scriptName: 'comp-beta-testers' }));
   console.log('✅ Connected to MongoDB\n');
 
   let comped = 0;

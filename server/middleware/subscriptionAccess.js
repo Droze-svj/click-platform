@@ -123,6 +123,46 @@ const requireActiveSubscription = (req, res, next) => {
 };
 
 /**
+ * Pure subscription decision (NO res side-effects) — reused by callers that
+ * can't sit behind Express middleware, e.g. the tus resumable-upload hook
+ * (onUploadCreate). Mirrors requireActiveSubscription's dev-bypass + fail-closed
+ * semantics exactly so chunked, multipart, and tus uploads gate identically.
+ * @returns {{ ok: true } | { ok: false, statusCode: number, message: string, status?: object }}
+ */
+const checkActiveSubscription = (req) => {
+  const nodeEnv = process.env.NODE_ENV;
+  if (nodeEnv === 'development') {
+    const host = (req.headers?.host || req.headers?.['x-forwarded-host'] || '').toLowerCase();
+    const referer = (req.headers?.referer || req.headers?.origin || '').toLowerCase();
+    const forwardedFor = req.headers?.['x-forwarded-for'] || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
+      referer.includes('localhost') || referer.includes('127.0.0.1') ||
+      (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
+    if (process.env.BYPASS_SUBSCRIPTION === 'true' || isLocalhost || req.user?.isDevUser) {
+      return { ok: true };
+    }
+  }
+  if (!req.user) return { ok: false, statusCode: 401, message: 'Authentication required' };
+  try {
+    if (hasSubscriptionAccess(req.user)) return { ok: true };
+    const status = getSubscriptionStatus(req.user);
+    return {
+      ok: false,
+      statusCode: 403,
+      status,
+      message: status.isExpired
+        ? 'Your subscription has expired. Please renew to continue using this feature.'
+        : 'An active subscription is required to access this feature.',
+    };
+  } catch (error) {
+    logger.error('❌ [Subscription] checkActiveSubscription error', { error: error.message });
+    // Fail OPEN only in local development; deployed envs fail CLOSED.
+    if (nodeEnv === 'development') return { ok: true };
+    return { ok: false, statusCode: 500, message: 'Error checking subscription access' };
+  }
+};
+
+/**
  * Check subscription for premium features
  */
 const requirePremiumSubscription = (req, res, next) => {
@@ -178,6 +218,7 @@ const checkSubscriptionStatus = (req, res, next) => {
 
 module.exports = {
   requireActiveSubscription,
+  checkActiveSubscription,
   requirePremiumSubscription,
   checkSubscriptionStatus
 };

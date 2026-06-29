@@ -17,7 +17,7 @@ async function seed() {
   try {
     console.log('🌱 Seeding mock developer user...');
     
-    await mongoose.connect(MONGODB_URI, {
+    await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(MONGODB_URI, { allowProd: process.argv.includes('--prod'), scriptName: 'seed-dev-user' }), {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

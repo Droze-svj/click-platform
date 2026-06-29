@@ -15,7 +15,7 @@ router.post('/store', auth, async (req, res) => {
       return res.status(400).json({ error: "Missing preferred text memory" });
     }
 
-    const success = await vectorMemoryService.storeUserMemory(req.user._id || req.user.id, text, metadata);
+    const success = await vectorMemoryService.storeUserMemory(req.user._id, text, metadata);
     if (!success) {
       return res.status(500).json({ error: "Failed to generate embeddings. Could not store memory." });
     }
@@ -38,7 +38,7 @@ router.get('/query', auth, async (req, res) => {
       return res.status(400).json({ error: "Missing search query" });
     }
 
-    const results = await vectorMemoryService.queryUserMemory(req.user._id || req.user.id, query);
+    const results = await vectorMemoryService.queryUserMemory(req.user._id, query);
     res.json({ results, status: 200 });
   } catch (error) {
     logger.error('Query semantic memory error', { error: error.message });
@@ -57,7 +57,7 @@ router.delete('/:memoryId', auth, async (req, res) => {
       return res.status(400).json({ error: "Missing memory ID" });
     }
 
-    const success = await vectorMemoryService.deleteUserMemory(req.user._id || req.user.id, memoryId);
+    const success = await vectorMemoryService.deleteUserMemory(req.user._id, memoryId);
     if (!success) {
       return res.status(404).json({ error: "Memory not found or could not be deleted" });
     }

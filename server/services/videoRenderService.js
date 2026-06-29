@@ -6,7 +6,7 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const crypto = require('crypto')
-const { notoFontForText } = require('../utils/scriptFont')
+const { notoFontForText, getSystemFontPath } = require('../utils/scriptFont')
 let sharp = null
 try { sharp = require('sharp') } catch (_) { /* sharp optional; svg/gradient overlays degrade gracefully */ }
 const Content = require('../models/Content')
@@ -231,40 +231,8 @@ const CAPTION_STYLE_MAP = {
   default:  { fontColor: '#FFFFFF', bgColor: 'black@0.8',  fontSize: 58, y: 'h-text_h-(h*0.1667)', borderColor: 'black',   borderw: 2, shadow: 2 },
 };
 
-/**
- * Resolves a valid TTF/OTF font file on the server's filesystem
- * to avoid FFmpeg drawtext crashes when Sans/Arial defaults are missing.
- */
-function getSystemFontPath() {
-  const possiblePaths = [
-    // macOS Supplemental Fonts
-    '/System/Library/Fonts/Supplemental/Arial.ttf',
-    '/System/Library/Fonts/Supplemental/Helvetica.ttf',
-    '/System/Library/Fonts/Supplemental/Verdana.ttf',
-    '/System/Library/Fonts/Supplemental/Georgia.ttf',
-    '/System/Library/Fonts/Supplemental/Impact.ttf',
-    // macOS Core Fonts
-    '/System/Library/Fonts/Helvetica.dfont',
-    '/System/Library/Fonts/Arial.ttf',
-    '/Library/Fonts/Arial.ttf',
-    '/Library/Fonts/Microsoft/Arial.ttf',
-    // Linux truetype Fonts
-    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-    '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
-    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-    '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf',
-    '/usr/share/fonts/truetype/msttcorefonts/arial.ttf',
-    // Windows Fonts
-    'C:\\Windows\\Fonts\\arial.ttf'
-  ];
-
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-  return null;
-}
+// getSystemFontPath() is now shared via utils/scriptFont (imported above) so this
+// service and aiVideoEditingService resolve the SAME Latin default-font list.
 
 // ── Emoji support ──────────────────────────────────────────────────────────
 // Emoji are ALWAYS stripped from the main text drawtext so the body font never

@@ -7,12 +7,53 @@ const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const User = require('../models/User');
+const redisCache = require('../utils/redisCache');
 
-// Security event tracking
-const securityEvents = new Map(); // userId -> [events]
-const blockedIPs = new Set();
-const whitelistedIPs = new Map(); // userId -> Set of IPs
-const deviceSessions = new Map(); // userId -> [devices]
+// ── Shared per-user security state (events / devices / IP whitelist) ─────────
+// Was in-memory-only Maps, so on a multi-instance deploy each instance saw a
+// DIFFERENT view (a device revoked on instance A still appeared on B, the
+// security event log was split, etc.). Now read-through / write-through Redis
+// (via redisCache, JSON blobs with TTL) so every instance shares one view, with
+// the in-memory Maps kept as the fallback when Redis is absent (single-instance
+// dev, or Redis down). Blob read-modify-write is best-effort (audit/UX state,
+// not auth-critical), which is acceptable for these categories.
+const securityEvents = new Map(); // userId -> [events]   (fallback cache)
+const blockedIPs = new Set();      // global; NOT shared (no enforcement consumers)
+const whitelistedIPs = new Map();  // userId -> [ips]      (fallback cache)
+const deviceSessions = new Map();  // userId -> [devices]  (fallback cache)
+
+const STATE_TTL_SECONDS = 30 * 24 * 3600; // 30 days
+const stateKey = {
+  events: (u) => `sec:events:${u}`,
+  devices: (u) => `sec:devices:${u}`,
+  whitelist: (u) => `sec:wl:${u}`,
+};
+
+/** Read a per-user array from Redis (shared) or the in-memory fallback. */
+async function readState(key, memMap, memKey) {
+  if (redisCache.isConnected) {
+    try {
+      const v = await redisCache.get(key);
+      if (Array.isArray(v)) { memMap.set(memKey, v); return v; } // refresh fallback
+    } catch (_) { /* fall through to memory */ }
+  }
+  const m = memMap.get(memKey);
+  return Array.isArray(m) ? m : [];
+}
+
+/** Write a per-user array to Redis (shared) AND the in-memory fallback. */
+async function writeState(key, arr, memMap, memKey) {
+  // Bound the in-memory fallback (FIFO) so it can't grow unbounded when Redis is
+  // absent and many distinct users are active over the process lifetime.
+  if (!memMap.has(memKey) && memMap.size >= 10000) {
+    const oldest = memMap.keys().next().value;
+    if (oldest !== undefined) memMap.delete(oldest);
+  }
+  memMap.set(memKey, arr);
+  if (redisCache.isConnected) {
+    try { await redisCache.set(key, arr, STATE_TTL_SECONDS); } catch (_) { /* best-effort */ }
+  }
+}
 
 /**
  * Generate 2FA secret for user
@@ -161,10 +202,9 @@ async function disable2FA(userId, password) {
  */
 async function whitelistIP(userId, ip) {
   try {
-    if (!whitelistedIPs.has(userId)) {
-      whitelistedIPs.set(userId, new Set());
-    }
-    whitelistedIPs.get(userId).add(ip);
+    const ips = await readState(stateKey.whitelist(userId), whitelistedIPs, userId);
+    if (!ips.includes(ip)) ips.push(ip);
+    await writeState(stateKey.whitelist(userId), ips, whitelistedIPs, userId);
 
     trackSecurityEvent(userId, 'ip_whitelisted', { ip });
     logger.info('IP whitelisted', { userId, ip });
@@ -184,9 +224,8 @@ async function whitelistIP(userId, ip) {
  */
 async function removeWhitelistedIP(userId, ip) {
   try {
-    if (whitelistedIPs.has(userId)) {
-      whitelistedIPs.get(userId).delete(ip);
-    }
+    const ips = (await readState(stateKey.whitelist(userId), whitelistedIPs, userId)).filter((x) => x !== ip);
+    await writeState(stateKey.whitelist(userId), ips, whitelistedIPs, userId);
 
     trackSecurityEvent(userId, 'ip_removed', { ip });
     logger.info('IP removed from whitelist', { userId, ip });
@@ -204,11 +243,10 @@ async function removeWhitelistedIP(userId, ip) {
  * @param {string} ip - IP address
  * @returns {boolean} Is whitelisted
  */
-function isIPWhitelisted(userId, ip) {
-  if (!whitelistedIPs.has(userId)) {
-    return false; // No whitelist = allow all
-  }
-  return whitelistedIPs.get(userId).has(ip);
+async function isIPWhitelisted(userId, ip) {
+  const ips = await readState(stateKey.whitelist(userId), whitelistedIPs, userId);
+  if (!ips.length) return false; // No whitelist = allow all
+  return ips.includes(ip);
 }
 
 /**
@@ -269,17 +307,11 @@ async function trackDevice(userId, deviceInfo) {
       trusted: false,
     };
 
-    if (!deviceSessions.has(userId)) {
-      deviceSessions.set(userId, []);
-    }
-
-    deviceSessions.get(userId).push(device);
-
+    const devices = await readState(stateKey.devices(userId), deviceSessions, userId);
+    devices.push(device);
     // Keep last 10 devices
-    const devices = deviceSessions.get(userId);
-    if (devices.length > 10) {
-      devices.shift();
-    }
+    while (devices.length > 10) devices.shift();
+    await writeState(stateKey.devices(userId), devices, deviceSessions, userId);
 
     trackSecurityEvent(userId, 'device_registered', { deviceId: device.id });
     logger.info('Device tracked', { userId, deviceId: device.id });
@@ -296,8 +328,8 @@ async function trackDevice(userId, deviceInfo) {
  * @param {string} userId - User ID
  * @returns {Array} User devices
  */
-function getUserDevices(userId) {
-  return deviceSessions.get(userId) || [];
+async function getUserDevices(userId) {
+  return readState(stateKey.devices(userId), deviceSessions, userId);
 }
 
 /**
@@ -308,15 +340,14 @@ function getUserDevices(userId) {
  */
 async function revokeDevice(userId, deviceId) {
   try {
-    if (deviceSessions.has(userId)) {
-      const devices = deviceSessions.get(userId);
-      const index = devices.findIndex((d) => d.id === deviceId);
-      if (index !== -1) {
-        devices.splice(index, 1);
-        trackSecurityEvent(userId, 'device_revoked', { deviceId });
-        logger.info('Device revoked', { userId, deviceId });
-        return true;
-      }
+    const devices = await readState(stateKey.devices(userId), deviceSessions, userId);
+    const index = devices.findIndex((d) => d.id === deviceId);
+    if (index !== -1) {
+      devices.splice(index, 1);
+      await writeState(stateKey.devices(userId), devices, deviceSessions, userId);
+      trackSecurityEvent(userId, 'device_revoked', { deviceId });
+      logger.info('Device revoked', { userId, deviceId });
+      return true;
     }
     return false;
   } catch (error) {
@@ -331,18 +362,11 @@ async function revokeDevice(userId, deviceId) {
  * @param {string} eventType - Event type
  * @param {Object} metadata - Event metadata
  */
-function trackSecurityEvent(userId, eventType, metadata = {}) {
+// Async (Redis-backed) but safe to call fire-and-forget: it self-handles errors
+// and never rejects, so callers that don't await it won't see an unhandled
+// rejection. Audit events are best-effort.
+async function trackSecurityEvent(userId, eventType, metadata = {}) {
   try {
-    if (!securityEvents.has(userId)) {
-      // Bound the number of tracked users (FIFO eviction) so this in-memory
-      // store can't grow unbounded over the process lifetime.
-      if (securityEvents.size >= 10000) {
-        const oldest = securityEvents.keys().next().value;
-        if (oldest !== undefined) securityEvents.delete(oldest);
-      }
-      securityEvents.set(userId, []);
-    }
-
     const event = {
       type: eventType,
       userId,
@@ -350,13 +374,11 @@ function trackSecurityEvent(userId, eventType, metadata = {}) {
       metadata,
     };
 
-    securityEvents.get(userId).push(event);
-
+    const events = await readState(stateKey.events(userId), securityEvents, userId);
+    events.push(event);
     // Keep last 100 events per user
-    const events = securityEvents.get(userId);
-    if (events.length > 100) {
-      events.shift();
-    }
+    while (events.length > 100) events.shift();
+    await writeState(stateKey.events(userId), events, securityEvents, userId);
 
     // Log security events
     if (eventType.includes('failed') || eventType.includes('blocked')) {
@@ -373,8 +395,8 @@ function trackSecurityEvent(userId, eventType, metadata = {}) {
  * @param {number} limit - Limit results
  * @returns {Array} Security events
  */
-function getSecurityEvents(userId, limit = 50) {
-  const events = securityEvents.get(userId) || [];
+async function getSecurityEvents(userId, limit = 50) {
+  const events = await readState(stateKey.events(userId), securityEvents, userId);
   return events.slice(-limit).reverse();
 }
 
@@ -383,23 +405,24 @@ function getSecurityEvents(userId, limit = 50) {
  * @param {string} userId - User ID
  * @returns {Object} Security summary
  */
-function getSecuritySummary(userId) {
-  const events = getSecurityEvents(userId, 100);
+async function getSecuritySummary(userId) {
+  const events = await getSecurityEvents(userId, 100);
   const recentEvents = events.slice(0, 10);
 
   const failedLogins = events.filter((e) => e.type === 'login_failed').length;
-  const blockedIPs = events.filter((e) => e.type === 'ip_blocked').length;
-  const devices = getUserDevices(userId);
+  const blockedCount = events.filter((e) => e.type === 'ip_blocked').length;
+  const devices = await getUserDevices(userId);
+  const whitelist = await readState(stateKey.whitelist(userId), whitelistedIPs, userId);
 
   return {
     userId,
     totalEvents: events.length,
     recentEvents,
     failedLogins,
-    blockedIPs,
+    blockedIPs: blockedCount,
     deviceCount: devices.length,
     devices: devices.slice(0, 5), // Last 5 devices
-    whitelistedIPs: Array.from(whitelistedIPs.get(userId) || []),
+    whitelistedIPs: whitelist,
   };
 }
 

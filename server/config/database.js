@@ -12,9 +12,10 @@ let databaseStatus = {
 // True when a MongoDB URI points at a remote/Atlas (i.e. PRODUCTION) host. Used
 // by the dev DB-safety guard to refuse connecting a non-production boot to the
 // live prod database. Kept pure + exported so it can be unit-tested. Mirrors the
-// test-suite guard in tests/setup-env.js / tests/setup.js.
-const isRemoteProdUri = (uri) =>
-  /mongodb\+srv:/i.test(uri || '') || /\.mongodb\.net/i.test(uri || '');
+// test-suite guard in tests/setup-env.js / tests/setup.js. The canonical
+// implementation now lives in server/utils/dbSafety.js (one source of truth,
+// shared with the standalone scripts); re-exported here for back-compat.
+const { isRemoteProdUri } = require('../utils/dbSafety');
 
 // Initialize Supabase connection
 const initSupabase = async () => {

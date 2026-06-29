@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 
 const contentSchema = new mongoose.Schema({
+  // Identity. Kept as String for now (NOT flipped to ObjectId) — the read-path
+  // audit found 35+ sites resolving identity UUID-first (req.user?.id ||
+  // req.user?._id), and req.user.id's runtime form depends on the auth mode, so a
+  // BSON type-flip needs a coordinated migration + integration pass. Consistency
+  // is instead enforced by routing writes/reads through the canonical id
+  // (server/utils/userKey.js → req.user._id) so the stored string is always hex.
   userId: {
     type: String,
     required: true

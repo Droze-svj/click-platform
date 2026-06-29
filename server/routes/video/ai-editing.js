@@ -965,7 +965,7 @@ router.post('/marketing-brief', auth, asyncHandler(async (req, res) => {
 
     const [brief, scoredClips] = await Promise.all([
       generateMarketingStrategy(videoId, transcript, metadata, resolvedNiche),
-      scoreAndRankClips(transcript, transcriptWords, duration, metadata, req.user?.id),
+      scoreAndRankClips(transcript, transcriptWords, duration, metadata, req.user?._id),
     ]);
 
     return sendSuccess(res, 'Marketing brief generated', 200, { brief, scoredClips });
