@@ -68,7 +68,8 @@ router.put('/:workspaceId/guidelines', auth, requireWorkspaceAccess('canManageSe
     return sendError(res, 'Guidelines not found', 404);
   }
 
-  Object.assign(guidelines, req.body);
+  // Mass-assignment guard: never let the body reassign ownership (workspaceId/agencyWorkspaceId).
+  require('../utils/safeUpdate').applySafeUpdates(guidelines, req.body);
   await guidelines.save();
 
   sendSuccess(res, 'Guidelines updated', 200, guidelines);

@@ -10,8 +10,12 @@ function securityHeaders() {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Adjust for production
-        scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
+        // 'unsafe-eval' removed — nothing at runtime needs string→code execution
+        // (it's the strongest XSS amplifier). 'unsafe-inline' is retained because
+        // Next.js hydration uses inline bootstrap scripts; dropping it safely
+        // requires migrating to per-response nonces (tracked as a follow-up).
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'none'"], // no inline event handlers (onclick=…); React doesn't use them
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         // media-src must be set explicitly — without it, video/audio falls back
         // to default-src ('self') and Cloudinary-hosted uploads won't play.

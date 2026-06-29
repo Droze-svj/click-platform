@@ -197,7 +197,9 @@ router.put('/:agencyWorkspaceId/reports/templates/:templateId', auth, requireWor
     );
   }
 
-  Object.assign(template, req.body);
+  // Mass-assignment guard: never let the body reassign ownership
+  // (agencyWorkspaceId/clientWorkspaceId/createdBy).
+  require('../utils/safeUpdate').applySafeUpdates(template, req.body);
   await template.save();
 
   sendSuccess(res, 'Template updated', 200, template);

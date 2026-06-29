@@ -93,7 +93,8 @@ router.put('/:templateId', auth, asyncHandler(async (req, res) => {
     );
   }
 
-  Object.assign(template, req.body);
+  // Mass-assignment guard: block ownership (userId/teamId) + the system usage counter.
+  require('../../utils/safeUpdate').applySafeUpdates(template, req.body, { block: ['usageCount'] });
   await template.save();
 
   sendSuccess(res, 'Template updated', 200, template);
