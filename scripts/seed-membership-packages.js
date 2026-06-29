@@ -346,7 +346,7 @@ const defaultPackages = [
 
 async function seedPackages() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click');
+    await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(process.env.MONGODB_URI || 'mongodb://localhost:27017/click', { allowProd: process.argv.includes('--prod'), scriptName: 'seed-membership-packages' }));
     logger.info('Connected to MongoDB');
 
     // Clear existing packages (optional - comment out if you want to keep existing)

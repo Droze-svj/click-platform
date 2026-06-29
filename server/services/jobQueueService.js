@@ -350,6 +350,22 @@ function getRedisConnection() {
   return redisConnection;
 }
 
+/**
+ * Per-environment BullMQ key prefix.
+ *
+ * Every BullMQ key is namespaced by this prefix. PRODUCTION keeps BullMQ's
+ * default ('bull') so existing prod jobs/dead-letters are never orphaned. Every
+ * NON-production environment (development / staging / test / unset) gets its OWN
+ * keyspace ('bull-<env>') so a dev/staging/test process that (mis)points at the
+ * prod Redis can NEVER enqueue into — or be consumed by — prod's queues. This is
+ * the queue-side analogue of the Mongo dev-DB safety guard, and stops the
+ * test-pollution path that orphaned the generate-content dead-letter jobs.
+ */
+function queuePrefix() {
+  const env = process.env.NODE_ENV || 'development';
+  return env === 'production' ? undefined : `bull-${env}`;
+}
+
 // Job queues
 const queues = {};
 const workers = {};
@@ -367,6 +383,7 @@ function getQueue(name) {
   if (!queues[name]) {
     queues[name] = new Queue(name, {
       connection: connection,
+      prefix: queuePrefix(),
       defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -384,7 +401,7 @@ function getQueue(name) {
     });
 
     // Set up queue events
-    queueEvents[name] = new QueueEvents(name, { connection: connection });
+    queueEvents[name] = new QueueEvents(name, { connection: connection, prefix: queuePrefix() });
 
     queueEvents[name].on('completed', ({ jobId }) => {
       logger.info('Job completed', { queue: name, jobId });
@@ -903,9 +920,12 @@ function createWorker(queueName, processor, options = {}) {
               }
             }
 
-            
+
             return connection;
           })(),
+          // Must match the Queue/QueueEvents prefix or the worker silently
+          // consumes from the wrong (default) keyspace. See queuePrefix().
+          prefix: queuePrefix(),
           concurrency: options.concurrency || 1,
           limiter: options.limiter,
           ...options,

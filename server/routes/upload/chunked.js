@@ -2,6 +2,7 @@
 
 const express = require('express');
 const auth = require('../../middleware/auth');
+const { requireActiveSubscription } = require('../../middleware/subscriptionAccess');
 const {
   initChunkedUpload,
   uploadChunk,
@@ -29,7 +30,7 @@ const upload = multer({ storage: multer.memoryStorage() });
  *     security:
  *       - bearerAuth: []
  */
-router.post('/init', auth, asyncHandler(async (req, res) => {
+router.post('/init', auth, requireActiveSubscription, asyncHandler(async (req, res) => {
   const { totalSize, totalChunks, filename } = req.body;
   const uploadId = randomUUID();
 
@@ -88,7 +89,7 @@ router.post('/:uploadId', auth, upload.single('chunk'), asyncHandler(async (req,
  *     security:
  *       - bearerAuth: []
  */
-router.post('/:uploadId/assemble', auth, asyncHandler(async (req, res) => {
+router.post('/:uploadId/assemble', auth, requireActiveSubscription, asyncHandler(async (req, res) => {
   const { uploadId } = req.params;
 
   try {

@@ -35,7 +35,10 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
  */
 router.get('/stats', auth, asyncHandler(async (req, res) => {
   try {
-    const userId = req.user?.id || req.user?._id;
+    // Canonical-first (ObjectId), NOT req.user.id-first: Content/ScheduledPost are
+    // written keyed by the hex form of req.user._id, so resolving identity as the
+    // UUID first made uidStr a UUID and these stat queries silently returned 0.
+    const userId = req.user?._id || req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, error: 'User not authenticated' });

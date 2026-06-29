@@ -19,7 +19,7 @@ async function fixAndComplete() {
     console.log('🔧 Fixing YouTube OAuth state and completing connection...\n');
     
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/click';
+    const mongoUri = require('../server/utils/dbSafety').assertSafeScriptDbUri(process.env.MONGODB_URI || 'mongodb://localhost:27017/click', { allowProd: process.argv.includes('--prod'), scriptName: 'fix-youtube-state-and-complete' });
     await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB\n');
     

@@ -1081,42 +1081,14 @@ async function autoSelectMusic(videoId, sentiment, duration, options = {}) {
  * Resolves a valid TTF/OTF font file on the server's filesystem
  * to avoid FFmpeg drawtext crashes when Sans/Arial defaults are missing.
  */
-function getSystemFontPath() {
-  const possiblePaths = [
-    // macOS Supplemental Fonts
-    '/System/Library/Fonts/Supplemental/Arial.ttf',
-    '/System/Library/Fonts/Supplemental/Helvetica.ttf',
-    '/System/Library/Fonts/Supplemental/Verdana.ttf',
-    '/System/Library/Fonts/Supplemental/Georgia.ttf',
-    '/System/Library/Fonts/Supplemental/Impact.ttf',
-    // macOS Core Fonts
-    '/System/Library/Fonts/Helvetica.dfont',
-    '/System/Library/Fonts/Arial.ttf',
-    '/Library/Fonts/Arial.ttf',
-    '/Library/Fonts/Microsoft/Arial.ttf',
-    // Linux truetype Fonts
-    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-    '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
-    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-    '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf',
-    '/usr/share/fonts/truetype/msttcorefonts/arial.ttf',
-    // Windows Fonts
-    'C:\\Windows\\Fonts\\arial.ttf'
-  ];
-
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-  return null;
-}
+// getSystemFontPath() moved to utils/scriptFont (imported above) — single shared
+// Latin default-font list with videoRenderService.
 
 // Script-aware caption font: a Noto font covering the line's script (CJK/Arabic/
 // Thai/Devanagari) when installed, else the Latin default — so non-Latin captions
 // render real glyphs instead of tofu boxes. Detection + Noto candidates are shared
 // via utils/scriptFont so this service and videoRenderService stay in lock-step.
-const { notoFontForText } = require('../utils/scriptFont');
+const { notoFontForText, getSystemFontPath } = require('../utils/scriptFont');
 
 function getFontPathForText(text) {
   return notoFontForText(text) || getSystemFontPath();

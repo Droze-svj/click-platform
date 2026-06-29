@@ -128,7 +128,7 @@ router.delete('/ip/whitelist/:ip', authenticate, async (req, res) => {
 router.get('/devices', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
-    const devices = securityService.getUserDevices(userId);
+    const devices = await securityService.getUserDevices(userId);
     return sendSuccess(res, { devices });
   } catch (error) {
     logger.error('Error getting devices', { error: error.message });
@@ -161,7 +161,7 @@ router.get('/events', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     const { limit = 50 } = req.query;
-    const events = securityService.getSecurityEvents(userId, parseInt(limit, 10));
+    const events = await securityService.getSecurityEvents(userId, parseInt(limit, 10));
     return sendSuccess(res, { events });
   } catch (error) {
     logger.error('Error getting security events', { error: error.message });
@@ -176,7 +176,7 @@ router.get('/events', authenticate, async (req, res) => {
 router.get('/summary', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
-    const summary = securityService.getSecuritySummary(userId);
+    const summary = await securityService.getSecuritySummary(userId);
     return sendSuccess(res, summary);
   } catch (error) {
     logger.error('Error getting security summary', { error: error.message });

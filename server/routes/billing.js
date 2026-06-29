@@ -94,7 +94,7 @@ router.post('/promo-code/validate', auth, asyncHandler(async (req, res) => {
  */
 router.get('/usage', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id || req.user.id;
-  const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
+  const isDevUser = require('../utils/devUser').isDevUser(userId);
 
   // Dev users may not have a real Mongo record; return a safe empty payload
   // so the dashboard's billing card renders zeroes instead of 500ing.

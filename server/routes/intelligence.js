@@ -15,6 +15,7 @@ const logger = require('../utils/logger');
 const Script = require('../models/Script');
 const { generateContent } = require('../utils/googleAI');
 const { costGuard } = require('../middleware/costGuard');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { resolveTier } = require('../config/entitlements');
 const {
   HOOK_FRAMEWORKS, NICHE_PLAYBOOKS, NICHE_POSTING_WINDOWS, CTA_LIBRARY,
@@ -296,7 +297,7 @@ router.get('/factory/history', async (req, res) => {
   // both shapes and short-circuit to an empty list.
   const mongoose = require('mongoose');
   const userId = req.user._id || req.user.id;
-  const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
+  const isDevUser = require('../utils/devUser').isDevUser(userId);
   const isMongoId = mongoose.Types.ObjectId.isValid(String(userId));
   if (isDevUser || !isMongoId) {
     return res.json({ success: true, data: [] });
@@ -493,7 +494,7 @@ router.get('/strategist/tips', async (req, res) => {
  * niche+platform playbook. Returns a structured answer plus follow-up
  * questions and any related playbook keys the UI should highlight.
  */
-router.post('/strategist/ask', async (req, res) => {
+router.post('/strategist/ask', aiLimiter, async (req, res) => {
   try {
     const { question, niche: rawNiche, platforms = [] } = req.body || {};
     if (!question || typeof question !== 'string' || question.length > 1500) {
@@ -540,7 +541,7 @@ router.post('/strategist/ask', async (req, res) => {
  * The user picks one in the UI; the picked variant gets recorded to their
  * weightedHooks profile so the model biases toward what they actually use.
  */
-router.post('/strategist/variants', async (req, res) => {
+router.post('/strategist/variants', aiLimiter, async (req, res) => {
   try {
     const { baseHook, niche: rawNiche, platform: rawPlatform } = req.body || {};
     if (!baseHook || typeof baseHook !== 'string' || baseHook.length < 4 || baseHook.length > 600) {

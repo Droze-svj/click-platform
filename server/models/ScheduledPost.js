@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 
 const scheduledPostSchema = new mongoose.Schema({
+  // Identity. Kept as String (see Content.js note) — flip to ObjectId deferred to
+  // a coordinated migration. Writes/reads go through the canonical id
+  // (server/utils/userKey.js → req.user._id) so the stored string is always hex.
   userId: {
     type: String,
     required: true,

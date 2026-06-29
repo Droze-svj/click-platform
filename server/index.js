@@ -113,6 +113,10 @@ const HOST = process.env.HOST || '0.0.0.0';
 // Health check server should ONLY run on actual cloud deployments, not localhost
 const isCloudPlatform = !!(process.env.RENDER || process.env.HEROKU || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const __isHosted = (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') && isCloudPlatform;
+// Fail-closed misconfig check: loudly flag a deployed host whose NODE_ENV is
+// unset/dev/test (which would silently leave non-production gates active). See
+// server/utils/env.js for the canonical env predicates.
+require('./utils/env').assertDeployedEnvSane(logger);
 
 let healthCheckServer = null;
 if (__isHosted) {
@@ -439,6 +443,14 @@ setImmediate(() => {
         // The downstream scheduler/worker pipeline takes over from there.
         const { startRecurringPostCron } = require('./services/recurringPostCron');
         startRecurringPostCron();
+
+        // Alert-sweep cron — restores the search/benchmark/audience/repost alert,
+        // curation, goal-progress and always-on-library automation that used to
+        // live in the never-called jobScheduler.initializeScheduler(). OFF unless
+        // ENABLE_ALERT_SWEEPS=true (these raise user notifications + scan all
+        // users, so activating them is a deliberate opt-in). cronLock-guarded.
+        const { startAlertSweepCron } = require('./services/alertSweepCronService');
+        startAlertSweepCron();
 
         // Trends ingest schedule — pulls REAL web-grounded trends (Claude web
         // search via liveTrendService) per platform into TrendSnapshot on a
@@ -2517,6 +2529,7 @@ function __installShutdownHooks() {
       // restart or keep the process alive. Best-effort — never block shutdown.
       try { require('./services/performanceLearningCron').stopLearningCron?.(); } catch (err) { /* ignore */ }
       try { require('./services/performanceAlertService').stopAlertCron?.(); } catch (err) { /* ignore */ }
+      try { require('./services/alertSweepCronService').stopAlertSweepCron?.(); } catch (err) { /* ignore */ }
 
       // Flush Sentry events before shutdown
       if (Sentry && typeof Sentry.close === 'function') {

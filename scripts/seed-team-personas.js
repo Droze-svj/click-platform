@@ -15,7 +15,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/click'
 
 async function seedUsers() {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(MONGODB_URI, { allowProd: process.argv.includes('--prod'), scriptName: 'seed-team-personas' }));
     console.log('Connected to MongoDB');
 
     const testUsers = [

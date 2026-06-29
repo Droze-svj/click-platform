@@ -52,6 +52,14 @@ const tusServer = new Server({
     if (!ext || !ALLOWED_EXT.includes(ext)) {
       throw { status_code: 415, body: `Unsupported or missing file type${ext ? `: ${ext}` : ''}. Allowed: ${ALLOWED_EXT.join(', ')}` };
     }
+    // Gate CREATE on an active subscription, matching multipart (video.js:/upload)
+    // and chunked (upload/chunked.js). Gating here (not on every tus method) keeps
+    // resume/HEAD/OPTIONS of an already-created upload working.
+    const { checkActiveSubscription } = require('../middleware/subscriptionAccess');
+    const sub = checkActiveSubscription(req);
+    if (!sub.ok) {
+      throw { status_code: sub.statusCode === 401 ? 401 : 403, body: sub.message };
+    }
     return res;
   },
 

@@ -19,9 +19,11 @@ describe('E2E User Flows', () => {
 
   beforeAll(async () => {
     process.env.AUTO_VERIFY_EMAIL = 'true';
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click-test');
-    }
+    // Refuse any remote/Atlas URI; reuse the shared in-memory connection owned by
+    // tests/setup.js. (Previously a raw mongoose.connect(process.env.MONGODB_URI)
+    // here could connect straight to the prod DB — the root cause of the orphaned
+    // generate-content dead-letter jobs.)
+    await require('../helpers/connectTestDb')();
     registerEmail = `e2e_${Date.now()}@example.com`;
     searchtestEmail = `searchtest_${Date.now()}@example.com`;
   });

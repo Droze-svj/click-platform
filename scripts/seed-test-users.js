@@ -337,7 +337,10 @@ async function upsertUser(persona) {
 
 async function main() {
   console.log('🌱 Seeding five test personas into', MONGODB_URI.replace(/:\/\/[^@]+@/, '://***@'));
-  await mongoose.connect(MONGODB_URI);
+  await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(MONGODB_URI, {
+    allowProd: process.argv.includes('--prod'),
+    scriptName: 'seed-test-users',
+  }));
 
   const results = [];
   for (const persona of PERSONAS) {
