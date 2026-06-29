@@ -17,6 +17,7 @@ const QUEUE_NAMES = {
   ANALYTICS_PROCESSING: 'analytics-processing',
   FILE_PROCESSING: 'file-processing',
   SCHEDULED_POSTS: 'scheduled-posts',
+  C2PA_RESIGN: 'c2pa-resign',
 };
 
 // Job priorities
@@ -123,6 +124,24 @@ async function addScheduledPostJob(postData, scheduleTime, options = {}) {
 }
 
 /**
+ * Add a C2PA re-sign job — enqueued when a render shipped UNSIGNED (signer was
+ * transiently unavailable) so the file is re-signed asynchronously instead of
+ * staying permanently unsigned (CLAUDE.md mandates strict provenance). Several
+ * retries with backoff so a brief c2patool/c2pa-node hiccup self-heals.
+ */
+async function addC2paResignJob(data, options = {}) {
+  return addJob(QUEUE_NAMES.C2PA_RESIGN, {
+    name: 'c2pa-resign',
+    data,
+  }, {
+    priority: options.priority || JOB_PRIORITY.LOW,
+    attempts: options.attempts || 5,
+    backoff: { type: 'exponential', delay: 30_000 },
+    ...options,
+  });
+}
+
+/**
  * Get all queue statistics
  */
 async function getAllQueueStats() {
@@ -165,6 +184,7 @@ module.exports = {
   addTranscriptJob,
   addSocialPostJob,
   addScheduledPostJob,
+  addC2paResignJob,
   getAllQueueStats,
   cleanAllQueues,
 };
