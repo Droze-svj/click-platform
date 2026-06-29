@@ -2,9 +2,23 @@
 
 const winston = require('winston');
 const path = require('path');
+const { getContext } = require('./requestContext');
+
+// Stamp every log line emitted during a request with its requestId (+ userId)
+// from the AsyncLocalStorage context, so one request can be traced end-to-end.
+// Never throws — a context hiccup must not break logging.
+const injectRequestContext = winston.format((info) => {
+  try {
+    const ctx = getContext();
+    if (ctx.requestId && info.requestId === undefined) info.requestId = ctx.requestId;
+    if (ctx.userId && info.userId === undefined) info.userId = ctx.userId;
+  } catch (_) { /* never break logging */ }
+  return info;
+});
 
 // Define log format
 const logFormat = winston.format.combine(
+  injectRequestContext(),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
   winston.format.splat(),
@@ -39,6 +53,7 @@ function safeStringify(obj) {
 
 // Console format for development
 const consoleFormat = winston.format.combine(
+  injectRequestContext(),
   winston.format.colorize(),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
