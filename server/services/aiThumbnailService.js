@@ -28,6 +28,7 @@ const logger = require('../utils/logger');
 
 const Content = require('../models/Content');
 const googleAI = require('../utils/googleAI');
+const { fontfileOptFor } = require('../utils/scriptFont');
 
 const MIN_THUMBNAIL_BYTES = 5 * 1024; // 5KB — anything smaller is a render bailout
 const DEFAULT_VARIANT_COUNT = 3;
@@ -136,7 +137,9 @@ function renderThumbnail({ inputPath, outputPath, timestamp, overlay }) {
     // Centered horizontally; sits in the upper third for thumb-stop
     // dominance on small mobile previews.
     const drawtext = [
-      `drawtext=text='${escapedText}'`,
+      // Script-aware font so CJK / Arabic / Thai / Devanagari overlay titles
+      // burn real glyphs (not tofu) on the most-seen "hook" frame.
+      `drawtext=text='${escapedText}'${fontfileOptFor(overlay)}`,
       `fontsize=72`,
       `fontcolor=yellow`,
       `borderw=4`,

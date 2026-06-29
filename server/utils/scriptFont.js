@@ -94,4 +94,26 @@ function notoFontForText(text) {
   return _scriptFontCache[script];
 }
 
-module.exports = { detectTextScript, notoFontForText, getSystemFontPath, SYSTEM_FONT_CANDIDATES };
+/**
+ * The resolved font path for `text`: a script-covering Noto font when `text` is
+ * non-Latin and one is installed, else the Latin system default (or null if no
+ * font resolves at all). The single decision point every drawtext caller should use.
+ */
+function fontPathForText(text) {
+  return notoFontForText(text) || getSystemFontPath();
+}
+
+/**
+ * FFmpeg drawtext `:fontfile='...'` option string for `text`'s script, or ''
+ * when no font resolves (so the caller's existing Latin default applies —
+ * additive, never a regression). The path is escaped for the filter graph
+ * (`\` → `/`, `:` → `\:`, e.g. a Windows `C:\…` drive path). Returned WITH the
+ * leading colon so it concatenates directly after a `text='…'` token. Shared so
+ * every drawtext surface (captions, overlays, thumbnails) selects fonts identically.
+ */
+function fontfileOptFor(text) {
+  const p = fontPathForText(text);
+  return p ? `:fontfile='${p.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : '';
+}
+
+module.exports = { detectTextScript, notoFontForText, getSystemFontPath, fontPathForText, fontfileOptFor, SYSTEM_FONT_CANDIDATES };
