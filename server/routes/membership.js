@@ -229,7 +229,8 @@ router.put('/admin/packages/:packageId', auth, requireRole('admin'), asyncHandle
     return sendError(res, 'Package not found', 404);
   }
 
-  Object.assign(membershipPackage, req.body);
+  // Mass-assignment guard: block identity/system fields (and the immutable slug).
+  require('../utils/safeUpdate').applySafeUpdates(membershipPackage, req.body, { block: ['slug'] });
   await membershipPackage.save();
 
   logger.info('Membership package updated', {

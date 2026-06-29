@@ -238,7 +238,8 @@ router.put('/content/:id', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content not found', 404);
   }
 
-  Object.assign(content, req.body);
+  // Mass-assignment guard: never let the body reassign ownership (userId/workspaceId).
+  require('../utils/safeUpdate').applySafeUpdates(content, req.body);
   await content.save();
 
   // Trigger webhook

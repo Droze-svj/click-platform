@@ -257,7 +257,9 @@ router.put('/:agencyWorkspaceId/links/groups/:groupId', auth, requireWorkspaceAc
     return sendError(res, 'Link group not found', 404);
   }
 
-  Object.assign(group, req.body);
+  // Mass-assignment guard: never let the body reassign ownership
+  // (agencyWorkspaceId/clientWorkspaceId/createdBy) or overwrite computed analytics.
+  require('../utils/safeUpdate').applySafeUpdates(group, req.body, { block: ['analytics'] });
   await group.save();
 
   sendSuccess(res, 'Link group updated', 200, group);

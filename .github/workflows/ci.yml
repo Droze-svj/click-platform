@@ -164,6 +164,11 @@ jobs:
     - name: Generate Prisma Client
       run: npm run prisma:generate
 
+    # Fail if a real .env or key material was ever committed (the highest-leverage
+    # leak guardrail — local pre-commit hooks can be skipped, CI can't).
+    - name: Scan for committed secrets
+      run: node scripts/check-secrets.js
+
     # Runtime deps are clean at high/critical (all prior highs fixed via direct
     # bumps + overrides — see docs/security-debt.md). Gate at high so no new
     # high/critical advisory can merge unnoticed. The 4 remaining moderates need

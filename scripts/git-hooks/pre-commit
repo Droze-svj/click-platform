@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Local pre-commit guard against committing secrets. Install with:
+#   git config core.hooksPath scripts/git-hooks
+# (CI also runs scripts/check-secrets.js, so this is a fast local backstop, not
+# the enforcement point.)
+set -e
+node scripts/check-secrets.js
