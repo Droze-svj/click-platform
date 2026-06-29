@@ -10,12 +10,14 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    # Informational only. The Playwright suite has ~130 tests, ~111 of
-    # which assert against routes/UI that don't behave as expected
-    # (aspirational fixtures pre-PR). Surfacing the run is useful;
-    # blocking on it is not.
-    continue-on-error: true
-    timeout-minutes: 30
+    # Runs the CI gate SMOKE (tests/e2e/ci-smoke.spec.js): a tiny, deterministic
+    # check that the backend + frontend actually boot and serve. This is a REQUIRED
+    # status check, so it must reach `success` to merge — hence no continue-on-error.
+    # The full aspirational tests/e2e suite (~130 specs, most asserting routes/UI
+    # that aren't built yet) is NOT run here: it can't pass and, run serially with
+    # retries, blows the timeout. Run it on demand with
+    # `npx playwright test --config=playwright.config.no-webserver.js`.
+    timeout-minutes: 20
     
     services:
       mongodb:
@@ -58,11 +60,11 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
 
-    - name: Build application
-      run: |
-        npm run build
-      env:
-        NODE_ENV: production
+    # NOTE: no separate "build the client" step here — the API process doesn't
+    # need client/.next to boot (it just declines to serve the frontend, which
+    # Next serves itself on :3000), and the client is built once below in
+    # "Build frontend" with the right NEXT_PUBLIC_API_URL. (Prisma is generated
+    # in its own step above.) Dropping the duplicate Next build saves ~5 min.
 
     - name: Start server
       run: |
@@ -92,13 +94,11 @@ jobs:
       run: |
         npx --yes wait-on tcp:5001 tcp:3000 --timeout 120000
 
-    - name: Run E2E tests
-      # CI manages the server lifecycle itself (separate Start steps above),
-      # so use the no-webserver config — otherwise Playwright tries to spawn
-      # `npm run dev` (which uses pnpm, not present on the runner) and exits
-      # 1 before any test runs.
+    - name: Run E2E smoke (gate)
+      # The required gate: the small deterministic smoke. CI manages the server
+      # lifecycle via the Start steps above, so this uses a no-webserver config.
       run: |
-        npx playwright test --config=playwright.config.no-webserver.js
+        npx playwright test --config=playwright.config.ci-smoke.js
       env:
         E2E_BASE_URL: http://localhost:3000
         E2E_API_URL: http://localhost:5001/api
