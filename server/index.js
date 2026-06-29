@@ -125,6 +125,18 @@ const __isHosted = (process.env.NODE_ENV === 'production' || process.env.NODE_EN
 // server/utils/env.js for the canonical env predicates.
 require('./utils/env').assertDeployedEnvSane(logger);
 
+// C2PA signer availability — CLAUDE.md mandates strict provenance signing. Alert
+// LOUDLY at boot if no signer (c2pa-node / c2patool) is present, so an operator
+// knows renders will ship unsigned (and get queued for async re-sign) until fixed.
+require('./services/c2paService').verifyC2paTools().then((c) => {
+  if (c && !c.available) {
+    const m = `[c2pa] NO signer available (${c.error}) — renders will ship UNSIGNED (queued for re-sign) until c2patool/c2pa-node is installed.`;
+    if (isProductionLikeEnv()) logger.error('❌ ' + m); else logger.warn('⚠️ ' + m);
+  } else if (c) {
+    logger.info(`✅ C2PA signer available: ${c.signer}${c.version ? ' ' + c.version : ''}`);
+  }
+}).catch(() => { /* never block boot on the probe */ });
+
 let healthCheckServer = null;
 if (__isHosted) {
   logger.info(`📝 Starting health check server on port ${PORT}...`);

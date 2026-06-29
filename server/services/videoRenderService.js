@@ -1840,6 +1840,23 @@ async function renderFromEditorState(options) {
                     logger.warn('[render] persistAuthenticity threw', { jobId: c2paJobId, error: err.message })
                   })
 
+                  // Strict provenance (CLAUDE.md): a render must NEVER silently ship
+                  // unsigned. If the signer was unavailable, alert loudly + queue an
+                  // async re-sign so the file is signed once the signer recovers.
+                  if (!c2paResult.signed) {
+                    logger.error('[render] export shipped UNSIGNED (C2PA signer unavailable) — queued for re-sign', {
+                      jobId: c2paJobId, videoId, reason: c2paResult.reason || 'unknown',
+                    })
+                    try { require('../utils/sentry').captureException?.(new Error('C2PA unsigned export'), { tags: { type: 'c2pa_unsigned' }, extra: { jobId: c2paJobId, videoId } }) } catch (_) { /* sentry optional */ }
+                    try {
+                      await require('../queues').addC2paResignJob({
+                        inputPath: outputPath, tree: null, jobId: c2paJobId, userId: userId || null, contentId: videoId || null,
+                      })
+                    } catch (e) {
+                      logger.warn('[render] failed to enqueue C2PA re-sign', { jobId: c2paJobId, error: e.message })
+                    }
+                  }
+
                   // Default to the local URL. On hosts with cloud storage configured
                   // (Cloudinary/S3) the local uploads dir is ephemeral, so push the
                   // export to cloud and hand back the durable URL instead. This is

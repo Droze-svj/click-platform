@@ -176,6 +176,7 @@ function initializeAllWorkers() {
     const { initializeEmailWorker } = require('./emailSender');
     const { initializeTranscriptWorker } = require('./transcriptProcessor');
     const { initializeSocialPostWorker } = require('./socialPostProcessor');
+    const { initializeC2paResignWorker } = require('./c2paResignWorker');
 
     // Initialize each worker (they will check Redis internally)
     const videoWorker = initializeVideoWorker();
@@ -183,9 +184,10 @@ function initializeAllWorkers() {
     const emailWorker = initializeEmailWorker();
     const transcriptWorker = initializeTranscriptWorker();
     const socialWorker = initializeSocialPostWorker();
+    const c2paResignWorker = initializeC2paResignWorker();
 
     // Check if any workers were actually created
-    const workersCreated = [videoWorker, contentWorker, emailWorker, transcriptWorker, socialWorker].filter(w => w !== null).length;
+    const workersCreated = [videoWorker, contentWorker, emailWorker, transcriptWorker, socialWorker, c2paResignWorker].filter(w => w !== null).length;
 
     if (workersCreated === 0) {
       logger.warn('⚠️ No workers were created. Redis may not be configured correctly.');
