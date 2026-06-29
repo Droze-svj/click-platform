@@ -54,7 +54,10 @@ import HealthDeltaOverlay from './editor/HealthDeltaOverlay'
 // Specialized Views
 import EliteAIView from './editor/views/EliteAIView'
 import CreativeAIView from './editor/views/CreativeAIView'
-import GrowthInsightsView from './editor/views/GrowthInsightsView'
+// Lazy-loaded: pulls in recharts (~heavy). Only loads when the Growth tab is
+// opened, keeping it out of the editor's initial chunk. (AdvancedTimelineView
+// below does the same for react-konva.)
+const GrowthInsightsView = dynamic(() => import('./editor/views/GrowthInsightsView'), { ssr: false })
 import PredictionEngineView from './editor/views/PredictionEngineView'
 import AutomateView from './editor/views/AutomateView'
 import ColorGradingView from './editor/views/ColorGradingView'
