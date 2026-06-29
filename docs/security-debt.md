@@ -6,7 +6,7 @@ production deps, so no new `high`/`critical` advisory can merge unnoticed. The
 overrides are mirrored in both `overrides` (npm / `npm ci`) and `pnpm.overrides`
 (the Docker/pnpm build) so both package managers get the patches.
 
-## Cleared (current as of 2026-06-04)
+## Cleared (current as of 2026-06-29)
 
 Production `npm audit`: **0 critical, 0 high.** Patched via direct bumps +
 `overrides`:
@@ -30,8 +30,10 @@ Production `npm audit`: **0 critical, 0 high.** Patched via direct bumps +
 | picomatch | override `^2.3.2` | POSIX char-class injection. |
 | socket.io-parser | override `^4.2.6` | Unbounded binary attachments. |
 | tar | override `^7.5.13` | Hardlink path-traversal. |
-| undici | override `^7.25.0` | Unbounded decompression. |
+| undici | override `^7.27.3` | Unbounded decompression; bumped 2026-06-29 to clear new highs (TLS bypass via SOCKS5, Set-Cookie/header injection, cache poisoning). Stays within major 7. |
 | minimatch | override `^10.2.5` | ReDoS via repeated wildcards. |
+| form-data | override `^4.0.6` | (2026-06-29) CRLF injection via unescaped multipart field names/filenames. Transitive; pinned to the 4.x patch. |
+| nodemailer | bumped to `^9.0.1` | (2026-06-29) Direct dep. Fixes SMTP command injection (envelope.size, EHLO/HELO CRLF), List-* header injection, jsonTransport file-access bypass, OAuth2 TLS validation, raw-option SSRF/file-read. The only fix is the v9 major; the createTransport/sendMail API Click uses is unchanged. |
 
 ## Outstanding (4 moderate, accepted)
 
