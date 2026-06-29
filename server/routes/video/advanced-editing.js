@@ -6,6 +6,7 @@ const { authenticate } = require('../../middleware/auth');
 const { sendSuccess, sendError } = require('../../utils/response');
 const advancedVideoEditingService = require('../../services/advancedVideoEditingService');
 const Content = require('../../models/Content');
+const { getUserIdFromReq } = require('../../utils/userId');
 const { addVideoProcessingJob } = require('../../queues');
 const logger = require('../../utils/logger');
 const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
@@ -31,7 +32,7 @@ router.post('/auto-cut', authenticate, async (req, res) => {
     }
 
     // Get content
-    const content = await Content.findOne({ _id: contentId, userId });
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }
@@ -83,7 +84,7 @@ router.post('/smart-transitions', authenticate, async (req, res) => {
       return sendError(res, 'Content ID is required', 400);
     }
 
-    const content = await Content.findOne({ _id: contentId, userId });
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }
@@ -125,7 +126,7 @@ router.post('/color-correct', authenticate, async (req, res) => {
       return sendError(res, 'Content ID is required', 400);
     }
 
-    const content = await Content.findOne({ _id: contentId, userId });
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }
@@ -167,7 +168,7 @@ router.post('/auto-frame', authenticate, async (req, res) => {
       return sendError(res, 'Content ID is required', 400);
     }
 
-    const content = await Content.findOne({ _id: contentId, userId });
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }
@@ -208,7 +209,7 @@ router.post('/stabilize', authenticate, async (req, res) => {
       return sendError(res, 'Content ID is required', 400);
     }
 
-    const content = await Content.findOne({ _id: contentId, userId });
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }
@@ -250,7 +251,7 @@ router.post('/apply-all', authenticate, async (req, res) => {
       return sendError(res, 'Content ID is required', 400);
     }
 
-    const content = await Content.findOne({ _id: contentId, userId });
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }
@@ -297,7 +298,7 @@ router.get('/scenes/:contentId', authenticate, async (req, res) => {
     const { contentId } = req.params;
     const userId = req.user.id;
 
-    const content = await Content.findOne({ _id: contentId, userId });
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }

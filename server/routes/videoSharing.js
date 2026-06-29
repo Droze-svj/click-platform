@@ -7,6 +7,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const socialMediaService = require('../services/socialMediaService');
 const Content = require('../models/Content');
+const { getUserIdFromReq } = require('../utils/userId');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 
@@ -33,7 +34,9 @@ router.post('/share', auth, async (req, res) => {
     // other user's content to their connected platforms. Scope the
     // lookup to the caller and return 404 (not 403) so an attacker
     // can't enumerate valid content ids.
-    const content = await Content.findOne({ _id: contentId, userId });
+    // Canonical hex for the flip-set Content filter; `userId` (above) is kept
+    // as-is for socialMediaService (its own identity keying).
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) return sendError(res, 'Content not found', 404);
 
     const mediaUrl = content.originalFile.url; // Or the viral edited version

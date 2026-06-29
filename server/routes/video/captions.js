@@ -6,6 +6,7 @@ const { authenticate } = require('../../middleware/auth');
 const { sendSuccess, sendError } = require('../../utils/response');
 const videoCaptionService = require('../../services/videoCaptionService');
 const Content = require('../../models/Content');
+const { getUserIdFromReq } = require('../../utils/userId');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
@@ -35,7 +36,7 @@ const upload = multer({
 router.post('/generate', authenticate, upload.single('video'), async (req, res) => {
   try {
     const { contentId, language } = req.body;
-    const userId = req.user.id;
+    const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId (flip-set)
 
     if (!contentId) {
       return sendError(res, 'Content ID is required', 400);
@@ -101,7 +102,7 @@ router.get('/:contentId', authenticate, async (req, res) => {
   try {
     const { contentId } = req.params;
     const { format = 'srt' } = req.query;
-    const userId = req.user.id;
+    const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId (flip-set)
 
     // Verify content belongs to user
     const content = await Content.findOne({ _id: contentId, userId });
@@ -127,7 +128,7 @@ router.post('/:contentId/translate', authenticate, async (req, res) => {
   try {
     const { contentId } = req.params;
     const { targetLanguage } = req.body;
-    const userId = req.user.id;
+    const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId (flip-set)
 
     if (!targetLanguage) {
       return sendError(res, 'Target language is required', 400);
@@ -181,7 +182,7 @@ router.post('/:contentId/translate', authenticate, async (req, res) => {
 router.get('/:contentId/in-language', authenticate, async (req, res) => {
   try {
     const { contentId } = req.params;
-    const userId = req.user.id;
+    const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId (flip-set)
     const requested = (req.query.language || req.language || 'en').toString().toLowerCase();
     const format = (req.query.format || 'srt').toString();
 

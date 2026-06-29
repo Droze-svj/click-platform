@@ -56,12 +56,36 @@ canonical ObjectId (or its hex), so behavior is unchanged under the String schem
 3. Grep guard: `grep -rn "req.user?.id || req.user?._id" server/routes server/services` and convert the flip-set ones. List each in the PR.
 4. Verify on staging: editor/render/dashboard/scheduling/vector-memory/agentic all behave identically (still String schema). 808+ unit suite green.
 
+## Phase 1 status — SHIPPED ✅
+
+The flip-set Content **ownership filters** that still keyed off the raw Supabase
+UUID (`req.user.id`) were converted to the canonical resolver
+`utils/userId.getUserIdFromReq(req)` (returns the 24-hex == `req.user._id`,
+ObjectId-castable): `video/captions.js`, `video/advanced-editing.js`,
+`videoSharing.js`, `analytics/predictions.js`. All other flip-set reads were
+already canonical-first (dashboard `uidStr`, the `ownsPost(_, req.user._id)`
+helpers, `contentAnalytics(req.user._id)`, post-versions, scheduler, library,
+engagement, video.js, sovereign, clips via `getUserIdFromReq`). Guarded by
+`tests/services/useridCanonicalOwnership.test.js`.
+
 ## Phase 2 — data: normalize stored values to canonical hex (idempotent, safe)
 
 [`scripts/migrate-userid-normalize.js`](../scripts/migrate-userid-normalize.js)
 converts any stored UUID-form `userId` → canonical hex (string→string, no type
-change). Already applied to prod (16 docs healed); re-run dry-run to confirm
-**0 convertible** (idempotent).
+change). Already applied to prod (16 docs healed).
+
+**Verified prod state (dry-run, 2026-06-30) — 0 convertible:**
+
+| collection | total | string userId | objectId | missing |
+|---|---|---|---|---|
+| contents | 0 | 0 | 0 | 0 |
+| scheduledposts | 28 | 28 | 0 | 0 |
+| vectormemories | 4 | 4 | 0 | 0 |
+| workflows | 354 | 354 | 0 | 0 |
+| agenticjobs | 0 | 0 | 0 | 0 |
+
+So the forward flip touches **386 docs, all clean hex** (contents + agenticjobs
+empty) — seconds of work, and the forward script's non-hex abort guard passes.
 
 ```
 NODE_ENV=production node scripts/migrate-userid-normalize.js --prod         # dry-run
@@ -74,11 +98,33 @@ NODE_ENV=production node scripts/migrate-userid-normalize.js --prod --apply  # i
 > Keep it to seconds: convert the data with the raw driver, then deploy the
 > flipped schema (or vice-versa within the same maintenance step).
 
-1. **Backup** prod (and confirm restore works).
-2. Write `scripts/migrate-userid-to-objectid.js` (mirror the dry-run/`--apply`/`--prod`/dbSafety-guarded pattern): for each flip-set collection, `bulkWrite` converting the String `userId` → **BSON ObjectId** via the raw driver (`new ObjectId(hex)` — every value is 24-hex after Phase 2). Idempotent (skip values already ObjectId).
-3. **Flip the schemas** (`type: String` → `mongoose.Schema.Types.ObjectId`) on the 5 flip-set models. (The reverted Wave-2 comments in those models point here.)
-4. **Run order on staging, timed:** apply the BSON conversion → deploy the schema-flip build → immediately verify reads. On prod, do the same in one maintenance step (small data — hundreds–thousands of docs, seconds).
-5. Mongoose `autoIndex` rebuilds the `userId` indexes against the new type.
+**Migration scripts — WRITTEN + round-trip tested ✅** (dormant until run):
+- [`scripts/migrate-userid-to-objectid.js`](../scripts/migrate-userid-to-objectid.js) — forward (String → BSON ObjectId). Touches only `$type:'string'` (idempotent), and **ABORTS with zero writes** if any string is non-hex (Phase 2 not complete).
+- [`scripts/migrate-userid-to-string.js`](../scripts/migrate-userid-to-string.js) — inverse/rollback (ObjectId → hex String).
+- `tests/services/useridFlipMigration.test.js` proves: forward preserves the exact hex, inverse is identity, both idempotent, the non-hex abort guard fires.
+
+**Exact schema diff** (apply during the window — `type: String` → `type: mongoose.Schema.Types.ObjectId`, keep `required`/`index`; do NOT touch `Content.sharedWith[].userId`, a separate share-ref field):
+
+```
+server/models/Content.js:12         type: String,  →  type: mongoose.Schema.Types.ObjectId,
+server/models/ScheduledPost.js:8    type: String,  →  type: mongoose.Schema.Types.ObjectId,
+server/models/VectorMemory.js:6     type: String   →  type: mongoose.Schema.Types.ObjectId
+server/models/Workflow.js:13        type: String,  →  type: mongoose.Schema.Types.ObjectId,
+server/models/AgenticJob.js:10      type: String   →  type: mongoose.Schema.Types.ObjectId
+```
+
+> The schema diff is INTENTIONALLY not committed to `main`: merging it would
+> auto-deploy the ObjectId schema while prod data is still String → the 386 docs
+> go invisible until the data migration runs. It must be applied + deployed in
+> lockstep with the migration, inside the maintenance window.
+
+**Maintenance-window sequence (low-traffic):**
+1. **Backup** prod (`scripts/backup-database.js`) and confirm restore works.
+2. Final pre-flight: `NODE_ENV=production node scripts/migrate-userid-to-objectid.js --prod` (dry-run) → expect `convertible=386, nonHex=0`.
+3. Apply the data flip: `NODE_ENV=production node scripts/migrate-userid-to-objectid.js --prod --apply`.
+4. **Immediately** deploy the schema-flip build (the diff above). Keep step 3→4 tight (seconds; the conversion is 386 docs).
+5. Mongoose `autoIndex` rebuilds the `userId` indexes against the new type on boot.
+6. Verify (Phase 4). If broken → Rollback (below).
 
 ## Phase 4 — verify
 
@@ -94,4 +140,10 @@ NODE_ENV=production node scripts/migrate-userid-normalize.js --prod --apply  # i
 
 ## Decision gate
 
-Do not proceed to prod Phase 3 until: Phase 1 shipped + soaked on staging with zero CastErrors, Phase 2 shows 0 convertible, integration suite green, backup+restore verified, and the inverse (rollback) migration is written and tested on staging.
+Ready ✅: Phase 1 shipped, Phase 2 shows **0 convertible** (386 clean-hex docs), forward+inverse migrations written + round-trip tested, the non-hex abort guard verified.
+
+The remaining prerequisite is a **rehearsal target** for the irreversible step 3→4 lockstep. Choose ONE before prod cut-over:
+- **(preferred)** a staging DB seeded from a prod snapshot + a staging deploy with prod-like auth — rehearse steps 1→6, soak, confirm zero `Cast to ObjectId failed`; OR
+- **explicitly accept** a no-staging prod cut-over in a low-traffic maintenance window, given: data is tiny (386 docs) and verified clean-hex, the inverse rollback is tested, and a fresh backup+restore is confirmed first.
+
+Either way the cut-over needs **deploy coordination** (data `--apply` then schema-flip deploy, seconds apart) — it is an ops action, not an auto-merge.

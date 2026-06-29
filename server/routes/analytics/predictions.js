@@ -6,6 +6,7 @@ const { authenticate } = require('../../middleware/auth');
 const { sendSuccess, sendError } = require('../../utils/response');
 const predictionService = require('../../services/predictionService');
 const Content = require('../../models/Content');
+const { getUserIdFromReq } = require('../../utils/userId');
 const logger = require('../../utils/logger');
 
 /**
@@ -21,8 +22,9 @@ router.post('/content', authenticate, async (req, res) => {
       return sendError(res, 'Content ID is required', 400);
     }
 
-    // Get content
-    const content = await Content.findOne({ _id: contentId, userId });
+    // Get content — canonical hex for the flip-set filter; `userId` (above) is
+    // passed unchanged to predictionService for its own identity keying.
+    const content = await Content.findOne({ _id: contentId, userId: getUserIdFromReq(req) });
     if (!content) {
       return sendError(res, 'Content not found', 404);
     }
