@@ -161,8 +161,12 @@ async function getContentReportData(userId, startDate, filters = {}) {
     ...filters,
   };
 
+  // Date-windowed + owner-scoped, but a heavy account could still return a lot;
+  // cap query TIME (not the result/count, so the report stays accurate) so a
+  // runaway scan can't pin the event loop.
   const content = await Content.find(query)
     .sort({ createdAt: -1 })
+    .maxTimeMS(10000)
     .lean();
 
   return {
