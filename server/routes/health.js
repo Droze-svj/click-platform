@@ -299,6 +299,38 @@ router.get('/light', (req, res) => {
 });
 
 /**
+ * GET /api/health/ready
+ *
+ * Conventional readiness alias (the deep `/api/health` is the full one). Returns
+ * 503 when a REQUIRED dependency (Mongo, or Redis when configured) is unreachable
+ * so the load balancer drains a process that's alive but can't serve. Also reports
+ * the rate-limit store — `memory` means limits are per-instance (not shared across
+ * replicas), which is a prod misconfiguration to alert on.
+ */
+router.get('/ready', async (req, res) => {
+  const isTest = process.env.NODE_ENV === 'test';
+  const [mongo, redis] = await Promise.all([
+    withTimeout(checkMongo(), 3000, 'Mongo').catch(() => ({ connected: false })),
+    withTimeout(checkRedis(), 3000, 'Redis').catch(() => ({ connected: false })),
+  ]);
+  const mongoRequired = !isTest && !!process.env.MONGODB_URI;
+  const redisRequired = !isTest && !!process.env.REDIS_URL && !/localhost|127\.0\.0\.1/.test(process.env.REDIS_URL || '');
+  const failures = [];
+  if (mongoRequired && mongo.connected === false) failures.push('mongo');
+  if (redisRequired && redis.connected === false) failures.push('redis');
+
+  let rateLimitStore = 'unknown';
+  try { rateLimitStore = require('../middleware/enhancedRateLimiter').getRateLimitStore(); } catch (_) { /* optional */ }
+
+  res.status(failures.length ? 503 : 200).json({
+    status: failures.length ? 'not_ready' : 'ready',
+    failures,
+    rateLimitStore,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+/**
  * GET /api/health/signed-media
  *
  * Readiness probe for the private-media signing/enforcement system, so the

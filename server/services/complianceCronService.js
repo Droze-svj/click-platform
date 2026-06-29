@@ -23,21 +23,34 @@ function startRetentionCron() {
     try {
       logger.info('Running daily data retention enforcement');
 
-      // Get all workspaces
-      const workspaces = await Workspace.find({}).select('_id settings.sla.dataRetention').lean();
+      // Only workspaces that actually configured a retention policy, paginated so
+      // a large tenant base isn't loaded into memory at once (mirrors tokenRefreshCron).
+      const PAGE = 500;
+      let processed = 0;
+      for (let skip = 0; ; skip += PAGE) {
+        const workspaces = await Workspace.find({ 'settings.sla.dataRetention': { $exists: true, $ne: null } })
+          .select('_id settings.sla.dataRetention')
+          .skip(skip)
+          .limit(PAGE)
+          .lean();
+        if (!workspaces.length) break;
 
-      for (const workspace of workspaces) {
-        try {
-          if (workspace.settings?.sla?.dataRetention) {
-            await enforceDataRetention(workspace._id);
+        for (const workspace of workspaces) {
+          try {
+            if (workspace.settings?.sla?.dataRetention) {
+              await enforceDataRetention(workspace._id);
+              processed += 1;
+            }
+          } catch (error) {
+            logger.warn('Error enforcing retention for workspace', {
+              workspaceId: workspace._id,
+              error: error.message
+            });
           }
-        } catch (error) {
-          logger.warn('Error enforcing retention for workspace', {
-            workspaceId: workspace._id,
-            error: error.message
-          });
         }
+        if (workspaces.length < PAGE) break;
       }
+      logger.info('Data retention enforcement: workspaces processed', { processed });
 
       logger.info('Data retention enforcement completed');
     } catch (error) {

@@ -88,18 +88,22 @@ async function getPendingApprovals(token) {
       .limit(20)
       .lean();
 
-    // Generate tokens for each approval
+    // Generate tokens for each approval. Batch the existing-token lookup into ONE
+    // $in query (was a findOne PER approval); only the missing ones are created
+    // individually below.
     const EmailApprovalTokenModel = require('../models/EmailApprovalToken');
+    const _existingTokens = await EmailApprovalTokenModel.find({
+      approvalId: { $in: approvals.map((a) => a._id) },
+      approverId: approvalToken.approverId,
+      action: 'approve',
+      used: false,
+      expiresAt: { $gt: new Date() }
+    }).lean();
+    const _tokenByApproval = new Map(_existingTokens.map((t) => [String(t.approvalId), t]));
     const pendingWithTokens = await Promise.all(
       approvals.map(async (approval) => {
         // Find or create token for this approval
-        let token = await EmailApprovalTokenModel.findOne({
-          approvalId: approval._id,
-          approverId: approvalToken.approverId,
-          action: 'approve',
-          used: false,
-          expiresAt: { $gt: new Date() }
-        }).lean();
+        let token = _tokenByApproval.get(String(approval._id));
 
         if (!token) {
           // Create new token
