@@ -48,4 +48,6 @@ const commentSchema = new mongoose.Schema({
 
 commentSchema.index({ teamId: 1, entityId: 1, createdAt: -1 });
 
+commentSchema.index({ userId: 1 }); // author-scoped reads — avoid a collection scan
+
 module.exports = mongoose.model('Comment', commentSchema);

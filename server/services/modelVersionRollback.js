@@ -185,24 +185,21 @@ async function getRollbackCandidates(provider, model) {
       .limit(10)
       .lean();
 
-    // Get performance for each
-    const candidates = await Promise.all(
-      versions.map(async (version) => {
-        const performance = await ModelLearning.findOne({
-          provider,
-          model,
-          aggregated: true,
-        }).lean();
+    // The aggregated performance row is the SAME for every version (the query
+    // doesn't depend on `version`) — fetch it ONCE instead of N identical queries.
+    const performance = await ModelLearning.findOne({
+      provider,
+      model,
+      aggregated: true,
+    }).lean();
 
-        return {
-          version: version.version,
-          released: version.released,
-          improvements: version.improvements || [],
-          baselinePerformance: version.baselinePerformance,
-          historicalPerformance: performance?.avgQualityScore || null,
-        };
-      })
-    );
+    const candidates = versions.map((version) => ({
+      version: version.version,
+      released: version.released,
+      improvements: version.improvements || [],
+      baselinePerformance: version.baselinePerformance,
+      historicalPerformance: performance?.avgQualityScore || null,
+    }));
 
     // Sort by historical performance
     return candidates.sort((a, b) => {

@@ -51,6 +51,8 @@ commandPaletteSchema.pre('save', function(next) {
   next();
 });
 
+commandPaletteSchema.index({ userId: 1 }); // owner-scoped reads — avoid a collection scan
+
 module.exports = mongoose.model('CommandPalette', commandPaletteSchema);
 
 

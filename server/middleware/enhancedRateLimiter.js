@@ -3,19 +3,32 @@
 const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
 
-// Try to use Redis if available, otherwise use memory store
+// Try to use Redis if available, otherwise use memory store.
 let RedisStore;
 let redisClient;
+let rateLimitStore = 'memory'; // 'redis' once connected; surfaced via getRateLimitStore()
+
+// A per-process memory store means rate limits DON'T hold across replicas (3
+// instances ⇒ 3× the limit) — a real bypass. In production that's a misconfig,
+// not a graceful degradation: log it LOUD so it's caught, while still serving.
+const isProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+function noteDegraded(msg, meta) {
+  if (isProd) logger.error(`⚠️ RATE-LIMIT DEGRADED (prod): ${msg}`, meta || {});
+  else logger.warn(msg, meta || {});
+}
 
 try {
   const redisUrl = process.env.REDIS_URL;
   const hasValidRedis = (redisUrl || process.env.REDIS_HOST) && !redisUrl?.includes('placeholder');
+  if (!hasValidRedis) {
+    noteDegraded('No REDIS_URL — rate limiting uses a per-instance memory store (not shared across replicas).');
+  }
   if (hasValidRedis) {
-    // Try to load rate-limit-redis (optional dependency)
+    // Try to load rate-limit-redis.
     try {
       RedisStore = require('rate-limit-redis').default;
     } catch (storeError) {
-      logger.warn('rate-limit-redis not installed, using memory store for rate limiting');
+      noteDegraded('rate-limit-redis not installed — using a per-instance memory store. Add it to dependencies for cross-replica limits.');
       RedisStore = null;
     }
 
@@ -34,22 +47,25 @@ try {
       });
 
       redisClient.on('error', (err) => {
-        logger.warn('Redis connection error, falling back to memory store', { error: err.message });
+        noteDegraded('Redis connection error — falling back to per-instance memory store', { error: err.message });
         redisClient = null;
+        rateLimitStore = 'memory';
       });
 
       redisClient.on('connect', () => {
-        logger.info('Redis connected for rate limiting');
+        logger.info('✅ Redis connected for rate limiting (shared across replicas)');
+        rateLimitStore = 'redis';
       });
 
       redisClient.connect().catch((err) => {
-        logger.warn('Redis connection failed, falling back to memory store', { error: err.message });
+        noteDegraded('Redis connection failed — falling back to per-instance memory store', { error: err.message });
         redisClient = null;
+        rateLimitStore = 'memory';
       });
     }
   }
 } catch (error) {
-  logger.warn('Redis not available, using memory store for rate limiting', { error: error.message });
+  noteDegraded('Redis not available — using a per-instance memory store for rate limiting', { error: error.message });
   redisClient = null;
 }
 
@@ -92,12 +108,18 @@ function createRateLimiter(options) {
     },
   };
 
-  // Use Redis store if available
+  // Use Redis store if available. Wrapped so a store-construction incompatibility
+  // degrades to the in-memory store instead of breaking module load / the route.
   if (redisClient && RedisStore) {
-    limiterOptions.store = new RedisStore({
-      sendCommand: (...args) => redisClient.sendCommand(args),
-      prefix: 'rl:',
-    });
+    try {
+      limiterOptions.store = new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+        prefix: 'rl:',
+      });
+    } catch (e) {
+      noteDegraded('Failed to construct the Redis rate-limit store — using memory', { error: e.message });
+      rateLimitStore = 'memory';
+    }
   }
 
   return rateLimit(limiterOptions);
@@ -322,5 +344,8 @@ module.exports = {
   subscriptionRateLimiter,
   getSubscriptionLimiter,
   endpointLimiters,
+  // 'redis' (shared across replicas) or 'memory' (per-instance — bypassable).
+  // Surfaced by the health/readiness probe so a degraded limiter is visible.
+  getRateLimitStore: () => rateLimitStore,
 };
 
