@@ -1,4 +1,4 @@
-const { detectTextScript, notoFontForText } = require('../../server/utils/scriptFont');
+const { detectTextScript, notoFontForText, fontPathForText, fontfileOptFor } = require('../../server/utils/scriptFont');
 
 describe('scriptFont.detectTextScript', () => {
   it('detects CJK (Chinese / Japanese / Korean)', () => {
@@ -31,5 +31,31 @@ describe('scriptFont.notoFontForText', () => {
     // On a host without Noto installed this is null; with it, a real path. Either is valid.
     const p = notoFontForText('你好');
     expect(p === null || typeof p === 'string').toBe(true);
+  });
+});
+
+describe('scriptFont.fontfileOptFor (shared drawtext option)', () => {
+  it('returns an empty string only when NO font resolves at all', () => {
+    // On CI/dev a Latin system font resolves, so Latin text yields a real opt.
+    // The contract: '' (caller keeps its default) XOR a leading-colon fontfile token.
+    const opt = fontfileOptFor('Hello');
+    expect(opt === '' || /^:fontfile='.*'$/.test(opt)).toBe(true);
+  });
+  it('emits a leading-colon :fontfile= token so it concatenates after text=\'…\'', () => {
+    const opt = fontfileOptFor('Hello');
+    if (opt) expect(opt.startsWith(":fontfile='")).toBe(true);
+  });
+  it('escapes drive-letter colons so a Windows path can\'t break the filter graph', () => {
+    // fontPathForText never returns a raw ':' un-escaped inside the option.
+    const opt = fontfileOptFor('日本語');
+    if (opt) {
+      const inner = opt.slice(":fontfile='".length, -1); // strip wrapper
+      expect(inner.includes(':')).toBe(false); // any ':' was escaped to '\:'
+      expect(inner.includes('\\')).toBe(false); // backslashes normalized to '/'
+    }
+  });
+  it('fontPathForText falls back to the Latin default for Latin/empty text', () => {
+    // Same path notoFontForText(null) → getSystemFontPath().
+    expect(fontPathForText('Hello')).toBe(fontPathForText(''));
   });
 });

@@ -6,6 +6,7 @@ const fs = require('fs')
 const { v4: uuidv4 } = require('uuid')
 const logger = require('../utils/logger')
 const { escapeDrawtext, safeColor, safeNum } = require('../utils/ffmpegSafe')
+const { fontfileOptFor } = require('../utils/scriptFont')
 const OpenAI = require('openai')
 
 let openai = null;
@@ -103,7 +104,7 @@ async function addTextOverlays(videoPath, textOverlays, options = {}) {
       const escapedText = escapeDrawtext(overlay.text);
 
       const nextLabel = index === safeOverlays.length - 1 ? '[v]' : `[v${index}]`;
-      filterGraph += `drawtext=text='${escapedText}':fontsize=${fontSize}:fontcolor=${color}:x=${x}:y=${y}:enable='between(t,${startTime},${endTime})'${nextLabel}`;
+      filterGraph += `drawtext=text='${escapedText}'${fontfileOptFor(overlay.text)}:fontsize=${fontSize}:fontcolor=${color}:x=${x}:y=${y}:enable='between(t,${startTime},${endTime})'${nextLabel}`;
       if (index < safeOverlays.length - 1) {
         filterGraph += `;${nextLabel}`;
       }
