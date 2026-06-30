@@ -8,6 +8,7 @@ const Music = require('../models/Music');
 const auth = require('../middleware/auth');
 const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
 const { validateFileExists } = require('../middleware/fileValidator');
+const { escapeRegex } = require('../utils/escapeRegex');
 const logger = require('../utils/logger');
 const { uploadFile } = require('../services/storageService');
 const { signMediaUrls } = require('../utils/mediaUrlSigner');
@@ -71,8 +72,8 @@ router.get('/', auth, async (req, res) => {
       if (req.query.mood) query.mood = req.query.mood;
       if (req.query.search) {
         query.$or = [
-          { title: { $regex: req.query.search, $options: 'i' } },
-          { artist: { $regex: req.query.search, $options: 'i' } },
+          { title: { $regex: escapeRegex(req.query.search), $options: 'i' } },
+          { artist: { $regex: escapeRegex(req.query.search), $options: 'i' } },
           { tags: { $in: [new RegExp(req.query.search, 'i')] } }
         ];
       }
@@ -103,8 +104,8 @@ router.get('/', auth, async (req, res) => {
     if (mood) query.mood = mood;
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { artist: { $regex: search, $options: 'i' } },
+        { title: { $regex: escapeRegex(search), $options: 'i' } },
+        { artist: { $regex: escapeRegex(search), $options: 'i' } },
         { tags: { $in: [new RegExp(search, 'i')] } }
       ];
     }

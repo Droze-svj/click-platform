@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { safeJsonParse } = require('../utils/safeJson');
 const { sendSuccess, sendError } = require('../utils/response');
+const { escapeRegex } = require('../utils/escapeRegex');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const ContentApproval = require('../models/ContentApproval');
@@ -142,8 +143,8 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
   if (tags) query.tags = { $in: tags.split(',') };
   if (search) {
     query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { 'content.text': { $regex: search, $options: 'i' } }
+      { title: { $regex: escapeRegex(search), $options: 'i' } },
+      { 'content.text': { $regex: escapeRegex(search), $options: 'i' } }
     ];
   }
 
@@ -913,8 +914,8 @@ router.get('/search', requireScope('content.read'), asyncHandler(async (req, res
 
   if (q) {
     query.$or = [
-      { title: { $regex: q, $options: 'i' } },
-      { description: { $regex: q, $options: 'i' } },
+      { title: { $regex: escapeRegex(q), $options: 'i' } },
+      { description: { $regex: escapeRegex(q), $options: 'i' } },
       { tags: { $in: [new RegExp(q, 'i')] } }
     ];
   }

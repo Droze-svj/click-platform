@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { escapeRegex } = require('../utils/escapeRegex');
 const { isDevUser } = require('../utils/devUser');
 const logger = require('../utils/logger');
 const Music = require('../models/Music');
@@ -186,8 +187,8 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
     if (mood && mood !== 'all') query.mood = mood;
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { artist: { $regex: search, $options: 'i' } },
+        { title: { $regex: escapeRegex(search), $options: 'i' } },
+        { artist: { $regex: escapeRegex(search), $options: 'i' } },
         { tags: { $in: [new RegExp(search, 'i')] } }
       ];
     }

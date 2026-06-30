@@ -7,6 +7,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { generateQRCode } = require('../services/qrCodeService');
+const { escapeRegex } = require('../utils/escapeRegex');
 const {
   createABTest,
   getABTestResults,
@@ -204,8 +205,8 @@ router.get('/:agencyWorkspaceId/links/groups', auth, requireWorkspaceAccess(), a
   if (type) query.type = type;
   if (search) {
     query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
+      { name: { $regex: escapeRegex(search), $options: 'i' } },
+      { description: { $regex: escapeRegex(search), $options: 'i' } }
     ];
   }
 

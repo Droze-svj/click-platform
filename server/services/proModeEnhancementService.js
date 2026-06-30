@@ -4,6 +4,7 @@
 const CommandPalette = require('../models/CommandPalette');
 const UserPreferences = require('../models/UserPreferences');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Get command palette
@@ -179,7 +180,8 @@ function buildAdvancedFilters(filters, operators) {
       searchFilters[key] = { $ne: value };
       break;
     case 'contains':
-      searchFilters[key] = { $regex: value, $options: 'i' };
+      // Escape user input → no ReDoS / regex-injection, and a literal "contains".
+      searchFilters[key] = { $regex: escapeRegex(value), $options: 'i' };
       break;
     case 'greater_than':
       searchFilters[key] = { $gt: value };
