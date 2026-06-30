@@ -1,6 +1,18 @@
 # Runbook — userId `String → ObjectId` schema flip (staged)
 
-**Status:** PLANNED — do NOT run against prod without completing every staging step below.
+> **DECISION (2026-06-30): NOT proceeding — keep `userId` as String.** Draft PR
+> #131 (the schema flip) was closed. Rationale: the data is already 100%
+> consistent hex (Phase 2 dry-run = 0 convertible), `contents`/`agenticjobs` are
+> empty, and all reads/writes resolve canonically (#128/#130) — so the flip's only
+> benefit is cosmetic type-purity, while its cost is real: ~3 aggregation `$match`
+> sites that bypass Mongoose casting would break, and a zero-downtime flip would
+> need a broad dual-read query-rewrite on core models. Not worth the risk for a
+> working, consistent system. The aggregation `$match` form bugs this surfaced
+> were fixed independently (they were latent under String too). This runbook is
+> kept for historical context + in case the calculus changes (e.g. a hot
+> userId-keyed collection grows large enough to want the index type purity).
+
+**Status:** SHELVED (see decision above). The steps below remain valid if revived.
 
 ## Why this is deferred (the risk)
 

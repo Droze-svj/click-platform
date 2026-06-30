@@ -96,7 +96,9 @@ async function getSearchSuggestions(userId, query, limit = 10) {
     const suggestions = await Content.aggregate([
       {
         $match: {
-          userId: require('mongoose').Types.ObjectId(userId),
+          // Content.userId is stored as a String (hex); aggregate $match doesn't
+          // cast, so an ObjectId here matched nothing. Use the hex-string form.
+          userId: String(userId),
           $or: [
             { title: { $regex: query, $options: 'i' } },
             { description: { $regex: query, $options: 'i' } }
