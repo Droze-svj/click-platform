@@ -155,8 +155,9 @@ router.get('/:approvalId/audit-trail', auth, asyncHandler(async (req, res) => {
   }
 
   sendSuccess(res, 'Audit trail retrieved', 200, {
-    history: approval.history,
-    stages: approval.stages.map(stage => ({
+    history: approval.history || [],
+    // Guard: an approval without stages (legacy/partial doc) must not 500 the audit trail.
+    stages: (approval.stages || []).map(stage => ({
       order: stage.stageOrder,
       name: stage.stageName,
       status: stage.status,
