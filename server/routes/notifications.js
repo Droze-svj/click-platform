@@ -6,6 +6,7 @@ const UserSettings = require('../models/UserSettings');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
 const liveStatusService = require('../services/liveStatusService');
 const jobQueueService = require('../services/jobQueueService');
@@ -74,7 +75,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     try {
       notifications = await Notification.find(query)
         .sort({ createdAt: -1 })
-        .limit(parseInt(limit, 10) || 50)
+        .limit(clampInt(limit, 50, 500))
         .lean();
     } catch (dbError) {
       logger.warn('Error querying notifications', { error: dbError.message, userId });

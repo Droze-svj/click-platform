@@ -8,6 +8,7 @@ const AssetShare = require('../models/AssetShare');
 const AssetRelationship = require('../models/AssetRelationship');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Create asset version
@@ -645,9 +646,9 @@ async function advancedAssetSearch(userId, searchQuery, filters = {}) {
     // Text search
     if (searchQuery) {
       query.$or = [
-        { title: { $regex: searchQuery, $options: 'i' } },
-        { description: { $regex: searchQuery, $options: 'i' } },
-        { transcript: { $regex: searchQuery, $options: 'i' } },
+        { title: { $regex: escapeRegex(searchQuery), $options: 'i' } },
+        { description: { $regex: escapeRegex(searchQuery), $options: 'i' } },
+        { transcript: { $regex: escapeRegex(searchQuery), $options: 'i' } },
         { tags: { $in: [new RegExp(searchQuery, 'i')] } }
       ];
     }

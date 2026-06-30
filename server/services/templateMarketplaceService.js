@@ -2,6 +2,7 @@
 // Browse, search, download, rate, and monetize video editing templates
 
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 const Template = require('../models/Template');
 const UserPreferences = require('../models/UserPreferences');
 
@@ -65,8 +66,8 @@ async function browseTemplates(filters = {}) {
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+        { name: { $regex: escapeRegex(search), $options: 'i' } },
+        { description: { $regex: escapeRegex(search), $options: 'i' } },
         { tags: { $in: [new RegExp(search, 'i')] } }
       ];
     }
