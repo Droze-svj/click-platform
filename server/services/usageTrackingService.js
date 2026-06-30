@@ -290,9 +290,68 @@ async function checkUsageLimits(userId, action) {
   }
 }
 
+/**
+ * Can the user perform `amount` units of `type` (videosProcessed,
+ * contentGenerated, postsScheduled, storageUsed, scriptsGenerated…)?
+ * A limit of -1 / null / undefined (incl. an unrecognised type) = unlimited.
+ * (Backs GET /api/billing/usage/check — was imported but never defined → 500.)
+ */
+async function canPerformAction(userId, type, amount = 1) {
+  const { usage, limits } = await getCurrentUsage(userId);
+  const limit = limits ? limits[type] : undefined;
+  const used = (usage && usage[type]) || 0;
+  const amt = Number(amount) > 0 ? Number(amount) : 1;
+  if (limit == null || limit < 0) {
+    return { allowed: true, type, used, limit: -1, remaining: -1, amount: amt };
+  }
+  const remaining = Math.max(0, limit - used);
+  const allowed = used + amt <= limit;
+  return {
+    allowed,
+    type,
+    used,
+    limit,
+    remaining,
+    amount: amt,
+    reason: allowed ? null : `${type} limit reached (${used}/${limit})`,
+    upgradeRequired: !allowed,
+  };
+}
+
+/**
+ * Current-period overage charges for the user, from the UsageTracking doc's
+ * stored `overage` (units over limit) + `overageCharges` ($). Returns zeros when
+ * there's no tracking row or the id isn't a Mongo ObjectId — never throws.
+ * (Backs GET /api/billing/overage — was imported but never defined → 500.)
+ */
+async function calculateOverageCharges(userId) {
+  const UsageTracking = require('../models/UsageTracking');
+  const mongooseLib = require('mongoose');
+  const now = new Date();
+  const period = { year: now.getFullYear(), month: now.getMonth() + 1 };
+  const empty = { period, overage: {}, overageCharges: {}, total: 0 };
+  if (!mongooseLib.Types.ObjectId.isValid(String(userId))) return empty;
+  try {
+    const tracking = await UsageTracking.findOne({
+      userId,
+      'period.year': period.year,
+      'period.month': period.month,
+    }).lean();
+    if (!tracking) return empty;
+    const overageCharges = tracking.overageCharges || {};
+    const total = Object.values(overageCharges).reduce((s, v) => s + (Number(v) || 0), 0);
+    return { period: tracking.period || period, overage: tracking.overage || {}, overageCharges, total };
+  } catch (error) {
+    logger.warn('Error calculating overage charges, returning zero', { error: error.message, userId });
+    return empty;
+  }
+}
+
 module.exports = {
   getUserUsageSummary,
   checkUsageLimits,
   getCurrentUsage,
-  getUsageStats
+  getUsageStats,
+  canPerformAction,
+  calculateOverageCharges
 };
