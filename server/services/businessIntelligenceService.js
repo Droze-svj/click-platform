@@ -142,6 +142,11 @@ async function getContentByStatus(userId, startDate) {
  * Get scheduled posts metrics
  */
 async function getScheduledPosts(userId, startDate) {
+  // ScheduledPost.userId is stored as a String (hex). countDocuments() casts the
+  // query value via the schema, but aggregate() $match does NOT — so an ObjectId
+  // (req.user._id) here silently matched zero docs, blanking byPlatform/byStatus.
+  // Use the hex-string form so the aggregate $match matches the stored data.
+  const uidStr = String(userId);
   const [
     total,
     byPlatform,
@@ -155,7 +160,7 @@ async function getScheduledPosts(userId, startDate) {
     ScheduledPost.aggregate([
       {
         $match: {
-          userId: userId,
+          userId: uidStr,
           createdAt: { $gte: startDate },
         },
       },
@@ -169,7 +174,7 @@ async function getScheduledPosts(userId, startDate) {
     ScheduledPost.aggregate([
       {
         $match: {
-          userId: userId,
+          userId: uidStr,
           createdAt: { $gte: startDate },
         },
       },
@@ -318,10 +323,13 @@ async function getTrends(userId, period = 30, granularity = 'day') {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - period);
 
+    // Hex-String form so the aggregate $match matches String-stored Content.userId
+    // (aggregate doesn't cast like find()/countDocuments() do).
+    const uidStr = String(userId);
     const pipeline = [
       {
         $match: {
-          userId: userId,
+          userId: uidStr,
           createdAt: { $gte: startDate },
         },
       },

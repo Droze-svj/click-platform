@@ -264,7 +264,9 @@ async function fetchRecentCaptions(userId, limit = 20) {
   try {
     const Content = require('../models/Content');
     const { ensureObjectId } = require('../utils/devUser');
-    const uid = ensureObjectId(userId);
+    // Content.userId is stored as a String (hex); aggregate $match doesn't cast,
+    // so the ObjectId form matched nothing. Use the canonical hex-string form.
+    const uid = ensureObjectId(userId).toString();
     const rows = await Content.aggregate([
       { $match: { userId: uid } },
       { $project: { clips: { $ifNull: ['$generatedContent.shortVideos', []] } } },
