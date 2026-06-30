@@ -323,6 +323,9 @@ async function getTrends(userId, period = 30, granularity = 'day') {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - period);
 
+    // Hex-String form so the aggregate $match matches String-stored Content.userId
+    // (aggregate doesn't cast like find()/countDocuments() do).
+    const uidStr = String(userId);
     const pipeline = [
       {
         $match: {
