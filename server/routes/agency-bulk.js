@@ -66,7 +66,13 @@ router.post('/:agencyWorkspaceId/bulk/clone-content', auth, requireWorkspaceAcce
     return sendError(res, 'Content ID and client workspace IDs are required', 400);
   }
 
-  const sourceContent = await Content.findById(contentId);
+  // IDOR guard: the source content must belong to this (access-verified) agency
+  // workspace OR to the requester — otherwise an agency user could clone ANY
+  // user's content across the platform by passing a guessed contentId.
+  const sourceContent = await Content.findOne({
+    _id: contentId,
+    $or: [{ agencyWorkspaceId }, { userId: req.user._id }],
+  });
   if (!sourceContent) {
     return sendError(res, 'Source content not found', 404);
   }
@@ -192,7 +198,13 @@ router.post('/:agencyWorkspaceId/bulk/customize-and-schedule', auth, requireWork
     return sendError(res, 'Content ID and client workspace IDs are required', 400);
   }
 
-  const sourceContent = await Content.findById(contentId);
+  // IDOR guard: the source content must belong to this (access-verified) agency
+  // workspace OR to the requester — otherwise an agency user could clone ANY
+  // user's content across the platform by passing a guessed contentId.
+  const sourceContent = await Content.findOne({
+    _id: contentId,
+    $or: [{ agencyWorkspaceId }, { userId: req.user._id }],
+  });
   if (!sourceContent) {
     return sendError(res, 'Source content not found', 404);
   }
