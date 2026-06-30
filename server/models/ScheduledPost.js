@@ -5,7 +5,7 @@ const scheduledPostSchema = new mongoose.Schema({
   // a coordinated migration. Writes/reads go through the canonical id
   // (server/utils/userKey.js → req.user._id) so the stored string is always hex.
   userId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
     index: true
   },

@@ -9,7 +9,7 @@ const contentSchema = new mongoose.Schema({
   // is instead enforced by routing writes/reads through the canonical id
   // (server/utils/userKey.js → req.user._id) so the stored string is always hex.
   userId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true
   },
   workspaceId: {

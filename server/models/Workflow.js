@@ -3,14 +3,15 @@
 const mongoose = require('mongoose');
 
 const workflowSchema = new mongoose.Schema({
-  // NOTE: kept as String. The agentic pipeline (routes/agentic.js →
-  // agenticWorkflowService) keys Workflow/AgenticJob by a STRING userId; flipping
-  // to ObjectId would CastError on the UUID-form ids that subsystem threads
-  // through. Consistency is enforced instead by routing those writes through the
-  // canonical id (see server/utils/userKey.js) so the stored string is always the
-  // hex form — never a raw UUID.
+  // FLIPPED to ObjectId (was String). The historical concern — the agentic
+  // pipeline threading UUID-form ids — was resolved: routes/agentic.js,
+  // advancedWorkflowService (create/execute/schedule) and the AgenticJob upsert
+  // all key off the canonical id (req.user._id / getUserIdFromReq → utils/userKey.js),
+  // and the last raw-UUID write (routes/workflows/advanced-automation.js) was fixed.
+  // Deploy ONLY in lockstep with scripts/migrate-userid-to-objectid.js — see
+  // docs/userid-objectid-flip-runbook.md.
   userId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true
   },
   teamId: {

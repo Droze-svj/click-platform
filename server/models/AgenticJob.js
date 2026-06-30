@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 
 const agenticJobSchema = new mongoose.Schema({
   jobId: { type: String, required: true, unique: true, index: true },
-  userId: { type: String, required: true, index: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
   videoId: { type: String, index: true },
   goals: { type: mongoose.Schema.Types.Mixed, default: [] },
   status: { type: String, enum: ['running', 'done', 'error'], default: 'running', index: true },
