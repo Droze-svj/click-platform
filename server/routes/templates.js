@@ -5,6 +5,7 @@ const ContentTemplate = require('../models/ContentTemplate');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -62,7 +63,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
         // Add timeout to prevent buffering timeout errors
         const templates = await ContentTemplate.find(query)
           .sort(sort)
-          .limit(parseInt(limit, 10) || 50)
+          .limit(clampInt(limit, 50, 500))
           .maxTimeMS(5000) // 5 second timeout (well below 10s buffering limit)
           .lean();
         return sendSuccess(res, 'Templates fetched', 200, templates || []);
@@ -110,7 +111,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     try {
       templates = await ContentTemplate.find(query)
         .sort(sort)
-        .limit(parseInt(limit, 10) || 50)
+        .limit(clampInt(limit, 50, 500))
         .maxTimeMS(5000) // 5 second timeout to prevent buffering timeout
         .lean();
     } catch (dbError) {
@@ -129,7 +130,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
           if (niche) publicQuery.niche = niche;
           templates = await ContentTemplate.find(publicQuery)
             .sort(sort)
-            .limit(parseInt(limit, 10) || 50)
+            .limit(clampInt(limit, 50, 500))
             .maxTimeMS(5000)
             .lean();
         } catch (e) {
@@ -382,7 +383,7 @@ router.get('/marketplace', auth, asyncHandler(async (req, res) => {
         .populate('createdBy', 'name email')
         .sort(sort)
         .skip(parseInt(skip, 10))
-        .limit(parseInt(limit, 10))
+        .limit(clampInt(limit, 20, 500))
         .maxTimeMS(5000) // 5 second timeout to prevent buffering timeout
         .lean();
     } catch (dbError) {
