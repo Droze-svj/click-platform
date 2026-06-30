@@ -54,8 +54,10 @@ router.get('/:agencyWorkspaceId/reports/templates', auth, requireWorkspaceAccess
  * Get report template
  */
 router.get('/:agencyWorkspaceId/reports/templates/:templateId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { templateId } = req.params;
-  const template = await ReportTemplate.findById(templateId).lean();
+  const { agencyWorkspaceId, templateId } = req.params;
+  // IDOR guard: scope the template to the (access-verified) agency workspace so a
+  // user can't read another agency's template by guessing its id.
+  const template = await ReportTemplate.findOne({ _id: templateId, agencyWorkspaceId }).lean();
 
   if (!template) {
     return sendError(res, 'Template not found', 404);
@@ -82,7 +84,8 @@ router.post('/:agencyWorkspaceId/reports/generate-from-template', auth, requireW
     return sendError(res, 'Template ID and client workspace ID are required', 400);
   }
 
-  const template = await ReportTemplate.findById(templateId);
+  // IDOR guard: the template must belong to this (access-verified) agency workspace.
+  const template = await ReportTemplate.findOne({ _id: templateId, agencyWorkspaceId });
   if (!template) {
     return sendError(res, 'Template not found', 404);
   }
@@ -182,8 +185,9 @@ router.post('/:agencyWorkspaceId/reports/compare', auth, requireWorkspaceAccess(
  * Update report template
  */
 router.put('/:agencyWorkspaceId/reports/templates/:templateId', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
-  const { templateId } = req.params;
-  const template = await ReportTemplate.findById(templateId);
+  const { agencyWorkspaceId, templateId } = req.params;
+  // IDOR guard: only a template owned by this (access-verified) agency may be edited.
+  const template = await ReportTemplate.findOne({ _id: templateId, agencyWorkspaceId });
 
   if (!template) {
     return sendError(res, 'Template not found', 404);
@@ -210,8 +214,12 @@ router.put('/:agencyWorkspaceId/reports/templates/:templateId', auth, requireWor
  * Delete report template
  */
 router.delete('/:agencyWorkspaceId/reports/templates/:templateId', auth, requireWorkspaceAccess('canDelete'), asyncHandler(async (req, res) => {
-  const { templateId } = req.params;
-  await ReportTemplate.findByIdAndDelete(templateId);
+  const { agencyWorkspaceId, templateId } = req.params;
+  // IDOR guard: only delete a template owned by this (access-verified) agency.
+  const deleted = await ReportTemplate.findOneAndDelete({ _id: templateId, agencyWorkspaceId });
+  if (!deleted) {
+    return sendError(res, 'Template not found', 404);
+  }
   sendSuccess(res, 'Template deleted', 200);
 }));
 

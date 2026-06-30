@@ -154,8 +154,11 @@ router.get('/knowledge/search', asyncHandler(async (req, res) => {
 router.get('/knowledge/suggest/:ticketId', auth, asyncHandler(async (req, res) => {
   const { ticketId } = req.params;
   const SupportTicket = require('../models/SupportTicket');
-  const ticket = await SupportTicket.findById(ticketId).lean();
-  
+  // IDOR guard: a user may only fetch suggestions for their OWN ticket — scoping
+  // by userId stops reading another user's ticket (subject/description/messages)
+  // by guessing its id.
+  const ticket = await SupportTicket.findOne({ _id: ticketId, userId: req.user._id }).lean();
+
   if (!ticket) {
     return sendError(res, 'Ticket not found', 404);
   }
