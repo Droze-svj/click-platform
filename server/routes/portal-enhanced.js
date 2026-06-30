@@ -8,6 +8,7 @@ const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { generateQRCode } = require('../services/qrCodeService');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { clampInt } = require('../utils/pagination');
 const {
   createABTest,
   getABTestResults,
@@ -59,7 +60,7 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
     .populate('actor.userId', 'name email')
     .populate('actor.portalUserId', 'name email')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit, 10))
+    .limit(clampInt(limit, 20, 500))
     .skip(parseInt(offset, 10))
     .lean();
 

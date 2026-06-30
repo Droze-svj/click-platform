@@ -2,6 +2,7 @@
 
 const express = require('express');
 const auth = require('../middleware/auth');
+const { clampInt } = require('../utils/pagination');
 const {
   semanticSearch,
   textSearch,
@@ -204,7 +205,7 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
 
     const history = await SearchHistory.find({ userId: req.user._id })
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit, 10))
+      .limit(clampInt(limit, 20, 500))
       .lean();
 
     sendSuccess(res, 'Search history retrieved', 200, { history: history || [] });

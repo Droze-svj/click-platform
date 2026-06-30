@@ -9,6 +9,7 @@ const auth = require('../middleware/auth');
 const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
 const { validateFileExists } = require('../middleware/fileValidator');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
 const { uploadFile } = require('../services/storageService');
 const { signMediaUrls } = require('../utils/mediaUrlSigner');
@@ -112,7 +113,7 @@ router.get('/', auth, async (req, res) => {
 
     const music = await Music.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit, 10));
+      .limit(clampInt(limit, 20, 500));
 
     res.json({
       success: true,

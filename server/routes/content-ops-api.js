@@ -7,6 +7,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { safeJsonParse } = require('../utils/safeJson');
 const { sendSuccess, sendError } = require('../utils/response');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { clampInt } = require('../utils/pagination');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const ContentApproval = require('../models/ContentApproval');
@@ -152,7 +153,7 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
   const [content, total] = await Promise.all([
     Content.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit, 10))
+      .limit(clampInt(limit, 20, 500))
       .skip(skip)
       .maxTimeMS(8000)
       .lean(),
@@ -297,7 +298,7 @@ router.get('/assets', auth, asyncHandler(async (req, res) => {
   const content = await Content.find(query)
     .select('title content.images content.videos metadata createdAt')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit, 10))
+    .limit(clampInt(limit, 20, 500))
     .skip(skip)
     .lean();
 
@@ -360,7 +361,7 @@ router.get('/posts', auth, asyncHandler(async (req, res) => {
     ScheduledPost.find(query)
       .populate('contentId', 'title type')
       .sort({ postedAt: -1 })
-      .limit(parseInt(limit, 10))
+      .limit(clampInt(limit, 20, 500))
       .skip(skip)
       .lean(),
     ScheduledPost.countDocuments(query)
@@ -483,7 +484,7 @@ router.get('/approvals', requireScope('approvals.read'), asyncHandler(async (req
     ContentApproval.find(query)
       .populate('contentId', 'title type')
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit, 10))
+      .limit(clampInt(limit, 20, 500))
       .skip(skip)
       .lean(),
     ContentApproval.countDocuments(query)
@@ -932,7 +933,7 @@ router.get('/search', requireScope('content.read'), asyncHandler(async (req, res
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
   const [results, total] = await Promise.all([
-    Content.find(query).sort(sort).limit(parseInt(limit, 10)).skip(skip).maxTimeMS(8000).lean(),
+    Content.find(query).sort(sort).limit(clampInt(limit, 20, 500)).skip(skip).maxTimeMS(8000).lean(),
     Content.countDocuments(query).maxTimeMS(8000)
   ]);
 

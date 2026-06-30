@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { clampInt } = require('../utils/pagination');
 const { isDevUser } = require('../utils/devUser');
 const logger = require('../utils/logger');
 const Music = require('../models/Music');
@@ -198,7 +199,7 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
     const tracks = await Music.find(query)
       .sort({ createdAt: -1 })
       .skip(offset)
-      .limit(parseInt(limit, 10))
+      .limit(clampInt(limit, 20, 500))
       .lean();
 
     const total = await Music.countDocuments(query);

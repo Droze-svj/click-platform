@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const Content = require('../models/Content');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess } = require('../utils/response');
+const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -108,7 +109,7 @@ router.get('/activities', auth, asyncHandler(async (req, res) => {
     try {
       activities = await Activity.find({ userId })
         .sort({ createdAt: -1 })
-        .limit(parseInt(limit, 10) || 20)
+        .limit(clampInt(limit, 20, 500))
         .lean();
     } catch (dbError) {
       logger.warn('Error fetching activities from database', { error: dbError.message, userId });

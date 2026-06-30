@@ -10,6 +10,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 // throw CastError when given a UUID. Guard with this helper.
 const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 const { sendSuccess, sendError } = require('../utils/response');
+const { clampInt } = require('../utils/pagination');
 const {
   processSubscriptionChange,
   applyPromoCode
@@ -248,7 +249,7 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
     .populate('toPackage', 'name slug')
     .populate('addOns.addOnId', 'name')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit, 10))
+    .limit(clampInt(limit, 20, 500))
     .skip(skip)
     .lean();
 
