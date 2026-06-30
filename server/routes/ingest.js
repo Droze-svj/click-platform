@@ -116,6 +116,9 @@ async function ingestUrlHandler(req, res) {
       try {
         await streamDownload(url, destPath);
       } catch (e) {
+        // Remove the partial .mp4 so a failed download doesn't leak onto the
+        // (ephemeral) disk and accumulate over time.
+        try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (_) { /* best effort */ }
         return res.status(502).json({ success: false, error: `Direct download failed: ${e.message}` });
       }
     } else if (classified.kind === 'platform') {
@@ -131,6 +134,8 @@ async function ingestUrlHandler(req, res) {
       try {
         await ytDlpDownload(url, destPath);
       } catch (e) {
+        // Remove any partial download so a failed platform ingest doesn't leak.
+        try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (_) { /* best effort */ }
         return res.status(502).json({ success: false, error: `Platform download failed: ${e.message}` });
       }
     } else {

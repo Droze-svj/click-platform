@@ -622,7 +622,16 @@ async function downloadVideo(videoUrl) {
 
     return new Promise((resolve, reject) => {
       writer.on('finish', () => resolve(tempPath));
-      writer.on('error', reject);
+      // The outer try/catch only covers axios SETUP errors. A writer/stream
+      // error AFTER the Promise is returned would reject WITHOUT removing the
+      // partial .mp4 — destroy the writer and unlink so it doesn't leak.
+      const onErr = (err) => {
+        writer.destroy();
+        try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (_) { /* best effort */ }
+        reject(err);
+      };
+      writer.on('error', onErr);
+      response.data.on('error', onErr);
     });
   } catch (error) {
     // Cleanup on error
