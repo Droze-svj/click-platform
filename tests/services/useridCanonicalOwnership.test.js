@@ -61,4 +61,13 @@ describe('flip-set Content ownership filters resolve canonically (Phase 1 guard)
       }
     });
   }
+
+  // WRITE side: this route persists Workflow.userId (a flip-set field). A raw
+  // req.user.id (UUID) here fragments the user's workflows now, and CastErrors
+  // once Workflow.userId becomes ObjectId.
+  it('workflows/advanced-automation.js writes Workflow userId canonically (getUserIdFromReq)', () => {
+    const src = read('workflows/advanced-automation.js');
+    expect(src).toContain('const userId = getUserIdFromReq(req)');
+    expect(src).not.toMatch(/const userId = req\.user\.id\b/);
+  });
 });

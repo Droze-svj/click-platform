@@ -5,6 +5,7 @@ const router = express.Router();
 const { authenticate } = require('../../middleware/auth');
 const { sendSuccess, sendError } = require('../../utils/response');
 const advancedWorkflowService = require('../../services/advancedWorkflowService');
+const { getUserIdFromReq } = require('../../utils/userId');
 const logger = require('../../utils/logger');
 
 /**
@@ -13,7 +14,10 @@ const logger = require('../../utils/logger');
  */
 router.post('/create', authenticate, async (req, res) => {
   try {
-    const userId = req.user.id;
+    // Canonical hex — this is WRITTEN as Workflow.userId (a flip-set field), so a
+    // raw Supabase UUID here would fragment the user's workflows (and CastError
+    // once Workflow.userId becomes ObjectId). See docs/userid-objectid-flip-runbook.md.
+    const userId = getUserIdFromReq(req);
     const workflowDefinition = { ...req.body, userId };
 
     const workflow = await advancedWorkflowService.createWorkflow(workflowDefinition);
