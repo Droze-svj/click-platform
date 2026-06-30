@@ -126,6 +126,33 @@ server/models/AgenticJob.js:10      type: String   →  type: mongoose.Schema.Ty
 5. Mongoose `autoIndex` rebuilds the `userId` indexes against the new type on boot.
 6. Verify (Phase 4). If broken → Rollback (below).
 
+## Staging rehearsal — REQUIRED FIRST (chosen path)
+
+> ⚠️ `.env` `MONGODB_URI` is the **prod** cluster, and `dbSafety` flags **any**
+> Atlas URI (incl. staging) as "remote" → needs `--prod`. So you MUST pass the
+> staging URI EXPLICITLY on every command — never rely on the `.env` default, or
+> the rehearsal hits prod. Triple-check `db=…` in each script's first log line.
+
+1. Stand up a **staging** MongoDB seeded from a recent prod snapshot, and a
+   staging app deploy with prod-like auth (`ENABLE_SUPABASE_AUTH` as prod) built
+   from `main` **plus the schema diff above**.
+2. Pre-flight (dry-run) — confirm the staging snapshot mirrors prod:
+   ```
+   MONGODB_URI="<STAGING_URI>" NODE_ENV=production node scripts/migrate-userid-normalize.js --prod
+   MONGODB_URI="<STAGING_URI>" NODE_ENV=production node scripts/migrate-userid-to-objectid.js --prod
+   ```
+   Expect `convertible=N, nonHex=0` (N = staging's string-typed count).
+3. Time the lockstep on staging: `…migrate-userid-to-objectid.js --prod --apply`
+   → deploy the schema-flip staging build → immediately verify reads (Phase 4).
+4. **Soak** staging (editor load, render, dashboard `/stats`, scheduling,
+   vector-memory query, agentic pipeline). Grep logs for `Cast to ObjectId failed`
+   over the window — zero is the pass bar.
+5. Rehearse the **rollback** too: `…migrate-userid-to-string.js --prod --apply`
+   against staging + redeploy the String-schema build; confirm reads recover.
+
+Only after a clean staging soak + rehearsed rollback, schedule the prod
+maintenance window (the Phase 3 sequence above).
+
 ## Phase 4 — verify
 
 - For a sample of real users: the SAME documents are returned by `Content.find({userId})`, `ScheduledPost.find({userId})`, etc. **before vs after** (assert count + ids match).
