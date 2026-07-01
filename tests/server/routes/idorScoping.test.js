@@ -33,4 +33,32 @@ describe('IDOR scoping guards', () => {
       expect(l).toContain('req.user._id');
     }
   });
+
+  it('portal-enhanced: LinkGroup by-id lookups are workspace-scoped (no bare findById)', () => {
+    const src = read('portal-enhanced.js');
+    // requireWorkspaceAccess only validates the URL workspace, not the child
+    // resource — these must scope by agencyWorkspaceId or the group escapes tenant.
+    expect(src).not.toMatch(/LinkGroup\.findById\(/);
+    const lookups = src.match(/LinkGroup\.findOne\(\{[\s\S]*?_id: groupId[\s\S]*?\}\)/g) || [];
+    expect(lookups.length).toBeGreaterThanOrEqual(2);
+    for (const l of lookups) expect(l).toContain('agencyWorkspaceId');
+  });
+
+  it('portal-enhanced: qr-code + ab-test routes verify workspace ownership before delegating', () => {
+    const src = read('portal-enhanced.js');
+    // generateQRCode / getABTestResults do bare findById internally, so the route
+    // must confirm the resource belongs to the URL workspace first.
+    expect(src).toMatch(/BrandedLink\.findOne\(\{\s*_id: linkId,\s*agencyWorkspaceId: req\.params\.agencyWorkspaceId/);
+    expect(src).toMatch(/LinkGroup\.findOne\(\{\s*_id: testId,\s*agencyWorkspaceId: req\.params\.agencyWorkspaceId/);
+  });
+
+  it('branded-links: BrandedLink by-id read/update/delete are workspace-scoped (no bare findById*)', () => {
+    const src = read('branded-links.js');
+    expect(src).not.toMatch(/BrandedLink\.findById\(/);
+    expect(src).not.toMatch(/BrandedLink\.findByIdAndDelete\(/);
+    // GET + analytics-ownership + PUT + DELETE = 4 scoped lookups, all by workspace.
+    const lookups = src.match(/BrandedLink\.(findOne|findOneAndDelete)\(\{[\s\S]*?_id: linkId[\s\S]*?\}\)/g) || [];
+    expect(lookups.length).toBeGreaterThanOrEqual(4);
+    for (const l of lookups) expect(l).toContain('agencyWorkspaceId');
+  });
 });

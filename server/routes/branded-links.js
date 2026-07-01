@@ -48,7 +48,11 @@ router.get('/:agencyWorkspaceId/links', auth, requireWorkspaceAccess(), asyncHan
  */
 router.get('/:agencyWorkspaceId/links/:linkId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { linkId } = req.params;
-  const link = await BrandedLink.findById(linkId).populate('createdBy', 'name email').lean();
+  // IDOR guard: requireWorkspaceAccess proves access to the URL's workspace, not
+  // that this link belongs to it. Scope by agencyWorkspaceId so a caller can't
+  // read/hijack a link in another workspace via their own workspace id.
+  const link = await BrandedLink.findOne({ _id: linkId, agencyWorkspaceId: req.params.agencyWorkspaceId })
+    .populate('createdBy', 'name email').lean();
 
   if (!link) {
     return sendError(res, 'Link not found', 404);
@@ -68,6 +72,13 @@ router.get('/:agencyWorkspaceId/links/:linkId/analytics', auth, requireWorkspace
   const { linkId } = req.params;
   const { startDate, endDate, groupBy } = req.query;
 
+  // IDOR guard: confirm the link belongs to this workspace before exposing its
+  // analytics — otherwise any workspace member could read a foreign link's stats.
+  const owned = await BrandedLink.findOne({ _id: linkId, agencyWorkspaceId: req.params.agencyWorkspaceId }).select('_id').lean();
+  if (!owned) {
+    return sendError(res, 'Link not found', 404);
+  }
+
   const analytics = await getLinkAnalytics(linkId, {
     startDate,
     endDate,
@@ -83,7 +94,8 @@ router.get('/:agencyWorkspaceId/links/:linkId/analytics', auth, requireWorkspace
  */
 router.put('/:agencyWorkspaceId/links/:linkId', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
   const { linkId } = req.params;
-  const link = await BrandedLink.findById(linkId);
+  // IDOR guard: scope by agencyWorkspaceId (see the GET handler above).
+  const link = await BrandedLink.findOne({ _id: linkId, agencyWorkspaceId: req.params.agencyWorkspaceId });
 
   if (!link) {
     return sendError(res, 'Link not found', 404);
@@ -108,7 +120,12 @@ router.put('/:agencyWorkspaceId/links/:linkId', auth, requireWorkspaceAccess('ca
  */
 router.delete('/:agencyWorkspaceId/links/:linkId', auth, requireWorkspaceAccess('canDelete'), asyncHandler(async (req, res) => {
   const { linkId } = req.params;
-  await BrandedLink.findByIdAndDelete(linkId);
+  // IDOR guard: scope the delete by agencyWorkspaceId so a caller can't delete a
+  // link in another workspace via their own workspace id.
+  const deleted = await BrandedLink.findOneAndDelete({ _id: linkId, agencyWorkspaceId: req.params.agencyWorkspaceId });
+  if (!deleted) {
+    return sendError(res, 'Link not found', 404);
+  }
   sendSuccess(res, 'Link deleted', 200);
 }));
 
