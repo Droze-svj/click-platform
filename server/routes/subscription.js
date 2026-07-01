@@ -8,7 +8,10 @@ const router = express.Router();
 // Verify WHOP subscription
 router.post('/verify', auth, async (req, res) => {
   try {
-    const { whopUserId, whopSubscriptionId } = req.body;
+    // NOTE: whopUserId is intentionally NOT read from the body — it can only be
+    // set by the signed webhook. Accepting it here would let a caller claim
+    // another account's Whop identity.
+    const { whopSubscriptionId } = req.body;
 
     if (!whopSubscriptionId) {
       return res.status(400).json({ error: 'Subscription ID is required' });
@@ -29,72 +32,29 @@ router.post('/verify', auth, async (req, res) => {
     const subData = whopResponse.data;
     const isActive = ['active', 'trialing'].includes(subData.status);
 
-    if (isActive) {
-      // Derive the plan from the canonical Whop product map — NEVER hardcode
-      // 'pro'. An unknown/unmapped product means we cannot prove a paid tier,
-      // so we record the membership as active on 'free' rather than granting Pro.
-      const { getProductMap } = require('../services/whopWebhookService');
-      const productId = subData.plan_id || subData.product_id || subData.plan?.id || null;
-      const mapping = productId ? getProductMap()[productId] : null;
-      if (!mapping) {
-        logger.warn('Subscription verify: unmapped Whop product, defaulting to free', { userId: req.user._id, productId });
-      }
-      const resolvedPlan = mapping ? mapping.planId : 'free';
-
-      req.user.whopUserId = whopUserId;
-      req.user.subscription = {
-        status: 'active',
-        plan: resolvedPlan,
-        startDate: new Date(subData.created_at || Date.now()),
-        endDate: new Date(subData.expires_at || Date.now() + 30 * 24 * 60 * 60 * 1000),
-        whopSubscriptionId: whopSubscriptionId
-      };
-      
-      if (req.user && typeof req.user.save === 'function') {
-        await req.user.save();
-      } else {
-        const User = require('../models/User');
-        const userDoc = await User.findById(req.userId || req.user?._id || req.user?.id);
-        if (userDoc) {
-          userDoc.whopUserId = whopUserId;
-          userDoc.subscription = req.user.subscription;
-          await userDoc.save();
-        } else {
-          if (!req.allowDevMode && !req.user.isDevUser) {
-            try {
-              const newUserDoc = new User({
-                _id: req.userId || req.user?._id || req.user?.id,
-                email: req.user.email || 'unknown@example.com',
-                name: req.user.name || 'Unknown User',
-                password: 'sso-placeholder-password',
-                whopUserId: whopUserId,
-                subscription: req.user.subscription
-              });
-              await newUserDoc.save();
-            } catch (e) {
-              logger.error('Failed to create user doc for subscription settings', e);
-            }
-          }
-        }
-      }
-
-      logger.info('Subscription verified successfully', { 
-        userId: req.user._id, 
-        tier: req.user.subscription.plan 
-      });
-
-      res.json({
-        success: true,
-        message: 'Subscription verified',
-        subscription: req.user.subscription
-      });
-    } else {
-      logger.warn('Subscription verify failed: Inactive status', { 
-        userId: req.user._id, 
-        status: subData.status 
-      });
-      res.status(403).json({ error: `Subscription is ${subData.status}. Please reactivate at Whop.` });
-    }
+    // SECURITY: this route must NOT grant paid entitlements. A body-supplied
+    // `whopSubscriptionId` proves nothing about the caller — anyone could pass
+    // ANY active paid subscription id (their own on a throwaway account, a
+    // friend's, a leaked/shared one) and self-upgrade to Pro/Agency for free,
+    // and a single valid sub id could upgrade unlimited accounts. Likewise the
+    // body-supplied `whopUserId` must never be written (identity-claim /
+    // mass-assignment). Paid tiers are applied ONLY by the signed Whop webhook
+    // (/api/webhooks/whop -> whopWebhookService.processEvent), which binds the
+    // subscription to the correct user via passthrough/user_id/email — exactly
+    // like the retired unsigned /subscription/webhook and /billing/complete
+    // self-grant paths. Here we only REPORT the Whop-side status; we never write
+    // req.user.subscription or req.user.whopUserId.
+    logger.info('Subscription verify (report-only; grants happen via signed webhook)', {
+      userId: req.user._id, whopStatus: subData.status,
+    });
+    return res.json({
+      success: true,
+      message: isActive
+        ? 'Subscription is active on Whop. Entitlements are applied automatically via the secure webhook.'
+        : `Subscription is ${subData.status}. Please reactivate at Whop.`,
+      whopStatus: subData.status,
+      subscription: req.user.subscription || { status: 'none', plan: 'free' },
+    });
   } catch (error) {
     logger.error('WHOP verification error', { 
       error: error.response?.data || error.message, 

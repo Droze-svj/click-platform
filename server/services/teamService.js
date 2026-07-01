@@ -126,6 +126,20 @@ async function inviteByEmail(teamId, inviterId, { email, role }) {
     throw new Error('Team not found');
   }
 
+  // Permission guard: only an owner/admin member may invite. Without this, the
+  // external-email branch below mints a valid, emailed invitation — with a
+  // caller-chosen role (incl. admin) — into ANY team the caller has no relation
+  // to, a cross-tenant privilege grant on accept. Gates BOTH branches (the
+  // existing-user branch also re-checks inside inviteMember).
+  const inviterMember = (team.members || []).find(
+    (m) => m.userId && m.userId.toString() === inviterId.toString()
+  );
+  if (!inviterMember || (inviterMember.role !== 'owner' && inviterMember.role !== 'admin')) {
+    const err = new Error('Insufficient permissions to invite members');
+    err.statusCode = 403;
+    throw err;
+  }
+
   // Get inviter name for email
   const inviter = await User.findById(inviterId).select('name');
   const inviterName = inviter ? inviter.name : 'A team member';

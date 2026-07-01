@@ -11,7 +11,7 @@ const {
   cloneCampaignToClients,
   updateCampaignForClients
 } = require('../services/bulkCampaignService');
-const { requireWorkspaceAccess, requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, requireAgencyClientAccess, verifyClientWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const Campaign = require('../models/Campaign');
 const router = express.Router();
 
@@ -86,6 +86,17 @@ router.post('/:agencyWorkspaceId/campaigns/:campaignId/clone', auth, requireWork
   // Confirm the campaign belongs to the agency in the path (not another tenant's).
   if (!(await Campaign.exists({ _id: campaignId, agencyWorkspaceId }))) {
     return sendError(res, 'Campaign not found', 404);
+  }
+
+  // IDOR guard: requireWorkspaceAccess only validated the agency in the URL. Each
+  // body-supplied client workspace must actually belong to THIS agency — the
+  // service otherwise creates ScheduledPosts under a victim tenant's ownerId with
+  // attacker-controlled content (cross-tenant post injection into their queue).
+  for (const clientWorkspaceId of clientWorkspaceIds) {
+    const access = await verifyClientWorkspaceAccess(agencyWorkspaceId, clientWorkspaceId);
+    if (!access.allowed) {
+      return sendError(res, `Client workspace ${clientWorkspaceId} is not linked to this agency`, 403);
+    }
   }
 
   const result = await cloneCampaignToClients(campaignId, clientWorkspaceIds, options);

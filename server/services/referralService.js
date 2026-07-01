@@ -44,7 +44,9 @@ async function generateReferralCode(userId) {
  */
 async function applyReferralCode(newUserId, referralCode) {
   try {
-    const referrer = await User.findOne({ referralCode });
+    // String()-cast the client-supplied code so a `{$ne:null}`/operator object
+    // can't reach the Mongo filter (NoSQL injection → match an arbitrary user).
+    const referrer = await User.findOne({ referralCode: String(referralCode) });
     if (!referrer) {
       return { valid: false, error: 'Invalid referral code' };
     }
