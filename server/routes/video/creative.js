@@ -168,6 +168,9 @@ router.post('/thumbnail', auth, express.json({ limit: '15mb' }), asyncHandler(as
 
   // Primary: render from the source video.
   if (videoId) {
+    // IDOR guard: only render a thumbnail from a source video the caller owns.
+    const owned = await guardOwnership(req, res, videoId);
+    if (!owned) return;
     try {
       const result = await aiThumbnailService.autoGenerateViralThumbnails(
         videoId,

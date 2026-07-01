@@ -896,6 +896,9 @@ router.post('/history/save', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID and edit state are required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await editHistoryService.saveEditState(videoId, editState);
     sendSuccess(res, 'Edit state saved', 200, result);
@@ -910,6 +913,9 @@ router.post('/history/undo', auth, asyncHandler(async (req, res) => {
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const result = await editHistoryService.undoEdit(videoId);
@@ -926,6 +932,9 @@ router.post('/history/redo', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID is required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await editHistoryService.redoEdit(videoId);
     sendSuccess(res, 'Edit redone', 200, result);
@@ -937,6 +946,9 @@ router.post('/history/redo', auth, asyncHandler(async (req, res) => {
 
 router.get('/history/:videoId', auth, asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const history = await editHistoryService.getEditHistory(videoId);
@@ -1417,6 +1429,9 @@ router.post('/keyframes/save', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID and animation data are required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await keyframeService.saveKeyframeAnimation(videoId, animationData);
     sendSuccess(res, 'Keyframe animation saved', 200, result);
@@ -1452,6 +1467,9 @@ router.get('/keyframes/presets', auth, asyncHandler(async (req, res) => {
 router.get('/timeline/:videoId', auth, asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const timeline = await multiTrackService.getTimelineConfig(videoId);
     sendSuccess(res, 'Timeline config retrieved', 200, timeline);
@@ -1465,6 +1483,9 @@ router.post('/timeline/:videoId/track', auth, asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { trackData } = req.body;
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await multiTrackService.addTrack(videoId, trackData);
     sendSuccess(res, 'Track added', 200, result);
@@ -1476,6 +1497,9 @@ router.post('/timeline/:videoId/track', auth, asyncHandler(async (req, res) => {
 
 router.delete('/timeline/:videoId/track/:trackId', auth, asyncHandler(async (req, res) => {
   const { videoId, trackId } = req.params;
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     await multiTrackService.removeTrack(videoId, trackId);
@@ -1489,6 +1513,9 @@ router.delete('/timeline/:videoId/track/:trackId', auth, asyncHandler(async (req
 router.post('/timeline/:videoId/track/:trackId/clip', auth, asyncHandler(async (req, res) => {
   const { videoId, trackId } = req.params;
   const { clipData } = req.body;
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const result = await multiTrackService.addClipToTrack(videoId, trackId, clipData);
@@ -1812,6 +1839,9 @@ router.post('/cloud/save', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID and project data are required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await cloudSyncService.saveProjectToCloud(videoId, projectData);
     sendSuccess(res, 'Project saved to cloud', 200, result);
@@ -1825,6 +1855,9 @@ router.get('/cloud/:videoId', auth, asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { version } = req.query;
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const project = await cloudSyncService.getProjectFromCloud(videoId, version ? parseInt(version, 10) : null);
     sendSuccess(res, 'Project retrieved from cloud', 200, project);
@@ -1836,6 +1869,9 @@ router.get('/cloud/:videoId', auth, asyncHandler(async (req, res) => {
 
 router.get('/cloud/:videoId/history', auth, asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const history = await cloudSyncService.getVersionHistory(videoId);
@@ -1849,6 +1885,9 @@ router.get('/cloud/:videoId/history', auth, asyncHandler(async (req, res) => {
 router.post('/cloud/:videoId/restore', auth, asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { version } = req.body;
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const result = await cloudSyncService.restoreProjectVersion(videoId, version);

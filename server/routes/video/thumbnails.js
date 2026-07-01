@@ -10,6 +10,7 @@ const {
 } = require('../../services/smartThumbnailService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { guardOwnership } = require('../../utils/ownership');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
@@ -126,6 +127,10 @@ router.post('/ai-viral', auth, asyncHandler(async (req, res) => {
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
+
+  // IDOR guard: /ai-viral renders thumbnails from the source video — scope to owner.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const result = await autoGenerateViralThumbnails(videoId, timelineData || {});
