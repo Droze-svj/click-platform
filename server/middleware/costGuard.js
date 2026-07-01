@@ -83,45 +83,41 @@ function usdToCredits(usd) {
   return Math.max(1, Math.ceil(usd * CREDIT_PER_USD));
 }
 
-async function getRemainingBudgetUsd(userId) {
-  // Fail CLOSED: a missing userId must not yield an unlimited budget. Treat it
-  // as the free-tier ceiling so an unauthenticated/misrouted AI call can't drive
-  // unbounded spend. (All AI routes are authed today; this is defense-in-depth.)
+// Resolve the per-user AI budget ceiling in USD from the single source of truth
+// (entitlements LIMITS.aiBudgetUsd: free 0.5 / creator 5 / pro 50 / agency 500 /
+// enterprise Infinity). Missing userId fails CLOSED to the free ceiling so an
+// unauthenticated/misrouted AI call can't drive unbounded spend.
+async function resolveTierBudgetUsd(userId) {
+  const { resolveTier, limitFor } = require('../config/entitlements');
   if (!userId) {
-    const { limitFor } = require('../config/entitlements');
     const freeBudget = limitFor('free', 'aiBudgetUsd');
     return typeof freeBudget === 'number' ? freeBudget : DEFAULT_TIER_BUDGETS_USD.free;
   }
-  let UsageMeter;
   let User;
-  try {
-    UsageMeter = require('../models/UsageMeter');
-  } catch { /* intentionally empty */ }
   try {
     User = require('../models/User');
   } catch { /* intentionally empty */ }
-
-  // Resolve the canonical tier and read its AI budget from the single source of
-  // truth (entitlements LIMITS.aiBudgetUsd: free 0.5 / creator 5 / pro 50 /
-  // agency 500). Previously this read subscription.tier/user.tier — fields the
-  // User model never defines — so resolution was fragile and the budget table
-  // here could drift from the canonical one. resolveTier handles trial⇒pro and
-  // all legacy plan aliases.
-  const { resolveTier, limitFor } = require('../config/entitlements');
-  const tier = await (async () => {
-    if (!User) return 'free';
+  let tier = 'free';
+  if (User) {
     try {
       const u = await User.findById(userId).lean();
-      return resolveTier(u);
+      tier = resolveTier(u);
     } catch {
-      return 'free';
+      tier = 'free';
     }
-  })();
+  }
   const canonicalBudget = limitFor(tier, 'aiBudgetUsd');
-  const tierBudget = (typeof canonicalBudget === 'number')
+  return (typeof canonicalBudget === 'number')
     ? canonicalBudget
     : (DEFAULT_TIER_BUDGETS_USD[tier] ?? DEFAULT_TIER_BUDGETS_USD.free);
+}
 
+async function getRemainingBudgetUsd(userId) {
+  const tierBudget = await resolveTierBudgetUsd(userId);
+  let UsageMeter;
+  try {
+    UsageMeter = require('../models/UsageMeter');
+  } catch { /* intentionally empty */ }
   if (!UsageMeter) return tierBudget;
 
   const monthKey = new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -135,6 +131,21 @@ async function getRemainingBudgetUsd(userId) {
   return Math.max(0, tierBudget - used);
 }
 
+// Build the 402 "budget exceeded" error with its structured upgrade payload.
+function makeBudgetError(est, remaining) {
+  const err = new Error('AI budget exceeded for this billing period.');
+  err.statusCode = 402;
+  err.payload = {
+    reason: 'budget-exceeded',
+    requiredUsd: est.usd,
+    requiredCredits: usdToCredits(est.usd),
+    remainingUsd: remaining,
+    remainingCredits: usdToCredits(Math.max(0, remaining)),
+    upgradeUrl: '/dashboard/billing',
+  };
+  return err;
+}
+
 /**
  * Pre-call gate. Throws an error tagged with `.statusCode = 402` and a
  * structured payload when the estimated cost exceeds remaining budget.
@@ -143,19 +154,141 @@ async function assertBudget({ userId, provider, model, prompt, expectedOutputTok
   const est = estimateCostUsd({ provider, model, prompt, expectedOutputTokens });
   const remaining = await getRemainingBudgetUsd(userId);
   if (est.usd > remaining) {
-    const err = new Error('AI budget exceeded for this billing period.');
-    err.statusCode = 402;
-    err.payload = {
-      reason: 'budget-exceeded',
-      requiredUsd: est.usd,
-      requiredCredits: usdToCredits(est.usd),
-      remainingUsd: remaining,
-      remainingCredits: usdToCredits(remaining),
-      upgradeUrl: '/dashboard/billing',
-    };
-    throw err;
+    throw makeBudgetError(est, remaining);
   }
   return { estimate: est, remainingUsd: remaining };
+}
+
+/**
+ * Atomic reserve-then-settle gate (closes the check-then-act TOCTOU in
+ * assertBudget, where two concurrent calls both read the same remaining budget,
+ * both pass, and both spend). This debits the ESTIMATED cost up-front with a
+ * single conditional `$inc` that only succeeds while the running spend + this
+ * estimate stays within the tier ceiling — so N racing calls can never
+ * collectively exceed budget. `settleReservation` later corrects the meter from
+ * the estimate to the real usage; `releaseReservation` refunds an estimate whose
+ * call never settled (errored). Gated behind AI_BUDGET_ATOMIC_RESERVE; when off,
+ * assertBudget/recordUsage behave exactly as before.
+ */
+async function reserveBudget({ userId, provider, model, prompt, expectedOutputTokens }) {
+  const est = estimateCostUsd({ provider, model, prompt, expectedOutputTokens });
+  const tierBudget = await resolveTierBudgetUsd(userId);
+
+  // Infinite ceiling (enterprise): nothing to meter, always allow.
+  if (!Number.isFinite(tierBudget)) {
+    return { estimate: est, reservedUsd: 0, remainingUsd: Infinity };
+  }
+
+  let UsageMeter;
+  try {
+    UsageMeter = require('../models/UsageMeter');
+  } catch { /* intentionally empty */ }
+
+  // No meter model or no user → can't reserve atomically; fall back to a plain
+  // ceiling check (fail-closed on missing userId is handled by resolveTierBudget).
+  if (!userId || !UsageMeter) {
+    if (est.usd > tierBudget) throw makeBudgetError(est, tierBudget);
+    return { estimate: est, reservedUsd: 0, remainingUsd: tierBudget };
+  }
+
+  const monthKey = new Date().toISOString().slice(0, 7);
+  // Ensure the meter doc exists so the conditional update can match it.
+  try {
+    await UsageMeter.updateOne(
+      { userId, monthKey },
+      { $setOnInsert: { aiSpendUsd: 0 } },
+      { upsert: true }
+    );
+  } catch { /* unique-index race: a concurrent insert won — fine */ }
+
+  // The whole gate: increment spend by the estimate ONLY IF it stays within the
+  // ceiling. If no doc matches, we're at/over budget and no reservation is made.
+  const meter = await UsageMeter.findOneAndUpdate(
+    {
+      userId,
+      monthKey,
+      $expr: { $lte: [{ $add: [{ $ifNull: ['$aiSpendUsd', 0] }, est.usd] }, tierBudget] },
+    },
+    { $inc: { aiSpendUsd: est.usd } },
+    { new: true }
+  );
+
+  if (!meter) {
+    let used = tierBudget;
+    try {
+      const cur = await UsageMeter.findOne({ userId, monthKey }).lean();
+      used = cur?.aiSpendUsd || 0;
+    } catch { /* intentionally empty */ }
+    throw makeBudgetError(est, Math.max(0, tierBudget - used));
+  }
+
+  return {
+    estimate: est,
+    reservedUsd: est.usd,
+    remainingUsd: Math.max(0, tierBudget - (meter.aiSpendUsd || 0)),
+  };
+}
+
+/**
+ * Settle a reservation to real usage: the estimate was already debited by
+ * reserveBudget, so here we apply only the DELTA (actual − reserved) plus the
+ * token/count meters. Net effect on aiSpendUsd = the real cost.
+ */
+async function settleReservation({ userId, provider, model, inputTokens, outputTokens, taskType, reservedUsd }) {
+  if (!userId) return;
+  let UsageMeter;
+  try {
+    UsageMeter = require('../models/UsageMeter');
+  } catch {
+    return;
+  }
+  if (!UsageMeter) return;
+
+  const rate = pickRate(provider, model);
+  const actualUsd =
+    ((inputTokens || 0) / 1_000_000) * rate.input +
+    ((outputTokens || 0) / 1_000_000) * rate.output;
+  const delta = actualUsd - (reservedUsd || 0);
+  const monthKey = new Date().toISOString().slice(0, 7);
+
+  try {
+    await UsageMeter.findOneAndUpdate(
+      { userId, monthKey },
+      {
+        $inc: {
+          aiSpendUsd: delta,
+          aiInputTokens: inputTokens || 0,
+          aiOutputTokens: outputTokens || 0,
+          callCount: 1,
+        },
+        $set: { lastTaskType: taskType || 'unknown', updatedAt: new Date() },
+      },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+  } catch (err) {
+    logger.warn('[costGuard] settleReservation failed (non-blocking)', { userId, error: err.message });
+  }
+}
+
+/** Refund a reservation whose call never settled (handler errored). */
+async function releaseReservation({ userId, reservedUsd }) {
+  if (!userId || !reservedUsd) return;
+  let UsageMeter;
+  try {
+    UsageMeter = require('../models/UsageMeter');
+  } catch {
+    return;
+  }
+  if (!UsageMeter) return;
+  const monthKey = new Date().toISOString().slice(0, 7);
+  try {
+    await UsageMeter.findOneAndUpdate(
+      { userId, monthKey },
+      { $inc: { aiSpendUsd: -reservedUsd } }
+    );
+  } catch (err) {
+    logger.warn('[costGuard] releaseReservation failed (non-blocking)', { userId, error: err.message });
+  }
 }
 
 /** Record actual usage after a call. Best-effort; silent on failure. */
@@ -202,17 +335,41 @@ async function recordUsage({ userId, provider, model, inputTokens, outputTokens,
  * can call `req.assertBudget(...)` without re-importing this module.
  */
 function costGuard() {
-  return (req, _res, next) => {
-    req.assertBudget = (args) =>
-      assertBudget({
-        userId: req.user?.id || req.user?._id?.toString(),
-        ...args,
-      });
-    req.recordAiUsage = (args) =>
-      recordUsage({
-        userId: req.user?.id || req.user?._id?.toString(),
-        ...args,
-      });
+  const atomicEnabled = () => process.env.AI_BUDGET_ATOMIC_RESERVE === 'true';
+  return (req, res, next) => {
+    const uid = () => req.user?.id || req.user?._id?.toString();
+    // Reservations made this request but not yet settled (FIFO). Released on
+    // response finish so an errored call can't leak a phantom debit.
+    req._aiReservations = [];
+
+    req.assertBudget = async (args) => {
+      if (atomicEnabled()) {
+        const r = await reserveBudget({ userId: uid(), ...args });
+        if (r.reservedUsd > 0) req._aiReservations.push(r.reservedUsd);
+        return r;
+      }
+      return assertBudget({ userId: uid(), ...args });
+    };
+
+    req.recordAiUsage = (args) => {
+      if (atomicEnabled() && req._aiReservations.length) {
+        const reservedUsd = req._aiReservations.shift();
+        return settleReservation({ userId: uid(), reservedUsd, ...args });
+      }
+      return recordUsage({ userId: uid(), ...args });
+    };
+
+    // Leak guard: refund any reservation whose call reserved budget but never
+    // settled (handler threw before recordAiUsage). No-op when the flag is off.
+    res.on('finish', () => {
+      if (req._aiReservations && req._aiReservations.length) {
+        const userId = uid();
+        for (const reservedUsd of req._aiReservations.splice(0)) {
+          releaseReservation({ userId, reservedUsd }).catch(() => {});
+        }
+      }
+    });
+
     next();
   };
 }
@@ -224,6 +381,11 @@ module.exports = {
   assertBudget,
   recordUsage,
   getRemainingBudgetUsd,
+  resolveTierBudgetUsd,
+  reserveBudget,
+  settleReservation,
+  releaseReservation,
+  makeBudgetError,
   RATE_CARD,
   DEFAULT_TIER_BUDGETS_USD,
 };
