@@ -44,6 +44,14 @@ describe('IDOR scoping guards', () => {
     for (const l of lookups) expect(l).toContain('agencyWorkspaceId');
   });
 
+  it('portal-enhanced: qr-code + ab-test routes verify workspace ownership before delegating', () => {
+    const src = read('portal-enhanced.js');
+    // generateQRCode / getABTestResults do bare findById internally, so the route
+    // must confirm the resource belongs to the URL workspace first.
+    expect(src).toMatch(/BrandedLink\.findOne\(\{\s*_id: linkId,\s*agencyWorkspaceId: req\.params\.agencyWorkspaceId/);
+    expect(src).toMatch(/LinkGroup\.findOne\(\{\s*_id: testId,\s*agencyWorkspaceId: req\.params\.agencyWorkspaceId/);
+  });
+
   it('branded-links: BrandedLink by-id read/update/delete are workspace-scoped (no bare findById*)', () => {
     const src = read('branded-links.js');
     expect(src).not.toMatch(/BrandedLink\.findById\(/);

@@ -16,6 +16,7 @@ const {
 } = require('../services/linkABTestingService');
 const PortalActivity = require('../models/PortalActivity');
 const LinkGroup = require('../models/LinkGroup');
+const BrandedLink = require('../models/BrandedLink');
 const router = express.Router();
 
 /**
@@ -124,6 +125,13 @@ router.get('/:agencyWorkspaceId/links/:linkId/qr-code', auth, requireWorkspaceAc
     format = 'png' // 'png', 'svg', 'dataurl'
   } = req.query;
 
+  // IDOR guard: generateQRCode does a bare findById, so confirm the link belongs
+  // to this workspace before rendering (a QR leaks the link's domain/shortCode).
+  const owned = await BrandedLink.findOne({ _id: linkId, agencyWorkspaceId: req.params.agencyWorkspaceId }).select('_id').lean();
+  if (!owned) {
+    return sendError(res, 'Link not found', 404);
+  }
+
   const qrCode = await generateQRCode(linkId, {
     size: parseInt(size, 10),
     margin: parseInt(margin, 10),
@@ -159,6 +167,12 @@ router.post('/:agencyWorkspaceId/links/ab-test', auth, requireWorkspaceAccess('c
  */
 router.get('/:agencyWorkspaceId/links/ab-test/:testId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { testId } = req.params;
+  // IDOR guard: getABTestResults does a bare LinkGroup.findById, so confirm the
+  // test (a LinkGroup) belongs to this workspace before returning its results.
+  const owned = await LinkGroup.findOne({ _id: testId, agencyWorkspaceId: req.params.agencyWorkspaceId }).select('_id').lean();
+  if (!owned) {
+    return sendError(res, 'A/B test not found', 404);
+  }
   const results = await getABTestResults(testId);
   sendSuccess(res, 'A/B test results retrieved', 200, results);
 }));
