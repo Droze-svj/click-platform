@@ -283,8 +283,9 @@ router.get('/', auth, async (req, res) => {
     const { platform, status, startDate, endDate } = req.query;
 
     const query = { userId: req.user._id || req.user.id };
-    if (platform) query.platform = platform;
-    if (status) query.status = status;
+    // String()-cast so `?platform[$ne]=x` (qs-parsed to an object) can't inject a Mongo operator.
+    if (platform) query.platform = String(platform);
+    if (status) query.status = String(status);
     if (startDate || endDate) {
       query.scheduledTime = {};
       if (startDate) query.scheduledTime.$gte = new Date(startDate);
