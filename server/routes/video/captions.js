@@ -2,6 +2,14 @@
 
 const express = require('express');
 const router = express.Router();
+
+// AI cost/fan-out guard: translate-overlays fans out to per-segment LLM calls —
+// rate-limit POST/PUT per user + attach the per-tier budget guard.
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+router.use((req, res, next) => (['POST', 'PUT'].includes(req.method) ? aiLimiter(req, res, next) : next()));
+router.use(costGuard());
+
 const { authenticate } = require('../../middleware/auth');
 const { sendSuccess, sendError } = require('../../utils/response');
 const videoCaptionService = require('../../services/videoCaptionService');
@@ -216,6 +224,12 @@ router.post('/translate-overlays', authenticate, async (req, res) => {
 
     if (overlays.length === 0) {
       return sendSuccess(res, [], 'Empty overlays array');
+    }
+
+    // Bound the fan-out: an unbounded overlays array drives thousands of
+    // sequential translation calls. Cap at a sane caption count.
+    if (overlays.length > 200) {
+      return sendError(res, 'Too many overlays (max 200 per request)', 400);
     }
 
     // Map overlays to standard segments { text }

@@ -10,9 +10,18 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
+// AI cost/fan-out guard: the GPT-4o call must be rate-limited + budget-gated
+// independently of the Redis-backed requireFeature (which fails open without Redis).
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+router.use((req, res, next) => (['POST', 'PUT'].includes(req.method) ? aiLimiter(req, res, next) : next()));
+router.use(costGuard());
+
 const OpenAI = require('openai');
+// Bound the GPT-4o call: without an explicit timeout a stuck request pins the
+// handler for the SDK default (10 min). Match aiRouter's 90s / single retry.
 const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 90000, maxRetries: 1 })
   : null;
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../../utils/googleAI');

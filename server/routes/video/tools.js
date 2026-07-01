@@ -13,6 +13,14 @@
 
 const express = require('express');
 const router = express.Router();
+
+// AI cost/fan-out guard: these tools run paid AI + ffmpeg pipelines — rate-limit
+// POST/PUT per user + attach the per-tier budget guard, matching the siblings.
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+router.use((req, res, next) => (['POST', 'PUT'].includes(req.method) ? aiLimiter(req, res, next) : next()));
+router.use(costGuard());
+
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');

@@ -1,5 +1,13 @@
 const express = require('express');
 const router = express.Router();
+
+// AI cost/fan-out guard: neural routes call paid LLMs (incl. Claude web search)
+// — rate-limit per user + attach the per-tier budget guard.
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+router.use((req, res, next) => (['POST', 'PUT'].includes(req.method) ? aiLimiter(req, res, next) : next()));
+router.use(costGuard());
+
 const liveTrendService = require('../../services/liveTrendService');
 const successIntelligenceService = require('../../services/successIntelligenceService');
 const neuralQualityService = require('../../services/neuralQualityService');
