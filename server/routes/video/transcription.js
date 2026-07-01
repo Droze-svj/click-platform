@@ -14,6 +14,13 @@ const { guardOwnership } = require('../../utils/ownership');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
+// AI/render cost guard: transcription triggers paid renders + Gemini calls —
+// rate-limit POST/PUT per user + attach the per-tier budget guard.
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+router.use((req, res, next) => (['POST', 'PUT'].includes(req.method) ? aiLimiter(req, res, next) : next()));
+router.use(costGuard());
+
 // `audioFile` is handed to the transcriber/ffmpeg as an input path. Constrain it
 // to a non-traversal /uploads reference so a caller can't point transcription at
 // an arbitrary server file (or a remote SSRF target).

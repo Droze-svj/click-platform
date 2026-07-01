@@ -13,6 +13,13 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
+// AI cost/fan-out guard: /auto-generate calls an LLM — rate-limit POST/PUT per
+// user + attach the per-tier budget guard, matching the sibling AI routers.
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
+const { costGuard } = require('../../middleware/costGuard');
+router.use((req, res, next) => (['POST', 'PUT'].includes(req.method) ? aiLimiter(req, res, next) : next()));
+router.use(costGuard());
+
 /**
  * @swagger
  * /api/video/chapters/auto-generate:
