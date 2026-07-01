@@ -61,7 +61,7 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
     .populate('actor.portalUserId', 'name email')
     .sort({ createdAt: -1 })
     .limit(clampInt(limit, 20, 500))
-    .skip(parseInt(offset, 10))
+    .skip(clampInt(offset, 0, 100000, 0))
     .lean();
 
   const unreadCount = await PortalActivity.countDocuments({

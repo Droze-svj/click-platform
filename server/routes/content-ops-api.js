@@ -154,7 +154,7 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
     Content.find(query)
       .sort({ createdAt: -1 })
       .limit(clampInt(limit, 20, 500))
-      .skip(skip)
+      .skip(clampInt(skip, 0, 100000, 0))
       .maxTimeMS(8000)
       .lean(),
     Content.countDocuments(query).maxTimeMS(8000)
@@ -299,7 +299,7 @@ router.get('/assets', auth, asyncHandler(async (req, res) => {
     .select('title content.images content.videos metadata createdAt')
     .sort({ createdAt: -1 })
     .limit(clampInt(limit, 20, 500))
-    .skip(skip)
+    .skip(clampInt(skip, 0, 100000, 0))
     .lean();
 
   const assets = [];
@@ -362,7 +362,7 @@ router.get('/posts', auth, asyncHandler(async (req, res) => {
       .populate('contentId', 'title type')
       .sort({ postedAt: -1 })
       .limit(clampInt(limit, 20, 500))
-      .skip(skip)
+      .skip(clampInt(skip, 0, 100000, 0))
       .lean(),
     ScheduledPost.countDocuments(query)
   ]);
@@ -485,7 +485,7 @@ router.get('/approvals', requireScope('approvals.read'), asyncHandler(async (req
       .populate('contentId', 'title type')
       .sort({ createdAt: -1 })
       .limit(clampInt(limit, 20, 500))
-      .skip(skip)
+      .skip(clampInt(skip, 0, 100000, 0))
       .lean(),
     ContentApproval.countDocuments(query)
   ]);
@@ -933,7 +933,7 @@ router.get('/search', requireScope('content.read'), asyncHandler(async (req, res
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
   const [results, total] = await Promise.all([
-    Content.find(query).sort(sort).limit(clampInt(limit, 20, 500)).skip(skip).maxTimeMS(8000).lean(),
+    Content.find(query).sort(sort).limit(clampInt(limit, 20, 500)).skip(clampInt(skip, 0, 100000, 0)).maxTimeMS(8000).lean(),
     Content.countDocuments(query).maxTimeMS(8000)
   ]);
 
