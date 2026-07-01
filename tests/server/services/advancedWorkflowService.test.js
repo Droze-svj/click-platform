@@ -17,7 +17,12 @@ jest.mock('../../../server/services/jobQueueService', () => ({
 describe('Advanced Workflow Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // A realistic fetch Response exposes BOTH text() and json(); callWebhook now
+    // reads text() (so a plain-text webhook reply doesn't throw) then best-effort
+    // JSON.parses it — the mock must provide text() to match real fetch.
     global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(JSON.stringify({ success: true, data: 'webhook_received' })),
       json: () => Promise.resolve({ success: true, data: 'webhook_received' })
     });
   });
