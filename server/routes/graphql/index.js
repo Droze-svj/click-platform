@@ -8,6 +8,7 @@ const { authenticate } = require('../../middleware/auth');
 const Content = require('../../models/Content');
 const User = require('../../models/User');
 const logger = require('../../utils/logger');
+const { clampInt } = require('../../utils/pagination');
 
 // GraphQL Schema
 const schema = buildSchema(`
@@ -77,20 +78,22 @@ const root = {
 
   contents: async ({ userId, type, limit = 20, offset = 0 }, context) => {
     try {
-      const query = {};
-      if (userId) {
-        query.userId = userId;
-      } else {
-        query.userId = context.userId; // Default to current user
+      // BOLA/IDOR guard: the `userId` arg must NOT let a caller read another
+      // user's content. Previously `if (userId) query.userId = userId` honored
+      // any client-supplied id, so passing a victim's id returned their content.
+      // Always scope to the authenticated caller; a mismatching arg is rejected.
+      if (userId && String(userId) !== String(context.userId)) {
+        throw new Error('Unauthorized');
       }
+      const query = { userId: context.userId };
       if (type) {
         query.type = type;
       }
 
       const contents = await Content.find(query)
         .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip(offset)
+        .limit(clampInt(limit, 20, 500))
+        .skip(clampInt(offset, 0, 100000, 0))
         .lean();
 
       return contents.map(formatContent);
@@ -102,6 +105,13 @@ const root = {
 
   user: async ({ id }, context) => {
     try {
+      // IDOR guard: this used to return ANY user's profile (email/name) by id
+      // with no ownership check — an arbitrary-PII leak. Restrict to self; the
+      // `me` query is the canonical self-lookup, and admin user lookup lives on
+      // the dedicated admin routes, not this public GraphQL surface.
+      if (String(id) !== String(context.userId)) {
+        throw new Error('Unauthorized');
+      }
       const user = await User.findById(id).select('-password').lean();
       if (!user) {
         throw new Error('User not found');
@@ -226,3 +236,6 @@ router.use(
 );
 
 module.exports = router;
+// Exported for unit tests — the resolvers carry the ownership/IDOR guards, so
+// they are asserted directly (guards throw before any DB access).
+module.exports.root = root;
