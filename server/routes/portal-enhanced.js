@@ -231,7 +231,11 @@ router.get('/:agencyWorkspaceId/links/groups', auth, requireWorkspaceAccess(), a
  */
 router.get('/:agencyWorkspaceId/links/groups/:groupId', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { groupId } = req.params;
-  const group = await LinkGroup.findById(groupId)
+  // IDOR guard: requireWorkspaceAccess only proves the caller can access the
+  // workspace in the URL — it does NOT prove this group belongs to it. Scope the
+  // lookup by agencyWorkspaceId so a caller can't read a group from another
+  // workspace by pairing their own workspace id with a foreign groupId.
+  const group = await LinkGroup.findOne({ _id: groupId, agencyWorkspaceId: req.params.agencyWorkspaceId })
     .populate('links')
     .populate('createdBy', 'name email')
     .lean();
@@ -253,7 +257,8 @@ router.get('/:agencyWorkspaceId/links/groups/:groupId', auth, requireWorkspaceAc
  */
 router.put('/:agencyWorkspaceId/links/groups/:groupId', auth, requireWorkspaceAccess('canEdit'), asyncHandler(async (req, res) => {
   const { groupId } = req.params;
-  const group = await LinkGroup.findById(groupId);
+  // IDOR guard: scope by agencyWorkspaceId (see the GET handler above).
+  const group = await LinkGroup.findOne({ _id: groupId, agencyWorkspaceId: req.params.agencyWorkspaceId });
 
   if (!group) {
     return sendError(res, 'Link group not found', 404);
