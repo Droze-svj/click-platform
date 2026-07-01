@@ -2,7 +2,6 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
-const { addScheduledPostJob } = require('../queues');
 const router = express.Router();
 
 // Supabase client will be created in route handlers to avoid loading issues
@@ -45,6 +44,21 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     } = req.query;
 
     const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+
+    // Lazy publish: a scheduled post whose scheduled_at has passed becomes
+    // 'published' on the next fetch. /api/posts scheduling previously enqueued to
+    // a consumer-less BullMQ queue (SCHEDULED_POSTS has no worker) so a scheduled
+    // blog post NEVER went live; this makes it actually publish without needing a
+    // dedicated cron. Best-effort — the listing proceeds regardless.
+    try {
+      const nowIso = new Date().toISOString();
+      await createSupabaseClient()
+        .from('posts')
+        .update({ status: 'published', published_at: nowIso })
+        .eq('author_id', req.user.id)
+        .eq('status', 'scheduled')
+        .lte('scheduled_at', nowIso);
+    } catch (_) { /* best effort; listing still returns current state */ }
 
     let query = createSupabaseClient()
       .from('posts')
@@ -164,14 +178,13 @@ router.post('/', auth, asyncHandler(async (req, res) => {
       return res.status(500).json({ success: false, error: 'Failed to create post' });
     }
 
-    // If scheduled, we could trigger scheduling logic here
+    // Scheduled posts are stored with status:'scheduled' + scheduled_at and are
+    // auto-published lazily on the next GET /api/posts once their time passes
+    // (see the lazy-publish step there). No background job is enqueued — the
+    // SCHEDULED_POSTS queue this used to target has no worker, so the job never
+    // ran and the post never published.
     if (scheduled_at && status === 'scheduled') {
-      try {
-        await addScheduledPostJob({ postId: post.id, userId: req.user.id }, scheduled_at);
-        logger.info('Post scheduled successfully via background job', { postId: post.id, scheduledAt: scheduled_at });
-      } catch (jobError) {
-        logger.error('Failed to queue scheduled post job', { error: jobError.message, postId: post.id });
-      }
+      logger.info('Post scheduled (auto-publishes on/after scheduled_at)', { postId: post.id, scheduledAt: scheduled_at });
     }
 
     res.status(201).json({
@@ -414,13 +427,9 @@ router.post('/:id/schedule', auth, asyncHandler(async (req, res) => {
       return res.status(404).json({ success: false, error: 'Post not found' });
     }
 
-    // Queue for later via centralized background worker system
-    try {
-      await addScheduledPostJob({ postId: post.id, userId: req.user.id }, post.scheduled_at);
-      logger.info('Post scheduling job added', { postId: post.id, scheduledAt: post.scheduled_at });
-    } catch (jobError) {
-      logger.error('Failed to add post scheduling job', { error: jobError.message, postId: post.id });
-    }
+    // Auto-publishes lazily on the next GET /api/posts once scheduled_at passes
+    // (the SCHEDULED_POSTS queue has no worker — no job is enqueued).
+    logger.info('Post scheduled (auto-publishes on/after scheduled_at)', { postId: post.id, scheduledAt: post.scheduled_at });
 
     res.json({
       success: true,
