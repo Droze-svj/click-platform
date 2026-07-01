@@ -75,14 +75,14 @@ router.get('/', auth, async (req, res) => {
         query.$or = [
           { title: { $regex: escapeRegex(req.query.search), $options: 'i' } },
           { artist: { $regex: escapeRegex(req.query.search), $options: 'i' } },
-          { tags: { $in: [new RegExp(req.query.search, 'i')] } }
+          { tags: { $in: [new RegExp(escapeRegex(req.query.search), 'i')] } }
         ];
       }
       
       try {
         const music = await Music.find(query)
           .sort({ createdAt: -1 })
-          .limit(parseInt(req.query.limit || 50, 10));
+          .limit(clampInt(req.query.limit, 50, 500));
         return res.json({ success: true, data: signMediaUrls(music || []) });
       } catch (dbError) {
         // If MongoDB not connected or error, return empty array for dev mode
@@ -107,7 +107,7 @@ router.get('/', auth, async (req, res) => {
       query.$or = [
         { title: { $regex: escapeRegex(search), $options: 'i' } },
         { artist: { $regex: escapeRegex(search), $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { tags: { $in: [new RegExp(escapeRegex(search), 'i')] } }
       ];
     }
 

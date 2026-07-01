@@ -73,7 +73,7 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
       query.$or = [
         { name: { $regex: escapeRegex(search), $options: 'i' } },
         { description: { $regex: escapeRegex(search), $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { tags: { $in: [new RegExp(escapeRegex(search), 'i')] } }
       ];
     }
 

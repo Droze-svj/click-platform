@@ -5,6 +5,7 @@ const logger = require('../utils/logger');
 const MusicLicense = require('../models/MusicLicense');
 const Music = require('../models/Music');
 const MusicGeneration = require('../models/MusicGeneration');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Search autocomplete suggestions
@@ -218,7 +219,7 @@ function buildAdvancedSearchQuery(query, filters) {
     baseQuery.$or = [
       { title: { $regex: query, $options: 'i' } },
       { artist: { $regex: query, $options: 'i' } },
-      { tags: { $in: [new RegExp(query, 'i')] } }
+      { tags: { $in: [new RegExp(escapeRegex(query), 'i')] } }
     ];
   }
 

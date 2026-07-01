@@ -190,7 +190,7 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
       query.$or = [
         { title: { $regex: escapeRegex(search), $options: 'i' } },
         { artist: { $regex: escapeRegex(search), $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { tags: { $in: [new RegExp(escapeRegex(search), 'i')] } }
       ];
     }
 
