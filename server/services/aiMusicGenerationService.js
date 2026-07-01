@@ -560,29 +560,31 @@ async function downloadAndStoreTrack(generationId, userId) {
   const os = require('os');
   
   const tempPath = path.join(os.tmpdir(), `ai-music-${generation._id}-${Date.now()}.mp3`);
-  const writeStream = fs.createWriteStream(tempPath);
-  
-  await new Promise((resolve, reject) => {
-    trackStream.pipe(writeStream);
-    writeStream.on('finish', resolve);
-    writeStream.on('error', reject);
-  });
-
-  // Upload to storage
-  const storageKey = `music/ai-generated/${userId}/${generation._id}.mp3`;
-  const uploadResult = await uploadFile(tempPath, storageKey, 'audio/mpeg', {
-    userId: userId.toString(),
-    provider: generation.provider,
-    generationId: generation._id.toString()
-  });
-
-  // Clean up temp file
+  let uploadResult;
   try {
-    if (fs.existsSync(tempPath)) {
-      fs.unlinkSync(tempPath);
+    const writeStream = fs.createWriteStream(tempPath);
+    await new Promise((resolve, reject) => {
+      trackStream.pipe(writeStream);
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+
+    // Upload to storage
+    const storageKey = `music/ai-generated/${userId}/${generation._id}.mp3`;
+    uploadResult = await uploadFile(tempPath, storageKey, 'audio/mpeg', {
+      userId: userId.toString(),
+      provider: generation.provider,
+      generationId: generation._id.toString()
+    });
+  } finally {
+    // Always remove the temp .mp3 — on success AND if the stream/upload throws.
+    // Previously the unlink only ran after a SUCCESSFUL upload, leaking the file
+    // in os.tmpdir() on every stream/upload failure.
+    try {
+      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    } catch (cleanupError) {
+      logger.warn('Failed to cleanup temp file', { error: cleanupError.message, tempPath });
     }
-  } catch (cleanupError) {
-    logger.warn('Failed to cleanup temp file', { error: cleanupError.message, tempPath });
   }
 
   // Create Music record

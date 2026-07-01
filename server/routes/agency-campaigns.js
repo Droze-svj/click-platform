@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { escapeRegex } = require('../utils/escapeRegex');
 const {
   createCampaign,
   cloneCampaignToClients,
@@ -36,8 +37,8 @@ router.get('/:agencyWorkspaceId/campaigns', auth, requireWorkspaceAccess(), asyn
   if (status) query.status = status;
   if (search) {
     query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
+      { name: { $regex: escapeRegex(search), $options: 'i' } },
+      { description: { $regex: escapeRegex(search), $options: 'i' } }
     ];
   }
 

@@ -7,6 +7,7 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -207,7 +208,7 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
     [content, total] = await Promise.all([
       Content.find(query)
         .sort(sort)
-        .limit(parseInt(limit, 10))
+        .limit(clampInt(limit, 20, 500))
         .skip(parseInt(offset, 10))
         .populate('folderId', 'name color')
         .maxTimeMS(8000),

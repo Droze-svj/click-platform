@@ -4,6 +4,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { escapeRegex } = require('../utils/escapeRegex');
 const logger = require('../utils/logger');
 const MusicGenerationTemplate = require('../models/MusicGenerationTemplate');
 const { generateMusicTrack } = require('../services/aiMusicGenerationService');
@@ -70,9 +71,9 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
     if (useCase) query.useCases = useCase;
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { name: { $regex: escapeRegex(search), $options: 'i' } },
+        { description: { $regex: escapeRegex(search), $options: 'i' } },
+        { tags: { $in: [new RegExp(escapeRegex(search), 'i')] } }
       ];
     }
 

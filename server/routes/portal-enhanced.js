@@ -7,6 +7,8 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { generateQRCode } = require('../services/qrCodeService');
+const { escapeRegex } = require('../utils/escapeRegex');
+const { clampInt } = require('../utils/pagination');
 const {
   createABTest,
   getABTestResults,
@@ -58,7 +60,7 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
     .populate('actor.userId', 'name email')
     .populate('actor.portalUserId', 'name email')
     .sort({ createdAt: -1 })
-    .limit(parseInt(limit, 10))
+    .limit(clampInt(limit, 20, 500))
     .skip(parseInt(offset, 10))
     .lean();
 
@@ -204,8 +206,8 @@ router.get('/:agencyWorkspaceId/links/groups', auth, requireWorkspaceAccess(), a
   if (type) query.type = type;
   if (search) {
     query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
+      { name: { $regex: escapeRegex(search), $options: 'i' } },
+      { description: { $regex: escapeRegex(search), $options: 'i' } }
     ];
   }
 

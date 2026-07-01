@@ -4,6 +4,7 @@ const HelpArticle = require('../models/HelpArticle');
 const SupportTicket = require('../models/SupportTicket');
 const { getOrSet } = require('./cacheService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Get help articles
@@ -32,7 +33,7 @@ async function getHelpArticles(options = {}) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { content: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } },
+        { tags: { $in: [new RegExp(escapeRegex(search), 'i')] } },
       ];
     }
 

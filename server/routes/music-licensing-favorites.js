@@ -4,6 +4,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
 const MusicFavorite = require('../models/MusicFavorite');
 const MusicPlaylist = require('../models/MusicPlaylist');
@@ -71,7 +72,7 @@ router.get('/favorites', auth, asyncHandler(async (req, res) => {
         .populate('licenseId')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit, 10))
+        .limit(clampInt(limit, 20, 500))
         .lean(),
       MusicFavorite.countDocuments({ userId: req.user._id })
     ]);

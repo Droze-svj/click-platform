@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
+const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
 const {
   generateMusicTrack,
@@ -222,7 +223,7 @@ router.get('/generations', auth, asyncHandler(async (req, res) => {
       MusicGeneration.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit, 10))
+        .limit(clampInt(limit, 20, 500))
         .populate('musicId')
         .lean(),
       MusicGeneration.countDocuments(query)

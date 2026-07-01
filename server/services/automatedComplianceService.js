@@ -4,6 +4,7 @@
 const AITemplate = require('../models/AITemplate');
 const { validateAgainstGuardrails } = require('./aiTemplateService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Check content compliance
@@ -200,7 +201,7 @@ async function autoFixCompliance(content, templateId, violations) {
         const phrase = extractPhraseFromViolation(violation);
         if (phrase) {
           // Replace with placeholder or remove
-          fixedContent = fixedContent.replace(new RegExp(phrase, 'gi'), '[REMOVED]');
+          fixedContent = fixedContent.replace(new RegExp(escapeRegex(phrase), 'gi'), '[REMOVED]');
         }
       });
 

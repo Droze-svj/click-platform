@@ -3,6 +3,7 @@
 const Content = require('../models/Content');
 const ContentVersion = require('../models/ContentVersion');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 const { trackEvent } = require('./analyticsService');
 const {
   smartSentenceSplit,
@@ -264,7 +265,7 @@ function highlightMatch(text, query, maxLength = 200) {
   
   // Highlight the match
   snippet = snippet.replace(
-    new RegExp(query, 'gi'),
+    new RegExp(escapeRegex(query), 'gi'),
     match => `<mark>${match}</mark>`
   );
 

@@ -2,6 +2,7 @@ const logger = require('../utils/logger');
 logger.debug('🎬 Video route initialization sequence starting...');
 const express = require('express');
 const { safeJsonParse } = require('../utils/safeJson');
+const { clampInt } = require('../utils/pagination');
 logger.debug('📦 express loaded');
 const multer = require('multer');
 logger.debug('📦 multer loaded');
@@ -1341,7 +1342,7 @@ router.get('/', auth, async (req, res) => {
     const videos = await Content.find(query)
       .select('title description originalFile status createdAt processingOptions')
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit, 10))
+      .limit(clampInt(limit, 20, 500))
       .skip(skip)
       .lean();
 

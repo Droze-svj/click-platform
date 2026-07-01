@@ -3,6 +3,7 @@
 const Content = require('../models/Content');
 const Script = require('../models/Script');
 const logger = require('./logger');
+const { escapeRegex } = require('./escapeRegex');
 
 /**
  * Advanced search with filters
@@ -32,7 +33,7 @@ async function advancedSearch(userId, searchParams) {
         { title: { $regex: query, $options: 'i' } },
         { description: { $regex: query, $options: 'i' } },
         { transcript: { $regex: query, $options: 'i' } },
-        { tags: { $in: [new RegExp(query, 'i')] } }
+        { tags: { $in: [new RegExp(escapeRegex(query), 'i')] } }
       ];
     }
 
