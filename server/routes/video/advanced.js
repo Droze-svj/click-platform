@@ -14,6 +14,8 @@ const { generateNeuralThumbnail } = require('../../services/thumbnailService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { safeJsonParse } = require('../../utils/safeJson');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { guardOwnership } = require('../../utils/ownership');
+const { verifyWorkspaceAccess } = require('../../middleware/workspaceIsolation');
 const logger = require('../../utils/logger');
 const multer = require('multer');
 const path = require('path');
@@ -966,6 +968,12 @@ router.post('/remove-silence', auth, upload.single('video'), asyncHandler(async 
     minSilenceDuration = 0.5,    // minimum silence gap in seconds to cut
     padding = 0.1,               // keep N seconds around cuts for natural feel
   } = req.body
+  // Validate ffmpeg-bound params before interpolation: silenceThreshold goes into
+  // the filtergraph (accept only a dB/number token so it can't inject filters);
+  // durations are coerced to bounded numbers.
+  const safeThreshold = /^-?\d{1,3}(\.\d+)?(dB)?$/.test(String(silenceThreshold)) ? String(silenceThreshold) : '-35dB'
+  const safeMinSilence = Number.isFinite(Number(minSilenceDuration)) ? Math.min(Math.max(Number(minSilenceDuration), 0.05), 60) : 0.5
+  const safePadding = Number.isFinite(Number(padding)) ? Math.min(Math.max(Number(padding), 0), 5) : 0.1
   const videoPath = req.file ? req.file.path : null
   const videoId = bodyVideoId || `video-${Date.now()}`
 
@@ -993,7 +1001,7 @@ router.post('/remove-silence', auth, upload.single('video'), asyncHandler(async 
       try {
         const { stderr } = await execFileAsync('ffmpeg', [
           '-i', inputPath,
-          '-af', `silencedetect=noise=${silenceThreshold}:d=${minSilenceDuration}`,
+          '-af', `silencedetect=noise=${safeThreshold}:d=${safeMinSilence}`,
           '-f', 'null', '-'
         ], { maxBuffer: 10 * 1024 * 1024 })
         silenceLog = stderr
@@ -1016,8 +1024,8 @@ router.post('/remove-silence', auth, upload.single('video'), asyncHandler(async 
       const keepSegments = []
       let cursor = 0
       for (let i = 0; i < Math.min(starts.length, ends.length); i++) {
-        const silStart = Math.max(0, starts[i] - padding)
-        const silEnd = ends[i] + padding
+        const silStart = Math.max(0, starts[i] - safePadding)
+        const silEnd = ends[i] + safePadding
         if (silStart > cursor) {
           keepSegments.push({ start: cursor, end: silStart })
         }
@@ -1098,6 +1106,12 @@ const { predictContentROI } = require('../../services/aiROIPredictorService');
  */
 router.post('/roi-prediction', auth, asyncHandler(async (req, res) => {
   const { videoId, timelineData, audiencePersona } = req.body;
+  // IDOR guard: predictContentROI reads the Content (and its workspace revenue)
+  // by id — scope to the owner so it can't be run against another tenant's video.
+  if (videoId) {
+    const owned = await guardOwnership(req, res, videoId);
+    if (!owned) return;
+  }
   const result = await predictContentROI(videoId, timelineData, audiencePersona);
   sendSuccess(res, 'ROI prediction complete', 200, result);
 }));
@@ -1163,7 +1177,12 @@ router.post('/launch-test-ad', auth, asyncHandler(async (req, res) => {
 const { ingestPostMetrics } = require('../../services/oracleMetricIngestionService');
 router.post('/ingest-metrics', auth, asyncHandler(async (req, res) => {
   const { workspaceId } = req.body;
-  const result = await ingestPostMetrics(workspaceId || req.user.workspaceId);
+  // IDOR guard: workspaceId is client-supplied — verify the caller is a member
+  // before reading/writing that workspace's performance metrics.
+  if (!workspaceId) return sendError(res, 'workspaceId is required', 400);
+  const access = await verifyWorkspaceAccess(req.user._id, workspaceId);
+  if (!access.allowed) return sendError(res, access.reason || 'Workspace access denied', 403);
+  const result = await ingestPostMetrics(workspaceId);
   sendSuccess(res, 'Oracle metrics ingestion complete', 200, result);
 }));
 
@@ -1175,7 +1194,11 @@ router.post('/ingest-metrics', auth, asyncHandler(async (req, res) => {
 const { analyzeStrategicPivots } = require('../../services/cognitiveLoopService');
 router.post('/analyze-pivots', auth, asyncHandler(async (req, res) => {
   const { workspaceId, niche } = req.body;
-  const result = await analyzeStrategicPivots(workspaceId || req.user.workspaceId, niche);
+  // IDOR guard: verify workspace membership before returning its performance data.
+  if (!workspaceId) return sendError(res, 'workspaceId is required', 400);
+  const access = await verifyWorkspaceAccess(req.user._id, workspaceId);
+  if (!access.allowed) return sendError(res, access.reason || 'Workspace access denied', 403);
+  const result = await analyzeStrategicPivots(workspaceId, niche);
   sendSuccess(res, 'Cognitive loop analysis complete', 200, result);
 }));
 
