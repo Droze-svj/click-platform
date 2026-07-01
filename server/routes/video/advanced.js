@@ -119,6 +119,9 @@ async function downloadToUploadsTemp(videoUrl) {
     await assertPublicUrl(resolved);
     fetchOpts.redirect = 'error';
   }
+  // Bound the download: without a timeout an unresponsive remote hangs the
+  // request (and its temp-file handle) indefinitely, starving the worker.
+  fetchOpts.signal = AbortSignal.timeout(30000);
 
   const resp = await fetch(resolved, fetchOpts);
   if (!resp.ok) {

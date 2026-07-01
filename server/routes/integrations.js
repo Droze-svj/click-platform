@@ -80,10 +80,12 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     return sendSuccess(res, 'Integrations retrieved', 200, { integrations: [] });
   }
 
+  // String()-cast query-param filters so a crafted `?type[$ne]=x` (parsed by qs
+  // into an object) can't inject a Mongo operator into the filter.
   const query = { userId: req.user._id };
-  if (type) query.type = type;
-  if (status) query.status = status;
-  if (workspaceId) query.workspaceId = workspaceId;
+  if (type) query.type = String(type);
+  if (status) query.status = String(status);
+  if (workspaceId) query.workspaceId = String(workspaceId);
 
   const integrations = await Integration.find(query).sort({ createdAt: -1 }).lean();
   sendSuccess(res, 'Integrations retrieved', 200, { integrations });

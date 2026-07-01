@@ -231,8 +231,9 @@ router.get('/', auth, async (req, res) => {
     const { page, limit, skip } = getPagination(req.query, { defaultLimit: 50, maxLimit: 100 });
     const query = { userId };
 
-    if (type) query.type = type;
-    if (status) query.status = status;
+    // String()-cast so `?type[$ne]=x` (qs-parsed to an object) can't inject a Mongo operator.
+    if (type) query.type = String(type);
+    if (status) query.status = String(status);
 
     // Try to execute queries, but handle all errors gracefully
     let contents = [];

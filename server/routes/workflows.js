@@ -234,7 +234,7 @@ router.put('/:workflowId', auth, asyncHandler(async (req, res) => {
   if (req.body.name) workflow.name = req.body.name;
   if (req.body.description !== undefined) workflow.description = req.body.description;
   if (req.body.teamId !== undefined) workflow.teamId = req.body.teamId || null;
-  if (req.body.steps) {
+  if (Array.isArray(req.body.steps)) {
     workflow.steps = req.body.steps.map((step, index) => ({
       order: index + 1,
       action: step.action,
