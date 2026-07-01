@@ -324,6 +324,9 @@ router.post('/score', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'videoId is required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await computeVideoScore(videoId, { editedVideoUrl });
     sendSuccess(res, 'Video score computed', 200, result);
@@ -617,6 +620,9 @@ router.post('/scenes', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID is required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await detectScenes(videoId, videoMetadata || {});
     sendSuccess(res, 'Scenes detected', 200, result);
@@ -641,6 +647,9 @@ router.post('/smart-cuts', auth, asyncHandler(async (req, res) => {
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const result = await detectSmartCuts(videoId, videoMetadata || {});
@@ -709,6 +718,9 @@ router.post('/preview', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID is required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const preview = await generateEditPreview(videoId, editingOptions || {});
     sendSuccess(res, 'Edit preview generated', 200, preview);
@@ -733,6 +745,9 @@ router.post('/compare', auth, asyncHandler(async (req, res) => {
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const comparison = await createComparisonVideo(videoId);
@@ -759,6 +774,9 @@ router.post('/versions', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID is required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const version = await saveEditVersion(videoId, versionName);
     sendSuccess(res, 'Edit version saved', 200, { version });
@@ -784,6 +802,9 @@ router.post('/versions/:versionId/restore', auth, asyncHandler(async (req, res) 
   if (!videoId) {
     return sendError(res, 'Video ID is required', 400);
   }
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const result = await restoreEditVersion(videoId, versionId);
@@ -814,6 +835,12 @@ router.post('/batch', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Maximum 50 videos per batch', 400);
   }
 
+  // Ownership gate: every id must belong to the caller before we mutate/re-encode.
+  for (const id of videoIds) {
+    const owned = await guardOwnership(req, res, id);
+    if (!owned) return;
+  }
+
   try {
     logger.info('Starting batch auto-edit', { count: videoIds.length, userId: req.user?.id || req.user?._id });
     const results = await batchAutoEdit(videoIds, editingOptions || {});
@@ -835,6 +862,9 @@ router.post('/batch', auth, asyncHandler(async (req, res) => {
  */
 router.get('/analytics/:videoId', auth, asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   try {
     const analytics = await getEditPerformanceAnalytics(videoId);
@@ -865,6 +895,9 @@ router.post('/export', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Formats array is required', 400);
   }
 
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const exports = await exportMultipleFormats(videoId, formats);
     sendSuccess(res, 'Multi-format export completed', 200, exports);
@@ -886,6 +919,9 @@ router.post('/export', auth, asyncHandler(async (req, res) => {
 router.post('/broll/:contentId', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
   if (!contentId) return sendError(res, 'contentId is required', 400);
+
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
 
   try {
     const content = await resolveContent(contentId);
@@ -927,6 +963,9 @@ router.post('/export-aspect-ratios', auth, asyncHandler(async (req, res) => {
   if (!Array.isArray(aspectRatios) || aspectRatios.length === 0) {
     return sendError(res, 'aspectRatios must be a non-empty array', 400);
   }
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
   try {
     const result = await exportAspectRatios(videoId, aspectRatios);
     sendSuccess(res, 'Aspect-ratio export completed', 200, result);
