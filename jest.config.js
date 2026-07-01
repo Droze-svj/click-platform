@@ -50,12 +50,18 @@ module.exports = {
       testPathIgnorePatterns: ['/node_modules/'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      // With `projects`, the root-level testTimeout is ignored, so this project
+      // fell back to jest's 5s default. tests/server/routes/* boot the app + do a
+      // real bcrypt(12) hash on register, which spikes past 5s under parallel CI
+      // load → a flaky timeout on auth.test.js. 30s gives ample headroom.
+      testTimeout: 30000,
     },
     {
       displayName: 'integration',
       testMatch: ['<rootDir>/tests/integration/**/*.test.js'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      testTimeout: 30000,
     },
     {
       displayName: 'e2e',
@@ -74,6 +80,7 @@ module.exports = {
       testMatch: ['<rootDir>/tests/security/**/*.test.js'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      testTimeout: 30000,
     },
     {
       // Breadth endpoint sweep — hits every safe GET endpoint. Non-gating
