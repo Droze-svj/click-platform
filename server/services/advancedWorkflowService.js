@@ -337,7 +337,15 @@ async function callWebhook(url, data) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    return await response.json();
+    // A webhook endpoint often replies with plain text ("OK") or an empty body;
+    // response.json() would throw a SyntaxError on those and fail the node. Read
+    // text and best-effort parse so a non-JSON 200 doesn't break the workflow.
+    const text = await response.text();
+    try {
+      return text ? JSON.parse(text) : null;
+    } catch (_) {
+      return text;
+    }
   } catch (error) {
     logger.error('Webhook call failed', { url, error: error.message });
     throw error;
