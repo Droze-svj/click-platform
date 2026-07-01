@@ -70,7 +70,11 @@ async function generateFoley(durationSeconds, transitionType, videoId) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    const fileName = `foley_${videoId}_${Date.now()}.mp3`;
+    // Sanitize the client-supplied videoId before it becomes part of a filename:
+    // an unsanitized value (e.g. "../../..") would let path.join escape uploads/sfx
+    // and write the generated .mp3 outside the media dir. Restrict to a safe token.
+    const safeVideoId = (String(videoId || 'anon').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)) || 'anon';
+    const fileName = `foley_${safeVideoId}_${Date.now()}.mp3`;
     const filePath = path.join(targetDir, fileName);
 
     const fileStream = fs.createWriteStream(filePath);
