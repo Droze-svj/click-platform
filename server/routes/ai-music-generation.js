@@ -222,7 +222,7 @@ router.get('/generations', auth, asyncHandler(async (req, res) => {
     const [generations, total] = await Promise.all([
       MusicGeneration.find(query)
         .sort({ createdAt: -1 })
-        .skip(skip)
+        .skip(clampInt(skip, 0, 100000, 0))
         .limit(clampInt(limit, 20, 500))
         .populate('musicId')
         .lean(),

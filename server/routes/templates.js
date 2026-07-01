@@ -382,7 +382,7 @@ router.get('/marketplace', auth, asyncHandler(async (req, res) => {
       templates = await ContentTemplate.find(query)
         .populate('createdBy', 'name email')
         .sort(sort)
-        .skip(parseInt(skip, 10))
+        .skip(clampInt(skip, 0, 100000, 0))
         .limit(clampInt(limit, 20, 500))
         .maxTimeMS(5000) // 5 second timeout to prevent buffering timeout
         .lean();

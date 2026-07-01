@@ -250,7 +250,7 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
     .populate('addOns.addOnId', 'name')
     .sort({ createdAt: -1 })
     .limit(clampInt(limit, 20, 500))
-    .skip(skip)
+    .skip(clampInt(skip, 0, 100000, 0))
     .lean();
 
   const total = await SubscriptionChange.countDocuments({ userId: req.user._id });
