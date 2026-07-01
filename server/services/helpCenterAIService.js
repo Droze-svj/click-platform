@@ -3,6 +3,7 @@
 const HelpArticle = require('../models/HelpArticle');
 const { getOrSet } = require('./cacheService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * AI-powered article search
@@ -17,7 +18,7 @@ async function aiSearch(query, userId = null) {
       $or: [
         { title: { $regex: query, $options: 'i' } },
         { content: { $regex: query, $options: 'i' } },
-        { tags: { $in: [new RegExp(query, 'i')] } },
+        { tags: { $in: [new RegExp(escapeRegex(query), 'i')] } },
       ],
     })
       .sort({ helpful: -1, views: -1 })

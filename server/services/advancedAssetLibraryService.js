@@ -649,7 +649,7 @@ async function advancedAssetSearch(userId, searchQuery, filters = {}) {
         { title: { $regex: escapeRegex(searchQuery), $options: 'i' } },
         { description: { $regex: escapeRegex(searchQuery), $options: 'i' } },
         { transcript: { $regex: escapeRegex(searchQuery), $options: 'i' } },
-        { tags: { $in: [new RegExp(searchQuery, 'i')] } }
+        { tags: { $in: [new RegExp(escapeRegex(searchQuery), 'i')] } }
       ];
     }
 

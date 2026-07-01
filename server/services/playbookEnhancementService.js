@@ -4,6 +4,7 @@
 const Playbook = require('../models/Playbook');
 const PlaybookVersion = require('../models/PlaybookVersion');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Create playbook version
@@ -279,7 +280,7 @@ async function searchMarketplace(query, filters = {}) {
       searchQuery.$or = [
         { name: { $regex: query, $options: 'i' } },
         { description: { $regex: query, $options: 'i' } },
-        { tags: { $in: [new RegExp(query, 'i')] } }
+        { tags: { $in: [new RegExp(escapeRegex(query), 'i')] } }
       ];
     }
 

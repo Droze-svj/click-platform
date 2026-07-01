@@ -917,7 +917,7 @@ router.get('/search', requireScope('content.read'), asyncHandler(async (req, res
     query.$or = [
       { title: { $regex: escapeRegex(q), $options: 'i' } },
       { description: { $regex: escapeRegex(q), $options: 'i' } },
-      { tags: { $in: [new RegExp(q, 'i')] } }
+      { tags: { $in: [new RegExp(escapeRegex(q), 'i')] } }
     ];
   }
   if (type) query.type = type;
