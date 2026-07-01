@@ -209,7 +209,7 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
       Content.find(query)
         .sort(sort)
         .limit(clampInt(limit, 20, 500))
-        .skip(parseInt(offset, 10))
+        .skip(clampInt(offset, 0, 100000, 0))
         .populate('folderId', 'name color')
         .maxTimeMS(8000),
       Content.countDocuments(query).maxTimeMS(8000)

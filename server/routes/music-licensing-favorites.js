@@ -71,7 +71,7 @@ router.get('/favorites', auth, asyncHandler(async (req, res) => {
       MusicFavorite.find({ userId: req.user._id })
         .populate('licenseId')
         .sort({ createdAt: -1 })
-        .skip(skip)
+        .skip(clampInt(skip, 0, 100000, 0))
         .limit(clampInt(limit, 20, 500))
         .lean(),
       MusicFavorite.countDocuments({ userId: req.user._id })

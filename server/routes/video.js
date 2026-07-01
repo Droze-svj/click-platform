@@ -1343,7 +1343,7 @@ router.get('/', auth, async (req, res) => {
       .select('title description originalFile status createdAt processingOptions')
       .sort({ createdAt: -1 })
       .limit(clampInt(limit, 20, 500))
-      .skip(skip)
+      .skip(clampInt(skip, 0, 100000, 0))
       .lean();
 
     const total = await Content.countDocuments(query);

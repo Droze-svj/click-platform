@@ -8,6 +8,7 @@ const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess, requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
 const ClientGuidelines = require('../models/ClientGuidelines');
 const Workspace = require('../models/Workspace');
+const { escapeRegex } = require('../utils/escapeRegex');
 const router = express.Router();
 
 /**
@@ -103,7 +104,10 @@ function validateContentAgainstGuidelines(content, guidelines) {
   // Check do not use words
   if (guidelines.contentRules?.doNotUse && content.text) {
     guidelines.contentRules.doNotUse.forEach(word => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      // Escape the user-configured banned word: an unescaped value with regex
+      // metacharacters (e.g. "C++", "$$$") makes `new RegExp` throw, crashing
+      // the compliance check or letting banned content slip through.
+      const regex = new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi');
       if (regex.test(content.text)) {
         issues.push({
           type: 'forbidden_word',

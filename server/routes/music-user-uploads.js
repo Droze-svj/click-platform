@@ -198,7 +198,7 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
 
     const tracks = await Music.find(query)
       .sort({ createdAt: -1 })
-      .skip(offset)
+      .skip(clampInt(offset, 0, 100000, 0))
       .limit(clampInt(limit, 20, 500))
       .lean();
 

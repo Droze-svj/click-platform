@@ -8,6 +8,7 @@ const Content = require('../models/Content');
 const ClientGuidelines = require('../models/ClientGuidelines');
 const { getOptimalPostingTimes } = require('./smartScheduleOptimizationService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Create campaign template
@@ -169,7 +170,9 @@ function applyClientGuidelines(content, guidelines, campaignGuidelines) {
     // Replace do not use words
     if (guidelines.contentRules.doNotUse && customized.text) {
       guidelines.contentRules.doNotUse.forEach(word => {
-        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        // Escape the user-configured banned word before building the regex — an
+        // unescaped value with regex metacharacters would throw on `new RegExp`.
+        const regex = new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi');
         customized.text = customized.text.replace(regex, '');
       });
     }
