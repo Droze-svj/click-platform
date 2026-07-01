@@ -91,6 +91,31 @@ async function resolveUser(event, User) {
 }
 
 /**
+ * Best-effort extraction of an event's source timestamp (ms since epoch).
+ * Whop payloads don't carry a single canonical field, so we try the common
+ * ones and accept ISO strings, epoch-seconds, or epoch-millis. Returns null
+ * when nothing usable is present — callers must treat null as "unknown", never
+ * as "oldest", so a missing timestamp can't cause a legit event to be dropped.
+ */
+function getEventTime(event) {
+  const raw =
+    event?.data?.updated_at ||
+    event?.data?.created_at ||
+    event?.updated_at ||
+    event?.created_at ||
+    event?.timestamp ||
+    null;
+  if (raw == null) return null;
+  let ms;
+  if (typeof raw === 'number') {
+    ms = raw < 1e12 ? raw * 1000 : raw; // seconds vs millis heuristic
+  } else {
+    ms = Date.parse(raw);
+  }
+  return Number.isFinite(ms) ? ms : null;
+}
+
+/**
  * Process a single Whop event and apply it to the user.
  * Returns { ok, action, userId, plan } for logging.
  *
@@ -104,6 +129,28 @@ async function processEvent(event, deps) {
   if (!user) {
     return { ok: false, action: eventType, reason: 'user-not-found' };
   }
+
+  // Ordering guard (opt-in via WHOP_WEBHOOK_ORDERING_GUARD). The two-phase
+  // idempotency layer stops a *processed* event from re-applying, but not an
+  // out-of-order or replayed *older* event — e.g. a delayed `payment.succeeded`
+  // arriving AFTER a `cancelled` would re-grant the tier. This drops any event
+  // provably older than the last one applied to this user. It only ever skips
+  // when BOTH the incoming and the stored timestamps are known, so it can never
+  // drop a first/only event or one from a provider that omits timestamps.
+  const orderingGuard = process.env.WHOP_WEBHOOK_ORDERING_GUARD === 'true';
+  const eventTime = orderingGuard ? getEventTime(event) : null;
+  if (orderingGuard && eventTime != null) {
+    const lastAt = user.subscription?.lastEventAt
+      ? new Date(user.subscription.lastEventAt).getTime()
+      : null;
+    if (lastAt != null && eventTime < lastAt) {
+      logger.info('[whop] dropping out-of-order event', {
+        eventType, userId: user._id?.toString(), eventTime, lastAt,
+      });
+      return { ok: true, action: eventType, stale: true, userId: user._id.toString() };
+    }
+  }
+  const stampTime = eventTime != null ? new Date(eventTime) : null;
 
   const productId =
     event?.data?.product_id ||
@@ -128,6 +175,7 @@ async function processEvent(event, deps) {
       user.subscription = user.subscription || {};
       user.subscription.status = 'active';
       if (subId) user.subscription.whopSubscriptionId = subId;
+      if (stampTime) user.subscription.lastEventAt = stampTime;
       await user.save();
       return { ok: true, action: eventType, userId: user._id.toString(), plan: 'unknown' };
     }
@@ -137,6 +185,7 @@ async function processEvent(event, deps) {
     user.subscription.startDate = new Date();
     if (subId) user.subscription.whopSubscriptionId = subId;
     if (event?.data?.user_id && !user.whopUserId) user.whopUserId = event.data.user_id;
+    if (stampTime) user.subscription.lastEventAt = stampTime;
     await user.save();
     return { ok: true, action: eventType, userId: user._id.toString(), plan: mapping.planId, period: mapping.period };
   }
@@ -151,6 +200,7 @@ async function processEvent(event, deps) {
     user.subscription.status = 'cancelled';
     const periodEnd = event?.data?.expires_at || event?.data?.current_period_end;
     if (periodEnd) user.subscription.endDate = new Date(periodEnd);
+    if (stampTime) user.subscription.lastEventAt = stampTime;
     await user.save();
     return { ok: true, action: eventType, userId: user._id.toString(), plan: user.subscription.plan };
   }
@@ -165,4 +215,5 @@ module.exports = {
   getProductMap,
   resolveUser,
   processEvent,
+  getEventTime,
 };

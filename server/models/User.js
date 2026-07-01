@@ -45,7 +45,11 @@ const userSchema = new mongoose.Schema({
     // expired, which silently blocked every brand-new user from uploading.
     // Paid flows (Whop webhook / billing service) overwrite this on purchase.
     endDate: { type: Date, default: () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
-    whopSubscriptionId: String
+    whopSubscriptionId: String,
+    // Source timestamp of the last billing webhook applied to this subscription.
+    // Used by the opt-in Whop ordering guard (WHOP_WEBHOOK_ORDERING_GUARD) to drop
+    // out-of-order / replayed events older than what we've already applied.
+    lastEventAt: Date
   },
   niche: {
     type: String,
