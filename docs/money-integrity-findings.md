@@ -1,11 +1,13 @@
-# Money / state-integrity findings (verified, NOT auto-fixed)
+# Money / state-integrity findings
 
-From the deep bug-hunt (2026-06-30). These are **real** but sit in either
-**incomplete** or **concurrency/ordering-sensitive** billing paths — the kind of
-change that should be made with billing context + a staging rehearsal, not a
-hasty autonomous edit. Documented here with the exact fix so they can be reviewed
-and shipped deliberately. (The clear, low-risk bugs from the same hunt WERE fixed:
-IDOR #135, billing-500 #136, crash-hardening #137.)
+From the deep bug-hunt (2026-06-30). Status (2026-07-01):
+
+- **✅ FIXED — Promo `usedCount` reuse** (#1) — atomic `claimPromoCode` shipped + unit-tested.
+- **✅ FIXED — `/api/posts` scheduled-post dead-queue** (#4) — lazy publish-on-read (PR #143).
+- **⏳ STAGING-FLAGGED — costGuard TOCTOU (#2) + Whop webhook ordering/replay (#3):**
+  both change **live billing / AI-gating** logic that can't be validated against the
+  real integrations in CI, and are low-frequency; the exact ready implementations
+  are below, to be applied + rehearsed on staging rather than shipped blind.
 
 ## 1. Promo `usedCount` never incremented → single-use promos infinitely reusable
 - **Where:** `services/billingService.js` — `applyPromoCode` validates against

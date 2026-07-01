@@ -117,6 +117,26 @@ async function applyPromoCode(code, packageId, amount) {
 }
 
 /**
+ * Atomically claim ONE use of a promo code (race-safe). Returns the updated doc,
+ * or null if the code is inactive / already exhausted. `applyPromoCode` validated
+ * `usedCount` but NEVER incremented it, so a single-use code was reusable forever
+ * and two concurrent redemptions could both pass the check — this closes both by
+ * doing the check-and-increment in one conditional update. Call ONLY at genuine
+ * redemption (not in the /promo-code/validate preview).
+ */
+async function claimPromoCode(code) {
+  return PromoCode.findOneAndUpdate(
+    {
+      code: String(code).toUpperCase(),
+      isActive: true,
+      $or: [{ maxUses: -1 }, { $expr: { $lt: ['$usedCount', '$maxUses'] } }],
+    },
+    { $inc: { usedCount: 1 } },
+    { new: true }
+  );
+}
+
+/**
  * Process subscription upgrade/downgrade
  */
 async function processSubscriptionChange(userId, newPackageId, newBillingCycle, promoCode = null, addOnIds = []) {
@@ -181,8 +201,15 @@ async function processSubscriptionChange(userId, newPackageId, newBillingCycle, 
     if (promoCode) {
       promoCodeResult = await applyPromoCode(promoCode, newPackageId, totalAmount);
       if (promoCodeResult.valid) {
-        discountAmount = promoCodeResult.discountAmount;
-        totalAmount = promoCodeResult.finalAmount;
+        // Atomically claim one use. null → the code was exhausted between the
+        // validate read and here (a concurrent redemption won the race).
+        const claimed = await claimPromoCode(promoCode);
+        if (!claimed) {
+          promoCodeResult = { valid: false, error: 'Promo code usage limit reached' };
+        } else {
+          discountAmount = promoCodeResult.discountAmount;
+          totalAmount = promoCodeResult.finalAmount;
+        }
       }
     }
 
@@ -249,6 +276,7 @@ async function completeSubscriptionChange() {
 module.exports = {
   calculateProratedAmount,
   applyPromoCode,
+  claimPromoCode,
   processSubscriptionChange,
   completeSubscriptionChange
 };
