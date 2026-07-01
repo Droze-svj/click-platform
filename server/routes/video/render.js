@@ -340,6 +340,24 @@ async function runRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
   return { outputPath, sha256, sizeBytes, compositionId, signed, signer };
 }
 
+// c2pa integrity guard: persistAuthenticity upserts AuditMetadata by contentId
+// alone, so a client-supplied tree.metadata.contentId could overwrite another
+// tenant's authenticity record. Strip it unless the caller owns that Content
+// (best-effort — an invalid/foreign id is nulled and the render still proceeds,
+// just without cross-tenant provenance attribution).
+async function stripUnownedContentId(tree, req) {
+  const cid = tree && tree.metadata && tree.metadata.contentId;
+  if (!cid) return;
+  try {
+    const Content = require('../../models/Content');
+    const ids = [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+    const owns = await Content.findOne({ _id: cid, userId: { $in: ids } }).select('_id').lean();
+    if (!owns) tree.metadata.contentId = null;
+  } catch (_) {
+    tree.metadata.contentId = null;
+  }
+}
+
 router.post(
   '/render',
   auth,
@@ -350,6 +368,7 @@ router.post(
 
     const err = validateRenderTree(tree);
     if (err) return sendError(res, err, 400);
+    await stripUnownedContentId(tree, req);
     if (!COMPOSITION_BY_RATIO[ratio]) {
       return sendError(res, `Unknown ratio "${ratio}". Allowed: ${Object.keys(COMPOSITION_BY_RATIO).join(', ')}`, 400);
     }
@@ -418,11 +437,13 @@ router.post(
 router.post(
   '/render-multi',
   auth,
+  renderLimiter,
   checkExportQuota,
   asyncHandler(async (req, res) => {
     const { tree, ratios = ['9:16', '1:1', '16:9', '4:5'] } = req.body || {};
     const err = validateRenderTree(tree);
     if (err) return sendError(res, err, 400);
+    await stripUnownedContentId(tree, req);
     const userId = req.user?.id || req.user?._id?.toString();
     const tier = entitlements.resolveTier(req.user || {});
 

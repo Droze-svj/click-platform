@@ -7,6 +7,8 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { parseRequestJson } = require('../utils/safeJson');
 const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
+const { guardOwnership } = require('../utils/ownership');
+const { clampInt } = require('../utils/pagination');
 const { updateConfidenceRealTime, getConfidenceHistory, getConfidenceRecommendations, setConfidenceThresholds, batchAnalyzeConfidence } = require('../services/realTimeConfidenceService');
 const { getTemplatePerformance, compareTemplateVersions, getTemplateSuggestions } = require('../services/templateAnalyticsService');
 const { compareContentSideBySide, getEditSuggestions, bulkImproveSections } = require('../services/advancedEditingService');
@@ -30,6 +32,9 @@ router.post('/confidence/realtime', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content ID and content are required', 400);
   }
 
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
+
   const result = await updateConfidenceRealTime(contentId, content, context || {});
   sendSuccess(res, 'Confidence updated', 200, result);
 }));
@@ -42,7 +47,10 @@ router.get('/confidence/:contentId/history', auth, asyncHandler(async (req, res)
   const { contentId } = req.params;
   const { limit = 10 } = req.query;
 
-  const history = await getConfidenceHistory(contentId, parseInt(limit, 10));
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
+
+  const history = await getConfidenceHistory(contentId, clampInt(limit, 10, 100, 1));
   sendSuccess(res, 'Confidence history retrieved', 200, { history });
 }));
 
@@ -52,6 +60,10 @@ router.get('/confidence/:contentId/history', auth, asyncHandler(async (req, res)
  */
 router.get('/confidence/:contentId/recommendations', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
+
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
+
   const recommendations = await getConfidenceRecommendations(contentId);
   sendSuccess(res, 'Recommendations retrieved', 200, { recommendations });
 }));
@@ -67,6 +79,9 @@ router.post('/confidence/thresholds', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content ID and thresholds are required', 400);
   }
 
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
+
   const result = await setConfidenceThresholds(contentId, thresholds);
   sendSuccess(res, 'Thresholds checked', 200, result);
 }));
@@ -80,6 +95,15 @@ router.post('/confidence/batch', auth, asyncHandler(async (req, res) => {
 
   if (!contentIds || !Array.isArray(contentIds)) {
     return sendError(res, 'Content IDs array is required', 400);
+  }
+  if (contentIds.length > 100) {
+    return sendError(res, 'Maximum 100 content IDs per batch', 400);
+  }
+
+  // Ownership gate: every id must belong to the caller (Content is userId-owned).
+  for (const id of contentIds) {
+    const owned = await guardOwnership(req, res, id);
+    if (!owned) return;
   }
 
   const result = await batchAnalyzeConfidence(contentIds, context || {});
