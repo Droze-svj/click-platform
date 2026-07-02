@@ -5,7 +5,8 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess, requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, requireAgencyClientAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const ContentApproval = require('../models/ContentApproval');
 const { getKanbanBoardWithFilters, bulkMoveCards, getKanbanBoardWithSwimlanes, bulkUpdateCards } = require('../services/advancedKanbanService');
 const { getSLAAnalytics, getSLAPredictions } = require('../services/slaAnalyticsService');
 const { addRichComment, addCommentReaction, getCommentTemplates, createCommentTemplate } = require('../services/richCommentService');
@@ -13,6 +14,32 @@ const { generateVisualDiff, addDiffAnnotation } = require('../services/visualDif
 const { getApprovalHistory, getPendingApprovals, batchApproveDecline } = require('../services/batchApprovalService');
 const { autoAdvanceApproval, routeConditionally, delegateApproval, createAutoAdvanceRule } = require('../services/workflowAutomationService');
 const router = express.Router();
+
+// IDOR guard for :approvalId routes. autoAdvanceApproval/routeConditionally/
+// delegateApproval fetch ContentApproval.findById(approvalId) with no scoping and
+// evaluateRule() returns true for empty conditions — so any authed user could
+// POST rules:[{conditions:[]}] to auto-approve, or routingRules to reassign the
+// approver to themselves, on ANOTHER tenant's approval. Allow only the approval's
+// creator, an assignee, or a member of its workspace.
+async function requireApprovalAccess(req, res, next) {
+  try {
+    const approval = await ContentApproval.findById(req.params.approvalId)
+      .select('workspaceId createdBy assignedTo').lean();
+    if (!approval) return sendError(res, 'Approval not found', 404);
+    const uid = String(req.user?._id || req.user?.id || '');
+    const isCreator = approval.createdBy && String(approval.createdBy) === uid;
+    const isAssignee = Array.isArray(approval.assignedTo)
+      && approval.assignedTo.some((a) => a && a.userId && String(a.userId) === uid);
+    let wsAccess = false;
+    if (approval.workspaceId) {
+      try { wsAccess = (await verifyWorkspaceAccess(req.user._id, approval.workspaceId)).allowed; } catch (_) { /* fail closed */ }
+    }
+    if (!isCreator && !isAssignee && !wsAccess) return sendError(res, 'Access denied', 403);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Approval not found', 404);
+  }
+}
 
 /**
  * GET /api/clients/:clientWorkspaceId/kanban/filtered
@@ -232,7 +259,7 @@ router.post('/:token/batch', asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/auto-advance
  * Auto-advance approval
  */
-router.post('/:approvalId/auto-advance', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/auto-advance', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { rules } = req.body;
 
@@ -248,7 +275,7 @@ router.post('/:approvalId/auto-advance', auth, asyncHandler(async (req, res) => 
  * POST /api/approvals/:approvalId/route
  * Conditionally route approval
  */
-router.post('/:approvalId/route', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/route', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { routingRules } = req.body;
 
@@ -264,7 +291,7 @@ router.post('/:approvalId/route', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/delegate
  * Delegate approval
  */
-router.post('/:approvalId/delegate', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/delegate', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { toUserId, stageOrder, expiresAt } = req.body;
 
