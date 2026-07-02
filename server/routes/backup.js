@@ -14,6 +14,7 @@ const {
 } = require('../services/backupService');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { uploadLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
 const multer = require('multer');
 const path = require('path');
@@ -32,7 +33,9 @@ const upload = multer({ dest: 'uploads/backups/', limits: { fileSize: 25 * 1024 
  *     security:
  *       - bearerAuth: []
  */
-router.post('/create', auth, asyncHandler(async (req, res) => {
+// Rate-limit backup generation (full-account serialization is expensive) so it
+// can't be spammed to exhaust CPU/disk.
+router.post('/create', auth, uploadLimiter, asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const options = req.body;
 
@@ -109,13 +112,14 @@ router.post('/restore', auth, upload.single('backup'), asyncHandler(async (req, 
     // Restore from backup
     const result = await restoreFromBackup(userId, backupData, options || {});
 
-    // Clean up uploaded file
-    await fs.promises.unlink(req.file.path).catch(() => {});
-
     sendSuccess(res, 'Backup restored successfully', 200, result);
   } catch (error) {
     logger.error('Restore backup error', { error: error.message, userId });
     sendError(res, error.message, 500);
+  } finally {
+    // Always remove the uploaded temp file — previously the unlink lived on the
+    // success path, so any error before it leaked the file in uploads/backups/.
+    await require('fs').promises.unlink(req.file.path).catch(() => {});
   }
 }));
 
@@ -128,7 +132,7 @@ router.post('/restore', auth, upload.single('backup'), asyncHandler(async (req, 
  *     security:
  *       - bearerAuth: []
  */
-router.get('/export', auth, asyncHandler(async (req, res) => {
+router.get('/export', auth, uploadLimiter, asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
   try {
@@ -255,13 +259,13 @@ router.post('/preview', auth, upload.single('backup'), asyncHandler(async (req, 
       preview: true,
     });
 
-    // Clean up uploaded file
-    await fs.promises.unlink(req.file.path).catch(() => {});
-
     sendSuccess(res, 'Restore preview completed', 200, result);
   } catch (error) {
     logger.error('Preview restore error', { error: error.message, userId });
     sendError(res, error.message, 500);
+  } finally {
+    // Always remove the uploaded temp file (see /restore) — no leak on error.
+    await require('fs').promises.unlink(req.file.path).catch(() => {});
   }
 }));
 

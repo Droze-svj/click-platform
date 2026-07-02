@@ -314,7 +314,7 @@ async function restoreFromBackup(userId, backupData, options = {}) {
       for (const item of backupData.data.content) {
         try {
           if (preview) {
-            const exists = await Content.findById(item._id);
+            const exists = await Content.findOne({ _id: item._id, userId });
             results.restored.content++;
             if (exists) {
               results.skipped.content++;
@@ -327,7 +327,7 @@ async function restoreFromBackup(userId, backupData, options = {}) {
                 { upsert: true }
               );
             } else {
-              const exists = await Content.findById(item._id);
+              const exists = await Content.findOne({ _id: item._id, userId });
               if (!exists) {
                 await Content.create({ ...item, userId });
               } else {
@@ -347,7 +347,7 @@ async function restoreFromBackup(userId, backupData, options = {}) {
       for (const item of backupData.data.posts) {
         try {
           if (preview) {
-            const exists = await ScheduledPost.findById(item._id);
+            const exists = await ScheduledPost.findOne({ _id: item._id, userId });
             results.restored.posts++;
             if (exists) {
               results.skipped.posts++;
@@ -360,7 +360,7 @@ async function restoreFromBackup(userId, backupData, options = {}) {
                 { upsert: true }
               );
             } else {
-              const exists = await ScheduledPost.findById(item._id);
+              const exists = await ScheduledPost.findOne({ _id: item._id, userId });
               if (!exists) {
                 await ScheduledPost.create({ ...item, userId });
               } else {
@@ -380,7 +380,7 @@ async function restoreFromBackup(userId, backupData, options = {}) {
       for (const item of backupData.data.scripts) {
         try {
           if (preview) {
-            const exists = await Script.findById(item._id);
+            const exists = await Script.findOne({ _id: item._id, userId });
             results.restored.scripts++;
             if (exists) {
               results.skipped.scripts++;
@@ -393,7 +393,7 @@ async function restoreFromBackup(userId, backupData, options = {}) {
                 { upsert: true }
               );
             } else {
-              const exists = await Script.findById(item._id);
+              const exists = await Script.findOne({ _id: item._id, userId });
               if (!exists) {
                 await Script.create({ ...item, userId });
               } else {
