@@ -27,7 +27,8 @@ async function getAudienceInsights(userId, options = {}) {
     };
 
     if (platform) {
-      query.platform = platform;
+      // String()-cast to block NoSQL operator injection through the filter.
+      query.platform = String(platform);
     }
 
     const posts = await ScheduledPost.find(query)

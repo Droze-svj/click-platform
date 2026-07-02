@@ -28,7 +28,9 @@ router.get('/', auth, async (req, res) => {
     return sendError(res, 'Not found', 404);
   }
   try {
-    const comments = await Comment.find({ teamId, entityId })
+    // String()-cast entityId (Comment.entityId is Mixed) so a caller can't pass
+    // an operator object like {$ne:null} to widen the team-scoped query.
+    const comments = await Comment.find({ teamId, entityId: String(entityId) })
       .sort({ createdAt: 1 })
       .limit(100);
     sendSuccess(res, 'Comments retrieved', 200, comments);
@@ -61,7 +63,7 @@ router.post('/', auth, async (req, res) => {
       userId: req.user._id || req.user.id,
       userName,
       teamId,
-      entityId,
+      entityId: String(entityId),
       entityType,
       text,
       parentId
