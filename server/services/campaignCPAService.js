@@ -62,8 +62,9 @@ async function getCampaignCPAMetrics(agencyWorkspaceId, filters = {}) {
       if (startDate) query['campaign.startDate'].$gte = new Date(startDate);
       if (endDate) query['campaign.startDate'].$lte = new Date(endDate);
     }
-    if (platform) query['campaign.platform'] = platform;
-    if (campaignType) query['campaign.type'] = campaignType;
+    // String()-cast to block NoSQL operator injection via the query filters.
+    if (platform) query['campaign.platform'] = String(platform);
+    if (campaignType) query['campaign.type'] = String(campaignType);
 
     const campaigns = await CampaignCPA.find(query).lean();
 

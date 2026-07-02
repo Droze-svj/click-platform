@@ -5,6 +5,7 @@ const PostComment = require('../models/PostComment');
 const CommentTemplate = require('../models/CommentTemplate');
 const NotificationService = require('./notificationService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Add rich text comment
@@ -139,13 +140,20 @@ async function getCommentTemplates(workspaceId, filters = {}) {
       ]
     };
 
-    if (category) query.category = category;
-    if (type) query.type = type;
+    if (category) query.category = String(category);
+    if (type) query.type = String(type);
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { text: { $regex: search, $options: 'i' } }
-      ];
+      // escapeRegex + length cap defuses the ReDoS from an attacker-controlled
+      // $regex. Combine via $and so the workspace/isPublic scope above is
+      // preserved — assigning query.$or here previously CLOBBERED that scope,
+      // leaking every workspace's templates on any search.
+      const safe = escapeRegex(String(search)).slice(0, 200);
+      query.$and = [{
+        $or: [
+          { name: { $regex: safe, $options: 'i' } },
+          { text: { $regex: safe, $options: 'i' } }
+        ]
+      }];
     }
 
     const templates = await CommentTemplate.find(query)
