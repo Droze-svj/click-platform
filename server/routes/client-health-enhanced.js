@@ -5,7 +5,9 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess, requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, requireAgencyClientAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireAdmin } = require('../middleware/admin');
+const CompetitorMonitoring = require('../models/CompetitorMonitoring');
 const { forecastClientHealth } = require('../services/healthForecastingService');
 const { checkHealthAlerts, getActiveAlerts } = require('../services/healthAlertService');
 const { addCompetitor, syncCompetitorMetrics, syncAllCompetitors } = require('../services/competitorMonitoringService');
@@ -74,6 +76,13 @@ router.post('/:workspaceId/competitors', auth, requireWorkspaceAccess('canView')
  */
 router.post('/:competitorId/sync', auth, asyncHandler(async (req, res) => {
   const { competitorId } = req.params;
+  // IDOR guard: syncCompetitorMetrics loads the competitor by bare id and
+  // mutates it. Resolve its owning workspace and confirm the caller can access
+  // that workspace before syncing, so one tenant can't drive another's monitor.
+  const competitor = await CompetitorMonitoring.findById(competitorId).select('workspaceId').lean();
+  if (!competitor) return sendError(res, 'Competitor not found', 404);
+  const access = await verifyWorkspaceAccess(req.user._id, competitor.workspaceId);
+  if (!access.allowed) return sendError(res, 'Competitor not found', 404);
   const metrics = await syncCompetitorMetrics(competitorId);
   sendSuccess(res, 'Competitor metrics synced', 200, metrics);
 }));
@@ -82,7 +91,10 @@ router.post('/:competitorId/sync', auth, asyncHandler(async (req, res) => {
  * POST /api/competitors/sync-all
  * Sync all competitors
  */
-router.post('/sync-all', auth, asyncHandler(async (req, res) => {
+// Global cross-tenant fan-out (syncs EVERY workspace's competitors). Gate behind
+// admin so a single authed tenant can't trigger a platform-wide job; the routine
+// sync path is the scheduler, not this ad-hoc route.
+router.post('/sync-all', auth, requireAdmin, asyncHandler(async (req, res) => {
   const result = await syncAllCompetitors();
   sendSuccess(res, 'All competitors synced', 200, result);
 }));
