@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
 const { getKanbanBoardWithFilters, bulkMoveCards, getKanbanBoardWithSwimlanes, bulkUpdateCards } = require('../services/advancedKanbanService');
 const { getSLAAnalytics, getSLAPredictions } = require('../services/slaAnalyticsService');
 const { addRichComment, addCommentReaction, getCommentTemplates, createCommentTemplate } = require('../services/richCommentService');
@@ -18,7 +18,7 @@ const router = express.Router();
  * GET /api/clients/:clientWorkspaceId/kanban/filtered
  * Get Kanban board with filters
  */
-router.get('/:clientWorkspaceId/kanban/filtered', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/kanban/filtered', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId, ...filters } = req.query;
 
@@ -34,7 +34,7 @@ router.get('/:clientWorkspaceId/kanban/filtered', auth, asyncHandler(async (req,
  * GET /api/clients/:clientWorkspaceId/kanban/swimlanes
  * Get Kanban board with swimlanes
  */
-router.get('/:clientWorkspaceId/kanban/swimlanes', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/kanban/swimlanes', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId, swimlaneType = 'priority' } = req.query;
 
@@ -50,7 +50,7 @@ router.get('/:clientWorkspaceId/kanban/swimlanes', auth, asyncHandler(async (req
  * POST /api/clients/:clientWorkspaceId/kanban/bulk-move
  * Bulk move cards
  */
-router.post('/:clientWorkspaceId/kanban/bulk-move', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/kanban/bulk-move', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId, cardIds, toColumnId } = req.body;
 
@@ -67,7 +67,7 @@ router.post('/:clientWorkspaceId/kanban/bulk-move', auth, asyncHandler(async (re
  * POST /api/clients/:clientWorkspaceId/kanban/bulk-update
  * Bulk update cards
  */
-router.post('/:clientWorkspaceId/kanban/bulk-update', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/kanban/bulk-update', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId, cardIds, updates } = req.body;
 
@@ -84,7 +84,7 @@ router.post('/:clientWorkspaceId/kanban/bulk-update', auth, asyncHandler(async (
  * GET /api/clients/:clientWorkspaceId/sla/analytics
  * Get SLA analytics
  */
-router.get('/:clientWorkspaceId/sla/analytics', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/sla/analytics', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const analytics = await getSLAAnalytics(clientWorkspaceId, req.query);
   sendSuccess(res, 'SLA analytics retrieved', 200, analytics);
@@ -94,7 +94,7 @@ router.get('/:clientWorkspaceId/sla/analytics', auth, asyncHandler(async (req, r
  * GET /api/clients/:clientWorkspaceId/sla/predictions
  * Get SLA predictions
  */
-router.get('/:clientWorkspaceId/sla/predictions', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/sla/predictions', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const predictions = await getSLAPredictions(clientWorkspaceId);
   sendSuccess(res, 'SLA predictions retrieved', 200, predictions);
