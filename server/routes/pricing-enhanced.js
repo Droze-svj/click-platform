@@ -168,6 +168,14 @@ router.post('/support/tickets/:ticketId/respond', auth, asyncHandler(async (req,
     return sendError(res, 'Response text is required', 400);
   }
 
+  // IDOR guard: only the ticket owner (or an admin) may respond — mirror the GET
+  // handler's ownership check. Without this, any user could post into (and via the
+  // service auto-resolve) another tenant's support ticket by guessing its id.
+  const existing = await getTicket(ticketId);
+  if (!existing || (existing.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin')) {
+    return sendError(res, 'Ticket not found', 404);
+  }
+
   const ticket = await respondToTicket(ticketId, {
     text,
     from: 'user',
