@@ -18,6 +18,21 @@ const router = express.Router();
  * Create or update report template
  */
 router.post('/templates', auth, asyncHandler(async (req, res) => {
+  const { templateId, agencyWorkspaceId } = req.body;
+  if (templateId) {
+    // Update path: the service does ReportTemplate.findById + mutate with no owner
+    // check — a caller could overwrite ANY agency's template. Verify access first.
+    const existing = await ReportTemplate.findById(templateId);
+    if (!existing) return sendError(res, 'Template not found', 404);
+    const access = await verifyWorkspaceAccess(req.user._id, existing.agencyWorkspaceId);
+    if (!access.allowed) return sendError(res, 'Access denied', 403);
+  } else {
+    // Create path: the template's agencyWorkspaceId is taken from the body — verify
+    // the caller is a member so they can't forge a template in a foreign workspace.
+    if (!agencyWorkspaceId) return sendError(res, 'Agency workspace ID is required', 400);
+    const access = await verifyWorkspaceAccess(req.user._id, agencyWorkspaceId);
+    if (!access.allowed) return sendError(res, access.reason || 'Workspace access denied', 403);
+  }
   const template = await createOrUpdateTemplate({
     ...req.body,
     createdBy: req.user._id
