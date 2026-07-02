@@ -14,6 +14,11 @@ const {
 router.post('/', auth, async (req, res) => {
   try {
     const { items, platforms, autonomyMode, niche, dryRun } = req.body || {};
+    // Cap the plan size: each item fans out into per-platform scheduling work, so
+    // an unbounded items array is a memory/CPU DoS.
+    if (Array.isArray(items) && items.length > 200) {
+      return res.status(400).json({ success: false, error: 'A plan is limited to 200 items' });
+    }
     const result = await createAutopilotPlan(req.user._id, {
       items,
       platforms: Array.isArray(platforms) ? platforms : null,
