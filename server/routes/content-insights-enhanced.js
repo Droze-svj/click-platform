@@ -12,13 +12,28 @@ const { generateEngagementHeatmap, getEngagementHeatmap } = require('../services
 const { compareContent, analyzeABTest } = require('../services/contentComparisonService');
 const { scoreContentQuality } = require('../services/contentQualityService');
 const { generateContentInsightsReportExcel, generateContentInsightsReportPDF } = require('../services/contentInsightsReportService');
+const ScheduledPost = require('../models/ScheduledPost');
 const router = express.Router();
+
+// IDOR guard for :postId routes — the prediction/heatmap/quality services fetch a
+// ScheduledPost by id with no owner filter, so a caller could read/overwrite
+// another tenant's post insights. Confirm the post belongs to the caller first.
+async function requirePostOwner(req, res, next) {
+  try {
+    const ids = [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+    const post = await ScheduledPost.findOne({ _id: req.params.postId, userId: { $in: ids } }).select('_id').lean();
+    if (!post) return sendError(res, 'Post not found', 404);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Post not found', 404);
+  }
+}
 
 /**
  * POST /api/posts/:postId/predict
  * Predict content performance
  */
-router.post('/:postId/predict', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/predict', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const prediction = await predictContentPerformance(postId);
   sendSuccess(res, 'Content performance predicted', 200, prediction);
@@ -28,7 +43,7 @@ router.post('/:postId/predict', auth, asyncHandler(async (req, res) => {
  * POST /api/posts/:postId/predictions/update-actual
  * Update prediction with actual performance
  */
-router.post('/:postId/predictions/update-actual', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/predictions/update-actual', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const updated = await updatePredictionWithActual(postId);
   sendSuccess(res, 'Prediction updated with actual performance', 200, updated);
@@ -58,7 +73,7 @@ router.get('/:workspaceId/content/recommendations', auth, requireWorkspaceAccess
  * POST /api/posts/:postId/video-heatmap
  * Generate engagement heatmap
  */
-router.post('/:postId/video-heatmap', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/video-heatmap', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const heatmap = await generateEngagementHeatmap(postId, req.body);
   sendSuccess(res, 'Engagement heatmap generated', 200, heatmap);
@@ -68,7 +83,7 @@ router.post('/:postId/video-heatmap', auth, asyncHandler(async (req, res) => {
  * GET /api/posts/:postId/video-heatmap
  * Get engagement heatmap
  */
-router.get('/:postId/video-heatmap', auth, asyncHandler(async (req, res) => {
+router.get('/:postId/video-heatmap', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const heatmap = await getEngagementHeatmap(postId);
   sendSuccess(res, 'Engagement heatmap retrieved', 200, heatmap);
@@ -108,7 +123,7 @@ router.post('/ab-test/analyze', auth, asyncHandler(async (req, res) => {
  * POST /api/posts/:postId/quality/score
  * Score content quality
  */
-router.post('/:postId/quality/score', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/quality/score', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const quality = await scoreContentQuality(postId);
   sendSuccess(res, 'Content quality scored', 200, quality);
