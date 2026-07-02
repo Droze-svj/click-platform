@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
 const { getKanbanBoardWithCards, moveCard } = require('../services/approvalKanbanService');
 const { getUserSLAAlerts } = require('../services/slaAlertService');
 const router = express.Router();
@@ -14,7 +14,7 @@ const router = express.Router();
  * GET /api/clients/:clientWorkspaceId/kanban
  * Get Kanban board for client
  */
-router.get('/:clientWorkspaceId/kanban', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/kanban', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId } = req.query;
 
@@ -30,7 +30,7 @@ router.get('/:clientWorkspaceId/kanban', auth, asyncHandler(async (req, res) => 
  * POST /api/clients/:clientWorkspaceId/kanban/move
  * Move card between columns
  */
-router.post('/:clientWorkspaceId/kanban/move', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/kanban/move', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { cardId, fromColumnId, toColumnId, agencyWorkspaceId } = req.body;
 
