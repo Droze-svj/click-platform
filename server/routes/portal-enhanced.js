@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { generateQRCode } = require('../services/qrCodeService');
 const { escapeRegex } = require('../utils/escapeRegex');
 const { clampInt } = require('../utils/pagination');
@@ -17,7 +17,27 @@ const {
 const PortalActivity = require('../models/PortalActivity');
 const LinkGroup = require('../models/LinkGroup');
 const BrandedLink = require('../models/BrandedLink');
+const WhiteLabelPortal = require('../models/WhiteLabelPortal');
 const router = express.Router();
+
+// IDOR guard for :portalId routes. requireWorkspaceAccess() resolves the workspace
+// from the workspaceId/agencyWorkspaceId/clientWorkspaceId path params — but these
+// routes only have :portalId (a WhiteLabelPortal id), so the middleware falls
+// through to the caller-controlled body/query workspaceId and is a NO-OP. Load the
+// portal and require the caller to have access to its agency (workspaceId) or
+// client (clientId) workspace.
+async function requirePortalAccess(req, res, next) {
+  try {
+    const portal = await WhiteLabelPortal.findById(req.params.portalId).select('workspaceId clientId').lean();
+    if (!portal) return sendError(res, 'Portal not found', 404);
+    const wsOk = portal.workspaceId && (await verifyWorkspaceAccess(req.user._id, portal.workspaceId)).allowed;
+    const clientOk = !wsOk && portal.clientId && (await verifyWorkspaceAccess(req.user._id, portal.clientId)).allowed;
+    if (!wsOk && !clientOk) return sendError(res, 'Access denied', 403);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Portal not found', 404);
+  }
+}
 
 /**
  * Derive a link group's analytics from its member links.
@@ -48,7 +68,7 @@ function computeGroupAnalytics(links = []) {
  * GET /api/client-portal/:portalId/activity
  * Get activity feed
  */
-router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
+router.get('/:portalId/activity', auth, requirePortalAccess, asyncHandler(async (req, res) => {
   const { portalId } = req.params;
   const { limit = 50, offset = 0, types } = req.query;
 
@@ -85,7 +105,7 @@ router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(a
  * PUT /api/client-portal/:portalId/activity/:activityId/read
  * Mark activity as read
  */
-router.put('/:portalId/activity/:activityId/read', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
+router.put('/:portalId/activity/:activityId/read', auth, requirePortalAccess, asyncHandler(async (req, res) => {
   const { portalId, activityId } = req.params;
   // Resource-ownership guard — the activityId must belong to the same
   // portal the caller is authorised against. Without this, a logged-in
@@ -105,7 +125,7 @@ router.put('/:portalId/activity/:activityId/read', auth, requireWorkspaceAccess(
  * PUT /api/client-portal/:portalId/activity/read-all
  * Mark all activities as read
  */
-router.put('/:portalId/activity/read-all', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
+router.put('/:portalId/activity/read-all', auth, requirePortalAccess, asyncHandler(async (req, res) => {
   const { portalId } = req.params;
   await PortalActivity.updateMany({ portalId, isRead: false }, { isRead: true });
   sendSuccess(res, 'All activities marked as read', 200);
