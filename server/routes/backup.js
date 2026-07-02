@@ -19,7 +19,9 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 
-const upload = multer({ dest: 'uploads/backups/' });
+// Cap the uploaded backup size (every other upload route sets a limit; this one
+// didn't — an unbounded multipart upload is a disk/DoS vector).
+const upload = multer({ dest: 'uploads/backups/', limits: { fileSize: 25 * 1024 * 1024 } });
 
 /**
  * @swagger
