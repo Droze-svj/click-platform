@@ -11,6 +11,13 @@ const logger = require('../utils/logger');
  */
 async function createRepostAlert(userId, alertData) {
   try {
+    // IDOR guard: the client-supplied recycleId must reference a recycling plan
+    // owned by the caller — otherwise the alert attaches to another tenant's plan.
+    if (alertData.recycleId && !(await ContentRecycle.exists({ _id: alertData.recycleId, userId }))) {
+      const err = new Error('Recycling plan not found');
+      err.statusCode = 404;
+      throw err;
+    }
     const alert = new RepostAlert({
       userId,
       recycleId: alertData.recycleId,

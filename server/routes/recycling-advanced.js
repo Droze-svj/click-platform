@@ -42,6 +42,17 @@ async function assertOwnsLibrary(libraryId, userId) {
   return AlwaysOnLibrary.exists({ _id: libraryId, userId });
 }
 
+// The A/B-variant + freshness services below load Content / ScheduledPost by a
+// bare client-supplied id with no owner scope (cross-tenant read of engagement,
+// and cross-tenant winner-metadata writes). Assert ownership in the route first.
+// ($in tolerates Content.userId being an ObjectId or a UUID string.)
+async function assertOwnsContent(contentId, req) {
+  const Content = require('../models/Content');
+  const ids = [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+  return Content.exists({ _id: String(contentId), userId: { $in: ids } });
+}
+const ownerIdsOf = (req) => [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+
 /**
  * POST /api/recycling-advanced/evergreen/detect
  * Detect evergreen content
@@ -186,6 +197,9 @@ router.post('/evergreen/freshness', auth, asyncHandler(async (req, res) => {
   if (!contentId || !lastPostedDate) {
     return sendError(res, 'Content ID and last posted date are required', 400);
   }
+  if (!(await assertOwnsContent(contentId, req))) {
+    return sendError(res, 'Content not found', 404);
+  }
   const freshness = await calculateContentFreshness(contentId, lastPostedDate);
   sendSuccess(res, 'Content freshness calculated', 200, freshness);
 }));
@@ -212,7 +226,8 @@ router.post('/ab-variants/auto-winner', auth, asyncHandler(async (req, res) => {
   if (!testId || !variantResults) {
     return sendError(res, 'Test ID and variant results are required', 400);
   }
-  const result = await autoSelectWinner(testId, variantResults, options);
+  // Pass the caller's ids so the auto-deploy write is scoped to their own Content.
+  const result = await autoSelectWinner(testId, variantResults, options, ownerIdsOf(req));
   sendSuccess(res, 'Winner selected', 200, result);
 }));
 
@@ -224,6 +239,9 @@ router.post('/ab-variants/predict', auth, asyncHandler(async (req, res) => {
   const { baseContentId, variant, historicalData = null } = req.body;
   if (!baseContentId || !variant) {
     return sendError(res, 'Base content ID and variant are required', 400);
+  }
+  if (!(await assertOwnsContent(baseContentId, req))) {
+    return sendError(res, 'Content not found', 404);
   }
   const prediction = await predictVariantPerformance(baseContentId, variant, historicalData);
   sendSuccess(res, 'Variant performance predicted', 200, prediction);
