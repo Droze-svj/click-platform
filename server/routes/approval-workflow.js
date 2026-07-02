@@ -5,13 +5,37 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const {
   createMultiStepApproval,
   advanceToNextStage,
   getApprovalStatus
 } = require('../services/multiStepWorkflowService');
 const ContentApproval = require('../models/ContentApproval');
+
+// IDOR guard for :approvalId routes. The collaboration service mutates a
+// ContentApproval by id with no scoping, so a caller could comment on / resolve /
+// push revisions onto ANOTHER tenant's approval. Allow only the approval's creator,
+// an assignee, or a member of its workspace.
+async function requireApprovalAccess(req, res, next) {
+  try {
+    const approval = await ContentApproval.findById(req.params.approvalId)
+      .select('workspaceId createdBy assignedTo').lean();
+    if (!approval) return sendError(res, 'Approval not found', 404);
+    const uid = String(req.user?._id || req.user?.id || '');
+    const isCreator = approval.createdBy && String(approval.createdBy) === uid;
+    const isAssignee = Array.isArray(approval.assignedTo)
+      && approval.assignedTo.some((a) => a && a.userId && String(a.userId) === uid);
+    let wsAccess = false;
+    if (approval.workspaceId) {
+      try { wsAccess = (await verifyWorkspaceAccess(req.user._id, approval.workspaceId)).allowed; } catch (_) { /* fail closed */ }
+    }
+    if (!isCreator && !isAssignee && !wsAccess) return sendError(res, 'Access denied', 403);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Approval not found', 404);
+  }
+}
 const router = express.Router();
 
 /**
@@ -173,7 +197,7 @@ const approvalCollab = require('../services/approvalCollaborationService');
 
 // POST /api/approvals/:approvalId/comments — add an inline comment (optionally on
 // a specific field / as a threaded reply).
-router.post('/:approvalId/comments', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/comments', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const { text, targetField, parentId, authorRole } = req.body || {};
   const comment = await approvalCollab.addComment(req.params.approvalId, {
     authorId: req.user._id, authorName: req.user.name, authorRole, text, targetField, parentId,
@@ -182,14 +206,14 @@ router.post('/:approvalId/comments', auth, asyncHandler(async (req, res) => {
 }));
 
 // POST /api/approvals/:approvalId/comments/:commentId/resolve
-router.post('/:approvalId/comments/:commentId/resolve', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/comments/:commentId/resolve', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const resolved = !(req.body && req.body.resolved === false);
   const comment = await approvalCollab.resolveComment(req.params.approvalId, req.params.commentId, resolved);
   sendSuccess(res, 'Comment updated', 200, comment);
 }));
 
 // POST /api/approvals/:approvalId/revisions — creator re-submits after changes.
-router.post('/:approvalId/revisions', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/revisions', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const rev = await approvalCollab.addRevision(req.params.approvalId, {
     changedBy: req.user._id, note: req.body && req.body.note, changes: req.body && req.body.changes,
   });
