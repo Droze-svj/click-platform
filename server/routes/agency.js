@@ -23,6 +23,22 @@ const {
 const { checkPermission } = require('../services/workspaceService');
 const { requireTierLimit } = require('../middleware/tierEnforcement');
 const { loadAgencyTierContext } = require('../services/agencyPlanContext');
+const { verifyClientWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { clampInt } = require('../utils/pagination');
+
+// IDOR guard: every client-scoped agency route validates the caller against the
+// AGENCY workspace (checkPermission) but the body clientWorkspaceId/clientId is
+// never verified to actually be a client OF that agency — so a caller could
+// generate reports / track billing / create portals / import against ANOTHER
+// tenant's workspace. Confirm the linkage; sends 403 and returns false on failure.
+async function assertClientOfAgency(agencyWorkspaceId, clientWorkspaceId, res) {
+  const access = await verifyClientWorkspaceAccess(agencyWorkspaceId, clientWorkspaceId);
+  if (!access.allowed) {
+    sendError(res, 'Client workspace is not linked to this agency', 403);
+    return false;
+  }
+  return true;
+}
 
 const router = express.Router();
 
@@ -60,6 +76,8 @@ router.post('/portals', auth, asyncHandler(async (req, res) => {
   if (!hasPermission) {
     return sendError(res, 'Insufficient permissions', 403);
   }
+
+  if (!(await assertClientOfAgency(agencyWorkspaceId, clientWorkspaceId, res))) return;
 
   const portal = await createWhiteLabelPortal(agencyWorkspaceId, clientWorkspaceId, portalData);
   sendSuccess(res, 'White-label portal created', 201, portal);
@@ -123,6 +141,8 @@ router.post('/bulk-import', auth, asyncHandler(async (req, res) => {
   if (!hasPermission) {
     return sendError(res, 'Insufficient permissions', 403);
   }
+
+  if (!(await assertClientOfAgency(agencyWorkspaceId, clientId, res))) return;
 
   const results = await bulkImportContent(agencyWorkspaceId, clientId, importData);
   sendSuccess(res, 'Bulk import completed', 200, results);
@@ -199,6 +219,17 @@ router.post('/onboarding/:onboardingId/step', auth, asyncHandler(async (req, res
   const { onboardingId } = req.params;
   const { stepNumber } = req.body;
 
+  // IDOR guard: this route (unlike every other write in the file) had no
+  // permission/ownership check — any authed user could drive another agency's
+  // onboarding by id. Load it and gate on the owning agency workspace.
+  const ClientOnboarding = require('../models/ClientOnboarding');
+  const onboarding = await ClientOnboarding.findById(onboardingId).select('agencyWorkspaceId').lean();
+  if (!onboarding) return sendError(res, 'Onboarding not found', 404);
+  const hasPermission = await checkPermission(req.user._id, onboarding.agencyWorkspaceId, 'canManageMembers');
+  if (!hasPermission) {
+    return sendError(res, 'Insufficient permissions', 403);
+  }
+
   const result = await executeOnboardingStep(onboardingId, stepNumber || 0);
   sendSuccess(res, 'Onboarding step executed', 200, result);
 }));
@@ -220,6 +251,8 @@ router.post('/reports/generate', auth, requireTierLimit('generate_report', loadA
     return sendError(res, 'Insufficient permissions', 403);
   }
 
+  if (!(await assertClientOfAgency(agencyWorkspaceId, clientWorkspaceId, res))) return;
+
   const report = await generateClientReport(agencyWorkspaceId, clientWorkspaceId, reportData);
   sendSuccess(res, 'Client report generated', 200, report);
 }));
@@ -240,6 +273,8 @@ router.post('/billing/track', auth, asyncHandler(async (req, res) => {
   if (!hasPermission) {
     return sendError(res, 'Insufficient permissions', 403);
   }
+
+  if (!(await assertClientOfAgency(agencyWorkspaceId, clientWorkspaceId, res))) return;
 
   const billing = await trackClientUsage(agencyWorkspaceId, clientWorkspaceId, period);
   sendSuccess(res, 'Client usage tracked', 200, billing);
@@ -296,7 +331,7 @@ router.get('/reports/latest', auth, asyncHandler(async (req, res) => {
   }
 
   const agencyWorkspaceId = workspaces[0]._id;
-  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+  const limit = clampInt(req.query.limit, 10, 100, 1);
   
   const reports = await getLatestAutonomousReports(agencyWorkspaceId, limit);
   sendSuccess(res, 'Latest reports retrieved', 200, { reports });
