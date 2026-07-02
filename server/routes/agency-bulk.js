@@ -13,11 +13,28 @@ const {
   cloneCampaignToClients,
   applyClientGuidelines
 } = require('../services/bulkCampaignService');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, verifyClientWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const ClientGuidelines = require('../models/ClientGuidelines');
 const Content = require('../models/Content');
 const logger = require('../utils/logger');
 const router = express.Router();
+
+// IDOR guard for bulk routes: requireWorkspaceAccess only validates the AGENCY
+// workspace in the URL — the body-supplied clientWorkspaceIds are NOT checked, so
+// a caller could clone/schedule content into ANOTHER tenant's client workspaces
+// (writing ScheduledPosts under a victim's ownerId → posted to their accounts).
+// Verify every client workspace is actually linked to this agency. Returns false
+// (and sends a 403) on the first mismatch.
+async function verifyClientsBelongToAgency(agencyWorkspaceId, clientWorkspaceIds, res) {
+  for (const clientWorkspaceId of clientWorkspaceIds) {
+    const access = await verifyClientWorkspaceAccess(agencyWorkspaceId, clientWorkspaceId);
+    if (!access.allowed) {
+      sendError(res, `Client workspace ${clientWorkspaceId} is not linked to this agency`, 403);
+      return false;
+    }
+  }
+  return true;
+}
 
 /**
  * POST /api/agency/:agencyWorkspaceId/bulk/clone-campaign
@@ -37,6 +54,8 @@ router.post('/:agencyWorkspaceId/bulk/clone-campaign', auth, requireWorkspaceAcc
   if (!campaignId || !clientWorkspaceIds || !Array.isArray(clientWorkspaceIds)) {
     return sendError(res, 'Campaign ID and client workspace IDs are required', 400);
   }
+
+  if (!(await verifyClientsBelongToAgency(agencyWorkspaceId, clientWorkspaceIds, res))) return;
 
   const result = await cloneCampaignToClients(campaignId, clientWorkspaceIds, {
     customizeContent,
@@ -65,6 +84,8 @@ router.post('/:agencyWorkspaceId/bulk/clone-content', auth, requireWorkspaceAcce
   if (!contentId || !clientWorkspaceIds || !Array.isArray(clientWorkspaceIds)) {
     return sendError(res, 'Content ID and client workspace IDs are required', 400);
   }
+
+  if (!(await verifyClientsBelongToAgency(agencyWorkspaceId, clientWorkspaceIds, res))) return;
 
   // IDOR guard: the source content must belong to this (access-verified) agency
   // workspace OR to the requester — otherwise an agency user could clone ANY
@@ -177,6 +198,8 @@ router.post('/:agencyWorkspaceId/bulk/import', auth, requireWorkspaceAccess('can
     return sendError(res, 'Client workspace ID is required', 400);
   }
 
+  if (!(await verifyClientsBelongToAgency(agencyWorkspaceId, [clientId], res))) return;
+
   const result = await bulkImportContent(agencyWorkspaceId, clientId, importData);
   sendSuccess(res, 'Content bulk imported', 200, result);
 }));
@@ -197,6 +220,8 @@ router.post('/:agencyWorkspaceId/bulk/customize-and-schedule', auth, requireWork
   if (!contentId || !clientWorkspaceIds || !Array.isArray(clientWorkspaceIds)) {
     return sendError(res, 'Content ID and client workspace IDs are required', 400);
   }
+
+  if (!(await verifyClientsBelongToAgency(agencyWorkspaceId, clientWorkspaceIds, res))) return;
 
   // IDOR guard: the source content must belong to this (access-verified) agency
   // workspace OR to the requester — otherwise an agency user could clone ANY
