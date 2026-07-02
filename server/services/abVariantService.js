@@ -477,7 +477,7 @@ function checkStatisticalSignificance(variantResults, confidenceLevel = 0.95) {
 /**
  * Auto-select winner and deploy
  */
-async function autoSelectWinner(testId, variantResults, options = {}) {
+async function autoSelectWinner(testId, variantResults, options = {}, ownerIds = null) {
   try {
     const {
       requireSignificance = true,
@@ -517,16 +517,21 @@ async function autoSelectWinner(testId, variantResults, options = {}) {
       };
     }
 
-    // Auto-deploy if requested
+    // Auto-deploy if requested. IDOR guard: winner.contentId comes from the
+    // client-supplied variantResults, so the deploy MUST be scoped to the caller —
+    // an unscoped findByIdAndUpdate let a user stamp winner-metadata onto ANY
+    // tenant's Content. Only write when the content belongs to the caller.
     let deployed = false;
-    if (autoDeploy && winner.contentId) {
-      // Mark winner as primary variant
-      await Content.findByIdAndUpdate(winner.contentId, {
-        'metadata.isWinner': true,
-        'metadata.wonTest': testId,
-        'metadata.wonAt': new Date()
-      });
-      deployed = true;
+    if (autoDeploy && winner.contentId && Array.isArray(ownerIds) && ownerIds.length) {
+      const updated = await Content.findOneAndUpdate(
+        { _id: winner.contentId, userId: { $in: ownerIds } },
+        {
+          'metadata.isWinner': true,
+          'metadata.wonTest': testId,
+          'metadata.wonAt': new Date()
+        }
+      );
+      deployed = !!updated;
     }
 
     return {
