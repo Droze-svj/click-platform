@@ -6,10 +6,27 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { clampInt } = require('../utils/pagination');
+const ScheduledPost = require('../models/ScheduledPost');
 const { getTopPerformingPosts, updateContentPerformance } = require('../services/topPerformingPostsService');
 const { updateVideoMetrics, getVideoMetricsAnalytics, getRetentionCurve } = require('../services/videoMetricsService');
 const { analyzePostingCadence } = require('../services/postingCadenceService');
 const router = express.Router();
+
+// IDOR guard for :postId routes. The metrics/performance services fetch a
+// ScheduledPost by id with no owner filter, so a caller could read/overwrite
+// another tenant's post metrics. Confirm the post belongs to the caller first.
+// ($in tolerates ScheduledPost.userId being stored as an ObjectId or a UUID string.)
+async function requirePostOwner(req, res, next) {
+  try {
+    const ids = [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+    const post = await ScheduledPost.findOne({ _id: req.params.postId, userId: { $in: ids } }).select('_id').lean();
+    if (!post) return sendError(res, 'Post not found', 404);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Post not found', 404);
+  }
+}
 
 /**
  * GET /api/workspaces/:workspaceId/content/top-performing
@@ -30,7 +47,7 @@ router.get('/:workspaceId/content/top-performing', auth, requireWorkspaceAccess(
 
   const result = await getTopPerformingPosts(workspaceId, {
     metric,
-    limit: parseInt(limit, 10),
+    limit: clampInt(limit, 10, 100, 1),
     platform,
     startDate,
     endDate,
@@ -46,7 +63,7 @@ router.get('/:workspaceId/content/top-performing', auth, requireWorkspaceAccess(
  * POST /api/posts/:postId/content-performance/update
  * Update content performance for a post
  */
-router.post('/:postId/content-performance/update', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/content-performance/update', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const performance = await updateContentPerformance(postId);
   sendSuccess(res, 'Content performance updated', 200, performance);
@@ -56,7 +73,7 @@ router.post('/:postId/content-performance/update', auth, asyncHandler(async (req
  * POST /api/posts/:postId/video-metrics
  * Update video metrics
  */
-router.post('/:postId/video-metrics', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/video-metrics', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const metrics = await updateVideoMetrics(postId, req.body);
   sendSuccess(res, 'Video metrics updated', 200, metrics);
@@ -76,7 +93,7 @@ router.get('/:workspaceId/video-metrics/analytics', auth, requireWorkspaceAccess
  * GET /api/posts/:postId/video-metrics/retention
  * Get retention curve for a video
  */
-router.get('/:postId/video-metrics/retention', auth, asyncHandler(async (req, res) => {
+router.get('/:postId/video-metrics/retention', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const retention = await getRetentionCurve(postId);
   sendSuccess(res, 'Retention curve retrieved', 200, retention);
