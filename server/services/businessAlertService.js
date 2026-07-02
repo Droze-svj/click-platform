@@ -202,8 +202,10 @@ async function getActiveAlerts(agencyWorkspaceId, filters = {}) {
       status: 'active'
     };
 
-    if (severity) query['alert.severity'] = severity;
-    if (type) query['alert.type'] = type;
+    // String()-cast so a caller can't smuggle a Mongo operator object
+    // (e.g. severity={$ne:null}) through the query filter.
+    if (severity) query['alert.severity'] = String(severity);
+    if (type) query['alert.type'] = String(type);
 
     const alerts = await BusinessAlert.find(query)
       .sort({ createdAt: -1 })

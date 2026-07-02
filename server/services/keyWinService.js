@@ -3,6 +3,7 @@
 
 const KeyWin = require('../models/KeyWin');
 const logger = require('../utils/logger');
+const { clampInt } = require('../utils/pagination');
 
 /**
  * Create key win
@@ -62,8 +63,9 @@ async function getKeyWins(clientWorkspaceId, filters = {}) {
     } = filters;
 
     const query = { clientWorkspaceId };
-    if (type) query['win.type'] = type;
-    if (impact) query['win.impact'] = impact;
+    // String()-cast to block NoSQL operator injection via the filters.
+    if (type) query['win.type'] = String(type);
+    if (impact) query['win.impact'] = String(impact);
     if (startDate || endDate) {
       query['win.date'] = {};
       if (startDate) query['win.date'].$gte = new Date(startDate);
@@ -73,7 +75,8 @@ async function getKeyWins(clientWorkspaceId, filters = {}) {
     const wins = await KeyWin.find(query)
       .populate('postId', 'content platform postedAt')
       .sort({ 'win.date': -1 })
-      .limit(parseInt(limit, 10))
+      // Clamp the row cap so limit=999999 can't be a pagination DoS.
+      .limit(clampInt(limit, 20, 500, 1))
       .lean();
 
     return wins;
