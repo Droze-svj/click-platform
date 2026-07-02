@@ -100,15 +100,20 @@ async function startAgentPipeline(videoId, goals, userId) {
  * @param {string} jobId
  * @returns {object|null}
  */
-async function getJobStatus(jobId) {
+async function getJobStatus(jobId, userId = null) {
+  const uid = userId != null ? String(userId) : null
   let job = jobs.get(jobId)
   if (!job) {
-    // Not in memory (e.g. after a restart) — read the persisted record.
+    // Not in memory (e.g. after a restart) — read the persisted record, scoped
+    // to the caller so a job id can't be polled cross-tenant.
     try {
       const AgenticJob = require('../models/AgenticJob')
-      job = await AgenticJob.findOne({ jobId }).lean()
+      job = await AgenticJob.findOne(uid ? { jobId, userId: uid } : { jobId }).lean()
     } catch { job = null }
     if (!job) return null
+  } else if (uid && job.userId != null && String(job.userId) !== uid) {
+    // In-memory job belongs to another user — deny.
+    return null
   }
   return {
     jobId: job.jobId,
