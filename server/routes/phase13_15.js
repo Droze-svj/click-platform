@@ -12,7 +12,7 @@ const logger = require('../utils/logger');
 // 🛡️ Phase 13: Bridge Integrity Pulse
 router.post('/bridge/pulse', auth, async (req, res) => {
   try {
-    const result = await bridgeCalibration.calibrateFleet(req.user.id);
+    const result = await bridgeCalibration.calibrateFleet(req.user._id);
     res.json(result);
   } catch (err) {
     logger.error('Phase 13: Pulse Failed', { error: err.message });
@@ -23,7 +23,7 @@ router.post('/bridge/pulse', auth, async (req, res) => {
 // 🛠️ Phase 14: Bridge Calibration & Proxy Rotation
 router.get('/bridge/health', auth, async (req, res) => {
   try {
-    const index = await bridgeCalibration.getClusterStabilityIndex(req.user.id);
+    const index = await bridgeCalibration.getClusterStabilityIndex(req.user._id);
     res.json({ stabilityIndex: index, timestamp: new Date() });
   } catch (err) {
     res.status(500).json({ error: 'Health scan failed' });
@@ -34,7 +34,7 @@ router.get('/bridge/health', auth, async (req, res) => {
 router.post('/hardware/deploy', auth, async (req, res) => {
   try {
     const { nodeUri } = req.body;
-    const result = await hardwareNode.deploySovereignManifest(req.user.id, nodeUri);
+    const result = await hardwareNode.deploySovereignManifest(req.user._id, nodeUri);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Hardware deployment failed' });

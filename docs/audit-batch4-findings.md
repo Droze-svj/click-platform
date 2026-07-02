@@ -24,7 +24,9 @@ Exhaustive per-route audit, 74 files, **17 confirmed** (verify partially rate-li
 | 16 | recurring.js | low | crash-safety | POST /api/recurring | Validate cadence.timezone (and timeOfDay) at the route before calling computeNextFireAt — e.g. reject with 400 CADENCE_INVALID when a lightweight tz c |
 | 17 | recycling-advanced.js | low | IDOR / broken obje | POST POST /api/recycling-advanced/evergreen/fres | Pass req.user._id into calculateContentFreshness and add `userId: req.user._id` (String()-cast) to the ScheduledPost.find filter, returning a not-foun |
 
-## Remaining (to fix — patterns proven in batches 1-3)
-- **recycling-advanced.js** auto-winner/predict/freshness + **recycling.js** /alerts — owner-scope Content/ScheduledPost/recycleId (service-level).
-- **push.js** /subscribe — SSRF: assertPublicUrl on subscription.endpoint.
-- **playbooks.js** apply (always-500 $inc+$set same path) + performance cross-tenant count; **pipeline.js** /batch cap; **phase13_15.js** wrong userId key; **phase16** comment NoSQL scope; **recurring.js** timezone 400-not-500.
+## Status (ALL Batch-4 rows now SHIPPED)
+- **PR #169** — recycling IDOR cluster: #7 auto-winner (owner-scoped deploy write via `ownerIdsOf`), #14 predict + #17 freshness (`assertOwnsContent`), #8 /alerts recycleId ownership (repostAlertService), plus always-on library id-ownership guards.
+- **PR #170** — #13 push /subscribe SSRF (`assertPublicUrl`), #9 phase13_15 `req.user._id` fleet key, #11 pipeline /batch cap (25), #12 playbooks apply always-500 (single `$inc`), #16 recurring timezone 400-not-500 (create+update).
+- Earlier PRs (#150–168) covered #3 portal-enhanced, #4 report-builder, #5 pipeline /variations clamp, #6 pricing ticket respond IDOR, #10 phase16 NoSQL cast, #15 playbooks /performance (now `getAccessiblePlaybook`-gated — verified present).
+
+Batch-4 = COMPLETE. Regression guards: tests/server/routes/idorScoping.test.js + batch4Hardening.test.js.

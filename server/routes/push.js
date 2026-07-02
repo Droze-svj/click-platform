@@ -7,6 +7,7 @@ const express = require('express')
 const webpush = require('web-push')
 const auth = require('../middleware/auth')
 const { requireAdmin } = require('../middleware/admin')
+const { assertPublicUrl } = require('../utils/urlGuard')
 const router = express.Router()
 
 // VAPID keys for push notifications (generate these for production)
@@ -48,6 +49,16 @@ router.post('/subscribe', auth, async (req, res) => {
 
     if (!subscription || !subscription.endpoint) {
       return res.status(400).json({ error: 'Invalid subscription data' })
+    }
+
+    // SSRF guard: the endpoint is a client-supplied URL that the server (and the
+    // web-push library) will POST to now and on every future /send + /broadcast.
+    // Reject non-public targets (loopback/private/link-local, non-http(s)) before
+    // it is ever stored or dispatched, so it can't be aimed at internal services.
+    try {
+      await assertPublicUrl(subscription.endpoint)
+    } catch (err) {
+      return res.status(400).json({ error: 'Invalid subscription endpoint' })
     }
 
     // Key the subscription by the authenticated owner.

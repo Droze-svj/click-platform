@@ -103,13 +103,15 @@ async function applyPlaybookToClient(playbookId, userId, clientId, customization
       }
     }
 
-    // Update playbook stats
+    // Update playbook stats. Both counters move via a single $inc — a prior
+    // version also referenced 'stats.clientsUsed' inside $set, and Mongo rejects
+    // updating the same path in two operators ("would create a conflict"), which
+    // made every /apply call throw and 500. One $inc per counter is conflict-free.
     await Playbook.findByIdAndUpdate(playbookId, {
-      $inc: { 
+      $inc: {
         'stats.timesUsed': 1,
-        'stats.clientsUsed': playbook.stats.clientsUsed === 0 ? 1 : 0 // Only increment if first use
-      },
-      $set: { 'stats.clientsUsed': playbook.stats.clientsUsed + 1 }
+        'stats.clientsUsed': 1
+      }
     });
 
     return {
