@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { clampInt } = require('../utils/pagination');
 const {
   processContentPipeline,
   getPipelineStatus,
@@ -114,7 +115,10 @@ router.post('/batch', auth, asyncHandler(async (req, res) => {
  */
 router.post('/:contentId/variations', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
-  const { platform, count = 3 } = req.body;
+  const { platform } = req.body;
+  // Clamp the fan-out: each variation is a paid LLM call, so an unclamped body
+  // `count` (e.g. 100000) was a cost bomb.
+  const count = clampInt(req.body.count, 3, 5, 1);
 
   if (!platform) {
     return sendError(res, 'Platform is required', 400);
