@@ -581,7 +581,7 @@ router.post('/login',
       try {
         const result = await supabase
           .from('users')
-          .select('id, email, first_name, last_name, password, login_attempts, last_login_at, social_links')
+          .select('id, email, first_name, last_name, password, login_attempts, last_login_attempt_at, last_login_at, social_links')
           .eq('email', email.toLowerCase())
           .single();
 
