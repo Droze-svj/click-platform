@@ -20,14 +20,15 @@ async function createABTest(agencyWorkspaceId, testData) {
       successMetric = 'clicks' // 'clicks', 'conversions', 'engagement'
     } = testData;
 
-    // Create variant A link
-    const linkA = await BrandedLink.findById(variantA);
+    // IDOR: scope both variant lookups to the caller's agency workspace — the ids
+    // come from the request body and these links are MUTATED (metadata.abTest) +
+    // saved below, so an unscoped findById let a caller hijack another agency's links.
+    const linkA = await BrandedLink.findOne({ _id: variantA, agencyWorkspaceId });
     if (!linkA) {
       throw new Error('Variant A link not found');
     }
 
-    // Create variant B link
-    const linkB = await BrandedLink.findById(variantB);
+    const linkB = await BrandedLink.findOne({ _id: variantB, agencyWorkspaceId });
     if (!linkB) {
       throw new Error('Variant B link not found');
     }
