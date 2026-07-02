@@ -33,7 +33,8 @@ router.post('/run', authenticateToken, requireFeature('ai_agent'), async (req, r
 // GET /api/agentic/status/:jobId — Poll pipeline progress
 router.get('/status/:jobId', authenticateToken, async (req, res) => {
   try {
-    const job = await getJobStatus(req.params.jobId)
+    // IDOR: scope the job to the caller so one user can't poll another's job.
+    const job = await getJobStatus(req.params.jobId, req.user._id)
     if (!job) return res.status(404).json({ error: 'Job not found' })
     res.json(job)
   } catch (err) {
