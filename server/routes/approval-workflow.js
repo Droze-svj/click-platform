@@ -12,6 +12,7 @@ const {
   getApprovalStatus
 } = require('../services/multiStepWorkflowService');
 const ContentApproval = require('../models/ContentApproval');
+const Content = require('../models/Content');
 
 // IDOR guard for :approvalId routes. The collaboration service mutates a
 // ContentApproval by id with no scoping, so a caller could comment on / resolve /
@@ -55,6 +56,15 @@ router.post('/multi-step', auth, asyncHandler(async (req, res) => {
   if (!contentId || !workspaceId) {
     return sendError(res, 'Content ID and workspace ID are required', 400);
   }
+
+  // Authz: the caller must be able to access the target workspace, and the
+  // content must belong to it. createMultiStepApproval loads Content by bare id
+  // with no scope, so without this a caller could stand up an approval workflow
+  // over another tenant's content or into a workspace they don't control.
+  const access = await verifyWorkspaceAccess(req.user._id, workspaceId);
+  if (!access.allowed) return sendError(res, 'Workspace not found', 404);
+  const ownsContent = await Content.exists({ _id: String(contentId), workspaceId });
+  if (!ownsContent) return sendError(res, 'Content not found', 404);
 
   const approval = await createMultiStepApproval(contentId, {
     workspaceId,

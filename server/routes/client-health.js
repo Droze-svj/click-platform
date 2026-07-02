@@ -13,7 +13,23 @@ const { calculateClientHealthScore, getClientHealthDashboard } = require('../ser
 const { createKeyWin, getKeyWins, getKeyWinsSummary } = require('../services/keyWinService');
 const { analyzeCommentSentiment, getCommentSentimentTrends } = require('../services/commentSentimentService');
 const { generateClientHealthReportExcel, generateClientHealthReportPDF } = require('../services/clientHealthReportService');
+const ScheduledPost = require('../models/ScheduledPost');
 const router = express.Router();
+
+// IDOR guard for :postId routes. analyzeCommentSentiment upserts a
+// CommentSentiment keyed by postId with no owner scope, so a caller could write
+// sentiment onto another tenant's post by guessing its id. Confirm ownership
+// first. ($in tolerates ScheduledPost.userId being an ObjectId or a UUID string.)
+async function requirePostOwner(req, res, next) {
+  try {
+    const ids = [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+    const post = await ScheduledPost.findOne({ _id: req.params.postId, userId: { $in: ids } }).select('_id').lean();
+    if (!post) return sendError(res, 'Post not found', 404);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Post not found', 404);
+  }
+}
 
 /**
  * POST /api/workspaces/:workspaceId/brand-awareness/calculate
@@ -139,7 +155,7 @@ router.get('/:clientWorkspaceId/key-wins/summary', auth, requireWorkspaceAccess(
  * POST /api/posts/:postId/comments/sentiment
  * Analyze comment sentiment
  */
-router.post('/:postId/comments/sentiment', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/comments/sentiment', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const sentiment = await analyzeCommentSentiment(postId, req.body);
   sendSuccess(res, 'Comment sentiment analyzed', 200, sentiment);
