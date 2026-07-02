@@ -19,6 +19,11 @@ const Content = require('../models/Content');
 const logger = require('../utils/logger');
 const router = express.Router();
 
+// Each bulk op fans out one (or more) writes per client workspace. Cap the list
+// so a single request can't schedule/clone across an unbounded number of clients
+// (pagination/DoS). Legitimate agencies operate on far fewer than this.
+const MAX_BULK_CLIENTS = 100;
+
 // IDOR guard for bulk routes: requireWorkspaceAccess only validates the AGENCY
 // workspace in the URL — the body-supplied clientWorkspaceIds are NOT checked, so
 // a caller could clone/schedule content into ANOTHER tenant's client workspaces
@@ -54,6 +59,9 @@ router.post('/:agencyWorkspaceId/bulk/clone-campaign', auth, requireWorkspaceAcc
   if (!campaignId || !clientWorkspaceIds || !Array.isArray(clientWorkspaceIds)) {
     return sendError(res, 'Campaign ID and client workspace IDs are required', 400);
   }
+  if (clientWorkspaceIds.length > MAX_BULK_CLIENTS) {
+    return sendError(res, `A bulk operation is limited to ${MAX_BULK_CLIENTS} client workspaces`, 400);
+  }
 
   if (!(await verifyClientsBelongToAgency(agencyWorkspaceId, clientWorkspaceIds, res))) return;
 
@@ -83,6 +91,9 @@ router.post('/:agencyWorkspaceId/bulk/clone-content', auth, requireWorkspaceAcce
 
   if (!contentId || !clientWorkspaceIds || !Array.isArray(clientWorkspaceIds)) {
     return sendError(res, 'Content ID and client workspace IDs are required', 400);
+  }
+  if (clientWorkspaceIds.length > MAX_BULK_CLIENTS) {
+    return sendError(res, `A bulk operation is limited to ${MAX_BULK_CLIENTS} client workspaces`, 400);
   }
 
   if (!(await verifyClientsBelongToAgency(agencyWorkspaceId, clientWorkspaceIds, res))) return;
@@ -219,6 +230,9 @@ router.post('/:agencyWorkspaceId/bulk/customize-and-schedule', auth, requireWork
 
   if (!contentId || !clientWorkspaceIds || !Array.isArray(clientWorkspaceIds)) {
     return sendError(res, 'Content ID and client workspace IDs are required', 400);
+  }
+  if (clientWorkspaceIds.length > MAX_BULK_CLIENTS) {
+    return sendError(res, `A bulk operation is limited to ${MAX_BULK_CLIENTS} client workspaces`, 400);
   }
 
   if (!(await verifyClientsBelongToAgency(agencyWorkspaceId, clientWorkspaceIds, res))) return;

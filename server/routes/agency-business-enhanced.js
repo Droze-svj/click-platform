@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { clampInt } = require('../utils/pagination');
 const { predictClientChurn, forecastRevenue, forecastSatisfaction } = require('../services/predictiveAnalyticsService');
 const { checkBusinessAlerts, getActiveAlerts } = require('../services/businessAlertService');
 const { getIndustryBenchmarks, compareAgainstBenchmarks } = require('../services/industryBenchmarkService');
@@ -30,7 +31,9 @@ router.post('/:agencyWorkspaceId/clients/:clientWorkspaceId/churn-prediction', a
  */
 router.post('/:agencyWorkspaceId/revenue/forecast', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId } = req.params;
-  const { months = 6 } = req.body;
+  // Clamp: months drives a forecasting loop, so an unbounded value (e.g. 1e9)
+  // is a CPU/memory DoS.
+  const months = clampInt(req.body.months, 6, 36, 1);
   const forecast = await forecastRevenue(agencyWorkspaceId, months);
   sendSuccess(res, 'Revenue forecast generated', 200, forecast);
 }));
@@ -41,7 +44,7 @@ router.post('/:agencyWorkspaceId/revenue/forecast', auth, requireWorkspaceAccess
  */
 router.post('/:agencyWorkspaceId/satisfaction/forecast', auth, requireWorkspaceAccess('canView'), asyncHandler(async (req, res) => {
   const { agencyWorkspaceId } = req.params;
-  const { months = 3 } = req.body;
+  const months = clampInt(req.body.months, 3, 36, 1);
   const forecast = await forecastSatisfaction(agencyWorkspaceId, months);
   sendSuccess(res, 'Satisfaction forecast generated', 200, forecast);
 }));
