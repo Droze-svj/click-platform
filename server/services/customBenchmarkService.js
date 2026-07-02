@@ -3,6 +3,7 @@
 
 const CustomBenchmark = require('../models/CustomBenchmark');
 const logger = require('../utils/logger');
+const { applySafeUpdates } = require('../utils/safeUpdate');
 
 /**
  * Create custom benchmark
@@ -56,7 +57,9 @@ async function updateCustomBenchmark(benchmarkId, userId, updates) {
       throw new Error('Benchmark not found');
     }
 
-    Object.assign(benchmark, updates);
+    // Allow-list the mutable fields — a bare Object.assign let a caller overwrite
+    // userId (owner) or other protected fields via the update body.
+    applySafeUpdates(benchmark, updates, { allow: ['name', 'platform', 'metrics', 'isActive'] });
     await benchmark.save();
 
     return benchmark;
