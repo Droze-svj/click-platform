@@ -13,6 +13,19 @@ const { computeNextFireAt } = require('../services/recurringPostCron');
 
 const router = express.Router();
 
+// A caller-supplied IANA timezone flows into computeNextFireAt →
+// Intl.DateTimeFormat, which throws a RangeError on an unknown zone. Without
+// this validation that surfaced as an unhandled 500; reject it as a clean 400.
+function isValidTimezone(tz) {
+  if (!tz) return true; // absent → a default is applied downstream
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** GET /api/recurring — list every template for the current user. */
 router.get('/', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id || req.user.id;
@@ -34,6 +47,9 @@ router.post('/', auth, asyncHandler(async (req, res) => {
   const hasContent = !!(content?.text || content?.mediaUrl) || (Array.isArray(contentPool) && contentPool.length > 0);
   if (!hasContent) {
     return res.status(400).json({ success: false, error: 'Provide content.text/mediaUrl or a contentPool with at least one entry', code: 'CONTENT_REQUIRED' });
+  }
+  if (!isValidTimezone(cadence.timezone)) {
+    return res.status(400).json({ success: false, error: 'cadence.timezone is not a valid IANA timezone', code: 'TIMEZONE_INVALID' });
   }
 
   const tpl = new RecurringPostTemplate({
@@ -69,6 +85,9 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
   if (Array.isArray(contentPool)) {
     tpl.contentPool = contentPool;
     tpl.poolCursor = 0; // reset rotation when the pool changes
+  }
+  if (cadence && !isValidTimezone(cadence.timezone)) {
+    return res.status(400).json({ success: false, error: 'cadence.timezone is not a valid IANA timezone', code: 'TIMEZONE_INVALID' });
   }
   if (cadence) {
     tpl.cadence = {

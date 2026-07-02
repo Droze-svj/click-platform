@@ -97,6 +97,13 @@ router.post('/batch', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content IDs array is required', 400);
   }
 
+  // Each content id fans out into a full multi-platform pipeline of paid LLM
+  // calls. Cap the batch so an unbounded contentIds array can't be a cost/DoS
+  // bomb; callers with more items must page through in chunks.
+  if (contentIds.length > 25) {
+    return sendError(res, 'Batch is limited to 25 content items per request', 400);
+  }
+
   const results = await batchProcessPipeline(req.user._id, contentIds, {
     platforms: platforms || SUPPORTED_PLATFORMS,
     autoSchedule: autoSchedule || false,
