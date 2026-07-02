@@ -215,6 +215,22 @@ router.get('/confidence/:contentId', auth, asyncHandler(async (req, res) => {
  * Create or update AI template
  */
 router.post('/templates', auth, asyncHandler(async (req, res) => {
+  const { templateId, agencyWorkspaceId } = req.body;
+  if (templateId) {
+    // Update path: the service does AITemplate.findById(templateId) and mutates it
+    // with NO owner check — so a caller could overwrite another tenant's template
+    // (proprietary prompts/brand rules). Require access to the existing template.
+    const existing = await AITemplate.findById(templateId);
+    if (!existing) return sendError(res, 'Template not found', 404);
+    if (!(await canAccessTemplate(existing, req))) return sendError(res, 'Access denied', 403);
+  } else {
+    // Create path: the new template's required agencyWorkspaceId is taken from the
+    // body verbatim — verify the caller is a member so they can't create inside a
+    // workspace they don't belong to.
+    if (!agencyWorkspaceId) return sendError(res, 'Agency workspace ID is required', 400);
+    const access = await verifyWorkspaceAccess(req.user._id, agencyWorkspaceId);
+    if (!access.allowed) return sendError(res, access.reason || 'Workspace access denied', 403);
+  }
   const template = await createOrUpdateTemplate({
     ...req.body,
     createdBy: req.user._id

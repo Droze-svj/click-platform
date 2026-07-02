@@ -84,7 +84,18 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  */
 router.get('/workflows', auth, asyncHandler(async (req, res) => {
   const { teamId } = req.query;
-  const workflows = await getWorkflows(req.user._id, teamId);
+  // (1) String()-cast so a `?teamId[$ne]=x` operator object can't reach the Mongo
+  // $or filter (NoSQL injection). (2) Only honor teamId if the caller is a member —
+  // otherwise any team's workflows (approver names/emails, stage config) leak.
+  let safeTeamId = null;
+  if (teamId) {
+    safeTeamId = String(teamId);
+    const Team = require('../models/Team');
+    const member = await Team.findOne({ _id: safeTeamId, 'members.userId': req.user._id })
+      .select('_id').lean().catch(() => null);
+    if (!member) safeTeamId = null; // not a member → fall back to the caller's own workflows
+  }
+  const workflows = await getWorkflows(req.user._id, safeTeamId);
   sendSuccess(res, 'Workflows retrieved', 200, { workflows });
 }));
 
