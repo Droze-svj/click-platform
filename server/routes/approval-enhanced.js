@@ -7,6 +7,8 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess, requireAgencyClientAccess, verifyWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const ContentApproval = require('../models/ContentApproval');
+const Content = require('../models/Content');
+const ScheduledPost = require('../models/ScheduledPost');
 const { getKanbanBoardWithFilters, bulkMoveCards, getKanbanBoardWithSwimlanes, bulkUpdateCards } = require('../services/advancedKanbanService');
 const { getSLAAnalytics, getSLAPredictions } = require('../services/slaAnalyticsService');
 const { addRichComment, addCommentReaction, getCommentTemplates, createCommentTemplate } = require('../services/richCommentService');
@@ -38,6 +40,38 @@ async function requireApprovalAccess(req, res, next) {
     return next();
   } catch (_) {
     return sendError(res, 'Approval not found', 404);
+  }
+}
+
+// IDOR guard for :postId routes (rich comments / reactions). addRichComment and
+// addCommentReaction write a PostComment against a bare postId with no owner
+// scope, so a caller could comment/react on another tenant's post by id. Confirm
+// the post belongs to the caller first. ($in tolerates ObjectId-or-UUID userId.)
+async function requirePostOwner(req, res, next) {
+  try {
+    const ids = [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+    const post = await ScheduledPost.findOne({ _id: req.params.postId, userId: { $in: ids } }).select('_id').lean();
+    if (!post) return sendError(res, 'Post not found', 404);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Post not found', 404);
+  }
+}
+
+// IDOR guard for :entityId version routes (visual-diff / annotations). The
+// visualDiffService loads versions by bare contentId/postId (entityId) with no
+// owner scope. Resolve the parent Content (default) or ScheduledPost scoped to
+// the caller before diffing/annotating, and 404 when they don't own it.
+async function requireEntityOwner(req, res, next) {
+  try {
+    const ids = [req.user?._id, req.user?._id?.toString(), req.user?.id].filter(Boolean);
+    const entityType = req.query.entityType || req.body?.entityType || 'content';
+    const Model = entityType === 'post' ? ScheduledPost : Content;
+    const doc = await Model.findOne({ _id: req.params.entityId, userId: { $in: ids } }).select('_id').lean();
+    if (!doc) return sendError(res, 'Not found', 404);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Not found', 404);
   }
 }
 
@@ -131,7 +165,7 @@ router.get('/:clientWorkspaceId/sla/predictions', auth, requireAgencyClientAcces
  * POST /api/posts/:postId/comments/rich
  * Add rich text comment
  */
-router.post('/:postId/comments/rich', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/comments/rich', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const userId = req.user._id;
   const comment = await addRichComment(postId, { ...req.body, userId });
@@ -142,7 +176,7 @@ router.post('/:postId/comments/rich', auth, asyncHandler(async (req, res) => {
  * POST /api/posts/:postId/comments/:commentId/reaction
  * Add reaction to comment
  */
-router.post('/:postId/comments/:commentId/reaction', auth, asyncHandler(async (req, res) => {
+router.post('/:postId/comments/:commentId/reaction', auth, requirePostOwner, asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const userId = req.user._id;
   const { reactionType } = req.body;
@@ -188,7 +222,7 @@ router.post('/:workspaceId/comment-templates', auth, requireWorkspaceAccess('can
  * GET /api/versions/:entityId/visual-diff
  * Get visual diff with highlighting
  */
-router.get('/:entityId/visual-diff', auth, asyncHandler(async (req, res) => {
+router.get('/:entityId/visual-diff', auth, requireEntityOwner, asyncHandler(async (req, res) => {
   const { entityId } = req.params;
   const { version1, version2, entityType = 'content' } = req.query;
 
@@ -204,7 +238,7 @@ router.get('/:entityId/visual-diff', auth, asyncHandler(async (req, res) => {
  * POST /api/versions/:entityId/annotations
  * Add annotation to diff
  */
-router.post('/:entityId/annotations', auth, asyncHandler(async (req, res) => {
+router.post('/:entityId/annotations', auth, requireEntityOwner, asyncHandler(async (req, res) => {
   const { entityId } = req.params;
   const { versionNumber, entityType = 'content', ...annotationData } = req.body;
 
