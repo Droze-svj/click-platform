@@ -201,9 +201,11 @@ router.get('/content/:contentId/custom-evaluation', auth, asyncHandler(async (re
  * Create benchmark alert
  */
 router.post('/alerts', auth, asyncHandler(async (req, res) => {
+  // Mass-assignment guard: spread the body FIRST so the canonical userId wins —
+  // a `userId` in req.body must never override the authenticated owner.
   const alert = new BenchmarkAlert({
-    userId: req.user._id,
-    ...req.body
+    ...req.body,
+    userId: req.user._id
   });
 
   await alert.save();

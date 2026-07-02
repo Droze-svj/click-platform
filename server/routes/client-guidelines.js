@@ -29,12 +29,15 @@ router.post('/:workspaceId/guidelines', auth, requireWorkspaceAccess('canManageS
     agencyWorkspaceId = workspace.metadata?.agencyWorkspaceId || null;
   }
 
+  // Mass-assignment guard: spread the body FIRST so the canonical
+  // workspaceId/agencyWorkspaceId win — a body value must never reassign the
+  // guidelines to another workspace/agency.
   const guidelines = await ClientGuidelines.findOneAndUpdate(
     { workspaceId },
     {
+      ...req.body,
       workspaceId,
-      agencyWorkspaceId,
-      ...req.body
+      agencyWorkspaceId
     },
     { upsert: true, new: true }
   );
