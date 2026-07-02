@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const Content = require('../models/Content');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { SENSITIVE_FIELDS } = require('../utils/safeUpdate');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -38,10 +39,24 @@ router.post('/update', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Some content items not found or access denied', 403);
   }
 
+  // Mass-assignment guard: the ownership filter restricts WHICH docs are updated,
+  // but a raw `$set: {...updates}` still lets a user set protected fields (userId,
+  // workspaceId, createdBy, …) on their own content. Strip sensitive/system fields
+  // and any Mongo operator keys, mirroring utils/safeUpdate.
+  const blocked = new Set([...SENSITIVE_FIELDS, 'updatedAt']);
+  const safeUpdates = {};
+  for (const [key, value] of Object.entries(updates)) {
+    if (blocked.has(key) || key.startsWith('$')) continue;
+    safeUpdates[key] = value;
+  }
+  if (Object.keys(safeUpdates).length === 0) {
+    return sendError(res, 'No updatable fields provided', 400);
+  }
+
   // Update all content
   const result = await Content.updateMany(
     { _id: { $in: contentIds }, userId: req.user._id },
-    { $set: { ...updates, updatedAt: new Date() } }
+    { $set: { ...safeUpdates, updatedAt: new Date() } }
   );
 
   logger.info('Bulk content update', {
