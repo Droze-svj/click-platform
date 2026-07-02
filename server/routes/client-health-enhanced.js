@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
-const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+const { requireWorkspaceAccess, requireAgencyClientAccess } = require('../middleware/workspaceIsolation');
 const { forecastClientHealth } = require('../services/healthForecastingService');
 const { checkHealthAlerts, getActiveAlerts } = require('../services/healthAlertService');
 const { addCompetitor, syncCompetitorMetrics, syncAllCompetitors } = require('../services/competitorMonitoringService');
@@ -18,7 +18,7 @@ const router = express.Router();
  * POST /api/clients/:clientWorkspaceId/health-score/forecast
  * Forecast client health score
  */
-router.post('/:clientWorkspaceId/health-score/forecast', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/health-score/forecast', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { days = 30 } = req.body;
 
@@ -30,7 +30,7 @@ router.post('/:clientWorkspaceId/health-score/forecast', auth, asyncHandler(asyn
  * POST /api/clients/:clientWorkspaceId/health-alerts/check
  * Check and create health alerts
  */
-router.post('/:clientWorkspaceId/health-alerts/check', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/health-alerts/check', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { agencyWorkspaceId } = req.body;
 
@@ -46,7 +46,7 @@ router.post('/:clientWorkspaceId/health-alerts/check', auth, asyncHandler(async 
  * GET /api/clients/:clientWorkspaceId/health-alerts
  * Get active health alerts
  */
-router.get('/:clientWorkspaceId/health-alerts', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/health-alerts', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const alerts = await getActiveAlerts(clientWorkspaceId, req.query);
   sendSuccess(res, 'Active alerts retrieved', 200, { alerts });
@@ -91,7 +91,7 @@ router.post('/sync-all', auth, asyncHandler(async (req, res) => {
  * GET /api/clients/:clientWorkspaceId/health/recommendations
  * Get health improvement recommendations
  */
-router.get('/:clientWorkspaceId/health/recommendations', auth, asyncHandler(async (req, res) => {
+router.get('/:clientWorkspaceId/health/recommendations', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const recommendations = await generateHealthRecommendations(clientWorkspaceId, req.query);
   sendSuccess(res, 'Health recommendations retrieved', 200, recommendations);
@@ -101,7 +101,7 @@ router.get('/:clientWorkspaceId/health/recommendations', auth, asyncHandler(asyn
  * POST /api/clients/:clientWorkspaceId/key-wins/detect
  * Automatically detect key wins
  */
-router.post('/:clientWorkspaceId/key-wins/detect', auth, asyncHandler(async (req, res) => {
+router.post('/:clientWorkspaceId/key-wins/detect', auth, requireAgencyClientAccess, asyncHandler(async (req, res) => {
   const { clientWorkspaceId } = req.params;
   const { workspaceId, agencyWorkspaceId, ...filters } = req.body;
 
