@@ -129,14 +129,17 @@ async function rejectReply(userId, id) {
 }
 
 /**
- * Default send adapter: there is no wired per-platform reply/DM API yet, so this
- * refuses rather than pretend to post. A real integration replaces this.
+ * Default send adapter: confirm the platform is connected, then dispatch to the
+ * per-platform reply adapter (socialReplyAdapters). Unsupported platforms fail
+ * closed with 501. Still only reached when SOCIAL_REPLY_SEND=true (enforced by
+ * sendApprovedReply).
  */
-async function defaultSender(userId, platform /*, externalCommentId, text */) {
+async function defaultSender(userId, platform, externalCommentId, text) {
   const SocialConnection = require('../models/SocialConnection');
   const conn = await SocialConnection.findOne({ userId: String(userId), platform, isActive: true }).lean();
   if (!conn) { const e = new Error(`No connected ${platform} account`); e.statusCode = 400; throw e; }
-  const e = new Error(`Sending to ${platform} is not wired yet`); e.statusCode = 501; throw e;
+  const { sendReply } = require('./socialReplyAdapters');
+  return sendReply(userId, platform, externalCommentId, text);
 }
 
 /**
