@@ -21,6 +21,8 @@ otherwise a restart).
 | Purge orphaned dead-letters | `scripts/purge-orphaned-deadletters.js` | dry-run | §4 (below) |
 | Signed-media enforcement | `REQUIRE_SIGNED_MEDIA` | OFF | [signed-media-enablement-runbook.md](./signed-media-enablement-runbook.md) |
 | userId String→hex normalize | `scripts/migrate-userid-normalize.js` | dry-run | [userid-objectid-flip-runbook.md](./userid-objectid-flip-runbook.md) |
+| Weekly digest generation cron | `ENABLE_DIGEST_CRONS` | OFF | §5 (below) |
+| Social reply sending | `SOCIAL_REPLY_SEND` | OFF | §6 (below) |
 
 General flip protocol (applies to every flag): rehearse in staging → run the
 item's Jest suite in CI → set the env var in the **staging** env store → smoke
@@ -119,6 +121,66 @@ See [generate-content-deadletter-rootcause](../memory) for the root cause.
 4. Verify the dead-letter count drops and no real content-generation jobs were touched.
 
 Safe to re-run (filter is idempotent — already-purged jobs won't re-match).
+
+---
+
+## §5 — `ENABLE_DIGEST_CRONS`
+
+**What it changes.** OFF = the Weekly Performance Digest cron never runs (the
+`/api/digest` read endpoints still work; there is just nothing to read). ON = a
+weekly cron generates a per-user `PerformanceDigest` (top wins, week-over-week
+engagement trend, platform breakdown, next-best actions).
+
+- Read site: `server/services/weeklyDigestService.js` (`digestEnabled()` →
+  `ENABLE_DIGEST_CRONS === 'true'` **AND** `autonomousModeEnabled()`).
+- Schedule: Mondays 08:00, cronLock-guarded (multi-instance safe); per-user
+  iteration is keyset-paged + memory-bounded.
+- Tests: `tests/services/weeklyDigest.test.js` (pure builder).
+- Cost: reads only (no AI in generation) — analytics aggregates + the existing
+  next-best engine; safe to run.
+
+**Rehearsal (staging)**
+1. `npx jest --selectProjects unit weeklyDigest` → green.
+2. Set `ENABLE_DIGEST_CRONS=true`; restart. Either wait for Monday 08:00 or invoke
+   `generateWeeklyDigests()` once from a node REPL against staging.
+3. `GET /api/digest/latest` for a seeded user → confirm the digest shape + that
+   `hasData`/`trend` reflect the account's real activity (empty accounts → `new`).
+4. Confirm only ONE instance generates (cronLock) and the run logs
+   `[digest] weekly generation complete { processed, ok, failed }`.
+
+**Flip (prod)**: set `ENABLE_DIGEST_CRONS=true`. **Watch**: the weekly completion
+log + `PerformanceDigest` insert volume. **Rollback**: unset (generation stops;
+existing digests remain readable).
+
+---
+
+## §6 — `SOCIAL_REPLY_SEND`
+
+**What it changes.** OFF = the AI Comment/DM Responder drafts + queues + approves
+replies, but `POST /api/responder/:id/send` returns **501** (nothing is posted to
+a real platform). ON = an approved reply *may* be sent — but only if a real
+per-platform adapter is wired; the default sender still refuses (`501`/`400`)
+rather than fake a post.
+
+- Read site: `server/services/socialResponderService.js` (`sendApprovedReply` →
+  `SOCIAL_REPLY_SEND === 'true'`, then a `sender` adapter).
+- ⚠ **Do not flip this until a real platform reply/DM adapter is implemented and
+  wired as the `sender`.** With the flag on and no adapter, sends fail closed
+  (the reply is marked `failed` with `sendError`) — safe, but pointless. The flag
+  is a second lock in front of that integration, not a feature toggle on its own.
+- Tests: `tests/services/socialResponder.test.js` (pure draft/approve logic; send
+  path is guarded).
+
+**Rehearsal (staging)** — only once an adapter exists:
+1. Wire the per-platform adapter as the `sender` and unit-test it in isolation.
+2. Set `SOCIAL_REPLY_SEND=true` in staging; draft → approve → send to a **test**
+   account; confirm the reply appears on-platform and the record flips to `sent`.
+3. Force an adapter error → confirm the record flips to `failed` with `sendError`
+   and nothing double-posts.
+
+**Flip (prod)**: set `SOCIAL_REPLY_SEND=true` after the adapter is proven.
+**Watch**: `sent` vs `failed` ratio + platform API error logs. **Rollback**:
+unset (sends 501 again; drafts/approvals unaffected).
 
 ---
 
