@@ -10,6 +10,7 @@ const {
 } = require('../../services/ssoSCIMService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { clampInt } = require('../../utils/pagination');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
@@ -99,8 +100,10 @@ router.get('/Users', asyncHandler(async (req, res) => {
 
   try {
     const result = await listSCIMUsers(req.scimProvider, {
-      startIndex: parseInt(startIndex, 10),
-      count: parseInt(count, 10),
+      // Clamp: count flows straight into .limit(); an unbounded value (count=1e9)
+      // was a memory/DoS vector even behind the SCIM token.
+      startIndex: clampInt(startIndex, 1, Number.MAX_SAFE_INTEGER, 1),
+      count: clampInt(count, 100, 1000, 1),
       filter,
     });
     res.json(result);

@@ -87,10 +87,13 @@ async function getTotalContent(userId, startDate) {
  * Get content by type
  */
 async function getContentByType(userId, startDate) {
+  // Content.userId is stored as a String; aggregate() does NOT auto-cast the
+  // ObjectId the way find() does, so an un-stringified userId matches nothing and
+  // returns an empty breakdown. String() it, matching getScheduledPosts below.
   const pipeline = [
     {
       $match: {
-        userId: userId,
+        userId: String(userId),
         createdAt: { $gte: startDate },
       },
     },
@@ -116,10 +119,12 @@ async function getContentByType(userId, startDate) {
  * Get content by status
  */
 async function getContentByStatus(userId, startDate) {
+  // Same String() cast as getContentByType — Content.userId is a String and
+  // aggregate() won't coerce an ObjectId, so the match would return nothing.
   const pipeline = [
     {
       $match: {
-        userId: userId,
+        userId: String(userId),
         createdAt: { $gte: startDate },
       },
     },
