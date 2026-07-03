@@ -2151,6 +2151,9 @@ app.use('/api/agency', require('./routes/agency-bulk'));
 // Enhanced calendar routes
 app.use('/api/agency', require('./routes/calendar-enhanced'));
 
+// Content Calendar Autofill — AI-draft a week/month of posts for review
+app.use('/api/calendar', require('./routes/calendar-autofill'));
+
 // Client portal routes
 app.use('/api/client-portal', require('./routes/client-portal'));
 
