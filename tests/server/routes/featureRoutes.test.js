@@ -8,7 +8,7 @@ const mountFeatureRoutes = require('../../../server/routes/featureRoutes');
 
 const EXPECTED = [
   '/api/calendar', '/api/first-comment', '/api/schedule', '/api/triage',
-  '/api/streak', '/api/digest', '/api/repurpose', '/api/responder',
+  '/api/streak', '/api/digest', '/api/repurpose', '/api/responder', '/api/series',
 ];
 
 describe('featureRoutes registry', () => {
@@ -27,12 +27,14 @@ describe('featureRoutes registry', () => {
     }
   });
 
-  test('mountFeatureRoutes calls app.use once per feature and returns the paths', () => {
+  test('mountFeatureRoutes calls app.use once per registered feature and returns the paths', () => {
+    // Compare against the registry itself (self-maintaining as features are added).
+    const registryPaths = mountFeatureRoutes.FEATURE_ROUTES.map(([p]) => p);
     const calls = [];
     const fakeApp = { use: (p) => calls.push(p) };
     const returned = mountFeatureRoutes(fakeApp);
-    expect(calls.sort()).toEqual([...EXPECTED].sort());
-    expect(returned.sort()).toEqual([...EXPECTED].sort());
+    expect(calls.sort()).toEqual([...registryPaths].sort());
+    expect(returned.sort()).toEqual([...registryPaths].sort());
   });
 
   test('index.js delegates to the registry (no stray individual feature mounts)', () => {
