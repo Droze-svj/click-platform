@@ -2162,6 +2162,9 @@ app.use('/api/calendar', require('./routes/calendar-autofill'));
 // Weekly Performance Digest — read generated per-user weekly recaps
 app.use('/api/digest', require('./routes/digest'));
 
+// Smart Repurpose Studio — one source → N platform-native variant previews
+app.use('/api/repurpose', require('./routes/repurpose-studio'));
+
 // Client portal routes
 app.use('/api/client-portal', require('./routes/client-portal'));
 
