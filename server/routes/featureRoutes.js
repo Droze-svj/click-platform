@@ -14,6 +14,7 @@ const FEATURE_ROUTES = [
   ['/api/digest', './digest'],                   // Weekly Performance Digest
   ['/api/repurpose', './repurpose-studio'],      // Smart Repurpose Studio
   ['/api/responder', './social-responder'],      // AI Comment/DM Responder
+  ['/api/series', './content-series'],           // Content Series Planner
 ];
 
 /** Mount every feature route on the given Express app. */
