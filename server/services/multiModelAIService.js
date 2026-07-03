@@ -57,25 +57,29 @@ const AI_PROVIDERS = {
 };
 
 let openaiClient = null;
-let currentProvider = 'openai';
-let currentModel = 'gpt-4';
+// Provider/model are process-wide reporting DEFAULTS, not per-request state.
+// Previously `let currentProvider/currentModel` were WRITTEN per request by
+// initAIProvider and read by other concurrent requests — a cross-request/tenant
+// bleed. Generation always routes through Gemini (geminiGenerate) regardless of
+// these, so they only ever fed response metadata; make them immutable constants.
+const DEFAULT_PROVIDER = 'google';
+const DEFAULT_MODEL = 'gemini-2.5-flash';
 
 /**
- * Initialize AI provider
+ * Initialize AI provider. Pure: resolves the requested provider/model and returns
+ * it WITHOUT mutating any shared state (so it can't leak into another request).
  */
 function initAIProvider(provider = 'google', model = null) {
   try {
-    currentProvider = provider;
-
-    if (provider === 'google' || provider === 'openai') {
-      // Use Gemini as primary
-      currentModel = model || 'gemini-2.5-flash';
-    } else if (provider === 'anthropic') {
-      currentModel = model || AI_PROVIDERS.anthropic.defaultModel;
+    let resolvedModel;
+    if (provider === 'anthropic') {
+      resolvedModel = model || AI_PROVIDERS.anthropic.defaultModel;
+    } else {
+      resolvedModel = model || DEFAULT_MODEL;
     }
 
-    logger.info('AI provider initialized', { provider, model: currentModel });
-    return { provider, model: currentModel };
+    logger.info('AI provider initialized', { provider, model: resolvedModel });
+    return { provider, model: resolvedModel };
   } catch (error) {
     logger.error('Init AI provider error', { error: error.message, provider });
     throw new ServiceUnavailableError(`AI Provider (${provider})`);
@@ -170,8 +174,8 @@ async function generateWithModel(prompt, taskType, options = {}) {
 
     return {
       content,
-      model: model || currentModel,
-      provider: currentProvider,
+      model,
+      provider: DEFAULT_PROVIDER, // generation always routes through Gemini
       tokens: 0, // Gemini tokens are tracked in Sentry spans within googleAI.js
     };
   } catch (error) {
@@ -258,16 +262,16 @@ function getAvailableModels() {
       models: AI_PROVIDERS[key].models,
       defaultModel: AI_PROVIDERS[key].defaultModel,
     })),
-    currentProvider,
-    currentModel,
+    currentProvider: DEFAULT_PROVIDER,
+    currentModel: DEFAULT_MODEL,
   };
 }
 
 module.exports = {
   initAIProvider,
   selectModelForTask,
-  generateWithModel: withAgentSpan('Multi-Model Generation Agent', generateWithModel, (_prompt, _taskType, options = {}) => options.model || currentModel || 'gemini-2.5-flash'),
-  compareModelOutputs: withAgentSpan('Model Comparison Agent', compareModelOutputs, () => currentModel || 'gemini-2.5-flash'),
+  generateWithModel: withAgentSpan('Multi-Model Generation Agent', generateWithModel, (_prompt, _taskType, options = {}) => options.model || DEFAULT_MODEL),
+  compareModelOutputs: withAgentSpan('Model Comparison Agent', compareModelOutputs, () => DEFAULT_MODEL),
   getAvailableModels,
 };
 
