@@ -191,6 +191,35 @@ async function postTweet(userId, tweetText, options = {}) {
   return response.data.data;
 }
 
+/**
+ * Reply to a tweet as the authenticated user. Same v2 /tweets endpoint as
+ * postTweet, with the `reply.in_reply_to_tweet_id` field set.
+ * @param {string} userId
+ * @param {string} replyText
+ * @param {string} inReplyToTweetId  the tweet being replied to
+ */
+async function replyToTweet(userId, replyText, inReplyToTweetId, options = {}) {
+  if (!inReplyToTweetId) throw new Error('inReplyToTweetId is required');
+  const accessToken = await getAccessTokenForAccount(userId);
+  const tweetData = {
+    text: replyText,
+    reply: { in_reply_to_tweet_id: String(inReplyToTweetId) },
+  };
+  if (options.mediaIds?.length > 0) {
+    tweetData.media = { media_ids: options.mediaIds };
+  }
+
+  const response = await axios.post(`${API_BASE}/tweets`, tweetData, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    timeout: 10000,
+  });
+
+  return response.data.data;
+}
+
 async function refreshToken(userId) {
   const creds = await oauthService.getSocialCredentials(userId, 'twitter');
   if (!creds?.refreshToken) {
@@ -272,6 +301,7 @@ module.exports = {
   exchangeCodeForToken,
   getUserProfile,
   postTweet,
+  replyToTweet,
   refreshToken,
   getAccessTokenForAccount,
   getConnectedAccounts,
