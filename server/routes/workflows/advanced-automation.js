@@ -6,7 +6,24 @@ const { authenticate } = require('../../middleware/auth');
 const { sendSuccess, sendError } = require('../../utils/response');
 const advancedWorkflowService = require('../../services/advancedWorkflowService');
 const { getUserIdFromReq } = require('../../utils/userId');
+const Workflow = require('../../models/Workflow');
 const logger = require('../../utils/logger');
+
+// IDOR guard for :workflowId routes. executeWorkflow / getWorkflowHistory /
+// getWorkflowAnalytics all resolve the workflow (or its in-memory run state) by
+// bare id with no owner scope, so a caller could run — or read the history and
+// analytics of — ANOTHER tenant's workflow by guessing its id. Confirm the
+// caller owns it first. Workflow.userId is the canonical hex (getUserIdFromReq),
+// the same value the /create route writes.
+async function requireWorkflowOwner(req, res, next) {
+  try {
+    const owned = await Workflow.exists({ _id: req.params.workflowId, userId: getUserIdFromReq(req) });
+    if (!owned) return sendError(res, 'Workflow not found', 404);
+    return next();
+  } catch (_) {
+    return sendError(res, 'Workflow not found', 404);
+  }
+}
 
 /**
  * POST /api/workflows/advanced-automation/create
@@ -32,7 +49,7 @@ router.post('/create', authenticate, async (req, res) => {
  * POST /api/workflows/advanced-automation/:workflowId/execute
  * Execute workflow
  */
-router.post('/:workflowId/execute', authenticate, async (req, res) => {
+router.post('/:workflowId/execute', authenticate, requireWorkflowOwner, async (req, res) => {
   try {
     const { workflowId } = req.params;
     const { inputData = {} } = req.body;
@@ -49,7 +66,7 @@ router.post('/:workflowId/execute', authenticate, async (req, res) => {
  * GET /api/workflows/advanced-automation/:workflowId/history
  * Get workflow execution history
  */
-router.get('/:workflowId/history', authenticate, async (req, res) => {
+router.get('/:workflowId/history', authenticate, requireWorkflowOwner, async (req, res) => {
   try {
     const { workflowId } = req.params;
     const history = advancedWorkflowService.getWorkflowHistory(workflowId);
@@ -64,7 +81,7 @@ router.get('/:workflowId/history', authenticate, async (req, res) => {
  * GET /api/workflows/advanced-automation/:workflowId/analytics
  * Get workflow analytics
  */
-router.get('/:workflowId/analytics', authenticate, async (req, res) => {
+router.get('/:workflowId/analytics', authenticate, requireWorkflowOwner, async (req, res) => {
   try {
     const { workflowId } = req.params;
     const analytics = await advancedWorkflowService.getWorkflowAnalytics(workflowId);
