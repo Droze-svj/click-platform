@@ -9,11 +9,19 @@ const { generateContentAdaptation } = require('./aiService');
 /**
  * Adapt content for multiple platforms
  */
+// Each platform is a separate paid LLM call, so a caller-supplied platforms
+// array is a fan-out cost bomb. Cap the count (and drop dupes) before fanning
+// out — the product only ever targets a handful of real networks at once.
+const MAX_ADAPT_PLATFORMS = 10;
+
 async function adaptContent(userId, contentId, text, title, platforms) {
   try {
     const adaptations = [];
 
-    for (const platform of platforms) {
+    // De-dupe and cap the fan-out before making one paid call per platform.
+    const safePlatforms = [...new Set(Array.isArray(platforms) ? platforms : [])].slice(0, MAX_ADAPT_PLATFORMS);
+
+    for (const platform of safePlatforms) {
       const adaptation = await adaptForPlatform(platform, text, title, userId);
       adaptations.push({
         platform,

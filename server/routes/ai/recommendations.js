@@ -12,6 +12,7 @@ const {
 const continuousLearningService = require('../../services/continuousLearningService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { clampInt } = require('../../utils/pagination');
 const {
   ValidationError,
 } = require('../../utils/errorHandler');
@@ -42,7 +43,9 @@ router.get('/personalized', auth, asyncHandler(async (req, res) => {
   
   try {
     const result = await getPersonalizedRecommendations(userId, {
-      limit: limit ? parseInt(limit, 10) : 10,
+      // Clamp: limit is echoed into the LLM prompt ("give me N recs"); an
+      // unbounded value bloats the prompt and truncates/times-out the response.
+      limit: clampInt(limit, 10, 50, 1),
       type: type || null,
       platform: platform || null,
     });
