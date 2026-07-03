@@ -53,13 +53,19 @@ function buildDraftRows(userId, ideas, opts = {}) {
     // then the execution note. Falls back to the title so text is never empty.
     const text = [hook, description].filter(Boolean).join('\n\n') || title;
 
+    // Prefer an explicit optimal-time slot when provided (opts.slots[i]); else
+    // fall back to the fixed-cadence spread from startAt.
+    const slot = Array.isArray(opts.slots) && opts.slots[i]
+      ? new Date(opts.slots[i])
+      : new Date(startAt + i * cadenceHours * HOUR_MS);
+
     return {
       userId: String(userId),
       autopilotPlanId: planId, // reuse the indexed grouping field (cal_-prefixed)
       platform,
       content: { text, hashtags: [] },
       niche: opts.niche || undefined,
-      scheduledTime: new Date(startAt + i * cadenceHours * HOUR_MS),
+      scheduledTime: slot,
       status: 'pending_approval', // held for human review; cron won't fire it
       dryRun: !!opts.dryRun,
     };

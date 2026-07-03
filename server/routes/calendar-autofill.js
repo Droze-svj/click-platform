@@ -18,6 +18,8 @@ const {
   approveCalendarPlan,
   cancelCalendarPlan,
 } = require('../services/calendarAutofillService');
+const { computeOptimalSlots } = require('../services/optimalScheduleService');
+const { scheduleDeps } = require('./schedule-optimal');
 
 /**
  * POST /api/calendar/autofill
@@ -61,13 +63,26 @@ router.post('/autofill', auth, aiLimiter, costGuard(), asyncHandler(async (req, 
   });
 
   const startMs = body.startAt ? new Date(body.startAt).getTime() : NaN;
+
+  // When optimalTimes is requested, place the drafts at the caller's best
+  // posting hours (from their history, or niche defaults) instead of a fixed
+  // cadence. Computed for the primary platform of the batch.
+  let slots;
+  let optimal;
+  if (body.optimalTimes) {
+    optimal = await computeOptimalSlots(req.user._id, platforms[0], ideas.length || count, scheduleDeps());
+    slots = optimal.slots;
+  }
+
   const result = await createCalendarDrafts(req.user._id, ideas, {
     platforms,
     niche,
     startAt: Number.isFinite(startMs) ? startMs : undefined,
     cadenceHours,
+    slots,
     dryRun: !!body.dryRun,
   });
+  if (optimal) result.optimalTimes = { source: optimal.source, hours: optimal.hours };
 
   sendSuccess(res, 'Calendar drafts created', 201, result);
 }));

@@ -2159,6 +2159,9 @@ app.use('/api/agency', require('./routes/calendar-enhanced'));
 // Content Calendar Autofill — AI-draft a week/month of posts for review
 app.use('/api/calendar', require('./routes/calendar-autofill'));
 
+// Optimal-Time Auto-Schedule — suggest best posting slots from user history
+app.use('/api/schedule', require('./routes/schedule-optimal'));
+
 // Weekly Performance Digest — read generated per-user weekly recaps
 app.use('/api/digest', require('./routes/digest'));
 
