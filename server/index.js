@@ -2162,6 +2162,9 @@ app.use('/api/calendar', require('./routes/calendar-autofill'));
 // Optimal-Time Auto-Schedule — suggest best posting slots from user history
 app.use('/api/schedule', require('./routes/schedule-optimal'));
 
+// Comment Triage — rank an inbound-comment batch by reply priority
+app.use('/api/triage', require('./routes/comment-triage'));
+
 // Weekly Performance Digest — read generated per-user weekly recaps
 app.use('/api/digest', require('./routes/digest'));
 
