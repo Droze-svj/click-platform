@@ -2165,6 +2165,9 @@ app.use('/api/digest', require('./routes/digest'));
 // Smart Repurpose Studio — one source → N platform-native variant previews
 app.use('/api/repurpose', require('./routes/repurpose-studio'));
 
+// AI Comment/DM Responder — draft on-brand replies, queue for human approval
+app.use('/api/responder', require('./routes/social-responder'));
+
 // Client portal routes
 app.use('/api/client-portal', require('./routes/client-portal'));
 
