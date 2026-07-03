@@ -365,7 +365,12 @@ router.post('/posts/:postId', auth, asyncHandler(async (req, res) => {
 router.get('/dashboard', auth, asyncHandler(async (req, res) => {
   // Dev users + stacks without Supabase configured: return a safe empty payload
   // shaped for both the legacy nested consumers and the new flat dashboard reads.
-  const userId = req.user._id || req.user.id;
+  // Every query below hits Supabase posts.author_id, which stores the Supabase
+  // UUID (req.user.id) — NOT the Mongo ObjectId. Preferring req.user._id here
+  // meant the normal (post-auth _id is a truthy ObjectId) case queried author_id
+  // with a 24-char hex id that never matches the 36-char UUID → an always-empty
+  // dashboard. Use req.user.id, matching the other 6 Supabase routes in this file.
+  const userId = req.user.id || req.user._id;
   // Earlier this checked `typeof userId === 'string' && startsWith('dev-')`,
   // but for dev sessions req.user._id is a synthetic ObjectId (per the auth
   // middleware) so the string check skipped → the route then fell through
