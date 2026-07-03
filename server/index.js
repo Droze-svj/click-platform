@@ -471,6 +471,11 @@ setImmediate(() => {
         const { startAlertSweepCron } = require('./services/alertSweepCronService');
         startAlertSweepCron();
 
+        // Weekly performance digest generation. OFF unless ENABLE_DIGEST_CRONS=true
+        // (per-user all-user scan → deliberate opt-in). cronLock-guarded.
+        const { startDigestCron } = require('./services/weeklyDigestService');
+        startDigestCron();
+
         // Trends ingest schedule — pulls REAL web-grounded trends (Claude web
         // search via liveTrendService) per platform into TrendSnapshot on a
         // repeatable BullMQ job. Previously defined but never registered.
@@ -2153,6 +2158,9 @@ app.use('/api/agency', require('./routes/calendar-enhanced'));
 
 // Content Calendar Autofill — AI-draft a week/month of posts for review
 app.use('/api/calendar', require('./routes/calendar-autofill'));
+
+// Weekly Performance Digest — read generated per-user weekly recaps
+app.use('/api/digest', require('./routes/digest'));
 
 // Client portal routes
 app.use('/api/client-portal', require('./routes/client-portal'));
