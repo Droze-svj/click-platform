@@ -407,6 +407,10 @@ module.exports = {
   getBusinessMetrics,
   getTrends,
   exportDataForBI,
+  // Lean per-user engagement aggregate (no global scans) — reused by the weekly
+  // performance digest, which can't afford getBusinessMetrics' platform-wide
+  // active-user / revenue counts once per user.
+  getEngagementMetrics,
 };
 
 
