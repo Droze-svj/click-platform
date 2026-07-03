@@ -10,6 +10,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const RecurringPostTemplate = require('../models/RecurringPostTemplate');
 const { computeNextFireAt } = require('../services/recurringPostCron');
+const { clampInt } = require('../utils/pagination');
 
 const router = express.Router();
 
@@ -26,10 +27,18 @@ function isValidTimezone(tz) {
   }
 }
 
-/** GET /api/recurring — list every template for the current user. */
+/** GET /api/recurring — list the current user's templates (paginated). */
 router.get('/', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id || req.user.id;
-  const templates = await RecurringPostTemplate.find({ userId }).sort({ createdAt: -1 }).lean();
+  // Bound the result set — was an unbounded find() that returned every template
+  // for the user (memory/response bloat for heavy users).
+  const limit = clampInt(req.query.limit, 50, 200, 1);
+  const skip = clampInt(req.query.skip, 0, 1000000, 0);
+  const templates = await RecurringPostTemplate.find({ userId })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
   res.json({ success: true, templates });
 }));
 
