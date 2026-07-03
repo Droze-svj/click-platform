@@ -2168,6 +2168,9 @@ app.use('/api/schedule', require('./routes/schedule-optimal'));
 // Comment Triage — rank an inbound-comment batch by reply priority
 app.use('/api/triage', require('./routes/comment-triage'));
 
+// Posting Streak — the caller's consistency streak
+app.use('/api/streak', require('./routes/streak'));
+
 // Weekly Performance Digest — read generated per-user weekly recaps
 app.use('/api/digest', require('./routes/digest'));
 
