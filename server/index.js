@@ -2156,29 +2156,10 @@ app.use('/api/agency', require('./routes/agency-bulk'));
 // Enhanced calendar routes
 app.use('/api/agency', require('./routes/calendar-enhanced'));
 
-// Content Calendar Autofill — AI-draft a week/month of posts for review
-app.use('/api/calendar', require('./routes/calendar-autofill'));
-
-// First-Comment Generator — pinned first-comment options for a post
-app.use('/api/first-comment', require('./routes/first-comment'));
-
-// Optimal-Time Auto-Schedule — suggest best posting slots from user history
-app.use('/api/schedule', require('./routes/schedule-optimal'));
-
-// Comment Triage — rank an inbound-comment batch by reply priority
-app.use('/api/triage', require('./routes/comment-triage'));
-
-// Posting Streak — the caller's consistency streak
-app.use('/api/streak', require('./routes/streak'));
-
-// Weekly Performance Digest — read generated per-user weekly recaps
-app.use('/api/digest', require('./routes/digest'));
-
-// Smart Repurpose Studio — one source → N platform-native variant previews
-app.use('/api/repurpose', require('./routes/repurpose-studio'));
-
-// AI Comment/DM Responder — draft on-brand replies, queue for human approval
-app.use('/api/responder', require('./routes/social-responder'));
+// Creator-feature endpoints (calendar autofill, digest, repurpose, responder,
+// optimal-schedule, triage, streak, first-comment). Registered in one module so
+// a new feature route is one line there — not an edit to this file.
+require('./routes/featureRoutes')(app);
 
 // Client portal routes
 app.use('/api/client-portal', require('./routes/client-portal'));

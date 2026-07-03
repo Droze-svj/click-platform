@@ -8,6 +8,9 @@ const path = require('path');
 
 const ROUTES_DIR = path.join(__dirname, '../../server/routes');
 const indexSrc = fs.readFileSync(path.join(__dirname, '../../server/index.js'), 'utf8');
+// Creator-feature routes are mounted via the featureRoutes registry (referenced
+// as './<name>'), not directly in index.js — scan it too so they count as mounted.
+const featureRoutesSrc = fs.readFileSync(path.join(ROUTES_DIR, 'featureRoutes.js'), 'utf8');
 
 // Intentionally NOT mounted (dead / superseded duplicates / experimental). Adding a
 // new route file? Mount it in server/index.js, or add it here ON PURPOSE.
@@ -30,7 +33,8 @@ const KNOWN_DEAD = new Set([
 ]);
 
 const isMounted = (name) =>
-  indexSrc.includes(`routes/${name}'`) || indexSrc.includes(`routes/${name}"`);
+  indexSrc.includes(`routes/${name}'`) || indexSrc.includes(`routes/${name}"`) ||
+  featureRoutesSrc.includes(`'./${name}'`) || featureRoutesSrc.includes(`"./${name}"`);
 
 const topLevelRoutes = fs.readdirSync(ROUTES_DIR)
   .filter((f) => f.endsWith('.js'))
