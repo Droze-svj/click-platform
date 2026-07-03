@@ -2159,6 +2159,9 @@ app.use('/api/agency', require('./routes/calendar-enhanced'));
 // Content Calendar Autofill — AI-draft a week/month of posts for review
 app.use('/api/calendar', require('./routes/calendar-autofill'));
 
+// First-Comment Generator — pinned first-comment options for a post
+app.use('/api/first-comment', require('./routes/first-comment'));
+
 // Optimal-Time Auto-Schedule — suggest best posting slots from user history
 app.use('/api/schedule', require('./routes/schedule-optimal'));
 
