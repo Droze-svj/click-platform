@@ -158,6 +158,10 @@ router.post('/playlists', auth, asyncHandler(async (req, res) => {
  */
 router.get('/playlists', auth, asyncHandler(async (req, res) => {
   try {
+    // Bound the result set — was an unbounded find() over the user's + all
+    // public playlists (each populating its tracks' licenses).
+    const limit = clampInt(req.query.limit, 50, 200, 1);
+    const skip = clampInt(req.query.skip, 0, 1000000, 0);
     const playlists = await MusicPlaylist.find({
       $or: [
         { userId: req.user._id },
@@ -166,6 +170,8 @@ router.get('/playlists', auth, asyncHandler(async (req, res) => {
     })
       .populate('tracks.licenseId')
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     sendSuccess(res, 'Playlists retrieved', 200, { playlists });
