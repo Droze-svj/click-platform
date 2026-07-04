@@ -18,12 +18,13 @@ describe('FeaturesDashboard', () => {
     ;(api.getResponderStats as jest.Mock).mockResolvedValue({ sinceDays: 30, total: 0, byStatus: {} })
   })
 
-  it('renders all feature sections and settles its async children', async () => {
+  it('renders all feature groups and settles its async children', async () => {
     render(<FeaturesDashboard />)
     expect(screen.getByTestId('features-dashboard')).toBeInTheDocument()
-    // Composed surfaces present.
-    expect(screen.getByLabelText('Fill my calendar')).toBeInTheDocument()
-    expect(screen.getByLabelText('Comment triage')).toBeInTheDocument()
+    // The four labeled groups are present.
+    for (const g of ['overview', 'plan', 'create', 'engage']) {
+      expect(screen.getByTestId(`group-${g}`)).toBeInTheDocument()
+    }
     // Async widgets resolve (streak card + digest empty-state + responder inbox).
     await waitFor(() => expect(screen.getByTestId('streak-card')).toBeInTheDocument())
     await waitFor(() => expect(screen.getByTestId('digest-empty')).toBeInTheDocument())
