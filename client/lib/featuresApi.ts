@@ -52,6 +52,12 @@ export interface RepurposeVariant {
   score: number; suggestions: string[]; aspectRatio: string; format: string
 }
 
+export interface SeriesPart { part: number; title: string; hook: string; description: string }
+export interface SeriesResult {
+  theme: string; niche: string; platform: string; parts: SeriesPart[]
+  scheduled?: { planId: string; count: number }
+}
+
 export interface SocialReply {
   _id: string; platform: string; inboundText: string
   draftReply: string; editedReply: string | null; status: string
@@ -78,6 +84,7 @@ export const paths = {
   repurposeStudio: () => '/repurpose/studio',
   repurposeSchedule: () => '/repurpose/studio/schedule',
   firstComment: () => '/first-comment',
+  series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
   responderApprove: (id: string) => `/responder/${encodeURIComponent(id)}/approve`,
@@ -120,6 +127,10 @@ export const repurposeStudio = async (body: {
 export const generateFirstComments = async (body: {
   contentId?: string; text?: string; platform?: Platform; goal?: 'engagement' | 'cta' | 'link'
 }): Promise<FirstCommentResult> => unwrap<FirstCommentResult>(await apiPost(paths.firstComment(), body))
+
+export const planSeries = async (body: {
+  theme: string; parts?: number; platform?: Platform; schedule?: boolean
+}): Promise<SeriesResult> => unwrap<SeriesResult>(await apiPost(paths.series(), body))
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string
