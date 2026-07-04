@@ -2,6 +2,7 @@
 
 import StreakWidget from './StreakWidget'
 import DigestWidget from './DigestWidget'
+import HeatmapWidget from './HeatmapWidget'
 import CalendarAutofillPanel from './CalendarAutofillPanel'
 import CommentTriageInbox from './CommentTriageInbox'
 import ResponderInbox from './ResponderInbox'
@@ -19,6 +20,7 @@ export default function FeaturesDashboard() {
     <div data-testid="features-dashboard" className="grid gap-4 md:grid-cols-2">
       <section aria-label="Posting streak"><StreakWidget /></section>
       <section aria-label="Weekly digest"><DigestWidget /></section>
+      <section aria-label="Engagement heatmap" className="md:col-span-2"><HeatmapWidget /></section>
       <section aria-label="Fill my calendar" className="md:col-span-2"><CalendarAutofillPanel /></section>
       <section aria-label="Comment triage"><CommentTriageInbox /></section>
       <section aria-label="Replies awaiting approval"><ResponderInbox /></section>
