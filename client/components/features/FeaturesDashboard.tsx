@@ -5,6 +5,9 @@ import DigestWidget from './DigestWidget'
 import CalendarAutofillPanel from './CalendarAutofillPanel'
 import CommentTriageInbox from './CommentTriageInbox'
 import ResponderInbox from './ResponderInbox'
+import RepurposeStudioPanel from './RepurposeStudioPanel'
+import FirstCommentPanel from './FirstCommentPanel'
+import SeriesPlannerPanel from './SeriesPlannerPanel'
 
 /**
  * Composes the 2026 creator-feature surfaces into one dashboard: at-a-glance
@@ -19,6 +22,9 @@ export default function FeaturesDashboard() {
       <section aria-label="Fill my calendar" className="md:col-span-2"><CalendarAutofillPanel /></section>
       <section aria-label="Comment triage"><CommentTriageInbox /></section>
       <section aria-label="Replies awaiting approval"><ResponderInbox /></section>
+      <section aria-label="Repurpose studio"><RepurposeStudioPanel /></section>
+      <section aria-label="First comment"><FirstCommentPanel /></section>
+      <section aria-label="Series planner" className="md:col-span-2"><SeriesPlannerPanel /></section>
     </div>
   )
 }
