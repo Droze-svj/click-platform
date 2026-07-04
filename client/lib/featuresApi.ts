@@ -93,6 +93,7 @@ export const paths = {
   repurposeStudio: () => '/repurpose/studio',
   repurposeSchedule: () => '/repurpose/studio/schedule',
   firstComment: () => '/first-comment',
+  hooks: () => '/hooks',
   series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
@@ -147,6 +148,14 @@ export const generateFirstComments = async (body: {
 export const planSeries = async (body: {
   theme: string; parts?: number; platform?: Platform; schedule?: boolean
 }): Promise<SeriesResult> => unwrap<SeriesResult>(await apiPost(paths.series(), body))
+
+export type HookStyle = 'mix' | 'curiosity' | 'bold' | 'story' | 'question' | 'contrarian'
+export interface Hook { text: string; style: string }
+export interface HookResult { platform: string; style: string; hooks: Hook[] }
+
+export const generateHooks = async (body: {
+  topic?: string; contentId?: string; platform?: Platform; style?: HookStyle; count?: number
+}): Promise<HookResult> => unwrap<HookResult>(await apiPost(paths.hooks(), body))
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string
