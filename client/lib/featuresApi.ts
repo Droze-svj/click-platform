@@ -96,6 +96,7 @@ export const paths = {
   hooks: () => '/hooks',
   hashtags: () => '/hashtags',
   captions: () => '/captions',
+  critique: () => '/critique',
   series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
@@ -175,6 +176,15 @@ export interface CaptionResult { platform: string; captions: Caption[] }
 export const generateCaptions = async (body: {
   topic?: string; contentId?: string; platform?: Platform; count?: number
 }): Promise<CaptionResult> => unwrap<CaptionResult>(await apiPost(paths.captions(), body))
+
+export interface Critique {
+  platform: string; scores: Record<string, number>; overall: number
+  summary: string; suggestions: string[]
+}
+
+export const critiquePost = async (body: {
+  text?: string; contentId?: string; platform?: Platform
+}): Promise<Critique> => unwrap<Critique>(await apiPost(paths.critique(), body))
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string
