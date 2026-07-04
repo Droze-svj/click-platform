@@ -130,3 +130,6 @@ export const getPendingReplies = async (): Promise<{ replies: SocialReply[] }> =
 
 export const approveReply = async (id: string, editedReply?: string): Promise<{ reply: SocialReply }> =>
   unwrap(await apiPost(paths.responderApprove(id), { editedReply }))
+
+export const rejectReply = async (id: string): Promise<{ reply: SocialReply }> =>
+  unwrap(await apiPost(paths.responderReject(id), {}))
