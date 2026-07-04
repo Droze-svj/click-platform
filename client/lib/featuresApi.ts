@@ -100,6 +100,8 @@ export const paths = {
   responderReject: (id: string) => `/responder/${encodeURIComponent(id)}/reject`,
   responderSend: (id: string) => `/responder/${encodeURIComponent(id)}/send`,
   responderPlatforms: () => '/responder/platforms',
+  responderHistory: (status?: string, limit?: number, skip?: number) =>
+    `/responder/history${qs({ status, limit, skip })}`,
 }
 
 const unwrap = <T,>(res: any): T => (res?.data ?? res) as T
@@ -157,6 +159,12 @@ export const getResponderPlatforms = async (): Promise<{
 
 export const getPendingReplies = async (): Promise<{ replies: SocialReply[] }> =>
   unwrap(await apiGet(paths.responderPending()))
+
+// Resolved replies (approved/sent/rejected/failed) — the responder history.
+export const getResponderHistory = async (
+  status?: string, limit = 50, skip = 0,
+): Promise<{ replies: SocialReply[] }> =>
+  unwrap(await apiGet(paths.responderHistory(status, limit, skip)))
 
 export const approveReply = async (id: string, editedReply?: string): Promise<{ reply: SocialReply }> =>
   unwrap(await apiPost(paths.responderApprove(id), { editedReply }))
