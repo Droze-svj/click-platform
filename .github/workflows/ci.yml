@@ -54,6 +54,12 @@ jobs:
     - name: Typecheck client
       run: npm run typecheck
 
+    - name: Test client
+      # Client jest (jsdom RTL + util suites). Gated: it runs no network/DB, so it
+      # must stay green. (Previously only `tsc` ran here, letting two util suites
+      # rot unnoticed — see PR #218.)
+      run: cd client && npm test -- --ci --watchAll=false
+
     - name: Run unit tests
       run: npm run test:unit
       env:
