@@ -66,6 +66,7 @@ const getZones = (t: (k: string) => string): Zone[] => [
     items: [
       { path: '/dashboard/social',        label: t('nav.connectAccounts') || 'Connect Accounts', icon: Share2,    badge: 'Setup' },
       { path: '/dashboard/scheduler',     label: t('nav.scheduler') || 'Scheduler',    icon: Send,         badge: null },
+      { path: '/dashboard/features',      label: t('nav.creatorTools') || 'Creator Tools', icon: Sparkles, badge: 'New' },
       { path: '/dashboard/autopilot',     label: t('nav.autopilot') || 'Autopilot',    icon: Bot,          badge: 'AI' },
       { path: '/dashboard/calendar',      label: t('nav.calendar') || 'Calendar',     icon: CalendarDays, badge: null },
       { path: '/dashboard/calendar/capacity', label: t('nav.capacity') || 'Capacity',  icon: Gauge,        badge: 'New' },
