@@ -14,8 +14,12 @@ describe('mediaName — unguessable, non-identifying media filenames', () => {
 
   test('randomMediaName preserves a (lowercased) extension and carries no id', () => {
     const n = randomMediaName('.MP4');
+    // The strict format below (exactly 32 hex chars + ext) is what guarantees no
+    // embedded userId/timestamp — it's a fixed-length random token, not
+    // `id-timestamp-rand`. (A prior `/\d{13}/` "no timestamp" check was flaky:
+    // a random hex token contains a run of 13 digits ~2% of the time.)
     expect(n).toMatch(/^[0-9a-f]{32}\.mp4$/);
-    expect(n).not.toMatch(/\d{13}/); // no millisecond timestamp embedded
+    expect(n).not.toContain('-'); // the old id-timestamp-rand scheme used hyphens
     expect(randomMediaName('mp3')).toMatch(/^[0-9a-f]{32}\.mp3$/); // adds the dot
     expect(randomMediaName()).toMatch(/^[0-9a-f]{32}$/); // no ext
   });
