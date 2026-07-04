@@ -15,11 +15,33 @@ async function twitterReply(userId, externalCommentId, text) {
   return { platform: 'twitter', id: result && result.id };
 }
 
+/**
+ * Instagram reply adapter — replies to the target IG comment via the Graph API
+ * (POST /{comment-id}/replies). externalCommentId is the IG comment id.
+ */
+async function instagramReply(userId, externalCommentId, text) {
+  const instagram = require('./instagramOAuthService');
+  const result = await instagram.replyToComment(userId, externalCommentId, text);
+  return { platform: 'instagram', id: result && result.id };
+}
+
+/**
+ * LinkedIn reply adapter — comments on the target object via socialActions.
+ * externalCommentId is the urn:li:… of the post/comment being replied to.
+ */
+async function linkedinReply(userId, externalCommentId, text) {
+  const linkedin = require('./linkedinOAuthService');
+  const result = await linkedin.replyToComment(userId, externalCommentId, text);
+  return { platform: 'linkedin', id: result && (result.id || result.$URN || result.object) };
+}
+
 // Registry of platforms we can actually send to. Add adapters here as each
 // platform's reply/comment API is implemented.
 const ADAPTERS = {
   twitter: twitterReply,
   x: twitterReply,
+  instagram: instagramReply,
+  linkedin: linkedinReply,
 };
 
 /** Platforms with a wired reply adapter. */
@@ -52,4 +74,6 @@ module.exports = {
   supportedPlatforms,
   sendReply,
   twitterReply,
+  instagramReply,
+  linkedinReply,
 };
