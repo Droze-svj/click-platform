@@ -15,6 +15,7 @@ import HookGeneratorPanel from './HookGeneratorPanel'
 import HashtagStrategistPanel from './HashtagStrategistPanel'
 import CaptionAnglesPanel from './CaptionAnglesPanel'
 import CaptionCritiquePanel from './CaptionCritiquePanel'
+import CarouselComposerPanel from './CarouselComposerPanel'
 import SeriesPlannerPanel from './SeriesPlannerPanel'
 
 /** A labeled group of feature panels. */
@@ -57,6 +58,7 @@ export default function FeaturesDashboard() {
         <div><HashtagStrategistPanel /></div>
         <div><FirstCommentPanel /></div>
         <div><CaptionCritiquePanel /></div>
+        <div><CarouselComposerPanel /></div>
         <div><RepurposeStudioPanel /></div>
       </Group>
 

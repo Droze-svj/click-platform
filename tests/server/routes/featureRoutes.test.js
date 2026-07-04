@@ -9,7 +9,7 @@ const mountFeatureRoutes = require('../../../server/routes/featureRoutes');
 const EXPECTED = [
   '/api/calendar', '/api/first-comment', '/api/schedule', '/api/triage',
   '/api/streak', '/api/digest', '/api/repurpose', '/api/responder', '/api/series',
-  '/api/hooks', '/api/hashtags', '/api/captions', '/api/critique',
+  '/api/hooks', '/api/hashtags', '/api/captions', '/api/critique', '/api/carousel',
 ];
 
 describe('featureRoutes registry', () => {

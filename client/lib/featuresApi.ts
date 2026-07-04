@@ -97,6 +97,7 @@ export const paths = {
   hashtags: () => '/hashtags',
   captions: () => '/captions',
   critique: () => '/critique',
+  carousel: () => '/carousel',
   series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
@@ -185,6 +186,14 @@ export interface Critique {
 export const critiquePost = async (body: {
   text?: string; contentId?: string; platform?: Platform
 }): Promise<Critique> => unwrap<Critique>(await apiPost(paths.critique(), body))
+
+export type SlideFormat = 'carousel' | 'thread'
+export interface Slide { n: number; text: string }
+export interface SlideResult { format: string; slides: Slide[] }
+
+export const composeSlides = async (body: {
+  topic?: string; contentId?: string; format?: SlideFormat; count?: number
+}): Promise<SlideResult> => unwrap<SlideResult>(await apiPost(paths.carousel(), body))
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string
