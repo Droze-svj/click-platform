@@ -27,10 +27,20 @@ describe('socialReplyAdapters.sendReply', () => {
       .rejects.toMatchObject({ statusCode: 400 });
   });
 
-  test('twitter and x are wired by default', () => {
+  test('twitter/x, instagram, and linkedin are wired by default', () => {
     const p = supportedPlatforms();
-    expect(p).toContain('twitter');
-    expect(p).toContain('x');
+    expect(p).toEqual(expect.arrayContaining(['twitter', 'x', 'instagram', 'linkedin']));
+  });
+
+  test('dispatches to the instagram and linkedin adapters', async () => {
+    const seen = [];
+    const adapters = {
+      instagram: async (u, id) => { seen.push(['ig', u, id]); return { ok: 1 }; },
+      linkedin: async (u, id) => { seen.push(['li', u, id]); return { ok: 1 }; },
+    };
+    await sendReply('u', 'instagram', 'c1', 'hi', adapters);
+    await sendReply('u', 'linkedin', 'urn:li:x', 'hi', adapters);
+    expect(seen).toEqual([['ig', 'u', 'c1'], ['li', 'u', 'urn:li:x']]);
   });
 });
 

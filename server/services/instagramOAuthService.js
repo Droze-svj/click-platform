@@ -448,6 +448,29 @@ class InstagramOAuthService {
     };
   }
 
+  /**
+   * Reply to an Instagram comment as the connected business account.
+   * `commentId` is the IG comment being replied to. Documented Graph API:
+   * POST /{ig-comment-id}/replies?message=… with the page access token.
+   * (Wired for the AI responder; only ever called when SOCIAL_REPLY_SEND=true.)
+   */
+  async replyToComment(userId, commentId, message) {
+    if (!commentId) throw new Error('commentId is required');
+    const { pageAccessToken } = await this.resolveBusinessAccount(userId);
+    const params = new URLSearchParams();
+    params.set('message', String(message || '').slice(0, 2200));
+    params.set('access_token', pageAccessToken);
+    const res = await fetch(
+      `https://graph.facebook.com/v18.0/${encodeURIComponent(commentId)}/replies?${params.toString()}`,
+      { method: 'POST', signal: AbortSignal.timeout(15000) },
+    );
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Instagram reply failed (${res.status}): ${body}`);
+    }
+    return res.json();
+  }
+
   async disconnectInstagram(userId) {
     const accounts = await this.getConnectedAccounts(userId);
     if (accounts && accounts.length > 0) {
