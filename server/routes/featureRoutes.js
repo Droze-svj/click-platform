@@ -17,6 +17,7 @@ const FEATURE_ROUTES = [
   ['/api/series', './content-series'],           // Content Series Planner
   ['/api/hooks', './hook-generator'],            // Hook Generator
   ['/api/hashtags', './hashtag-strategist'],     // Hashtag Strategist
+  ['/api/captions', './caption-angles'],         // Caption Angles
 ];
 
 /** Mount every feature route on the given Express app. */

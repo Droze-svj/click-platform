@@ -95,6 +95,7 @@ export const paths = {
   firstComment: () => '/first-comment',
   hooks: () => '/hooks',
   hashtags: () => '/hashtags',
+  captions: () => '/captions',
   series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
@@ -167,6 +168,13 @@ export interface HashtagResult {
 export const generateHashtags = async (body: {
   topic?: string; contentId?: string; platform?: Platform; count?: number
 }): Promise<HashtagResult> => unwrap<HashtagResult>(await apiPost(paths.hashtags(), body))
+
+export interface Caption { angle: string; text: string }
+export interface CaptionResult { platform: string; captions: Caption[] }
+
+export const generateCaptions = async (body: {
+  topic?: string; contentId?: string; platform?: Platform; count?: number
+}): Promise<CaptionResult> => unwrap<CaptionResult>(await apiPost(paths.captions(), body))
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string

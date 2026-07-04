@@ -13,6 +13,7 @@ import RepurposeStudioPanel from './RepurposeStudioPanel'
 import FirstCommentPanel from './FirstCommentPanel'
 import HookGeneratorPanel from './HookGeneratorPanel'
 import HashtagStrategistPanel from './HashtagStrategistPanel'
+import CaptionAnglesPanel from './CaptionAnglesPanel'
 import SeriesPlannerPanel from './SeriesPlannerPanel'
 
 /** A labeled group of feature panels. */
@@ -51,6 +52,7 @@ export default function FeaturesDashboard() {
 
       <Group id="create" title="Create" subtitle="Draft on-brand content fast">
         <div><HookGeneratorPanel /></div>
+        <div><CaptionAnglesPanel /></div>
         <div><HashtagStrategistPanel /></div>
         <div><FirstCommentPanel /></div>
         <div><RepurposeStudioPanel /></div>
