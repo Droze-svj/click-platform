@@ -13,6 +13,7 @@ describe('FeaturesDashboard', () => {
     ;(api.getLatestDigest as jest.Mock).mockResolvedValue({ digest: null })
     ;(api.getPendingReplies as jest.Mock).mockResolvedValue({ replies: [] })
     ;(api.getHeatmap as jest.Mock).mockResolvedValue({ grid: [], peak: null, totalPosts: 0, dayLabels: [] })
+    ;(api.getResponderPlatforms as jest.Mock).mockResolvedValue({ platforms: [{ name: 'instagram', canSend: true }], sendEnabled: false })
   })
 
   it('renders all feature sections and settles its async children', async () => {

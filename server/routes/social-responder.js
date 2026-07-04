@@ -16,6 +16,23 @@ const personalization = require('../services/personalizationService');
 const googleAI = require('../utils/googleAI');
 const SocialReply = require('../models/SocialReply');
 const responder = require('../services/socialResponderService');
+const { supportedPlatforms } = require('../services/socialReplyAdapters');
+
+/**
+ * GET /api/responder/platforms
+ * The platforms a draft can target, each flagged with whether an outbound send
+ * adapter is actually wired (`canSend`). Lets the UI avoid offering a platform
+ * (e.g. tiktok) whose approved reply would 501 on send. `sendEnabled` reflects
+ * the global SOCIAL_REPLY_SEND gate.
+ */
+router.get('/platforms', auth, asyncHandler(async (req, res) => {
+  const sendable = new Set(supportedPlatforms());
+  const platforms = SocialReply.PLATFORMS.map((name) => ({ name, canSend: sendable.has(name) }));
+  sendSuccess(res, 'Responder platforms retrieved', 200, {
+    platforms,
+    sendEnabled: process.env.SOCIAL_REPLY_SEND === 'true',
+  });
+}));
 
 /**
  * POST /api/responder/draft

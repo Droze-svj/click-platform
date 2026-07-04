@@ -99,6 +99,7 @@ export const paths = {
   responderApprove: (id: string) => `/responder/${encodeURIComponent(id)}/approve`,
   responderReject: (id: string) => `/responder/${encodeURIComponent(id)}/reject`,
   responderSend: (id: string) => `/responder/${encodeURIComponent(id)}/send`,
+  responderPlatforms: () => '/responder/platforms',
 }
 
 const unwrap = <T,>(res: any): T => (res?.data ?? res) as T
@@ -147,6 +148,12 @@ export const planSeries = async (body: {
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string
 }): Promise<{ reply: SocialReply }> => unwrap(await apiPost(paths.responderDraft(), body))
+
+export type ResponderPlatform = { name: Platform; canSend: boolean }
+
+export const getResponderPlatforms = async (): Promise<{
+  platforms: ResponderPlatform[]; sendEnabled: boolean
+}> => unwrap(await apiGet(paths.responderPlatforms()))
 
 export const getPendingReplies = async (): Promise<{ replies: SocialReply[] }> =>
   unwrap(await apiGet(paths.responderPending()))
