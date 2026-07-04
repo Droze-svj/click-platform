@@ -60,17 +60,35 @@ export default function CommentTriageInbox() {
     }
   }
 
-  async function draft(cm: TriagedComment) {
+  async function draftOne(cm: TriagedComment) {
     const key = cm.text
-    setDrafting((d) => ({ ...d, [key]: true })); setError(null)
+    setDrafting((d) => ({ ...d, [key]: true }))
     try {
       await draftReply({ platform, inboundText: cm.text, author: cm.author })
       setDrafted((d) => ({ ...d, [key]: true }))
-    } catch (e) {
-      setError((e as Error)?.message || 'Failed to draft reply')
+      return true
     } finally {
       setDrafting((d) => ({ ...d, [key]: false }))
     }
+  }
+
+  async function draft(cm: TriagedComment) {
+    setError(null)
+    try { await draftOne(cm) }
+    catch (e) { setError((e as Error)?.message || 'Failed to draft reply') }
+  }
+
+  // Draft every not-yet-queued comment in a priority group in one pass. Sequential
+  // to stay within the AI rate limiter; stops surfacing errors but keeps going so a
+  // single failure doesn't abort the batch.
+  async function draftAll(cms: TriagedComment[]) {
+    setError(null)
+    let failed = 0
+    for (const cm of cms) {
+      if (drafted[cm.text]) continue
+      try { await draftOne(cm) } catch { failed += 1 }
+    }
+    if (failed) setError(`${failed} repl${failed === 1 ? 'y' : 'ies'} failed to draft — retry individually.`)
   }
 
   return (
@@ -111,9 +129,22 @@ export default function CommentTriageInbox() {
         <div className="space-y-3" data-testid="triage-results">
           {groups.map((g) => (
             <section key={g.priority} data-testid={`group-${g.priority}`}>
-              <h3 className={`text-xs font-medium ${priorityMeta(g.priority).tone}`}>
-                {priorityMeta(g.priority).label} ({g.comments.length})
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className={`text-xs font-medium ${priorityMeta(g.priority).tone}`}>
+                  {priorityMeta(g.priority).label} ({g.comments.length})
+                </h3>
+                {g.priority !== 'ignore' && g.comments.some((cm) => !drafted[cm.text]) && (
+                  <button
+                    type="button"
+                    data-testid={`triage-draft-all-${g.priority}`}
+                    onClick={() => draftAll(g.comments)}
+                    disabled={g.comments.some((cm) => drafting[cm.text])}
+                    className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300 hover:text-white disabled:opacity-50"
+                  >
+                    Draft all
+                  </button>
+                )}
+              </div>
               <ul className="mt-1 space-y-1">
                 {g.comments.map((cm, i) => (
                   <li key={cm.id ?? `${g.priority}-${i}`} data-testid="triage-item" className="flex items-center gap-2 text-sm text-zinc-300">

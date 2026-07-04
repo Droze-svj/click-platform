@@ -55,6 +55,31 @@ describe('CommentTriageInbox', () => {
     expect(screen.getAllByTestId('triage-item')).toHaveLength(3)
   })
 
+  it('drafts every reply-worthy comment in a group with "Draft all"', async () => {
+    mockedTriage.mockResolvedValue({
+      total: 2, counts: { high: 2 },
+      ranked: [
+        { text: 'what mic?', author: 'a', intent: 'question', priority: 'high', score: 90 },
+        { text: 'price?', author: 'b', intent: 'lead', priority: 'high', score: 80 },
+      ],
+    } as any)
+    mockedDraft.mockResolvedValue({ reply: { _id: 'r' } } as any)
+
+    render(<CommentTriageInbox />)
+    fireEvent.change(screen.getByTestId('triage-input'), { target: { value: 'what mic?\nprice?' } })
+    fireEvent.click(screen.getByTestId('triage-run'))
+
+    await waitFor(() => expect(screen.getByTestId('triage-draft-all-high')).toBeInTheDocument())
+    fireEvent.click(screen.getByTestId('triage-draft-all-high'))
+
+    await waitFor(() => expect(screen.getAllByTestId('triage-drafted')).toHaveLength(2))
+    expect(mockedDraft).toHaveBeenCalledTimes(2)
+    expect(mockedDraft).toHaveBeenCalledWith({ platform: 'instagram', inboundText: 'what mic?', author: 'a' })
+    expect(mockedDraft).toHaveBeenCalledWith({ platform: 'instagram', inboundText: 'price?', author: 'b' })
+    // Batch done → the group-level button disappears.
+    expect(screen.queryByTestId('triage-draft-all-high')).not.toBeInTheDocument()
+  })
+
   it('surfaces an API error', async () => {
     mockedTriage.mockRejectedValue(new Error('rate limited'))
     render(<CommentTriageInbox />)
