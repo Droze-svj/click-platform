@@ -163,3 +163,8 @@ export const approveReply = async (id: string, editedReply?: string): Promise<{ 
 
 export const rejectReply = async (id: string): Promise<{ reply: SocialReply }> =>
   unwrap(await apiPost(paths.responderReject(id), {}))
+
+// Send an approved reply. Server hard-gates on SOCIAL_REPLY_SEND (501 if off), so
+// the UI only surfaces this when getResponderPlatforms().sendEnabled is true.
+export const sendReply = async (id: string): Promise<{ reply: SocialReply }> =>
+  unwrap(await apiPost(paths.responderSend(id), {}))

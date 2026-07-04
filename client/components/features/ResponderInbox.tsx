@@ -1,17 +1,24 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { getPendingReplies, approveReply, rejectReply, type SocialReply } from '@/lib/featuresApi'
+import {
+  getPendingReplies, approveReply, rejectReply, sendReply, getResponderPlatforms,
+  type SocialReply,
+} from '@/lib/featuresApi'
 
 /**
  * Human-approval inbox for the AI Comment/DM Responder. Lists pending drafts,
- * lets the creator edit the reply, then approve or reject. Approved/rejected
- * items drop out of the list. (Sending stays server-side + flag-gated.)
+ * lets the creator edit the reply, then approve or reject. When outbound sending
+ * is enabled (SOCIAL_REPLY_SEND), approving keeps the item as "approved" with a
+ * Send-now action; otherwise approve/reject just drop it from the list. Sending
+ * is always enforced server-side.
  */
 export default function ResponderInbox() {
   const [replies, setReplies] = useState<SocialReply[]>([])
   const [edits, setEdits] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<Record<string, boolean>>({})
+  const [approved, setApproved] = useState<Record<string, boolean>>({})
+  const [sendEnabled, setSendEnabled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,6 +27,7 @@ export default function ResponderInbox() {
     try {
       const res = await getPendingReplies()
       setReplies(res.replies || [])
+      setApproved({})
     } catch (e) {
       setError((e as Error)?.message || 'Failed to load pending replies')
     } finally {
@@ -29,18 +37,37 @@ export default function ResponderInbox() {
 
   useEffect(() => { load() }, [load])
 
+  // Whether outbound sending is turned on; drives the Send-now affordance.
+  useEffect(() => {
+    let alive = true
+    getResponderPlatforms()
+      .then((res) => { if (alive && res) setSendEnabled(!!res.sendEnabled) })
+      .catch(() => { /* leave sending affordance off */ })
+    return () => { alive = false }
+  }, [])
+
   const draftFor = (r: SocialReply) => (r._id in edits ? edits[r._id] : (r.editedReply ?? r.draftReply))
 
-  async function act(id: string, fn: () => Promise<unknown>) {
+  // Run an action; `keep` leaves the item in the list (e.g. approve when sending
+  // is enabled, so the creator can then Send it), otherwise it drops out.
+  async function act(id: string, fn: () => Promise<unknown>, onDone?: () => void) {
     setBusy((b) => ({ ...b, [id]: true })); setError(null)
     try {
       await fn()
-      setReplies((rs) => rs.filter((r) => r._id !== id))
+      if (onDone) onDone()
+      else setReplies((rs) => rs.filter((r) => r._id !== id))
     } catch (e) {
       setError((e as Error)?.message || 'Action failed')
     } finally {
       setBusy((b) => ({ ...b, [id]: false }))
     }
+  }
+
+  function approve(id: string) {
+    if (sendEnabled) {
+      return act(id, () => approveReply(id, edits[id]), () => setApproved((a) => ({ ...a, [id]: true })))
+    }
+    return act(id, () => approveReply(id, edits[id]))
   }
 
   if (loading) return <p data-testid="responder-loading" className="text-sm text-zinc-400">Loading…</p>
@@ -73,17 +100,31 @@ export default function ResponderInbox() {
             className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
           />
           <div className="flex gap-2">
+            {approved[r._id] ? (
+              <button
+                type="button"
+                data-testid="responder-send"
+                disabled={busy[r._id]}
+                onClick={() => act(r._id, () => sendReply(r._id))}
+                className="rounded-lg bg-blue-500/90 px-3 py-1 text-sm font-medium text-black disabled:opacity-50"
+              >
+                {busy[r._id] ? 'Sending…' : 'Send now'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                data-testid="responder-approve"
+                disabled={busy[r._id]}
+                onClick={() => approve(r._id)}
+                className="rounded-lg bg-green-500/90 px-3 py-1 text-sm font-medium text-black disabled:opacity-50"
+              >
+                Approve
+              </button>
+            )}
             <button
-              data-testid="responder-approve"
-              disabled={busy[r._id]}
-              onClick={() => act(r._id, () => approveReply(r._id, edits[r._id]))}
-              className="rounded-lg bg-green-500/90 px-3 py-1 text-sm font-medium text-black disabled:opacity-50"
-            >
-              Approve
-            </button>
-            <button
+              type="button"
               data-testid="responder-reject"
-              disabled={busy[r._id]}
+              disabled={busy[r._id] || approved[r._id]}
               onClick={() => act(r._id, () => rejectReply(r._id))}
               className="rounded-lg bg-zinc-800 px-3 py-1 text-sm text-zinc-300 disabled:opacity-50"
             >
