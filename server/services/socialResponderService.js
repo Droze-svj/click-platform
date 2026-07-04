@@ -102,6 +102,26 @@ async function listPending(userId, { limit = 50, skip = 0 } = {}) {
 }
 
 const HISTORY_STATUSES = ['approved', 'sent', 'rejected', 'failed'];
+const ALL_STATUSES = ['pending_approval', ...HISTORY_STATUSES];
+
+/**
+ * Responder KPI summary: reply counts by status over the last `sinceDays` days
+ * (clamped 1–365 by the caller). Caller-scoped. Always returns every known status
+ * key (zero-filled) so the UI can render a stable grid.
+ */
+async function getStats(userId, { sinceDays = 30 } = {}) {
+  const since = new Date(Date.now() - sinceDays * 24 * 60 * 60 * 1000);
+  const rows = await SocialReply.aggregate([
+    { $match: { userId: String(userId), createdAt: { $gte: since } } },
+    { $group: { _id: '$status', count: { $sum: 1 } } },
+  ]);
+  const byStatus = Object.fromEntries(ALL_STATUSES.map((s) => [s, 0]));
+  let total = 0;
+  for (const r of rows) {
+    if (r && r._id in byStatus) { byStatus[r._id] = r.count; total += r.count; }
+  }
+  return { sinceDays, total, byStatus };
+}
 
 /**
  * List the caller's resolved replies (approved/sent/rejected/failed) — the
@@ -201,7 +221,9 @@ module.exports = {
   createReply,
   listPending,
   listHistory,
+  getStats,
   HISTORY_STATUSES,
+  ALL_STATUSES,
   approveReply,
   rejectReply,
   sendApprovedReply,

@@ -102,6 +102,7 @@ export const paths = {
   responderPlatforms: () => '/responder/platforms',
   responderHistory: (status?: string, limit?: number, skip?: number) =>
     `/responder/history${qs({ status, limit, skip })}`,
+  responderStats: (days?: number) => `/responder/stats${qs({ days })}`,
 }
 
 const unwrap = <T,>(res: any): T => (res?.data ?? res) as T
@@ -165,6 +166,13 @@ export const getResponderHistory = async (
   status?: string, limit = 50, skip = 0,
 ): Promise<{ replies: SocialReply[] }> =>
   unwrap(await apiGet(paths.responderHistory(status, limit, skip)))
+
+export interface ResponderStats {
+  sinceDays: number; total: number; byStatus: Record<string, number>
+}
+
+export const getResponderStats = async (days = 30): Promise<ResponderStats> =>
+  unwrap(await apiGet(paths.responderStats(days)))
 
 export const approveReply = async (id: string, editedReply?: string): Promise<{ reply: SocialReply }> =>
   unwrap(await apiPost(paths.responderApprove(id), { editedReply }))
