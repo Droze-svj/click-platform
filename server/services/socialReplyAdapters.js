@@ -35,6 +35,26 @@ async function linkedinReply(userId, externalCommentId, text) {
   return { platform: 'linkedin', id: result && (result.id || result.$URN || result.object) };
 }
 
+/**
+ * Facebook reply adapter — comments on the target object as the connected page
+ * (Graph API POST /{object-id}/comments). externalCommentId is the FB object id.
+ */
+async function facebookReply(userId, externalCommentId, text) {
+  const facebook = require('./facebookOAuthService');
+  const result = await facebook.replyToComment(userId, externalCommentId, text);
+  return { platform: 'facebook', id: result && result.id };
+}
+
+/**
+ * YouTube reply adapter — replies to a top-level comment as the connected
+ * channel (Data API comments.insert). externalCommentId is the parent comment id.
+ */
+async function youtubeReply(userId, externalCommentId, text) {
+  const youtube = require('./youtubeOAuthService');
+  const result = await youtube.replyToComment(userId, externalCommentId, text);
+  return { platform: 'youtube', id: result && result.id };
+}
+
 // Registry of platforms we can actually send to. Add adapters here as each
 // platform's reply/comment API is implemented.
 const ADAPTERS = {
@@ -42,6 +62,8 @@ const ADAPTERS = {
   x: twitterReply,
   instagram: instagramReply,
   linkedin: linkedinReply,
+  facebook: facebookReply,
+  youtube: youtubeReply,
 };
 
 /** Platforms with a wired reply adapter. */
@@ -76,4 +98,6 @@ module.exports = {
   twitterReply,
   instagramReply,
   linkedinReply,
+  facebookReply,
+  youtubeReply,
 };

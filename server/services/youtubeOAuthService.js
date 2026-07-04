@@ -204,6 +204,23 @@ class YouTubeOAuthService {
     return google.youtube({ version: 'v3', auth });
   }
 
+  /**
+   * Reply to a YouTube comment as the connected channel. `parentCommentId` is the
+   * top-level comment being replied to. YouTube Data API: comments.insert with a
+   * snippet { parentId, textOriginal }. NOTE: requires the youtube.force-ssl
+   * scope — connections granted only youtube.upload/readonly must re-consent.
+   * (Wired for the AI responder; only called when SOCIAL_REPLY_SEND=true.)
+   */
+  async replyToComment(userId, parentCommentId, message) {
+    if (!parentCommentId) throw new Error('parentCommentId is required');
+    const youtube = await this.getYouTubeClient(userId);
+    const res = await youtube.comments.insert({
+      part: ['snippet'],
+      requestBody: { snippet: { parentId: parentCommentId, textOriginal: String(message || '') } },
+    });
+    return res.data;
+  }
+
   async refreshAccessToken(userId) {
     logger.info('Refreshing YouTube access token', { userId });
     const creds = await OAuthService.getSocialCredentials(userId, 'youtube');
