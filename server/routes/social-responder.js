@@ -76,6 +76,21 @@ router.get('/pending', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Pending replies retrieved', 200, { replies });
 }));
 
+/**
+ * GET /api/responder/history?status=sent,rejected&limit=&skip=
+ * Resolved replies (approved/sent/rejected/failed) — the responder history.
+ * Optional comma-separated `status` filter; unknown values are dropped.
+ */
+router.get('/history', auth, asyncHandler(async (req, res) => {
+  const limit = clampInt(req.query.limit, 50, 200, 1);
+  const skip = clampInt(req.query.skip, 0, 100000, 0);
+  const statuses = typeof req.query.status === 'string' && req.query.status.trim()
+    ? req.query.status.split(',').map((s) => s.trim()).filter(Boolean)
+    : undefined;
+  const replies = await responder.listHistory(req.user._id, { statuses, limit, skip });
+  sendSuccess(res, 'Responder history retrieved', 200, { replies });
+}));
+
 /** POST /api/responder/:id/approve — approve (optionally with an edited reply). */
 router.post('/:id/approve', auth, asyncHandler(async (req, res) => {
   const editedReply = req.body && req.body.editedReply;

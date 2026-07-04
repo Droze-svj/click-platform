@@ -6,6 +6,7 @@ import HeatmapWidget from './HeatmapWidget'
 import CalendarAutofillPanel from './CalendarAutofillPanel'
 import CommentTriageInbox from './CommentTriageInbox'
 import ResponderInbox from './ResponderInbox'
+import ResponderHistory from './ResponderHistory'
 import RepurposeStudioPanel from './RepurposeStudioPanel'
 import FirstCommentPanel from './FirstCommentPanel'
 import SeriesPlannerPanel from './SeriesPlannerPanel'
@@ -24,6 +25,7 @@ export default function FeaturesDashboard() {
       <section aria-label="Fill my calendar" className="md:col-span-2"><CalendarAutofillPanel /></section>
       <section aria-label="Comment triage"><CommentTriageInbox /></section>
       <section aria-label="Replies awaiting approval"><ResponderInbox /></section>
+      <section aria-label="Reply history"><ResponderHistory /></section>
       <section aria-label="Repurpose studio"><RepurposeStudioPanel /></section>
       <section aria-label="First comment"><FirstCommentPanel /></section>
       <section aria-label="Series planner" className="md:col-span-2"><SeriesPlannerPanel /></section>

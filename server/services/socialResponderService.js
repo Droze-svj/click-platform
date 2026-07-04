@@ -101,6 +101,26 @@ async function listPending(userId, { limit = 50, skip = 0 } = {}) {
     .lean();
 }
 
+const HISTORY_STATUSES = ['approved', 'sent', 'rejected', 'failed'];
+
+/**
+ * List the caller's resolved replies (approved/sent/rejected/failed) — the
+ * responder history. `statuses` filters to a subset; unknown values are ignored
+ * and fall back to all resolved statuses. Scoped to the caller (never leaks
+ * pending drafts, which have their own endpoint).
+ */
+async function listHistory(userId, { statuses, limit = 50, skip = 0 } = {}) {
+  const requested = Array.isArray(statuses)
+    ? statuses.filter((s) => HISTORY_STATUSES.includes(s))
+    : [];
+  const use = requested.length ? requested : HISTORY_STATUSES;
+  return SocialReply.find({ userId: String(userId), status: { $in: use } })
+    .sort({ updatedAt: -1, createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+}
+
 /** Approve a pending draft (optionally with a human edit). Scoped to the caller. */
 async function approveReply(userId, id, editedReply) {
   const doc = await SocialReply.findOne({ _id: id, userId: String(userId) });
@@ -180,6 +200,8 @@ module.exports = {
   composeDraft,
   createReply,
   listPending,
+  listHistory,
+  HISTORY_STATUSES,
   approveReply,
   rejectReply,
   sendApprovedReply,
