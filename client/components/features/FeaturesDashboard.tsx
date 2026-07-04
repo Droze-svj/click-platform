@@ -11,6 +11,7 @@ import ResponderHistory from './ResponderHistory'
 import RepurposeStudioPanel from './RepurposeStudioPanel'
 import FirstCommentPanel from './FirstCommentPanel'
 import HookGeneratorPanel from './HookGeneratorPanel'
+import HashtagStrategistPanel from './HashtagStrategistPanel'
 import SeriesPlannerPanel from './SeriesPlannerPanel'
 
 /**
@@ -32,6 +33,7 @@ export default function FeaturesDashboard() {
       <section aria-label="Repurpose studio"><RepurposeStudioPanel /></section>
       <section aria-label="First comment"><FirstCommentPanel /></section>
       <section aria-label="Hook generator"><HookGeneratorPanel /></section>
+      <section aria-label="Hashtag strategist"><HashtagStrategistPanel /></section>
       <section aria-label="Series planner" className="md:col-span-2"><SeriesPlannerPanel /></section>
     </div>
   )
