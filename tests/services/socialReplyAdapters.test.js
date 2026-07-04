@@ -32,6 +32,15 @@ describe('socialReplyAdapters.sendReply', () => {
     expect(p).toEqual(expect.arrayContaining(['twitter', 'x', 'instagram', 'linkedin', 'facebook', 'youtube']));
   });
 
+  test('platforms with no reply API (tiktok/pinterest/threads) are NOT sendable', () => {
+    // The responder /platforms route uses this to avoid offering dead send
+    // options in the UI — anything draftable but unsendable must be excluded.
+    const p = supportedPlatforms();
+    for (const dead of ['tiktok', 'pinterest', 'threads']) {
+      expect(p).not.toContain(dead);
+    }
+  });
+
   test('dispatches to the instagram, linkedin, facebook, and youtube adapters', async () => {
     const seen = [];
     const mk = (tag) => async (u, id) => { seen.push([tag, u, id]); return { ok: 1 }; };

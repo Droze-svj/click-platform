@@ -5,9 +5,20 @@ import * as api from '@/lib/featuresApi'
 jest.mock('@/lib/featuresApi')
 const mockedTriage = api.triageComments as jest.MockedFunction<typeof api.triageComments>
 const mockedDraft = api.draftReply as jest.MockedFunction<typeof api.draftReply>
+const mockedPlatforms = api.getResponderPlatforms as jest.MockedFunction<typeof api.getResponderPlatforms>
 
 describe('CommentTriageInbox', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    // Default: platforms endpoint resolves with the fallback-equivalent list.
+    mockedPlatforms.mockResolvedValue({
+      platforms: [
+        { name: 'instagram', canSend: true },
+        { name: 'youtube', canSend: true },
+      ],
+      sendEnabled: false,
+    } as any)
+  })
 
   it('validates empty input without calling the API', () => {
     render(<CommentTriageInbox />)
@@ -50,6 +61,24 @@ describe('CommentTriageInbox', () => {
     fireEvent.change(screen.getByTestId('triage-input'), { target: { value: 'hi' } })
     fireEvent.click(screen.getByTestId('triage-run'))
     await waitFor(() => expect(screen.getByTestId('triage-error')).toHaveTextContent('rate limited'))
+  })
+
+  it('only offers platforms that can actually send (drops non-sendable ones)', async () => {
+    mockedPlatforms.mockResolvedValue({
+      platforms: [
+        { name: 'instagram', canSend: true },
+        { name: 'tiktok', canSend: false },
+        { name: 'youtube', canSend: true },
+      ],
+      sendEnabled: false,
+    } as any)
+
+    render(<CommentTriageInbox />)
+    await waitFor(() => {
+      const opts = Array.from(screen.getByTestId('triage-platform').querySelectorAll('option')).map((o) => o.value)
+      expect(opts).toEqual(['instagram', 'youtube'])
+    })
+    expect(screen.queryByText('tiktok')).not.toBeInTheDocument()
   })
 
   it('drafts an AI reply for a triaged comment on the selected platform', async () => {
