@@ -77,6 +77,16 @@ router.get('/pending', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /api/responder/stats?days=30
+ * Reply counts by status over the last N days (KPI summary). Caller-scoped.
+ */
+router.get('/stats', auth, asyncHandler(async (req, res) => {
+  const sinceDays = clampInt(req.query.days, 30, 365, 1);
+  const stats = await responder.getStats(req.user._id, { sinceDays });
+  sendSuccess(res, 'Responder stats retrieved', 200, stats);
+}));
+
+/**
  * GET /api/responder/history?status=sent,rejected&limit=&skip=
  * Resolved replies (approved/sent/rejected/failed) — the responder history.
  * Optional comma-separated `status` filter; unknown values are dropped.
