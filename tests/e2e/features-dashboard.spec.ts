@@ -35,9 +35,9 @@ test('creator-tools dashboard renders its feature surfaces', async ({ page, requ
   await expect(page.getByRole('heading', { name: 'Creator tools' })).toBeVisible()
   await expect(page.getByTestId('features-dashboard')).toBeVisible()
 
-  // The interactive tools mount synchronously (no data fetch to render the form).
-  await expect(page.getByRole('region', { name: 'Fill my calendar' })).toBeVisible()
-  await expect(page.getByRole('region', { name: 'Comment triage' })).toBeVisible()
+  // The tools are grouped into labeled sections (Overview/Plan/Create/Engage).
+  await expect(page.getByRole('region', { name: 'Plan' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Engage' })).toBeVisible()
 })
 
 test('comment triage ranks a pasted inbox', async ({ page, request }) => {
