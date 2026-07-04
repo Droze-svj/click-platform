@@ -94,6 +94,7 @@ export const paths = {
   repurposeSchedule: () => '/repurpose/studio/schedule',
   firstComment: () => '/first-comment',
   hooks: () => '/hooks',
+  hashtags: () => '/hashtags',
   series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
@@ -156,6 +157,16 @@ export interface HookResult { platform: string; style: string; hooks: Hook[] }
 export const generateHooks = async (body: {
   topic?: string; contentId?: string; platform?: Platform; style?: HookStyle; count?: number
 }): Promise<HookResult> => unwrap<HookResult>(await apiPost(paths.hooks(), body))
+
+export type HashtagTier = 'broad' | 'niche' | 'community' | 'branded'
+export interface Hashtag { tag: string; tier: string }
+export interface HashtagResult {
+  platform: string; count: number; tags: Hashtag[]; groups: Record<string, string[]>
+}
+
+export const generateHashtags = async (body: {
+  topic?: string; contentId?: string; platform?: Platform; count?: number
+}): Promise<HashtagResult> => unwrap<HashtagResult>(await apiPost(paths.hashtags(), body))
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string
