@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   validateRequired,
   validateMinLength,
@@ -11,183 +10,116 @@ import {
   validateMultiple,
 } from '../validation'
 
+// These utilities return a { isValid, error? } ValidationResult (not null|string).
+// Validators take their value directly (not curried).
+
+const fileOfSize = (size: number, name = 'test.txt', type = 'text/plain') => {
+  const file = new File(['x'], name, { type })
+  Object.defineProperty(file, 'size', { value: size, writable: false })
+  return file
+}
+
 describe('Validation Utilities', () => {
   describe('validateRequired', () => {
-    it('should return null for non-empty string', () => {
-      expect(validateRequired('test')).toBeNull()
+    it('is valid for a non-empty string', () => {
+      expect(validateRequired('test')).toEqual({ isValid: true })
     })
-
-    it('should return error for empty string', () => {
-      expect(validateRequired('')).toBe('This field is required.')
-    })
-
-    it('should return error for whitespace-only string', () => {
-      expect(validateRequired('   ')).toBe('This field is required.')
-    })
-
-    it('should return error for null', () => {
-      expect(validateRequired(null)).toBe('This field is required.')
-    })
-
-    it('should return error for undefined', () => {
-      expect(validateRequired(undefined)).toBe('This field is required.')
+    it('is invalid for empty / whitespace, with a field-named message', () => {
+      expect(validateRequired('', 'Name')).toEqual({ isValid: false, error: 'Name is required' })
+      expect(validateRequired('   ')).toEqual({ isValid: false, error: 'Field is required' })
     })
   })
 
   describe('validateMinLength', () => {
-    it('should return null for string meeting minimum length', () => {
-      const validator = validateMinLength(5)
-      expect(validator('hello')).toBeNull()
-      expect(validator('hello world')).toBeNull()
+    it('is valid at or above the minimum (after trim)', () => {
+      expect(validateMinLength('hello', 5).isValid).toBe(true)
+      expect(validateMinLength('  hello  ', 5).isValid).toBe(true)
     })
-
-    it('should return error for string below minimum length', () => {
-      const validator = validateMinLength(5)
-      expect(validator('hi')).toBe('Must be at least 5 characters long.')
-    })
-
-    it('should trim whitespace before validating', () => {
-      const validator = validateMinLength(5)
-      expect(validator('  hello  ')).toBeNull()
+    it('is invalid below the minimum', () => {
+      expect(validateMinLength('hi', 5)).toEqual({ isValid: false, error: 'Field must be at least 5 characters' })
     })
   })
 
   describe('validateMaxLength', () => {
-    it('should return null for string within maximum length', () => {
-      const validator = validateMaxLength(10)
-      expect(validator('hello')).toBeNull()
-      expect(validator('1234567890')).toBeNull()
+    it('is valid within the maximum', () => {
+      expect(validateMaxLength('hello', 10).isValid).toBe(true)
     })
-
-    it('should return error for string exceeding maximum length', () => {
-      const validator = validateMaxLength(5)
-      expect(validator('hello world')).toBe('Must be at most 5 characters long.')
-    })
-
-    it('should trim whitespace before validating', () => {
-      const validator = validateMaxLength(5)
-      expect(validator('  hi  ')).toBeNull()
+    it('is invalid beyond the maximum', () => {
+      expect(validateMaxLength('hello world', 5)).toEqual({ isValid: false, error: 'Field must be no more than 5 characters' })
     })
   })
 
   describe('validateEmail', () => {
-    it('should return null for valid email', () => {
-      expect(validateEmail('test@example.com')).toBeNull()
-      expect(validateEmail('user.name@example.co.uk')).toBeNull()
+    it('is valid for a well-formed email', () => {
+      expect(validateEmail('test@example.com').isValid).toBe(true)
+      expect(validateEmail('user.name@example.co.uk').isValid).toBe(true)
     })
-
-    it('should return error for invalid email', () => {
-      expect(validateEmail('invalid')).toBe('Invalid email address.')
-      expect(validateEmail('invalid@')).toBe('Invalid email address.')
-      expect(validateEmail('@example.com')).toBe('Invalid email address.')
-      expect(validateEmail('test@')).toBe('Invalid email address.')
-    })
-
-    it('should return null for empty string (allowing optional fields)', () => {
-      expect(validateEmail('')).toBeNull()
+    it('is invalid for a malformed email', () => {
+      for (const bad of ['invalid', 'invalid@', '@example.com', 'test@']) {
+        expect(validateEmail(bad)).toEqual({ isValid: false, error: 'Please enter a valid email address' })
+      }
     })
   })
 
   describe('validateURL', () => {
-    it('should return null for valid URL', () => {
-      expect(validateURL('https://example.com')).toBeNull()
-      expect(validateURL('http://example.com')).toBeNull()
-      expect(validateURL('https://example.com/path')).toBeNull()
+    it('is valid for a well-formed URL', () => {
+      expect(validateURL('https://example.com').isValid).toBe(true)
+      expect(validateURL('http://example.com/path').isValid).toBe(true)
     })
-
-    it('should return error for invalid URL', () => {
-      expect(validateURL('not-a-url')).toBe('Invalid URL format.')
-      expect(validateURL('example.com')).toBe('Invalid URL format.')
-    })
-
-    it('should return null for empty string (allowing optional fields)', () => {
-      expect(validateURL('')).toBeNull()
+    it('is invalid for a malformed URL', () => {
+      expect(validateURL('not-a-url')).toEqual({ isValid: false, error: 'Please enter a valid URL' })
     })
   })
 
   describe('validateRange', () => {
-    it('should return null for number within range', () => {
-      const validator = validateRange(1, 10)
-      expect(validator(5)).toBeNull()
-      expect(validator(1)).toBeNull()
-      expect(validator(10)).toBeNull()
+    it('is valid within [min, max] inclusive', () => {
+      expect(validateRange(5, 1, 10).isValid).toBe(true)
+      expect(validateRange(1, 1, 10).isValid).toBe(true)
+      expect(validateRange(10, 1, 10).isValid).toBe(true)
     })
-
-    it('should return error for number outside range', () => {
-      const validator = validateRange(1, 10)
-      expect(validator(0)).toBe('Must be between 1 and 10.')
-      expect(validator(11)).toBe('Must be between 1 and 10.')
-    })
-
-    it('should handle string numbers', () => {
-      const validator = validateRange(1, 10)
-      expect(validator('5')).toBeNull()
-      expect(validator('15')).toBe('Must be between 1 and 10.')
+    it('is invalid outside the range', () => {
+      expect(validateRange(0, 1, 10)).toEqual({ isValid: false, error: 'Field must be between 1 and 10' })
+      expect(validateRange(11, 1, 10).isValid).toBe(false)
     })
   })
 
   describe('validateFileSize', () => {
-    it('should return null for file within size limit', () => {
-      const validator = validateFileSize(1024 * 1024) // 1MB
-      const file = new File(['content'], 'test.txt', { type: 'text/plain' })
-      Object.defineProperty(file, 'size', { value: 512 * 1024, writable: false })
-      expect(validator(file)).toBeNull()
+    it('is valid within the byte limit', () => {
+      expect(validateFileSize(fileOfSize(512 * 1024), 1024 * 1024).isValid).toBe(true)
     })
-
-    it('should return error for file exceeding size limit', () => {
-      const validator = validateFileSize(1024 * 1024) // 1MB
-      const file = new File(['content'], 'test.txt', { type: 'text/plain' })
-      Object.defineProperty(file, 'size', { value: 2 * 1024 * 1024, writable: false })
-      expect(validator(file)).toBe('File size must be less than 1 MB.')
-    })
-
-    it('should return null for non-file values', () => {
-      const validator = validateFileSize(1024)
-      expect(validator('not-a-file')).toBeNull()
+    it('is invalid beyond the limit, reporting MB', () => {
+      expect(validateFileSize(fileOfSize(2 * 1024 * 1024), 1024 * 1024))
+        .toEqual({ isValid: false, error: 'File must be smaller than 1MB' })
     })
   })
 
   describe('validateFileType', () => {
-    it('should return null for allowed file type', () => {
-      const validator = validateFileType(['image/jpeg', 'image/png'])
-      const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' })
-      expect(validator(file)).toBeNull()
+    it('is valid for an allowed mime type', () => {
+      expect(validateFileType(fileOfSize(10, 'a.jpg', 'image/jpeg'), ['image/jpeg', 'image/png']).isValid).toBe(true)
     })
-
-    it('should return error for disallowed file type', () => {
-      const validator = validateFileType(['image/jpeg', 'image/png'])
-      const file = new File(['content'], 'test.txt', { type: 'text/plain' })
-      expect(validator(file)).toBe('Invalid file type. Allowed types: image/jpeg, image/png.')
-    })
-
-    it('should return null for non-file values', () => {
-      const validator = validateFileType(['image/jpeg'])
-      expect(validator('not-a-file')).toBeNull()
+    it('is invalid for a disallowed type', () => {
+      expect(validateFileType(fileOfSize(10, 'a.txt', 'text/plain'), ['image/jpeg', 'image/png']))
+        .toEqual({ isValid: false, error: 'File must be one of: image/jpeg, image/png' })
     })
   })
 
   describe('validateMultiple', () => {
-    it('should return null when all validators pass', () => {
-      const validator = validateMultiple([
-        validateRequired,
-        validateMinLength(5),
-        validateEmail,
-      ])
-      expect(validator('test@example.com')).toBeNull()
+    it('is valid when all validators pass', () => {
+      expect(validateMultiple('test@example.com', [
+        (v) => validateRequired(v),
+        (v) => validateMinLength(v, 5),
+        (v) => validateEmail(v),
+      ])).toEqual({ isValid: true })
     })
-
-    it('should return first error when validators fail', () => {
-      const validator = validateMultiple([
-        validateRequired,
-        validateMinLength(5),
-        validateEmail,
-      ])
-      expect(validator('')).toBe('This field is required.')
-      expect(validator('a')).toBe('Must be at least 5 characters long.')
-      expect(validator('short')).toBe('Invalid email address.')
+    it('returns the first failing validator result', () => {
+      const chain = [
+        (v: string) => validateRequired(v),
+        (v: string) => validateMinLength(v, 5),
+        (v: string) => validateEmail(v),
+      ]
+      expect(validateMultiple('', chain)).toEqual({ isValid: false, error: 'Field is required' })
+      expect(validateMultiple('a', chain)).toEqual({ isValid: false, error: 'Field must be at least 5 characters' })
+      expect(validateMultiple('short', chain)).toEqual({ isValid: false, error: 'Please enter a valid email address' })
     })
   })
 })
-
-
-

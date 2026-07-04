@@ -85,13 +85,15 @@ describe('Environment Validation Utilities', () => {
       expect(result.errors).toHaveLength(0)
     })
 
-    it('should return error for missing API_URL', () => {
+    it('stays valid when NEXT_PUBLIC_API_URL is unset (defaults to localhost)', () => {
+      // getEnvConfig() provides a localhost default, so a missing var is not an
+      // error — the resulting URL is still well-formed.
       delete process.env.NEXT_PUBLIC_API_URL
       process.env.NODE_ENV = 'development'
 
       const result = validateEnv()
-      expect(result.valid).toBe(false)
-      expect(result.errors).toContain('NEXT_PUBLIC_API_URL is required')
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
     })
 
     it('should return error for invalid API_URL format', () => {
