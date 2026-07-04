@@ -58,6 +58,14 @@ export interface SeriesResult {
   scheduled?: { planId: string; count: number }
 }
 
+export interface HeatmapCell { day: number; hour: number; count: number; avgEngagement: number }
+export interface Heatmap {
+  grid: HeatmapCell[]
+  peak: { day: number; hour: number; avgEngagement: number } | null
+  totalPosts: number
+  dayLabels: string[]
+}
+
 export interface SocialReply {
   _id: string; platform: string; inboundText: string
   draftReply: string; editedReply: string | null; status: string
@@ -75,6 +83,7 @@ const qs = (params: Record<string, string | number | undefined>): string => {
 export const paths = {
   streak: (unit: StreakUnit = 'week') => `/streak${qs({ unit })}`,
   optimalSlots: (platform: string, count?: number) => `/schedule/optimal-slots${qs({ platform, count })}`,
+  heatmap: (platform?: string) => `/schedule/heatmap${qs({ platform })}`,
   calendarAutofill: () => '/calendar/autofill',
   calendarDrafts: (limit?: number, skip?: number) => `/calendar/drafts${qs({ limit, skip })}`,
   calendarApprove: (planId: string) => `/calendar/plans/${encodeURIComponent(planId)}/approve`,
@@ -100,6 +109,9 @@ export const getStreak = async (unit: StreakUnit = 'week'): Promise<Streak> =>
 
 export const getOptimalSlots = async (platform: Platform, count = 7): Promise<OptimalSlots> =>
   unwrap<OptimalSlots>(await apiGet(paths.optimalSlots(platform, count)))
+
+export const getHeatmap = async (platform?: Platform): Promise<Heatmap> =>
+  unwrap<Heatmap>(await apiGet(paths.heatmap(platform)))
 
 export const autofillCalendar = async (body: {
   count?: number; platforms?: Platform[]; topic?: string; optimalTimes?: boolean; dryRun?: boolean

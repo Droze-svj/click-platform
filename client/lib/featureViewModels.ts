@@ -66,3 +66,25 @@ export function compactNumber(n: number | undefined | null): string {
   if (v >= 1_000) return `${Math.round(v / 100) / 10}k`
   return String(v)
 }
+
+// ── Posting heatmap ──────────────────────────────────────────────────────────
+
+/** Highest average-engagement value in a heatmap grid (0 if empty). */
+export function heatmapMax(grid: { avgEngagement: number }[]): number {
+  return (grid || []).reduce((m, c) => Math.max(m, Number(c.avgEngagement) || 0), 0)
+}
+
+/** Relative cell intensity 0..1 for shading a heatmap against its own max. */
+export function cellIntensity(avg: number, max: number): number {
+  if (!(max > 0)) return 0
+  const v = (Number(avg) || 0) / max
+  return v < 0 ? 0 : v > 1 ? 1 : Math.round(v * 100) / 100
+}
+
+/** "Sun 9:00" style label for a heatmap cell (12h friendly). */
+export function cellLabel(day: number, hour: number, dayLabels: string[]): string {
+  const d = dayLabels?.[day] ?? String(day)
+  const h12 = hour % 12 === 0 ? 12 : hour % 12
+  const ampm = hour < 12 ? 'am' : 'pm'
+  return `${d} ${h12}${ampm}`
+}

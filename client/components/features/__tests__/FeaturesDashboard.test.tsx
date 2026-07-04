@@ -12,6 +12,7 @@ describe('FeaturesDashboard', () => {
     })
     ;(api.getLatestDigest as jest.Mock).mockResolvedValue({ digest: null })
     ;(api.getPendingReplies as jest.Mock).mockResolvedValue({ replies: [] })
+    ;(api.getHeatmap as jest.Mock).mockResolvedValue({ grid: [], peak: null, totalPosts: 0, dayLabels: [] })
   })
 
   it('renders all feature sections and settles its async children', async () => {
@@ -24,5 +25,6 @@ describe('FeaturesDashboard', () => {
     await waitFor(() => expect(screen.getByTestId('streak-card')).toBeInTheDocument())
     await waitFor(() => expect(screen.getByTestId('digest-empty')).toBeInTheDocument())
     await waitFor(() => expect(screen.getByTestId('responder-empty')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByTestId('heatmap-empty')).toBeInTheDocument())
   })
 })
