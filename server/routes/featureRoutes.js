@@ -19,6 +19,7 @@ const FEATURE_ROUTES = [
   ['/api/hashtags', './hashtag-strategist'],     // Hashtag Strategist
   ['/api/captions', './caption-angles'],         // Caption Angles
   ['/api/critique', './caption-critique'],       // Caption Critique
+  ['/api/carousel', './carousel-composer'],      // Carousel / Thread Composer
 ];
 
 /** Mount every feature route on the given Express app. */
