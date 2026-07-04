@@ -4,6 +4,7 @@ import * as api from '@/lib/featuresApi'
 
 jest.mock('@/lib/featuresApi')
 const mockedTriage = api.triageComments as jest.MockedFunction<typeof api.triageComments>
+const mockedDraft = api.draftReply as jest.MockedFunction<typeof api.draftReply>
 
 describe('CommentTriageInbox', () => {
   beforeEach(() => jest.clearAllMocks())
@@ -49,5 +50,24 @@ describe('CommentTriageInbox', () => {
     fireEvent.change(screen.getByTestId('triage-input'), { target: { value: 'hi' } })
     fireEvent.click(screen.getByTestId('triage-run'))
     await waitFor(() => expect(screen.getByTestId('triage-error')).toHaveTextContent('rate limited'))
+  })
+
+  it('drafts an AI reply for a triaged comment on the selected platform', async () => {
+    mockedTriage.mockResolvedValue({
+      total: 1, counts: { high: 1 },
+      ranked: [{ text: 'what mic?', author: 'fan', intent: 'question', priority: 'high', score: 80 }],
+    } as any)
+    mockedDraft.mockResolvedValue({ reply: { _id: 'r1' } } as any)
+
+    render(<CommentTriageInbox />)
+    fireEvent.change(screen.getByTestId('triage-platform'), { target: { value: 'youtube' } })
+    fireEvent.change(screen.getByTestId('triage-input'), { target: { value: 'what mic?' } })
+    fireEvent.click(screen.getByTestId('triage-run'))
+
+    await waitFor(() => expect(screen.getByTestId('triage-draft')).toBeInTheDocument())
+    fireEvent.click(screen.getByTestId('triage-draft'))
+
+    await waitFor(() => expect(screen.getByTestId('triage-drafted')).toBeInTheDocument())
+    expect(mockedDraft).toHaveBeenCalledWith({ platform: 'youtube', inboundText: 'what mic?', author: 'fan' })
   })
 })
