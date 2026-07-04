@@ -33,7 +33,8 @@
       "node",
       "react",
       "react-dom",
-      "jest"
+      "jest",
+      "@testing-library/jest-dom"
     ]
   },
   "include": [
