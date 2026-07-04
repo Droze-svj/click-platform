@@ -277,6 +277,33 @@ async function getLinkedInClient(userId) {
   });
 }
 
+/**
+ * Reply to a comment / post as the authenticated member. `objectUrn` is the
+ * urn:li:… of the thing being commented on. Documented LinkedIn socialActions
+ * API: POST /v2/socialActions/{objectUrn}/comments with { actor, object,
+ * message }. (Wired for the AI responder; only called when SOCIAL_REPLY_SEND=true.)
+ */
+async function replyToComment(userId, objectUrn, message) {
+  if (!objectUrn) throw new Error('objectUrn is required');
+  const accessToken = await getAccessTokenForAccount(userId);
+  const userInfo = await getLinkedInUserInfo(accessToken);
+  const actorUrn = `urn:li:person:${userInfo.id}`;
+  const body = { actor: actorUrn, object: objectUrn, message: { text: String(message || '') } };
+  const response = await axios.post(
+    `https://api.linkedin.com/v2/socialActions/${encodeURIComponent(objectUrn)}/comments`,
+    body,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0',
+      },
+      timeout: 10000,
+    },
+  );
+  return response.data;
+}
+
 module.exports = {
   isConfigured,
   getAuthorizationUrl,
@@ -285,6 +312,7 @@ module.exports = {
   refreshAccessToken,
   getAccessTokenForAccount,
   postToLinkedIn,
+  replyToComment,
   disconnectLinkedIn,
   getLinkedInClient,
   getConnectedAccounts,

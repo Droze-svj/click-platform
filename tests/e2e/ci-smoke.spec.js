@@ -29,3 +29,12 @@ test('frontend: homepage loads and renders the Click app shell', async ({ page }
   expect(res.status(), 'homepage HTTP status').toBeLessThan(400);
   await expect(page).toHaveTitle(/Click/i);
 });
+
+test('frontend: /dashboard/features route is served (not a 404/500)', async ({ page }) => {
+  // The Creator Tools dashboard page. Unauthenticated it may client-redirect to
+  // /login, but Next must SERVE the route — a 404/500 would mean the page I wired
+  // (app/dashboard/features/page.tsx) regressed or isn't built.
+  const res = await page.goto('/dashboard/features');
+  expect(res, 'navigation response').toBeTruthy();
+  expect(res.status(), 'features route HTTP status').toBeLessThan(400);
+});
