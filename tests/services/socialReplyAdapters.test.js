@@ -27,20 +27,20 @@ describe('socialReplyAdapters.sendReply', () => {
       .rejects.toMatchObject({ statusCode: 400 });
   });
 
-  test('twitter/x, instagram, and linkedin are wired by default', () => {
+  test('twitter/x, instagram, linkedin, facebook, and youtube are wired by default', () => {
     const p = supportedPlatforms();
-    expect(p).toEqual(expect.arrayContaining(['twitter', 'x', 'instagram', 'linkedin']));
+    expect(p).toEqual(expect.arrayContaining(['twitter', 'x', 'instagram', 'linkedin', 'facebook', 'youtube']));
   });
 
-  test('dispatches to the instagram and linkedin adapters', async () => {
+  test('dispatches to the instagram, linkedin, facebook, and youtube adapters', async () => {
     const seen = [];
-    const adapters = {
-      instagram: async (u, id) => { seen.push(['ig', u, id]); return { ok: 1 }; },
-      linkedin: async (u, id) => { seen.push(['li', u, id]); return { ok: 1 }; },
-    };
+    const mk = (tag) => async (u, id) => { seen.push([tag, u, id]); return { ok: 1 }; };
+    const adapters = { instagram: mk('ig'), linkedin: mk('li'), facebook: mk('fb'), youtube: mk('yt') };
     await sendReply('u', 'instagram', 'c1', 'hi', adapters);
     await sendReply('u', 'linkedin', 'urn:li:x', 'hi', adapters);
-    expect(seen).toEqual([['ig', 'u', 'c1'], ['li', 'u', 'urn:li:x']]);
+    await sendReply('u', 'facebook', 'fb1', 'hi', adapters);
+    await sendReply('u', 'youtube', 'yt1', 'hi', adapters);
+    expect(seen).toEqual([['ig', 'u', 'c1'], ['li', 'u', 'urn:li:x'], ['fb', 'u', 'fb1'], ['yt', 'u', 'yt1']]);
   });
 });
 

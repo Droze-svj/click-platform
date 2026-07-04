@@ -240,6 +240,22 @@ async function postToFacebook(userId, text, options = {}, retries = 1) {
 }
 
 /**
+ * Reply to a Facebook comment / post as the connected page. `commentId` is the
+ * object being replied to. Documented Graph API: POST /{object-id}/comments with
+ * a message. (Wired for the AI responder; only called when SOCIAL_REPLY_SEND=true.)
+ */
+async function replyToComment(userId, commentId, message) {
+  if (!commentId) throw new Error('commentId is required');
+  const accessToken = await getFacebookClient(userId);
+  const response = await axios.post(
+    `${GRAPH_API_BASE}/${encodeURIComponent(commentId)}/comments`,
+    null,
+    { params: { access_token: accessToken, message: String(message || '') }, timeout: 15000 },
+  );
+  return response.data;
+}
+
+/**
  * Refresh a long-lived access token
  */
 async function refreshAccessToken(userId) {
@@ -309,6 +325,7 @@ module.exports = {
   getFacebookPages,
   getFacebookClient,
   postToFacebook,
+  replyToComment,
   refreshAccessToken,
   disconnectFacebook,
   defaultRedirectUri,
