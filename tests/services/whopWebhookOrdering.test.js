@@ -51,13 +51,22 @@ describe('processEvent ordering guard', () => {
   const OLD_ENV = process.env.WHOP_WEBHOOK_ORDERING_GUARD;
   afterEach(() => { process.env.WHOP_WEBHOOK_ORDERING_GUARD = OLD_ENV; });
 
-  it('flag OFF: an older event still applies (no behaviour change)', async () => {
-    delete process.env.WHOP_WEBHOOK_ORDERING_GUARD;
+  it('flag explicitly OFF (=false): an older event still applies (legacy behaviour)', async () => {
+    process.env.WHOP_WEBHOOK_ORDERING_GUARD = 'false';
     const user = makeUser({ status: 'cancelled', lastEventAt: new Date('2026-02-01T00:00:00Z') });
     const r = await processEvent(evt('payment.succeeded', { created_at: '2026-01-01T00:00:00Z' }), depsFor(user));
     expect(r.stale).toBeUndefined();
     expect(user.save).toHaveBeenCalled();
     expect(user.subscription.status).toBe('active');
+  });
+
+  it('DEFAULT (unset): guard is ON — drops the older out-of-order event', async () => {
+    delete process.env.WHOP_WEBHOOK_ORDERING_GUARD; // default is now ON
+    const user = makeUser({ status: 'cancelled', lastEventAt: new Date('2026-02-01T00:00:00Z') });
+    const r = await processEvent(evt('payment.succeeded', { created_at: '2026-01-01T00:00:00Z' }), depsFor(user));
+    expect(r.stale).toBe(true);
+    expect(user.save).not.toHaveBeenCalled();
+    expect(user.subscription.status).toBe('cancelled'); // NOT re-activated
   });
 
   it('flag ON: drops an older payment.succeeded after a newer cancellation (the bug)', async () => {

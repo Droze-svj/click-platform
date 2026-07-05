@@ -130,14 +130,15 @@ async function processEvent(event, deps) {
     return { ok: false, action: eventType, reason: 'user-not-found' };
   }
 
-  // Ordering guard (opt-in via WHOP_WEBHOOK_ORDERING_GUARD). The two-phase
-  // idempotency layer stops a *processed* event from re-applying, but not an
-  // out-of-order or replayed *older* event — e.g. a delayed `payment.succeeded`
-  // arriving AFTER a `cancelled` would re-grant the tier. This drops any event
-  // provably older than the last one applied to this user. It only ever skips
-  // when BOTH the incoming and the stored timestamps are known, so it can never
-  // drop a first/only event or one from a provider that omits timestamps.
-  const orderingGuard = process.env.WHOP_WEBHOOK_ORDERING_GUARD === 'true';
+  // Ordering guard (now ON by default; set WHOP_WEBHOOK_ORDERING_GUARD=false to
+  // disable). The two-phase idempotency layer stops a *processed* event from
+  // re-applying, but not an out-of-order or replayed *older* event — e.g. a
+  // delayed `payment.succeeded` arriving AFTER a `cancelled` would re-grant the
+  // tier. This drops any event provably older than the last one applied to this
+  // user. It only ever skips when BOTH the incoming and the stored timestamps are
+  // known, so it can never drop a first/only event or one from a provider that
+  // omits timestamps.
+  const orderingGuard = process.env.WHOP_WEBHOOK_ORDERING_GUARD !== 'false';
   const eventTime = orderingGuard ? getEventTime(event) : null;
   if (orderingGuard && eventTime != null) {
     const lastAt = user.subscription?.lastEventAt
