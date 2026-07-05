@@ -69,12 +69,10 @@ jobs:
         REDIS_URL: redis://localhost:6379
 
     - name: Run integration tests
-      # Informational only. Integration suites have an open mongoose
-      # connection-race issue where afterAll closes the connection in
-      # one file and the next file's User.save() buffer-times-out before
-      # setup.js's beforeAll can reconnect. Tracked separately; do not
-      # gate the job on it.
-      continue-on-error: true
+      # GATING. The mongoose connection-race that made this informational was
+      # resolved by setup.js's per-worker DB split + 60s buffer + connected-event
+      # wait; the last real failure (a stale subscription/verify 403 assertion) is
+      # fixed. All 15 integration suites pass against the CI mongo service.
       run: npm run test:integration
       env:
         NODE_ENV: test
@@ -83,8 +81,12 @@ jobs:
         REDIS_URL: redis://localhost:6379
 
     - name: Generate test coverage
-      # Coverage runs the full jest suite which includes the broken
-      # integration project — same reason as above.
+      # Informational. `jest --coverage` runs at the ROOT config (no
+      # --selectProjects), so it matches every *.test.js under one config and the
+      # client/e2e suites fail in the wrong environment (collapses to 0%). That's a
+      # coverage-tooling config issue, independent of the now-gating unit +
+      # integration + security projects; kept non-gating until the coverage config
+      # is reworked to run per-project.
       continue-on-error: true
       run: npm run test:coverage
       env:
