@@ -37,7 +37,18 @@ async function attachRedisAdapter(io) {
     ({ createAdapter } = require('@socket.io/redis-adapter'));
     ({ createClient } = require('redis'));
   } catch (e) {
-    logger.warn('REDIS_URL is set but @socket.io/redis-adapter is not installed — realtime stays single-instance. Run `npm i @socket.io/redis-adapter`.', { error: e.message });
+    // REDIS_URL is set (multi-instance is intended) but the adapter isn't
+    // installed → realtime events silently DON'T fan out across instances (a
+    // render finishing on instance B can't notify a browser on instance A). In
+    // production that's a real correctness bug, so surface it at ERROR (+ Sentry)
+    // rather than a warn buried in the log stream.
+    const msg = 'REDIS_URL is set but @socket.io/redis-adapter is not installed — realtime is stuck SINGLE-INSTANCE (cross-instance events dropped). Run `npm i @socket.io/redis-adapter`.';
+    if (process.env.NODE_ENV === 'production') {
+      logger.error(msg, { error: e.message });
+      try { require('../utils/sentry').captureException?.(new Error('socket.io redis-adapter missing'), { tags: { type: 'realtime_single_instance' } }); } catch (_) { /* sentry optional */ }
+    } else {
+      logger.warn(msg, { error: e.message });
+    }
     return false;
   }
 
