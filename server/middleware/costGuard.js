@@ -335,7 +335,10 @@ async function recordUsage({ userId, provider, model, inputTokens, outputTokens,
  * can call `req.assertBudget(...)` without re-importing this module.
  */
 function costGuard() {
-  const atomicEnabled = () => process.env.AI_BUDGET_ATOMIC_RESERVE === 'true';
+  // Atomic reserve-then-settle is now ON by default (closes the TOCTOU where two
+  // racing calls both pass the pre-check and both spend, overshooting the ceiling).
+  // Set AI_BUDGET_ATOMIC_RESERVE=false to fall back to the legacy assert/record path.
+  const atomicEnabled = () => process.env.AI_BUDGET_ATOMIC_RESERVE !== 'false';
   return (req, res, next) => {
     const uid = () => req.user?.id || req.user?._id?.toString();
     // Reservations made this request but not yet settled (FIFO). Released on
