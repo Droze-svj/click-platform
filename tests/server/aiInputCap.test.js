@@ -43,4 +43,24 @@ describe('aiInputCap middleware', () => {
     expect(run(null).nexted).toBe(true);
     expect(run({}).nexted).toBe(true);
   });
+
+  it('caps the `topic` field (primary input on ideation/intelligence surfaces)', () => {
+    const { res, nexted } = run({ topic: 'x'.repeat(300_000) });
+    expect(res.statusCode).toBe(413);
+    expect(res.body.code).toBe('AI_INPUT_TOO_LARGE');
+    expect(nexted).toBe(false);
+    // a normal topic passes
+    expect(run({ topic: 'cold brew for beginners' }).nexted).toBe(true);
+  });
+
+  it('is mounted on the /api/intelligence surface (uncapped LLM prompt/topic path)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const src = fs.readFileSync(path.join(__dirname, '../../server/index.js'), 'utf8');
+    const mountLine = src.split('\n').find((l) => l.includes("require('./middleware/aiInputCap')"));
+    expect(mountLine).toBeTruthy();
+    for (const p of ['/api/ai', '/api/creative', '/api/intelligence']) {
+      expect(mountLine).toContain(p);
+    }
+  });
 });

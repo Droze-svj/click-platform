@@ -10,7 +10,8 @@
 const { assertPromptSize } = require('../utils/aiRouter');
 
 // Body fields that carry free text fed into an LLM across the AI surfaces.
-const TEXT_FIELDS = ['transcript', 'content', 'prompt', 'text', 'script', 'copy', 'input', 'message', 'caption'];
+// `topic` is the primary free-text input on the ideation/intelligence surfaces.
+const TEXT_FIELDS = ['transcript', 'content', 'prompt', 'text', 'script', 'copy', 'input', 'message', 'caption', 'topic'];
 // ~60k tokens ≈ 240KB of text — generous for real prompts, far below the 10mb body cap.
 const CEILING = parseInt(process.env.AI_INPUT_TOKEN_CEILING || '60000', 10);
 
