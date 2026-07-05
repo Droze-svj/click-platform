@@ -98,6 +98,7 @@ export const paths = {
   captions: () => '/captions',
   critique: () => '/critique',
   carousel: () => '/carousel',
+  ideas: () => '/creative/ideation/ideas',
   series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
@@ -194,6 +195,19 @@ export interface SlideResult { format: string; slides: Slide[] }
 export const composeSlides = async (body: {
   topic?: string; contentId?: string; format?: SlideFormat; count?: number
 }): Promise<SlideResult> => unwrap<SlideResult>(await apiPost(paths.carousel(), body))
+
+export interface ContentIdea {
+  title: string; description?: string; format?: string
+  keyPoints?: string[]; hashtags?: string[]
+}
+
+// Reuses the existing /api/creative/ideation/ideas endpoint (returns an array).
+export const generateIdeas = async (body: {
+  topic?: string; platform?: string; count?: number; style?: string; audience?: string
+}): Promise<ContentIdea[]> => {
+  const res = unwrap<ContentIdea[] | { ideas?: ContentIdea[] }>(await apiPost(paths.ideas(), body))
+  return Array.isArray(res) ? res : (res?.ideas ?? [])
+}
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string

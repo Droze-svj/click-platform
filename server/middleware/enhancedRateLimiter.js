@@ -110,17 +110,30 @@ function createRateLimiter(options) {
 
   // Use Redis store if available. Wrapped so a store-construction incompatibility
   // degrades to the in-memory store instead of breaking module load / the route.
+  let usingRedisStore = false;
   if (redisClient && RedisStore) {
     try {
       limiterOptions.store = new RedisStore({
         sendCommand: (...args) => redisClient.sendCommand(args),
         prefix: 'rl:',
       });
+      usingRedisStore = true;
     } catch (e) {
       noteDegraded('Failed to construct the Redis rate-limit store — using memory', { error: e.message });
       rateLimitStore = 'memory';
     }
   }
+
+  // Fail open if the Redis store's client dies after construction (the sendCommand
+  // closure would otherwise deref a null client and 500 the protected route). A
+  // rate limiter must never take down the endpoint it guards. Composed with any
+  // caller-provided skip; only trips for a limiter actually backed by a now-dead
+  // Redis store (memory-backed limiters keep limiting normally).
+  const providedSkip = typeof limiterOptions.skip === 'function' ? limiterOptions.skip : null;
+  limiterOptions.skip = (req, res) => {
+    if (usingRedisStore && !redisClient) return true;
+    return providedSkip ? providedSkip(req, res) : false;
+  };
 
   return rateLimit(limiterOptions);
 }

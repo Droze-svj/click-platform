@@ -10,6 +10,7 @@ const {
 } = require('../../services/aiIdeationService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
@@ -22,7 +23,7 @@ const router = express.Router();
  *     security:
  *       - bearerAuth: []
  */
-router.post('/ideas', auth, asyncHandler(async (req, res) => {
+router.post('/ideas', auth, aiLimiter, asyncHandler(async (req, res) => {
   const { topic, platform, count, style, audience } = req.body;
 
   try {
@@ -49,7 +50,7 @@ router.post('/ideas', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.get('/trends', auth, asyncHandler(async (req, res) => {
+router.get('/trends', auth, aiLimiter, asyncHandler(async (req, res) => {
   const { platform, category } = req.query;
 
   try {
@@ -70,7 +71,7 @@ router.get('/trends', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/variations/:contentId', auth, asyncHandler(async (req, res) => {
+router.post('/variations/:contentId', auth, aiLimiter, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
 
   try {
@@ -91,7 +92,7 @@ router.post('/variations/:contentId', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.get('/suggestions', auth, asyncHandler(async (req, res) => {
+router.get('/suggestions', auth, aiLimiter, asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 10;
 
   try {
@@ -119,7 +120,7 @@ const {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/template', auth, asyncHandler(async (req, res) => {
+router.post('/template', auth, aiLimiter, asyncHandler(async (req, res) => {
   const { templateType, variables } = req.body;
 
   if (!templateType) {
@@ -144,7 +145,7 @@ router.post('/template', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/competitor', auth, asyncHandler(async (req, res) => {
+router.post('/competitor', auth, aiLimiter, asyncHandler(async (req, res) => {
   const { competitorUrls, platform } = req.body;
 
   if (!competitorUrls || !Array.isArray(competitorUrls)) {
@@ -169,7 +170,7 @@ router.post('/competitor', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.get('/seasonal', auth, asyncHandler(async (req, res) => {
+router.get('/seasonal', auth, aiLimiter, asyncHandler(async (req, res) => {
   const { season, category } = req.query;
 
   try {
