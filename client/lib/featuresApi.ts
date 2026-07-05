@@ -99,6 +99,7 @@ export const paths = {
   critique: () => '/critique',
   carousel: () => '/carousel',
   ideas: () => '/creative/ideation/ideas',
+  nextBest: (count?: number) => `/me/next-best${qs({ count })}`,
   series: () => '/series',
   responderDraft: () => '/responder/draft',
   responderPending: (limit?: number, skip?: number) => `/responder/pending${qs({ limit, skip })}`,
@@ -208,6 +209,15 @@ export const generateIdeas = async (body: {
   const res = unwrap<ContentIdea[] | { ideas?: ContentIdea[] }>(await apiPost(paths.ideas(), body))
   return Array.isArray(res) ? res : (res?.ideas ?? [])
 }
+
+export interface NextBestIdea { title: string; hook?: string; why?: string }
+export interface NextBest {
+  hasRealData: boolean; reason?: string; sampleSize?: number; ideas: NextBestIdea[]
+}
+
+// "What should I make next?" — grounded in the creator's own proven performers.
+export const getNextBest = async (count = 4): Promise<NextBest> =>
+  unwrap<NextBest>(await apiGet(paths.nextBest(count)))
 
 export const draftReply = async (body: {
   platform: Platform; inboundText: string; externalCommentId?: string; author?: string

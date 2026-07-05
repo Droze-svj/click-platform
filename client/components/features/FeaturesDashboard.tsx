@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import StreakWidget from './StreakWidget'
 import DigestWidget from './DigestWidget'
 import HeatmapWidget from './HeatmapWidget'
+import NextBestTile from './NextBestTile'
 import CalendarAutofillPanel from './CalendarAutofillPanel'
 import IdeaGeneratorPanel from './IdeaGeneratorPanel'
 import CommentTriageInbox from './CommentTriageInbox'
@@ -46,6 +47,7 @@ export default function FeaturesDashboard() {
       <Group id="overview" title="Overview" subtitle="How your posting is trending">
         <div><StreakWidget /></div>
         <div><DigestWidget /></div>
+        <div className="md:col-span-2"><NextBestTile /></div>
         <div className="md:col-span-2"><HeatmapWidget /></div>
       </Group>
 
