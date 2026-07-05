@@ -12,6 +12,7 @@ import ResponderStats from './ResponderStats'
 import ResponderHistory from './ResponderHistory'
 import RepurposeStudioPanel from './RepurposeStudioPanel'
 import FirstCommentPanel from './FirstCommentPanel'
+import ComposerPanel from './ComposerPanel'
 import HookGeneratorPanel from './HookGeneratorPanel'
 import HashtagStrategistPanel from './HashtagStrategistPanel'
 import CaptionAnglesPanel from './CaptionAnglesPanel'
@@ -55,6 +56,7 @@ export default function FeaturesDashboard() {
       </Group>
 
       <Group id="create" title="Create" subtitle="Draft on-brand content fast">
+        <div className="md:col-span-2"><ComposerPanel /></div>
         <div><HookGeneratorPanel /></div>
         <div><CaptionAnglesPanel /></div>
         <div><HashtagStrategistPanel /></div>
