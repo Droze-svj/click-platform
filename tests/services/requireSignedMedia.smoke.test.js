@@ -61,8 +61,8 @@ afterEach(() => {
 });
 
 describe('signed-media gate — running-app smoke (real HTTP + static serving)', () => {
-  it('flag OFF: unsigned private video serves today (no regression on enable-prep)', async () => {
-    delete process.env.REQUIRE_SIGNED_MEDIA;
+  it('flag explicitly OFF (=false): unsigned private video serves (legacy path)', async () => {
+    process.env.REQUIRE_SIGNED_MEDIA = 'false';
     const res = await request(buildApp()).get('/uploads/videos/private.mp4');
     expect(res.status).toBe(200);
     expect(Buffer.from(res.body)).toEqual(VIDEO_BYTES);

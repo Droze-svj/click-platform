@@ -172,10 +172,12 @@ export default function AssetLibrary({
               ...m,
               id: m._id || m.id,
               type: 'music' as const,
-              // Prefer the API-provided file.url — it's the signed capability URL
-              // (?exp&sig) the server now returns. The hand-built /uploads path is
-              // an unsigned last resort that won't survive REQUIRE_SIGNED_MEDIA.
-              url: m.file?.url || m.url || m.fileUrl || `/uploads/music/${m.filename}`,
+              // Use ONLY the API-provided URL — it's the signed capability URL
+              // (?exp&sig) the server returns now that REQUIRE_SIGNED_MEDIA is on.
+              // The old hand-built `/uploads/music/${m.filename}` fallback was
+              // unsigned and would 403 under enforcement, so it's dropped: an empty
+              // url renders no source rather than a broken (403) one.
+              url: m.file?.url || m.url || m.fileUrl || '',
               title: m.title || m.name,
               duration: m.duration
             }))
