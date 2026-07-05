@@ -14,6 +14,7 @@ describe('buildVideoOutputOptions', () => {
     expect(o).toContain('-pix_fmt yuv420p'); // was missing → broke Safari/QuickTime/mobile
     expect(o).toContain('-profile:v high');
     expect(o).toContain('-movflags +faststart');
+    expect(o).toContain('-max_muxing_queue_size 9999'); // robustness on VFR/complex graphs
     expect(o).not.toContain('-b:v');       // x264 ignored it in CRF mode anyway
     expect(o).not.toContain('-preset');    // optimizeFFmpegCommand owns the preset
   });
@@ -30,6 +31,7 @@ describe('buildVideoOutputOptions', () => {
     const o = joined(buildVideoOutputOptions({ isProres: true }));
     expect(o).toContain('-profile:v 3');
     expect(o).toContain('-vendor apl0');
+    expect(o).toContain('-max_muxing_queue_size 9999'); // codec-agnostic robustness
     expect(o).not.toContain('-crf');
     expect(o).not.toContain('-pix_fmt');
   });

@@ -1201,7 +1201,10 @@ function compileTimelineEffects(effects) {
  * its own profile/vendor and is not CRF-encoded.
  */
 function buildVideoOutputOptions({ codec = 'libx264', isProres = false, crf = 23, bitrateMbps = 8 } = {}) {
-  if (isProres) return ['-profile:v', '3', '-vendor', 'apl0'] // ProRes 422 HQ
+  // A generous muxing queue prevents "Too many packets buffered for output stream"
+  // failures on variable-frame-rate inputs + complex filtergraphs (a real class of
+  // aborted renders). Codec-agnostic, so applied on every path.
+  if (isProres) return ['-profile:v', '3', '-vendor', 'apl0', '-max_muxing_queue_size', '9999'] // ProRes 422 HQ
   const cap = Math.max(1, Number(bitrateMbps) || 8)
   const opts = [
     `-crf ${crf}`,
@@ -1210,6 +1213,7 @@ function buildVideoOutputOptions({ codec = 'libx264', isProres = false, crf = 23
     '-pix_fmt yuv420p',
   ]
   if (codec === 'libx264') opts.push('-profile:v high')
+  opts.push('-max_muxing_queue_size 9999')
   opts.push('-movflags +faststart')
   return opts
 }
@@ -1797,7 +1801,10 @@ async function renderFromEditorState(options) {
       if (hasAudio || hasMusic) {
         commandChain
           .audioCodec('aac')
-          .outputOptions(['-b:a', audioBitrate])
+          // Normalize to stereo 48kHz — the universal target for web/social/mobile
+          // playback. Some inputs carry odd sample rates or mono tracks that a few
+          // players/CDNs mishandle; forcing -ar/-ac makes every export consistent.
+          .outputOptions(['-b:a', audioBitrate, '-ar', '48000', '-ac', '2'])
       }
 
       commandChain.output(outputPath)
