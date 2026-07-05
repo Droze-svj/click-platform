@@ -5,6 +5,7 @@ import StreakWidget from './StreakWidget'
 import DigestWidget from './DigestWidget'
 import HeatmapWidget from './HeatmapWidget'
 import CalendarAutofillPanel from './CalendarAutofillPanel'
+import IdeaGeneratorPanel from './IdeaGeneratorPanel'
 import CommentTriageInbox from './CommentTriageInbox'
 import ResponderInbox from './ResponderInbox'
 import ResponderStats from './ResponderStats'
@@ -47,7 +48,8 @@ export default function FeaturesDashboard() {
         <div className="md:col-span-2"><HeatmapWidget /></div>
       </Group>
 
-      <Group id="plan" title="Plan" subtitle="Fill and structure your calendar">
+      <Group id="plan" title="Plan" subtitle="Find ideas and structure your calendar">
+        <div className="md:col-span-2"><IdeaGeneratorPanel /></div>
         <div className="md:col-span-2"><CalendarAutofillPanel /></div>
         <div className="md:col-span-2"><SeriesPlannerPanel /></div>
       </Group>
