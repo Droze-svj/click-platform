@@ -324,19 +324,85 @@ async function getFeaturedTemplates(limit = 10) {
   }
 }
 
-// Honest 501 stubs for marketplace features the routes import but that aren't
-// implemented yet — return a clean "Not Implemented" instead of crashing the
-// route with "X is not a function" (a 500).
-function _notImplemented(feature) {
-  const e = new Error(`${feature} is not available yet`);
-  e.statusCode = 501;
-  e.code = 'NOT_IMPLEMENTED';
-  return e;
+/**
+ * Publish one of the caller's own templates to the public marketplace
+ * (isPublic = true). Ownership-scoped: you can only publish templates you own.
+ */
+async function publishToMarketplace(templateId, userId) {
+  try {
+    const template = await TemplateModel.findById(templateId);
+    if (!template) { const e = new Error('Template not found'); e.statusCode = 404; throw e; }
+    if (template.userId.toString() !== userId?.toString()) {
+      const e = new Error('You can only publish your own templates'); e.statusCode = 403; throw e;
+    }
+    if (!template.isPublic) {
+      template.isPublic = true;
+      await template.save();
+    }
+    logger.info('Template published to marketplace', { templateId, userId: String(userId) });
+    return template.toObject();
+  } catch (error) {
+    logger.error('Publish template error', { error: error.message, templateId });
+    throw error;
+  }
 }
-async function publishToMarketplace() { throw _notImplemented('Publishing templates to the marketplace'); }
-async function unpublishFromMarketplace() { throw _notImplemented('Unpublishing templates'); }
-async function getTemplateStats() { throw _notImplemented('Template stats'); }
-async function getTrendingTemplates() { throw _notImplemented('Trending templates'); }
+
+/** Remove one of the caller's own templates from the marketplace (isPublic = false). */
+async function unpublishFromMarketplace(templateId, userId) {
+  try {
+    const template = await TemplateModel.findById(templateId);
+    if (!template) { const e = new Error('Template not found'); e.statusCode = 404; throw e; }
+    if (template.userId.toString() !== userId?.toString()) {
+      const e = new Error('You can only unpublish your own templates'); e.statusCode = 403; throw e;
+    }
+    if (template.isPublic) {
+      template.isPublic = false;
+      await template.save();
+    }
+    logger.info('Template unpublished from marketplace', { templateId, userId: String(userId) });
+    return template.toObject();
+  } catch (error) {
+    logger.error('Unpublish template error', { error: error.message, templateId });
+    throw error;
+  }
+}
+
+/** Public engagement stats for a template (downloads / views / rating / review count). */
+async function getTemplateStats(templateId) {
+  try {
+    const template = await TemplateModel.findById(templateId).lean();
+    if (!template) { const e = new Error('Template not found'); e.statusCode = 404; throw e; }
+    const reviews = Array.isArray(template.reviews) ? template.reviews : [];
+    return {
+      templateId: String(template._id),
+      isPublic: !!template.isPublic,
+      downloads: template.downloads || 0,
+      views: template.views || 0,
+      rating: template.rating || 0,
+      reviewCount: reviews.length,
+    };
+  } catch (error) {
+    logger.error('Get template stats error', { error: error.message, templateId });
+    throw error;
+  }
+}
+
+/** Top public templates by download volume (then rating). Uses the
+ * {isPublic, downloads} index. `limit` clamped to 1–50. */
+async function getTrendingTemplates(limit = 10) {
+  try {
+    const cap = Math.min(50, Math.max(1, parseInt(limit, 10) || 10));
+    const templates = await TemplateModel.find({ isPublic: true })
+      .sort({ downloads: -1, rating: -1 })
+      .limit(cap)
+      .populate('userId', 'name email')
+      .lean();
+    return templates;
+  } catch (error) {
+    logger.error('Get trending templates error', { error: error.message });
+    throw error;
+  }
+}
 
 module.exports = {
   browseTemplates,
