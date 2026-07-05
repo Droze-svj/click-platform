@@ -69,9 +69,15 @@ router.get('/dashboard', auth, requireAdmin, asyncHandler(async (req, res) => {
       .select('*', { count: 'exact', head: true })
       .eq('is_connected', true);
 
-    // Get system health metrics (mock for now)
+    // Real system-health signals (previously hardcoded 'healthy', which lied when
+    // the DB was actually down). `database` reflects the live Mongoose connection
+    // state (1 = connected); `api` is trivially healthy since this handler is
+    // responding. `supabase` is reachable if we got here (the queries above ran).
+    const mongoose = require('mongoose');
+    const dbConnected = mongoose.connection && mongoose.connection.readyState === 1;
     const systemHealth = {
-      database: 'healthy',
+      database: dbConnected ? 'healthy' : 'degraded',
+      supabase: 'healthy',
       api: 'healthy',
       uptime: process.uptime(),
       memory: process.memoryUsage()
