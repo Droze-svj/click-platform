@@ -25,11 +25,19 @@ describe('requireSignedMedia gate', () => {
     else process.env.REQUIRE_SIGNED_MEDIA = ORIG;
   });
 
-  it('flag OFF → serves everything (current behavior, zero risk)', () => {
-    delete process.env.REQUIRE_SIGNED_MEDIA;
+  it('flag explicitly OFF (=false) → serves everything (legacy behavior)', () => {
+    process.env.REQUIRE_SIGNED_MEDIA = 'false';
     const m = mockReqRes({ path: '/videos/private.mp4' });
     requireSignedMedia(m.req, m.res, m.next);
     expect(m.nexted).toBe(true);
+  });
+
+  it('DEFAULT (unset) → enforcement ON: unsigned private media is 403', () => {
+    delete process.env.REQUIRE_SIGNED_MEDIA; // default is now ON
+    const m = mockReqRes({ path: '/videos/private.mp4', query: {} });
+    requireSignedMedia(m.req, m.res, m.next);
+    expect(m.nexted).toBe(false);
+    expect(m.status).toBe(403);
   });
 
   it('flag ON + unsigned → 403', () => {

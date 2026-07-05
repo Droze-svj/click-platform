@@ -104,9 +104,16 @@ describe('requireSignedMedia gate', () => {
     return { res, nextCalled };
   }
 
-  test('OFF by default → serves (next) regardless of signature', () => {
-    delete process.env.REQUIRE_SIGNED_MEDIA;
+  test('explicitly OFF (=false) → serves (next) regardless of signature', () => {
+    process.env.REQUIRE_SIGNED_MEDIA = 'false';
     expect(mock('/videos/abc.mp4').nextCalled).toBe(true);
+  });
+
+  test('DEFAULT (unset) → enforcement ON: unsigned → 403', () => {
+    delete process.env.REQUIRE_SIGNED_MEDIA; // default is now ON
+    const { res, nextCalled } = mock('/videos/abc.mp4', {});
+    expect(nextCalled).toBe(false);
+    expect(res.code).toBe(403);
   });
 
   test('ON → 403 without a valid signature', () => {

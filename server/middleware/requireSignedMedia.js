@@ -1,16 +1,17 @@
 // Gate the public /uploads static mount behind a valid signed-capability URL.
 //
-// Flag-gated by REQUIRE_SIGNED_MEDIA (default OFF → current behavior, zero risk
-// until the API signs the media URLs it returns and the frontend is verified).
-// When ON, a request to /uploads/<path> must carry a valid ?exp&sig minted by
-// utils/mediaUrlSigner (see signMediaUrl) — otherwise 403. A small allowlist of
-// truly-public prefixes (assets referenced outside API responses, e.g. fonts in
-// CSS) bypasses the check. See docs/security/private-media-access-plan.md.
+// Now ON by default (set REQUIRE_SIGNED_MEDIA=false to disable). The API already
+// signs every /uploads URL in its JSON responses at one global point
+// (server/index.js res.json → signMediaUrls), so the client only ever receives
+// signable URLs. A request to /uploads/<path> must carry a valid ?exp&sig minted
+// by utils/mediaUrlSigner — otherwise 403. A small allowlist of truly-public
+// prefixes (assets referenced outside API responses, e.g. fonts in CSS) bypasses
+// the check. See docs/security/private-media-access-plan.md.
 
 const { verifyMediaUrl } = require('../utils/mediaUrlSigner');
 
 function enforcementEnabled() {
-  return String(process.env.REQUIRE_SIGNED_MEDIA || '').toLowerCase() === 'true';
+  return String(process.env.REQUIRE_SIGNED_MEDIA || '').toLowerCase() !== 'false';
 }
 
 // Public prefixes relative to /uploads/ (no leading slash). Default: fonts only.
