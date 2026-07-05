@@ -1,7 +1,6 @@
 const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 const schedulerRoutes = require('../../server/routes/scheduler');
 const ScheduledPost = require('../../server/models/ScheduledPost');
 
@@ -18,25 +17,16 @@ const mockAuth = (req, res, next) => {
 };
 
 describe('Scheduler Integration Tests', () => {
-  let mongoServer;
   let app;
 
   beforeAll(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
-    await mongoose.connect(uri);
-
+    // Use the shared mongoose connection from tests/setup.js (in-memory locally,
+    // the mongo service in CI). Do NOT spin up a second MongoMemoryServer here:
+    // its binary download 404s on the CI runner, and disconnecting first tore
+    // down setup.js's connection and wedged the rest of the integration run.
     app = express();
     app.use(express.json());
     app.use('/api/scheduler', mockAuth, schedulerRoutes);
-  });
-
-  afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
   });
 
   beforeEach(async () => {

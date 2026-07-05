@@ -81,7 +81,11 @@ describe('Subscription API Integration', () => {
       expect(response.body.subscription.plan).not.toBe('pro');
     });
 
-    it('should return 403 if subscription is not active', async () => {
+    it('reports an inactive subscription as 200 without granting (never 403 / never upgrades)', async () => {
+      // /verify is REPORT-ONLY now (security hardening): it reflects the Whop-side
+      // status and NEVER grants a paid tier or returns 403 — entitlements are
+      // applied exclusively by the signed webhook (POST /api/webhooks/whop). The
+      // old 403-on-inactive behavior was removed with the self-upgrade hole.
       axios.get.mockResolvedValue({
         data: {
           status: 'cancelled',
@@ -93,7 +97,9 @@ describe('Subscription API Integration', () => {
         .post('/api/subscription/verify')
         .send({ whopUserId: 'user_1', whopSubscriptionId: 'sub_1' });
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(200);
+      expect(response.body.whopStatus).toBe('cancelled');
+      expect(response.body.subscription.plan).not.toBe('pro');
     });
   });
 
