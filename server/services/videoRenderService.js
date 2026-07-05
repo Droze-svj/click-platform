@@ -1184,6 +1184,40 @@ function compileTimelineEffects(effects) {
   return out
 }
 
+/**
+ * Build the encoder output options for the final export. Pure + unit-tested.
+ *
+ * For H.264/H.265 this uses CONSTANT-QUALITY (`-crf`) as the primary control with a
+ * VBV bitrate CAP (`-maxrate`/`-bufsize`) so the file streams well and stays within
+ * budget — replacing the old `-b:v`, which x264 SILENTLY IGNORES in CRF mode (the
+ * cap never applied). It also forces `-pix_fmt yuv420p` — H.264 output from 4:4:4 /
+ * 4:2:2 inputs (ProRes, screen recordings) otherwise won't play in Safari /
+ * QuickTime / most mobile browsers — and, for H.264, `-profile:v high` for broad
+ * decoder compatibility (libx265 rejects that flag, so it's omitted there).
+ * `+faststart` moves the moov atom to the front for instant web playback. `-preset`
+ * is intentionally NOT set here — optimizeFFmpegCommand owns it (see the call site);
+ * setting it in both places double-specified `-preset` and the perf helper's default
+ * `fast` silently overrode the render's `slow`/`medium` quality preset. ProRes keeps
+ * its own profile/vendor and is not CRF-encoded.
+ */
+function buildVideoOutputOptions({ codec = 'libx264', isProres = false, crf = 23, bitrateMbps = 8 } = {}) {
+  // A generous muxing queue prevents "Too many packets buffered for output stream"
+  // failures on variable-frame-rate inputs + complex filtergraphs (a real class of
+  // aborted renders). Codec-agnostic, so applied on every path.
+  if (isProres) return ['-profile:v', '3', '-vendor', 'apl0', '-max_muxing_queue_size', '9999'] // ProRes 422 HQ
+  const cap = Math.max(1, Number(bitrateMbps) || 8)
+  const opts = [
+    `-crf ${crf}`,
+    `-maxrate ${cap}M`,
+    `-bufsize ${cap * 2}M`,
+    '-pix_fmt yuv420p',
+  ]
+  if (codec === 'libx264') opts.push('-profile:v high')
+  opts.push('-max_muxing_queue_size 9999')
+  opts.push('-movflags +faststart')
+  return opts
+}
+
 async function renderFromEditorState(options) {
   const {
     videoId,
@@ -1750,9 +1784,7 @@ async function renderFromEditorState(options) {
         }
       }
 
-      const videoOutputOptions = isProres
-        ? ['-profile:v', '3', '-vendor', 'apl0'] // ProRes 422 HQ
-        : [`-b:v ${bitrateMbps}M`, `-preset ${preset}`, `-crf ${crf}`, '-movflags +faststart']
+      const videoOutputOptions = buildVideoOutputOptions({ codec, isProres, crf, bitrateMbps })
 
       const commandChain = command
         .videoCodec(codec)
@@ -1769,13 +1801,18 @@ async function renderFromEditorState(options) {
       if (hasAudio || hasMusic) {
         commandChain
           .audioCodec('aac')
-          .outputOptions(['-b:a', audioBitrate])
+          // Normalize to stereo 48kHz — the universal target for web/social/mobile
+          // playback. Some inputs carry odd sample rates or mono tracks that a few
+          // players/CDNs mishandle; forcing -ar/-ac makes every export consistent.
+          .outputOptions(['-b:a', audioBitrate, '-ar', '48000', '-ac', '2'])
       }
 
       commandChain.output(outputPath)
 
-      // Optimize for this specific machine
-      optimizeFFmpegCommand(commandChain)
+      // Optimize for this specific machine. Pass the render's chosen preset so the
+      // perf helper doesn't clobber a 'slow'/'medium' quality preset with its
+      // default 'fast' (both would emit -preset; the last one — the helper's — won).
+      optimizeFFmpegCommand(commandChain, { preset })
 
       const job = {
         execute: () => {
@@ -2285,6 +2322,7 @@ module.exports = {
   selectPrimarySegments,
   resolveInputPath,
   buildVideoFilterChain,
+  buildVideoOutputOptions,
   buildAudioMix,
   buildMasterFx,
   buildDrawTextFilter,
