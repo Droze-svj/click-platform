@@ -1780,6 +1780,23 @@ async function renderFromEditorState(options) {
       const job = {
         execute: () => {
           return new Promise((jobResolve, jobReject) => {
+            // Hard-kill guard: if ffmpeg wedges (corrupt input, stalled remote
+            // source, codec deadlock) the 'end'/'error' events never fire, so the
+            // child process orphans and its temp files leak. The RenderQueue also
+            // has a Promise.race timeout, but that only REJECTS the job — it can't
+            // reach this child to kill it. Terminate the process here and clean up.
+            // Default matches the queue guard (20 min); tune via RENDER_JOB_TIMEOUT_MS.
+            let settled = false
+            const RENDER_JOB_TIMEOUT_MS = Number(process.env.RENDER_JOB_TIMEOUT_MS) || 20 * 60 * 1000
+            const killTimer = setTimeout(() => {
+              if (settled) return
+              settled = true
+              logger.error('Neural Node hard-timeout — terminating ffmpeg child', { videoId, ms: RENDER_JOB_TIMEOUT_MS })
+              try { commandChain.kill('SIGKILL') } catch (_) { /* already exited */ }
+              cleanupTmp()
+              jobReject(new Error(`Render timed out after ${RENDER_JOB_TIMEOUT_MS}ms`))
+            }, RENDER_JOB_TIMEOUT_MS)
+
             commandChain
               .on('start', () => {
                 logger.info('Neural Node Dispatch: Render Process Initialized', {
@@ -1792,6 +1809,9 @@ async function renderFromEditorState(options) {
                 if (p.percent) logger.debug('Render progress', { percent: p.percent.toFixed(1) })
               })
               .on('end', async () => {
+                clearTimeout(killTimer)
+                if (settled) return // already hard-timed-out
+                settled = true
                 try {
                   cleanupTmp() // remove temp rasterized overlay PNGs
                   if (!fs.existsSync(outputPath)) {
@@ -1905,6 +1925,9 @@ async function renderFromEditorState(options) {
                 }
               })
               .on('error', (err) => {
+                clearTimeout(killTimer)
+                if (settled) return // already hard-timed-out
+                settled = true
                 cleanupTmp() // remove temp rasterized overlay PNGs
                 logger.error('Neural Node Failure', { error: err.message, videoId })
                 jobReject(err)
