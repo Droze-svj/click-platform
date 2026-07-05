@@ -16,6 +16,7 @@ describe('FeaturesDashboard', () => {
     ;(api.getResponderPlatforms as jest.Mock).mockResolvedValue({ platforms: [{ name: 'instagram', canSend: true }], sendEnabled: false })
     ;(api.getResponderHistory as jest.Mock).mockResolvedValue({ replies: [] })
     ;(api.getResponderStats as jest.Mock).mockResolvedValue({ sinceDays: 30, total: 0, byStatus: {} })
+    ;(api.getNextBest as jest.Mock).mockResolvedValue({ hasRealData: false, reason: 'need-more-data', ideas: [] })
   })
 
   it('renders all feature groups and settles its async children', async () => {
