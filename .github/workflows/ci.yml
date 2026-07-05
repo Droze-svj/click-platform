@@ -69,11 +69,14 @@ jobs:
         REDIS_URL: redis://localhost:6379
 
     - name: Run integration tests
-      # GATING. The mongoose connection-race that made this informational was
-      # resolved by setup.js's per-worker DB split + 60s buffer + connected-event
-      # wait; the last real failure (a stale subscription/verify 403 assertion) is
-      # fixed. All 15 integration suites pass against the CI mongo service.
-      run: npm run test:integration
+      # GATING. Run SERIALLY (--runInBand): integration suites are I/O-bound and a
+      # couple (server-startup spawns real processes on dynamic ports) flake under
+      # parallel workers from port/resource contention + cross-file mongoose
+      # connection cycling. Serial is slower but reliable and sidesteps the old
+      # race entirely. Also fixed: stale subscription/verify assertion, scheduler
+      # spinning its own MongoMemoryServer (404s on the runner), and spawned prod
+      # servers now get a test OAUTH_ENCRYPTION_KEY so they boot.
+      run: npm run test:integration -- --runInBand
       env:
         NODE_ENV: test
         MONGODB_URI: mongodb://localhost:27017/click-test
