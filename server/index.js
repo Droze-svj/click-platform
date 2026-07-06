@@ -2662,6 +2662,25 @@ if (process.env.JEST_WORKER_ID) {
           }
         } catch (_) { /* status is best-effort */ }
 
+        // Report the render host's HARDWARE-ENCODER capability so you can tell, at
+        // a glance, whether RENDER_HW_ACCEL will do anything here (no GPU/VT → it's
+        // a safe no-op; software encoding is used regardless). Best-effort + async.
+        if (!process.env.JEST_WORKER_ID) {
+          try {
+            require('./utils/ffmpegCapabilities').getAvailableEncoders().then((enc) => {
+              const hw = ['h264_nvenc', 'hevc_nvenc', 'h264_videotoolbox', 'hevc_videotoolbox', 'h264_qsv', 'hevc_qsv'].filter((n) => enc[n]);
+              const on = process.env.RENDER_HW_ACCEL === 'true';
+              logger.info('🎬 Render hardware encoders', {
+                available: hw,
+                RENDER_HW_ACCEL: on ? 'on' : 'off',
+                status: hw.length
+                  ? (on ? 'ACTIVE — hardware encoding in use' : 'available — set RENDER_HW_ACCEL=true to use it')
+                  : 'none on this host — software encoding only (RENDER_HW_ACCEL would be a no-op)',
+              });
+            }).catch(() => { /* probe is best-effort */ });
+          } catch (_) { /* best-effort */ }
+        }
+
         // Initialize Socket.io for real-time updates
         if (!process.env.JEST_WORKER_ID) {
           initializeSocket(server);
