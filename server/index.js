@@ -2650,6 +2650,18 @@ if (process.env.JEST_WORKER_ID) {
         logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
 
+        // Report optional AI-integration wiring so operators can verify keys took
+        // effect after a deploy. A half-set key pair logs at WARN (it silently
+        // stays off otherwise, which reads as "the key didn't work").
+        try {
+          const { summarize } = require('./utils/aiFeatureStatus');
+          const ai = summarize();
+          logger.info('🤖 AI feature wiring', { enabled: ai.enabled, misconfigured: ai.misconfigured.map((m) => m.feature) });
+          for (const m of ai.misconfigured) {
+            logger.warn(`⚠️ AI feature "${m.feature}" is MISCONFIGURED — set the missing var(s) to enable it`, { missing: m.missing });
+          }
+        } catch (_) { /* status is best-effort */ }
+
         // Initialize Socket.io for real-time updates
         if (!process.env.JEST_WORKER_ID) {
           initializeSocket(server);

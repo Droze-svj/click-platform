@@ -23,6 +23,19 @@ const getSupabaseClient = () => {
 };
 
 /**
+ * GET /api/admin/ai-features
+ * Wiring status of the optional external-AI integrations (dubbing, avatar,
+ * eye-contact, object-removal, bg-replace) so an operator can VERIFY after adding
+ * keys to the env store. Reports enabled/disabled/misconfigured (never secret
+ * values). `misconfigured` = a half-set key pair (surfaced so a typo/partial add
+ * doesn't silently look like "the key didn't work").
+ */
+router.get('/ai-features', auth, requireAdmin, asyncHandler(async (req, res) => {
+  const { aiFeatureStatus } = require('../utils/aiFeatureStatus');
+  res.json({ success: true, features: aiFeatureStatus() });
+}));
+
+/**
  * GET /api/admin/dashboard
  * Admin dashboard overview
  */
