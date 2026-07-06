@@ -1185,37 +1185,63 @@ function compileTimelineEffects(effects) {
 }
 
 /**
- * Build the encoder output options for the final export. Pure + unit-tested.
- *
- * For H.264/H.265 this uses CONSTANT-QUALITY (`-crf`) as the primary control with a
- * VBV bitrate CAP (`-maxrate`/`-bufsize`) so the file streams well and stays within
- * budget — replacing the old `-b:v`, which x264 SILENTLY IGNORES in CRF mode (the
- * cap never applied). It also forces `-pix_fmt yuv420p` — H.264 output from 4:4:4 /
- * 4:2:2 inputs (ProRes, screen recordings) otherwise won't play in Safari /
- * QuickTime / most mobile browsers — and, for H.264, `-profile:v high` for broad
- * decoder compatibility (libx265 rejects that flag, so it's omitted there).
- * `+faststart` moves the moov atom to the front for instant web playback. `-preset`
- * is intentionally NOT set here — optimizeFFmpegCommand owns it (see the call site);
- * setting it in both places double-specified `-preset` and the perf helper's default
- * `fast` silently overrode the render's `slow`/`medium` quality preset. ProRes keeps
- * its own profile/vendor and is not CRF-encoded.
+ * Choose the concrete video encoder. Pure + unit-tested. Prefers a hardware
+ * encoder (NVENC on NVIDIA hosts, VideoToolbox on macOS) ONLY when hardware accel
+ * is opted-in (RENDER_HW_ACCEL) AND that encoder actually exists on this ffmpeg
+ * binary (from the capability probe) — otherwise it falls back to the software
+ * codec. So default behavior is unchanged, and enabling the flag on a host without
+ * the hardware is a safe no-op. Returns { encoder, family }.
  */
-function buildVideoOutputOptions({ codec = 'libx264', isProres = false, crf = 23, bitrateMbps = 8 } = {}) {
-  // A generous muxing queue prevents "Too many packets buffered for output stream"
-  // failures on variable-frame-rate inputs + complex filtergraphs (a real class of
-  // aborted renders). Codec-agnostic, so applied on every path.
-  if (isProres) return ['-profile:v', '3', '-vendor', 'apl0', '-max_muxing_queue_size', '9999'] // ProRes 422 HQ
+function resolveVideoEncoder({ codec = 'libx264', isProres = false, preferHardware = false, encoders = {} } = {}) {
+  if (isProres) return { encoder: 'prores_ks', family: 'prores' }
+  const has = (n) => !!(encoders && encoders[n])
+  if (preferHardware) {
+    if (codec === 'libx265') {
+      if (has('hevc_nvenc')) return { encoder: 'hevc_nvenc', family: 'nvenc' }
+      if (has('hevc_videotoolbox')) return { encoder: 'hevc_videotoolbox', family: 'videotoolbox' }
+    } else {
+      if (has('h264_nvenc')) return { encoder: 'h264_nvenc', family: 'nvenc' }
+      if (has('h264_videotoolbox')) return { encoder: 'h264_videotoolbox', family: 'videotoolbox' }
+    }
+  }
+  return { encoder: codec, family: 'sw' }
+}
+
+/**
+ * Build the encoder output options for the final export, per encoder family. Pure
+ * + unit-tested. This is the SINGLE owner of the video output flags (codec choice,
+ * rate control, preset, pixel format, compatibility, faststart) — the perf helper
+ * only sets threads now, so there's no double-specified/conflicting flag.
+ *
+ * - software (libx264/265): CONSTANT-QUALITY `-crf` + a VBV bitrate cap
+ *   (`-maxrate`/`-bufsize`) — replaces the old `-b:v` that x264 SILENTLY IGNORES in
+ *   CRF mode. `-preset` sets the speed/quality tradeoff.
+ * - nvenc: no `-crf`; uses `-rc vbr -cq <n> -b:v 0` (constant-quality VBR) with the
+ *   same bitrate cap. `-preset` accepts the sw aliases (slow/medium/fast).
+ * - videotoolbox: bitrate-driven (no `-crf`/`-preset` support — passing either
+ *   errors), so a plain `-b:v` + cap.
+ * All non-ProRes paths force `-pix_fmt yuv420p` (4:4:4/4:2:2 inputs otherwise won't
+ * play in Safari/QuickTime/mobile), add `-profile:v high` for H.264 (libx265/hw
+ * reject it only where noted), a generous `-max_muxing_queue_size` (prevents "Too
+ * many packets buffered" aborts on VFR/complex graphs), and `+faststart`. ProRes
+ * keeps its own profile/vendor and is NOT pix_fmt-forced (that would corrupt it —
+ * a bug when optimizeFFmpegCommand used to force yuv420p on every codec).
+ */
+function buildVideoOutputOptions({ family = 'sw', codec = 'libx264', isProres = false, crf = 23, preset = 'medium', bitrateMbps = 8 } = {}) {
+  if (isProres || family === 'prores') return ['-profile:v', '3', '-vendor', 'apl0', '-max_muxing_queue_size', '9999'] // ProRes 422 HQ
   const cap = Math.max(1, Number(bitrateMbps) || 8)
-  const opts = [
-    `-crf ${crf}`,
-    `-maxrate ${cap}M`,
-    `-bufsize ${cap * 2}M`,
-    '-pix_fmt yuv420p',
-  ]
-  if (codec === 'libx264') opts.push('-profile:v high')
-  opts.push('-max_muxing_queue_size 9999')
-  opts.push('-movflags +faststart')
-  return opts
+  const tail = ['-pix_fmt yuv420p']
+  if (codec === 'libx264') tail.push('-profile:v high')
+  tail.push('-max_muxing_queue_size 9999', '-movflags +faststart')
+
+  if (family === 'nvenc') {
+    return [`-preset ${preset}`, '-rc vbr', `-cq ${crf}`, '-b:v 0', `-maxrate ${cap}M`, `-bufsize ${cap * 2}M`, ...tail]
+  }
+  if (family === 'videotoolbox') {
+    return [`-b:v ${cap}M`, `-maxrate ${cap}M`, `-bufsize ${cap * 2}M`, ...tail]
+  }
+  // software (default)
+  return [`-preset ${preset}`, `-crf ${crf}`, `-maxrate ${cap}M`, `-bufsize ${cap * 2}M`, ...tail]
 }
 
 async function renderFromEditorState(options) {
@@ -1784,10 +1810,23 @@ async function renderFromEditorState(options) {
         }
       }
 
-      const videoOutputOptions = buildVideoOutputOptions({ codec, isProres, crf, bitrateMbps })
+      // Pick the encoder: a hardware one (NVENC/VideoToolbox) only when opted-in
+      // via RENDER_HW_ACCEL AND actually present on this ffmpeg build; else the
+      // software codec. Safe no-op by default. Big CPU/wall-clock win where present.
+      const preferHardware = process.env.RENDER_HW_ACCEL === 'true'
+      const availableEncoders = preferHardware
+        ? await require('../utils/ffmpegCapabilities').getAvailableEncoders()
+        : {}
+      const { encoder: videoEncoder, family: encoderFamily } =
+        resolveVideoEncoder({ codec, isProres, preferHardware, encoders: availableEncoders })
+      if (encoderFamily !== 'sw' && encoderFamily !== 'prores') {
+        logger.info('[render] hardware-accelerated encoder selected', { encoder: videoEncoder, family: encoderFamily, videoId })
+      }
+
+      const videoOutputOptions = buildVideoOutputOptions({ family: encoderFamily, codec, isProres, crf, preset, bitrateMbps })
 
       const commandChain = command
-        .videoCodec(codec)
+        .videoCodec(videoEncoder)
         .outputOptions(videoOutputOptions)
 
       // Only apply -s W:H when scaling was NOT already done inside a filtergraph that
@@ -1809,10 +1848,11 @@ async function renderFromEditorState(options) {
 
       commandChain.output(outputPath)
 
-      // Optimize for this specific machine. Pass the render's chosen preset so the
-      // perf helper doesn't clobber a 'slow'/'medium' quality preset with its
-      // default 'fast' (both would emit -preset; the last one — the helper's — won).
-      optimizeFFmpegCommand(commandChain, { preset })
+      // Thread tuning only — buildVideoOutputOptions now owns the encode flags
+      // (codec/preset/rate-control/pix_fmt), so the perf helper no longer sets a
+      // preset (its old default 'fast' silently overrode 'slow'/'medium') or forces
+      // pix_fmt yuv420p on every codec (which corrupted ProRes exports).
+      optimizeFFmpegCommand(commandChain)
 
       const job = {
         execute: () => {
@@ -2323,6 +2363,7 @@ module.exports = {
   resolveInputPath,
   buildVideoFilterChain,
   buildVideoOutputOptions,
+  resolveVideoEncoder,
   buildAudioMix,
   buildMasterFx,
   buildDrawTextFilter,

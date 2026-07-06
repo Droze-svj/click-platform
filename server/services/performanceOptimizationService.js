@@ -33,30 +33,17 @@ function getSystemCapabilities() {
  */
 function optimizeFFmpegCommand(command, options = {}) {
   const {
-    useGPU = false,
     threads = Math.max(1, Math.floor(os.cpus().length * 0.75)),
-    preset = 'fast'
   } = options;
 
-  // Set thread count
-  command.outputOptions([`-threads`, threads.toString()]);
-
-  // GPU acceleration (if available)
-  if (useGPU) {
-    // NVIDIA GPU
-    command.outputOptions(['-hwaccel', 'cuda']);
-    command.videoCodec('h264_nvenc');
-  } else {
-    // CPU optimization
-    command.outputOptions(['-preset', preset]);
-  }
-
-  // Memory optimization
-  command.outputOptions([
-    '-movflags', '+faststart', // Web optimization
-    '-pix_fmt', 'yuv420p' // Compatible format
-  ]);
-
+  // Thread tuning ONLY. Everything else (codec, preset, rate control, -pix_fmt,
+  // -movflags, and hardware-encoder selection) is owned by
+  // videoRenderService.buildVideoOutputOptions / resolveVideoEncoder — one place,
+  // per encoder family. This helper used to ALSO set `-preset fast` (silently
+  // overriding the render's slow/medium quality preset — last -preset wins) and
+  // force `-pix_fmt yuv420p` on EVERY codec (corrupting ProRes exports) and
+  // hardcode h264_nvenc (ignoring hevc/prores). Those are removed.
+  command.outputOptions(['-threads', threads.toString()]);
   return command;
 }
 
