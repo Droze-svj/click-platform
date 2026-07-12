@@ -2777,17 +2777,10 @@ if (process.env.JEST_WORKER_ID) {
             }
           });
 
-          // Health reports (daily at 4 AM)
-          cron.schedule('0 4 * * *', async () => {
-            logger.info('📊 Generating daily health reports...');
-            try {
-              const { generateHealthReports } = require('./services/healthReportService');
-              await generateHealthReports();
-              logger.info('✅ Daily health reports generated');
-            } catch (err) {
-              logger.error('❌ Failed to generate health reports', { error: err.message });
-            }
-          });
+          // NOTE: client health reports are scheduled by scheduleHealthReports()
+          // (healthReportSchedulerService, wired at boot). A previous daily 4 AM
+          // cron here required a ./services/healthReportService that never existed
+          // — it could only ever log an error once a day. Removed as dead code.
 
           // Scheduled white-label client reports (hourly). Generates due
           // ScheduledReport rows from their template + delivers branded
