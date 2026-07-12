@@ -185,33 +185,87 @@ async function magicBRoll(videoId, transcript, userId, opts = {}) {
 async function fixEyeContact(videoId, userId) {
   const apiUrl = process.env.EYE_CONTACT_API_URL;
   const apiKey = process.env.EYE_CONTACT_API_KEY;
-  if (!apiUrl || !apiKey) {
-    logger.info('[CreativeTools] fixEyeContact: no provider configured', { videoId, userId });
-    return {
-      success: false,
-      notImplemented: true,
-      videoId,
-      message: 'Eye-contact correction needs a gaze-redirection provider. Set EYE_CONTACT_API_URL + EYE_CONTACT_API_KEY (e.g. Sieve eye-contact or NVIDIA Maxine) to enable it.',
-    };
+
+  const { resolveVideoPath } = require('./aiOutpaintingService');
+  const inputPath = await resolveVideoPath(videoId);
+  if (!inputPath) {
+    return { success: false, error: 'Source video not found on disk.' };
   }
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30000);
+
+  const projectRoot = path.join(__dirname, '..', '..');
+  const outDir = path.join(projectRoot, 'uploads', 'processed');
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  const outputPath = path.join(outDir, `${videoId}_eye_contact_${Date.now()}.mp4`);
+  const publicUrl = `/uploads/processed/${path.basename(outputPath)}`;
+
+  // 1. If external API is configured, use it
+  if (apiUrl && apiKey) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
+    try {
+      logger.info('[CreativeTools] Calling external eye-contact API provider', { videoId, userId });
+      const resp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ videoId }),
+        signal: controller.signal,
+      });
+      if (!resp.ok) throw new Error(`provider returned ${resp.status}`);
+      const job = await resp.json().catch(() => ({}));
+      return { success: true, videoId, provider: 'external', job };
+    } catch (err) {
+      const msg = err && err.name === 'AbortError' ? 'eye-contact provider timed out' : err.message;
+      logger.error('[CreativeTools] fixEyeContact provider call failed', { error: msg, videoId });
+      return { success: false, error: msg };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // 2. Offload to GCP Vertex AI if configured
+  const gcpVertex = require('./gcpVertexService');
+  if (gcpVertex.isConfigured()) {
+    logger.info('[CreativeTools] fixEyeContact: offloading gaze correction to GCP Vertex AI', { videoId, userId });
+    try {
+      const inputGcsUrl = await gcpVertex.uploadToGCS(inputPath, `inputs/${videoId}_input_${Date.now()}.mp4`);
+      const outputFilename = `${videoId}_eye_contact_${Date.now()}.mp4`;
+      const outputGcsUrl = `gs://${process.env.GCS_BUCKET_NAME}/outputs/${outputFilename}`;
+
+      await gcpVertex.runVertexCustomJob({
+        task: 'eye_contact',
+        videoId,
+        inputGcsUrl,
+        outputGcsUrl
+      });
+
+      await gcpVertex.downloadFromGCS(outputGcsUrl, outputPath);
+      return { success: true, videoId, outputUrl: publicUrl, technique: 'vertex_ai_eye_contact' };
+    } catch (err) {
+      logger.error('[CreativeTools] Vertex AI gaze correction failed, falling back to local...', { error: err.message });
+    }
+  }
+
+  // 3. Local CPU/OpenCV Fallback
+  logger.info('[CreativeTools] fixEyeContact: running local face-stabilized gaze focus fallback', { videoId, userId });
   try {
-    const resp = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ videoId }),
-      signal: controller.signal,
-    });
-    if (!resp.ok) throw new Error(`provider returned ${resp.status}`);
-    const job = await resp.json().catch(() => ({}));
-    return { success: true, videoId, provider: 'external', job };
+    const venvPython = path.join(projectRoot, '.venv', 'bin', 'python');
+    const pythonCmd = fs.existsSync(venvPython) ? venvPython : 'python3';
+    const scriptPath = path.join(projectRoot, 'scripts', 'eye_contact_fix.py');
+
+    logger.info(`[CreativeTools] Spawning local eye_contact_fix.py: ${pythonCmd} ${scriptPath} --video ${inputPath} --output ${outputPath}`);
+
+    const { runPythonScript } = require('../utils/runPythonScript');
+    await runPythonScript(pythonCmd, [
+      scriptPath,
+      '--video', inputPath,
+      '--output', outputPath,
+    ], { label: 'eye_contact_fix', timeoutMs: 5 * 60 * 1000 });
+    logger.info(`[CreativeTools] eye_contact_fix.py completed successfully`);
+
+    return { success: true, videoId, outputUrl: publicUrl, technique: 'local_eye_contact' };
   } catch (err) {
-    const msg = err && err.name === 'AbortError' ? 'eye-contact provider timed out' : err.message;
-    logger.error('[CreativeTools] fixEyeContact provider call failed', { error: msg, videoId });
-    return { success: false, error: msg };
-  } finally {
-    clearTimeout(timer);
+    logger.error('[CreativeTools] Local gaze correction fallback failed', { error: err.message, videoId });
+    throw err;
   }
 }
 
@@ -220,35 +274,156 @@ async function fixEyeContact(videoId, userId) {
 // green/blue screen and a background asset is supplied. General (non-greenscreen)
 // background removal needs a segmentation model (rembg/MediaPipe) that isn't
 // installed here, so that path returns an honest not-implemented response.
+// ── Background Swap ──────────────────────────────────────────────────────────
+// Real green-screen compositing via FFmpeg chromakey when the source is a
+// green/blue screen and a background asset is supplied. General (non-greenscreen)
+// background removal needs a segmentation model (rembg/MediaPipe) which is installed
+// locally in the virtual environment (.venv/bin/backgroundremover).
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const { createCanvas } = require('canvas');
+
+async function downloadFile(url, outputPath) {
+  const writer = fs.createWriteStream(outputPath);
+  const response = await axios({
+    url,
+    method: 'GET',
+    responseType: 'stream'
+  });
+  response.data.pipe(writer);
+  return new Promise((resolve, reject) => {
+    writer.on('finish', resolve);
+    writer.on('error', reject);
+  });
+}
+
+async function runLocalBackgroundRemover(inputPath, backgroundPath, outputPath) {
+  const projectRoot = path.join(__dirname, '..', '..');
+  const venvBgRemover = path.join(projectRoot, '.venv', 'bin', 'backgroundremover');
+  const bgCmd = fs.existsSync(venvBgRemover) ? venvBgRemover : 'backgroundremover';
+
+  // Command: backgroundremover -i inputPath -tbg backgroundPath -o outputPath
+  const args = ['-i', inputPath];
+  if (backgroundPath) {
+    args.push('-tbg', backgroundPath);
+  }
+  args.push('-o', outputPath);
+
+  logger.info(`[CreativeTools] Running local backgroundremover: ${bgCmd} ${args.join(' ')}`);
+
+  const { runPythonScript } = require('../utils/runPythonScript');
+  await runPythonScript(bgCmd, args, { label: 'backgroundremover', timeoutMs: 10 * 60 * 1000 });
+  logger.info(`[CreativeTools] backgroundremover completed successfully`);
+  return outputPath;
+}
+
 async function swapBackground(videoId, backgroundUrl, blurAmount, userId, opts = {}) {
   try {
     const greenScreen = opts.greenScreen || opts.chromaKey || false;
-
-    if (!backgroundUrl || !greenScreen) {
-      logger.info('[CreativeTools] swapBackground: no green-screen background supplied', { videoId, userId });
-      return {
-        success: false,
-        notImplemented: true,
-        videoId,
-        backgroundUrl: backgroundUrl || null,
-        blurAmount,
-        message: 'General background removal needs a segmentation model (rembg/MediaPipe), which isn\'t installed. Green-screen swap is supported: send a backgroundUrl plus greenScreen:true with green/blue-screen footage.',
-      };
-    }
-
-    const fs = require('fs');
-    const path = require('path');
     const { resolveVideoPath } = require('./aiOutpaintingService');
     const { run: ffmpegRun } = require('../utils/ffmpegRunner');
+    const gcpVertex = require('./gcpVertexService');
 
     const inputPath = await resolveVideoPath(videoId);
     if (!inputPath) {
       return { success: false, error: 'Source video not found on disk. Re-upload the clip and try again.' };
     }
 
-    // Resolve the background: remote URLs pass straight to FFmpeg; local
-    // /uploads paths resolve against the project root.
     const projectRoot = path.join(__dirname, '..', '..');
+    const outDir = path.join(projectRoot, 'uploads', 'processed');
+    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+    const outputPath = path.join(outDir, `${videoId}_bg_swapped_${Date.now()}.mp4`);
+    const publicUrl = `/uploads/processed/${path.basename(outputPath)}`;
+
+    // ── GCP Vertex AI OFF-LOADING (If configured) ──
+    if (gcpVertex.isConfigured() && !greenScreen) {
+      logger.info('[CreativeTools] swapBackground: offloading background removal to GCP Vertex AI', { videoId, userId });
+      try {
+        // 1. Upload video to GCS
+        const inputGcsUrl = await gcpVertex.uploadToGCS(inputPath, `inputs/${videoId}_input_${Date.now()}.mp4`);
+
+        // 2. Upload background (if any) to GCS
+        let bgGcsUrl = null;
+        if (backgroundUrl) {
+          let bgLocalPath = backgroundUrl;
+          let tempBgFile = null;
+
+          if (/^https?:\/\//i.test(backgroundUrl)) {
+            tempBgFile = path.join(outDir, `temp_bg_${Date.now()}${path.extname(backgroundUrl) || '.jpg'}`);
+            await downloadFile(backgroundUrl, tempBgFile);
+            bgLocalPath = tempBgFile;
+          } else if (backgroundUrl.startsWith('/')) {
+            bgLocalPath = path.join(projectRoot, backgroundUrl);
+          }
+
+          try {
+            bgGcsUrl = await gcpVertex.uploadToGCS(bgLocalPath, `backgrounds/${videoId}_bg_${Date.now()}${path.extname(bgLocalPath) || '.jpg'}`);
+          } finally {
+            if (tempBgFile && fs.existsSync(tempBgFile)) {
+              fs.unlink(tempBgFile, () => {});
+            }
+          }
+        }
+
+        // 3. Trigger Vertex AI custom job
+        const outputFilename = `${videoId}_bg_swapped_${Date.now()}.mp4`;
+        const outputGcsUrl = `gs://${process.env.GCS_BUCKET_NAME}/outputs/${outputFilename}`;
+
+        await gcpVertex.runVertexCustomJob({
+          task: backgroundUrl ? 'background_swap' : 'background_removal',
+          videoId,
+          inputGcsUrl,
+          bgGcsUrl,
+          outputGcsUrl
+        });
+
+        // 4. Download finished video back to local processed directory
+        await gcpVertex.downloadFromGCS(outputGcsUrl, outputPath);
+        return { success: true, videoId, outputUrl: publicUrl, technique: 'vertex_ai_backgroundremover' };
+      } catch (err) {
+        logger.error('[CreativeTools] Vertex background removal failed, falling back to local...', { error: err.message });
+      }
+    }
+
+    // If not a green screen, run the local backgroundremover AI model
+    if (!greenScreen && backgroundUrl) {
+      logger.info('[CreativeTools] swapBackground: running local backgroundremover model', { videoId, userId });
+      let bgLocalPath = backgroundUrl;
+      let tempBgFile = null;
+
+      if (/^https?:\/\//i.test(backgroundUrl)) {
+        tempBgFile = path.join(outDir, `temp_bg_${Date.now()}${path.extname(backgroundUrl) || '.jpg'}`);
+        await downloadFile(backgroundUrl, tempBgFile);
+        bgLocalPath = tempBgFile;
+      } else if (backgroundUrl.startsWith('/')) {
+        bgLocalPath = path.join(projectRoot, backgroundUrl);
+      }
+
+      try {
+        await runLocalBackgroundRemover(inputPath, bgLocalPath, outputPath);
+        return { success: true, videoId, outputUrl: publicUrl, technique: 'backgroundremover' };
+      } finally {
+        if (tempBgFile && fs.existsSync(tempBgFile)) {
+          fs.unlink(tempBgFile, () => {});
+        }
+      }
+    }
+
+    if (!backgroundUrl) {
+      // Background removal only (making it transparent mov/alpha)
+      logger.info('[CreativeTools] swapBackground: removing background (transparent output)', { videoId, userId });
+      const transparentOutPath = path.join(outDir, `${videoId}_transparent_${Date.now()}.mov`);
+      await runLocalBackgroundRemover(inputPath, null, transparentOutPath);
+      return { 
+        success: true, 
+        videoId, 
+        outputUrl: `/uploads/processed/${path.basename(transparentOutPath)}`, 
+        technique: 'backgroundremover_transparent' 
+      };
+    }
+
+    // Traditional chromakey (Green Screen) composition via FFmpeg
     const bgIsRemote = /^https?:\/\//i.test(backgroundUrl);
     const bgInput = bgIsRemote
       ? backgroundUrl
@@ -257,11 +432,6 @@ async function swapBackground(videoId, backgroundUrl, blurAmount, userId, opts =
       return { success: false, error: 'Background asset not found.' };
     }
     const bgIsImage = /\.(png|jpe?g|webp|bmp)$/i.test(bgInput);
-
-    const outDir = path.join(projectRoot, 'uploads', 'processed');
-    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-    const outputPath = path.join(outDir, `${videoId}_bg_swapped_${Date.now()}.mp4`);
-    const publicUrl = `/uploads/processed/${path.basename(outputPath)}`;
 
     const keyColor = opts.keyColor || '0x00FF00';
     const similarity = opts.similarity ?? 0.30;
@@ -301,6 +471,149 @@ async function swapBackground(videoId, backgroundUrl, blurAmount, userId, opts =
   } catch (err) {
     logger.error('[CreativeTools] swapBackground failed', { error: err.message, videoId });
     throw err;
+  }
+}
+
+// ── Object Removal / Video Inpainting ─────────────────────────────────────────
+async function generateMaskImage(videoPath, maskPoints, outputPath) {
+  const ffprobe = require('fluent-ffmpeg').ffprobe;
+  const dimensions = await new Promise((resolve) => {
+    ffprobe(videoPath, (err, metadata) => {
+      if (err || !metadata?.streams?.[0]) {
+        resolve({ width: 1280, height: 720 });
+      } else {
+        const stream = metadata.streams.find(s => s.codec_type === 'video');
+        resolve({
+          width: stream?.width || 1280,
+          height: stream?.height || 720
+        });
+      }
+    });
+  });
+
+  const { width, height } = dimensions;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = 'white';
+  ctx.fillStyle = 'white';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (Array.isArray(maskPoints)) {
+    for (const stroke of maskPoints) {
+      if (stroke.points && Array.isArray(stroke.points)) {
+        ctx.beginPath();
+        ctx.lineWidth = stroke.brushSize || stroke.width || 20;
+        const pts = stroke.points;
+        if (pts.length > 0) {
+          ctx.moveTo(pts[0].x * width, pts[0].y * height);
+          for (let i = 1; i < pts.length; i++) {
+            ctx.lineTo(pts[i].x * width, pts[i].y * height);
+          }
+          ctx.stroke();
+        }
+      } else if (typeof stroke.x === 'number' && typeof stroke.y === 'number') {
+        const radius = stroke.radius || 15;
+        ctx.beginPath();
+        ctx.arc(stroke.x * width, stroke.y * height, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  const buffer = canvas.toBuffer('image/png');
+  fs.writeFileSync(outputPath, buffer);
+  return outputPath;
+}
+
+async function removeObject(videoId, maskPoints, userId) {
+  try {
+    logger.info('[CreativeTools] removeObject initiated', { videoId, userId, pointsCount: maskPoints?.length });
+    
+    const { resolveVideoPath } = require('./aiOutpaintingService');
+    const inputPath = await resolveVideoPath(videoId);
+    if (!inputPath) {
+      return { success: false, error: 'Source video not found on disk.' };
+    }
+
+    const projectRoot = path.join(__dirname, '..', '..');
+    const outDir = path.join(projectRoot, 'uploads', 'processed');
+    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+    const maskPath = path.join(outDir, `${videoId}_mask_${Date.now()}.png`);
+    const outputPath = path.join(outDir, `${videoId}_inpainted_${Date.now()}.mp4`);
+    const publicUrl = `/uploads/processed/${path.basename(outputPath)}`;
+
+    // 1. Create the binary mask image using canvas
+    await generateMaskImage(inputPath, maskPoints, maskPath);
+
+    // ── GCP Vertex AI OFF-LOADING (If configured) ──
+    const gcpVertex = require('./gcpVertexService');
+    if (gcpVertex.isConfigured()) {
+      logger.info('[CreativeTools] removeObject: offloading inpainting task to GCP Vertex AI', { videoId, userId });
+      try {
+        // Upload video and mask to GCS
+        const inputGcsUrl = await gcpVertex.uploadToGCS(inputPath, `inputs/${videoId}_input_${Date.now()}.mp4`);
+        const maskGcsUrl = await gcpVertex.uploadToGCS(maskPath, `masks/${videoId}_mask_${Date.now()}.png`);
+
+        // Clean up temp local mask
+        fs.unlink(maskPath, () => {});
+
+        const outputFilename = `${videoId}_inpainted_${Date.now()}.mp4`;
+        const outputGcsUrl = `gs://${process.env.GCS_BUCKET_NAME}/outputs/${outputFilename}`;
+
+        // Trigger job
+        await gcpVertex.runVertexCustomJob({
+          task: 'inpainting',
+          videoId,
+          inputGcsUrl,
+          maskGcsUrl,
+          outputGcsUrl
+        });
+
+        // Download result back
+        await gcpVertex.downloadFromGCS(outputGcsUrl, outputPath);
+        return {
+          success: true,
+          videoId,
+          outputUrl: publicUrl,
+          message: 'Object successfully inpainted and removed from video via Vertex AI Custom Job.'
+        };
+      } catch (err) {
+        logger.error('[CreativeTools] Vertex inpainting failed, falling back to local...', { error: err.message });
+      }
+    }
+
+    // 2. Call python scripts/video_object_removal.py locally (fallback)
+    const venvPython = path.join(projectRoot, '.venv', 'bin', 'python');
+    const pythonCmd = fs.existsSync(venvPython) ? venvPython : 'python3';
+    const scriptPath = path.join(projectRoot, 'scripts', 'video_object_removal.py');
+
+    logger.info(`[CreativeTools] Spawning local video_object_removal.py: ${pythonCmd} ${scriptPath} --video ${inputPath} --mask ${maskPath} --output ${outputPath}`);
+
+    const { runPythonScript } = require('../utils/runPythonScript');
+    try {
+      await runPythonScript(pythonCmd, [
+        scriptPath,
+        '--video', inputPath,
+        '--mask', maskPath,
+        '--output', outputPath,
+      ], { label: 'video_object_removal', timeoutMs: 10 * 60 * 1000 });
+      logger.info(`[CreativeTools] video_object_removal.py completed successfully`);
+      return { success: true, videoId, outputUrl: publicUrl, message: 'Object successfully inpainted and removed from video.' };
+    } catch (e) {
+      logger.error(`[CreativeTools] video_object_removal.py failed: ${e.message}`);
+      return { success: false, error: `Inpainting failed: ${e.message}` };
+    } finally {
+      if (fs.existsSync(maskPath)) fs.unlink(maskPath, () => {}); // always clean the temp mask
+    }
+  } catch (err) {
+    logger.error('[CreativeTools] removeObject failed', { error: err.message, videoId });
+    return { success: false, error: err.message };
   }
 }
 
@@ -475,4 +788,5 @@ module.exports = {
   applySpeedRamp,
   generateAiAvatar,
   patternInterruptDetector,
+  removeObject,
 };

@@ -90,3 +90,5 @@ tests/reports/
 .claude/scheduled_tasks.lock
 # Machine-local Claude permissions (absolute paths, per-machine) — keep out of the repo.
 .claude/settings.local.json
+.venv/
+coverage/

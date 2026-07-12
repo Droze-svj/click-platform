@@ -51,7 +51,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Debian-bookworm yt-dlp is months old and quickly stops working on
 # TikTok/IG which rotate anti-bot fingerprints. --break-system-packages
 # is required on bookworm for system-wide pip installs.
-RUN pip3 install --break-system-packages --no-cache-dir yt-dlp \
+# edge-tts is the LIGHT voice-dubbing fallback spawned on THIS (web) host when
+# ELEVENLABS_API_KEY is unset — safe to install here. The HEAVY ML deps
+# (opencv/backgroundremover/torch in requirements.txt) are intentionally NOT
+# installed in the web image; they run on the GPU worker
+# (infrastructure/Dockerfile.gpu-worker) / Vertex AI. Missing heavy deps here
+# degrade gracefully (server/utils/runPythonScript rejects → feature falls back).
+RUN pip3 install --break-system-packages --no-cache-dir yt-dlp edge-tts \
    && yt-dlp --version
 
 # Install c2patool for C2PA provenance signing

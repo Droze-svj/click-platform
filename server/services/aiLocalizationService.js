@@ -41,6 +41,78 @@ async function separateStems(audioPath) {
   };
 }
 
+const path = require('path');
+const fs = require('fs');
+
+const EDGE_TTS_VOICES = {
+  'en': 'en-US-AriaNeural',
+  'es': 'es-MX-DaliaNeural',
+  'fr': 'fr-FR-DeniseNeural',
+  'de': 'de-DE-ConradNeural',
+  'it': 'it-IT-ElsaNeural',
+  'pt': 'pt-BR-FranciscaNeural',
+  'ru': 'ru-RU-SvetlanaNeural',
+  'ja': 'ja-JP-NanamiNeural',
+  'ko': 'ko-KR-SunHiNeural',
+  'zh': 'zh-CN-XiaoxiaoNeural',
+  'ar': 'ar-EG-SalmaNeural',
+  'hi': 'hi-IN-MadhurNeural',
+  'nl': 'nl-NL-ColetteNeural',
+  'pl': 'pl-PL-MarekNeural',
+  'tr': 'tr-TR-AhmetNeural'
+};
+
+function getEdgeTTSVoice(lang) {
+  if (!lang) return 'en-US-AriaNeural';
+  const normalized = lang.trim().toLowerCase();
+  if (EDGE_TTS_VOICES[normalized]) return EDGE_TTS_VOICES[normalized];
+  const nameMap = {
+    'english': 'en',
+    'spanish': 'es',
+    'french': 'fr',
+    'german': 'de',
+    'italian': 'it',
+    'portuguese': 'pt',
+    'russian': 'ru',
+    'japanese': 'ja',
+    'korean': 'ko',
+    'chinese': 'zh',
+    'arabic': 'ar',
+    'hindi': 'hi',
+    'dutch': 'nl',
+    'polish': 'pl',
+    'turkish': 'tr'
+  };
+  const code = nameMap[normalized];
+  if (code && EDGE_TTS_VOICES[code]) return EDGE_TTS_VOICES[code];
+  return 'en-US-AriaNeural';
+}
+
+async function generateEdgeTTSAudio(text, targetLanguage) {
+  const voice = getEdgeTTSVoice(targetLanguage);
+  const outDir = path.join(__dirname, '..', '..', 'uploads', 'audio');
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  const filename = `dub_edge_${Date.now()}_${String(targetLanguage || 'xx').substring(0, 3).toLowerCase()}.mp3`;
+  const outputPath = path.join(outDir, filename);
+
+  const projectRoot = path.join(__dirname, '..', '..');
+  const venvEdgeTTS = path.join(projectRoot, '.venv', 'bin', 'edge-tts');
+  const edgeTtsCmd = fs.existsSync(venvEdgeTTS) ? venvEdgeTTS : 'edge-tts';
+
+  logger.info(`[Localization] Generating Edge-TTS audio using voice ${voice}...`);
+
+  // Safe spawn: rejects (never crashes the process) if edge-tts is missing, and
+  // times out a wedged run. The caller degrades to null on rejection.
+  const { runPythonScript } = require('../utils/runPythonScript');
+  await runPythonScript(edgeTtsCmd, [
+    '--voice', voice,
+    '--text', text,
+    '--write-media', outputPath,
+  ], { label: 'edge-tts', timeoutMs: 2 * 60 * 1000 });
+  logger.info(`[Localization] Edge-TTS audio generated successfully at ${outputPath}`);
+  return `/uploads/audio/${filename}`;
+}
+
 /**
  * Generates localized speech via ElevenLabs and saves it to /uploads/audio.
  * Real SDK call — returns a real, servable audio URL. Returns null (caller
@@ -49,12 +121,15 @@ async function separateStems(audioPath) {
 async function generateLocalizedAudio(text, sourceVoiceId, targetLanguage) {
   const client = getClient();
   if (!client) {
-    logger.warn('[Localization] ElevenLabs API not configured.');
-    return null;
+    logger.warn('[Localization] ElevenLabs API not configured, falling back to local Edge-TTS...');
+    try {
+      return await generateEdgeTTSAudio(text, targetLanguage);
+    } catch (e) {
+      logger.error('[Localization] Edge-TTS fallback failed:', e);
+      return null;
+    }
   }
 
-  const fs = require('fs');
-  const path = require('path');
   const voiceId = sourceVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JBFqnCBsd6RMkjVDRZzb';
 
   logger.info(`[Localization] Generating ${targetLanguage} dub for text: "${text.substring(0, 30)}..."`);
@@ -103,15 +178,6 @@ async function synchronizeLipSync() {
  * response instead of a fake-success URL pointing at a file that never exists.
  */
 async function localizeVideo(videoId, targetLanguage) {
-  if (!process.env.ELEVENLABS_API_KEY) {
-    return {
-      success: false,
-      notImplemented: true,
-      language: targetLanguage,
-      message: `Voice localization needs an ElevenLabs API key (voice cloning + ${targetLanguage} dub). Visual lip-sync is on the roadmap (HeyGen/SyncLabs).`,
-    };
-  }
-
   try {
     // 1. Pull the source transcript from the Content record.
     let sourceText = '';
