@@ -64,19 +64,61 @@ function captureDubbingError(err, context = {}) {
  */
 async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEnabled = false, audioSampleUrl }) {
   if (!ELEVENLABS_API_KEY) {
-    // PRODUCTION: never hand back mock audio URLs that 404 — return an honest
-    // "not configured" result so the client shows a real message (owner's #1
-    // rule: no fake-as-real). Dev keeps the mock but flags it clearly.
-    if (isProduction()) {
-      logger.warn('[dubbing] ELEVENLABS_API_KEY missing in production — returning unconfigured result', { videoId, targetLanguage })
-      return {
-        ok: false,
-        configured: false,
-        error: 'Dubbing is not configured. Set ELEVENLABS_API_KEY to enable voice dubbing.',
+    logger.info('[dubbing] ELEVENLABS_API_KEY missing, trying Edge-TTS fallback...', { videoId, targetLanguage });
+    try {
+      // 1. Fetch transcript from Content DB
+      const Content = require('../models/Content');
+      const content = await Content.findById(videoId).select('transcript title description').lean();
+      const sourceText =
+        (typeof content?.transcript === 'string' ? content.transcript : content?.transcript?.text) ||
+        content?.description ||
+        content?.title ||
+        '';
+      
+      if (!sourceText) {
+        throw new Error('No transcript text available for Edge-TTS');
       }
+
+      // 2. Translate text (Gemini)
+      let translated = sourceText;
+      try {
+        const { generateContent, isConfigured } = require('../utils/googleAI');
+        if (isConfigured) {
+          translated = await generateContent(
+            `Translate the following into ${targetLanguage}. Return ONLY the translated text, no preamble:\n\n${sourceText}`,
+            { temperature: 0.2 }
+          );
+        }
+      } catch (e) {
+        logger.warn('[dubbing] translation failed; using source text as-is', { error: e.message });
+      }
+
+      // 3. Generate Edge-TTS audio using localized audio service
+      const localizationService = require('./aiLocalizationService');
+      const audioUrl = await localizationService.generateLocalizedAudio(translated, null, targetLanguage);
+      if (!audioUrl) {
+        throw new Error('Edge-TTS generation failed');
+      }
+
+      const jobId = crypto.randomUUID();
+      return {
+        success: true,
+        jobId,
+        audioUrl,
+        lipSyncDataUrl: null,
+        technique: 'edge-tts'
+      };
+    } catch (err) {
+      logger.error('[dubbing] Edge-TTS fallback failed, returning mock/error', { error: err.message });
+      if (isProduction()) {
+        return {
+          ok: false,
+          configured: false,
+          error: `Dubbing fallback failed: ${err.message}`,
+        };
+      }
+      return buildMockResponse(videoId, targetLanguage, lipSyncEnabled);
     }
-    logger.info('[dubbing] dev mock response (no ELEVENLABS_API_KEY)', { videoId, targetLanguage })
-    return buildMockResponse(videoId, targetLanguage, lipSyncEnabled)
   }
 
   try {

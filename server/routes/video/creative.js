@@ -322,6 +322,27 @@ router.post('/outpaint', auth, express.json(), asyncHandler(async (req, res) => 
 }));
 
 /**
+ * POST /object-removal
+ * Video object removal (inpainting) using OpenCV fallback or ProPainter deep learning.
+ */
+router.post('/object-removal', auth, express.json(), asyncHandler(async (req, res) => {
+  const { videoId, maskPoints } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, error: 'No videoId provided' });
+  }
+  if (!maskPoints || !Array.isArray(maskPoints) || maskPoints.length === 0) {
+    return res.status(400).json({ success: false, error: 'No maskPoints provided' });
+  }
+
+  // IDOR guard: only allow users to edit videos they own
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
+  const result = await creativeTools.removeObject(videoId, maskPoints, getUserId(req));
+  res.json(result);
+}));
+
+/**
  * POST /fonts
  * Upload a custom font (OTF/TTF/WOFF) and serve it from /uploads/fonts.
  */

@@ -1,0 +1,36 @@
+# Use a CUDA-enabled PyTorch runtime as base
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+
+# Install system dependencies (FFmpeg, OpenCV dependencies, Git)
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    git \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up working directory
+WORKDIR /app
+
+# Copy python dependencies
+COPY requirements.txt /app/requirements.txt
+
+# Install pip dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy model scripts
+COPY scripts/video_object_removal.py /app/scripts/video_object_removal.py
+COPY scripts/worker_entrypoint.py /app/scripts/worker_entrypoint.py
+COPY scripts/video_avatar_sync.py /app/scripts/video_avatar_sync.py
+COPY scripts/eye_contact_fix.py /app/scripts/eye_contact_fix.py
+
+# Make entrypoint script executable
+RUN chmod +x /app/scripts/*.py
+
+# Setup env variables
+ENV PYTHONUNBUFFERED=1
+
+# Entrypoint runs the worker_entrypoint.py script
+ENTRYPOINT ["python", "/app/scripts/worker_entrypoint.py"]
