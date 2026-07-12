@@ -2,6 +2,7 @@
 # video_avatar_sync.py - Local talking avatar lip-sync with SadTalker/Wav2Lip and FFmpeg fallback
 import os
 import sys
+import shutil
 import argparse
 import subprocess
 

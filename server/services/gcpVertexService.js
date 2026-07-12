@@ -145,35 +145,53 @@ async function runVertexCustomJob({ task, videoId, inputGcsUrl, maskGcsUrl, bgGc
   const jobId = job.name.split('/').pop();
   logger.info(`[GCPVertex] Custom Job created successfully: ${jobId}`);
 
-  // Poll for completion
+  // Poll for completion, bounded by a hard deadline. Without one, a job stuck
+  // in a non-terminal state (RUNNING/PENDING) would poll forever — leaking the
+  // interval timer and never settling the caller's await. The `settled` guard
+  // also makes resolve/reject strictly single-shot.
+  const POLL_MS = 15000; // 15s — sane for Vertex AI startup time
+  const DEADLINE_MS = Number(process.env.GCP_VERTEX_JOB_TIMEOUT_MS) || 45 * 60 * 1000;
   return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
+    let settled = false;
+    let pollInterval = null;
+    let deadlineTimer = null;
+    const finish = (fn, arg) => {
+      if (settled) return;
+      settled = true;
+      if (pollInterval) clearInterval(pollInterval);
+      if (deadlineTimer) clearTimeout(deadlineTimer);
+      fn(arg);
+    };
+
+    deadlineTimer = setTimeout(() => {
+      logger.error(`[GCPVertex] Job ${jobId} exceeded ${DEADLINE_MS}ms deadline — abandoning poll`);
+      finish(reject, new Error(`Vertex AI Job timed out after ${DEADLINE_MS}ms`));
+    }, DEADLINE_MS);
+
+    pollInterval = setInterval(async () => {
       try {
         const [jobStatus] = await client.getCustomJob({ name: job.name });
         const state = jobStatus.state;
-        
+
         logger.info(`[GCPVertex] Job status polling... Job: ${jobId}, State: ${state}`);
 
         if (state === 'JOB_STATE_SUCCEEDED') {
-          clearInterval(pollInterval);
           logger.info(`[GCPVertex] Job completed successfully!`);
-          resolve(outputGcsUrl);
+          finish(resolve, outputGcsUrl);
         } else if (
           state === 'JOB_STATE_FAILED' ||
           state === 'JOB_STATE_CANCELLED' ||
           state === 'JOB_STATE_EXPIRED'
         ) {
-          clearInterval(pollInterval);
           const errorMsg = jobStatus.error?.message || 'Unknown execution error';
           logger.error(`[GCPVertex] Job failed with state ${state}: ${errorMsg}`);
-          reject(new Error(`Vertex AI Job failed: ${errorMsg}`));
+          finish(reject, new Error(`Vertex AI Job failed: ${errorMsg}`));
         }
       } catch (err) {
-        clearInterval(pollInterval);
         logger.error(`[GCPVertex] Error during status polling`, { error: err.message });
-        reject(err);
+        finish(reject, err);
       }
-    }, 15000); // check status every 15s (sane for Vertex AI startup time)
+    }, POLL_MS);
   });
 }
 
