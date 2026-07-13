@@ -92,3 +92,5 @@ tests/reports/
 .claude/settings.local.json
 .venv/
 coverage/
+
+.env.bak.*

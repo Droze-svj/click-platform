@@ -6,6 +6,9 @@ const { captureException } = require('../utils/sentry');
 const { getStats } = require('./cacheService');
 const os = require('os');
 
+// Cap the recent-errors ring buffer so it can never grow unbounded.
+const MAX_RECENT_ERRORS = 200;
+
 // In-memory metrics storage
 const metrics = {
   api: {
@@ -13,6 +16,7 @@ const metrics = {
     errors: 0,
     totalResponseTime: 0,
     endpoints: new Map(), // endpoint -> { count, totalTime, errors }
+    recentErrors: [], // ring buffer of recent 5xx events (see trackAPIRequest)
   },
   database: {
     queries: 0,
@@ -61,6 +65,21 @@ function trackAPIRequest(endpoint, method, responseTime, statusCode) {
     endpointMetrics.totalTime += responseTime;
     if (statusCode >= 400) {
       endpointMetrics.errors++;
+    }
+
+    // Capture server (5xx) errors into a bounded ring buffer so the admin
+    // /monitoring/performance/recent-errors view has real events to show.
+    if (statusCode >= 500) {
+      metrics.api.recentErrors.push({
+        endpoint,
+        method,
+        statusCode,
+        responseTime,
+        timestamp: new Date().toISOString(),
+      });
+      if (metrics.api.recentErrors.length > MAX_RECENT_ERRORS) {
+        metrics.api.recentErrors.shift();
+      }
     }
 
     // Track slow requests (>1 second)
@@ -290,6 +309,30 @@ function getMetrics() {
 }
 
 /**
+ * Return the top slow query TYPES (by average time), newest aggregate first.
+ * Derived from the same queryTypes map getMetrics() summarizes.
+ */
+function getSlowQueries(limit = 20) {
+  const n = Math.max(1, limit);
+  return Array.from(metrics.database.queryTypes.entries())
+    .map(([type, data]) => ({
+      type,
+      avgTime: data.count > 0 ? Math.round(data.totalTime / data.count) : 0,
+      count: data.count,
+    }))
+    .sort((a, b) => b.avgTime - a.avgTime)
+    .slice(0, n);
+}
+
+/**
+ * Return the most-recent captured 5xx error events (most recent first).
+ */
+function getRecentErrors(limit = 20) {
+  const n = Math.max(1, limit);
+  return metrics.api.recentErrors.slice(-n).reverse();
+}
+
+/**
  * Reset metrics (for testing or periodic reset)
  */
 function resetMetrics() {
@@ -298,6 +341,7 @@ function resetMetrics() {
     metrics.api.errors = 0;
     metrics.api.totalResponseTime = 0;
     metrics.api.endpoints.clear();
+    metrics.api.recentErrors.length = 0;
 
     metrics.database.queries = 0;
     metrics.database.slowQueries = 0;
@@ -342,6 +386,8 @@ module.exports = {
   trackJob,
   updateQueueLength,
   getMetrics,
+  getSlowQueries,
+  getRecentErrors,
   resetMetrics,
   collectSystemMetrics,
   stopMetricsCollection,
