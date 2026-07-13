@@ -93,6 +93,19 @@ const initMongoDB = async () => {
     if (process.env.SEED_DEMO_MUSIC !== 'false') {
       try { await require('../utils/seedDemoMusic').seedDemoMusic(); } catch (_) { /* non-fatal */ }
     }
+    // Opt-in: seed 5 rich test personas (sarah/marcus/emma/alex/jordan @click.test,
+    // pw TestPass123!) for pre-launch UI testing. ONLY runs here (in-memory path),
+    // so the prod Atlas DB is never touched. Idempotent. Enable with
+    // SEED_TEST_USERS=true (dev:test:server sets the persistent DB path).
+    if (process.env.SEED_TEST_USERS === 'true') {
+      try {
+        const { seedTestPersonas } = require('../../scripts/seed-test-users');
+        const seeded = await seedTestPersonas();
+        logger.info(`✅ Seeded ${seeded.length} test personas — log in at /login with *@click.test / TestPass123!.`);
+      } catch (e) {
+        logger.warn('Test-persona seed failed (non-fatal)', { error: e.message });
+      }
+    }
     return true;
   };
 
