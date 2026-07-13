@@ -4,6 +4,7 @@
 const CancellationRequest = require('../models/CancellationRequest');
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const { NotFoundError } = require('../utils/errorHandler');
 
 /**
  * Get win-back offer
@@ -19,6 +20,7 @@ async function getWinBackOffer(userId) {
     }
 
     const user = await User.findById(userId).populate('membershipPackage').lean();
+    if (!user) throw new NotFoundError('User');
     const currentTier = user.membershipPackage;
 
     // Generate offer based on cancellation reason

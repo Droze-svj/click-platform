@@ -6,6 +6,7 @@ const SupportTicket = require('../models/SupportTicket');
 const PlatformStatus = require('../models/PlatformStatus');
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const { NotFoundError } = require('../utils/errorHandler');
 
 /**
  * Get or create support SLA
@@ -17,6 +18,7 @@ async function getSupportSLA(userId) {
     if (!sla) {
       // Determine tier based on user's membership
       const user = await User.findById(userId).populate('membershipPackage').lean();
+      if (!user) throw new NotFoundError('User');
       const tier = determineSupportTier(user);
       
       // Create default SLA

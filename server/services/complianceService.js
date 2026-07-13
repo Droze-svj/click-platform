@@ -6,6 +6,7 @@ const Content = require('../models/Content');
 const Workspace = require('../models/Workspace');
 const AuditLog = require('../models/AuditLog');
 const logger = require('../utils/logger');
+const { NotFoundError } = require('../utils/errorHandler');
 
 /**
  * GDPR: Export user data
@@ -13,6 +14,7 @@ const logger = require('../utils/logger');
 async function exportUserData(userId) {
   try {
     const user = await User.findById(userId).lean();
+    if (!user) throw new NotFoundError('User');
     const content = await Content.find({ userId }).lean();
     const workspaces = await Workspace.find({ 'members.userId': userId }).lean();
     const auditLogs = await AuditLog.find({ userId }).lean();

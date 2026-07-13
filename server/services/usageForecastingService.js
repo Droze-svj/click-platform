@@ -4,6 +4,7 @@
 const User = require('../models/User');
 const UsageBasedTier = require('../models/UsageBasedTier');
 const logger = require('../utils/logger');
+const { NotFoundError } = require('../utils/errorHandler');
 
 /**
  * Forecast usage for next period
@@ -38,6 +39,7 @@ async function forecastUsage(userId, period = 'month') {
 
     // Check if forecast exceeds current limits
     const user = await User.findById(userId).populate('membershipPackage').lean();
+    if (!user) throw new NotFoundError('User');
     const tier = await UsageBasedTier.findById(user.membershipPackage).lean();
     
     const willExceed = {
@@ -261,6 +263,7 @@ async function getUsageAlerts(userId) {
   try {
     const forecast = await forecastUsage(userId);
     const user = await User.findById(userId).populate('membershipPackage').lean();
+    if (!user) throw new NotFoundError('User');
     const tier = await UsageBasedTier.findById(user.membershipPackage).lean();
     const currentUsage = await getUserUsageSummary(userId);
 
