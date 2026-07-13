@@ -41,7 +41,7 @@ router.post('/create', authenticate, async (req, res) => {
     return sendSuccess(res, workflow, 'Workflow created successfully');
   } catch (error) {
     logger.error('Error creating workflow', { error: error.message });
-    return sendError(res, error.message, 500);
+    return sendError(res, error.message, error.statusCode || 500);
   }
 });
 

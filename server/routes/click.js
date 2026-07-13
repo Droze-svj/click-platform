@@ -57,6 +57,9 @@ router.get('/ledger', auth, asyncHandler(async (req, res) => {
  * Multi-agent council debate (Phase 23)
  */
 router.post('/syndicate-consensus', auth, asyncHandler(async (req, res) => {
+  if (!req.body || !req.body.proposal || typeof req.body.proposal !== 'object') {
+    return res.status(400).json({ success: false, error: 'A proposal object is required' });
+  }
   const result = await syndicateService.getCouncilConsensus(req.user.id, req.body.proposal);
   res.json(result);
 }));

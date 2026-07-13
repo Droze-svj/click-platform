@@ -4,6 +4,7 @@
 const UsageBasedTier = require('../models/UsageBasedTier');
 const AgencyScalePlan = require('../models/AgencyScalePlan');
 const logger = require('../utils/logger');
+const { ValidationError } = require('../utils/errorHandler');
 
 /**
  * Calculate cost based on usage
@@ -31,7 +32,7 @@ async function calculateCost(usageData) {
     }
 
     if (!tier) {
-      throw new Error('No suitable tier found');
+      throw new ValidationError('No suitable tier found for the provided usage');
     }
 
     // Calculate base cost

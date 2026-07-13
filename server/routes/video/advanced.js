@@ -1266,6 +1266,9 @@ router.post('/community-feedback', auth, asyncHandler(async (req, res) => {
  */
 router.post('/export-whop', auth, asyncHandler(async (req, res) => {
   const { jobId, regionId } = req.body;
+  if (!jobId || !regionId) {
+    return sendError(res, 'jobId and regionId are required', 400);
+  }
   const result = await visualSynthesis.exportToWhop(jobId, regionId);
   sendSuccess(res, 'Global Render Bridge: Export successful', 200, result);
 }));

@@ -263,6 +263,9 @@ router.post('/calculator', asyncHandler(async (req, res) => {
  */
 router.post('/calculator/roi', asyncHandler(async (req, res) => {
   const { usageData, businessMetrics } = req.body;
+  if (!usageData || !businessMetrics) {
+    return sendError(res, 'usageData and businessMetrics are required', 400);
+  }
   const roi = await calculateROI(usageData, businessMetrics);
   sendSuccess(res, 'ROI calculated', 200, roi);
 }));
