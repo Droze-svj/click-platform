@@ -66,8 +66,8 @@ router.post('/add-to-video', auth, upload.fields([
 ]), async (req, res) => {
   try {
     const { options } = req.body;
-    const videoFile = req.files.video?.[0];
-    const voiceHookFile = req.files.voiceHook?.[0];
+    const videoFile = req.files?.video?.[0];
+    const voiceHookFile = req.files?.voiceHook?.[0];
 
     if (!videoFile) {
       return res.status(400).json({ success: false, error: 'Video file is required' });
@@ -246,8 +246,8 @@ router.post('/advanced-mixing', auth, upload.fields([
 ]), async (req, res) => {
   try {
     const { audioSettings } = req.body;
-    const videoFile = req.files.video?.[0];
-    const voiceHookFiles = req.files.voiceHooks || [];
+    const videoFile = req.files?.video?.[0];
+    const voiceHookFiles = req.files?.voiceHooks || [];
 
     if (!videoFile) {
       return res.status(400).json({ success: false, error: 'Video file is required' });

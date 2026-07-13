@@ -16,6 +16,9 @@ router.get('/omni-router/models', auth, (req, res) => {
 router.post('/omni-router/route', auth, async (req, res) => {
   try {
     const { scenes } = req.body;
+    if (!scenes) {
+      return res.status(400).json({ error: 'scenes is required' });
+    }
     const manifest = await omniRouter.routeBatch(scenes);
     res.json({ manifest });
   } catch (err) {
@@ -60,6 +63,9 @@ router.get('/ugc/profiles', auth, (req, res) => {
 router.post('/ugc/humanize-audio', auth, async (req, res) => {
   try {
     const { script, intensity } = req.body;
+    if (!script) {
+      return res.status(400).json({ error: 'script is required' });
+    }
     const { humanizedScript } = await ugcSynthesizer.humanize(req.user.id, script, intensity);
     res.json({ humanizedScript });
   } catch (err) {
