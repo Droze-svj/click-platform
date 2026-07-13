@@ -5,6 +5,7 @@ const CommandPalette = require('../models/CommandPalette');
 const UserPreferences = require('../models/UserPreferences');
 const logger = require('../utils/logger');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { AuthorizationError } = require('../utils/errorHandler');
 
 /**
  * Get command palette
@@ -215,7 +216,7 @@ async function createAutomationRule(userId, ruleData) {
     }
 
     if (!preferences.proMode.enabled) {
-      throw new Error('Pro mode must be enabled for automation');
+      throw new AuthorizationError('Pro mode must be enabled for automation');
     }
 
     // Would create automation rule
@@ -244,7 +245,7 @@ async function createCustomDashboard(userId, dashboardData) {
     }
 
     if (!preferences.proMode.enabled) {
-      throw new Error('Pro mode must be enabled for custom dashboards');
+      throw new AuthorizationError('Pro mode must be enabled for custom dashboards');
     }
 
     // Would create custom dashboard

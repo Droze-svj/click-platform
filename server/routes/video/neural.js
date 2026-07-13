@@ -69,6 +69,9 @@ router.post('/predict-success', auth, async (req, res) => {
 router.post('/audit', auth, async (req, res) => {
   try {
     const { projectData } = req.body;
+    if (!projectData) {
+      return res.status(400).json({ success: false, error: 'projectData is required' });
+    }
     const audit = await neuralQualityService.auditProject(projectData);
 
     res.json({

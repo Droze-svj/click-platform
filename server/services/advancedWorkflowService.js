@@ -6,7 +6,7 @@ const { captureException } = require('../utils/sentry');
 const Workflow = require('../models/Workflow');
 const { addJob } = require('./jobQueueService');
 const mongoose = require('mongoose');
-const { NotFoundError } = require('../utils/errorHandler');
+const { NotFoundError, ValidationError } = require('../utils/errorHandler');
 
 // Workflow execution engine
 const activeWorkflows = new Map(); // workflowId -> workflow state
@@ -90,20 +90,20 @@ async function createWorkflow(workflowDefinition) {
  */
 function validateWorkflow(nodes, edges) {
   if (!nodes || nodes.length === 0) {
-    throw new Error('Workflow must have at least one node');
+    throw new ValidationError('Workflow must have at least one node');
   }
 
   // Check for start node
   const hasStartNode = nodes.some((node) => node.type === 'start');
   if (!hasStartNode) {
-    throw new Error('Workflow must have a start node');
+    throw new ValidationError('Workflow must have a start node');
   }
 
   // Validate edges connect valid nodes
   const nodeIds = new Set(nodes.map((n) => n.id));
   for (const edge of edges) {
     if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
-      throw new Error(`Invalid edge: node not found`);
+      throw new ValidationError('Invalid edge: node not found');
     }
   }
 }
