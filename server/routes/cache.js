@@ -18,15 +18,22 @@ let warmAnalyticsCache = null;
 let warmAllCaches = null;
 try {
   const cacheWarming = require('../services/cacheWarmingService');
-  warmUserCache = cacheWarming.warmUserCache;
+  // The service's exported names differ from these historical vars. Only
+  // warmUserDashboard(userId) matches a call site's signature exactly, so wire
+  // that; the coercion below no-ops the rest rather than risk an arg-mismatch
+  // crash. Previously all three were assigned undefined (no throw), so
+  // POST /api/cache/warm hit "warmUserCache is not a function" at call time.
+  warmUserCache = cacheWarming.warmUserDashboard || cacheWarming.warmUserCache;
   warmAnalyticsCache = cacheWarming.warmAnalyticsCache;
   warmAllCaches = cacheWarming.warmAllCaches;
 } catch (error) {
   logger.warn('Cache warming service not available', { error: error.message });
-  warmUserCache = async () => {};
-  warmAnalyticsCache = async () => {};
-  warmAllCaches = async () => {};
 }
+// Degrade gracefully: any warmer the service didn't export becomes a safe no-op
+// so these ops can never throw "X is not a function".
+if (typeof warmUserCache !== 'function') warmUserCache = async () => {};
+if (typeof warmAnalyticsCache !== 'function') warmAnalyticsCache = async () => {};
+if (typeof warmAllCaches !== 'function') warmAllCaches = async () => {};
 const router = express.Router();
 
 /**
