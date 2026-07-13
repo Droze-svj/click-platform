@@ -4,6 +4,7 @@
 const MembershipPackage = require('../models/MembershipPackage');
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const { NotFoundError } = require('../utils/errorHandler');
 
 /**
  * Get all active pricing tiers
@@ -158,6 +159,7 @@ function findPackageDifferences(packages) {
 async function getRecommendedPackage(userId, usageData = {}) {
   try {
     const user = await User.findById(userId).populate('membershipPackage');
+    if (!user) throw new NotFoundError('User');
     const packages = await MembershipPackage.find({ isActive: true })
       .sort({ sortOrder: 1 })
       .lean();
