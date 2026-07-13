@@ -265,7 +265,10 @@ router.post('/factory/create', costGuard(), async (req, res) => {
 router.post('/factory/save', async (req, res) => {
   try {
     const { manifest, topic, platform } = req.body;
-    
+    if (!manifest || typeof manifest !== 'object') {
+      return res.status(400).json({ success: false, error: 'manifest is required' });
+    }
+
     const newScript = new Script({
       userId: req.user._id,
       title: `${topic || 'Untitled'} - ${platform}`,

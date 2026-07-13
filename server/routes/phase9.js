@@ -12,6 +12,9 @@ const logger = require('../utils/logger');
 router.post('/broadcaster/build-pipeline', auth, async (req, res) => {
   try {
     const { videoId, platforms, aeoMetadata } = req.body;
+    if (!videoId || !platforms) {
+      return res.status(400).json({ error: 'videoId and platforms are required' });
+    }
     const userId = req.user.id || req.user._id;
     const pipeline = await neuralBroadcaster.buildDeploymentPipeline(userId, videoId, platforms, aeoMetadata);
     res.json({ pipeline });
@@ -65,6 +68,9 @@ router.get('/autonomic-cm/drafts', auth, async (req, res) => {
 router.post('/autonomic-cm/approve', auth, async (req, res) => {
   try {
     const { responseId } = req.body;
+    if (!responseId) {
+      return res.status(400).json({ error: 'responseId is required' });
+    }
     const userId = req.user.id || req.user._id;
     const result = await communityAgent.approveResponse(responseId, userId);
     res.json(result);
