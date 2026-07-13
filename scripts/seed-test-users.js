@@ -33,10 +33,6 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-  console.error('❌ MONGODB_URI is missing. Cannot seed.');
-  process.exit(1);
-}
 
 const User = require('../server/models/User');
 const Workspace = require('../server/models/Workspace');
@@ -333,22 +329,17 @@ async function upsertUser(persona) {
   return user;
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────
-
-async function main() {
-  console.log('🌱 Seeding five test personas into', MONGODB_URI.replace(/:\/\/[^@]+@/, '://***@'));
-  await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(MONGODB_URI, {
-    allowProd: process.argv.includes('--prod'),
-    scriptName: 'seed-test-users',
-  }));
-
+// ── Seeding (assumes an already-open mongoose connection) ──────────────────
+// Exported so the server can run it in-process on its in-memory test DB
+// (the standalone CLI below can't reach that ephemeral instance). Idempotent.
+async function seedTestPersonas({ verbose = false } = {}) {
   const results = [];
   for (const persona of PERSONAS) {
-    process.stdout.write(`  · ${persona.name.padEnd(20)} `);
+    if (verbose) process.stdout.write(`  · ${persona.name.padEnd(20)} `);
     const user = await upsertUser(persona);
     const ws = await seedWorkspace({ user });
     const contents = await seedContent({ user, persona });
-    const posts = await seedScheduledPosts({ user, persona, contentIds: contents.map(c => c._id) });
+    const posts = await seedScheduledPosts({ user, persona, contentIds: contents.map((c) => c._id) });
     results.push({
       name: persona.name,
       email: persona.email,
@@ -359,9 +350,12 @@ async function main() {
       contents: contents.length,
       posts: posts.length,
     });
-    console.log(`✅ user ${String(user._id).slice(-6)} · ws ${String(ws._id).slice(-6)} · ${contents.length} content · ${posts.length} posts`);
+    if (verbose) console.log(`✅ user ${String(user._id).slice(-6)} · ws ${String(ws._id).slice(-6)} · ${contents.length} content · ${posts.length} posts`);
   }
+  return results;
+}
 
+function printCredentials(results) {
   console.log('');
   console.log('═'.repeat(74));
   console.log('  CREDENTIALS — TEST THESE AT http://localhost:3010/login');
@@ -379,13 +373,33 @@ async function main() {
   console.log('  · 3 Content records (completed/processing/failed) per user');
   console.log('  · 3 ScheduledPost records (posted/dry-run-scheduled/cancelled) per user');
   console.log('');
+}
 
+// ── CLI ────────────────────────────────────────────────────────────────────
+async function main() {
+  if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI is missing. Cannot seed.');
+    process.exit(1);
+  }
+  console.log('🌱 Seeding five test personas into', MONGODB_URI.replace(/:\/\/[^@]+@/, '://***@'));
+  await mongoose.connect(require('../server/utils/dbSafety').assertSafeScriptDbUri(MONGODB_URI, {
+    allowProd: process.argv.includes('--prod'),
+    scriptName: 'seed-test-users',
+  }));
+  const results = await seedTestPersonas({ verbose: true });
+  printCredentials(results);
   await mongoose.disconnect();
   process.exit(0);
 }
 
-main().catch(err => {
-  console.error('❌ Seeding failed:', err.message);
-  console.error(err.stack);
-  process.exit(1);
-});
+module.exports = { seedTestPersonas, printCredentials, PERSONAS };
+
+// Only run the CLI when invoked directly — requiring this module (e.g. from the
+// server's in-memory boot seed) must NOT connect or exit the process.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('❌ Seeding failed:', err.message);
+    console.error(err.stack);
+    process.exit(1);
+  });
+}
