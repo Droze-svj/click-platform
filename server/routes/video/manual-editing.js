@@ -203,7 +203,7 @@ router.get('/color-grading/presets', auth, asyncHandler(async (req, res) => {
 
 router.post('/audio/mix-tracks', auth, upload.fields([{ name: 'video', maxCount: 1 }, { name: 'audio', maxCount: 10 }]), asyncHandler(async (req, res) => {
   const { audioTracks } = req.body;
-  if (!req.files.video || !req.files.audio) {
+  if (!req.files || !req.files.video || !req.files.audio) {
     return sendError(res, 'Video and audio files are required', 400);
   }
 
@@ -345,7 +345,7 @@ router.post('/motion-graphics/chroma-key', auth, upload.single('video'), asyncHa
 
 router.post('/motion-graphics/pip', auth, upload.fields([{ name: 'video', maxCount: 1 }, { name: 'pip', maxCount: 1 }]), asyncHandler(async (req, res) => {
   const { pipOptions } = req.body;
-  if (!req.files.video || !req.files.pip) {
+  if (!req.files || !req.files.video || !req.files.pip) {
     return sendError(res, 'Video and PIP video are required', 400);
   }
 
@@ -581,7 +581,7 @@ router.post('/ai-assist/marketing-strategy', auth, asyncHandler(async (req, res)
 
 router.post('/transitions/apply', auth, upload.fields([{ name: 'clip1', maxCount: 1 }, { name: 'clip2', maxCount: 1 }]), asyncHandler(async (req, res) => {
   const { transition } = req.body;
-  if (!req.files.clip1 || !req.files.clip2) {
+  if (!req.files || !req.files.clip1 || !req.files.clip2) {
     return sendError(res, 'Two video clips are required', 400);
   }
 
@@ -1047,7 +1047,7 @@ router.post('/preview/frame', auth, upload.single('video'), asyncHandler(async (
 
 router.post('/preview/comparison', auth, upload.fields([{ name: 'original', maxCount: 1 }, { name: 'edited', maxCount: 1 }]), asyncHandler(async (req, res) => {
   const { frameTime = 5 } = req.body;
-  if (!req.files.original || !req.files.edited) {
+  if (!req.files || !req.files.original || !req.files.edited) {
     return sendError(res, 'Original and edited videos are required', 400);
   }
 
@@ -1110,6 +1110,9 @@ router.get('/shortcuts', auth, asyncHandler(async (req, res) => {
 router.post('/shortcuts/save', auth, asyncHandler(async (req, res) => {
   const { shortcut } = req.body;
   const userId = req.user?.id || req.user?._id;
+  if (!shortcut || typeof shortcut !== 'object') {
+    return sendError(res, 'A shortcut object is required', 400);
+  }
 
   try {
     await keyboardShortcutsService.saveCustomShortcut(userId, shortcut);
@@ -1384,6 +1387,9 @@ router.get('/marketplace/:templateId', auth, asyncHandler(async (req, res) => {
 router.post('/marketplace/create', auth, asyncHandler(async (req, res) => {
   const { templateData } = req.body;
   const userId = req.user?.id || req.user?._id;
+  if (!templateData || typeof templateData !== 'object') {
+    return sendError(res, 'templateData is required', 400);
+  }
 
   try {
     const template = await templateMarketplaceService.createTemplate(userId, templateData);

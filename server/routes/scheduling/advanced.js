@@ -49,6 +49,10 @@ router.post('/schedule-timezone', auth, asyncHandler(async (req, res) => {
  * Create recurring schedule
  */
 router.post('/recurring', auth, asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  if (!body.recurrence || !body.schedule || !body.schedule.startDate) {
+    return sendError(res, 'recurrence and schedule.startDate are required', 400);
+  }
   const schedule = await createRecurringSchedule(req.user._id, req.body);
   sendSuccess(res, 'Recurring schedule created', 201, schedule);
 }));

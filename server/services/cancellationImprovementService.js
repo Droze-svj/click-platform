@@ -4,7 +4,7 @@
 const CancellationRequest = require('../models/CancellationRequest');
 const User = require('../models/User');
 const logger = require('../utils/logger');
-const { NotFoundError } = require('../utils/errorHandler');
+const { NotFoundError, ConflictError } = require('../utils/errorHandler');
 
 /**
  * Get win-back offer
@@ -127,7 +127,7 @@ async function resumeSubscription(userId) {
     }
 
     if (user.subscription.status !== 'paused') {
-      throw new Error('Subscription is not paused');
+      throw new ConflictError('Subscription is not paused');
     }
 
     // Resume subscription

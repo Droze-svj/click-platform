@@ -296,6 +296,10 @@ router.get('/analytics/platform/:platform', auth, asyncHandler(async (req, res) 
  * Add entry to translation memory
  */
 router.post('/memory', auth, asyncHandler(async (req, res) => {
+  const { sourceLanguage, targetLanguage } = req.body || {};
+  if (!sourceLanguage || !targetLanguage) {
+    return sendError(res, 'sourceLanguage and targetLanguage are required', 400);
+  }
   const memory = await addToMemory(req.user._id, req.body);
   sendSuccess(res, 'Added to translation memory', 201, memory);
 }));
@@ -379,6 +383,10 @@ router.post('/memory/import', auth, asyncHandler(async (req, res) => {
  * Create translation glossary
  */
 router.post('/glossary', auth, asyncHandler(async (req, res) => {
+  const { sourceLanguage, targetLanguage } = req.body || {};
+  if (!sourceLanguage || !targetLanguage) {
+    return sendError(res, 'sourceLanguage and targetLanguage are required', 400);
+  }
   const glossary = await createGlossary(req.user._id, req.body);
   sendSuccess(res, 'Glossary created', 201, glossary);
 }));
