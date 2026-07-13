@@ -201,13 +201,68 @@ function getPluginCategories() {
   ];
 }
 
+/**
+ * Validate a plugin object for the marketplace register route, returning the
+ * { valid, errors } shape that route expects. The route called
+ * pluginService.validatePlugin(), which never existed (only validateManifest,
+ * a boolean), so POST /plugins/register threw "validatePlugin is not a function".
+ */
+function validatePlugin(plugin) {
+  const errors = [];
+  if (!plugin || typeof plugin !== 'object') {
+    return { valid: false, errors: ['Plugin payload is required'] };
+  }
+  const required = ['name', 'version', 'description', 'author'];
+  for (const field of required) {
+    if (!plugin[field]) errors.push(`Missing required field: ${field}`);
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Execute a registered plugin by id via its own execute() entrypoint. Honest
+ * about the two failure modes (unknown id -> 404, no entrypoint -> 400) instead
+ * of the previous "executePlugin is not a function" 500.
+ */
+async function executePlugin(pluginId, input, options = {}) {
+  const plugin = plugins.get(pluginId);
+  if (!plugin) {
+    const err = new Error(`Plugin ${pluginId} not found`);
+    err.statusCode = 404;
+    throw err;
+  }
+  if (typeof plugin.execute !== 'function') {
+    const err = new Error(`Plugin ${pluginId} does not expose an execute() entrypoint`);
+    err.statusCode = 400;
+    throw err;
+  }
+  return plugin.execute(input, options);
+}
+
+/**
+ * Enable/disable a registered plugin (toggles a flag on the registry entry).
+ */
+function setPluginEnabled(pluginId, enabled) {
+  const plugin = plugins.get(pluginId);
+  if (!plugin) {
+    const err = new Error(`Plugin ${pluginId} not found`);
+    err.statusCode = 404;
+    throw err;
+  }
+  plugin.enabled = !!enabled;
+  return { pluginId, enabled: plugin.enabled };
+}
+
 module.exports = {
   loadPlugin,
   registerPlugin,
   getPlugin,
   getAllPlugins,
   executeHook,
+  executePlugin,
+  setPluginEnabled,
   unloadPlugin,
   validateManifest,
+  validatePlugin,
   getPluginCategories,
 };

@@ -859,8 +859,20 @@ function getSearchFilters() {
   };
 }
 
+/**
+ * Advanced search entrypoint used by POST /api/search/advanced. The route
+ * imported `advancedSearch` but the service only exposed the lower-level
+ * text/semantic/faceted searches, so the endpoint threw "advancedSearch is not
+ * a function". Delegates to textSearch, which has the matching
+ * (userId, query, options) signature and returns ranked multi-field matches.
+ */
+async function advancedSearch(userId, query, options = {}) {
+  return textSearch(userId, query, options);
+}
+
 module.exports = {
   getSearchFilters,
+  advancedSearch,
   semanticSearch,
   textSearch,
   facetedSearch,
