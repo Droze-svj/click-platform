@@ -592,12 +592,13 @@ export default function AssetLibrary({
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <button className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all">
+                  <button type="button" aria-label="Preview asset" className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all">
                     <Maximize2 className="w-5 h-5" />
                   </button>
                   {onAddToTimeline && (
                     <button
                       type="button"
+                      aria-label="Add to timeline"
                       onClick={(e) => {
                         e.stopPropagation()
                         onAddToTimeline(asset, currentTime)
@@ -658,7 +659,7 @@ export default function AssetLibrary({
               <div className="p-10 space-y-8">
                 <div className="flex items-center justify-between">
                   <h2 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter">{previewAsset.title}</h2>
-                  <button type="button" onClick={() => setPreviewAsset(null)} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
+                  <button type="button" aria-label="Close preview" onClick={() => setPreviewAsset(null)} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
                 </div>
                 <div className="aspect-video bg-black/50 rounded-[3rem] border border-white/5 flex items-center justify-center relative overflow-hidden shadow-inner">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_70%)]" />

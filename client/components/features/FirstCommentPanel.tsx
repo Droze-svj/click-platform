@@ -39,11 +39,11 @@ export default function FirstCommentPanel() {
         className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
       />
       <div className="flex gap-2">
-        <select data-testid="firstcomment-platform" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}
+        <select aria-label="Platform" data-testid="firstcomment-platform" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}
           className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200">
           {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
-        <select data-testid="firstcomment-goal" value={goal} onChange={(e) => setGoal(e.target.value as FirstCommentResult['goal'])}
+        <select aria-label="Goal" data-testid="firstcomment-goal" value={goal} onChange={(e) => setGoal(e.target.value as FirstCommentResult['goal'])}
           className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200">
           {GOALS.map((g) => <option key={g} value={g}>{g}</option>)}
         </select>

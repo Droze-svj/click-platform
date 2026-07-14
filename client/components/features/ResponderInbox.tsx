@@ -94,6 +94,7 @@ export default function ResponderInbox() {
           <p className="text-sm text-zinc-400" data-testid="responder-inbound">“{r.inboundText}”</p>
           <textarea
             data-testid="responder-draft"
+            aria-label="Reply draft"
             value={draftFor(r)}
             onChange={(e) => setEdits((s) => ({ ...s, [r._id]: e.target.value }))}
             rows={2}
