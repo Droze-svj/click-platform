@@ -39,6 +39,12 @@ const SANITIZER_BYPASS_PATHS = [
   // HTML. Escaping fragments the learned keys (`&`→`&amp;`) so the same trait never
   // accumulates weight; pass it through raw (no HTML sink here).
   /^\/api\/ai\/feedback(\/|$|\?)/,
+  // Editor media tools: GET waveform-peaks/filmstrip/beats take a `videoUrl`
+  // query param (a source path/URL fed to ffmpeg) plus numeric params, never
+  // reflected as HTML. HTML-escaping videoUrl turns `/`→`&#x2F;` and `&`→`&amp;`,
+  // corrupting the source path so the timeline waveform/filmstrip/beats 404. The
+  // SSRF guard (utils/urlGuard) — not HTML-escaping — protects the URL here.
+  /^\/api\/video\/manual-editing\/(waveform-peaks|filmstrip|beats)(\/|$|\?)/,
 ];
 
 function sanitizeInput(req, res, next) {

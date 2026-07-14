@@ -12,6 +12,29 @@ const { assertPublicUrl } = require('../../utils/urlGuard');
 const logger = require('../../utils/logger');
 const multer = require('multer');
 
+// A same-origin /uploads media URL (absolute http(s)://host/uploads/… or a bare
+// /uploads/… path, optionally carrying a signed ?exp=&sig= suffix) resolved to
+// its on-disk file — or null if it isn't our own uploads media / doesn't exist.
+// The editor tools should read these from disk rather than HTTP-fetching the
+// server itself: the self-fetch trips the SSRF guard on localhost, needlessly
+// round-trips, and breaks once the signed URL expires. Self-contained (does not
+// touch the shared toAbsolutePath, which the render pipeline depends on); a
+// traversal guard keeps the result under <root>/uploads.
+function toLocalUploadsPath(u) {
+  const p = require('path');
+  let pathname = null;
+  if (/^https?:\/\//i.test(u)) {
+    try { pathname = new URL(u).pathname; } catch (_) { return null; } // URL() normalizes ../
+  } else if (u.startsWith('/uploads/')) {
+    pathname = u.split(/[?#]/)[0];
+  }
+  if (!pathname || !/^\/uploads\//i.test(pathname)) return null;
+  const abs = p.join(process.cwd(), pathname.replace(/^\/+/, ''));
+  const uploadsRoot = p.join(process.cwd(), 'uploads');
+  if (!abs.startsWith(uploadsRoot + p.sep) || !require('fs').existsSync(abs)) return null;
+  return abs;
+}
+
 // Resolve a media source for the read-only waveform/filmstrip/beats tools while
 // enforcing ownership on a contentId (was a bare Content.findById → leaked another
 // user's video frames/audio) and SSRF-guarding an attacker-supplied external
@@ -20,6 +43,10 @@ const multer = require('multer');
 async function resolveToolSource(req, res, { contentId, videoUrl }) {
   if (videoUrl) {
     const u = String(videoUrl);
+    // Same-origin /uploads media → read from disk (skips the self-HTTP-fetch that
+    // the SSRF guard blocks on localhost and that depends on the signed URL).
+    const localUploads = toLocalUploadsPath(u);
+    if (localUploads) return localUploads;
     if (/^https?:\/\//i.test(u)) {
       try {
         await assertPublicUrl(u);
