@@ -9,7 +9,6 @@ const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { guardOwnership } = require('../../utils/ownership');
 const { assertPublicUrl } = require('../../utils/urlGuard');
-const { toAbsolutePath } = require('../../utils/pathUtils');
 const logger = require('../../utils/logger');
 const multer = require('multer');
 
@@ -18,19 +17,21 @@ const multer = require('multer');
 // its on-disk file — or null if it isn't our own uploads media / doesn't exist.
 // The editor tools should read these from disk rather than HTTP-fetching the
 // server itself: the self-fetch trips the SSRF guard on localhost, needlessly
-// round-trips, and breaks once the signed URL expires. A traversal guard keeps
-// the result under <root>/uploads.
+// round-trips, and breaks once the signed URL expires. Self-contained (does not
+// touch the shared toAbsolutePath, which the render pipeline depends on); a
+// traversal guard keeps the result under <root>/uploads.
 function toLocalUploadsPath(u) {
+  const p = require('path');
   let pathname = null;
   if (/^https?:\/\//i.test(u)) {
-    try { pathname = new URL(u).pathname; } catch (_) { return null; }
+    try { pathname = new URL(u).pathname; } catch (_) { return null; } // URL() normalizes ../
   } else if (u.startsWith('/uploads/')) {
     pathname = u.split(/[?#]/)[0];
   }
   if (!pathname || !/^\/uploads\//i.test(pathname)) return null;
-  const abs = toAbsolutePath(pathname);
-  const uploadsRoot = require('path').join(process.cwd(), 'uploads');
-  if (!abs || !abs.startsWith(uploadsRoot) || !require('fs').existsSync(abs)) return null;
+  const abs = p.join(process.cwd(), pathname.replace(/^\/+/, ''));
+  const uploadsRoot = p.join(process.cwd(), 'uploads');
+  if (!abs.startsWith(uploadsRoot + p.sep) || !require('fs').existsSync(abs)) return null;
   return abs;
 }
 
