@@ -250,16 +250,16 @@ export default function AdvancedVideoTimeline({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">{t('advancedVideoTimeline.advancedTimeline')}</h3>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={handleZoomOut} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button type="button" onClick={handleZoomOut} aria-label="Zoom out" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
               <ZoomOut className="w-4 h-4" />
             </button>
             <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[60px] text-center">
               {Math.round(zoom * 100)}%
             </span>
-            <button type="button" onClick={handleZoomIn} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button type="button" onClick={handleZoomIn} aria-label="Zoom in" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
               <ZoomIn className="w-4 h-4" />
             </button>
-            <button type="button" onClick={handleResetZoom} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded ml-2">
+            <button type="button" onClick={handleResetZoom} aria-label="Reset zoom" className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded ml-2">
               <RotateCcw className="w-4 h-4" />
             </button>
           </div>
@@ -270,6 +270,7 @@ export default function AdvancedVideoTimeline({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('advancedVideoTimeline.trackLabel')}</span>
             <select
+              aria-label="Select track"
               value={selectedTrack}
               onChange={(e) => setSelectedTrack(parseInt(e.target.value))}
               className="px-2 py-1 border rounded text-sm bg-white dark:bg-gray-900"
@@ -420,6 +421,7 @@ export default function AdvancedVideoTimeline({
                   {/* Delete button */}
                   <button
                     type="button"
+                    aria-label="Delete segment"
                     onClick={(e) => {
                       e.stopPropagation()
                       onSegmentDelete(segment.id)

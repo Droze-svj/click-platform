@@ -105,6 +105,7 @@ export const NetworkStatusHUD: React.FC = () => {
                     </div>
                     <button
                         type="button"
+                        aria-label="Audit network"
                         onClick={auditNetwork}
                         disabled={auditing}
                         className={`p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all ${auditing ? 'animate-spin' : ''}`}
