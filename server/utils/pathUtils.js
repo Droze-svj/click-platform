@@ -15,6 +15,15 @@ function toAbsolutePath(relativeOrAbsolute) {
   const cut = p.search(/[?#]/);
   if (cut !== -1) p = p.slice(0, cut);
 
+  // A leading-slash /uploads path is a WEB path (served from <root>/uploads),
+  // NOT a filesystem-absolute path. Treating it as absolute made ffmpeg look for
+  // "/uploads/x.mp4" at the filesystem root — which never exists — so the editor
+  // waveform/filmstrip/beats tools (and any local /uploads media) 404'd. Map it
+  // under the project root instead.
+  if (/^\/+uploads(\/|$)/i.test(p)) {
+    return path.join(process.cwd(), p.replace(/^\/+/, ''));
+  }
+
   // If it's already absolute (starts with / on Linux/Mac or C:\ on Windows), return it
   if (path.isAbsolute(p)) return p;
   relativeOrAbsolute = p;
