@@ -92,7 +92,10 @@ module.exports = {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       boxShadow: {
-        'glow-primary': '0 0 20px rgba(99, 102, 241, 0.4)',
+        // Softened from 20px/0.4 → a subtler, more professional brand glow.
+        // Propagates to every `shadow-glow-primary` consumer (primary buttons,
+        // ProfileHUD, WorkflowRail, VideoProgressTracker) for a calmer, consistent feel.
+        'glow-primary': '0 0 12px rgba(99, 102, 241, 0.22)',
         'glass-light': '0 4px 30px rgba(0, 0, 0, 0.05)',
         'glass-dark': '0 4px 30px rgba(0, 0, 0, 0.3)',
       },
