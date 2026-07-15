@@ -52,25 +52,6 @@ export const CATEGORIES: Category[] = [
     features: ['Smart Cuts', 'B-Roll', 'Captions']
   },
   {
-    id: 'settings',
-    label: 'Settings',
-    icon: Settings,
-    color: 'from-slate-500 to-slate-700',
-    bgColor: 'bg-slate-100 dark:bg-slate-900/10',
-    textColor: 'text-slate-600 dark:text-slate-400',
-    description: 'App preferences & settings'
-  },
-  {
-    id: 'scripts',
-    label: 'AI Scripts',
-    icon: PenTool,
-    color: 'from-blue-600 to-indigo-600',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/10',
-    textColor: 'text-blue-600 dark:text-blue-400',
-    description: 'Strategic script generation',
-    features: ['Role Based', '3s Hooks', 'CTA Optimization']
-  },
-  {
     id: 'edit',
     label: 'Edit',
     icon: EditToolIcon,
@@ -119,26 +100,6 @@ export const CATEGORIES: Category[] = [
     textColor: 'text-emerald-700 dark:text-emerald-300',
     description: 'Green screen & compositing',
     features: ['Key Removal', 'Spill Suppression', 'Edge Refinement']
-  },
-  {
-    id: 'ai-analysis',
-    label: 'AI Analysis',
-    icon: NeuralNetworkIcon,
-    color: 'from-pink-500 to-purple-500',
-    bgColor: 'bg-pink-100 dark:bg-pink-900/20',
-    textColor: 'text-pink-700 dark:text-pink-300',
-    description: 'Smart scene detection',
-    features: ['Scene Detection', 'Auto-Editing', 'Suggestions']
-  },
-  {
-    id: 'collaborate',
-    label: 'Collaborate',
-    icon: CollaborationIcon,
-    color: 'from-green-500 to-teal-500',
-    bgColor: 'bg-green-100 dark:bg-green-900/20',
-    textColor: 'text-green-700 dark:text-green-300',
-    description: 'Real-time collaboration',
-    features: ['Live Cursors', 'Comments', 'Team Editing']
   },
   {
     id: 'timeline',

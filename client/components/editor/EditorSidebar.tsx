@@ -82,16 +82,6 @@ const NEW_2026_CATEGORIES = [
     badge: 'NEW',
   },
   {
-    id: 'creative-packs' as EditorCategory,
-    label: 'Creative Packs',
-    icon: Wand2,
-    color: 'from-amber-500 to-rose-500',
-    bgColor: 'bg-amber-900/20',
-    textColor: 'text-amber-400',
-    description: 'One-click style bundles',
-    badge: 'NEW',
-  },
-  {
     id: 'text-motion' as EditorCategory,
     label: 'Text & Motion',
     icon: Type,
@@ -99,16 +89,6 @@ const NEW_2026_CATEGORIES = [
     bgColor: 'bg-fuchsia-900/20',
     textColor: 'text-fuchsia-400',
     description: 'Captions · animations · motion · fonts',
-    badge: 'NEW',
-  },
-  {
-    id: 'creative-tools' as EditorCategory,
-    label: 'AI Tools',
-    icon: Sparkles,
-    color: 'from-fuchsia-600 to-purple-700',
-    bgColor: 'bg-fuchsia-900/20',
-    textColor: 'text-fuchsia-400',
-    description: 'Hooks · beats · engagement predictor',
   },
 ]
 
