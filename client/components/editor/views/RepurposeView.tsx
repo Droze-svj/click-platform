@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getMediaUrl } from '../../../utils/url'
 import {
   Smartphone,
   Monitor,
@@ -414,7 +415,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
                   {v.status === 'completed' && (
                     v.previewUrl ? (
                       <div className="mt-4 flex items-center gap-4">
-                        <video src={v.previewUrl} controls preload="metadata" className="h-40 rounded-xl border border-white/10 bg-black" />
+                        <video src={getMediaUrl(v.previewUrl || '')} controls preload="metadata" className="h-40 rounded-xl border border-white/10 bg-black" />
                         <a
                           href={v.previewUrl}
                           download={`click-${v.platform}-${v.ratio.replace(':', 'x')}.mp4`}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { getMediaUrl } from '../../../utils/url'
 import { Sparkles, Image as ImageIcon, Mic, AudioWaveform, Loader2, Download, Plus, Lock } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
 
@@ -179,7 +180,7 @@ const GenerateView: React.FC<GenerateViewProps> = ({ videoId, currentTime = 0, s
             <div className="text-sm font-black text-[var(--text-main)]">{asset.title}</div>
             {asset.type === 'image'
               ? <img src={asset.url} alt={asset.title} className="max-h-72 rounded-xl border border-white/10" />
-              : <audio src={asset.url} controls className="w-full" />}
+              : <audio src={getMediaUrl(asset.url || '')} controls className="w-full" />}
             <div className="flex items-center gap-3">
               <button onClick={() => addToTimeline(asset)} className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black uppercase tracking-widest">
                 <Plus className="w-4 h-4" /> Add to timeline
