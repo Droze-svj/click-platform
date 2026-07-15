@@ -1570,7 +1570,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     return (
       <div className={`flex items-center gap-1 transition-opacity ${dimmed ? 'opacity-30' : 'opacity-40 group-hover/track:opacity-100'}`}>
         <button type="button" onClick={toggleSolo} title={st.solo ? 'Unsolo Track' : 'Solo Track'} aria-pressed={st.solo ? 'true' : 'false'}
-          className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider transition-colors ${st.solo ? 'bg-amber-500 text-black' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>S</button>
+          className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider transition-colors ${st.solo ? 'bg-amber-500 text-black' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>S</button>
         <button type="button" onClick={toggleMute} title={muted ? 'Unmute Track' : 'Mute Track'} aria-pressed={muted ? 'true' : 'false'}
           className={`p-1 rounded transition-colors ${muted ? 'bg-rose-500/30 text-rose-300' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>
           {muted ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -1619,14 +1619,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
               <button
                 type="button"
                 onClick={() => setTimelineMode('visual')}
-                className={`px-3 py-1 rounded text-[8px] font-black uppercase tracking-widest transition-all ${timelineMode === 'visual' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}
+                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${timelineMode === 'visual' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}
               >
                 Visual
               </button>
               <button
                 type="button"
                 onClick={() => setTimelineMode('hybrid')}
-                className={`px-3 py-1 rounded text-[8px] font-black uppercase tracking-widest transition-all ${timelineMode === 'hybrid' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}
+                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${timelineMode === 'hybrid' ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}
               >
                 Hybrid
               </button>
@@ -1673,7 +1673,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                 </div>
                 <div className="flex flex-col">
                    <span className="text-[10px] font-black text-white italic tabular-nums">{formatTimeDetailed(currentTime)}</span>
-                   <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Current Frame Matrix</span>
+                   <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Current Frame Matrix</span>
                 </div>
              </div>
            </div>
@@ -1798,7 +1798,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         onClick={(e) => { e.stopPropagation(); onTimeUpdate(t) }}
                       >
                         <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse shadow-[0_0_8px_rgba(240,79,216,1)] border border-white/20" />
-                        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-fuchsia-950/90 text-[7px] font-black text-fuchsia-300 uppercase tracking-widest rounded border border-fuchsia-500/30 opacity-0 group-hover/beat:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-fuchsia-950/90 text-[10px] font-black text-fuchsia-300 uppercase tracking-widest rounded border border-fuchsia-500/30 opacity-0 group-hover/beat:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                           Peak Beat ({t.toFixed(1)}s)
                         </div>
                       </div>
@@ -1812,7 +1812,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        style={{ '--marker-left': `${timeToX(m.time)}%`, left: 'var(--marker-left)' } as any}
                      >
                         <div className="absolute top-0 -left-[4px] w-2.5 h-2.5 bg-amber-500 rotate-45 border border-black/50 shadow-lg group-hover/marker:scale-150 transition-transform" />
-                        <span className="absolute top-4 left-3 px-2 py-0.5 bg-amber-500 text-black text-[8px] font-black uppercase rounded opacity-0 group-hover/marker:opacity-100 transition-opacity whitespace-nowrap">{m.name || 'Marker'}</span>
+                        <span className="absolute top-4 left-3 px-2 py-0.5 bg-amber-500 text-black text-[10px] font-black uppercase rounded opacity-0 group-hover/marker:opacity-100 transition-opacity whitespace-nowrap">{m.name || 'Marker'}</span>
                      </div>
                    ))}
 
@@ -1840,7 +1840,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl p-3 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2" onClick={e => e.stopPropagation()}>
                                <div className="flex items-center justify-between mb-2">
                                   <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{c.author}</span>
-                                  <span className="text-[8px] font-mono text-slate-500">{formatTime(c.time)}</span>
+                                  <span className="text-[10px] font-mono text-slate-500">{formatTime(c.time)}</span>
                                </div>
                                <p className="text-xs text-slate-200 leading-snug">{c.text}</p>
                                <div className="mt-3 flex items-center gap-2">
@@ -1872,14 +1872,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   </div>
                                   <div className="flex flex-col">
                                      <span className="text-[10px] font-black text-white uppercase tracking-widest italic">Speech Projection</span>
-                                     <span className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Neural Metadata</span>
+                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Neural Metadata</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2 mt-1">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)] animate-pulse" />
-                                  <span className="text-[8px] font-bold text-emerald-100/50 uppercase tracking-widest">Active Sync</span>
+                                  <span className="text-[10px] font-bold text-emerald-100/50 uppercase tracking-widest">Active Sync</span>
                                </div>
                                {renderLaneControls('captions')}
                             </div>
@@ -1897,14 +1897,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   </div>
                                   <div className="flex flex-col">
                                      <span className="text-[11px] font-black text-white uppercase tracking-widest italic drop-shadow-md">Prime Sequence</span>
-                                     <span className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Primary A-Roll Stream</span>
+                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Primary A-Roll Stream</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.8)]" />
-                                  <span className="text-[8px] font-bold text-blue-100/50 uppercase tracking-widest">Locked 4K RAW</span>
+                                  <span className="text-[10px] font-bold text-blue-100/50 uppercase tracking-widest">Locked 4K RAW</span>
                                </div>
                                <div className="bg-black/40 rounded-lg p-0.5 border border-white/5">
                                   {renderLaneControls('a-roll')}
@@ -1924,14 +1924,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   </div>
                                   <div className="flex flex-col">
                                      <span className="text-[10px] font-black text-white uppercase tracking-widest italic">Visual Assets</span>
-                                     <span className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">B-Roll & Overlays</span>
+                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">B-Roll & Overlays</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2 mt-1">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.8)]" />
-                                  <span className="text-[8px] font-bold text-amber-100/50 uppercase tracking-widest">Global Vault</span>
+                                  <span className="text-[10px] font-bold text-amber-100/50 uppercase tracking-widest">Global Vault</span>
                                </div>
                                {renderLaneControls('b-roll')}
                             </div>
@@ -1949,14 +1949,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   </div>
                                   <div className="flex flex-col">
                                      <span className="text-[10px] font-black text-white uppercase italic tracking-widest leading-none">Audio Streams</span>
-                                     <span className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mt-1">Multi-Channel Sonic</span>
+                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Multi-Channel Sonic</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2 mt-1">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 shadow-[0_0_5px_rgba(192,38,211,0.8)]" />
-                                  <span className="text-[8px] font-bold text-fuchsia-100/50 uppercase tracking-widest">48kHz Spatial</span>
+                                  <span className="text-[10px] font-bold text-fuchsia-100/50 uppercase tracking-widest">48kHz Spatial</span>
                                </div>
                                <div className="bg-black/40 rounded-lg p-0.5 border border-white/5">
                                   {renderLaneControls('audio')}
@@ -1999,7 +1999,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <div className="relative h-6 w-full bg-black/40 rounded-xl border border-white/5 mb-6 group/heatmap overflow-hidden">
                        <div className="absolute inset-y-0 left-0 flex items-center px-4 z-10 pointer-events-none">
                           <Activity className="w-3 h-3 text-indigo-400 opacity-50" />
-                          <span className="text-[7px] font-black text-indigo-400/50 uppercase tracking-[0.2em] ml-2">Retention Heatmap // AI Prediction</span>
+                          <span className="text-[10px] font-black text-indigo-400/50 uppercase tracking-[0.2em] ml-2">Retention Heatmap // AI Prediction</span>
                        </div>
                       {engagementScore?.retentionHeatmap.map((val, i) => (
                         <div
@@ -2021,7 +2021,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <div className="relative h-14 w-full bg-white/[0.02] border border-white/5 rounded-2xl mb-8 overflow-hidden group/waveform shadow-inner">
                        <div className="absolute inset-y-0 left-6 flex items-center z-10 pointer-events-none">
                           <div className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse mr-3 shadow-[0_0_10px_rgba(232,121,249,0.8)]" />
-                          <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-[0.4em] italic opacity-60">{waveformHasAudio ? 'Audio Waveform' : (waveformKey ? 'Audio Waveform // No Audio' : 'Audio Waveform')}</span>
+                          <span className="text-[10px] font-black text-fuchsia-400 uppercase tracking-wide italic opacity-60">{waveformHasAudio ? 'Audio Waveform' : (waveformKey ? 'Audio Waveform // No Audio' : 'Audio Waveform')}</span>
                        </div>
 
                        {/* Playhead Reflection on Waveform */}
@@ -2079,7 +2079,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           >
                              <Zap className="w-2 h-2 text-white" />
                              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 p-2 rounded-lg opacity-0 group-hover/portal:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                <p className="text-[8px] font-black uppercase text-fuchsia-400">Suggest: Glitch Dissolve</p>
+                                <p className="text-[10px] font-black uppercase text-fuchsia-400">Suggest: Glitch Dissolve</p>
                              </div>
                           </motion.div>
                        )
@@ -2196,7 +2196,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    <Type className="w-3 h-3 text-emerald-400" />
                                    <span className="text-[10px] font-black text-white italic truncate uppercase">{o.text}</span>
                                 </div>
-                                <div className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-widest mt-1">
+                                <div className="text-[10px] font-bold text-emerald-400/60 uppercase tracking-widest mt-1">
                                    {formatTime(o.endTime - o.startTime)}
                                 </div>
 
@@ -2236,7 +2236,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                      <div className="w-[1px] h-3 bg-rose-400" />
                                      <div className="w-[1px] h-1 bg-rose-400" />
                                    </div>
-                                   <span className="text-[7px] font-black text-rose-300 uppercase tracking-widest ml-1 select-none whitespace-nowrap">J-Cut</span>
+                                   <span className="text-[10px] font-black text-rose-300 uppercase tracking-widest ml-1 select-none whitespace-nowrap">J-Cut</span>
                                  </div>
                                )}
 
@@ -2253,7 +2253,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    }}
                                    className="bg-gradient-to-r from-pink-500/30 to-pink-500/0 border-y border-r border-pink-500/40 rounded-r-lg pointer-events-none flex items-center pl-1 overflow-hidden"
                                  >
-                                   <span className="text-[7px] font-black text-pink-300 uppercase tracking-widest mr-1 select-none whitespace-nowrap">L-Cut</span>
+                                   <span className="text-[10px] font-black text-pink-300 uppercase tracking-widest mr-1 select-none whitespace-nowrap">L-Cut</span>
                                    <div className="flex gap-0.5 items-center opacity-60">
                                      <div className="w-[1px] h-1 bg-pink-400" />
                                      <div className="w-[1px] h-3 bg-pink-400" />
@@ -2300,7 +2300,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    {/* Speed Ramp / FX Indicator */}
                                    <div className="flex items-center gap-1.5 bg-blue-950/50 backdrop-blur-sm border border-blue-400/20 px-2 py-1 rounded shadow-lg group-hover/node:bg-blue-900/60 transition-colors">
                                       <Activity className="w-2.5 h-2.5 text-blue-300" />
-                                      <span className="text-[8px] font-black text-blue-200 uppercase tracking-widest">100% Warp</span>
+                                      <span className="text-[10px] font-black text-blue-200 uppercase tracking-widest">100% Warp</span>
                                    </div>
                                 </div>
 
@@ -2592,7 +2592,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   </div>
                                   <div className="flex flex-col min-w-0 z-10">
                                      <span className="text-[10px] font-black text-white italic truncate uppercase drop-shadow-md">{eff.name}</span>
-                                     <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">{eff.type} · {formatTime(eff.endTime - eff.startTime)}</span>
+                                     <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{eff.type} · {formatTime(eff.endTime - eff.startTime)}</span>
                                   </div>
 
                                   {/* Edge-trim handles (skipped when locked) */}
@@ -2784,7 +2784,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           style={{ background: SNAP_KIND_COLOR[activeSnap.kind], boxShadow: `0 0 12px ${SNAP_KIND_COLOR[activeSnap.kind]}` }}
                         />
                         <div
-                          className="absolute top-1 -translate-x-1/2 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider text-black whitespace-nowrap"
+                          className="absolute top-1 -translate-x-1/2 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-black whitespace-nowrap"
                           style={{ background: SNAP_KIND_COLOR[activeSnap.kind] }}
                         >
                           {SNAP_KIND_LABEL[activeSnap.kind]}
@@ -2925,7 +2925,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <Activity className="w-3.5 h-3.5 text-emerald-500" />
                     <span className="text-[11px] font-black text-white italic tracking-tighter uppercase whitespace-nowrap">Semantic Feed Active</span>
                  </div>
-                 <span className="text-[8px] font-bold text-slate-600 uppercase tracking-[0.2em]">Neural Processing Optimized</span>
+                 <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">Neural Processing Optimized</span>
               </div>
            </div>
         </div>
