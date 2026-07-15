@@ -8,7 +8,7 @@ import { useSocket } from '../../../../../hooks/useSocket'
 import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, TrendingUp, Layout, Moon, Sun, Wand2, Scissors, Music, Type, Hash, Flame, Mic, Film, Gauge } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
-import { getAssetUrl } from '../../../../../utils/url'
+import { getAssetUrl, getMediaUrl } from '../../../../../utils/url'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
 import { useTheme } from '../../../../../components/ThemeProvider'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
@@ -605,7 +605,7 @@ export default function VideoEditPage({ params }: PageProps) {
   )
 
   const videoUrl = video?.originalFile?.url
-  const editorVideoUrl = getAssetUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl || '')
+  const editorVideoUrl = getMediaUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl || '')
 
   const selectionUI = (
     <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-24 transition-colors duration-500">
@@ -641,7 +641,7 @@ export default function VideoEditPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
             <div className="relative w-full aspect-video bg-surface-100 dark:bg-surface-950 rounded-3xl overflow-hidden shadow-sm border border-surface-200 dark:border-surface-800 flex items-center justify-center">
-              <video src={videoUrl} controls className="w-full h-full object-contain" />
+              <video src={getMediaUrl(videoUrl || '')} controls className="w-full h-full object-contain" />
               <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 border border-white/10 backdrop-blur-md">
                  <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">Preview</span>
