@@ -102,6 +102,10 @@ interface ResizableTimelineProps {
   beatTimes?: number[]
   aiDirectorSuggestions?: AIDirectorSuggestion[]
   engagementScore?: EngagementScore | null
+  /** Show the decorative AI "insights" lanes (retention heatmap, neural
+   *  waveform, scene portals, AI-director pills). OFF by default for a calm,
+   *  legible timeline; power users opt in via the Insights toggle. */
+  showInsights?: boolean
   /** Source the waveform peaks are decoded from. Either is enough; videoSrc wins. */
   videoSrc?: string | null
   contentId?: string | null
@@ -128,9 +132,12 @@ const SNAP_KIND_LABEL: Record<SnapKind, string> = {
   edge: 'Edge', playhead: 'Playhead', boundary: 'Bound',
 }
 
-const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, beatTimes = [], aiDirectorSuggestions = [], engagementScore = null, videoSrc = null, contentId = null }) => {
+const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, beatTimes = [], aiDirectorSuggestions = [], engagementScore = null, showInsights: showInsightsInitial = false, videoSrc = null, contentId = null }) => {
   const [timelineMode, setTimelineMode] = useState<'hybrid' | 'visual' | 'text'>('hybrid')
   const [focusLane, setFocusLane] = useState<string | null>(null)
+  // Decorative AI "insights" lanes are OFF by default (calm timeline); toggle in
+  // the toolbar. Seeded from the optional prop for callers that want them on.
+  const [showInsights, setShowInsights] = useState(showInsightsInitial)
 
   const selectedIds = useMemo(() => selectedSegmentIdsProp ?? (selectedSegmentIdProp ? [selectedSegmentIdProp] : []), [selectedSegmentIdsProp, selectedSegmentIdProp])
   const selectedSegmentId = selectedSegmentIdProp ?? selectedIds[0] ?? null
@@ -1704,6 +1711,17 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                  <div className="w-12 text-center text-[10px] font-black text-slate-400 tabular-nums">{Math.round(zoom * 100)}%</div>
                  <button type="button" onClick={() => setZoom(Math.min(10, zoom + 0.25))} className="p-2.5 rounded-xl text-slate-500 hover:text-white transition-all" title="Zoom In"><ZoomIn className="w-4 h-4" /></button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setShowInsights((v) => !v)}
+                aria-pressed={showInsights}
+                title={showInsights ? 'Hide AI insights lanes' : 'Show AI insights lanes'}
+                className={`hidden xl:flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-[10px] font-semibold uppercase tracking-wide transition-colors ${showInsights ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300' : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'}`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                Insights
+              </button>
            </div>
         </div>
 
@@ -1973,7 +1991,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    <div className="space-y-2">
                        {/* AI DIRECTOR LANE CANVAS (NEW) */}
                          {/* AI Director Lane (New) */}
-                     {/* RETENTION HEATMAP OVERLAY TRACK (ENHANCED) */}
+                     {/* Insights lanes (retention heatmap, neural waveform, scene
+                        portals, AI-director) — decorative, OFF by default for a
+                        calm timeline; toggled on via the Insights control. */}
+                    {showInsights && (<>
+                    {/* RETENTION HEATMAP OVERLAY TRACK (ENHANCED) */}
                     <div className="relative h-6 w-full bg-black/40 rounded-xl border border-white/5 mb-6 group/heatmap overflow-hidden">
                        <div className="absolute inset-y-0 left-0 flex items-center px-4 z-10 pointer-events-none">
                           <Activity className="w-3 h-3 text-indigo-400 opacity-50" />
@@ -2090,6 +2112,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                             ))}
                          </div>
                        )}
+                    </>)}
 
                        {/* HYBRID SCRIPT VIEW TRACK (HORIZONTAL) */}
                        {(timelineMode === 'hybrid') && (
