@@ -17,7 +17,7 @@ import { normWord } from '../../lib/captions'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
 import { activeTransitionAt, transitionOverlayStyle } from '../../lib/transitionPreview'
 import { Rnd } from 'react-rnd'
-import { getAssetUrl } from '../../utils/url'
+import { getAssetUrl, getMediaUrl } from '../../utils/url'
 
 /** Coerce a possibly-undefined/NaN number to a finite fallback. */
 function safeNum(n: any, fallback: number): number {
@@ -108,7 +108,7 @@ function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; cur
     if (isPlaying) el.play().catch(() => { })
     else el.pause()
   }, [isPlaying])
-  const normalizedUrl = getAssetUrl(seg.sourceUrl || '')
+  const normalizedUrl = getMediaUrl(seg.sourceUrl || '')
   return (
     <video
       ref={ref}
@@ -178,7 +178,7 @@ function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogue
     return () => cancelAnimationFrame(frameId)
   }, [volume, isMuted, isDialogueActive, seg.track])
 
-  const normalizedAudioUrl = getAssetUrl(seg.sourceUrl || '')
+  const normalizedAudioUrl = getMediaUrl(seg.sourceUrl || '')
   return <audio ref={ref} src={normalizedAudioUrl} />
 }
 
@@ -437,7 +437,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], svgOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}, previewQuality = 'full', chromaKey, onUpdateOverlay, selectedOverlayId, onSelectOverlay, isNeuralActive, videoTransform, videoTransformKeyframes, videoCrop, isTransformMode, onUpdateVideoTransform
 }) => {
   const isDraft = previewQuality === 'draft'
-  const normalizedVideoUrl = getAssetUrl(videoUrl || '')
+  const normalizedVideoUrl = getMediaUrl(videoUrl || '')
   
   // Overlay active B-roll on top of the main video
   const activeBroll = timelineSegments.find(s => 
@@ -461,6 +461,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const [previewResolution, setPreviewResolution] = useState<'Full' | '1/2' | '1/4'>('Full')
   const [videoDimensions, setVideoDimensions] = useState<{ w: number; h: number } | null>(null)
   const [containerDimensions, setContainerDimensions] = useState<{ w: number; h: number } | null>(null)
+  // Surface video load failures instead of a silent blank preview.
+  const [videoLoadError, setVideoLoadError] = useState(false)
+  const [videoLoadState, setVideoLoadState] = useState<'idle' | 'loading' | 'ready'>('idle')
+  const [reloadKey, setReloadKey] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   // Use the measured container if available; otherwise fall back to the live
   // overlay layer's current rect (fix #3 init race) and only then to a constant.
@@ -812,6 +816,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             }}
           >
             <video
+              key={reloadKey}
               ref={videoRef}
               src={normalizedVideoUrl}
               className="w-full h-full object-contain pointer-events-none"
@@ -824,9 +829,30 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 clipPath: 'var(--v-clip)'
               } as any}
               onLoadedMetadata={handleLoadedMetadata}
+              onLoadStart={() => { setVideoLoadState('loading'); setVideoLoadError(false) }}
+              onCanPlay={() => setVideoLoadState('ready')}
+              onError={() => { setVideoLoadError(true); setVideoLoadState('idle') }}
               autoPlay={isPlaying}
               muted={isMuted}
             />
+            {videoLoadError && normalizedVideoUrl && (
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center">
+                <p className="text-sm font-medium text-white">Video failed to load</p>
+                <p className="max-w-md break-all text-xs text-white/50">{normalizedVideoUrl}</p>
+                <button
+                  type="button"
+                  onClick={() => { setVideoLoadError(false); setVideoLoadState('loading'); setReloadKey((k) => k + 1) }}
+                  className="pointer-events-auto rounded-lg bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            {!videoLoadError && videoLoadState === 'loading' && normalizedVideoUrl && (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+              </div>
+            )}
             {activeBroll && (
               <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
                 <BrollVideo
