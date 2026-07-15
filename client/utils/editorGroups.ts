@@ -30,54 +30,42 @@ export interface EditorGroup {
   categoryIds: EditorCategory[]
 }
 
+// Trimmed to a focused, pro core (calm-down pass). Non-editing surfaces
+// (analytics/growth, distribution/scheduling, teams/accounts, settings) live
+// elsewhere in the app; long-tail AI/labs tools are kept in code but off the
+// default editor surface. Neutral gradients — no neon.
 export const EDITOR_GROUPS: EditorGroup[] = [
   {
     id: 'edit',
     label: 'Edit',
-    gradient: 'from-sky-500 to-indigo-600',
-    accent: 'text-sky-300',
+    gradient: 'from-slate-700 to-slate-800',
+    accent: 'text-indigo-300',
     description: 'Cut, grade, composite — the core editing surface.',
-    categoryIds: ['edit', 'timeline', 'color', 'chromakey', 'visual-fx', 'spatial', 'effects'],
+    categoryIds: ['edit', 'timeline', 'color', 'chromakey', 'effects'],
   },
   {
     id: 'media',
     label: 'Media',
-    gradient: 'from-emerald-500 to-teal-600',
-    accent: 'text-emerald-300',
-    description: 'Stock, B-roll, sound, brand kit, thumbnails.',
-    categoryIds: ['assets', 'stock-library', 'creative-packs', 'creative-tools', 'style-vault', 'thumbnails'],
-  },
-  {
-    id: 'text',
-    label: 'Text',
-    gradient: 'from-fuchsia-500 to-rose-500',
-    accent: 'text-fuchsia-300',
-    description: 'Captions, motion typography, AI scripts.',
-    categoryIds: ['text-motion', 'scripts'],
+    gradient: 'from-slate-700 to-slate-800',
+    accent: 'text-indigo-300',
+    description: 'Assets, stock, captions & text.',
+    categoryIds: ['assets', 'stock-library', 'text-motion'],
   },
   {
     id: 'ai',
     label: 'AI',
-    gradient: 'from-violet-500 to-purple-600',
-    accent: 'text-violet-300',
-    description: 'Auto-edit, analysis, prediction, remix, agents.',
-    categoryIds: ['ai-edit', 'ai-analysis', 'ai', 'intelligence', 'automate', 'agent', 'predict', 'growth', 'remix', 'short-clips', 'insights', 'dub'],
-  },
-  {
-    id: 'collab',
-    label: 'Collab',
-    gradient: 'from-amber-500 to-orange-500',
-    accent: 'text-amber-300',
-    description: 'Reviews, teams, connected accounts.',
-    categoryIds: ['collaborate', 'accounts'],
+    gradient: 'from-slate-700 to-slate-800',
+    accent: 'text-indigo-300',
+    description: 'One-click AI auto-edit.',
+    categoryIds: ['ai-edit'],
   },
   {
     id: 'export',
     label: 'Export',
-    gradient: 'from-rose-500 to-pink-600',
-    accent: 'text-rose-300',
-    description: 'Render, schedule, distribute, settings.',
-    categoryIds: ['export', 'distribution', 'scheduling', 'settings'],
+    gradient: 'from-slate-700 to-slate-800',
+    accent: 'text-indigo-300',
+    description: 'Render & share.',
+    categoryIds: ['export'],
   },
 ]
 

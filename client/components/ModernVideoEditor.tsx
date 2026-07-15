@@ -99,7 +99,6 @@ import { useEditorShortcuts } from '../hooks/useEditorShortcuts'
 import { rippleDelete as rippleDeleteOp } from '../utils/timelineOps'
 import { PlatformInsights } from '../types/editor' // Added
 
-import AchievementSystem from './AchievementSystem'
 import { ErrorBoundary } from './ErrorBoundary'
 import { useVideoEditorAutosave } from '../hooks/useVideoEditorAutosave'
 import { useToast } from '../contexts/ToastContext'
@@ -2305,17 +2304,9 @@ const ModernVideoEditor: React.FC<{
     // via md: (the heavy row layout below stays as-is on >=768px).
     <div className="h-[100dvh] w-full md:h-screen md:w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden overflow-x-hidden font-['Outfit'] selection:bg-indigo-500/30 editor-auto">
 
-      {/* Background nebula */}
-      <motion.div
-        style={{ x: nebulaX, y: nebulaY }}
-        className="fixed inset-0 pointer-events-none opacity-30 mix-blend-screen z-0"
-      >
-        <div className="absolute top-1/4 left-1/4 w-[800px] h-[800px] bg-indigo-500/[0.08] blur-[160px] rounded-full animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[1000px] h-[1000px] bg-indigo-600/[0.05] blur-[200px] rounded-full animate-pulse animation-delay-3000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-screen bg-[var(--page-bg)]" />
-      </motion.div>
-
-      <AchievementSystem />
+      {/* Calm shell: the decorative animated background nebula and the
+          gamification achievement overlay were removed to reduce on-screen
+          noise for a focused, pro editing surface. */}
       <CommandK
         isOpen={commandKOpen}
         onClose={() => setCommandKOpen(false)}
