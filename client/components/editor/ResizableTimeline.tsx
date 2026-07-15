@@ -1797,7 +1797,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         style={{ left: `${timeToX(t)}%` }}
                         onClick={(e) => { e.stopPropagation(); onTimeUpdate(t) }}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse shadow-[0_0_8px_rgba(240,79,216,1)] border border-white/20" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 shadow-[0_0_4px_rgba(240,79,216,0.6)] border border-white/20" />
                         <div className="absolute top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-fuchsia-950/90 text-[10px] font-black text-fuchsia-300 uppercase tracking-widest rounded border border-fuchsia-500/30 opacity-0 group-hover/beat:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                           Peak Beat ({t.toFixed(1)}s)
                         </div>
@@ -1878,7 +1878,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                             </div>
                             <div className="flex items-center justify-between pl-2 mt-1">
                                <div className="flex items-center gap-1.5 opacity-60">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)] animate-pulse" />
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]" />
                                   <span className="text-[10px] font-bold text-emerald-100/50 uppercase tracking-widest">Active Sync</span>
                                </div>
                                {renderLaneControls('captions')}
@@ -2189,7 +2189,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                 {selectedIds.includes(o.id) && (
                                    <motion.div
                                       layoutId={`selection-glow-${o.id}`}
-                                      className="absolute -inset-[2px] rounded-xl border-2 border-white/40 pointer-events-none animate-pulse"
+                                      className="absolute -inset-[2px] rounded-xl border-2 border-white/40 pointer-events-none"
                                    />
                                 )}
                                 <div className="flex items-center gap-2">
@@ -2716,7 +2716,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      style={{ '--progress-left-vis': `${progress}%`, left: 'var(--progress-left-vis)' } as any}
                    >
                      {/* Playhead Diamond Head */}
-                     <div className="absolute top-[-4px] left-[-7px] w-3.5 h-3.5 bg-fuchsia-500 rotate-45 border border-white/20 shadow-[0_0_20px_rgba(217,70,239,1)]" />
+                     <div className="absolute top-[-4px] left-[-7px] w-3.5 h-3.5 bg-fuchsia-500 rotate-45 border border-white/20 shadow-[0_0_6px_rgba(217,70,239,0.5)]" />
                      {/* Playhead Center Glow */}
                      <div className="absolute top-0 bottom-0 w-[1px] bg-white opacity-50" />
                      {/* Wide Body Gradient */}
