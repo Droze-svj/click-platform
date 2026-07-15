@@ -20,7 +20,7 @@ import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
 import { motion, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTranslation } from '../../../hooks/useTranslation'
-import { getAssetUrl } from '../../../utils/url'
+import { getAssetUrl, getMediaUrl } from '../../../utils/url'
 import { cn } from '../../../lib/utils'
 import {
   Panel,
@@ -370,7 +370,7 @@ export default function VideoStudioPage() {
                 return (
                   <Panel key={video._id} variant="bento" className="ds-anim-rise overflow-hidden p-0 group flex flex-col">
                     <div className="aspect-video relative bg-accent overflow-hidden border-b border-[var(--border-subtle)]">
-                      <video src={getAssetUrl(video.originalFile?.url || '')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
+                      <video src={getMediaUrl(video.originalFile?.url || '')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <button type="button" onClick={() => router.push(editLink(video._id))} aria-label={`Open ${video.title || 'video'} in editor`} title={`Open ${video.title || 'video'} in editor`} className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-black shadow-lg transition-transform active:scale-95">
                           <Play size={28} className="ml-0.5 fill-current" aria-hidden />

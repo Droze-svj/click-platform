@@ -26,4 +26,11 @@ describe('getMediaUrl — same-origin media resolution', () => {
     const ext = 'https://res.cloudinary.com/demo/video/upload/x.mp4';
     expect(getMediaUrl(ext)).toBe(ext);
   });
+
+  it('passes through blob:/data: URLs untouched (locally-generated media)', () => {
+    const blob = 'blob:http://localhost:3010/9f8e7d6c-1234';
+    const data = 'data:audio/mp3;base64,AAAA';
+    expect(getMediaUrl(blob)).toBe(blob);
+    expect(getMediaUrl(data)).toBe(data);
+  });
 });

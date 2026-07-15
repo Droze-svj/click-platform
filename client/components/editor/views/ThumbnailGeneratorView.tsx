@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
+import { getMediaUrl } from '../../../utils/url'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 import {
   ImageDown, Sparkles, Zap, Film, Loader2, CheckCircle2,
@@ -166,7 +167,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
           {/* Hidden video + canvas (used for frame capture) */}
           {videoUrl && (
             <>
-              <video ref={videoRef} src={videoUrl} className="hidden" crossOrigin="anonymous" preload="metadata" />
+              <video ref={videoRef} src={getMediaUrl(videoUrl || '')} className="hidden" crossOrigin="anonymous" preload="metadata" />
               <canvas ref={canvasRef} className="hidden" />
             </>
           )}

@@ -52,6 +52,9 @@ export function getAssetUrl(path: string): string {
  */
 export function getMediaUrl(path: string): string {
   if (!path) return '';
+  // Locally-generated media (blob:/data:) is already same-origin — never rewrite
+  // it (prepending '/' would corrupt the URL).
+  if (/^(blob:|data:)/i.test(path)) return path;
   const backendUrl = getBackendUrl();
   if (path.startsWith('http')) {
     // Our own backend origin → strip to a same-origin relative path.

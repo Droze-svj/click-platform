@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getMediaUrl } from '../utils/url'
 import {
     Folder,
     FileVideo,
@@ -117,7 +118,7 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
                                 {/* Preview Thumbnail */}
                                 <div className={`${viewMode === 'list' ? 'w-24 h-16' : 'aspect-video w-full'} bg-slate-100 dark:bg-gray-850 relative flex items-center justify-center overflow-hidden`}>
                                     {project.videoUrl ? (
-                                        <video src={project.videoUrl} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
+                                        <video src={getMediaUrl(project.videoUrl || '')} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
                                     ) : (
                                         <FileVideo className="w-10 h-10 text-gray-300" />
                                     )}
