@@ -293,12 +293,15 @@ const ModernVideoEditor: React.FC<{
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false)
   const [showPerformanceRail, setShowPerformanceRail] = useState(false)
-  const [insightsSidebarCollapsed, setInsightsSidebarCollapsed] = useState(false)
+  // Calm default: the right-hand AI insights sidebar starts COLLAPSED so the
+  // video preview gets the room; users can expand it (persisted). Key bumped to
+  // -v2 so the new default applies to everyone, not just brand-new sessions.
+  const [insightsSidebarCollapsed, setInsightsSidebarCollapsed] = useState(true)
 
   // Hydration-safe load of workspace insights sidebar preference on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('click-insights-sidebar-collapsed')
+      const stored = localStorage.getItem('click-insights-sidebar-collapsed-v2')
       if (stored !== null) {
         setInsightsSidebarCollapsed(stored === 'true')
       }
@@ -308,7 +311,7 @@ const ModernVideoEditor: React.FC<{
   // Persist workspace insights sidebar preference whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('click-insights-sidebar-collapsed', String(insightsSidebarCollapsed))
+      localStorage.setItem('click-insights-sidebar-collapsed-v2', String(insightsSidebarCollapsed))
     }
   }, [insightsSidebarCollapsed])
 
