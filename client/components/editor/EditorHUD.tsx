@@ -7,9 +7,6 @@ import {
   Search,
   Undo2,
   Redo2,
-  Activity,
-  TrendingUp,
-  Flame,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -20,7 +17,6 @@ import {
   Clock,
   Sparkles,
   Upload,
-  Brain,
   Timer,
   Cpu,
   Bot,
@@ -43,12 +39,6 @@ interface EditorHUDProps {
   handleRedo: () => void
   setShowKeyboardHelp: (show: boolean) => void
   onLayoutChange: (prefs: any) => void
-  engagementScore?: number
-  viralPotential?: number
-  hookStrength?: number
-  sentimentDensity?: number
-  trendAlignment?: number
-  retentionHeatmap?: number[]
   currentTime?: number
   duration?: number
   activeCategory?: EditorCategory
@@ -66,76 +56,6 @@ interface EditorHUDProps {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-/** SVG circular arc ring — shows score as a filled arc */
-function ScoreRing({
-  value,
-  size = 20,
-  strokeWidth = 2.5,
-  color,
-  animate = true,
-}: {
-  value: number
-  size?: number
-  strokeWidth?: number
-  color: string
-  animate?: boolean
-}) {
-  const safe = Math.max(0, Math.min(100, isFinite(value) ? value : 0))
-  const r = (size - strokeWidth) / 2
-  const circ = 2 * Math.PI * r
-  const fill = circ * (1 - safe / 100)
-
-  return (
-    <svg width={size} height={size} className="shrink-0 -rotate-90">
-      <circle
-        className="text-white/10"
-        strokeWidth={strokeWidth}
-        stroke="currentColor"
-        fill="transparent"
-        r={r}
-        cx={size / 2}
-        cy={size / 2}
-      />
-      <motion.circle
-        strokeWidth={strokeWidth}
-        strokeDasharray={circ}
-        initial={animate ? { strokeDashoffset: circ } : false}
-        animate={{ strokeDashoffset: fill }}
-        transition={{ duration: animate ? 0.7 : 0, ease: 'easeOut' }}
-        stroke={color}
-        fill="transparent"
-        r={r}
-        cx={size / 2}
-        cy={size / 2}
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-/** Tiny sparkline SVG */
-function MiniSparkline({ data, color }: { data: number[]; color: string }) {
-  const pts = (Array.isArray(data) ? data : []).filter((n) => isFinite(n)).slice(-10)
-  if (pts.length < 2) {
-    return <div className="h-5 flex items-center text-[10px] text-slate-600">No data yet</div>
-  }
-  const min = Math.min(...pts)
-  const max = Math.max(...pts)
-  const range = max - min || 1
-  const W = 80
-  const H = 20
-  const xs = pts.map((_, i) => (i / (pts.length - 1)) * W)
-  const ys = pts.map((v) => H - ((v - min) / range) * H)
-  const d = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ')
-
-  return (
-    <svg width={W} height={H} className="overflow-visible">
-      <path d={d} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={xs[xs.length - 1]} cy={ys[ys.length - 1]} r={2} fill={color} />
-    </svg>
-  )
-}
 
 /** Hover tooltip wrapper */
 function HUDTooltip({
@@ -185,27 +105,6 @@ function HUDTooltip({
   )
 }
 
-/** Mini bar chart for a sub-score */
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  const safe = Math.max(0, Math.min(100, isFinite(value) ? value : 0))
-  const barColorClass =
-    safe >= 90 ? 'bg-emerald-400' : safe >= 70 ? 'bg-amber-400' : 'bg-red-400'
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-[11px] text-slate-400 w-20 shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${safe}%` }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className={`h-full rounded-full ${barColorClass}`}
-        />
-      </div>
-      <span className="text-[11px] font-mono tabular-nums text-slate-300 w-6 text-right">{safe}</span>
-    </div>
-  )
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Plain, human-readable names for each editor section. */
@@ -247,14 +146,6 @@ function formatTime(s: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`
 }
 
-const clampScore = (v: number) => Math.max(0, Math.min(100, isFinite(v) ? Math.round(v) : 0))
-
-const scoreRingColor = (v: number) =>
-  v >= 90 ? '#34d399' : v >= 70 ? '#fbbf24' : '#f87171'
-
-const scoreTxtColor = (v: number) =>
-  v >= 90 ? 'text-emerald-400' : v >= 70 ? 'text-amber-400' : 'text-rose-400'
-
 /**
  * Container-width breakpoints. The HUD adapts to the width of its OWN container
  * (which changes with side panels / zen mode), not the viewport — so it fits
@@ -270,55 +161,11 @@ function useResponsiveLayout(width: number) {
     saveLabel: W >= 1240,
     inlineUndoRedo: W >= 660,
     commandText: W >= 880,
-    secondaryScores: W >= 540, // show Viral + Hook pills (Retention always shows)
-    scoreLabels: W >= 1180,
     inlineLayout: W >= 920,
     inlineViral: W >= 800,
     inlineZen: W >= 720,
     statusChips: W >= 1200,
   }
-}
-
-// ─── Metric Pill ─────────────────────────────────────────────────────────────
-
-function MetricPill({
-  icon: Icon,
-  value,
-  label,
-  showLabel,
-  isOpen,
-  onClick,
-}: {
-  icon: React.ElementType
-  value: number
-  label: string
-  showLabel: boolean
-  isOpen: boolean
-  onClick: () => void
-}) {
-  const v = clampScore(value)
-  const col = scoreRingColor(v)
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={`${label} score ${v}%`}
-      aria-haspopup="dialog"
-      aria-expanded={isOpen ? 'true' : 'false'}
-      className={`relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-[11px] font-medium transition-colors bg-white/[0.03] shrink-0 ${
-        isOpen ? 'border-primary-500/40 bg-primary-500/5' : 'border-white/10 hover:bg-white/[0.06]'
-      } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40`}
-      style={{ '--icon-col': col } as any}
-    >
-      <div className="relative flex items-center justify-center shrink-0">
-        <ScoreRing value={v} size={20} strokeWidth={2.5} color={col} />
-        <Icon className="absolute w-2.5 h-2.5 text-[var(--icon-col)]" />
-      </div>
-      <span className={`font-mono tabular-nums ${scoreTxtColor(v)}`}>{v}%</span>
-      {showLabel && <span className="text-slate-400">{label}</span>}
-    </button>
-  )
 }
 
 // ─── EditorHUD ────────────────────────────────────────────────────────────────
@@ -333,12 +180,6 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   handleRedo,
   setShowKeyboardHelp,
   onLayoutChange,
-  engagementScore = 85,
-  viralPotential = 78,
-  hookStrength = 92,
-  sentimentDensity = 70,
-  trendAlignment = 82,
-  retentionHeatmap = Array(20).fill(80).map((v, i) => v - i * 2),
   currentTime = 0,
   duration = 0,
   activeCategory,
@@ -357,7 +198,6 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   const reduceMotion = useReducedMotion()
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
-  const [openMetric, setOpenMetric] = useState<'engagement' | 'viral' | 'hook' | null>(null)
 
   // Measure the bar's own width to drive container-based responsiveness.
   const barRef = useRef<HTMLDivElement>(null)
@@ -375,26 +215,18 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   }, [])
   const L = useResponsiveLayout(barWidth)
 
-  const eng = clampScore(engagementScore)
-  const viral = clampScore(viralPotential)
-  const hook = clampScore(hookStrength)
-
   const canUndo = historyIndex > 0
   const canRedo = historyLength > 0 && historyIndex < historyLength - 1
 
-  const closeAllMenus = () => { setLayoutOpen(false); setMoreOpen(false); setOpenMetric(null) }
+  const closeAllMenus = () => { setLayoutOpen(false); setMoreOpen(false) }
 
-  const toggleMetric = (key: 'engagement' | 'viral' | 'hook') => {
-    setLayoutOpen(false); setMoreOpen(false)
-    setOpenMetric((prev) => (prev === key ? null : key))
-  }
-  const toggleLayout = () => { setMoreOpen(false); setOpenMetric(null); setLayoutOpen((v) => !v) }
-  const toggleMore = () => { setLayoutOpen(false); setOpenMetric(null); setMoreOpen((v) => !v) }
+  const toggleLayout = () => { setMoreOpen(false); setLayoutOpen((v) => !v) }
+  const toggleMore = () => { setLayoutOpen(false); setMoreOpen((v) => !v) }
 
   // Single source of truth for closing menus: outside-click + Escape. This also
   // fixes the old bug where the layout dropdown never closed on outside-click.
   useEffect(() => {
-    const anyOpen = layoutOpen || moreOpen || openMetric
+    const anyOpen = layoutOpen || moreOpen
     if (!anyOpen) return
     const onDown = (e: MouseEvent) => {
       if (barRef.current && !barRef.current.contains(e.target as Node)) closeAllMenus()
@@ -406,15 +238,9 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('keydown', onKey)
     }
-  }, [layoutOpen, moreOpen, openMetric])
+  }, [layoutOpen, moreOpen])
 
   const categoryLabel = activeCategory ? CATEGORY_LABELS[activeCategory] : undefined
-
-  const aiTips: Record<string, string> = {
-    engagement: eng >= 85 ? 'Strong retention. Add a call-to-action around 80%.' : 'Add cuts or energy mid-roll to keep viewers watching.',
-    viral: viral >= 80 ? 'Viral potential is high. Add a hook overlay on the first frame.' : 'Increase pacing in the first 5s to boost shares.',
-    hook: hook >= 88 ? 'Hook is excellent. Lock in the opening frame.' : 'Open with a bold statement. Shorten the talking-head intro.',
-  }
 
   // The overflow menu always exists (it hosts keyboard shortcuts plus anything
   // that didn't fit inline), so nothing is ever silently dropped from the HUD.
@@ -551,30 +377,6 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
             </>
           )}
         </button>
-
-        {/* Scores */}
-        <div className="relative flex items-center gap-1.5 shrink-0">
-          <MetricPill icon={Activity} value={eng} label="Retention" showLabel={L.scoreLabels} isOpen={openMetric === 'engagement'} onClick={() => toggleMetric('engagement')} />
-          {L.secondaryScores && (
-            <>
-              <MetricPill icon={Flame} value={viral} label="Viral" showLabel={L.scoreLabels} isOpen={openMetric === 'viral'} onClick={() => toggleMetric('viral')} />
-              <MetricPill icon={TrendingUp} value={hook} label="Hook" showLabel={L.scoreLabels} isOpen={openMetric === 'hook'} onClick={() => toggleMetric('hook')} />
-            </>
-          )}
-
-          <AnimatePresence>
-            {openMetric && (
-              <MetricPopover
-                title={openMetric === 'engagement' ? 'Retention' : openMetric === 'viral' ? 'Viral potential' : 'Hook strength'}
-                value={openMetric === 'engagement' ? eng : openMetric === 'viral' ? viral : hook}
-                heatmap={retentionHeatmap}
-                allScores={{ 'Retention': eng, 'Viral': viral, 'Hook': hook, 'Sentiment': clampScore(sentimentDensity), 'Trend': clampScore(trendAlignment) }}
-                tip={aiTips[openMetric]}
-                reduceMotion={!!reduceMotion}
-              />
-            )}
-          </AnimatePresence>
-        </div>
 
         {/* ════════ ZONE 3 · Actions ════════ */}
         <div className="flex items-center gap-1.5 shrink-0 ml-auto">
@@ -764,69 +566,6 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           </button>
         </div>
 
-      </div>
-    </motion.div>
-  )
-}
-
-// ─── Metrics Popover ─────────────────────────────────────────────────────────
-
-function MetricPopover({
-  title,
-  value,
-  heatmap,
-  allScores,
-  tip,
-  reduceMotion,
-}: {
-  title: string
-  value: number
-  heatmap: number[]
-  allScores: Record<string, number>
-  tip: string
-  reduceMotion: boolean
-}) {
-  const col = scoreRingColor(value)
-
-  return (
-    <motion.div
-      role="dialog"
-      aria-label={`${title} details`}
-      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 6 }}
-      transition={{ duration: 0.15 }}
-      className="absolute top-full left-0 mt-2 z-[70] w-56 max-w-[calc(100vw-2rem)] max-h-[80vh] overflow-y-auto rounded-xl border border-white/10 neural-hud-dropdown p-3.5"
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <div className="text-[12px] font-semibold text-white">{title}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Live score</div>
-        </div>
-        <div className="flex items-baseline gap-1" style={{ '--score-col': col } as any}>
-          <span className="text-[18px] font-semibold font-mono tabular-nums text-[var(--score-col)]">{value}</span>
-          <span className="text-[11px] text-slate-500">/ 100</span>
-        </div>
-      </div>
-
-      <div className="mb-3">
-        <div className="text-[10px] uppercase tracking-wide text-slate-500 mb-1.5">Retention over time</div>
-        <MiniSparkline data={heatmap} color={col} />
-      </div>
-
-      <div className="h-px bg-white/5 mb-3" />
-
-      <div className="flex flex-col gap-2 mb-3">
-        {Object.entries(allScores).map(([k, v]) => (
-          <ScoreBar key={k} label={k} value={v} />
-        ))}
-      </div>
-
-      <div className="h-px bg-white/5 mb-2.5" />
-
-      <div className="flex gap-2">
-        <Brain className="w-3.5 h-3.5 text-primary-400 shrink-0 mt-0.5" />
-        <p className="text-[11px] text-slate-400 leading-relaxed">{tip}</p>
       </div>
     </motion.div>
   )

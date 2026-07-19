@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
 import { useSocket } from '../../../../../hooks/useSocket'
-import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, TrendingUp, Layout, Moon, Sun, Wand2, Scissors, Music, Type, Hash, Flame, Mic, Film, Gauge } from 'lucide-react'
+import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, Layout, Moon, Sun, Wand2, Scissors, Music, Type, Hash, Flame, Mic, Film, Gauge } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
 import { getAssetUrl, getMediaUrl } from '../../../../../utils/url'
@@ -98,89 +98,6 @@ function SelectCard<T extends string>({
           <option key={o} value={o}>{String(o).replace(/-/g, ' ')}</option>
         ))}
       </select>
-    </div>
-  )
-}
-
-// ─── Per-clip viral score breakdown ─────────────────────────────────────────
-const CLIP_TYPE_COLORS: Record<string, string> = {
-  hook:       'bg-yellow-50 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/50',
-  proof:      'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50',
-  story:      'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800/50',
-  insight:    'bg-purple-50 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800/50',
-  reaction:   'bg-orange-50 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border-orange-200 dark:border-orange-800/50',
-  confession: 'bg-pink-50 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300 border-pink-200 dark:border-pink-800/50',
-}
-
-function ClipScoreCard({ clip }: { clip: any }) {
-  const score = clip.engagementScore || {}
-  const breakdown = clip.scoreBreakdown || {}
-  const clipType = (clip.clipType || 'insight') as string
-  const typeColor = CLIP_TYPE_COLORS[clipType] || CLIP_TYPE_COLORS.insight
-  const overall = score.overall ?? clip.viralScore ?? 0
-
-  return (
-    <div className="p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-4">
-      <div className="flex items-center justify-between">
-        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border ${typeColor}`}>
-          {clipType}
-        </span>
-        <span className="text-2xl font-black text-surface-900 dark:text-white tabular-nums">{overall}%</span>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { label: 'Hook',   val: score.hookStrength  ?? breakdown.hookStrength  ?? 0 },
-          { label: 'Viral',  val: score.viralPotential ?? 0 },
-          { label: 'Proof',  val: breakdown.proofDensity ?? 0 },
-          { label: 'Energy', val: breakdown.deliveryEnergy ?? score.sentimentDensity ?? 0 },
-        ].map(({ label, val }) => (
-          <div key={label} className="flex justify-between items-center px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
-            <span className="text-[10px] font-bold text-surface-500 uppercase">{label}</span>
-            <span className="text-sm font-black text-surface-900 dark:text-white tabular-nums">{val}%</span>
-          </div>
-        ))}
-      </div>
-      {clip.rationale && (
-        <p className="text-[11px] text-surface-500 italic leading-relaxed">{clip.rationale}</p>
-      )}
-    </div>
-  )
-}
-
-// ─── A/B hook variant selector ───────────────────────────────────────────────
-function HookVariantSelector({ variants, onSelect }: {
-  variants: { curiosityGap?: string; boldClaim?: string; socialProof?: string }
-  onSelect: (hook: string) => void
-}) {
-  const [selected, setSelected] = useState<string | null>(null)
-  const options = [
-    { key: 'curiosityGap', label: 'Curiosity Gap', icon: '🕵️', text: variants.curiosityGap },
-    { key: 'boldClaim',    label: 'Bold Claim',    icon: '💥', text: variants.boldClaim },
-    { key: 'socialProof',  label: 'Social Proof',  icon: '📣', text: variants.socialProof },
-  ].filter(o => o.text)
-
-  if (options.length === 0) return null
-  return (
-    <div className="space-y-2">
-      <p className="text-[10px] font-black uppercase tracking-widest text-surface-500">Hook Variant</p>
-      {options.map(opt => (
-        <button
-          key={opt.key}
-          type="button"
-          onClick={() => { setSelected(opt.key); onSelect(opt.text!) }}
-          className={`w-full text-left p-4 rounded-xl border transition-all ${
-            selected === opt.key
-              ? 'bg-primary-500/10 border-primary-400 dark:border-primary-600'
-              : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <span>{opt.icon}</span>
-            <span className="text-[10px] font-black uppercase tracking-wider text-surface-500">{opt.label}</span>
-          </div>
-          <p className="text-sm font-medium text-surface-900 dark:text-white">{opt.text}</p>
-        </button>
-      ))}
     </div>
   )
 }
@@ -354,9 +271,7 @@ export default function VideoEditPage({ params }: PageProps) {
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(false)
   const [customInstructions, setCustomInstructions] = useState<string>('')
   const [editJobId, setEditJobId] = useState<string | null>(null)
-  const [newVideoScore, setNewVideoScore] = useState<{ score: number; factors?: { name: string; value: string; impact: string }[] } | null>(null)
   const [marketingBrief, setMarketingBrief] = useState<any>(null)
-  const [scoredClips, setScoredClips] = useState<any[]>([])
   // Resolved style insight from the publish→learn loop. When the user
   // has ≥3 publishes, we pre-select their top preset / color grade /
   // hook style so the HUD opens already biased toward their style. The
@@ -438,21 +353,12 @@ export default function VideoEditPage({ params }: PageProps) {
 
   useEffect(() => {
     if (!aiEditResult || !videoId) return
-    setNewVideoScore(null)
     setMarketingBrief(null)
-    setScoredClips([])
-    // Fetch engagement score and marketing brief in parallel
-    apiPost('/video/ai-editing/score', { videoId })
-      .then((res: any) => {
-        const data = res?.data ?? res
-        if (data?.score != null) setNewVideoScore({ score: data.score, factors: data.factors })
-      })
-      .catch(() => { })
+    // Fetch the marketing brief for the finished edit.
     apiPost('/video/ai-editing/marketing-brief', { videoId })
       .then((res: any) => {
         const data = res?.data ?? res
         if (data?.brief) setMarketingBrief(data.brief)
-        if (Array.isArray(data?.scoredClips?.clips)) setScoredClips(data.scoredClips.clips)
       })
       .catch(() => { })
   }, [aiEditResult, videoId])
@@ -785,57 +691,6 @@ export default function VideoEditPage({ params }: PageProps) {
                     </button>
                   </div>
                 </div>
-
-                {newVideoScore && (
-                  <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-10 rounded-3xl shadow-sm">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                           <TrendingUp size={16} className="text-primary-600 dark:text-primary-400" />
-                           <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">Engagement Prediction</span>
-                        </div>
-                        <h3 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">Predicted Score</h3>
-                      </div>
-                      <div className="text-6xl font-black text-primary-500 tabular-nums leading-none tracking-tighter">{newVideoScore.score}%</div>
-                    </div>
-                    {newVideoScore.factors && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {newVideoScore.factors.map((f, i) => (
-                          <div key={i} className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex justify-between items-center">
-                            <div>
-                               <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mb-1">{f.name}</p>
-                               <p className="text-lg font-black text-surface-900 dark:text-white tracking-tight">{f.value}</p>
-                            </div>
-                            <div className={`px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider ${f.impact.startsWith('+') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50' : 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50'}`}>
-                               {f.impact}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Ranked Viral Clips — scored by the Smart Clip Scorer */}
-                {scoredClips.length > 0 && (
-                  <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 rounded-3xl shadow-sm space-y-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <TrendingUp size={16} className="text-primary-500" />
-                      <h3 className="text-sm font-black text-surface-900 dark:text-white uppercase tracking-wider">Top Viral Clips</h3>
-                    </div>
-                    {scoredClips.map((clip, i) => (
-                      <div key={i} className="space-y-3">
-                        <ClipScoreCard clip={clip} />
-                        {clip.hookVariants && (
-                          <HookVariantSelector
-                            variants={clip.hookVariants}
-                            onSelect={(hook) => { /* hook selected — could copy to clipboard */ navigator.clipboard?.writeText(hook).catch(() => {}) }}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
 
                 {/* Marketing Brief */}
                 <MarketingBriefPanel brief={marketingBrief} />

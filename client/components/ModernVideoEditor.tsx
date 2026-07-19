@@ -58,7 +58,6 @@ import CreativeAIView from './editor/views/CreativeAIView'
 // opened, keeping it out of the editor's initial chunk. (AdvancedTimelineView
 // below does the same for react-konva.)
 const GrowthInsightsView = dynamic(() => import('./editor/views/GrowthInsightsView'), { ssr: false })
-import PredictionEngineView from './editor/views/PredictionEngineView'
 import AutomateView from './editor/views/AutomateView'
 import ColorGradingView from './editor/views/ColorGradingView'
 import AudioPanel from './editor/AudioPanel'
@@ -203,7 +202,6 @@ const WORKFLOW_STEPS: { id: EditorCategory; label: string; icon?: React.ElementT
   { id: 'ai', label: 'AI Auto Edit', icon: AiIcon, color: 'text-primary-600 dark:text-primary-400' },
   { id: 'effects', label: 'Visual Effects', icon: LayersIcon, color: 'text-amber-600 dark:text-amber-400' },
   { id: 'remix', label: 'Auto Remix', icon: Sparkles, color: 'text-fuchsia-600 dark:text-fuchsia-400' },
-  { id: 'predict', label: 'Performance Forecast', icon: BrainCircuit, color: 'text-indigo-600 dark:text-indigo-400' },
   { id: 'intelligence', label: 'Brand DNA', icon: Database, color: 'text-emerald-600 dark:text-emerald-400' },
   { id: 'timeline', label: 'Timeline', icon: List, color: 'text-surface-600 dark:text-surface-400' },
   { id: 'export', label: 'Export', icon: Send, color: 'text-surface-900 dark:text-white' },
@@ -2126,7 +2124,6 @@ const ModernVideoEditor: React.FC<{
       case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} onBeatCut={handleBeatCut} hasSegmentSelection={!!selectedSegmentId} />
       case 'short-clips': return <ShortClipsView videoState={videoState} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} setActiveCategory={setActiveCategory} showToast={showToast} transcript={transcript} />
       case 'growth': return <GrowthInsightsView isOledTheme={true} />
-      case 'predict': return <PredictionEngineView videoId={videoId || ''} timelineSegments={timelineSegments} transcript={transcript} showToast={showToast} />
       case 'automate': return <AutomateView
         voiceoverText={voiceoverText}
         setVoiceoverText={setVoiceoverText}
@@ -2422,12 +2419,6 @@ const ModernVideoEditor: React.FC<{
             handleRedo={handleRedo}
             setShowKeyboardHelp={setShowKeyboardHelp}
             onLayoutChange={updateLayout}
-            engagementScore={engagementScore.overall}
-            viralPotential={engagementScore.viralPotential}
-            hookStrength={engagementScore.hookStrength}
-            sentimentDensity={engagementScore.sentimentDensity}
-            trendAlignment={engagementScore.trendAlignment}
-            retentionHeatmap={engagementScore.retentionHeatmap}
             currentTime={videoState.currentTime}
             duration={videoState.duration}
             activeCategory={activeCategory}

@@ -3,14 +3,11 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BarChart3,
   Zap,
   Sparkles,
   MessageSquare,
   ChevronDown,
   ChevronRight,
-  ArrowUpRight,
-  TrendingUp,
   Target,
   Send,
   Calendar,
@@ -235,12 +232,6 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
     setAdvice(platformAdvice)
   }, [activePlatform, niche, initialScore])
 
-  const getStatusColor = (val: number = 0) => {
-    if (val > 80) return 'bg-emerald-500'
-    if (val > 50) return 'bg-amber-500'
-    return 'bg-rose-500'
-  }
-
   const hasHighDropoff = (currentScore.retentionHeatmap || []).some(v => v < 60)
 
   return (
@@ -332,46 +323,8 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
          </AnimatePresence>
       </div>
 
-      {/* Engagement Indicator */}
+      {/* Platform advice + coaching actions */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h3 className="ds-text-label text-theme-primary">Viral potential</h3>
-          </div>
-          <div className={cn('w-3 h-3 rounded-full', getStatusColor(currentScore.viralPotential))} />
-        </div>
-
-        <motion.div
-          key={activePlatform}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="ds-surface-card relative h-48 rounded-2xl overflow-hidden flex flex-col justify-end p-4 group"
-        >
-          <div className="absolute top-4 left-4 flex flex-col z-10">
-            <span className="ds-text-display text-theme-primary leading-none">{currentScore.viralPotential}</span>
-            <span className="ds-text-caption text-theme-secondary capitalize mt-1 ds-surface-subtle px-2 py-0.5 rounded-full">
-               {activePlatform} index
-            </span>
-          </div>
-
-          {/* Mini Heatmap Visualization (Animated & Safe) */}
-          <div className="flex items-end gap-1 h-20 px-2 mt-auto relative z-0">
-            {(currentScore.retentionHeatmap || []).map((val, i) => (
-              <motion.div
-                key={i}
-                initial={{ height: '0%' }}
-                animate={{
-                  height: `${(typeof val !== 'number' || isNaN(val)) ? 0 : val}%`
-                }}
-                transition={{ duration: 0.5, delay: i * 0.02, type: 'spring' }}
-                className={cn('flex-1 rounded-t-sm opacity-60 hover:opacity-100 transition-opacity', val > 70 ? 'bg-primary' : 'bg-slate-400/30')}
-              />
-            ))}
-          </div>
-        </motion.div>
-
         {/* Neural Platform Advice */}
         {advice && (
            <motion.div
@@ -384,64 +337,6 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
              {advice}
            </motion.div>
         )}
-
-        {/* Multi-Dimensional Metrics (Safe Math) */}
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'Hook', val: currentScore.hookStrength ?? 0, icon: Zap },
-            { label: 'Sentiment', val: currentScore.sentimentDensity ?? 0, icon: Sparkles },
-            { label: 'Trends', val: currentScore.trendAlignment ?? 0, icon: ArrowUpRight },
-            { label: 'Retention', val: Math.floor(currentScore.overall ?? 0), icon: BarChart3 },
-          ].map((m) => (
-            <div key={m.label} className="ds-surface-card rounded-xl p-3">
-              <div className="flex items-center justify-between mb-1">
-                <m.icon className="w-3 h-3 text-theme-muted" />
-                <motion.span
-                  key={m.val}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className={cn('text-[11px] font-semibold tabular-nums', m.val > 70 ? 'text-emerald-500' : 'text-theme-muted')}
-                >
-                  {m.val}%
-                </motion.span>
-              </div>
-              <div className="ds-text-caption text-theme-secondary">{m.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="h-px bg-border" />
-
-        {/* Psychological Hook Strategy */}
-        <div className="space-y-4">
-           <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Brain className="w-4 h-4 text-purple-500" />
-                <h3 className="ds-text-label text-theme-secondary">Hook psychology</h3>
-              </div>
-              <Badge variant="outline">AI scanned</Badge>
-           </div>
-           
-           <div className="space-y-3">
-              {[
-                { label: 'FOMO / Scarcity', val: currentScore.psychology?.fomo ?? 65, color: 'bg-orange-500' },
-                { label: 'Curiosity Gap', val: currentScore.psychology?.curiosity ?? 82, color: 'bg-indigo-500' },
-                { label: 'Core Value', val: currentScore.psychology?.value ?? 70, color: 'bg-emerald-500' },
-              ].map((psyc) => (
-                <div key={psyc.label} className="space-y-1.5">
-                   <div className="flex justify-between ds-text-caption text-theme-muted">
-                      <span>{psyc.label}</span>
-                      <span className="text-theme-primary tabular-nums">{psyc.val}%</span>
-                   </div>
-                   <div className="h-1 bg-slate-400/20 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${psyc.val}%` }} className={`h-full ${psyc.color}`} />
-                   </div>
-                </div>
-              ))}
-           </div>
-        </div>
-
-        <div className="h-px bg-border" />
 
         {/* CTA Placement Optimizer */}
         <div className="space-y-4">
@@ -476,7 +371,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                   className="p-3 rounded-2xl bg-rose-500/5 border border-rose-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-rose-500/[0.08]"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="ds-text-caption text-rose-500">Weak hook ({currentScore.hookStrength}%)</span>
+                    <span className="ds-text-caption text-rose-500">Weak hook</span>
                     <Button
                       variant="destructive"
                       size="sm"
@@ -500,7 +395,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                   className="p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-amber-500/[0.08]"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="ds-text-caption text-amber-500">Low trend fit ({currentScore.trendAlignment}%)</span>
+                    <span className="ds-text-caption text-amber-500">Low trend fit</span>
                     <Button
                       variant="secondary"
                       size="sm"
