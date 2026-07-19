@@ -101,10 +101,19 @@ export function mapTimelineToSource(
   timelineSec: number,
   segments: TimelineSegment[] | null | undefined
 ): SourceMapping {
+  const base: SourceMapping = { segment: null, sourceTime: timelineSec, speed: 1, sourceUrl: null, freeze: false, reversed: false }
   const primary = selectPrimarySegments(segments)
-  if (primary.length === 0) {
-    return { segment: null, sourceTime: timelineSec, speed: 1, sourceUrl: null, freeze: false, reversed: false }
-  }
+  if (primary.length === 0) return base
+
+  // Before the first segment (a lead-in gap after a trim that starts > 0): show
+  // the BASE source at t — do not jump into any clip.
+  if (timelineSec < primary[0].startTime) return base
+
+  // Track the most recent segment that has started, so an interior gap or a time
+  // past the end holds THAT segment's end frame — not the final clip's source
+  // (the old fallthrough returned `last` for every unmatched t, which could swap
+  // to the ending B-roll during the intro).
+  let prev = primary[0]
   for (const seg of primary) {
     if (timelineSec >= seg.startTime && timelineSec < seg.endTime) {
       const speed = resolveSegmentSpeed(seg)
@@ -120,14 +129,14 @@ export function mapTimelineToSource(
         reversed: !!seg.reversed,
       }
     }
+    if (seg.startTime <= timelineSec) prev = seg
   }
-  // Past the last segment — clamp to its end.
-  const last = primary[primary.length - 1]
+  // Interior gap or past the end — hold the most recent segment's end frame.
   return {
-    segment: last,
-    sourceTime: last.sourceEndTime ?? last.endTime,
-    speed: resolveSegmentSpeed(last),
-    sourceUrl: resolveSegmentSourceUrl(last),
+    segment: prev,
+    sourceTime: prev.sourceEndTime ?? prev.endTime,
+    speed: resolveSegmentSpeed(prev),
+    sourceUrl: resolveSegmentSourceUrl(prev),
     freeze: false,
     reversed: false,
   }

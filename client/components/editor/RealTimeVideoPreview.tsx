@@ -562,6 +562,9 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const pendingSourceSeekRef = useRef<number | null>(null)
   const videoUrlRef = useRef(videoUrl)
   videoUrlRef.current = videoUrl
+  // Report the timeline duration once per distinct base-source length, so a base
+  // reload on every clip→base transition doesn't re-fire onDurationChange.
+  const lastReportedDurationRef = useRef<number>(-1)
 
   /**
    * Switch the <video> to the active segment's source if it changed. Returns
@@ -583,6 +586,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   useEffect(() => {
     activeSourceUrlRef.current = null
     pendingSourceSeekRef.current = null
+    lastReportedDurationRef.current = -1
     setActiveSourceUrl(null)
   }, [videoUrl])
 
@@ -766,15 +770,29 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.currentTarget
     // Only the BASE source defines the timeline duration — a switched-in clip
-    // must not overwrite it with its own (usually shorter) length.
-    if (activeSourceUrlRef.current == null) onDurationChange(v.duration)
+    // must not overwrite it with its own (usually shorter) length. Report once
+    // per distinct value so a base reload on every clip→base transition doesn't
+    // re-fire onDurationChange.
+    if (
+      activeSourceUrlRef.current == null &&
+      isFinite(v.duration) &&
+      Math.abs(v.duration - lastReportedDurationRef.current) > 0.01
+    ) {
+      lastReportedDurationRef.current = v.duration
+      onDurationChange(v.duration)
+    }
     if (v.videoWidth > 0 && v.videoHeight > 0) {
       setVideoDimensions({ w: v.videoWidth, h: v.videoHeight })
     }
-    // A source switch just finished loading — apply the deferred seek now that
-    // the new clip is seekable, and resume playback if we're playing.
+    // A source switch just finished loading. Re-derive the seek target + speed
+    // from the CURRENT timeline position — the async load may have taken
+    // 100-300ms during which the cursor advanced, so replaying the value captured
+    // at the switch instant would leave the clip behind. load() also reset
+    // playbackRate to 1, so re-apply the segment speed here.
     if (pendingSourceSeekRef.current != null) {
-      try { v.currentTime = pendingSourceSeekRef.current } catch { /* clamp/seek may fail */ }
+      const m = timelineToSource(timelineTimeRef.current, timelineSegmentsRef.current || [])
+      try { v.currentTime = m.sourceTime } catch { /* clamp/seek may fail */ }
+      applyPlaybackRate(v, m.speed)
       pendingSourceSeekRef.current = null
       if (isPlaying) v.play().catch(() => {})
     }

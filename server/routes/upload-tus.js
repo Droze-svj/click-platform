@@ -83,6 +83,14 @@ const tusServer = new Server({
       const durableName = randomMediaNameFrom(upload?.metadata?.filename, '.mp4');
       const durablePath = path.join(videosDir, durableName);
 
+      // Idempotency: if the finished chunk is already gone, this hook most likely
+      // re-fired after a prior successful promotion (or the temp was swept). Skip
+      // so we don't create a duplicate Content + a doomed processing job.
+      if (!fs.existsSync(tempPath)) {
+        logger.warn('[tus] finish hook fired but the source chunk is gone; skipping (likely a re-fire)', { id: upload.id });
+        return res;
+      }
+
       // Default to the temp location so a promotion failure still yields a usable
       // (if short-lived) Content rather than hard-failing the upload.
       let fileUrl = `/uploads/temp/tus/${upload.id}`;
@@ -95,8 +103,12 @@ const tusServer = new Server({
         } catch (renameErr) {
           // rename fails across devices (EXDEV) — fall back to copy + unlink.
           if (renameErr && renameErr.code === 'EXDEV') {
-            fs.copyFileSync(tempPath, durablePath);
-            fs.unlinkSync(tempPath);
+            // Async copy: a multi-GB file must not block the event loop (which a
+            // sync copyFileSync would, stalling every other request). Then remove
+            // the source best-effort — a failed unlink must NOT discard the
+            // successful copy; the temp sweep reclaims the leftover.
+            await fs.promises.copyFile(tempPath, durablePath);
+            try { await fs.promises.unlink(tempPath); } catch { /* sweep reclaims */ }
           } else {
             throw renameErr;
           }
