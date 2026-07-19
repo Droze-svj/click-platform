@@ -502,7 +502,11 @@ export default function VideoEditPage({ params }: PageProps) {
   )
 
   const videoUrl = video?.originalFile?.url
-  const editorVideoUrl = getMediaUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl || '')
+  // aiEditResult shape varies by path: the synchronous /auto-edit returns
+  // { data?: { editedVideoUrl }, editedVideoUrl }, while an async VideoProgressTracker
+  // completion nests it under .result. Check all three so "Open in Editor" always
+  // opens the AI-edited clip, never silently the original.
+  const editorVideoUrl = getMediaUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl ?? aiEditResult?.result?.editedVideoUrl) || videoUrl || '')
 
   const selectionUI = (
     <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-24 transition-colors duration-500">

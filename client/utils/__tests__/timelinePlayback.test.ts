@@ -104,4 +104,28 @@ describe('mapTimelineToSource', () => {
     const segs = [seg({ id: 'a', startTime: 0, endTime: 4, sourceStartTime: 0, sourceEndTime: 4 })]
     expect(mapTimelineToSource(99, segs)).toMatchObject({ sourceTime: 4 })
   })
+
+  it('lead-in gap (t before the first segment) shows the BASE source, not the last clip', () => {
+    const segs = [
+      seg({ id: 'a', startTime: 2, endTime: 5, sourceStartTime: 0 }),
+      seg({ id: 'z', startTime: 5, endTime: 9, sourceUrl: '/uploads/videos/ending.mp4' } as any),
+    ]
+    // At t=0.5 (before segment a starts at 2) we must NOT jump to the ending clip.
+    const m = mapTimelineToSource(0.5, segs)
+    expect(m.segment).toBeNull()
+    expect(m.sourceUrl).toBeNull()
+    expect(m.sourceTime).toBe(0.5)
+  })
+
+  it('interior gap holds the previous segment end, not the final clip', () => {
+    const segs = [
+      seg({ id: 'a', startTime: 0, endTime: 4, sourceStartTime: 0, sourceEndTime: 4 }),
+      seg({ id: 'z', startTime: 8, endTime: 12, sourceUrl: '/uploads/videos/ending.mp4', sourceStartTime: 1, sourceEndTime: 5 } as any),
+    ]
+    // t=6 is in the gap between a (ends 4) and z (starts 8): hold a's end, not z.
+    const m = mapTimelineToSource(6, segs)
+    expect(m.segment?.id).toBe('a')
+    expect(m.sourceUrl).toBeNull()
+    expect(m.sourceTime).toBe(4)
+  })
 })
