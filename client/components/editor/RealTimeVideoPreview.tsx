@@ -15,6 +15,7 @@ import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
 import { resolveCaptionTextStyle, buildKaraokeTokens } from '../../utils/captionStyler'
 import { normWord } from '../../lib/captions'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
+import { mapTimelineToSource, clampPlaybackRate } from '../../utils/timelinePlayback'
 import { activeTransitionAt, transitionOverlayStyle } from '../../lib/transitionPreview'
 import { Rnd } from 'react-rnd'
 import { getAssetUrl, getMediaUrl } from '../../utils/url'
@@ -357,49 +358,12 @@ export interface RealTimeVideoPreviewProps {
  * pre-rendered proxy, and J/L audio offsets need a separate WebAudio mix.
  * For those, the UI badges the segment as "export-only".
  */
-function timelineToSource(
-  timelineSec: number,
-  segments: TimelineSegment[]
-): { segment: TimelineSegment | null; sourceTime: number; freeze: boolean; reversed: boolean } {
-  if (!segments || segments.length === 0) {
-    return { segment: null, sourceTime: timelineSec, freeze: false, reversed: false }
-  }
-  // Match the renderer's planSegments: only consider primary-video segments
-  // sorted by startTime. Effects/audio-only/text segments don't contribute.
-  const primary = segments
-    .filter((s) => {
-      const track = typeof s.track === 'number' ? s.track : 0
-      if (track !== 0 && track !== 1) return false
-      if (s.type && s.type !== 'video' && s.type !== 'broll' && s.type !== 'cut') return false
-      return true
-    })
-    .slice()
-    .sort((a, b) => (a.startTime ?? 0) - (b.startTime ?? 0))
-  if (primary.length === 0) {
-    return { segment: null, sourceTime: timelineSec, freeze: false, reversed: false }
-  }
-  for (const seg of primary) {
-    if (timelineSec >= seg.startTime && timelineSec < seg.endTime) {
-      const offsetIntoSeg = timelineSec - seg.startTime
-      const sourceStart = seg.sourceStartTime ?? seg.startTime
-      const sourceTime = sourceStart + offsetIntoSeg
-      return {
-        segment: seg,
-        sourceTime,
-        freeze: !!seg.freezeFrame,
-        reversed: !!seg.reversed,
-      }
-    }
-  }
-  // Past the last segment — clamp to its end.
-  const last = primary[primary.length - 1]
-  return {
-    segment: last,
-    sourceTime: last.sourceEndTime ?? last.endTime,
-    freeze: false,
-    reversed: false,
-  }
-}
+// Timeline→source mapping now lives in utils/timelinePlayback (pure + unit-tested
+// for preview/export parity). `timelineToSource` stays as a thin alias so the
+// existing call sites read unchanged; the mapping additionally carries `speed`
+// (per-segment playback rate) so the preview can play slow-mo/fast segments at
+// their real rate instead of a flat 1×.
+const timelineToSource = mapTimelineToSource
 
 function timelineHasExportOnlyOps(segments: TimelineSegment[]): { reverse: number; jcut: number; lcut: number } {
   let reverse = 0, jcut = 0, lcut = 0
@@ -570,6 +534,20 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const lastSegBoundarySeekRef = useRef<number>(0)
   const timelineSegmentsRef = useRef(timelineSegments)
   timelineSegmentsRef.current = timelineSegments
+  // The seek effect below doesn't list playbackSpeed as a dep, so read it via a
+  // ref to keep the applied playbackRate current without re-running the effect.
+  const playbackSpeedRef = useRef(playbackSpeed)
+  playbackSpeedRef.current = playbackSpeed
+
+  // Apply the active segment's speed to the <video> so slow-mo / fast segments
+  // actually play at their rate (times the global preview speed). Guarded so we
+  // don't thrash playbackRate every frame.
+  const applyPlaybackRate = (v: HTMLVideoElement, segSpeed: number) => {
+    const target = clampPlaybackRate((segSpeed || 1) * (playbackSpeedRef.current || 1))
+    if (Math.abs((v.playbackRate || 1) - target) > 0.01) {
+      try { v.playbackRate = target } catch { /* some states reject rate changes */ }
+    }
+  }
 
   // External currentTime → internal timeline cursor + underlying video seek.
   useEffect(() => {
@@ -587,6 +565,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         try { videoRefRight.current.currentTime = mapping.sourceTime } catch (e) { /* same */ }
       }
     }
+    applyPlaybackRate(v, mapping.speed)
     lastSegmentIdRef.current = mapping.segment?.id ?? null
   }, [currentTime, isPlaying, isSplit])
 
@@ -618,6 +597,11 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
       const t = timelineTimeRef.current
       const mapping = timelineToSource(t, timelineSegmentsRef.current || [])
       const segId = mapping.segment?.id ?? null
+      // Keep the <video> playing at the active segment's speed. The cursor above
+      // advances at the global preview rate; the source is consumed at
+      // segSpeed×globalRate, so a 2× segment shows twice the footage per second
+      // — matching the export. Guarded internally against per-frame thrash.
+      applyPlaybackRate(v, mapping.speed)
 
       if (segId !== lastSegmentIdRef.current) {
         // Crossed a segment boundary — seek to the new segment's source point.
