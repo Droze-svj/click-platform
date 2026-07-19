@@ -184,8 +184,10 @@ export default function VideoEditPage({ params }: PageProps) {
   const [video, setVideo] = useState<Video | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // Clicking a video goes STRAIGHT into AI Auto-Edit (the AI does the first pass);
+  // the manual editor is still reachable via ?mode=manual or from the result.
   const [editMode, setEditMode] = useState<'selection' | 'manual' | 'ai-auto'>(
-    aiTool || modeParam === 'manual' ? 'manual' : 'selection'
+    aiTool || modeParam === 'manual' ? 'manual' : 'ai-auto'
   )
   const [processing, setProcessing] = useState(false)
   const [liveProgress, setLiveProgress] = useState<{ stage: string; percent: number; message: string } | null>(null)
@@ -297,11 +299,6 @@ export default function VideoEditPage({ params }: PageProps) {
   } | null>(null)
   const [insightApplied, setInsightApplied] = useState<boolean>(false)
   const videoPreviewRef = useRef<HTMLVideoElement>(null)
-  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => () => {
-    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
-  }, [])
 
   // Fetch style insight once on mount. When source==='user' (≥3
   // publishes), bias the AI Director defaults to the user's top picks
@@ -442,17 +439,11 @@ export default function VideoEditPage({ params }: PageProps) {
       if (jobId) {
         setEditJobId(jobId)
       } else {
-        // Synchronous success (no jobId) — capture the result so the
-        // success UI renders, then redirect to the clip hub for this
-        // video so the user lands on their fresh clips with the AI's
-        // recommended captions + slots already populated.
+        // Synchronous success (no jobId) — show the result in place so the user
+        // can open the AI's edit straight in the editor (no redirect that yanks
+        // them out to the clip hub).
         setAiEditResult(result)
         setProcessing(false)
-        if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
-        redirectTimerRef.current = setTimeout(() => {
-          redirectTimerRef.current = null
-          router.push(`/dashboard/clips/hub/${videoId}`)
-        }, 1200)
       }
     } catch (error: any) {
       setProcessing(false)
@@ -658,7 +649,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 <p className="text-surface-500 font-medium mb-10 text-sm">Our AI is currently analyzing, cutting, and optimizing your video...</p>
                 {editJobId ? (
                   <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
-                     <VideoProgressTracker jobId={editJobId} videoId={videoId} onComplete={(res) => { setAiEditResult(res); setProcessing(false); setTimeout(() => router.push(`/dashboard/clips/hub/${videoId}`), 1200); }} onError={() => { setProcessing(false); }} />
+                     <VideoProgressTracker jobId={editJobId} videoId={videoId} onComplete={(res) => { setAiEditResult(res); setProcessing(false); }} onError={() => { setProcessing(false); }} />
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -683,7 +674,7 @@ export default function VideoEditPage({ params }: PageProps) {
                     <p className="text-surface-500 font-medium text-sm">Your video has been successfully processed and edited by AI.</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                    <button type="button" onClick={() => handleEditModeSelect('manual')} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
+                    <button type="button" onClick={() => { setProcessingError(''); setEditJobId(null); setEditMode('manual'); }} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
                       Open in Editor <ArrowRight size={16} />
                     </button>
                     <button type="button" onClick={() => { setAiEditResult(null); setEditMode('selection'); }} title="Dismiss and return to selection" aria-label="Dismiss and return to selection" className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
