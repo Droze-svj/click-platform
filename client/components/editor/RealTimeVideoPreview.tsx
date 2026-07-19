@@ -401,7 +401,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], svgOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}, previewQuality = 'full', chromaKey, onUpdateOverlay, selectedOverlayId, onSelectOverlay, isNeuralActive, videoTransform, videoTransformKeyframes, videoCrop, isTransformMode, onUpdateVideoTransform
 }) => {
   const isDraft = previewQuality === 'draft'
-  const normalizedVideoUrl = getMediaUrl(videoUrl || '')
+  // Multi-clip WYSIWYG: the on-screen source is the base videoUrl unless the
+  // active segment carries its own clip (activeSourceUrl). null === base.
+  const [activeSourceUrl, setActiveSourceUrl] = useState<string | null>(null)
+  const normalizedVideoUrl = getMediaUrl((activeSourceUrl || videoUrl) || '')
   
   // Overlay active B-roll on top of the main video
   const activeBroll = timelineSegments.find(s => 
@@ -549,6 +552,40 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     }
   }
 
+  // ── Multi-clip source switching ────────────────────────────────────────────
+  // A segment that carries its own sourceUrl (a distinct clip / B-roll spliced
+  // into the main sequence) swaps the <video> source and seeks once the new
+  // source is loaded — matching how the renderer concatenates distinct clips.
+  // Segments that just trim the base videoUrl (sourceUrl null, or === base) never
+  // switch, so single-source edits are a strict no-op.
+  const activeSourceUrlRef = useRef<string | null>(null)
+  const pendingSourceSeekRef = useRef<number | null>(null)
+  const videoUrlRef = useRef(videoUrl)
+  videoUrlRef.current = videoUrl
+
+  /**
+   * Switch the <video> to the active segment's source if it changed. Returns
+   * true when a switch was initiated (the caller should skip its direct seek
+   * this frame — the element is reloading and pendingSourceSeekRef will re-seek
+   * once metadata is ready).
+   */
+  const syncActiveSource = (sourceUrl: string | null, sourceTime: number): boolean => {
+    const desired = sourceUrl && sourceUrl !== videoUrlRef.current ? sourceUrl : null
+    if (desired === activeSourceUrlRef.current) return false
+    activeSourceUrlRef.current = desired
+    pendingSourceSeekRef.current = sourceTime
+    setActiveSourceUrl(desired)
+    return true
+  }
+
+  // When the base video changes (new project/clip), drop any active clip switch
+  // so the new base shows immediately instead of a stale spliced source.
+  useEffect(() => {
+    activeSourceUrlRef.current = null
+    pendingSourceSeekRef.current = null
+    setActiveSourceUrl(null)
+  }, [videoUrl])
+
   // External currentTime → internal timeline cursor + underlying video seek.
   useEffect(() => {
     const v = videoRef.current
@@ -558,8 +595,9 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
     timelineTimeRef.current = currentTime
     const mapping = timelineToSource(currentTime, timelineSegmentsRef.current || [])
+    const switching = syncActiveSource(mapping.sourceUrl, mapping.sourceTime)
     const seekThreshold = isPlaying ? 0.25 : 0.05
-    if (Math.abs(v.currentTime - mapping.sourceTime) > seekThreshold) {
+    if (!switching && Math.abs(v.currentTime - mapping.sourceTime) > seekThreshold) {
       try { v.currentTime = mapping.sourceTime } catch (e) { /* seek may fail before metadata */ }
       if (isSplit && videoRefRight.current) {
         try { videoRefRight.current.currentTime = mapping.sourceTime } catch (e) { /* same */ }
@@ -604,13 +642,17 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
       applyPlaybackRate(v, mapping.speed)
 
       if (segId !== lastSegmentIdRef.current) {
-        // Crossed a segment boundary — seek to the new segment's source point.
+        // Crossed a segment boundary. If the new segment uses a different source
+        // clip, swap it in (the seek then happens on load); otherwise seek the
+        // current element to the new segment's source point.
         // Hysteresis (0.1s): only seek when the element is meaningfully out of
         // sync, so float jitter exactly at a boundary doesn't re-seek every
         // frame (which audibly glitches audio). lastSegBoundarySeekRef guards
         // against re-issuing the same boundary seek before it settles.
         const now2 = now
+        const switching = syncActiveSource(mapping.sourceUrl, mapping.sourceTime)
         if (
+          !switching &&
           segId &&
           Math.abs(v.currentTime - mapping.sourceTime) > 0.1 &&
           now2 - lastSegBoundarySeekRef.current > 100
@@ -723,9 +765,18 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.currentTarget
-    onDurationChange(v.duration)
+    // Only the BASE source defines the timeline duration — a switched-in clip
+    // must not overwrite it with its own (usually shorter) length.
+    if (activeSourceUrlRef.current == null) onDurationChange(v.duration)
     if (v.videoWidth > 0 && v.videoHeight > 0) {
       setVideoDimensions({ w: v.videoWidth, h: v.videoHeight })
+    }
+    // A source switch just finished loading — apply the deferred seek now that
+    // the new clip is seekable, and resume playback if we're playing.
+    if (pendingSourceSeekRef.current != null) {
+      try { v.currentTime = pendingSourceSeekRef.current } catch { /* clamp/seek may fail */ }
+      pendingSourceSeekRef.current = null
+      if (isPlaying) v.play().catch(() => {})
     }
   }
 
