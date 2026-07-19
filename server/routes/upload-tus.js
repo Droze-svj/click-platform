@@ -71,16 +71,56 @@ const tusServer = new Server({
         logger.warn('[tus] upload finished without an authenticated user; skipping Content creation', { id: upload?.id });
         return res;
       }
-      const filePath = path.join(TUS_DIR, upload.id);
+
+      // Promote the finished chunk file out of the temp tus store into the durable
+      // videos dir — WITH a real extension — so it's a playable /uploads/videos/*.mp4
+      // like the multipart path (routes/video.js). Without this the Content pointed
+      // at the extensionless temp file, which the 24h expiry sweep then deleted →
+      // the editor's <video> loaded a missing/undecodable source (blank editor).
+      const { randomMediaNameFrom } = require('../utils/mediaName');
+      const tempPath = path.join(TUS_DIR, upload.id);
+      const videosDir = path.join(process.cwd(), 'uploads', 'videos');
+      const durableName = randomMediaNameFrom(upload?.metadata?.filename, '.mp4');
+      const durablePath = path.join(videosDir, durableName);
+
+      // Default to the temp location so a promotion failure still yields a usable
+      // (if short-lived) Content rather than hard-failing the upload.
+      let fileUrl = `/uploads/temp/tus/${upload.id}`;
+      let storageKey = `tus/${upload.id}`;
+      let videoPath = tempPath;
+      try {
+        fs.mkdirSync(videosDir, { recursive: true });
+        try {
+          fs.renameSync(tempPath, durablePath);
+        } catch (renameErr) {
+          // rename fails across devices (EXDEV) — fall back to copy + unlink.
+          if (renameErr && renameErr.code === 'EXDEV') {
+            fs.copyFileSync(tempPath, durablePath);
+            fs.unlinkSync(tempPath);
+          } else {
+            throw renameErr;
+          }
+        }
+        fileUrl = `/uploads/videos/${durableName}`;
+        storageKey = `videos/${durableName}`;
+        videoPath = durablePath;
+        // Drop the now-orphaned tus metadata sidecar so the store/sweep doesn't
+        // retain a record pointing at a file we've already moved.
+        try { fs.unlinkSync(`${tempPath}.json`); } catch { /* sidecar best-effort */ }
+        logger.info('[tus] promoted resumable upload to durable storage', { from: upload.id, to: durableName });
+      } catch (promoteErr) {
+        logger.error('[tus] failed to promote upload to /uploads/videos (falling back to temp path)', { error: promoteErr.message });
+      }
+
       const Content = require('../models/Content');
       const content = new Content({
         userId,
         type: 'video',
         originalFile: {
-          url: `/uploads/temp/tus/${upload.id}`,
+          url: fileUrl,
           filename: upload?.metadata?.filename || upload.id,
           size: upload?.size || 0,
-          storageKey: `tus/${upload.id}`,
+          storageKey,
           storage: 'local',
         },
         title: upload?.metadata?.title || upload?.metadata?.filename || 'Uploaded Video',
@@ -92,7 +132,7 @@ const tusServer = new Server({
         const { addVideoProcessingJob } = require('../queues');
         await addVideoProcessingJob({
           contentId: content._id.toString(),
-          videoPath: filePath,
+          videoPath,
           user: { _id: userId, email: req.user?.email, name: req.user?.name },
         });
       } catch (queueErr) {
