@@ -1535,10 +1535,14 @@ async function renderFromEditorState(options) {
   const timelineEffectFilters = compileTimelineEffects(timelineEffects)
 
   const allVideoFilters = [...videoFilters_ff, ...timelineEffectFilters, ...lutFilters, ...overlayFilters]
-  const firstMusic = timelineSegments.find(s => s.type === 'audio' && s.sourceUrl)
-  // music volume is read where it's applied — inside the `if (hasMusic)` audio
-  // graph below (firstMusic.properties.volume), not here.
-  const hasMusic = !!firstMusic
+  // ALL audio-track segments (music track 6 + SFX tracks 8/9 + added dialogue
+  // track 7), not just the first. The old code took a single `find(...)` and
+  // dropped every other audio segment from the export — SFX and second music
+  // tracks were silently lost even though the preview played them. Each is added
+  // as its own input and mixed (placed at its startTime, trimmed to its length,
+  // at its own volume) in the audio graph below.
+  const audioSegs = (timelineSegments || []).filter((s) => s && s.type === 'audio' && s.sourceUrl)
+  let hasMusic = audioSegs.length > 0
 
   // ── Editor parity: prepare multi-input visual overlays (image / svg /
   // gradient). Each becomes an extra ffmpeg .input(); the overlay graph is
@@ -1636,16 +1640,26 @@ async function renderFromEditorState(options) {
       }
 
       let command = ffmpeg(inputPath)
-      if (hasMusic) {
-      // Resolve the music source the same way as the main input: pass remote
-      // http(s) URLs through untouched, but turn a relative "/uploads/..." URL
-      // into a real absolute filesystem path (raw "/uploads/x.mp3" would be read
-      // by ffmpeg as a non-existent absolute path).
-        const musicInput = isRemoteUrl(firstMusic.sourceUrl)
-          ? await assertSafeRemote(firstMusic.sourceUrl)
-          : toAbsolutePath(firstMusic.sourceUrl)
-        command = command.input(musicInput)
+      // Add every audio segment as its own input. Resolve remote http(s) URLs
+      // (SSRF-checked) vs local "/uploads/..." paths like the main input. These
+      // are the only inputs added before the visual-overlay inputs, so each gets
+      // ffmpeg input index 1..K — and the overlay graph keys off
+      // command._inputs.length, so it stays correct after these. A segment whose
+      // source can't be resolved is skipped (never hard-fails the render).
+      const audioInputs = []
+      for (const seg of audioSegs) {
+        try {
+          const src = isRemoteUrl(seg.sourceUrl)
+            ? await assertSafeRemote(seg.sourceUrl)
+            : toAbsolutePath(seg.sourceUrl)
+          command = command.input(src)
+          audioInputs.push({ seg, inputIndex: 1 + audioInputs.length })
+        } catch (err) {
+          logger.warn('[render] skipping unreadable audio segment', { url: seg.sourceUrl, error: err.message })
+        }
       }
+      // If every audio segment was skipped, fall through to the no-music branch.
+      hasMusic = audioInputs.length > 0
 
       const finalFilterList = [...allVideoFilters, ...enhancementFilters]
     
@@ -1756,23 +1770,50 @@ async function renderFromEditorState(options) {
       const _masterFx = audioMix.masterFx ? `${audioMix.masterFx},` : ''
 
       if (hasMusic) {
-        const musicVolume = audioMix.musicVolume != null ? audioMix.musicVolume : (firstMusic?.properties?.volume ?? 0.5)
+        // Master music volume from the Audio panel (if the user set it) overrides a
+        // track-6 music segment's own level — preserving the prior single-music
+        // behavior; SFX / other audio segments keep their per-segment volume.
+        const masterMusicVol = audioMix.musicVolume != null ? audioMix.musicVolume : null
         const duckLevel = audioMix.duckLevel != null ? audioMix.duckLevel : (exportOptions.duckLevel ?? -12)
         const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
         const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
         videoMappedViaFiltergraph = true
         const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
+        // Build one chain per audio segment: trim the source to the segment's
+        // in/out window, reset timestamps, delay it to its startTime on the output
+        // timeline, and apply its volume. Then mix them all into a single [bed].
+        const clampVol = (v) => Math.max(0, Math.min(4, isFinite(v) ? v : 1))
+        const bedChains = audioInputs.map((ai, i) => {
+          const seg = ai.seg
+          const start = Math.max(0, Number(seg.startTime) || 0)
+          const segEnd = Number(seg.endTime)
+          const dur = (isFinite(segEnd) && segEnd > start) ? (segEnd - start) : Math.max(0, Number(seg.duration) || 0)
+          const srcStart = Math.max(0, Number(seg.sourceStartTime) || 0)
+          const trimPart = dur > 0.01
+            ? `atrim=${srcStart.toFixed(3)}:${(srcStart + dur).toFixed(3)},`
+            : (srcStart > 0 ? `atrim=${srcStart.toFixed(3)},` : '')
+          const delayMs = Math.round(start * 1000)
+          const rawVol = seg.properties?.volume ?? seg.volume ?? (seg.track === 6 ? 0.5 : 1)
+          const vol = clampVol(seg.track === 6 && masterMusicVol != null ? masterMusicVol : rawVol)
+          return `[${ai.inputIndex}:a]${trimPart}asetpts=PTS-STARTPTS,adelay=${delayMs}|${delayMs},aresample=async=1,volume=${vol}[abed${i}]`
+        })
+        // normalize=0 keeps each input at its own level (amix's default halves them);
+        // supported since ffmpeg 4.4.
+        const bedGraph = audioInputs.length === 1
+          ? bedChains[0].replace('[abed0]', '[bed]')
+          : `${bedChains.join(';')};${audioInputs.map((_, i) => `[abed${i}]`).join('')}amix=inputs=${audioInputs.length}:normalize=0:dropout_transition=0[bed]`
+
         if (hasAudio) {
-        // Source has audio + background music added -> map both with sidechain compression
-          let audPart = `[1:a]volume=${musicVolume}${audioMix.musicFade}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice}[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+        // Source has audio + an audio bed -> duck the bed under the source voice, then mix.
+          let audPart = `${bedGraph};[bed][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice}[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
           const complexStr = `${vidPart};${audPart}`
           command = command
             .complexFilter(complexStr)
             .outputOptions(['-map', '[vout]', '-map', '[aout]'])
         } else {
-        // Silent source + background music added -> map only music track directly (skip sidechain amix)
-          let audPart = `[1:a]volume=${musicVolume}${audioMix.musicFade},${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+        // Silent source + an audio bed -> map the bed directly (skip sidechain amix)
+          let audPart = `${bedGraph};[bed]${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
           const complexStr = `${vidPart};${audPart}`
           command = command
             .complexFilter(complexStr)
