@@ -232,6 +232,14 @@ router.post('/translate-overlays', authenticate, async (req, res) => {
       return sendError(res, 'Too many overlays (max 200 per request)', 400);
     }
 
+    // Be honest when AI translation isn't available. translateSegments returns
+    // the SOURCE text unchanged if Gemini isn't configured; surfacing that as a
+    // success made the UI claim "Translated!" while the captions were untouched.
+    const { isConfigured } = require('../../utils/googleAI');
+    if (!isConfigured) {
+      return sendError(res, 'AI translation is not configured on this server (set GOOGLE_AI_API_KEY). Your captions were left unchanged.', 503);
+    }
+
     // Map overlays to standard segments { text }
     const segments = overlays.map(o => ({ text: o.text || '' }));
 
@@ -247,7 +255,14 @@ router.post('/translate-overlays', authenticate, async (req, res) => {
       text: translatedSegments[idx]?.text || o.text
     }));
 
-    return sendSuccess(res, result, 'Overlays translated successfully');
+    // If nothing actually changed, the model returned the original text — tell the
+    // truth rather than a false success.
+    const changed = result.reduce((n, r, i) => n + (r.text !== (overlays[i].text || '') ? 1 : 0), 0);
+    if (changed === 0) {
+      return sendError(res, `Translation to ${targetLanguage} produced no changes — the captions were left unchanged.`, 502);
+    }
+
+    return sendSuccess(res, result, `Translated ${changed} caption${changed === 1 ? '' : 's'} to ${targetLanguage}`);
   } catch (error) {
     logger.error('Error translating overlays', { error: error.message });
     return sendError(res, error.message, 500);
