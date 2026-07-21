@@ -469,12 +469,13 @@ const ModernVideoEditor: React.FC<{
   // audio track, so it mixes into the preview + export like any other audio.
   const handleAddDubbedTrack = useCallback((audioUrl: string, langCode: string, langName: string) => {
     if (!audioUrl) return
-    const start = videoState.currentTime || 0
+    // A dub is a whole-clip voice replacement → lay it from 0, not the playhead,
+    // so it aligns with the video from the start.
     const dur = Math.max(1, videoState.duration || 30)
     setTimelineSegments((prev: any[]) => [...(Array.isArray(prev) ? prev : []), {
       id: `seg-dub-${langCode}-${Date.now()}`,
-      startTime: start,
-      endTime: start + dur,
+      startTime: 0,
+      endTime: dur,
       duration: dur,
       type: 'audio',
       name: `${langName} dub`,

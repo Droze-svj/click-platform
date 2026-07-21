@@ -80,6 +80,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
     setProgress(10)
     setResults([])
     const collected: DubResult[] = []
+    let mockCount = 0
 
     try {
       const langs = Array.from(selectedLangs)
@@ -90,14 +91,13 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
         setStep('translating')
         setProgress(Math.round((i / langs.length) * 100) + 5)
 
-        // Start the job. The server's local (Edge-TTS) path returns the finished
-        // /uploads audio SYNCHRONOUSLY; ElevenLabs returns an async job to poll.
+        // Start the job. The local (Edge-TTS) path returns the finished /uploads
+        // audio SYNCHRONOUSLY; ElevenLabs returns an async job to poll.
         const startRes: any = await apiPost('/dubbing/start', {
           videoId,
           targetLanguage: code,
           lipSyncEnabled,
           voiceClone: voiceCloneEnabled,
-          audioSampleUrl: 'video_source',
         })
 
         // Honest handling of the "not configured / failed" server shapes — instead
@@ -107,12 +107,16 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
         }
 
         const audioUrl: string | null = startRes.audioUrl || null
-        // Ready synchronously? (Edge-TTS finished file, or any resolvable URL.)
-        const isSync = !!audioUrl && (
+        // A dev placeholder (Edge-TTS unavailable / no transcript) — NOT a real
+        // playable file, so never poll it or add it to the timeline.
+        const isMock = !!startRes.mock || (!!audioUrl && audioUrl.startsWith('/api/mock'))
+        // Ready synchronously = an Edge-TTS finished /uploads file. An ElevenLabs
+        // job returns an absolute https URL that ISN'T ready yet → it MUST be
+        // polled, so we deliberately do NOT treat "looks like a URL" as sync.
+        const isSync = isMock || (!!audioUrl && (
           startRes.technique === 'edge-tts' ||
-          audioUrl.startsWith('/uploads') ||
-          /^https?:\/\//.test(audioUrl)
-        )
+          audioUrl.startsWith('/uploads')
+        ))
 
         if (!isSync) {
           // Async job — poll until a TERMINAL state, capped so a weird/unknown
@@ -138,26 +142,38 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           if (!done) throw new Error('Dubbing timed out — please try again.')
         }
 
+        if (isMock) {
+          mockCount++
+          continue // don't add a dead placeholder to the timeline/downloads
+        }
         if (audioUrl) {
           const entry: DubResult = { code, name: meta?.name || code, flag: meta?.flag || '🌐', audioUrl }
           collected.push(entry)
-          // Actually add the finished dub to the timeline (dialogue track).
-          onAddDubbedTrack?.(audioUrl, code, meta?.name || code)
+          // Languages are ALTERNATE voice tracks — stacking them all on one track
+          // would play them SIMULTANEOUSLY. Add only the FIRST to the timeline; the
+          // rest are available as downloads below.
+          if (collected.length === 1) onAddDubbedTrack?.(audioUrl, code, meta?.name || code)
         }
       }
 
       setResults(collected)
-      setStep('done')
+      setStep(collected.length ? 'done' : (mockCount ? 'done' : 'error'))
       setProgress(100)
       if (collected.length) {
-        showToast(`Dubbing ready for ${collected.length} language(s)${onAddDubbedTrack ? ' — added to your timeline' : ' — download below'}.`, 'success')
+        const extra = collected.length > 1 ? ` — ${collected[0].name} added to your timeline, download the others below.` : (onAddDubbedTrack ? ' — added to your timeline.' : ' — download below.')
+        showToast(`Dubbed ${collected.length} language(s)${extra}`, 'success')
+      } else if (mockCount) {
+        showToast('Dubbing produced a placeholder only — add captions/transcript to the video (or configure a dubbing provider) and retry.', 'info')
       } else {
         showToast('Dubbing finished but produced no audio.', 'info')
       }
     } catch (err: any) {
       console.error('[DubbingView] generation error:', err)
-      setStep('error')
-      showToast(err?.message || 'Error occurred during dubbing. Please try again.', 'error')
+      // Keep the languages that DID succeed visible + on the timeline.
+      setResults(collected)
+      setStep(collected.length ? 'done' : 'error')
+      const msg = err?.message || 'Error occurred during dubbing. Please try again.'
+      showToast(collected.length ? `Dubbed ${collected.length} language(s); the rest failed: ${msg}` : msg, collected.length ? 'info' : 'error')
     }
   }
 
