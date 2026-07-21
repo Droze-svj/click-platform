@@ -4,16 +4,21 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Globe, Mic, AudioLines, Play, Loader2, CheckCircle2,
-  Languages, Sparkles, Volume2, VolumeX, Download,
+  Languages, Sparkles, Download,
   ChevronDown, AlertCircle, Zap, Info
 } from 'lucide-react'
 import { apiPost, apiGet } from '../../../lib/api'
+import { getMediaUrl } from '../../../utils/url'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface GenerativeDubbingViewProps {
   videoId?: string
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
+  /** When provided, each finished dub is added to the timeline as an audio track. */
+  onAddDubbedTrack?: (audioUrl: string, langCode: string, langName: string) => void
 }
+
+interface DubResult { code: string; name: string; flag: string; audioUrl: string }
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl'
 
@@ -42,15 +47,15 @@ const STEP_LABELS: Record<DubStep, string> = {
   error: 'Error — please retry',
 }
 
-const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, showToast }) => {
+const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, showToast, onAddDubbedTrack }) => {
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set(['es']))
   const [voiceCloneEnabled, setVoiceCloneEnabled] = useState(true)
   const [lipSyncEnabled, setLipSyncEnabled] = useState(false)
   const [step, setStep] = useState<DubStep>('idle')
   const [progress, setProgress] = useState(0)
   const [showLangDropdown, setShowLangDropdown] = useState(false)
+  const [results, setResults] = useState<DubResult[]>([])
 
-  const selectedLangList = LANGUAGES.filter(l => selectedLangs.has(l.code))
 
   const toggleLang = (code: string) => {
     setSelectedLangs(prev => {
@@ -73,66 +78,86 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
 
     setStep('cloning')
     setProgress(10)
+    setResults([])
+    const collected: DubResult[] = []
 
     try {
-      const targetLangsArray = Array.from(selectedLangs)
-      
-      // We will loop through selected languages and dub them sequentially for now
-      // A more robust implementation might send array of languages to the backend.
-      for (let i = 0; i < targetLangsArray.length; i++) {
-        const lang = targetLangsArray[i]
-        
-        // 1. Start Job
+      const langs = Array.from(selectedLangs)
+
+      for (let i = 0; i < langs.length; i++) {
+        const code = langs[i]
+        const meta = LANGUAGES.find(l => l.code === code)
         setStep('translating')
-        setProgress(30)
-        
-        const startRes = await apiPost('/dubbing/start', {
-           videoId,
-           targetLanguage: lang,
-           voiceId: 'user_clone_auto', // Pass flag to use clone
-           lipSyncEnabled,
-           audioSampleUrl: 'video_source' // Hint to extract from video
+        setProgress(Math.round((i / langs.length) * 100) + 5)
+
+        // Start the job. The server's local (Edge-TTS) path returns the finished
+        // /uploads audio SYNCHRONOUSLY; ElevenLabs returns an async job to poll.
+        const startRes: any = await apiPost('/dubbing/start', {
+          videoId,
+          targetLanguage: code,
+          lipSyncEnabled,
+          voiceClone: voiceCloneEnabled,
+          audioSampleUrl: 'video_source',
         })
 
-        if (!startRes || !startRes.jobId) {
-           throw new Error('Failed to instantiate dubbing job on the server')
+        // Honest handling of the "not configured / failed" server shapes — instead
+        // of the old code that treated them as a job and polled forever.
+        if (!startRes || startRes.ok === false || startRes.configured === false || startRes.success === false) {
+          throw new Error(startRes?.error || 'Dubbing is not available on this server.')
         }
 
-        const jobId = startRes.jobId
+        const audioUrl: string | null = startRes.audioUrl || null
+        // Ready synchronously? (Edge-TTS finished file, or any resolvable URL.)
+        const isSync = !!audioUrl && (
+          startRes.technique === 'edge-tts' ||
+          audioUrl.startsWith('/uploads') ||
+          /^https?:\/\//.test(audioUrl)
+        )
 
-        // 2. Poll Status
-        let isDone = false
-        while (!isDone) {
-           // Poll every 2 seconds
-           await new Promise(r => setTimeout(r, 2000))
-           const statusRes = await apiGet(`/dubbing/status/${jobId}`)
-           
-           if (!statusRes) continue
+        if (!isSync) {
+          // Async job — poll until a TERMINAL state, capped so a weird/unknown
+          // status ('dubbed'/'not_configured'/…) can never hang the UI forever.
+          if (!startRes.jobId) throw new Error('Dubbing job did not start correctly.')
+          setStep('syncing')
+          let done = false
+          for (let p = 0; p < 90 && !done; p++) { // ~3 min @2s
+            await new Promise(r => setTimeout(r, 2000))
+            const st: any = await apiGet(`/dubbing/status/${startRes.jobId}`)
+            const status = st?.status
+            if (status === 'processing') {
+              setStep(p > 20 ? 'rendering' : 'syncing')
+              setProgress(Math.round((i / langs.length) * 100 + ((st.progress || 0) / langs.length)))
+            } else if (status === 'completed' || status === 'dubbed') {
+              done = true
+            } else if (status === 'not_configured') {
+              throw new Error(st.error || 'Dubbing is not configured on this server.')
+            } else if (status === 'error') {
+              throw new Error(st.error || 'Dubbing generation failed.')
+            }
+          }
+          if (!done) throw new Error('Dubbing timed out — please try again.')
+        }
 
-           if (statusRes.status === 'processing') {
-             if (statusRes.progress < 50) setStep('syncing')
-             else setStep('rendering')
-             
-             // Base progress + lang progress fraction
-             const baseProgress = (i / targetLangsArray.length) * 100
-             const langFraction = (statusRes.progress / 100) * (100 / targetLangsArray.length)
-             setProgress(Math.round(baseProgress + langFraction))
-           } else if (statusRes.status === 'completed') {
-             isDone = true
-           } else if (statusRes.status === 'error') {
-             throw new Error(statusRes.error || 'Dubbing generation failed')
-           }
+        if (audioUrl) {
+          const entry: DubResult = { code, name: meta?.name || code, flag: meta?.flag || '🌐', audioUrl }
+          collected.push(entry)
+          // Actually add the finished dub to the timeline (dialogue track).
+          onAddDubbedTrack?.(audioUrl, code, meta?.name || code)
         }
       }
 
+      setResults(collected)
       setStep('done')
       setProgress(100)
-      showToast(`Dubbing complete for ${selectedLangs.size} language(s) — new audio tracks added to timeline`, 'success')
-      
+      if (collected.length) {
+        showToast(`Dubbing ready for ${collected.length} language(s)${onAddDubbedTrack ? ' — added to your timeline' : ' — download below'}.`, 'success')
+      } else {
+        showToast('Dubbing finished but produced no audio.', 'info')
+      }
     } catch (err: any) {
       console.error('[DubbingView] generation error:', err)
       setStep('error')
-      showToast(err.message || 'Error occurred during dubbing. Please try again.', 'error')
+      showToast(err?.message || 'Error occurred during dubbing. Please try again.', 'error')
     }
   }
 
@@ -338,31 +363,29 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
 
                 <p className="text-[11px] text-slate-500 italic">{STEP_LABELS[step]}</p>
 
-                {step === 'done' && (
+                {step === 'done' && results.length > 0 && (
                   <div className="space-y-2">
-                    {selectedLangList.map(lang => (
-                      <div key={lang.code} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                        <span className="text-base">{lang.flag}</span>
+                    {results.map(r => (
+                      <div key={r.code} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                        <span className="text-base">{r.flag}</span>
                         <div className="flex-1">
-                          <p className="text-[10px] font-black text-white">{lang.name} Audio</p>
-                          <p className="text-[9px] text-emerald-600">Added to timeline • Track A3</p>
+                          <p className="text-[10px] font-black text-white">{r.name} Audio</p>
+                          <p className="text-[9px] text-emerald-600">{onAddDubbedTrack ? 'Added to your timeline' : 'Ready to download'}</p>
                         </div>
-                        <button
-                          type="button"
+                        <a
+                          href={getMediaUrl(r.audioUrl)}
+                          download
                           className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all"
-                          title={`Preview ${lang.name} dub`}
+                          title={`Download ${r.name} dub`}
+                          aria-label={`Download ${r.name} dub`}
                         >
-                          <Volume2 className="w-3.5 h-3.5 text-slate-400" />
-                        </button>
+                          <Download className="w-3.5 h-3.5 text-slate-400" />
+                        </a>
                       </div>
                     ))}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      className="w-full mt-2 py-3 rounded-2xl bg-violet-600/20 border border-violet-500/20 text-violet-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
-                      onClick={() => showToast('Export with dubbing tracks enabled', 'info')}
-                    >
-                      <Download className="w-4 h-4" /> Export with Dubbed Audio
-                    </motion.button>
+                    {onAddDubbedTrack && (
+                      <p className="text-[9px] text-slate-500 italic pt-1">Dubbed tracks are on your timeline — mix levels there, then render from the Export tab.</p>
+                    )}
                   </div>
                 )}
               </motion.div>
