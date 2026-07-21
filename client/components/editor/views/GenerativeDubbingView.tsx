@@ -381,12 +381,12 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
 
                 {step === 'done' && results.length > 0 && (
                   <div className="space-y-2">
-                    {results.map(r => (
+                    {results.map((r, idx) => (
                       <div key={r.code} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
                         <span className="text-base">{r.flag}</span>
                         <div className="flex-1">
                           <p className="text-[10px] font-black text-white">{r.name} Audio</p>
-                          <p className="text-[9px] text-emerald-600">{onAddDubbedTrack ? 'Added to your timeline' : 'Ready to download'}</p>
+                          <p className="text-[9px] text-emerald-600">{onAddDubbedTrack && idx === 0 ? 'Added to your timeline' : 'Ready to download'}</p>
                         </div>
                         <a
                           href={getMediaUrl(r.audioUrl)}
@@ -400,7 +400,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                       </div>
                     ))}
                     {onAddDubbedTrack && (
-                      <p className="text-[9px] text-slate-500 italic pt-1">Dubbed tracks are on your timeline — mix levels there, then render from the Export tab.</p>
+                      <p className="text-[9px] text-slate-500 italic pt-1">{results.length > 1 ? `${results[0].name} is on your timeline — mix levels there, then render from Export. Download the other languages above to publish them separately.` : 'Your dub is on the timeline — mix levels there, then render from the Export tab.'}</p>
                     )}
                   </div>
                 )}
