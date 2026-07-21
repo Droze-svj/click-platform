@@ -1,0 +1,92 @@
+name: Scheduled npm audit auto-fix
+
+# Keeps the dependency tree patched PROACTIVELY so the required `security` gate
+# (npm audit --omit=dev --audit-level=high in ci.yml) stops blocking unrelated
+# PRs. Runs on a schedule, applies the non-breaking fixes to the lockfile, and
+# opens a PR when anything changed. Anything that still needs a human (a breaking
+# major, or a direct-dependency range bump) is listed in the PR body + job summary.
+#
+# Trigger manually any time from the Actions tab ("Run workflow").
+
+on:
+  schedule:
+    # 06:17 UTC daily (only opens a PR when the lockfile actually changes).
+    - cron: '17 6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: audit-autofix
+  cancel-in-progress: true
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Audit BEFORE (record HIGH/critical)
+        id: before
+        run: |
+          echo "## npm audit auto-fix" >> "$GITHUB_STEP_SUMMARY"
+          npm audit --omit=dev --audit-level=high > audit-before.txt 2>&1 || true
+          if npm audit --omit=dev --audit-level=high >/dev/null 2>&1; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+            echo "No HIGH/critical advisories before running — nothing to do." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Non-breaking fixes only (no --force): bumps transitive + in-range direct
+      # deps in the lockfile without changing package.json ranges. --package-lock-only
+      # avoids a full install (the sharp linux pin blocks that locally, but CI is
+      # linux-x64 so a plain audit fix is fine here).
+      - name: npm audit fix (lockfile only, non-breaking)
+        if: steps.before.outputs.clean == 'false'
+        run: npm audit fix --package-lock-only --omit=dev || true
+
+      - name: Audit AFTER + summarise
+        if: steps.before.outputs.clean == 'false'
+        id: after
+        run: |
+          npm audit --omit=dev --audit-level=high > audit-after.txt 2>&1 || true
+          {
+            echo "### Remaining HIGH/critical after auto-fix (need a human — breaking or direct-dep bump)";
+            echo '```';
+            grep -iE 'severity:|^[[:alnum:]@/._-]+ +[0-9<>=.* -]' audit-after.txt | head -40 || echo '(none)';
+            echo '```';
+          } >> "$GITHUB_STEP_SUMMARY"
+          if git diff --quiet -- package-lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "npm audit fix produced no lockfile change (the remaining advisories need a manual override / major bump — see recipe in project memory)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          rm -f audit-before.txt audit-after.txt
+
+      - name: Open PR with the lockfile fixes
+        if: steps.after.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/audit-autofix
+          base: main
+          commit-message: 'chore(security): npm audit auto-fix (lockfile)'
+          title: 'chore(security): scheduled npm audit auto-fix'
+          body: |
+            Automated non-breaking `npm audit fix --package-lock-only --omit=dev` to
+            keep the required `security` gate green so it stops blocking unrelated PRs.
+
+            - Review the `package-lock.json` diff.
+            - Any advisory NOT resolved here needs a manual override or a direct-dep
+              major bump — see the job summary + the audit recipe in project memory.
+          labels: dependencies, security
+          delete-branch: true
