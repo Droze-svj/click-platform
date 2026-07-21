@@ -2227,29 +2227,6 @@ const ModernVideoEditor: React.FC<{
         />
       )
 
-      case 'export': return (
-        <ExportView 
-          videoId={videoId || ''} 
-          videoUrl={actualVideoUrl || ''} 
-          showToast={showToast}
-          textOverlays={textOverlays}
-          shapeOverlays={shapeOverlays}
-          imageOverlays={imageOverlays}
-          gradientOverlays={gradientOverlays}
-          svgOverlays={svgOverlays}
-          videoFilters={videoFilters}
-          videoTransform={videoTransform}
-          videoTransformKeyframes={videoTransformKeyframes}
-          videoCrop={videoCrop}
-          chromaKey={chromaKey}
-          playbackSpeed={playbackSpeed}
-          timelineSegments={timelineSegments}
-          videoDuration={videoState.duration}
-          projectName={projectName}
-          onExportComplete={captureShadowTelemetry}
-        />
-      )
-
       case 'style-vault': {
         if (styleVaultView === 'train') {
           return <NeuralTrainingMatrixView
