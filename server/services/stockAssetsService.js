@@ -4,26 +4,15 @@
 const https = require('https')
 const http = require('http')
 const logger = require('../utils/logger')
+const { ensureStockAssets, STOCK_SFX, STOCK_MUSIC } = require('../utils/stockAssets')
 
-// Built-in music catalog (SoundHelix + more - royalty-free, no attribution required for SoundHelix)
-const BUILTIN_MUSIC = [
-  { id: 'click-music-1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', title: 'Upbeat Creative', genre: 'electronic', mood: 'energetic', duration: 180 },
-  { id: 'click-music-2', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', title: 'Calm Focus', genre: 'ambient', mood: 'calm', duration: 240 },
-  { id: 'click-music-3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', title: 'Corporate Pulse', genre: 'corporate', mood: 'professional', duration: 200 },
-  { id: 'click-music-4', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', title: 'Dramatic Build', genre: 'cinematic', mood: 'dramatic', duration: 190 },
-  { id: 'click-music-5', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', title: 'Minimal Loop', genre: 'minimal', mood: 'relaxed', duration: 120 },
-  { id: 'click-music-6', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3', title: 'Driving Rhythm', genre: 'electronic', mood: 'energetic', duration: 210 },
-  { id: 'click-music-7', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3', title: 'Soothing Waves', genre: 'ambient', mood: 'peaceful', duration: 195 },
-  { id: 'click-music-8', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3', title: 'Tech Innovation', genre: 'electronic', mood: 'futuristic', duration: 185 },
-  { id: 'click-music-9', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3', title: 'Gentle Flow', genre: 'acoustic', mood: 'warm', duration: 220 },
-  { id: 'click-music-10', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3', title: 'Epic Journey', genre: 'cinematic', mood: 'epic', duration: 230 },
-  { id: 'click-music-11', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3', title: 'Urban Beat', genre: 'hip-hop', mood: 'urban', duration: 175 },
-  { id: 'click-music-12', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3', title: 'Morning Light', genre: 'ambient', mood: 'uplifting', duration: 205 },
-  { id: 'click-music-13', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3', title: 'Productive Mode', genre: 'corporate', mood: 'focused', duration: 195 },
-  { id: 'click-music-14', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3', title: 'Night Drive', genre: 'electronic', mood: 'chill', duration: 215 },
-  { id: 'click-music-15', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3', title: 'Inspirational', genre: 'cinematic', mood: 'inspiring', duration: 200 },
-  { id: 'click-music-16', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3', title: 'Clean Slate', genre: 'minimal', mood: 'neutral', duration: 165 },
-]
+// Generate the same-origin stock audio (SFX one-shots + music beds) on first load
+// so /uploads/stock/*.wav exists. Idempotent + best-effort.
+ensureStockAssets()
+
+// Built-in music catalog — SAME-ORIGIN generated beds (was external SoundHelix
+// songs that the page CSP blocked in the preview). See utils/stockAssets.js.
+const BUILTIN_MUSIC = STOCK_MUSIC
 
 // Built-in B-Roll (free sample videos - sample-videos.com, Big Buck Bunny clips)
 const BUILTIN_BROLL = [
@@ -38,19 +27,9 @@ const BUILTIN_BROLL = [
 ]
 
 // Built-in Sound Effects (free SFX - royalty-free)
-// Uses known working URLs; users can upload their own SFX in the Asset Library
-const BUILTIN_SFX = [
-  { id: 'sfx-whoosh-1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', title: 'Transition Build', tags: ['transition', 'build'], duration: 2 },
-  { id: 'sfx-impact-1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', title: 'Impact Hit', tags: ['hit', 'punch'], duration: 1 },
-  { id: 'sfx-notification', url: 'https://www.w3schools.com/html/horse.mp3', title: 'Notification', tags: ['alert', 'attention'], duration: 2 },
-  { id: 'sfx-pop', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', title: 'Pop', tags: ['bubble', 'click'], duration: 1 },
-  { id: 'sfx-ding', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3', title: 'Ding', tags: ['success', 'chime'], duration: 1 },
-  { id: 'sfx-swoosh', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3', title: 'Swoosh', tags: ['transition', 'swipe'], duration: 1 },
-  { id: 'sfx-tada', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3', title: 'Tada', tags: ['celebration', 'reveal'], duration: 1 },
-  { id: 'sfx-tick', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3', title: 'Tick', tags: ['clock', 'countdown'], duration: 0.5 },
-  { id: 'sfx-click', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3', title: 'Click', tags: ['ui', 'button'], duration: 0.5 },
-  { id: 'sfx-success', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3', title: 'Success', tags: ['confirm', 'done'], duration: 1 },
-]
+// Built-in SFX — SAME-ORIGIN generated one-shots with correct durations (was full
+// SoundHelix SONGS mislabelled as 0.5-2s SFX on external, CSP-blocked hosts).
+const BUILTIN_SFX = STOCK_SFX
 
 const BUILTIN_GIFS = [
   { id: 'gif-reaction-1', url: 'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif', title: 'Thumbs Up', tags: ['reaction', 'yes'], duration: 2 },
