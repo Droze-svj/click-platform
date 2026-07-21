@@ -47,7 +47,7 @@ const FALLBACK_STEPS: OnboardingStep[] = [
   { id: 'connect',     title: 'Connect Social Account', description: 'Link TikTok, Instagram or YouTube to enable scheduling.',   cta: 'OPEN_INTEGRATIONS', href: '/dashboard/integrations', icon: Plug },
   { id: 'upload',      title: 'Upload First Video',     description: 'Drop a long-form video and let Click extract clips.',       cta: 'OPEN_VIDEO_HUB',    href: '/dashboard/video',       icon: Video },
   { id: 'captions',    title: 'Set Up Your Captions',   description: 'Pick a caption look + keep Snap-to-Speech on for word-perfect captions.', cta: 'OPEN_CAPTION_SETUP', href: '/dashboard/onboarding/captions', icon: Sparkles },
-  { id: 'forge',       title: 'Run One-Click Forge',    description: 'Generate a multi-platform pack from a single prompt.',      cta: 'OPEN_FORGE',        href: '/dashboard/forge',       icon: Hammer },
+  { id: 'forge',       title: 'Run AI Video Creator',    description: 'Generate a multi-platform pack from a single prompt.',      cta: 'OPEN_FORGE',        href: '/dashboard/forge',       icon: Hammer },
   { id: 'script',      title: 'Generate a Script',      description: 'Synthesize a script tuned to your tone and platform.',      cta: 'OPEN_SCRIPTS',      href: '/dashboard/scripts',     icon: FileText },
   { id: 'schedule',    title: 'Schedule First Post',    description: 'Lock a post to the calendar to test the publish loop.',     cta: 'OPEN_CALENDAR',     href: '/dashboard/calendar',    icon: Calendar },
 ]

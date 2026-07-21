@@ -43,8 +43,8 @@
     "grow": "Grow",
     "manage": "Manage",
     "onboarding": "Get started",
-    "forge": "Forge",
-    "videoEditor": "Editor",
+    "forge": "AI Video Creator",
+    "videoEditor": "Video Editor",
     "aiClips": "AI clips",
     "aiTools": "AI tools",
     "creatorsHub": "Creators",
@@ -163,7 +163,7 @@
     "clickToView": "Click to view details →",
     "nav": {
       "forge": {
-        "label": "One-Click Forge",
+        "label": "AI Video Creator",
         "desc": "Instantly transform raw footage into viral short-form packs with AI.",
         "badge": "AI ENGINE"
       },

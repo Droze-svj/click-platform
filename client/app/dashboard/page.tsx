@@ -351,12 +351,12 @@ export default function DashboardHome() {
             <div className="relative z-10 mt-6 flex flex-wrap gap-3">
               <Link href="/dashboard/forge">
                 <Button variant="gradient" size="lg" leftIcon={<Hammer size={18} aria-hidden />}>
-                  {t('dashboard.nav.forge.label') || 'One-Click Forge'}
+                  {t('nav.forge') || 'AI Video Creator'}
                 </Button>
               </Link>
               <Link href="/dashboard/video">
                 <Button variant="secondary" size="lg" leftIcon={<Video size={18} aria-hidden />}>
-                  {t('dashboard.nav.studio.label') || 'Studio'}
+                  {t('nav.videoEditor') || 'Video Editor'}
                 </Button>
               </Link>
               <Link href="/dashboard/scheduler">
@@ -532,7 +532,7 @@ export default function DashboardHome() {
                 action={
                   <Link href="/dashboard/forge">
                     <Button variant="primary" size="sm" leftIcon={<Sparkles size={16} aria-hidden />}>
-                      {t('dashboard.nav.forge.label') || 'One-Click Forge'}
+                      {t('nav.forge') || 'AI Video Creator'}
                     </Button>
                   </Link>
                 }
