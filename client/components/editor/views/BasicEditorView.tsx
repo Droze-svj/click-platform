@@ -1278,7 +1278,11 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       }
     } catch (err: any) {
       console.error('Translation error', err)
-      showToast('Failed to translate captions: ' + (err.message || err), 'error')
+      // Surface the server's honest message (e.g. "AI translation is not
+      // configured…" / "produced no changes…") verbatim rather than a generic
+      // failure, so a no-op translation is never mistaken for a success.
+      const msg = err?.response?.data?.error || err?.data?.error || err?.message || 'Failed to translate captions.'
+      showToast(msg, 'error')
     } finally {
       setTranslatingCaptions(false)
     }

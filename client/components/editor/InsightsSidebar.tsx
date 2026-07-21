@@ -494,15 +494,19 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
         <div className="h-px bg-border" />
 
-        {/* High-Accuracy Neural Translation */}
+        {/* AI Director language — biases the AI's generated script/plan. This does
+            NOT translate your captions; use "Translate captions" in the Edit tab for
+            that. (Kept honest: this control used to be labelled a "Neural Translation"
+            output but only ever fed the AI Director.) */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-sky-500" />
-              <h3 className="ds-text-label text-theme-secondary">Output language</h3>
+              <h3 className="ds-text-label text-theme-secondary">AI script language</h3>
             </div>
-            <Badge variant="outline">Cultural sync</Badge>
+            <Badge variant="outline">AI Director</Badge>
           </div>
+          <p className="ds-text-caption text-theme-muted -mt-2">Guides the AI's generated script. To translate on-screen captions, use “Translate captions” in the Edit tab.</p>
           <div className="relative group">
             <select
               value={targetLanguage}
