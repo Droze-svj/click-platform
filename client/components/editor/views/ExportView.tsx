@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   Download,
@@ -72,6 +73,7 @@ interface ExportViewProps {
 const glassStyle = "ds-surface-card"
 
 const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], svgOverlays = [], videoFilters, audio, videoTransform, videoTransformKeyframes, videoCrop, chromaKey, playbackSpeed, timelineSegments = [], timelineEffects = [], videoDuration, showToast, setActiveCategory, projectName, onExportComplete }) => {
+  const router = useRouter()
   const [connectedAccounts, setConnectedAccounts] = useState<any>({})
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
@@ -637,6 +639,24 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                     <Download className="h-5 w-5" aria-hidden />
                     Download
                   </a>
+
+                  {/* One publish model: hand the finished export off to the Scheduler
+                      (schedule/queue across platforms) instead of only the editor's
+                      direct "Broadcast Now". Prefills the scheduler compose form. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const media = renderResult?.downloadUrl || renderResult?.url || ''
+                      const params = new URLSearchParams()
+                      if (media) params.set('mediaUrl', media)
+                      if (projectName) params.set('text', projectName)
+                      router.push(`/dashboard/scheduler?${params.toString()}`)
+                    }}
+                    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-700"
+                  >
+                    <Calendar className="h-5 w-5" aria-hidden />
+                    Send to Scheduler
+                  </button>
 
                   {videoId && lastRenderExportPath && !saveSuccess && (
                     <Button

@@ -78,6 +78,19 @@ export default function SchedulerPage() {
 
   useEffect(() => {
     if (!searchParams) return
+    // Direct hand-off from the editor's Export → "Send to Scheduler": prefill the
+    // compose form with the rendered media + caption so the finished export flows
+    // into the one scheduling model instead of only the editor's direct broadcast.
+    const mediaUrl = searchParams.get('mediaUrl')
+    const handoffText = searchParams.get('text')
+    if (mediaUrl || handoffText) {
+      setForm(f => ({
+        ...f,
+        mediaUrl: mediaUrl || f.mediaUrl,
+        text: handoffText || f.text,
+      }))
+      showToast('Export loaded — pick your platforms and a time to schedule it.', 'success')
+    }
     const idsParam = searchParams.get('clipIds')
     if (!idsParam) return
     const ids = idsParam.split(',').map(s => s.trim()).filter(Boolean)
