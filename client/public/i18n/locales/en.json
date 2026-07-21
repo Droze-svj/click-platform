@@ -390,8 +390,8 @@
     "grow": "Grow",
     "manage": "Manage",
     "onboarding": "Get started",
-    "forge": "Forge",
-    "videoEditor": "Editor",
+    "forge": "AI Video Creator",
+    "videoEditor": "Video Editor",
     "aiClips": "AI clips",
     "aiTools": "AI tools",
     "creatorsHub": "Creators",
@@ -510,7 +510,7 @@
     "clickToView": "Click to view details →",
     "nav": {
       "forge": {
-        "label": "One-Click Forge",
+        "label": "AI Video Creator",
         "desc": "Instantly transform raw footage into viral short-form packs with AI.",
         "badge": "AI ENGINE"
       },
@@ -1003,7 +1003,7 @@
     "backToDashboard": "Back to Dashboard",
     "intelligenceFactory": "Intelligence Factory",
     "coreEngineActive": "Core engine active",
-    "title": "One-Click Forge",
+    "title": "AI Video Creator",
     "systemStatus": "System status",
     "allSystemsOptimal": "All systems optimal",
     "globalLatency": "Global latency",
@@ -5220,7 +5220,7 @@
     "cmdHomeHint": "Home",
     "cmdOnboardingLabel": "Get Started",
     "cmdOnboardingHint": "Activation checklist",
-    "cmdForgeLabel": "One-Click Forge",
+    "cmdForgeLabel": "AI Video Creator",
     "cmdForgeHint": "Generate a content pack",
     "cmdVideoLabel": "Video Library",
     "cmdVideoHint": "Upload + manage videos",
