@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
@@ -184,9 +184,11 @@ export default function VideoEditPage({ params }: PageProps) {
   const [video, setVideo] = useState<Video | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  // Clicking a video goes STRAIGHT into AI Auto-Edit (the AI does the first pass);
-  // the manual editor is still reachable via ?mode=manual or from the result.
-  const [editMode, setEditMode] = useState<'selection' | 'manual' | 'ai-auto'>(
+  // Two modes only: clicking a video lands in AI Auto-Edit (the AI does the first
+  // pass); the manual editor is reached from the result's "Open in Editor" or via
+  // ?mode=manual. (The old 'selection' mode-picker was removed — every "back"
+  // dumped users onto a screen they could never reach going forward.)
+  const [editMode, setEditMode] = useState<'manual' | 'ai-auto'>(
     aiTool || modeParam === 'manual' ? 'manual' : 'ai-auto'
   )
   const [processing, setProcessing] = useState(false)
@@ -360,12 +362,6 @@ export default function VideoEditPage({ params }: PageProps) {
       .catch(() => { })
   }, [aiEditResult, videoId])
 
-  const handleEditModeSelect = useCallback((mode: 'manual' | 'ai-auto') => {
-    setEditMode(mode)
-    setProcessingError('')
-    setAiEditResult(null)
-    setEditJobId(null)
-  }, [])
 
   const handleAnalyzeVideo = async () => {
     setAnalyzing(true)
@@ -490,17 +486,6 @@ export default function VideoEditPage({ params }: PageProps) {
   // "desktop recommended" banner. The user can still scroll past and use
   // the read-only progress / asset views below, but the heavy edit surface
   // is gated. Hidden on md+ so desktop is unaffected.
-  const mobileGate = (
-    <div className="md:hidden bg-amber-500/10 border-b border-amber-500/30 text-amber-200 px-5 py-4 text-sm">
-      <p className="font-bold">Editing on mobile</p>
-      <p className="text-amber-200/80 mt-1 text-xs leading-relaxed">
-        The full editor works on your phone, but the timeline and multi-clip
-        controls have more room on a tablet or laptop (≥ 768px). Rotate to
-        landscape or use a larger screen for the most comfortable experience.
-      </p>
-    </div>
-  )
-
   const videoUrl = video?.originalFile?.url
   // aiEditResult shape varies by path: the synchronous /auto-edit returns
   // { data?: { editedVideoUrl }, editedVideoUrl }, while an async VideoProgressTracker
@@ -508,101 +493,13 @@ export default function VideoEditPage({ params }: PageProps) {
   // opens the AI-edited clip, never silently the original.
   const editorVideoUrl = getMediaUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl ?? aiEditResult?.result?.editedVideoUrl) || videoUrl || '')
 
-  const selectionUI = (
-    <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-24 transition-colors duration-500">
-      {mobileGate}
-      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
-
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-surface-200 dark:border-surface-800 pb-8">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl flex items-center justify-center shadow-sm">
-              <Edit3 size={32} className="text-primary-600 dark:text-primary-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                  Workflow Selection
-                </span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Select Edit Mode</h1>
-              <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg truncate">{video?.title || 'Untitled Project'}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={toggle} title="Toggle Theme" aria-label="Toggle Theme" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
-              {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <button type="button" onClick={() => router.push('/dashboard/video')} title="Return to Video Dashboard" aria-label="Return to Video Dashboard" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
-              <ChevronLeft size={16} />
-              Return
-            </button>
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-7">
-            <div className="relative w-full aspect-video bg-surface-100 dark:bg-surface-950 rounded-3xl overflow-hidden shadow-sm border border-surface-200 dark:border-surface-800 flex items-center justify-center">
-              <video src={getMediaUrl(videoUrl || '')} controls className="w-full h-full object-contain" />
-              <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 border border-white/10 backdrop-blur-md">
-                 <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">Preview</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-5 flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-               <span className="flex h-px flex-1 bg-surface-200 dark:bg-surface-800" />
-               <span className="text-xs font-bold text-surface-500 uppercase tracking-widest">Choose Option</span>
-               <span className="flex h-px flex-1 bg-surface-200 dark:bg-surface-800" />
-            </div>
-
-            <div className="space-y-4">
-              <button type="button" onClick={() => handleEditModeSelect('ai-auto')} title="Select AI Auto Edit Mode" aria-label="Select AI Auto Edit Mode" className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all text-left overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 dark:bg-primary-900/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Wand2 className="w-7 h-7 text-primary-600 dark:text-primary-400" />
-                </div>
-                <div className="flex-1 relative z-10">
-                  <div className="flex items-center gap-3 mb-1">
-                     <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">AI Auto Edit</h2>
-                     <span className="px-2 py-0.5 rounded-md bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 text-[9px] font-bold uppercase tracking-wider border border-primary-200 dark:border-primary-800">RECOMMENDED</span>
-                  </div>
-                  <p className="text-sm text-surface-500 leading-relaxed font-medium">Use AI to automatically find hooks, remove silence, and generate high-retention clips.</p>
-                  <div className="mt-4 flex items-center gap-2 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
-                    Start Auto Edit <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </button>
-
-              <button type="button" onClick={() => handleEditModeSelect('manual')} title="Select Manual Editor Mode" aria-label="Select Manual Editor Mode" className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:shadow-md transition-all text-left overflow-hidden">
-                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Scissors className="w-7 h-7 text-surface-600 dark:text-surface-400" />
-                </div>
-                <div className="flex-1 relative z-10">
-                  <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">Advanced Manual Editor</h2>
-                  <p className="text-sm text-surface-500 leading-relaxed font-medium">Access the full timeline editor for precise manual cuts, transitions, and audio mixing.</p>
-                  <div className="mt-4 flex items-center gap-2 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
-                    Open Editor <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  if (editMode === 'selection') return selectionUI
-
   if (editMode === 'manual') {
     const urlForEditor = editorVideoUrl || videoUrl
     if (!urlForEditor) return null
     return (
       <div className="fixed inset-0 bg-surface-50 dark:bg-surface-950 overflow-hidden transition-colors duration-500">
-        <button type="button" onClick={() => setEditMode('selection')} title="Back to Workflow Selection" aria-label="Back to Workflow Selection" className="absolute top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
-          <ChevronLeft size={16} /> Workflow Selection
+        <button type="button" onClick={() => setEditMode('ai-auto')} title="Back to AI Auto Edit" aria-label="Back to AI Auto Edit" className="absolute top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+          <ChevronLeft size={16} /> AI Auto Edit
         </button>
         <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} />
       </div>
@@ -637,8 +534,8 @@ export default function VideoEditPage({ params }: PageProps) {
                 {analyzing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
                 {analyzing ? 'Analyzing...' : 'Analyze Video'}
               </button>
-              <button type="button" onClick={() => setEditMode('selection')} title="Back to Workflow Selection" aria-label="Back to Workflow Selection" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
-                <ChevronLeft size={16} /> Return
+              <button type="button" onClick={() => router.push('/dashboard/video')} title="Back to Videos" aria-label="Back to Videos" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+                <ChevronLeft size={16} /> Back to Videos
               </button>
             </div>
           </header>
@@ -681,7 +578,7 @@ export default function VideoEditPage({ params }: PageProps) {
                     <button type="button" onClick={() => { setProcessingError(''); setEditJobId(null); setEditMode('manual'); }} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
                       Open in Editor <ArrowRight size={16} />
                     </button>
-                    <button type="button" onClick={() => { setAiEditResult(null); setEditMode('selection'); }} title="Dismiss and return to selection" aria-label="Dismiss and return to selection" className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+                    <button type="button" onClick={() => setAiEditResult(null)} title="Dismiss this result" aria-label="Dismiss this result" className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                       Dismiss
                     </button>
                   </div>
