@@ -252,6 +252,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
       color: asset.type === 'music' ? '#10B981' : asset.type === 'sfx' ? '#F97316' : asset.type === 'broll' ? '#F59E0B' : '#8B5CF6',
       track: asset.type === 'music' ? AUDIO_TRACKS[0].index : asset.type === 'sfx' ? AUDIO_TRACKS[2].index : asset.type === 'broll' ? VIDEO_TRACKS[2].index : VIDEO_TRACKS[4].index,
       sourceUrl: asset.url,
+      // Give audio a sensible starting level so it's audible in BOTH preview and
+      // export (the renderer reads properties.volume; without it music/SFX fell
+      // back to a flat default). Music sits under the voice as a bed; SFX louder.
+      ...(isAudio ? { properties: { volume: asset.type === 'sfx' ? 0.8 : 0.5 } } : {}),
     }
     setTimelineSegments((prev: any[]) => [...prev, segment])
     saveRecent((prev) => [asset, ...prev.filter((a) => a.id !== asset.id)].slice(0, RECENT_MAX))

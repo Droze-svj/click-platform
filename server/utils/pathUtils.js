@@ -15,6 +15,15 @@ function toAbsolutePath(relativeOrAbsolute) {
   const cut = p.search(/[?#]/);
   if (cut !== -1) p = p.slice(0, cut);
 
+  // A "/uploads/..." URL is PROJECT-RELATIVE (media lives under <root>/uploads),
+  // NOT a filesystem-root path. Without this, path.isAbsolute() below treats the
+  // leading slash as OS root and returns "/uploads/..." verbatim — which never
+  // exists — so local music / SFX / video referenced by their "/uploads/..." URL
+  // silently failed to resolve on export (the audio/video was dropped). Strip the
+  // leading slash so it joins onto process.cwd(). Genuine absolute paths that only
+  // CONTAIN "/uploads/" (e.g. "/Users/…/uploads/x.mp4") don't match and are kept.
+  if (/^\/+uploads\//i.test(p)) p = p.replace(/^\/+/, '');
+
   // If it's already absolute (starts with / on Linux/Mac or C:\ on Windows), return it
   if (path.isAbsolute(p)) return p;
   relativeOrAbsolute = p;

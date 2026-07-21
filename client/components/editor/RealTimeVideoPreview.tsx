@@ -149,9 +149,13 @@ function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogue
     const v = ref.current
     if (!v) return
 
-    let targetVolume = volume
+    // Honor the segment's own level (music/SFX set their own volume), scaled by
+    // the global preview volume — not the global volume alone. Mirrors the
+    // export, where each audio segment is mixed at its per-segment volume.
+    const segVol = Math.max(0, Number(seg.properties?.volume ?? seg.volume ?? (seg.track === 6 ? 0.5 : 1)))
+    let targetVolume = volume * segVol
     if (seg.track === 6 && isDialogueActive) {
-      targetVolume = volume * 0.3
+      targetVolume = targetVolume * 0.3 // duck music under dialogue
     }
     if (isMuted) targetVolume = 0
 
@@ -167,7 +171,9 @@ function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogue
       const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2
       const currentVol = startVolume + (targetVolume - startVolume) * eased
 
-      v.volume = currentVol
+      // HTMLMediaElement.volume is clamped to [0,1]; a per-segment boost above 1
+      // can only be realized in the export (volume filter), not the preview.
+      v.volume = Math.max(0, Math.min(1, currentVol))
       currentVolumeRef.current = currentVol
 
       if (progress < 1) {
@@ -177,7 +183,7 @@ function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogue
 
     frameId = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(frameId)
-  }, [volume, isMuted, isDialogueActive, seg.track])
+  }, [volume, isMuted, isDialogueActive, seg.track, seg.properties?.volume, seg.volume])
 
   const normalizedAudioUrl = getMediaUrl(seg.sourceUrl || '')
   return <audio ref={ref} src={normalizedAudioUrl} />
