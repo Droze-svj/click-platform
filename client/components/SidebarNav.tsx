@@ -133,7 +133,7 @@ export default function SidebarNav() {
 
   const MOBILE_TABS = [
     { path: '/dashboard',           label: t('nav.dashboard') || 'Home',    icon: LayoutDashboard },
-    { path: '/dashboard/video',     label: t('nav.studio') || 'Studio',  icon: Video },
+    { path: '/dashboard/video',     label: t('nav.videoEditor') || 'Video Editor',  icon: Video },
     { path: '/dashboard/scheduler', label: t('nav.publish') || 'Publish', icon: Send },
     { path: '/dashboard/settings',  label: t('nav.settings') || 'Settings', icon: Settings },
   ]
