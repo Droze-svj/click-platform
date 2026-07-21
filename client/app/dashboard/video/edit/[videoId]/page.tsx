@@ -492,6 +492,9 @@ export default function VideoEditPage({ params }: PageProps) {
   // completion nests it under .result. Check all three so "Open in Editor" always
   // opens the AI-edited clip, never silently the original.
   const editorVideoUrl = getMediaUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl ?? aiEditResult?.result?.editedVideoUrl) || videoUrl || '')
+  // The AI-edited output ONLY (no fallback to the source) — for the result card's
+  // Download action, so users can grab the finished cut without opening the editor.
+  const aiEditedDownloadUrl = getMediaUrl((aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl ?? aiEditResult?.result?.editedVideoUrl) || '')
 
   if (editMode === 'manual') {
     const urlForEditor = editorVideoUrl || videoUrl
@@ -574,11 +577,19 @@ export default function VideoEditPage({ params }: PageProps) {
                     <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Processing Complete</h2>
                     <p className="text-surface-500 font-medium text-sm">Your video has been successfully processed and edited by AI.</p>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                    <button type="button" onClick={() => { setProcessingError(''); setEditJobId(null); setEditMode('manual'); }} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 w-full md:w-auto">
+                    <button type="button" onClick={() => { setProcessingError(''); setEditJobId(null); setEditMode('manual'); }} className="col-span-2 sm:col-auto px-6 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-2">
                       Open in Editor <ArrowRight size={16} />
                     </button>
-                    <button type="button" onClick={() => setAiEditResult(null)} title="Dismiss this result" aria-label="Dismiss this result" className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+                    {aiEditedDownloadUrl && (
+                      <a href={aiEditedDownloadUrl} download title="Download the edited video" aria-label="Download the edited video" className="px-5 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <Download size={16} /> Download
+                      </a>
+                    )}
+                    <button type="button" onClick={() => router.push(`/dashboard/clips/hub/${videoId}`)} title="View the generated clips" aria-label="View the generated clips" className="px-5 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm flex items-center justify-center gap-2">
+                      <Film size={16} /> View Clips
+                    </button>
+                    <button type="button" onClick={() => setAiEditResult(null)} title="Dismiss this result" aria-label="Dismiss this result" className="px-5 py-4 rounded-xl bg-transparent text-surface-500 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center justify-center">
                       Dismiss
                     </button>
                   </div>
