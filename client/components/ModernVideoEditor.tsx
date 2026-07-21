@@ -64,6 +64,7 @@ import AudioPanel from './editor/AudioPanel'
 import MusicPicker from './editor/MusicPicker'
 const AdvancedTimelineView = dynamic(() => import('./editor/views/AdvancedTimelineView'), { ssr: false })
 import AssetLibraryView from './editor/views/AssetLibraryView'
+const GenerativeDubbingView = dynamic(() => import('./editor/views/GenerativeDubbingView'), { ssr: false })
 import CollaborateView from './editor/views/CollaborateView'
 import EffectsView from './editor/views/EffectsView'
 import ExportView from './editor/views/ExportView'
@@ -463,6 +464,26 @@ const ModernVideoEditor: React.FC<{
     setActiveCategory('ai-analysis' as any)
     setAiDirectorAutoGen((n) => n + 1)
   }, [videoId, showToast, setActiveCategory, t])
+
+  // Add a finished dub (from the Dubbing view) to the timeline as a dialogue
+  // audio track, so it mixes into the preview + export like any other audio.
+  const handleAddDubbedTrack = useCallback((audioUrl: string, langCode: string, langName: string) => {
+    if (!audioUrl) return
+    const start = videoState.currentTime || 0
+    const dur = Math.max(1, videoState.duration || 30)
+    setTimelineSegments((prev: any[]) => [...(Array.isArray(prev) ? prev : []), {
+      id: `seg-dub-${langCode}-${Date.now()}`,
+      startTime: start,
+      endTime: start + dur,
+      duration: dur,
+      type: 'audio',
+      name: `${langName} dub`,
+      color: '#8B5CF6',
+      track: 7, // Dialogue track (6=Music, 7=Dialogue, 8/9=SFX)
+      sourceUrl: audioUrl,
+      properties: { volume: 1 },
+    }])
+  }, [videoState.currentTime, videoState.duration, setTimelineSegments])
 
   // Wired ahead of declaration so the dispatcher passes the freshest
   // segments/overlays into applySuggestion. Defined right after
@@ -2149,6 +2170,7 @@ const ModernVideoEditor: React.FC<{
       case 'repurpose': return <RepurposeView videoUrl={actualVideoUrl || ''} videoId={videoId || undefined} videoFilters={videoFilters} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} audio={audioMix} videoDuration={videoState.duration} projectName={projectName} showToast={showToast} />
       case 'generate': return <GenerateView videoId={videoId || undefined} currentTime={videoState.currentTime} setTimelineSegments={setTimelineSegments} showToast={showToast} />
       case 'personalize': return <PersonalizationView showToast={showToast} />
+      case 'dub': return <GenerativeDubbingView videoId={videoId || undefined} showToast={showToast} onAddDubbedTrack={handleAddDubbedTrack} />
       case 'ai-analysis': return <AIDirectorView
         videoId={videoId || ''}
         showToast={showToast}

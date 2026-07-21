@@ -52,6 +52,17 @@ export const CATEGORIES: Category[] = [
     features: ['Smart Cuts', 'B-Roll', 'Captions']
   },
   {
+    id: 'dub',
+    label: 'Dubbing',
+    icon: Globe,
+    color: 'from-violet-600 to-fuchsia-600',
+    bgColor: 'bg-violet-100 dark:bg-violet-900/10',
+    textColor: 'text-violet-600 dark:text-violet-400',
+    description: 'Translate your voice into 10 languages',
+    features: ['Voice clone', '10 languages', 'Adds to timeline'],
+    badge: 'Agency'
+  },
+  {
     id: 'edit',
     label: 'Edit',
     icon: EditToolIcon,

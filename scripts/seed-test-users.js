@@ -310,7 +310,7 @@ async function upsertUser(persona) {
       emailVerified: true,
       subscription: {
         status: 'active',
-        plan: 'pro',
+        plan: 'agency',
         startDate: new Date(),
       },
       oauth: buildOAuth(persona),
@@ -321,7 +321,7 @@ async function upsertUser(persona) {
     user.name = persona.name;
     user.password = persona.password;
     user.niche = persona.niche;
-    user.subscription = { status: 'active', plan: 'pro', startDate: user.subscription?.startDate || new Date() };
+    user.subscription = { status: 'active', plan: 'agency', startDate: user.subscription?.startDate || new Date() };
     user.oauth = buildOAuth(persona);
     user.markModified('password'); // ensure pre-save hook re-hashes
   }

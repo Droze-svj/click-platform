@@ -56,8 +56,8 @@ export const EDITOR_GROUPS: EditorGroup[] = [
     label: 'AI',
     gradient: 'from-slate-700 to-slate-800',
     accent: 'text-indigo-300',
-    description: 'One-click AI auto-edit.',
-    categoryIds: ['ai-edit'],
+    description: 'One-click AI auto-edit + multilingual dubbing.',
+    categoryIds: ['ai-edit', 'dub'],
   },
   {
     id: 'export',
