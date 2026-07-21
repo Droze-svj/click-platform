@@ -33,9 +33,15 @@ describe('render fidelity fixes', () => {
     expect(buildVideoFilterChain({ brightness: 0 })[0]).toBe('eq=brightness=-1');
   });
 
-  it('toAbsolutePath strips a signed ?exp=&sig= suffix so local media resolves', () => {
-    expect(toAbsolutePath('/uploads/music/x.mp3?exp=123&sig=abc')).toBe('/uploads/music/x.mp3');
-    expect(toAbsolutePath('/uploads/music/x.mp3')).toBe('/uploads/music/x.mp3'); // unchanged when clean
+  it('toAbsolutePath strips a signed ?exp=&sig= suffix AND resolves /uploads project-relative', () => {
+    // A "/uploads/..." URL is project-relative (media lives under <root>/uploads),
+    // NOT an OS-root path. It must resolve onto process.cwd() — returning the bare
+    // "/uploads/..." (as the old code did) meant local music/SFX never resolved on
+    // export.
+    const path = require('path');
+    const expected = path.join(process.cwd(), 'uploads/music/x.mp3');
+    expect(toAbsolutePath('/uploads/music/x.mp3?exp=123&sig=abc')).toBe(expected); // query stripped + resolved
+    expect(toAbsolutePath('/uploads/music/x.mp3')).toBe(expected); // resolved even when clean
   });
 
   it('reverb stays valid at the slider extremes (no aecho=…:0)', () => {
