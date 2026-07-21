@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost } from '../../../lib/api'
 import {
@@ -76,8 +76,15 @@ export default function SchedulerPage() {
   }
   const [accountsByPlatform, setAccountsByPlatform] = useState<Record<string, PlatformAccount[]>>({})
 
+  const prefilledRef = useRef(false)
   useEffect(() => {
     if (!searchParams) return
+    // Run the URL prefill EXACTLY ONCE. `t`/`showToast` change identity after the
+    // locale JSON loads, and without this guard the effect would re-fire and
+    // silently overwrite whatever the user has since edited (caption/media) — plus
+    // re-show the toast. The query params are a one-shot hand-off, not live state.
+    if (prefilledRef.current) return
+    prefilledRef.current = true
     // Direct hand-off from the editor's Export → "Send to Scheduler": prefill the
     // compose form with the rendered media + caption so the finished export flows
     // into the one scheduling model instead of only the editor's direct broadcast.
