@@ -17,7 +17,7 @@ async function callGemini(systemPrompt, userPrompt, options = {}) {
  */
 async function generateContentIdeas(userId, options = {}) {
   try {
-    const { topic = null, platform = 'general', count = 10, style = 'engaging', audience = 'general' } = options;
+    const { topic = null, platform = 'general', count = 10, style = 'engaging', audience = 'general', exclude = [] } = options;
     // Bound + sanitize caller-supplied strings before prompt interpolation
     // (were raw — unbounded text starves the token budget / risks injection),
     // and clamp count so "generate 10000 ideas" can't blow up the call.
@@ -39,7 +39,7 @@ For each idea, provide:
 4. Key points to cover
 5. Potential hashtags
 
-Format as JSON array with fields: title, description, format, keyPoints (array), hashtags (array). Return only the JSON array.`;
+Format as JSON array with fields: title, description, format, keyPoints (array), hashtags (array). Return only the JSON array.${require('../utils/promptDedup').buildAvoidBlock(exclude, 'content ideas')}`;
 
     const ideasText = await callGemini(
       'You are a creative content strategist. Generate innovative and engaging content ideas that resonate with audiences.',
@@ -55,6 +55,8 @@ Format as JSON array with fields: title, description, format, keyPoints (array),
       ideas = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     }
 
+    // Drop any idea that repeats one already shown to the user (regenerate).
+    ideas = require('../utils/promptDedup').filterExcluded(ideas, exclude);
     logger.info('Content ideas generated', { userId, count: ideas.length });
     return ideas;
   } catch (error) {
