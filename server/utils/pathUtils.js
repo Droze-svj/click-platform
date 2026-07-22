@@ -1,4 +1,5 @@
 const path = require('path');
+const logger = require('./logger');
 
 /**
  * Converts a potentially relative URL/path (like '../uploads/video.mp4')
@@ -42,7 +43,7 @@ function toAbsolutePath(relativeOrAbsolute) {
   // Every caller passes a /uploads-style reference and already handles null.
   const uploadsBase = path.resolve(process.cwd(), 'uploads');
   if (resolved !== uploadsBase && !resolved.startsWith(uploadsBase + path.sep)) {
-    console.warn('[toAbsolutePath] rejected path outside uploads:', String(relativeOrAbsolute).slice(0, 120));
+    logger.warn('[toAbsolutePath] rejected path outside uploads', { input: String(relativeOrAbsolute).slice(0, 120) });
     return null;
   }
 
