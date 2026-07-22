@@ -217,7 +217,11 @@ Return only valid JSON with a "highlights" array.`;
     const rawContent = await geminiGenerate(prompt, { maxTokens: 1500 });
 
     const result = safeJsonParse(rawContent, { highlights: [] });
-    if (result.highlights && result.highlights.length > 0) return result.highlights;
+    // Must be an ARRAY — a truncated/garbage response can parse to
+    // { highlights: "..." } (a truthy string with .length), which would then be
+    // returned as "highlights" and blow up the caller's .map(). Fall to the
+    // deterministic fallback unless it's genuinely a non-empty array.
+    if (Array.isArray(result.highlights) && result.highlights.length > 0) return result.highlights;
     return buildFallbackHighlights(transcript, duration);
   } catch (error) {
     logger.error('Highlight detection error', { error: error.message, duration });
@@ -360,7 +364,9 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
 
     const response = await geminiGenerate(prompt, { maxTokens: 1200, temperature: 0.9 });
     const result = safeJsonParse(response, { ideas: [] });
-    let ideas = result.ideas || [];
+    // Coerce to an array — a non-array (e.g. the model apologising in a string)
+    // would flow into .map() below and throw.
+    let ideas = Array.isArray(result.ideas) ? result.ideas : [];
 
     // Phase 12: Sovereignty Refinement & Cliche Shield
     const refinedIdeas = await validateAndRefineOutput(ideas, safeTopic, 'viral-ideas');
@@ -400,7 +406,12 @@ async function validateAndRefineOutput(generatedContent, sourceMaterial, type = 
     Return a refined JSON object of the same structure. Return only valid JSON.`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 1000, temperature: 0.1 }); // Low temp for validation
-    return safeJsonParse(response, generatedContent);
+    const refined = safeJsonParse(response, generatedContent);
+    // Preserve the caller's array-ness: the refinement can come back as a non-array
+    // object, which would then break the caller's .map(). Fall back to the
+    // un-refined (correctly-typed) content in that case.
+    if (Array.isArray(generatedContent) && !Array.isArray(refined)) return generatedContent;
+    return refined;
   } catch (error) {
     logger.error('Cross-Validation Error', { error: error.message });
     return generatedContent;
@@ -497,7 +508,8 @@ async function extractQuotes(text, niche, options = {}) {
 
     const response = await geminiGenerate(prompt, { maxTokens: 800, temperature: 0.8 });
     let result = safeJsonParse(response, { quotes: [] });
-    let quotes = result.quotes || [];
+    // Coerce to an array so a non-array can't reach .map() below.
+    let quotes = Array.isArray(result.quotes) ? result.quotes : [];
 
     // Phase 12: Sovereignty Refinement & Cliche Shield
     const refinedQuotes = await validateAndRefineOutput(quotes, text, 'quotes');
