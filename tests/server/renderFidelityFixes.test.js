@@ -49,3 +49,39 @@ describe('render fidelity fixes', () => {
     expect(buildReverbFilter({ roomSize: 0, damping: 1 })).not.toMatch(/:0$/);
   });
 });
+
+describe('B-roll overlay compositing (export parity with the preview cover)', () => {
+  const { isBrollOverlaySeg, selectPrimarySegments, buildBrollOverlaySegment } = require('../../server/services/videoRenderService');
+
+  it('classifies B-roll = type broll OR B-Roll tracks 2/3 with a source (not audio/A-roll)', () => {
+    expect(isBrollOverlaySeg({ type: 'broll', sourceUrl: '/uploads/videos/b.mp4' })).toBe(true);
+    expect(isBrollOverlaySeg({ type: 'video', track: 2, sourceUrl: '/uploads/videos/b.mp4' })).toBe(true);
+    expect(isBrollOverlaySeg({ type: 'video', track: 3, sourceUrl: '/uploads/videos/b.mp4' })).toBe(true);
+    // A-roll (main) tracks 0/1 are NOT B-roll:
+    expect(isBrollOverlaySeg({ type: 'video', track: 0, sourceUrl: '/uploads/videos/a.mp4' })).toBe(false);
+    expect(isBrollOverlaySeg({ type: 'video', track: 1, sourceUrl: '/uploads/videos/a.mp4' })).toBe(false);
+    // No source, or audio → not a B-roll overlay:
+    expect(isBrollOverlaySeg({ type: 'broll' })).toBe(false);
+    expect(isBrollOverlaySeg({ type: 'audio', track: 2, sourceUrl: '/uploads/audio/x.mp3' })).toBe(false);
+  });
+
+  it('excludes B-roll from the primary stitch sequence (it composites as an overlay instead)', () => {
+    const segs = [
+      { id: 'main', type: 'video', track: 0, startTime: 0, endTime: 5 },
+      { id: 'broll', type: 'video', track: 2, sourceUrl: '/uploads/videos/b.mp4', startTime: 2, endTime: 4 },
+    ];
+    expect(selectPrimarySegments(segs).map((s) => s.id)).toEqual(['main']);
+  });
+
+  it('builds a time-gated, PTS-aligned, full-frame video overlay chain', () => {
+    const { chains } = buildBrollOverlaySegment(
+      { sourceUrl: '/uploads/videos/b.mp4', startTime: 2, endTime: 4, sourceStartTime: 1, playbackSpeed: 1 },
+      3, 'vbase', 'vout', 1920, 1080
+    );
+    const graph = chains.join(';');
+    expect(graph).toMatch(/\[3:v\]trim=start=1\.000:end=3\.000/); // trims from sourceStartTime for the window length
+    expect(graph).toMatch(/setpts=\(PTS-STARTPTS\)\/1\.0000\+2\.000\/TB/); // aligned to startTime on the output clock
+    expect(graph).toMatch(/scale=1920:1080:force_original_aspect_ratio=decrease/);
+    expect(graph).toMatch(/overlay=0:0:enable='between\(t\\,2\.000\\,4\.000\)'/); // covers ONLY its window
+  });
+});
