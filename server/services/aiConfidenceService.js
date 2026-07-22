@@ -41,7 +41,9 @@ async function analyzeContentConfidence(contentId, content, context = {}) {
       needsHumanReview,
       reviewReason: needsHumanReview ? generateReviewReason(uncertaintyFlags, overallConfidence) : null,
       confidenceBreakdown: analysis.breakdown,
-      model: 'gpt-4',
+      // Honest provenance — this service uses Gemini or a deterministic heuristic,
+      // never GPT-4. Reflect what actually produced the scores.
+      model: analysis.metadata?.source === 'heuristic-fallback' ? 'heuristic' : 'gemini-2.5-flash',
       analysisMetadata: analysis.metadata
     });
 
@@ -144,17 +146,31 @@ Respond with JSON:
     const fullPrompt = `You are a content quality analyst. Analyze content and provide confidence scores. Return valid JSON only.\n\n${prompt}`;
     const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1024 });
     const { safeJsonParse } = require('../utils/aiRouter');
-    const analysis = safeJsonParse(raw, {}) || {};
+    const analysis = safeJsonParse(raw, null);
 
+    // The model can return null (quota/blocked), prose, or TRUNCATED JSON that
+    // parses to an object missing the numeric aspects. In every such case we must
+    // NOT fabricate a "confident" 75 across the board (which would flip a record
+    // to needsHumanReview:false — the exact case this service exists to catch).
+    // Fall through to the deterministic text heuristic instead, same as a throw.
+    const hasScores = analysis && typeof analysis === 'object' &&
+      ['tone', 'clarity', 'engagement', 'sensitivity'].some(k => typeof analysis[k] === 'number');
+    if (!hasScores) {
+      logger.warn('Confidence LLM returned unusable output; using deterministic heuristics');
+      return heuristicConfidence(content);
+    }
+
+    // Use ?? (not ||) so a genuine 0 (e.g. sensitivity:0) isn't overwritten by the
+    // default — a real 0 must survive to trip the low-score uncertainty flags.
     return {
       aspectConfidence: {
-        tone: analysis.tone || 75,
-        humor: analysis.humor || 50,
-        sarcasm: analysis.sarcasm || 50,
-        sensitivity: analysis.sensitivity || 75,
-        brandAlignment: analysis.brandAlignment || 75,
-        clarity: analysis.clarity || 80,
-        engagement: analysis.engagement || 75
+        tone: analysis.tone ?? 75,
+        humor: analysis.humor ?? 50,
+        sarcasm: analysis.sarcasm ?? 50,
+        sensitivity: analysis.sensitivity ?? 75,
+        brandAlignment: analysis.brandAlignment ?? 75,
+        clarity: analysis.clarity ?? 80,
+        engagement: analysis.engagement ?? 75
       },
       breakdown: analysis.breakdown || {
         textAnalysis: 75,
@@ -162,11 +178,13 @@ Respond with JSON:
         brandCompliance: 75,
         platformFit: 75
       },
-      metadata: analysis.metadata || {
+      metadata: {
         detectedTopics: [],
         detectedSentiment: 'neutral',
         languageComplexity: 'medium',
-        readingLevel: '8th grade'
+        readingLevel: '8th grade',
+        ...(analysis.metadata || {}),
+        source: 'gemini',
       }
     };
   } catch (error) {

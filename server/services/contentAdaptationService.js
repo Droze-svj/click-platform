@@ -27,8 +27,10 @@ async function adaptContent(userId, contentId, text, title, platforms) {
         platform,
         content: adaptation.content,
         hashtags: adaptation.hashtags,
-        optimized: false,
-        score: adaptation.score || 85,
+        // Reflect what actually happened instead of hardcoding false + a fake 85.
+        optimized: adaptation.optimized === true,
+        degraded: adaptation.degraded === true,
+        score: adaptation.score ?? null,
         suggestions: adaptation.suggestions || []
       });
     }
@@ -67,20 +69,31 @@ async function adaptForPlatform(platform, text, title, userId) {
       examples: bestPerforming
     });
 
+    // The model was unavailable (null) or returned no adapted text. Don't pass the
+    // ORIGINAL text off as a "platform-optimized" adaptation with an invented
+    // score — mark it honestly as un-optimized (score null) so the client can show
+    // the original with a clear "not adapted" state instead of a fake result.
+    if (!adaptation || !adaptation.content) {
+      return { content: text, hashtags: [], score: null, suggestions: [], optimized: false, degraded: true };
+    }
+
     return {
-      content: adaptation.content || text,
+      content: adaptation.content,
       hashtags: adaptation.hashtags || [],
-      score: adaptation.score || 85,
-      suggestions: adaptation.suggestions || []
+      score: adaptation.score ?? null,
+      suggestions: adaptation.suggestions || [],
+      optimized: true
     };
   } catch (error) {
     logger.error('Error adapting for platform', { error: error.message, platform });
-    // Fallback to basic adaptation
+    // Honest degraded result — original text, no fabricated score.
     return {
       content: text,
       hashtags: [],
-      score: 70,
-      suggestions: ['Consider adding platform-specific formatting']
+      score: null,
+      suggestions: ['Consider adding platform-specific formatting'],
+      optimized: false,
+      degraded: true
     };
   }
 }

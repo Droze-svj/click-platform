@@ -61,9 +61,13 @@ async function generateSingleVariant(content, index, options) {
     maxTokens: 4000
   });
 
+  // Don't hand the user their OWN input back labelled as an AI variant — when the
+  // model is unavailable (quota/blocked → null) surface an honest error instead.
+  if (!response) throw new Error('AI variant generation unavailable');
+
   return {
     id: `variant_${Date.now()}_${index}`,
-    content: response || content,
+    content: response,
     index: index + 1,
     description: getVariantDescription(index, options)
   };
@@ -121,10 +125,11 @@ async function improveSection(content, section, options = {}) {
     const system = await personalSystem(options.userId, 'You are a content editor. Improve specific sections of content.');
     const fullPrompt = `${system}\n\n${prompt}`;
     const improved = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 4000 });
+    if (!improved) throw new Error('AI section improvement unavailable');
 
     return {
       original: section,
-      improved: improved || section,
+      improved,
       sectionType,
       improvementType
     };
@@ -184,10 +189,11 @@ async function rewriteForTone(content, targetTone, options = {}) {
     const system = await personalSystem(options.userId, 'You are a tone specialist. Rewrite content to match specific tones.', { tone: targetTone });
     const fullPrompt = `${system}\n\n${prompt}`;
     const rewritten = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 4000 });
+    if (!rewritten) throw new Error('AI tone rewrite unavailable');
 
     return {
       original: content,
-      rewritten: rewritten || content,
+      rewritten,
       targetTone,
       platform
     };

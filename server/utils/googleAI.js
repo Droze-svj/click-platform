@@ -53,7 +53,13 @@ try {
  */
 async function generateContent(prompt, options = {}) {
   if (process.env.NODE_ENV === 'test' || !model) {
-    if (process.env.NODE_ENV !== 'production' || process.env.NODE_ENV === 'test') {
+    // Fail-CLOSED: only ever fabricate mock output under an explicit development
+    // or test env (allowlist). The old denylist (NODE_ENV !== 'production') meant a
+    // real deploy with NODE_ENV unset/blank AND a missing key returned invented
+    // scores (hookScore:92, resonanceScore:94) as if they were genuine analysis.
+    // Anywhere else, fall through to `return null` so callers surface an honest
+    // "AI unavailable" instead of hallucinated numbers.
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
       const lowerPrompt = prompt.toLowerCase();
       logger.info('🛡️ [GoogleAI] Dev Fallback: analyzing prompt for mock', { 
         promptLength: prompt.length,

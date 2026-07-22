@@ -65,10 +65,14 @@ router.get('/personalized', auth, asyncHandler(async (req, res) => {
       });
     }
     logger.error('Get personalized recommendations error', { error: error.message, stack: error.stack, userId });
-    sendSuccess(res, 'Personalized recommendations fetched', 200, {
+    // Honest degraded response: an empty list here is due to an ERROR, not "no
+    // recommendations". Flag it so the client shows a retry state instead of a
+    // misleading "you have no recommendations".
+    sendSuccess(res, 'Recommendations temporarily unavailable', 200, {
       recommendations: [],
       insights: {},
-      topPlatforms: []
+      topPlatforms: [],
+      degraded: true
     });
   }
 }));
@@ -108,7 +112,9 @@ router.get('/trend-based', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Trend-based suggestions fetched', 200, result || { suggestions: [], trends: [] });
   } catch (error) {
     logger.error('Get trend-based suggestions error', { error: error.message, userId: req.user._id || req.user.id });
-    sendSuccess(res, 'Trend-based suggestions fetched', 200, { suggestions: [], trends: [] });
+    // Honest degraded response — flag the error so an empty list isn't read as
+    // "no trends".
+    sendSuccess(res, 'Trend suggestions temporarily unavailable', 200, { suggestions: [], trends: [], degraded: true });
   }
 }));
 
