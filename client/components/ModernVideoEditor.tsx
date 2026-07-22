@@ -76,7 +76,7 @@ import ScriptGeneratorView from './editor/views/ScriptGeneratorView'
 import ThumbnailGeneratorView from './editor/views/ThumbnailGeneratorView'
 import SchedulingView from './editor/views/SchedulingView'
 import ShortClipsView from './editor/views/ShortClipsView'
-import { ChromaKeySettings } from './editor/views/ChromakeyView'
+import ChromakeyView, { ChromaKeySettings } from './editor/views/ChromakeyView'
 // AIAssistView retained on disk; the AI tab now renders AIDirectorView.
 import AIDirectorView from './editor/views/AIDirectorView'
 import Inspector, { deriveSelection } from './editor/Inspector'
@@ -2167,6 +2167,7 @@ const ModernVideoEditor: React.FC<{
       case 'assets': return <AssetLibraryView currentTime={videoState.currentTime} videoDuration={videoState.duration} setTimelineSegments={setTimelineSegments} showToast={showToast} myBroll={userAssets.filter(a => a.type === 'broll')} myMusic={userAssets.filter(a => a.type === 'music')} />
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
       case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} selectedSegmentId={selectedSegmentId} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))} />
+      case 'chromakey': return <ChromakeyView chromaKey={chromaKey} setChromaKey={setChromaKey} showToast={showToast} />
       case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} timelineEffects={timelineEffects} videoFilters={videoFilters} audio={audioMix} videoTransform={videoTransform} videoTransformKeyframes={videoTransformKeyframes} videoCrop={videoCrop} chromaKey={chromaKey} playbackSpeed={playbackSpeed} videoDuration={videoState.duration} showToast={showToast} setActiveCategory={setActiveCategory} projectName={projectName} />
       case 'repurpose': return <RepurposeView videoUrl={actualVideoUrl || ''} videoId={videoId || undefined} videoFilters={videoFilters} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} svgOverlays={svgOverlays} timelineSegments={timelineSegments} audio={audioMix} videoDuration={videoState.duration} projectName={projectName} showToast={showToast} />
       case 'generate': return <GenerateView videoId={videoId || undefined} currentTime={videoState.currentTime} setTimelineSegments={setTimelineSegments} showToast={showToast} />

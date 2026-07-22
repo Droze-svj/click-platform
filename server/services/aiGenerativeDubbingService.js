@@ -213,7 +213,13 @@ async function getDubbingStatus(dubbingId) {
 
   if (!res.ok) throw new Error(`Status check failed: ${res.status}`)
   const data = await res.json()
-  return { status: data.status, progress: data.progress ?? 0 }
+  // Normalize ElevenLabs' vocabulary ('dubbing' in-progress, 'failed') to the
+  // states the client poll loop understands ('processing'/'completed'/'error'),
+  // so a real failure surfaces immediately instead of polling until the cap and
+  // reporting a bogus "timed out".
+  const STATUS_MAP = { dubbing: 'processing', dubbed: 'completed', failed: 'error', error: 'error' }
+  const status = STATUS_MAP[data.status] || data.status
+  return { status, progress: data.progress ?? 0 }
 }
 
 /**
