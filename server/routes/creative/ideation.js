@@ -24,7 +24,7 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.post('/ideas', auth, aiLimiter, asyncHandler(async (req, res) => {
-  const { topic, platform, count, style, audience } = req.body;
+  const { topic, platform, count, style, audience, exclude } = req.body;
 
   try {
     const ideas = await generateContentIdeas(req.user._id, {
@@ -33,6 +33,8 @@ router.post('/ideas', auth, aiLimiter, asyncHandler(async (req, res) => {
       count: count || 10,
       style: style || 'engaging',
       audience: audience || 'general',
+      // Already-shown ideas (regenerate) so the model returns fresh ones.
+      exclude: Array.isArray(exclude) ? exclude.slice(0, 40).map((x) => (x && (x.title || x.text)) || String(x || '')) : [],
     });
     sendSuccess(res, 'Content ideas generated', 200, ideas);
   } catch (error) {

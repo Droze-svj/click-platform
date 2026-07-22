@@ -19,6 +19,8 @@ try {
 // stuck upstream can hang an editor request for minutes. 60s is generous for
 // flash-tier text generation. Override with GEMINI_TIMEOUT_MS.
 const GEMINI_TIMEOUT_MS = parseInt(process.env.GEMINI_TIMEOUT_MS || '60000', 10);
+// Ceiling for the truncation-retry budget bump (gemini-2.5-flash supports 8k output).
+const MAX_OUTPUT_TOKEN_CAP = parseInt(process.env.GEMINI_MAX_OUTPUT_TOKENS || '8192', 10);
 
 const safetySettings = [
   { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
@@ -257,11 +259,12 @@ async function generateContent(prompt, options = {}) {
     // checks for null + falls through to a structured fallback (e.g.
     // `content || defaultCaption`). Bubbling 429s breaks the editor for the
     // entire day until quota resets, even when graceful copy is fine.
-    try {
+    // One upstream call at a given output budget → { text, finishReason }.
+    const callOnce = async (maxOutputTokens) => {
       const result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
-          maxOutputTokens: options.maxTokens || 1024,
+          maxOutputTokens,
           temperature: options.temperature ?? 0.7,
           topP: options.topP ?? 0.95,
           topK: options.topK ?? 40,
@@ -276,8 +279,29 @@ async function generateContent(prompt, options = {}) {
         safetySettings,
       }, { timeout: GEMINI_TIMEOUT_MS });
       const response = result.response;
-      if (!response || !response.text) return null;
-      return response.text().trim();
+      if (!response || !response.text) return { text: null, finishReason: null };
+      return { text: response.text().trim(), finishReason: response.candidates?.[0]?.finishReason || null };
+    };
+
+    try {
+      const budget = options.maxTokens || 1024;
+      let { text, finishReason } = await callOnce(budget);
+      // Truncation guard: Gemini stops at maxOutputTokens with finishReason
+      // 'MAX_TOKENS', leaving JSON callers a partial object that parses to a
+      // valid-but-INCOMPLETE shape (missing fields → blank/NaN, or a defaulted
+      // "confident" score). Retry ONCE from scratch at a doubled budget so the
+      // model can actually finish; if it still truncates, return best-effort but
+      // log the loss instead of laundering partial output as complete.
+      if (finishReason === 'MAX_TOKENS' && budget < MAX_OUTPUT_TOKEN_CAP) {
+        const bigger = Math.min(MAX_OUTPUT_TOKEN_CAP, budget * 2);
+        logger.warn('[GoogleAI] output truncated (MAX_TOKENS); retrying at larger budget', { from: budget, to: bigger });
+        const retry = await callOnce(bigger);
+        if (retry.text) { text = retry.text; finishReason = retry.finishReason; }
+        if (finishReason === 'MAX_TOKENS') {
+          logger.warn('[GoogleAI] output STILL truncated after retry', { budget: bigger, len: text ? text.length : 0 });
+        }
+      }
+      return text || null;
     } catch (err) {
       const msg = err?.message || '';
       const isQuota = /429|RESOURCE_EXHAUSTED|quota|rate ?limit/i.test(msg);
