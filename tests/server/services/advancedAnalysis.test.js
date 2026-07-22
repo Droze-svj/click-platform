@@ -1,7 +1,6 @@
 const vectorMemoryService = require('../../../server/services/vectorMemoryService');
 const creatorPerformanceService = require('../../../server/services/creatorPerformanceService');
 const creatorDnaService = require('../../../server/services/creatorDnaService');
-const aiRecommendationService = require('../../../server/services/aiRecommendationService');
 
 const googleAI = require('../../../server/utils/googleAI');
 const VectorMemory = require('../../../server/models/VectorMemory');

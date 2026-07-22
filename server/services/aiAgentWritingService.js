@@ -71,6 +71,13 @@ Return only valid JSON.`;
       const cleanedResponse = this.cleanAIResponse(response);
       const scriptData = safeJsonParse(cleanedResponse, {});
 
+      // A null response (quota/blocked) or truncated JSON parses to {} — reporting
+      // that as success:true would persist an empty hook/body/cta as a real script.
+      // Surface an honest failure instead so the caller doesn't save an empty doc.
+      if (!scriptData || (!scriptData.hook && !scriptData.body && !scriptData.cta && !scriptData.script)) {
+        throw new Error('AI script generation returned no usable content');
+      }
+
       return {
         success: true,
         script: scriptData
@@ -101,15 +108,10 @@ Return only valid JSON.`;
 
   async extractViralQuotes(transcript, engine = 'gpt4', persona = 'beast') {
     const run = async () => {
-      // Logic for fallback
-      if (!geminiConfigured && engine === 'gemini') {
-        return {
-          success: true,
-          quotes: [
-            { text: 'Consistency is the currency of the digital age.', score: 0.94, duration: 4.2 },
-            { text: 'The difference between a tool and a platform is community.', score: 0.82, duration: 5.1 }
-          ]
-        };
+      // Don't hand back invented "viral quotes" attributed to the user's transcript
+      // when the model isn't available — that's fabricated analysis. Fail honestly.
+      if (!geminiConfigured) {
+        throw new Error('AI quote extraction unavailable (AI not configured)');
       }
 
       logger.info('Extracting weighted quotes via Google AI', { charCount: transcript?.length || 0, persona });
@@ -153,6 +155,7 @@ Return only valid JSON.`;
         response = await geminiGenerate(fullPrompt, { temperature: 0.4, maxTokens: 800 });
       }
 
+      if (!response) throw new Error('AI quote extraction unavailable');
       const cleanedResponse = this.cleanAIResponse(response);
       const data = safeJsonParse(cleanedResponse, { quotes: [] });
 
