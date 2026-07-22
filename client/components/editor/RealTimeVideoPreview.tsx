@@ -572,6 +572,63 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   // reload on every clip→base transition doesn't re-fire onDurationChange.
   const lastReportedDurationRef = useRef<number>(-1)
 
+  // ── Seamless multi-clip cut (freeze-frame bridge) ────────────────────────────
+  // Swapping the <video> src forces the element to reload, painting BLACK until
+  // the new clip decodes its first frame — a visible flash at every multi-clip
+  // cut. To hide it we grab the last painted frame onto a canvas the instant a
+  // switch begins, hold that canvas over the reloading video, and drop it the
+  // moment the new clip presents its first frame. The viewer sees the old frame
+  // held for ~1 decode instead of black — i.e. a clean cut. Strict no-op unless a
+  // real source switch happens (single-source edits never touch this).
+  const bridgeCanvasRef = useRef<HTMLCanvasElement>(null)
+  const [bridgeActive, setBridgeActive] = useState(false)
+  const bridgeHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearBridge = () => {
+    if (bridgeHideTimerRef.current) { clearTimeout(bridgeHideTimerRef.current); bridgeHideTimerRef.current = null }
+    setBridgeActive(false)
+  }
+
+  // Paint the video's current frame onto the bridge canvas. Returns false (and
+  // leaves the bridge inactive → graceful fallback to the old reload) if the
+  // frame isn't decodable yet or the canvas would be cross-origin tainted.
+  const captureBridgeFrame = (): boolean => {
+    const v = videoRef.current
+    const c = bridgeCanvasRef.current
+    if (!v || !c || !v.videoWidth || !v.videoHeight || v.readyState < 2) return false
+    try {
+      c.width = v.videoWidth
+      c.height = v.videoHeight
+      const ctx = c.getContext('2d')
+      if (!ctx) return false
+      ctx.drawImage(v, 0, 0, c.width, c.height)
+      return true
+    } catch {
+      // SecurityError (tainted) or decode not ready — fall back silently.
+      return false
+    }
+  }
+
+  // Called after a switched-in source has loaded + seeked: drop the freeze frame
+  // exactly when the new clip presents its first painted frame.
+  const releaseBridgeOnNextFrame = () => {
+    // Only ever called right after a source switch (pendingSourceSeek consumed),
+    // so no bridgeActive guard is needed — and omitting it avoids a stale-closure
+    // early-return that could leave the freeze frame stuck.
+    const v = videoRef.current as any
+    const hasRvfc = v && typeof v.requestVideoFrameCallback === 'function'
+    // Backstop timer so the bridge can never get stuck if the frame callback
+    // never fires (decode error, tab backgrounded, no rVFC support).
+    if (bridgeHideTimerRef.current) clearTimeout(bridgeHideTimerRef.current)
+    bridgeHideTimerRef.current = setTimeout(() => {
+      bridgeHideTimerRef.current = null
+      setBridgeActive(false)
+    }, hasRvfc ? 500 : 120)
+    if (hasRvfc) {
+      try { v.requestVideoFrameCallback(() => clearBridge()) } catch { /* backstop timer covers it */ }
+    }
+  }
+
   /**
    * Switch the <video> to the active segment's source if it changed. Returns
    * true when a switch was initiated (the caller should skip its direct seek
@@ -581,6 +638,9 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const syncActiveSource = (sourceUrl: string | null, sourceTime: number): boolean => {
     const desired = sourceUrl && sourceUrl !== videoUrlRef.current ? sourceUrl : null
     if (desired === activeSourceUrlRef.current) return false
+    // Capture the outgoing frame BEFORE the src flips (both state updates batch
+    // into one render, so the canvas is already covering when the video reloads).
+    if (captureBridgeFrame()) setBridgeActive(true)
     activeSourceUrlRef.current = desired
     pendingSourceSeekRef.current = sourceTime
     setActiveSourceUrl(desired)
@@ -594,7 +654,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     pendingSourceSeekRef.current = null
     lastReportedDurationRef.current = -1
     setActiveSourceUrl(null)
+    clearBridge()
   }, [videoUrl])
+
+  // Clean up the freeze-frame bridge's backstop timer on unmount.
+  useEffect(() => () => {
+    if (bridgeHideTimerRef.current) clearTimeout(bridgeHideTimerRef.current)
+  }, [])
 
   // External currentTime → internal timeline cursor + underlying video seek.
   useEffect(() => {
@@ -801,6 +867,9 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
       applyPlaybackRate(v, m.speed)
       pendingSourceSeekRef.current = null
       if (isPlaying) v.play().catch(() => {})
+      // The new clip is loaded + seeked — drop the freeze-frame bridge the instant
+      // it presents its first painted frame, so the cut is seamless (no black).
+      releaseBridgeOnNextFrame()
     }
   }
 
@@ -890,9 +959,29 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               onLoadedMetadata={handleLoadedMetadata}
               onLoadStart={() => { setVideoLoadState('loading'); setVideoLoadError(false) }}
               onCanPlay={() => setVideoLoadState('ready')}
-              onError={() => { setVideoLoadError(true); setVideoLoadState('idle') }}
+              onError={() => { setVideoLoadError(true); setVideoLoadState('idle'); clearBridge() }}
               autoPlay={isPlaying}
               muted={isMuted}
+            />
+            {/* Freeze-frame bridge: the last frame of the outgoing clip, held over
+                the <video> while it reloads the next clip so a multi-clip cut
+                doesn't flash black. Same object-contain + grade/transform as the
+                video so the held frame is visually identical to the live one. */}
+            <canvas
+              ref={bridgeCanvasRef}
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+              style={{
+                filter: 'var(--v-filter)',
+                transform: 'var(--v-transform)',
+                clipPath: 'var(--v-clip)',
+                '--v-filter': filterString,
+                '--v-transform': `scale(${animatedTransform.scale ?? 1}) rotate(${animatedTransform.rotation ?? 0}deg)`,
+                '--v-clip': videoCrop ? `inset(${videoCrop.top || 0}% ${videoCrop.right || 0}% ${videoCrop.bottom || 0}% ${videoCrop.left || 0}%)` : 'none',
+                opacity: bridgeActive ? 1 : 0,
+                zIndex: 15,
+                transition: 'opacity 60ms linear',
+              } as any}
             />
             {videoLoadError && normalizedVideoUrl && (
               <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center">
@@ -907,7 +996,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 </button>
               </div>
             )}
-            {!videoLoadError && videoLoadState === 'loading' && normalizedVideoUrl && (
+            {!videoLoadError && videoLoadState === 'loading' && !bridgeActive && normalizedVideoUrl && (
               <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
               </div>
