@@ -917,6 +917,51 @@ function buildImageOverlaySegment(overlay, inputIdx, prevLabel, outLabel, W, H) 
 }
 
 /**
+ * True when a segment is a B-ROLL COVER OVERLAY (a distinct video clip that
+ * covers the base video for its time window), as opposed to a main-sequence
+ * clip that gets stitched. B-roll lives on the designated B-Roll tracks (2/3 =
+ * V3/V4) or carries type 'broll'. Must have its own source and not be audio.
+ * Mirrors the client's activeBroll + preview parity.
+ */
+function isBrollOverlaySeg(s) {
+  if (!s || s.type === 'audio' || s.type === 'image') return false
+  const hasSource = !!(s.sourceUrl || s.url || s.src)
+  if (!hasSource) return false
+  return s.type === 'broll' || s.track === 2 || s.track === 3
+}
+
+/**
+ * Build the ffmpeg chain for a B-roll VIDEO overlay: scale/pad the clip to the
+ * full frame on black (matching the client's object-contain cover), PTS-align it
+ * so its first kept frame appears at the segment's startTime on the OUTPUT
+ * timeline, then overlay it over `prevLabel` only within [startTime, endTime].
+ * The clip's audio is intentionally dropped — the base track keeps playing under
+ * the cover (the overlay model), matching the preview.
+ *
+ * @returns {{ chains: string[] }}
+ */
+function buildBrollOverlaySegment(seg, inputIdx, prevLabel, outLabel, W, H) {
+  const start = clampNum(seg.startTime, 0, 1e6, 0)
+  const end = clampNum(seg.endTime, start, 1e6, start + Math.max(0.1, clampNum(seg.duration, 0.1, 1e6, 5)))
+  const srcStart = Math.max(0, Number(seg.sourceStartTime) || 0)
+  const speed = normSegSpeed(seg.playbackSpeed)
+  const winDur = Math.max(0.1, end - start)
+  // Source length consumed for this window (faster speed → more source per second).
+  const srcEnd = srcStart + winDur * speed
+  const bvLabel = `bv${inputIdx}`
+  // trim → reset PTS → divide by speed (fast/slow) → shift to `start` on the
+  // output clock → letterbox-fit to the frame on black → normalize SAR.
+  const prepChain =
+    `[${inputIdx}:v]trim=start=${srcStart.toFixed(3)}:end=${srcEnd.toFixed(3)},` +
+    `setpts=(PTS-STARTPTS)/${speed.toFixed(4)}+${start.toFixed(3)}/TB,` +
+    `scale=${W}:${H}:force_original_aspect_ratio=decrease,` +
+    `pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1[${bvLabel}]`
+  const overlayChain =
+    `[${prevLabel}][${bvLabel}]overlay=0:0:enable='${enableBetween(start, end)}'[${outLabel}]`
+  return { chains: [prepChain, overlayChain] }
+}
+
+/**
  * Generate a gradient PNG (RGBA) at frame size honoring direction/region/stops.
  * Returns the temp file path. Uses sharp; throws if sharp unavailable.
  */
@@ -1574,6 +1619,15 @@ async function renderFromEditorState(options) {
     if (!o) { logger.warn('Skip gradient overlay: empty'); return }
     rawOverlays.push({ kind: 'gradient', spec: o, layer: clampNum(o.layer, -1e4, 1e4, 0) })
   })
+  // B-roll cover clips (type 'broll' or the B-Roll tracks 2/3). Rendered as a
+  // full-frame video overlay over the base for their window — the export
+  // counterpart of the preview's activeBroll layer. Given a low base layer so
+  // they draw UNDER image/logo overlays but OVER the base + captions (matching
+  // the client, where the broll cover is z-20 and captions are z-10).
+  ;(timelineSegments || []).forEach((s) => {
+    if (!isBrollOverlaySeg(s)) return
+    rawOverlays.push({ kind: 'broll', spec: s, layer: clampNum(s.layer, -1e4, 1e4, 0) - 1e4 })
+  })
   rawOverlays.sort((a, b) => a.layer - b.layer)
 
   if (rawOverlays.length > MAX_OVERLAYS) {
@@ -1607,6 +1661,11 @@ async function renderFromEditorState(options) {
             startTime: ro.spec.startTime, endTime: ro.spec.endTime,
           },
         })
+      } else if (ro.kind === 'broll') {
+        const raw = String(ro.spec.sourceUrl || ro.spec.url || ro.spec.src)
+        const source = isRemoteUrl(raw) ? await assertSafeRemote(raw) : toAbsolutePath(raw)
+        if (!source) { logger.warn('Skip broll overlay: unresolved source', { raw: raw.slice(0, 80) }); continue }
+        overlayInputs.push({ kind: 'broll', source, spec: ro.spec })
       }
     } catch (e) {
       logger.warn(`Skip ${ro.kind} overlay`, { error: e.message })
@@ -1744,7 +1803,9 @@ async function renderFromEditorState(options) {
             const inputIdx = baseIdx + i
             const isLast = i === overlayInputs.length - 1
             const outLabel = isLast ? 'vout' : `vo${i}`
-            const seg = buildImageOverlaySegment(ov.spec, inputIdx, prevLabel, outLabel, width, height)
+            const seg = ov.kind === 'broll'
+              ? buildBrollOverlaySegment(ov.spec, inputIdx, prevLabel, outLabel, width, height)
+              : buildImageOverlaySegment(ov.spec, inputIdx, prevLabel, outLabel, width, height)
             chains.push(...seg.chains)
             prevLabel = outLabel
           } catch (e) {
@@ -2117,7 +2178,10 @@ function selectPrimarySegments(timelineSegments) {
   if (!Array.isArray(timelineSegments)) return []
   return timelineSegments
     .map((s, i) => ({ s, i }))
-    .filter(({ s }) => s && PRIMARY_VIDEO_TYPES.has(s.type))
+    // B-roll cover clips are composited as overlays (buildBrollOverlaySegment),
+    // NOT concatenated into the primary sequence — exclude them here so they're
+    // not rendered twice.
+    .filter(({ s }) => s && PRIMARY_VIDEO_TYPES.has(s.type) && !isBrollOverlaySeg(s))
     .sort((a, b) => {
       const ta = Number(a.s.startTime) || 0
       const tb = Number(b.s.startTime) || 0
@@ -2422,6 +2486,8 @@ module.exports = {
   getEmojiFontPath,
   buildDrawBoxFilter,
   buildImageOverlaySegment,
+  buildBrollOverlaySegment,
+  isBrollOverlaySeg,
   buildVideoTransformChain,
   buildKeyframeExpr,
   buildTextAnimation,
