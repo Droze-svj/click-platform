@@ -44,12 +44,15 @@ describe('clampPlaybackRate', () => {
 })
 
 describe('selectPrimarySegments', () => {
-  it('keeps main-track video/broll/cut, drops audio/text/effects, sorts by startTime', () => {
+  it('keeps main-track video/cut, drops audio/text/effects/broll, sorts by startTime', () => {
     const segs = [
       seg({ id: 'b', startTime: 5, endTime: 10, type: 'video' }),
       seg({ id: 'a', startTime: 0, endTime: 5, type: 'video' }),
       seg({ id: 'audio', startTime: 0, endTime: 5, type: 'audio', track: 6 }),
       seg({ id: 'text', startTime: 0, endTime: 5, type: 'text' }),
+      // B-roll is a cover OVERLAY, not a main-sequence source-switch — excluded
+      // here so it isn't double-processed (overlay + source swap → black flash).
+      seg({ id: 'broll', startTime: 2, endTime: 4, type: 'broll' }),
     ]
     const out = selectPrimarySegments(segs)
     expect(out.map((s) => s.id)).toEqual(['a', 'b'])

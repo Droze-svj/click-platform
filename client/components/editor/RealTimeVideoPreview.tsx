@@ -412,11 +412,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const [activeSourceUrl, setActiveSourceUrl] = useState<string | null>(null)
   const normalizedVideoUrl = getMediaUrl((activeSourceUrl || videoUrl) || '')
   
-  // Overlay active B-roll on top of the main video
-  const activeBroll = timelineSegments.find(s => 
-    (s.type === 'broll' || s.track === 1) && 
-    currentTime >= s.startTime && 
-    currentTime <= s.endTime && 
+  // Overlay active B-roll on top of the main video. Match B-roll by TYPE only —
+  // track 1 is A-Roll (V2), a MAIN-sequence track, so matching `track === 1` here
+  // wrongly treated main clips as B-roll and double-processed them (overlay on top
+  // of the source-switch → black flash at the cut).
+  const activeBroll = timelineSegments.find(s =>
+    s.type === 'broll' &&
+    currentTime >= s.startTime &&
+    currentTime <= s.endTime &&
     (trackVisibility[s.track] !== false)
   )
   const videoRef = useRef<HTMLVideoElement>(null)

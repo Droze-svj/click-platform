@@ -75,7 +75,13 @@ export function selectPrimarySegments(segments: TimelineSegment[] | null | undef
     .filter((s) => {
       const track = typeof s.track === 'number' ? s.track : 0
       if (track !== 0 && track !== 1) return false
-      if (s.type && s.type !== 'video' && s.type !== 'broll' && s.type !== 'cut') return false
+      // B-roll is a COVER OVERLAY (rendered by RealTimeVideoPreview's activeBroll
+      // layer), NOT a main-sequence source-switch. Including 'broll' here made a
+      // B-roll segment BOTH swap the main <video> source AND draw the overlay on
+      // top — a redundant decode plus a black flash at the broll-out cut (the
+      // main <video> reloads back to base under the disappearing overlay). Only
+      // real main-track clips (video/cut) drive the source-switch.
+      if (s.type && s.type !== 'video' && s.type !== 'cut') return false
       return true
     })
     .slice()
