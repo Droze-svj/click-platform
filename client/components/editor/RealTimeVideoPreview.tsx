@@ -980,7 +980,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 '--v-clip': videoCrop ? `inset(${videoCrop.top || 0}% ${videoCrop.right || 0}% ${videoCrop.bottom || 0}% ${videoCrop.left || 0}%)` : 'none',
                 opacity: bridgeActive ? 1 : 0,
                 zIndex: 15,
-                transition: 'opacity 60ms linear',
+                // Show INSTANTLY (no transition) so the freeze frame covers the
+                // reloading <video> before it can paint black; fade out over 60ms
+                // only on release, once the new clip has a real frame underneath.
+                transition: bridgeActive ? 'none' : 'opacity 60ms linear',
               } as any}
             />
             {videoLoadError && normalizedVideoUrl && (

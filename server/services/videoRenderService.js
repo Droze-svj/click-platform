@@ -14,6 +14,7 @@ const logger = require('../utils/logger')
 const videoEnhancer = require('../utils/videoEnhancer')
 const c2paService = require('./c2paService')
 const { toAbsolutePath } = require('../utils/pathUtils')
+const { safeColor } = require('../utils/ffmpegSafe')
 const urlGuard = require('../utils/urlGuard')
 
 /**
@@ -632,7 +633,9 @@ function buildDrawBoxFilter(shape) {
   const y = shape.y !== undefined ? `(ih*${Number(shape.y) / 100})-(ih*${(Number(shape.height) || 20) / 100})/2` : '(ih-ih*0.2)/2'
   const w = `iw*${(Number(shape.width) || 20) / 100}`
   const h = shape.kind === 'line' ? (Number(shape.strokeWidth) || 2) : `ih*${(Number(shape.height) || 20) / 100}`
-  const color = String(shape.color || '#ffffff').replace('#', '0x')
+  // safeColor whitelists to a valid ffmpeg color so a value like "x];[y" can't
+  // break out of the drawbox color option and inject filter-graph syntax.
+  const color = safeColor(shape.color || '#ffffff', '0xffffff').replace('#', '0x')
   let alpha = clampNum(shape.opacity, 0, 1, 0.5)
 
   // ── Editor parity: per-overlay keyframes ──
@@ -1388,7 +1391,9 @@ async function renderFromEditorState(options) {
   const basePre = []
   if (reverseWhole) basePre.push('reverse')
   if (chromaKey && chromaKey.enabled && chromaKey.color) {
-    const hex = String(chromaKey.color).replace('#', '0x')
+    // safeColor whitelists to a valid ffmpeg color token so a value like
+    // "green,crop=1:1" can't break out of the filter option and inject syntax.
+    const hex = safeColor(chromaKey.color, 'green').replace('#', '0x')
     let tol = Number(chromaKey.tolerance)
     if (!Number.isFinite(tol)) tol = 0.3
     if (tol > 1) tol = tol / 100 // editor stores 0-100 in some paths, 0-1 in others
@@ -1666,7 +1671,9 @@ async function renderFromEditorState(options) {
       // 🌍 Phase 15: Global Subtitle Burn-in
       if (exportOptions.subtitlePath && fs.existsSync(exportOptions.subtitlePath)) {
         logger.info('Injecting Neural Subtitles', { path: exportOptions.subtitlePath });
-        const subPath = exportOptions.subtitlePath.replace(/\\/g, '/').replace(/:/g, '\\:');
+        // Escape backslash, colon AND single-quote so a "'" in the path can't
+        // close the ass='…' literal and inject filter syntax.
+        const subPath = exportOptions.subtitlePath.replace(/\\/g, '/').replace(/'/g, "\\'").replace(/:/g, '\\:');
         finalFilterList.push(`ass='${subPath}'`);
       }
 

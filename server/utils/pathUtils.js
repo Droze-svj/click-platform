@@ -1,8 +1,17 @@
 const path = require('path');
+const logger = require('./logger');
 
 /**
- * Converts a potentially relative URL/path (like '../uploads/video.mp4') 
- * into an absolute path from the project root.
+ * Converts a potentially relative URL/path (like '../uploads/video.mp4')
+ * into an absolute path from the project root, CONTAINED within <root>/uploads.
+ *
+ * Media references (seg.sourceUrl / videoUrl) flow in from client editor state,
+ * so this must never resolve outside the uploads directory. Every legitimate
+ * caller resolves a file under <root>/uploads (server-stored originals, generated
+ * thumbnails/exports/temp, or signed /uploads URLs); anything that escapes that
+ * base — via a traversal like '/uploads/../../.env' or a bare absolute path like
+ * '/etc/passwd' — is rejected with null so ffmpeg can't be pointed at an arbitrary
+ * local file (LFI). Unresolvable inputs are skipped gracefully downstream.
  */
 function toAbsolutePath(relativeOrAbsolute) {
   if (!relativeOrAbsolute) return null;
@@ -17,24 +26,28 @@ function toAbsolutePath(relativeOrAbsolute) {
 
   // A "/uploads/..." URL is PROJECT-RELATIVE (media lives under <root>/uploads),
   // NOT a filesystem-root path. Without this, path.isAbsolute() below treats the
-  // leading slash as OS root and returns "/uploads/..." verbatim — which never
-  // exists — so local music / SFX / video referenced by their "/uploads/..." URL
-  // silently failed to resolve on export (the audio/video was dropped). Strip the
-  // leading slash so it joins onto process.cwd(). Genuine absolute paths that only
-  // CONTAIN "/uploads/" (e.g. "/Users/…/uploads/x.mp4") don't match and are kept.
+  // leading slash as OS root — so local music / SFX / video referenced by their
+  // "/uploads/..." URL silently failed to resolve on export. Strip the leading
+  // slash(es) so it joins onto process.cwd().
   if (/^\/+uploads\//i.test(p)) p = p.replace(/^\/+/, '');
 
-  // If it's already absolute (starts with / on Linux/Mac or C:\ on Windows), return it
-  if (path.isAbsolute(p)) return p;
-  relativeOrAbsolute = p;
-  
-  // Clean up any '../' or './' prefixes
-  let cleaned = relativeOrAbsolute.replace(/^(\.\.\/)+/, '');
-  cleaned = cleaned.replace(/^(\.\/)+/, '');
-  
-  // If it starts with 'uploads/', it's relative to the project root
-  // Otherwise, assume it's relative to project root anyway
-  return path.join(process.cwd(), cleaned);
+  // Resolve to a real absolute path (collapsing any embedded '../') — from the
+  // project root for relative inputs, or as-is for genuine absolute inputs.
+  const resolved = path.isAbsolute(p)
+    ? path.resolve(p)
+    : path.resolve(process.cwd(), p);
+
+  // Containment: the result MUST stay within <root>/uploads. This blocks both
+  // traversal ('/uploads/../../.env' → <root>/.env) and bare absolute paths
+  // ('/etc/passwd'), while allowing every legitimate '<root>/uploads/...' file.
+  // Every caller passes a /uploads-style reference and already handles null.
+  const uploadsBase = path.resolve(process.cwd(), 'uploads');
+  if (resolved !== uploadsBase && !resolved.startsWith(uploadsBase + path.sep)) {
+    logger.warn('[toAbsolutePath] rejected path outside uploads', { input: String(relativeOrAbsolute).slice(0, 120) });
+    return null;
+  }
+
+  return resolved;
 }
 
 module.exports = {

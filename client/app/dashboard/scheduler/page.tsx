@@ -49,7 +49,7 @@ const PLATFORMS: { id: string; label: string; icon: LucideIcon }[] = [
 export default function SchedulerPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
   const { t } = useTranslation()
 
@@ -206,9 +206,13 @@ export default function SchedulerPage() {
   }, [showToast, t])
 
   useEffect(() => {
+    // Wait for the async auth check to settle — useAuth() starts with user:null
+    // while it validates the token, so redirecting on !user before it resolves
+    // bounced authenticated users (and the Export→Scheduler hand-off) to /login.
+    if (authLoading) return
     if (!user) router.push('/login')
     else loadPosts()
-  }, [user, router, loadPosts])
+  }, [user, authLoading, router, loadPosts])
 
   useUserSocket((user as any)?._id || (user as any)?.id, {
     onPostStatus: (payload) => {
