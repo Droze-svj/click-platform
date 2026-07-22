@@ -31,9 +31,10 @@ function clampCount(n) {
 /**
  * Pure: build the generation prompt for `count` hook options.
  */
-function buildPrompt({ platform, style, topic, count }) {
+function buildPrompt({ platform, style, topic, count, exclude }) {
   const s = normalizeStyle(style);
   const n = clampCount(count);
+  const { buildAvoidBlock } = require('../utils/promptDedup');
   return `You write scroll-stopping HOOKS — the opening line of a ${platform} post or short video.
 Style: ${STYLES[s]}
 
@@ -45,7 +46,7 @@ Rules:
 - Return exactly ${n} distinct hooks, each ONE short line (max ~12 words).
 - Make them punchy and specific to the topic. No hashtags, no emojis, no "as an AI".
 - Do NOT invent fake stats, prices, or promises.
-- Return ONLY a JSON array of ${n} strings.`;
+- Return ONLY a JSON array of ${n} strings.${buildAvoidBlock(exclude, 'hooks')}`;
 }
 
 /**
@@ -90,13 +91,13 @@ function shapeHooks(raw, style, count) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function generateHooks(input, deps) {
-  const { platform, style, topic, count } = input || {};
+  const { platform, style, topic, count, exclude } = input || {};
   const safe = deps.sanitize(topic, 1500);
   if (!safe || !String(safe).trim()) {
     const e = new Error('topic is required'); e.statusCode = 400; throw e;
   }
   const n = clampCount(count);
-  const prompt = buildPrompt({ platform, style, topic: safe, count: n });
+  const prompt = buildPrompt({ platform, style, topic: safe, count: n, exclude });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 400 });
   }
@@ -109,7 +110,11 @@ async function generateHooks(input, deps) {
       taskType: 'hook-generator',
     });
   }
-  return { platform, style: normalizeStyle(style), hooks: shapeHooks(raw, style, n) };
+  // The prompt already asks the model to avoid `exclude`; filter as a safety net
+  // so anything it repeats anyway never reaches the user.
+  const { filterExcluded } = require('../utils/promptDedup');
+  const hooks = filterExcluded(shapeHooks(raw, style, n), exclude);
+  return { platform, style: normalizeStyle(style), hooks };
 }
 
 module.exports = {

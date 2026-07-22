@@ -40,9 +40,10 @@ function anglesForCount(count) {
 /**
  * Pure: build the generation prompt for `count` distinct-angle captions.
  */
-function buildPrompt({ platform, topic, count }) {
+function buildPrompt({ platform, topic, count, exclude }) {
   const angles = anglesForCount(count);
   const lines = angles.map((a, i) => `${i + 1}. ${a}: ${ANGLES[a]}`).join('\n');
+  const { buildAvoidBlock } = require('../utils/promptDedup');
   return `You write ${platform} captions. Draft ${angles.length} DISTINCT captions for the same topic, each using a different angle:
 ${lines}
 
@@ -54,7 +55,7 @@ Rules:
 - One caption per angle, in order. Each 1-3 short sentences, native to ${platform}.
 - Sound like a real creator. No hashtags, no emojis spam, no "as an AI".
 - Do NOT invent fake stats, prices, or promises.
-- Return ONLY a JSON array of objects: [{"angle":"hook","text":"..."}, ...].`;
+- Return ONLY a JSON array of objects: [{"angle":"hook","text":"..."}, ...].${buildAvoidBlock(exclude, 'captions')}`;
 }
 
 /**
@@ -107,13 +108,13 @@ function shapeCaptions(raw, count) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function generateCaptions(input, deps) {
-  const { platform, topic, count } = input || {};
+  const { platform, topic, count, exclude } = input || {};
   const safe = deps.sanitize(topic, 1500);
   if (!safe || !String(safe).trim()) {
     const e = new Error('topic is required'); e.statusCode = 400; throw e;
   }
   const n = clampCount(count);
-  const prompt = buildPrompt({ platform, topic: safe, count: n });
+  const prompt = buildPrompt({ platform, topic: safe, count: n, exclude });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 500 });
   }
@@ -126,7 +127,9 @@ async function generateCaptions(input, deps) {
       taskType: 'caption-angles',
     });
   }
-  return { platform, captions: shapeCaptions(rawOut, n) };
+  // Safety-net filter for any caption the model repeats despite the avoid-list.
+  const { filterExcluded } = require('../utils/promptDedup');
+  return { platform, captions: filterExcluded(shapeCaptions(rawOut, n), exclude) };
 }
 
 module.exports = {

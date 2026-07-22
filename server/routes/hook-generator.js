@@ -40,9 +40,13 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
     recordUsage: (args) => req.recordAiUsage(args),
   };
 
+  // `exclude`: hooks already shown to the user (e.g. on "regenerate") so the model
+  // produces genuinely different ones. Bounded + string-coerced.
+  const exclude = Array.isArray(body.exclude) ? body.exclude.slice(0, 40).map((x) => String(x || '')) : [];
+
   let result;
   try {
-    result = await generateHooks({ platform, style, topic, count: body.count }, deps);
+    result = await generateHooks({ platform, style, topic, count: body.count, exclude }, deps);
   } catch (err) {
     return sendError(res, err.message, err.statusCode || 500);
   }

@@ -39,9 +39,12 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
     recordUsage: (args) => req.recordAiUsage(args),
   };
 
+  // `exclude`: captions already shown (regenerate) → produce different angles.
+  const exclude = Array.isArray(body.exclude) ? body.exclude.slice(0, 40).map((x) => (x && x.text) || String(x || '')) : [];
+
   let result;
   try {
-    result = await generateCaptions({ platform, topic, count: body.count }, deps);
+    result = await generateCaptions({ platform, topic, count: body.count, exclude }, deps);
   } catch (err) {
     return sendError(res, err.message, err.statusCode || 500);
   }
