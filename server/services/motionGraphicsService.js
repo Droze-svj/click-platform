@@ -159,7 +159,7 @@ async function applyStabilization(videoPath, outputPath, strength = 0.5) {
         ffmpeg(videoPath)
           .videoFilters(`vidstabtransform=input=${detectPath}:smoothing=${strength * 10}:zoom=1:optzoom=1`)
           .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
-      .output(outputPath)
+          .output(outputPath)
           .on('end', () => {
             // Clean up
             if (fs.existsSync(detectPath)) fs.unlinkSync(detectPath);
@@ -251,7 +251,7 @@ async function applyKenBurns(videoPath, outputPath, kenBurnsOptions) {
       ffmpeg(videoPath)
         .videoFilters(filter)
         .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
-      .output(outputPath)
+        .output(outputPath)
         .on('end', () => {
           logger.info('Ken Burns effect applied', { outputPath });
           resolve(outputPath);
