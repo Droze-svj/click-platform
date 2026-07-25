@@ -64,6 +64,27 @@ async function generateVoiceover(userId, text, options = {}) {
       fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     }
 
+    // OmniVoice path — the self-hosted, open-source ElevenLabs alternative. When
+    // the operator has pointed Click at an OmniVoice backend (OMNIVOICE_BASE_URL)
+    // it is the PREFERRED provider: it handles both stock and cloned voices and
+    // keeps synthesis on-prem. A failure falls through to ElevenLabs/OpenAI.
+    const omniVoice = require('./omniVoiceService');
+    if (omniVoice.isConfigured()) {
+      try {
+        const out = await omniVoice.generateSpeechFile({
+          text,
+          voice: voiceId || voice,   // an OmniVoice profile id OR a preset name
+          speed,
+          subdir: 'audio',
+        });
+        logger.info('OmniVoice voiceover generated', { userId, voice: voiceId || voice, chars: text.length });
+        return { success: true, url: out.url, voice: voiceId || voice, text, provider: 'omnivoice' };
+      } catch (ovErr) {
+        logger.warn('OmniVoice synthesis failed; falling back to ElevenLabs/OpenAI', { userId, error: ovErr.message });
+        // fall through
+      }
+    }
+
     // ElevenLabs path — cloned voices only.
     const eleven = voiceId ? getElevenLabsClient() : null;
     if (eleven && voiceId) {
@@ -121,6 +142,17 @@ async function listVoices() {
       voices.push({ id: v, name: v.charAt(0).toUpperCase() + v.slice(1), provider: 'openai', cloned: false });
     });
   }
+  // OmniVoice catalog (only when a self-hosted backend is configured).
+  try {
+    const omniVoice = require('./omniVoiceService');
+    if (omniVoice.isConfigured()) {
+      const ov = await omniVoice.listVoices();
+      for (const v of ov) voices.push(v);
+    }
+  } catch (err) {
+    logger.warn('OmniVoice listVoices failed', { error: err.message });
+  }
+
   // ElevenLabs catalog (only when configured).
   const eleven = getElevenLabsClient();
   if (eleven) {
