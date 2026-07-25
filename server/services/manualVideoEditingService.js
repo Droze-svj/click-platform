@@ -117,7 +117,9 @@ async function addBackgroundMusic(videoPath, musicPath, options = {}) {
             '-b:a 192k',
             '-shortest'
           ])
-          .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
+          // Video is stream-copied (-c:v copy), so -pix_fmt is meaningless here
+          // (encoder-only option). Keep faststart for web-progressive playback.
+          .outputOptions(['-movflags', '+faststart']).output(outputPath)
           .on('end', () => resolve(outputPath))
           .on('error', reject)
           .run();
@@ -444,7 +446,9 @@ async function processCustomMusic(musicFilePath, options = {}) {
 
     return new Promise((resolve, reject) => {
       command
-        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
+        // Audio-only output (.mp3 / libmp3lame) — MP4 video flags (-movflags,
+        // -pix_fmt) do not apply and error on stricter ffmpeg builds.
+        .output(outputPath)
         .audioCodec('libmp3lame')
         .audioBitrate('192k')
         .on('end', () => resolve(outputPath))

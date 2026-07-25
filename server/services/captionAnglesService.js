@@ -129,7 +129,13 @@ async function generateCaptions(input, deps) {
   }
   // Safety-net filter for any caption the model repeats despite the avoid-list.
   const { filterExcluded } = require('../utils/promptDedup');
-  return { platform, captions: filterExcluded(shapeCaptions(rawOut, n), exclude) };
+  const shaped = shapeCaptions(rawOut, n);
+  const filtered = filterExcluded(shaped, exclude);
+  // If the model repeated every caption despite the avoid-list, the filter
+  // empties the result. Fall back to the (repeated) captions so a "regenerate"
+  // click never returns an empty panel.
+  const captions = (filtered.length === 0 && shaped.length > 0) ? shaped : filtered;
+  return { platform, captions };
 }
 
 module.exports = {

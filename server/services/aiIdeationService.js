@@ -56,7 +56,11 @@ Format as JSON array with fields: title, description, format, keyPoints (array),
     }
 
     // Drop any idea that repeats one already shown to the user (regenerate).
-    ideas = require('../utils/promptDedup').filterExcluded(ideas, exclude);
+    // If the model repeated ALL of them, the filter empties the list — fall back
+    // to the (repeated) ideas so "regenerate" never returns nothing.
+    const rawIdeas = Array.isArray(ideas) ? ideas : [];
+    const deduped = require('../utils/promptDedup').filterExcluded(rawIdeas, exclude);
+    ideas = (deduped.length === 0 && rawIdeas.length > 0) ? rawIdeas : deduped;
     logger.info('Content ideas generated', { userId, count: ideas.length });
     return ideas;
   } catch (error) {
