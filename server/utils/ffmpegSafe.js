@@ -78,4 +78,22 @@ function safeNum(v, def = 0, min = -1e9, max = 1e9) {
   return Math.max(min, Math.min(max, n));
 }
 
-module.exports = { escapeDrawtext, safeColor, safeFontPath, safeExpr, safeNum };
+// Escape an arbitrary string (typically a PATH) so it is safe as an UNQUOTED
+// filtergraph OPTION VALUE — e.g. the path in `ass=<path>` or `lut3d=<path>`.
+// FFmpeg filtergraph escaping is two-level: option-level (\ ' :) and graph-level
+// ([ ] , ;). Backslash MUST be escaped first so the backslashes we add aren't
+// re-escaped. FFmpeg args are passed as an argv array (no shell), so no
+// shell-level escaping is needed. (Ported from moviego's ffmpeg/escape.go —
+// filterValueEscaper.) A clean POSIX path is left untouched (no-op).
+function escapeFilterValue(s) {
+  return String(s == null ? '' : s)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/:/g, '\\:')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+}
+
+module.exports = { escapeDrawtext, safeColor, safeFontPath, safeExpr, safeNum, escapeFilterValue };
