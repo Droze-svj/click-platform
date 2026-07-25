@@ -968,6 +968,12 @@ router.post('/reset-password',
 
 // Verify email with token
 router.get('/verify-email/:token', async (req, res) => {
+  // This flow is Supabase-backed; when Supabase auth is disabled the client is
+  // null. Degrade honestly to 503 (dependency unavailable) instead of null-deref
+  // → 500 "Server error".
+  if (!supabase) {
+    return res.status(503).json({ success: false, error: 'Email verification is temporarily unavailable.' });
+  }
   try {
     const { token } = req.params;
 

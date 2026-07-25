@@ -62,9 +62,10 @@ function categorize(status, body) {
 async function callOne(ep, fx) {
   const url = fillParams(ep.path, ep.paramNames, fx);
   const started = Date.now();
+  const req = request(app).get(url).set('Authorization', `Bearer ${fx.userToken}`);
   try {
     const res = await Promise.race([
-      request(app).get(url).set('Authorization', `Bearer ${fx.userToken}`),
+      req,
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), PER_CALL_TIMEOUT_MS)),
     ]);
     return {
@@ -74,6 +75,12 @@ async function callOne(ep, fx) {
       error: res.status >= 500 ? JSON.stringify(res.body).slice(0, 200) : undefined,
     };
   } catch (e) {
+    // On timeout the underlying request is abandoned (e.g. a slow aggregation or
+    // an SSE stream that never closes). Abort it and swallow its eventual settle
+    // so a late rejection can't surface as an unhandledRejection that fails the
+    // whole suite even though the endpoint itself did not 5xx.
+    try { if (typeof req.abort === 'function') req.abort(); } catch { /* ignore */ }
+    Promise.resolve(req).catch(() => {});
     return {
       method: ep.method, path: ep.path, url, status: 0,
       category: e.message === 'timeout' ? 'TIMEOUT' : 'THREW',
@@ -129,7 +136,10 @@ describe('Breadth endpoint sweep', () => {
     // tests/reports/endpoint-smoke.json + docs/readiness/endpoint-coverage.md and
     // driven down over time. This ceiling FAILS the sweep only if a NEW
     // regression pushes the count above the documented baseline.
-    const MAX_SERVER_ERRORS = 6;
+    // Ratcheted to 0: the GET breadth sweep is now clean (the former caption
+    // not-generated-500s → 404 and the Supabase-off verify-email 500 → 503). Any
+    // new GET 5xx is a regression.
+    const MAX_SERVER_ERRORS = 0;
     if (serverErrors.length > MAX_SERVER_ERRORS) {
       throw new Error(
         `Breadth sweep: ${serverErrors.length} server errors exceeds baseline ${MAX_SERVER_ERRORS}.\n` +
