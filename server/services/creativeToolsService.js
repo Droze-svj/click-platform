@@ -459,6 +459,7 @@ async function swapBackground(videoId, backgroundUrl, blurAmount, userId, opts =
             '-c:v', 'libx264',
             '-crf', '23',
             '-preset', 'veryfast',
+            '-pix_fmt', 'yuv420p',
             '-c:a', 'aac',
             '-shortest',
             '-movflags', '+faststart',

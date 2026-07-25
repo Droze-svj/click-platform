@@ -1280,6 +1280,11 @@ function buildVideoOutputOptions({ family = 'sw', codec = 'libx264', isProres = 
   const cap = Math.max(1, Number(bitrateMbps) || 8)
   const tail = ['-pix_fmt yuv420p']
   if (codec === 'libx264') tail.push('-profile:v high')
+  // HEVC in MP4 defaults to the 'hev1' tag, which Safari / QuickTime / iOS REFUSE
+  // to play — they require 'hvc1'. Force it so an HEVC export isn't a dead file on
+  // Apple devices. (codec stays 'libx265' for every HEVC family: sw + hevc_nvenc +
+  // hevc_videotoolbox.)
+  else if (codec === 'libx265') tail.push('-tag:v hvc1')
   tail.push('-max_muxing_queue_size 9999', '-movflags +faststart')
 
   if (family === 'nvenc') {

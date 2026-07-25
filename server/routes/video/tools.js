@@ -156,7 +156,7 @@ router.post('/edit-by-text', auth, asyncHandler(async (req, res) => {
       ffmpeg(inputPath)
         .videoFilters(videoFilter)
         .audioFilters(audioFilter)
-        .outputOptions(['-c:v libx264', '-preset medium', '-crf 23', '-c:a aac', '-b:a 192k'])
+        .outputOptions(['-c:v libx264', '-preset medium', '-crf 23', '-pix_fmt yuv420p', '-movflags +faststart', '-c:a aac', '-b:a 192k'])
         .output(outputPath)
         .on('end', resolve)
         .on('error', reject)

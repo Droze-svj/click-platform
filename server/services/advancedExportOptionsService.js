@@ -27,7 +27,9 @@ async function exportHDR(videoPath, outputPath, hdrOptions) {
       '-color_range', 'tv',
       '-colorspace', colorSpace,
       '-color_primaries', colorSpace,
-      '-color_trc', transferFunction
+      '-color_trc', transferFunction,
+      // HEVC needs the hvc1 tag (Safari/iOS reject hev1) + faststart for the web.
+      '-tag:v', 'hvc1', '-movflags', '+faststart'
     ];
 
     ffmpeg(videoPath)
@@ -60,12 +62,12 @@ async function exportWithCodec(videoPath, outputPath, codecOptions) {
     switch (videoCodec) {
     case 'h264':
       command.videoCodec('libx264');
-      command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '18' : quality === 'medium' ? '23' : '28']);
+      command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '18' : quality === 'medium' ? '23' : '28', '-pix_fmt', 'yuv420p', '-movflags', '+faststart']);
       break;
     case 'h265':
     case 'hevc':
       command.videoCodec('libx265');
-      command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '20' : quality === 'medium' ? '25' : '30']);
+      command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '20' : quality === 'medium' ? '25' : '30', '-pix_fmt', 'yuv420p', '-tag:v', 'hvc1', '-movflags', '+faststart']);
       break;
     case 'vp9':
       command.videoCodec('libvpx-vp9');
