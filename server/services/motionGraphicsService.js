@@ -37,6 +37,7 @@ async function addShapeOverlay(videoPath, outputPath, shape) {
     
     ffmpeg(videoPath)
       .videoFilters(filter)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Shape overlay added', { outputPath, type });
@@ -71,6 +72,7 @@ async function applyChromaKey(videoPath, outputPath, chromaKeyOptions) {
 
     ffmpeg(videoPath)
       .videoFilters(filter)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Chroma key applied', { outputPath, color: hex, similarity: sim, blend: bl });
@@ -129,6 +131,7 @@ async function addPictureInPicture(videoPath, pipVideoPath, outputPath, pipOptio
     command
       .complexFilter(filters)
       .outputOptions(['-map [pip_output]', '-map 0:a'])
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Picture-in-picture added', { outputPath });
@@ -155,7 +158,8 @@ async function applyStabilization(videoPath, outputPath, strength = 0.5) {
         // Step 2: Apply stabilization
         ffmpeg(videoPath)
           .videoFilters(`vidstabtransform=input=${detectPath}:smoothing=${strength * 10}:zoom=1:optzoom=1`)
-          .output(outputPath)
+          .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
+      .output(outputPath)
           .on('end', () => {
             // Clean up
             if (fs.existsSync(detectPath)) fs.unlinkSync(detectPath);
@@ -199,6 +203,7 @@ async function applySpeedRamp(videoPath, outputPath, speedSegments) {
     ffmpeg(videoPath)
       .videoFilters('setpts=0.5*PTS') // Example: 2x speed
       .audioFilters('atempo=2.0') // Match audio speed
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Speed ramp applied', { outputPath });
@@ -245,7 +250,8 @@ async function applyKenBurns(videoPath, outputPath, kenBurnsOptions) {
       
       ffmpeg(videoPath)
         .videoFilters(filter)
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
+      .output(outputPath)
         .on('end', () => {
           logger.info('Ken Burns effect applied', { outputPath });
           resolve(outputPath);
@@ -280,6 +286,7 @@ async function applyMask(videoPath, outputPath, mask) {
     
     ffmpeg(videoPath)
       .videoFilters(filter)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Mask applied', { outputPath, type });

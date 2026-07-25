@@ -34,10 +34,13 @@ async function generateProxy(videoPath, outputPath, quality = 'medium') {
       .size(settings.resolution)
       .videoCodec('libx264')
       .audioCodec('aac')
+      // CRF drives quality; a co-set -b:v is ignored by x264 in CRF mode (conflict),
+      // so drop it. Proxies are scrubbed in-browser → faststart + web pixel format.
       .outputOptions([
-        `-b:v ${settings.bitrate}`,
         '-preset fast',
-        '-crf 28'
+        '-crf 28',
+        '-pix_fmt yuv420p',
+        '-movflags +faststart'
       ])
       .output(outputPath)
       .on('start', (cmd) => {

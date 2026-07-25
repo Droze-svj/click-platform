@@ -711,6 +711,8 @@ async function processVideo(contentId, videoPath, user, options = {}) {
           ffmpeg(videoPath)
             .setStartTime(startTime)
             .setDuration(endTime - startTime)
+            // Web-safe MP4 clip: in-browser scrub (moov front) + Safari/iOS pixels.
+            .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
             .output(clipPath)
             .on('end', resolve)
             .on('error', reject)

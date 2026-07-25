@@ -2,9 +2,43 @@
 // dropped or wrong in the EXPORT now render correctly, and a signed /uploads URL
 // resolves to the real file on disk (so local-storage music/overlays actually play).
 
-const { buildVideoFilterChain } = require('../../server/services/videoRenderService');
+const { buildVideoFilterChain, buildVideoOutputOptions } = require('../../server/services/videoRenderService');
 const { toAbsolutePath } = require('../../server/utils/pathUtils');
 const { buildReverbFilter } = require('../../server/services/audioEffectsService');
+
+describe('web-safe MP4 output options', () => {
+  const flat = (opts) => opts.join(' ');
+
+  it('every H.264/HEVC MP4 output is web-playable (faststart + yuv420p)', () => {
+    for (const family of ['sw', 'nvenc', 'videotoolbox']) {
+      for (const codec of ['libx264', 'libx265']) {
+        const s = flat(buildVideoOutputOptions({ family, codec }));
+        expect(s).toMatch(/\+faststart/);      // no moov-at-end stall
+        expect(s).toMatch(/-pix_fmt yuv420p/); // Safari/iOS compatible
+      }
+    }
+  });
+
+  it('HEVC gets the hvc1 tag (Safari/iOS reject the default hev1); H.264 does not', () => {
+    expect(flat(buildVideoOutputOptions({ codec: 'libx265' }))).toMatch(/-tag:v hvc1/);
+    expect(flat(buildVideoOutputOptions({ family: 'nvenc', codec: 'libx265' }))).toMatch(/-tag:v hvc1/);
+    expect(flat(buildVideoOutputOptions({ codec: 'libx264' }))).not.toMatch(/hvc1/);
+  });
+
+  it('never sets both -crf and -b:v on the same output (conflicting rate control)', () => {
+    // sw uses -crf (no -b:v); nvenc uses -b:v 0 (cq-driven, not a real cap conflict);
+    // the software path in particular must not carry a plain -b:v.
+    const sw = flat(buildVideoOutputOptions({ family: 'sw', codec: 'libx264' }));
+    expect(sw).toMatch(/-crf/);
+    expect(sw).not.toMatch(/(^| )-b:v [1-9]/); // no real bitrate target alongside CRF
+  });
+
+  it('ProRes is exempt (own profile/container, not pix_fmt-forced)', () => {
+    const s = flat(buildVideoOutputOptions({ isProres: true }));
+    expect(s).not.toMatch(/yuv420p/);
+    expect(s).toMatch(/-profile:v 3/);
+  });
+});
 
 describe('render fidelity fixes', () => {
   it('vignette intensity scales (noir darker than cinematic — was a fixed angle)', () => {

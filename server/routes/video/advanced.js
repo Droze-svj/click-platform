@@ -1071,6 +1071,7 @@ router.post('/remove-silence', auth, upload.single('video'), asyncHandler(async 
         '-filter_complex', filterComplex,
         '-map', '[outv]', '-map', '[outa]',
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+        '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
         '-c:a', 'aac', '-b:a', '128k',
         '-y', outputPath
       ], { maxBuffer: 50 * 1024 * 1024 })

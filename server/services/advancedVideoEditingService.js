@@ -669,7 +669,7 @@ async function applyStyleEffect(inputPath, outputPath, styleId) {
     await new Promise((resolve, reject) => {
       ffmpeg(inputPath)
         .videoFilters(preset.ffmpegFilter)
-        .outputOptions(['-c:v libx264', '-crf 18', '-preset fast', '-c:a copy'])
+        .outputOptions(['-c:v libx264', '-crf 18', '-preset fast', '-c:a copy', '-pix_fmt yuv420p', '-movflags +faststart'])
         .output(outputPath)
         .on('end', () => {
           logger.info('Style effect applied', { outputPath, styleId });
