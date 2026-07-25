@@ -20,7 +20,7 @@ const imageGen = require('./imageGenerationService');
 const personalizationService = require('./personalizationService');
 const logger = require('../utils/logger');
 
-const voiceConfigured = () => !!process.env.OPENAI_API_KEY || !!process.env.ELEVENLABS_API_KEY;
+const voiceConfigured = () => !!process.env.OPENAI_API_KEY || !!process.env.ELEVENLABS_API_KEY || !!process.env.OMNIVOICE_BASE_URL;
 const sfxConfigured = () => !!process.env.ELEVENLABS_API_KEY;
 
 // Map the creator's saved voice tone → an OpenAI stock voice, used only as a

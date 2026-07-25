@@ -119,6 +119,26 @@ async function generateEdgeTTSAudio(text, targetLanguage) {
  * degrades to not-implemented) when the key/SDK is unavailable.
  */
 async function generateLocalizedAudio(text, sourceVoiceId, targetLanguage) {
+  // OmniVoice (self-hosted, open-source ElevenLabs alternative) is the preferred
+  // dub provider when configured — its default engine covers 600+ languages and
+  // keeps synthesis on-prem. A failure degrades to ElevenLabs, then Edge-TTS.
+  const omniVoice = require('./omniVoiceService');
+  if (omniVoice.isConfigured()) {
+    try {
+      logger.info(`[Localization] Generating ${targetLanguage} dub via OmniVoice...`);
+      const out = await omniVoice.generateSpeechFile({
+        text,
+        voice: sourceVoiceId || undefined,
+        language: targetLanguage,
+        subdir: 'audio',
+      });
+      return out.url;
+    } catch (ovErr) {
+      logger.warn('[Localization] OmniVoice dub failed; trying ElevenLabs/Edge-TTS', { error: ovErr.message });
+      // fall through
+    }
+  }
+
   const client = getClient();
   if (!client) {
     logger.warn('[Localization] ElevenLabs API not configured, falling back to local Edge-TTS...');

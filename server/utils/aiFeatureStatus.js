@@ -14,7 +14,13 @@
 // It only ever reports PRESENCE (boolean), never the secret values.
 
 const FEATURES = [
-  { key: 'voiceDubbing', label: 'Voice dubbing (ElevenLabs)', requires: ['ELEVENLABS_API_KEY'] },
+  {
+    key: 'voiceDubbing',
+    label: 'Voice dubbing (ElevenLabs or self-hosted OmniVoice)',
+    // Either provider fully satisfies it: the ElevenLabs cloud key, OR a
+    // self-hosted OmniVoice backend URL (the open-source alternative).
+    requiresAny: [['ELEVENLABS_API_KEY'], ['OMNIVOICE_BASE_URL']],
+  },
   { key: 'eyeContact', label: 'Eye-contact fix', requires: ['EYE_CONTACT_API_URL', 'EYE_CONTACT_API_KEY'] },
   {
     key: 'aiAvatar',
