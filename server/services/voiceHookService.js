@@ -264,6 +264,7 @@ async function addVoiceHookToVideo(videoPath, voiceHookPath, options = {}) {
 
     return new Promise((resolve, reject) => {
       command
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
         .output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
@@ -749,6 +750,7 @@ async function applyAdvancedAudioMixing(videoPath, voiceHooks, audioSettings) {
 
     return new Promise((resolve, reject) => {
       command
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
         .output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)

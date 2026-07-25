@@ -83,6 +83,7 @@ async function outpaintToVertical(videoId) {
         '-c:v', 'libx264',
         '-crf', '23',
         '-preset', 'veryfast',
+        '-pix_fmt', 'yuv420p',
         '-c:a', 'aac',
         '-movflags', '+faststart',
       ]),

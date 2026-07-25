@@ -79,6 +79,8 @@ async function addTextOverlays(videoPath, textOverlays, options = {}) {
     .output(outputPath)
     .outputOptions([
       '-c:v', 'libx264',
+      // Web-safe: play/scrub in-browser (moov at front) + Safari/iOS pixel format.
+      '-movflags', '+faststart', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-preset', 'medium',
       '-crf', '23'
@@ -147,6 +149,8 @@ async function applyVideoFilters(videoPath, filters, options = {}) {
     .output(outputPath)
     .outputOptions([
       '-c:v', 'libx264',
+      // Web-safe: play/scrub in-browser (moov at front) + Safari/iOS pixel format.
+      '-movflags', '+faststart', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-preset', 'medium',
       '-crf', '23'
@@ -248,6 +252,8 @@ async function cropVideo(videoPath, cropArea, options = {}) {
     .output(outputPath)
     .outputOptions([
       '-c:v', 'libx264',
+      // Web-safe: play/scrub in-browser (moov at front) + Safari/iOS pixel format.
+      '-movflags', '+faststart', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-preset', 'medium',
       '-crf', '23'
@@ -308,6 +314,8 @@ async function splitAndMergeVideo(videoPath, segments, options = {}) {
       '-map', '[v]',
       '-map', '[a]',
       '-c:v', 'libx264',
+      // Web-safe: play/scrub in-browser (moov at front) + Safari/iOS pixel format.
+      '-movflags', '+faststart', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac'
     ])
     .output(outputPath)
@@ -347,6 +355,8 @@ async function addTransitions(videoPath, transitionType, options = {}) {
     .output(outputPath)
     .outputOptions([
       '-c:v', 'libx264',
+      // Web-safe: play/scrub in-browser (moov at front) + Safari/iOS pixel format.
+      '-movflags', '+faststart', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-preset', 'medium',
       '-crf', '23'
@@ -467,6 +477,8 @@ async function stabilizeVideo(videoPath, options = {}) {
     .output(outputPath)
     .outputOptions([
       '-c:v', 'libx264',
+      // Web-safe: play/scrub in-browser (moov at front) + Safari/iOS pixel format.
+      '-movflags', '+faststart', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-preset', 'medium',
       '-crf', '23'
@@ -511,6 +523,8 @@ async function colorCorrectVideo(videoPath, options = {}) {
     .output(outputPath)
     .outputOptions([
       '-c:v', 'libx264',
+      // Web-safe: play/scrub in-browser (moov at front) + Safari/iOS pixel format.
+      '-movflags', '+faststart', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-preset', 'medium',
       '-crf', '23'

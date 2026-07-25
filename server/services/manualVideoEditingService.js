@@ -57,7 +57,7 @@ async function applyManualEdits(videoPath, edits) {
 
     return new Promise((resolve, reject) => {
       command
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
         .run();
@@ -117,7 +117,7 @@ async function addBackgroundMusic(videoPath, musicPath, options = {}) {
             '-b:a 192k',
             '-shortest'
           ])
-          .output(outputPath)
+          .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
           .on('end', () => resolve(outputPath))
           .on('error', reject)
           .run();
@@ -186,7 +186,7 @@ async function addImageOverlay(videoPath, imageConfigs) {
 
     return new Promise((resolve, reject) => {
       command
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
         .run();
@@ -253,7 +253,7 @@ async function addTextOverlay(videoPath, textConfigs) {
 
     return new Promise((resolve, reject) => {
       command
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
         .run();
@@ -311,7 +311,7 @@ async function createCustomLayout(inputs, layout, outputPath) {
 
     return new Promise((resolve, reject) => {
       command
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
         .run();
@@ -373,7 +373,7 @@ async function applyAdvancedCaptions(videoPath, captions, styleConfig) {
 
     return new Promise((resolve, reject) => {
       command
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
         .run();
@@ -444,7 +444,7 @@ async function processCustomMusic(musicFilePath, options = {}) {
 
     return new Promise((resolve, reject) => {
       command
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .audioCodec('libmp3lame')
         .audioBitrate('192k')
         .on('end', () => resolve(outputPath))

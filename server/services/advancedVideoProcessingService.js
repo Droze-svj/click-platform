@@ -40,14 +40,14 @@ async function compressVideo(inputPath, outputPath, options = {}) {
     const settings = qualitySettings[quality] || qualitySettings.medium;
 
     return new Promise((resolve, reject) => {
+      // CRF and an explicit -b:v are conflicting rate controls (x264 ignores -b:v
+      // in CRF mode). Use CRF for quality UNLESS the caller requested a bitrate.
+      const vOpts = [`-preset ${settings.preset}`, '-pix_fmt yuv420p', '-movflags +faststart'];
+      if (!bitrate) vOpts.unshift(`-crf ${settings.crf}`);
       let command = ffmpeg(inputPath)
         .videoCodec('libx264')
         .audioCodec('aac')
-        .outputOptions([
-          `-crf ${settings.crf}`,
-          `-preset ${settings.preset}`,
-          '-movflags +faststart', // Web optimization
-        ]);
+        .outputOptions(vOpts);
 
       if (resolution) {
         command = command.size(resolution);
@@ -207,6 +207,9 @@ async function convertVideoFormat(inputPath, outputPath, targetFormat, options =
       ffmpeg(inputPath)
         .videoCodec(format.videoCodec)
         .audioCodec(format.audioCodec)
+        // faststart is safe on mp4/mov and ignored on other containers; pix_fmt is
+        // left out since this converter can target codecs where yuv420p is wrong.
+        .outputOptions(['-movflags', '+faststart'])
         .output(outputPath)
         .on('start', () => {
           logger.info('Video format conversion started', { inputPath, outputPath });

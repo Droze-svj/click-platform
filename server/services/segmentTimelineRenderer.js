@@ -296,7 +296,8 @@ async function renderSegmentTimeline({ inputPath, segments, outputPath, exportOp
         '-c:v', codec,
         '-c:a', 'aac',
         '-b:a', escapeShell(audioBitrate),
-        ...(codec === 'libx264' || codec === 'libx265' ? ['-crf', String(crf), '-preset', preset] : []),
+        ...(codec === 'libx264' || codec === 'libx265' ? ['-crf', String(crf), '-preset', preset, '-pix_fmt', 'yuv420p'] : []),
+        ...(codec === 'libx265' ? ['-tag:v', 'hvc1'] : []), // Safari/iOS reject hev1
         ...(codec === 'prores_ks' ? ['-profile:v', '3'] : []),
         '-movflags', '+faststart',
       ])

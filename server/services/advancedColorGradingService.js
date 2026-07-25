@@ -37,7 +37,7 @@ async function applyColorCurves(videoPath, outputPath, curves) {
     if (!curveFilter) {
       // No curves, just copy
       ffmpeg(videoPath)
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
         .run();
@@ -46,7 +46,7 @@ async function applyColorCurves(videoPath, outputPath, curves) {
 
     ffmpeg(videoPath)
       .videoFilters(curveFilter)
-      .output(outputPath)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
       .on('end', () => {
         logger.info('Color curves applied', { outputPath });
         resolve(outputPath);
@@ -86,7 +86,7 @@ async function applyColorWheels(videoPath, outputPath, colorWheels) {
 
     if (filters.length === 0) {
       ffmpeg(videoPath)
-        .output(outputPath)
+        .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
         .on('end', () => resolve(outputPath))
         .on('error', reject)
         .run();
@@ -95,7 +95,7 @@ async function applyColorWheels(videoPath, outputPath, colorWheels) {
 
     ffmpeg(videoPath)
       .videoFilters(filters.join(','))
-      .output(outputPath)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
       .on('end', () => {
         logger.info('Color wheels applied', { outputPath });
         resolve(outputPath);
@@ -120,7 +120,7 @@ async function applyLUT(videoPath, outputPath, lutPath, intensity = 1.0) {
     
     ffmpeg(videoPath)
       .videoFilters(filter)
-      .output(outputPath)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
       .on('end', () => {
         logger.info('LUT applied', { outputPath, lutPath, intensity });
         resolve(outputPath);
@@ -142,7 +142,7 @@ async function applySelectiveColor(videoPath, outputPath, selectiveColor) {
     
     ffmpeg(videoPath)
       .videoFilters(filter)
-      .output(outputPath)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
       .on('end', () => {
         logger.info('Selective color applied', { outputPath, color });
         resolve(outputPath);
@@ -164,7 +164,7 @@ async function applySplitToning(videoPath, outputPath, splitToning) {
     
     ffmpeg(videoPath)
       .videoFilters(filter)
-      .output(outputPath)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
       .on('end', () => {
         logger.info('Split toning applied', { outputPath });
         resolve(outputPath);
@@ -302,7 +302,7 @@ async function matchColors(sourceVideoPath, targetVideoPath, outputPath) {
     // This is a simplified version - full implementation would analyze both videos
     ffmpeg(sourceVideoPath)
       .videoFilters('colorbalance=rs=0.1:gs=0.1:bs=0.1')
-      .output(outputPath)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p']).output(outputPath)
       .on('end', () => {
         logger.info('Color matching applied', { outputPath });
         resolve(outputPath);

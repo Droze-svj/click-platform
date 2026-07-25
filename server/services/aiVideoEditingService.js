@@ -1458,13 +1458,13 @@ async function exportMultipleFormats(videoId, formats = ['mp4', 'webm']) {
           command
             .videoCodec('libx264')
             .audioCodec('aac')
-            .outputOptions(['-preset', 'medium', '-crf', '23']);
+            .outputOptions(['-preset', 'medium', '-crf', '23', '-pix_fmt', 'yuv420p', '-movflags', '+faststart']);
         } else {
           // MP4 default
           command
             .videoCodec('libx264')
             .audioCodec('aac')
-            .outputOptions(['-preset', 'medium', '-crf', '23', '-movflags', '+faststart']);
+            .outputOptions(['-preset', 'medium', '-crf', '23', '-pix_fmt', 'yuv420p', '-movflags', '+faststart']);
         }
 
         command
@@ -5891,7 +5891,7 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
         .videoFilters(cropFilter)
         .videoCodec('libx264')
         .audioCodec('aac')
-        .outputOptions(['-preset', 'veryfast', '-crf', '21', '-movflags', '+faststart'])
+        .outputOptions(['-preset', 'veryfast', '-crf', '21', '-pix_fmt', 'yuv420p', '-movflags', '+faststart'])
         .output(outPath)
         .on('end', resolve)
         .on('error', reject)

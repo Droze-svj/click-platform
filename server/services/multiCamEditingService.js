@@ -81,7 +81,8 @@ async function createMultiCamSequence(cameraPaths, outputPath, sequence) {
       ffmpeg()
         .input(concatFile)
         .inputOptions(['-f', 'concat', '-safe', '0'])
-        .outputOptions(['-c', 'copy'])
+        // Concatenated copy → still needs faststart so the joined MP4 streams.
+        .outputOptions(['-c', 'copy', '-movflags', '+faststart'])
         .output(outputPath)
         .on('end', () => {
           // Clean up

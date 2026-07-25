@@ -87,6 +87,7 @@ async function exportWithPreset(videoPath, outputPath, platform, options = {}) {
     const outputOpts = [
       `-b:v ${preset.quality.bitrate}`,
       `-preset ${preset.quality.preset}`,
+      '-pix_fmt yuv420p',
       '-movflags +faststart'
     ];
     if (preset.fps) {
@@ -164,14 +165,15 @@ async function exportCustom(videoPath, outputPath, settings) {
     // Video quality
     if (quality) {
       command.videoCodec(quality.codec || 'h264');
-      if (quality.bitrate) {
+      // CRF and -b:v are conflicting rate controls (x264 silently ignores -b:v in
+      // CRF mode). Prefer CRF (constant quality) when both are supplied.
+      if (quality.crf !== undefined) {
+        command.outputOptions([`-crf ${quality.crf}`]);
+      } else if (quality.bitrate) {
         command.outputOptions([`-b:v ${quality.bitrate}`]);
       }
       if (quality.preset) {
         command.outputOptions([`-preset ${quality.preset}`]);
-      }
-      if (quality.crf !== undefined) {
-        command.outputOptions([`-crf ${quality.crf}`]);
       }
     }
 
@@ -200,6 +202,9 @@ async function exportCustom(videoPath, outputPath, settings) {
     }
 
     command
+      // faststart is safe across mp4/mov (ignored elsewhere); pix_fmt is left to
+      // the codec branch since this path allows ProRes/VP9 where yuv420p is wrong.
+      .outputOptions(['-movflags', '+faststart'])
       .format(format)
       .output(outputPath)
       .on('end', () => {

@@ -77,6 +77,7 @@ async function applyAnimatedText(videoPath, outputPath, textOverlay) {
 
     ffmpeg(videoPath)
       .videoFilters(textFilter)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Animated text applied', { outputPath, text: String(text || '').substring(0, 20) });

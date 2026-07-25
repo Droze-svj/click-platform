@@ -46,6 +46,8 @@ async function applyVideoEffect(videoPath, outputPath, effect) {
     }
 
     command
+      // Web-safe MP4: moov at front (in-browser scrub) + Safari/iOS pixel format.
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Video effect applied', { effect, outputPath });
@@ -102,6 +104,7 @@ async function addTextOverlay(videoPath, outputPath, textOptions) {
 
     ffmpeg(videoPath)
       .videoFilters(drawText)
+      .outputOptions(['-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Text overlay added', { outputPath });
@@ -169,7 +172,7 @@ async function addWatermark(videoPath, watermarkPath, outputPath, options = {}) 
           outputs: 'watermarked'
         }
       ])
-      .outputOptions(['-map [watermarked]', '-map 0:a'])
+      .outputOptions(['-map [watermarked]', '-map 0:a', '-movflags', '+faststart', '-pix_fmt', 'yuv420p'])
       .output(outputPath)
       .on('end', () => {
         logger.info('Watermark added', { outputPath });
