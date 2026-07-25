@@ -27,6 +27,7 @@ const { getActiveBlueprint } = require('./continuousLearningService');
 const anthropicAI = require('../utils/anthropicAI');
 const logger = require('../utils/logger');
 const { assertPromptSize } = require('../utils/aiRouter');
+const { buildEditingPrinciples } = require('./cinematicEditing');
 
 let Sentry = null;
 try {
@@ -290,6 +291,11 @@ function buildPrompts({
   if (constraints && Object.keys(constraints).length) {
     sections.push('', `CONSTRAINTS: ${JSON.stringify(constraints)}`);
   }
+
+  // Cinematic craft guidance (rhythm / motion / sound / copy / structure) so the
+  // designed steps + their timing follow proven editing principles, not just the
+  // schema. See services/cinematicEditing.js.
+  sections.push('', buildEditingPrinciples());
 
   sections.push(
     '',
@@ -615,4 +621,5 @@ module.exports = {
   generateEditPlan,
   // Exported for testing.
   validateDirections,
+  buildPrompts,
 };
