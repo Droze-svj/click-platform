@@ -124,7 +124,10 @@ router.get('/:contentId', authenticate, async (req, res) => {
     return sendSuccess(res, captions);
   } catch (error) {
     logger.error('Error getting captions', { error: error.message });
-    return sendError(res, error.message, 500);
+    // "Captions not generated yet" is a normal not-found state (the video simply
+    // hasn't been captioned), not a server error — surface it as 404.
+    const notReady = /not generated|no captions|have not been generated|not found/i.test(error.message || '');
+    return sendError(res, error.message, notReady ? 404 : 500);
   }
 });
 
@@ -206,7 +209,9 @@ router.get('/:contentId/in-language', authenticate, async (req, res) => {
     }, result.cached ? 'Captions returned from cache' : 'Captions translated and cached');
   } catch (error) {
     logger.error('Error fetching captions in language', { error: error.message, contentId: req.params.contentId });
-    return sendError(res, error.message, 500);
+    // Base captions not generated yet = a normal not-found state, not a 5xx.
+    const notReady = /not generated|no captions|have not been generated|not found/i.test(error.message || '');
+    return sendError(res, error.message, notReady ? 404 : 500);
   }
 });
 
