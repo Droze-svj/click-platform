@@ -3,7 +3,33 @@
 // colon-delimited drawtext filter string. Each helper must neutralize the
 // characters that break out of an option (' : \ , ; [ ] %).
 
-const { escapeDrawtext, safeColor, safeFontPath, safeExpr, safeNum } = require('../../server/utils/ffmpegSafe');
+const { escapeDrawtext, safeColor, safeFontPath, safeExpr, safeNum, escapeFilterValue } = require('../../server/utils/ffmpegSafe');
+
+describe('escapeFilterValue (filtergraph option-value paths — ass=/lut3d=)', () => {
+  it('leaves a clean POSIX path untouched (no-op)', () => {
+    expect(escapeFilterValue('/uploads/subs/x.ass')).toBe('/uploads/subs/x.ass');
+  });
+
+  it('escapes every filtergraph-special char: \\ \' : [ ] , ;', () => {
+    expect(escapeFilterValue("/u/a:b[c],d;e'f\\g.cube")).toBe("/u/a\\:b\\[c\\]\\,d\\;e\\'f\\\\g.cube");
+  });
+
+  it('escapes backslash FIRST so its own escapes are not re-escaped', () => {
+    // a single ':' → '\:' (one added backslash), not '\\:' (backslash re-escaped)
+    expect(escapeFilterValue('a:b')).toBe('a\\:b');
+    expect(escapeFilterValue('a\\b')).toBe('a\\\\b');
+  });
+
+  it('a colon-injection attempt cannot break out of the option', () => {
+    // ":crop=1:1" would add a bogus option if unescaped; escaping neutralizes it
+    expect(escapeFilterValue('/x.ass:crop=1:1')).toBe('/x.ass\\:crop=1\\:1');
+  });
+
+  it('coerces null/undefined to empty', () => {
+    expect(escapeFilterValue(null)).toBe('');
+    expect(escapeFilterValue(undefined)).toBe('');
+  });
+});
 
 describe('escapeDrawtext', () => {
   test('neutralizes the quote that would close the text literal', () => {

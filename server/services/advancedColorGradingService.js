@@ -5,6 +5,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 const logger = require('../utils/logger');
+const { escapeFilterValue } = require('../utils/ffmpegSafe');
 
 /**
  * Apply color grading with curves
@@ -115,8 +116,9 @@ async function applyLUT(videoPath, outputPath, lutPath, intensity = 1.0) {
       return;
     }
 
-    // Apply LUT with intensity control
-    const filter = `lut3d=${lutPath}:interp=trilinear`;
+    // Apply LUT with intensity control. Escape the path as a filtergraph value —
+    // a raw ':' / '[' / etc. in the path would break or inject into the graph.
+    const filter = `lut3d=${escapeFilterValue(lutPath)}:interp=trilinear`;
     
     ffmpeg(videoPath)
       .videoFilters(filter)

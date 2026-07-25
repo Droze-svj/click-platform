@@ -14,7 +14,7 @@ const logger = require('../utils/logger')
 const videoEnhancer = require('../utils/videoEnhancer')
 const c2paService = require('./c2paService')
 const { toAbsolutePath } = require('../utils/pathUtils')
-const { safeColor } = require('../utils/ffmpegSafe')
+const { safeColor, escapeFilterValue } = require('../utils/ffmpegSafe')
 const urlGuard = require('../utils/urlGuard')
 
 /**
@@ -1735,10 +1735,9 @@ async function renderFromEditorState(options) {
       // 🌍 Phase 15: Global Subtitle Burn-in
       if (exportOptions.subtitlePath && fs.existsSync(exportOptions.subtitlePath)) {
         logger.info('Injecting Neural Subtitles', { path: exportOptions.subtitlePath });
-        // Escape backslash, colon AND single-quote so a "'" in the path can't
-        // close the ass='…' literal and inject filter syntax.
-        const subPath = exportOptions.subtitlePath.replace(/\\/g, '/').replace(/'/g, "\\'").replace(/:/g, '\\:');
-        finalFilterList.push(`ass='${subPath}'`);
+        // Escape the path as an unquoted filtergraph value (covers \ ' : [ ] , ;)
+        // so nothing in it can break out of / inject into the graph.
+        finalFilterList.push(`ass=${escapeFilterValue(exportOptions.subtitlePath)}`);
       }
 
       // 🎬 Phase 16: Cinematic Film Grain (2026 Hollywood Standard)
