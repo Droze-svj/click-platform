@@ -1087,7 +1087,11 @@ function buildVideoTransformChain(videoTransform, videoCrop, videoTransformKeyfr
     // Scale up to the keyframed factor by rendering on a padded canvas and
     // cropping a moving window. We scale the source by max factor then crop a
     // W×H window whose origin moves with position/scale keyframes.
-    const sExpr = scaleKf || `${scaleConst}`
+    // Clamp the KEYFRAMED scale to the same [0.05, 10] range the constant path
+    // uses. sExpr is a divisor below (winW = W*canvas/sExpr); an unclamped
+    // keyframe of 0 (or negative) would divide-by-zero → NaN crop dims → the
+    // render aborts. max/min are ffmpeg expr fns; ',' is escaped for the graph.
+    const sExpr = scaleKf ? `(max(0.05\\,min(10\\,${scaleKf})))` : `${scaleConst}`
     const pxExpr = pxKf || `${pxConst}`
     const pyExpr = pyKf || `${pyConst}`
     // Upscale to (W*maxScale)… but ffmpeg scale can't take time expr for size.
@@ -2329,7 +2333,11 @@ async function stitchSegments(inputPath, segments, opts = {}) {
       // tpad clone. A clip flagged freezeFrame now actually holds (was a no-op).
       vParts.push(`trim=start=${ss.toFixed(3)}:duration=${(1 / FPS).toFixed(4)}`)
       vParts.push('setpts=PTS-STARTPTS')
-      vParts.push(`tpad=stop_mode=clone:stop_duration=${freezeDur.toFixed(3)}`)
+      // tpad ADDS to the 1-frame trim, so pad by (freezeDur - 1 frame) to make the
+      // total video length exactly freezeDur — matching the freeze AUDIO (atrim
+      // duration=freezeDur) and segDurations. Otherwise each freeze runs one frame
+      // long and A/V drifts across concatenated segments.
+      vParts.push(`tpad=stop_mode=clone:stop_duration=${Math.max(0, freezeDur - 1 / FPS).toFixed(3)}`)
     } else {
       if (trimLen != null) {
         vParts.push(`trim=start=${ss.toFixed(3)}:end=${se.toFixed(3)}`)

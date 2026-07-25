@@ -113,7 +113,12 @@ async function generateHooks(input, deps) {
   // The prompt already asks the model to avoid `exclude`; filter as a safety net
   // so anything it repeats anyway never reaches the user.
   const { filterExcluded } = require('../utils/promptDedup');
-  const hooks = filterExcluded(shapeHooks(raw, style, n), exclude);
+  const shaped = shapeHooks(raw, style, n);
+  const filtered = filterExcluded(shaped, exclude);
+  // If the model ignored the avoid-list and repeated EVERYTHING, the filter
+  // empties the result — returning nothing to a user who clicked "regenerate".
+  // Better to hand back the (repeated) hooks than an empty panel.
+  const hooks = (filtered.length === 0 && shaped.length > 0) ? shaped : filtered;
   return { platform, style: normalizeStyle(style), hooks };
 }
 

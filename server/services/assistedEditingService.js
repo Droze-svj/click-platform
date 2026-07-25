@@ -26,18 +26,31 @@ async function generateVariants(content, count = 5, options = {}) {
     const { preserveStructure = true, varyTone = true, varyLength = true, focusArea = null } = options;
 
     const variants = [];
+    let lastError = null;
 
     for (let i = 0; i < count; i++) {
-      const variant = await generateSingleVariant(content, i, {
-        preserveStructure,
-        varyTone,
-        varyLength,
-        focusArea
-      });
-      variants.push(variant);
+      try {
+        const variant = await generateSingleVariant(content, i, {
+          preserveStructure,
+          varyTone,
+          varyLength,
+          focusArea
+        });
+        variants.push(variant);
+      } catch (err) {
+        // One variant failing (transient quota/block on a single call) must not
+        // discard the k-1 variants we already produced. Keep the successes and
+        // only fail the whole request if EVERY variant failed.
+        lastError = err;
+        logger.warn('Variant generation failed for one index; continuing', { index: i, error: err.message });
+      }
     }
 
-    logger.info('Variants generated', { count: variants.length });
+    if (variants.length === 0) {
+      throw lastError || new Error('AI variant generation unavailable');
+    }
+
+    logger.info('Variants generated', { count: variants.length, requested: count });
     return variants;
   } catch (error) {
     logger.error('Error generating variants', { error: error.message });

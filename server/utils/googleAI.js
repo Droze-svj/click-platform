@@ -296,7 +296,15 @@ async function generateContent(prompt, options = {}) {
         const bigger = Math.min(MAX_OUTPUT_TOKEN_CAP, budget * 2);
         logger.warn('[GoogleAI] output truncated (MAX_TOKENS); retrying at larger budget', { from: budget, to: bigger });
         const retry = await callOnce(bigger);
-        if (retry.text) { text = retry.text; finishReason = retry.finishReason; }
+        // Only adopt the retry if it's genuinely MORE COMPLETE (longer). A
+        // doubled-budget call can come back safety-filtered or a short refusal
+        // (finishReason STOP but shorter than the usable partial we already have) —
+        // adopting that blindly would DISCARD good output for worse. Length is the
+        // proxy for "more of the JSON arrived".
+        if (retry.text && retry.text.length > (text ? text.length : 0)) {
+          text = retry.text;
+          finishReason = retry.finishReason;
+        }
         if (finishReason === 'MAX_TOKENS') {
           logger.warn('[GoogleAI] output STILL truncated after retry', { budget: bigger, len: text ? text.length : 0 });
         }
