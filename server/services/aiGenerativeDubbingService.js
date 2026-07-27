@@ -175,11 +175,20 @@ async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEn
  * @param {string} name
  * @returns {Promise<string>} voiceId
  */
-async function cloneVoice(audioSampleUrl, name) {
+async function cloneVoice(sample, name) {
+  // Fail honestly when the provider isn't configured, rather than firing a
+  // keyless request that 401s with an opaque "Voice clone failed: 401".
+  if (!ELEVENLABS_API_KEY) {
+    throw new Error('ElevenLabs voice cloning is not configured (set ELEVENLABS_API_KEY).')
+  }
+
   const formData = new FormData()
   formData.append('name', name)
-  // Fetch the audio as a blob and attach
-  const audioBlob = await fetchWithTimeout(audioSampleUrl).then(r => r.blob())
+  // Accept raw bytes (Buffer — the route reads the user's own file, no arbitrary
+  // URL fetch/SSRF) or a fetchable URL for the internal dubbing caller.
+  const audioBlob = Buffer.isBuffer(sample)
+    ? new Blob([sample])
+    : await fetchWithTimeout(sample).then(r => r.blob())
   formData.append('files', audioBlob, 'sample.mp3')
 
   const res = await fetchWithTimeout(`${ELEVENLABS_BASE}/voices/add`, {
