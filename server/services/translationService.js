@@ -591,10 +591,62 @@ Text to translate:
   }
 }
 
+/**
+ * Translate several contents into several languages in one call. Thin wrapper
+ * over translateToMultipleLanguages (which already dedupes + persists per
+ * language). Ownership is enforced upstream at the route; here we just fan out.
+ * routes/translation.js POST /bulk depends on this — it was imported but never
+ * existed, so the route 500'd on every call.
+ *
+ * @param {string[]} _userIds   (accepted for signature compat; scoping is done at the route)
+ * @param {string[]} contentIds
+ * @param {string[]} targetLanguages
+ * @param {object}   [options]
+ * @returns {Promise<{ results: Array, totals: object }>}
+ */
+async function bulkTranslateContent(_userIds, contentIds, targetLanguages, options = {}) {
+  const results = [];
+  const totals = { successful: 0, failed: 0, skipped: 0 };
+  for (const contentId of (Array.isArray(contentIds) ? contentIds : [])) {
+    try {
+      const r = await translateToMultipleLanguages(contentId, targetLanguages, options);
+      totals.successful += r.successful?.length || 0;
+      totals.failed += r.failed?.length || 0;
+      totals.skipped += r.skipped?.length || 0;
+      results.push({ contentId, ...r });
+    } catch (error) {
+      logger.error('Bulk translate: content failed', { contentId, error: error.message });
+      totals.failed += 1;
+      results.push({ contentId, error: error.message });
+    }
+  }
+  return { results, totals };
+}
+
+/**
+ * Auto-translate a single content into a set of languages (the "auto-translate
+ * on create" hook). Languages come from options.languages / options.targetLanguages;
+ * with none supplied it's a no-op rather than a guess. routes/translation.js
+ * POST /auto-translate depends on this — it was imported but never existed.
+ *
+ * @param {string} contentId
+ * @param {string} _userId  (scoping enforced at the route)
+ * @param {object} [options] { languages | targetLanguages, ...translateOptions }
+ */
+async function autoTranslateOnCreate(contentId, _userId, options = {}) {
+  const languages = options.languages || options.targetLanguages || [];
+  if (!Array.isArray(languages) || languages.length === 0) {
+    return { successful: [], failed: [], skipped: [], reason: 'no target languages supplied' };
+  }
+  return translateToMultipleLanguages(contentId, languages, options);
+}
+
 module.exports = {
   detectLanguage,
   translateContent,
   translateToMultipleLanguages,
+  bulkTranslateContent,
+  autoTranslateOnCreate,
   getContentInLanguage,
   getContentTranslations,
   updateTranslation,

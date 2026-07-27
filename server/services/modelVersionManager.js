@@ -8,7 +8,10 @@ const ModelLearning = require('../models/ModelLearning');
 const { FREE_AI_PROVIDERS } = require('./freeAIModelService');
 const { validateVersionBeforeUpgrade, abTestVersions } = require('./modelVersionTesting');
 const { rollbackVersion, checkRollbackNeeded, getRollbackCandidates } = require('./modelVersionRollback');
-const { startGradualRollout, shouldUseNewVersion, updateRolloutMetrics } = require('./modelVersionGradualRollout');
+const {
+  startGradualRollout, shouldUseNewVersion, updateRolloutMetrics,
+  getRolloutStatus, pauseRollout, cancelRollout,
+} = require('./modelVersionGradualRollout');
 
 /**
  * Check for available model upgrades from providers
@@ -694,5 +697,8 @@ module.exports = {
   startGradualRollout,
   shouldUseNewVersion,
   updateRolloutMetrics,
+  getRolloutStatus,
+  pauseRollout,
+  cancelRollout,
 };
 

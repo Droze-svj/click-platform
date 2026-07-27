@@ -3,7 +3,7 @@
 const express = require('express');
 const auth = require('../../middleware/auth');
 const WorkflowWebhook = require('../../models/WorkflowWebhook');
-const { sendWebhook, triggerWorkflowWebhook } = require('../../services/webhookService');
+const { sendWebhook } = require('../../services/webhookService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');

@@ -7,7 +7,6 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
 const { generateClientReport } = require('../services/reportGenerationService');
-const { generateComparisonReport } = require('../services/reportComparisonService');
 const ReportTemplate = require('../models/ReportTemplate');
 const router = express.Router();
 
@@ -169,15 +168,13 @@ router.post('/:agencyWorkspaceId/reports/compare', auth, requireWorkspaceAccess(
     return sendError(res, 'Client workspace ID and both periods are required', 400);
   }
 
-  const comparison = await generateComparisonReport(
-    agencyWorkspaceId,
-    clientWorkspaceId,
-    format,
-    { period1, period2, includeROI, includeGrowth }
-  );
-
-  // For now, return JSON. In production, would generate combined report
-  sendSuccess(res, 'Comparison report generated', 200, comparison);
+  // Honest 501: the period-over-period comparison report was wired to a
+  // `generateComparisonReport` export that never existed (the service only
+  // provides template-vs-template comparison with a different contract), so this
+  // route used to 500. Surface it as not-implemented until the client-report
+  // comparison is built, rather than crashing.
+  void format; void includeROI; void includeGrowth;
+  return sendError(res, 'Comparison reports are not available yet.', 501);
 }));
 
 /**
