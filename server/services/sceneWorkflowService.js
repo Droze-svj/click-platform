@@ -6,7 +6,10 @@ const Content = require('../models/Content');
 const Workflow = require('../models/Workflow');
 const AutomationRule = require('../models/AutomationRule');
 const logger = require('../utils/logger');
-const { detectScenes } = require('./sceneDetectionService');
+// NOTE: sceneDetectionService is an unimplemented stub (empty module). Each
+// action below requires it lazily and guards for the missing function, so a
+// scene-triggered workflow degrades to an honest no-op (no scenes) rather than
+// throwing. (The old top-level `detectScenes` import was undefined + unused.)
 const { trimVideo } = require('./advancedVideoProcessingService');
 const { generateTranscriptFromVideo } = require('./whisperService');
 const path = require('path');
@@ -230,8 +233,13 @@ async function createClipsFromScenesAction(config, context) {
     throw new Error('Content not found');
   }
 
-  const { getScenesForAsset } = require('./sceneDetectionService');
-  const scenesResult = await getScenesForAsset(contentId);
+  const sceneDetection = require('./sceneDetectionService');
+  if (typeof sceneDetection.getScenesForAsset !== 'function') {
+    logger.warn('sceneWorkflow: scene detection unavailable — proceeding with no scenes', { contentId });
+  }
+  const scenesResult = typeof sceneDetection.getScenesForAsset === 'function'
+    ? await sceneDetection.getScenesForAsset(contentId)
+    : { scenes: [] };
   
   return await createClipsFromScenes({
     contentId,
@@ -252,8 +260,13 @@ async function generateCaptionsForScenesAction(config, context) {
     throw new Error('Content not found');
   }
 
-  const { getScenesForAsset } = require('./sceneDetectionService');
-  const scenesResult = await getScenesForAsset(contentId);
+  const sceneDetection = require('./sceneDetectionService');
+  if (typeof sceneDetection.getScenesForAsset !== 'function') {
+    logger.warn('sceneWorkflow: scene detection unavailable — proceeding with no scenes', { contentId });
+  }
+  const scenesResult = typeof sceneDetection.getScenesForAsset === 'function'
+    ? await sceneDetection.getScenesForAsset(contentId)
+    : { scenes: [] };
   
   return await generateCaptionsForScenes({
     contentId,
@@ -273,8 +286,13 @@ async function createCarouselFromScenesAction(config, context) {
     throw new Error('Content not found');
   }
 
-  const { getScenesForAsset } = require('./sceneDetectionService');
-  const scenesResult = await getScenesForAsset(contentId);
+  const sceneDetection = require('./sceneDetectionService');
+  if (typeof sceneDetection.getScenesForAsset !== 'function') {
+    logger.warn('sceneWorkflow: scene detection unavailable — proceeding with no scenes', { contentId });
+  }
+  const scenesResult = typeof sceneDetection.getScenesForAsset === 'function'
+    ? await sceneDetection.getScenesForAsset(contentId)
+    : { scenes: [] };
   
   return await createCarouselFromScenes({
     contentId,
@@ -288,8 +306,13 @@ async function createCarouselFromScenesAction(config, context) {
  */
 async function tagKeyMomentsAction(config, context) {
   const { contentId } = config;
-  const { getScenesForAsset } = require('./sceneDetectionService');
-  const scenesResult = await getScenesForAsset(contentId);
+  const sceneDetection = require('./sceneDetectionService');
+  if (typeof sceneDetection.getScenesForAsset !== 'function') {
+    logger.warn('sceneWorkflow: scene detection unavailable — proceeding with no scenes', { contentId });
+  }
+  const scenesResult = typeof sceneDetection.getScenesForAsset === 'function'
+    ? await sceneDetection.getScenesForAsset(contentId)
+    : { scenes: [] };
   
   return await tagKeyMoments({
     contentId,
@@ -302,8 +325,13 @@ async function tagKeyMomentsAction(config, context) {
  */
 async function exportSceneAnalyticsAction(config, context) {
   const { contentId } = config;
-  const { getScenesForAsset } = require('./sceneDetectionService');
-  const scenesResult = await getScenesForAsset(contentId);
+  const sceneDetection = require('./sceneDetectionService');
+  if (typeof sceneDetection.getScenesForAsset !== 'function') {
+    logger.warn('sceneWorkflow: scene detection unavailable — proceeding with no scenes', { contentId });
+  }
+  const scenesResult = typeof sceneDetection.getScenesForAsset === 'function'
+    ? await sceneDetection.getScenesForAsset(contentId)
+    : { scenes: [] };
   
   return await exportSceneAnalytics({
     contentId,

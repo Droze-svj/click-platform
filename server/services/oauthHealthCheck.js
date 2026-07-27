@@ -2,7 +2,10 @@
 
 const User = require('../models/User');
 const logger = require('../utils/logger');
-const { getTwitterClient } = require('./twitterOAuthService');
+// twitterOAuthService has no live twitter-api-v2 client factory (getTwitterClient
+// never existed). We verify connection health by obtaining a valid, auto-refreshed
+// access token instead of making a live API call.
+const { getAccessTokenForAccount: getTwitterAccessToken } = require('./twitterOAuthService');
 const { getLinkedInClient, getLinkedInUserInfo } = require('./linkedinOAuthService');
 const { getFacebookClient, getFacebookUserInfo } = require('./facebookOAuthService');
 const { getInstagramClient } = require('./instagramOAuthService');
@@ -23,18 +26,17 @@ async function checkTwitterConnection(userId) {
       };
     }
 
-    // Try to get client (this will test token validity)
+    // Verify token validity by obtaining a valid (auto-refreshed) access token.
+    // NOTE: this checks token retrievability, not a live API round-trip (no
+    // twitter-api-v2 client in this service), so username/id aren't returned.
     try {
-      const client = await getTwitterClient(userId);
-      // Make a simple API call to verify token
-      const me = await client.v2.me();
-      
+      const token = await getTwitterAccessToken(userId);
+      if (!token) throw new Error('No valid Twitter access token');
+
       return {
         platform: 'twitter',
         connected: true,
         status: 'healthy',
-        username: me.data.username,
-        userId: me.data.id,
         lastChecked: new Date(),
       };
     } catch (error) {
@@ -304,8 +306,8 @@ async function refreshExpiredTokens(userId) {
       const health = await checkTwitterConnection(userId);
       if (health.status === 'token_expired') {
         try {
-          const { refreshAccessToken } = require('./twitterOAuthService');
-          await refreshAccessToken(userId);
+          const { refreshToken } = require('./twitterOAuthService');
+          await refreshToken(userId);
           results.refreshed.push('twitter');
           logger.info('Twitter token refreshed automatically', { userId });
         } catch (error) {

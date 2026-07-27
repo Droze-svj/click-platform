@@ -253,7 +253,8 @@ function validateAgainstGuardrails(content, guardrails) {
 module.exports = {
   createOrUpdateTemplate,
   getTemplates,
-  generateContentWithTemplate
+  generateContentWithTemplate,
+  validateAgainstGuardrails
 };
 
 

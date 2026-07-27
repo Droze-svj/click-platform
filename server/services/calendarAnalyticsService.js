@@ -3,7 +3,9 @@
 
 const ScheduledPost = require('../models/ScheduledPost');
 const Workspace = require('../models/Workspace');
-const { getOptimalPostingTimes } = require('./smartScheduleOptimizationService');
+// getOptimalPostingTimes is defined in contentCalendarService (returns a
+// platform-keyed object); smartScheduleOptimizationService never exported it.
+const { getOptimalPostingTimes } = require('./contentCalendarService');
 const logger = require('../utils/logger');
 
 /**
@@ -212,11 +214,10 @@ async function generateOptimalTimeRecommendations(posts, clientWorkspaceIds) {
 
     // Get optimal times for this client/platform
     try {
-      const optimalTimes = await getOptimalPostingTimes(
+      const optimalTimes = (await getOptimalPostingTimes(
         clientWorkspace.ownerId,
-        platform,
-        new Date()
-      );
+        [platform]
+      ))[platform] || [];
 
       // Find gaps where we could add posts
       const currentTimes = clientPosts.map(p => new Date(p.scheduledTime).getHours());

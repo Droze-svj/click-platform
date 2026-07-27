@@ -6,7 +6,9 @@ const Workspace = require('../models/Workspace');
 const ScheduledPost = require('../models/ScheduledPost');
 const Content = require('../models/Content');
 const ClientGuidelines = require('../models/ClientGuidelines');
-const { getOptimalPostingTimes } = require('./smartScheduleOptimizationService');
+// getOptimalPostingTimes is defined in contentCalendarService (returns a
+// platform-keyed object); smartScheduleOptimizationService never exported it.
+const { getOptimalPostingTimes } = require('./contentCalendarService');
 const logger = require('../utils/logger');
 const { escapeRegex } = require('../utils/escapeRegex');
 
@@ -234,8 +236,8 @@ async function scheduleCampaignPosts(campaign, clientWorkspaceId, content, custo
     for (const platform of platforms) {
       for (const scheduleDate of scheduleDates) {
         // Get optimal time for this platform
-        const optimalTime = await getOptimalPostingTimes(ownerId, platform, scheduleDate);
-        const [hour, minute] = optimalTime.split(':').map(Number);
+        const optimalTimes = (await getOptimalPostingTimes(ownerId, [platform]))[platform] || ['09:00'];
+        const [hour, minute] = optimalTimes[0].split(':').map(Number);
         const scheduledTime = new Date(scheduleDate);
         scheduledTime.setHours(hour, minute, 0, 0);
 

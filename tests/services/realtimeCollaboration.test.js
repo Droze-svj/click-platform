@@ -5,7 +5,9 @@ const User = require('../../server/models/User');
 // Mock dependencies
 jest.mock('../../server/models/Content');
 jest.mock('../../server/models/User');
-jest.mock('../../server/services/realtimeService', () => ({
+// emitToUser is exported by socketService (not realtimeService — that export
+// never existed; mocking it here previously masked a real production crash).
+jest.mock('../../server/services/socketService', () => ({
   emitToUser: jest.fn(),
   emitToRoom: jest.fn(),
   broadcast: jest.fn(),
@@ -38,7 +40,7 @@ describe('RealtimeCollaborationService', () => {
       const otherUserId = 'other_user_999';
       RealtimeCollaborationService.joinEditingSession(contentId, otherUserId, 'other_socket');
       
-      const { emitToUser: mockEmit } = require('../../server/services/realtimeService');
+      const { emitToUser: mockEmit } = require('../../server/services/socketService');
       
       RealtimeCollaborationService.joinEditingSession(contentId, userId, socketId);
       

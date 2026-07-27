@@ -201,10 +201,16 @@ async function syncVolumeToDialogue(trackId, contentId, userId, options = {}) {
   } = options;
 
   try {
-    // This would use the advanced ducking service
-    const { applyAdvancedDucking } = require('./advancedDuckingService');
-    
-    const result = await applyAdvancedDucking(
+    // advancedDuckingService only exposes applyDucking(speech,music,output,opts)
+    // which needs file PATHS; this call has DB ids. Bridging id→path is real
+    // feature work, so degrade honestly rather than throwing "applyAdvancedDucking
+    // is not a function".
+    const ducking = require('./advancedDuckingService');
+    if (typeof ducking.applyAdvancedDucking !== 'function') {
+      logger.warn('syncVolumeToDialogue: advanced ducking not available — skipping duck automation', { trackId, contentId });
+      return { applied: false, skipped: true, reason: 'advanced_ducking_unavailable', syncType: 'dialogue_rhythm' };
+    }
+    const result = await ducking.applyAdvancedDucking(
       trackId,
       contentId,
       userId,

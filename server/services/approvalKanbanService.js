@@ -317,6 +317,7 @@ async function updateApprovalStatus(approval, newStatus, userId) {
 module.exports = {
   getOrCreateKanbanBoard,
   getKanbanBoardWithCards,
-  moveCard
+  moveCard,
+  getApprovalStatus
 };
 

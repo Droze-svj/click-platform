@@ -744,10 +744,27 @@ async function sendWebhook(url, payload, options = {}) {
   return { success: false, status: null, attempts: maxAttempts, error: lastError ? String(lastError.message || lastError).slice(0, 200) : 'delivery failed' };
 }
 
+/**
+ * Fire a WorkflowWebhook document's URL for a workflow event. enhancedWorkflowService
+ * imported this name but it was never exported → "not a function" on workflow
+ * completion. Thin wrapper over the guarded sendWebhook.
+ */
+async function triggerWorkflowWebhook(webhook, event, data) {
+  if (!webhook || !webhook.url) {
+    return { success: false, status: null, error: 'missing webhook url' };
+  }
+  return sendWebhook(
+    webhook.url,
+    { event, data, timestamp: new Date().toISOString() },
+    { secret: webhook.secret || null }
+  );
+}
+
 module.exports = {
   createWebhook,
   deliverWebhook,
   sendWebhook,
+  triggerWorkflowWebhook,
   verifySignature,
   triggerWebhook,
   testWebhook,
