@@ -139,6 +139,38 @@ describe('omniVoiceService.generateSpeechFile', () => {
   });
 });
 
+describe('omniVoiceService.cloneVoice', () => {
+  beforeEach(clearOmniEnv);
+
+  it('rejects when not configured', async () => {
+    await expect(svc.cloneVoice(Buffer.from('x'), 'v')).rejects.toThrow(/not configured/i);
+  });
+
+  it('rejects with no sample', async () => {
+    process.env.OMNIVOICE_BASE_URL = 'http://localhost:3900/v1';
+    await expect(svc.cloneVoice(null, 'v')).rejects.toThrow(/reference audio/i);
+  });
+
+  it('POSTs a Buffer to the native /profiles endpoint (server root, not /v1) and returns the id', async () => {
+    process.env.OMNIVOICE_BASE_URL = 'http://localhost:3900/v1';
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 'prof123' }) });
+
+    const id = await svc.cloneVoice(Buffer.from('audio-bytes'), 'My Voice');
+
+    expect(id).toBe('prof123');
+    const [url, opts] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://localhost:3900/profiles'); // /v1 stripped
+    expect(opts.method).toBe('POST');
+    expect(opts.body).toBeInstanceOf(FormData);
+  });
+
+  it('throws honestly on a non-2xx clone response', async () => {
+    process.env.OMNIVOICE_BASE_URL = 'http://localhost:3900/v1';
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 422, text: async () => 'bad ref' });
+    await expect(svc.cloneVoice(Buffer.from('x'), 'v')).rejects.toThrow(/HTTP 422/);
+  });
+});
+
 describe('omniVoiceService.listVoices', () => {
   beforeEach(clearOmniEnv);
 

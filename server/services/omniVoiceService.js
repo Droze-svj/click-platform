@@ -50,6 +50,12 @@ function apiRoot() {
   return base;
 }
 
+// The OpenAI-compat endpoints live under /v1; OmniVoice's NATIVE endpoints (voice
+// profiles / cloning) live at the server root. Strip a trailing /v1 to reach them.
+function serverRoot() {
+  return apiRoot().replace(/\/v1$/, '');
+}
+
 function authHeaders(extra = {}) {
   const headers = { ...extra };
   const key = process.env.OMNIVOICE_API_KEY && String(process.env.OMNIVOICE_API_KEY).trim();
@@ -169,9 +175,57 @@ async function listVoices() {
   }
 }
 
+/**
+ * Clone a voice from a reference audio sample via OmniVoice's native profile API
+ * (POST /profiles, kind=clone). The returned profile id is used directly as the
+ * `voice` in synthesizeSpeech/generateSpeechFile.
+ *
+ * @param {Buffer|string} sample reference recording: a Buffer (preferred — no
+ *   SSRF) or an absolute URL that this server can fetch
+ * @param {string} name           display name for the profile
+ * @returns {Promise<string>} the OmniVoice voice/profile id
+ */
+async function cloneVoice(sample, name) {
+  if (!isConfigured()) throw new Error('OmniVoice is not configured (set OMNIVOICE_BASE_URL).');
+  if (!sample) throw new Error('A reference audio sample is required to clone a voice.');
+
+  // Prefer raw bytes (route reads the user's own file → no arbitrary-URL fetch).
+  let sampleBlob;
+  if (Buffer.isBuffer(sample)) {
+    sampleBlob = new Blob([sample]);
+  } else {
+    const sampleRes = await fetchWithTimeout(sample, {}, 60000);
+    if (!sampleRes.ok) throw new Error(`Could not fetch reference audio: HTTP ${sampleRes.status}`);
+    sampleBlob = await sampleRes.blob();
+  }
+
+  const form = new FormData();
+  form.append('name', name || 'Cloned voice');
+  form.append('kind', 'clone');
+  form.append('ref_audio', sampleBlob, 'reference.wav');
+
+  // Note: don't set Content-Type — fetch sets the multipart boundary itself.
+  const res = await fetchWithTimeout(`${serverRoot()}/profiles`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: form,
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 300); } catch { /* ignore */ }
+    throw new Error(`OmniVoice voice clone failed: HTTP ${res.status} ${detail}`);
+  }
+  const data = await res.json();
+  const voiceId = data.id || data.profile_id || data.profileId || data.voice_id;
+  if (!voiceId) throw new Error('OmniVoice clone returned no profile id.');
+  logger.info('[OmniVoice] voice cloned', { name });
+  return String(voiceId);
+}
+
 module.exports = {
   isConfigured,
   synthesizeSpeech,
   generateSpeechFile,
   listVoices,
+  cloneVoice,
 };

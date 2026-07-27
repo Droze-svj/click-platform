@@ -1925,6 +1925,7 @@ app.use('/api/retention-heatmap', require('./routes/retention-heatmap'));
 app.use('/api/trust', require('./routes/trust'));
 app.use('/api/toolbox', require('./routes/toolbox'));
 app.use('/api/dubbing', require('./routes/dubbing'));
+app.use('/api/voice', require('./routes/voice'));
 app.use('/api/quote', require('./routes/quote'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/recurring', require('./routes/recurring'));
