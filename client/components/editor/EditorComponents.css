@@ -36,6 +36,42 @@
   background-image: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,var(--vignette-opacity, 0)) 100%);
 }
 
+/* vfx: 'film-grain' — preview parity for the grain the render bakes (color grades
+   Vintage / Film Noir). Subtle animated luminance noise, overlay-blended so it
+   textures without washing out the image. Animating background-position keeps the
+   div full-cover (no edge gaps). */
+.video-film-grain {
+  opacity: 0.45;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  animation: video-grain-shift 0.5s steps(4) infinite;
+}
+
+@keyframes video-grain-shift {
+  0%   { background-position: 0 0; }
+  25%  { background-position: -80px 40px; }
+  50%  { background-position: 60px -70px; }
+  75%  { background-position: -40px -30px; }
+  100% { background-position: 0 0; }
+}
+
+/* vfx: 'chromatic-aberration' — preview parity for the RGB-split the render bakes
+   (Cyberpunk / Vaporwave). A true per-channel shift needs WebGL; this fringes the
+   frame edges red/cyan (where aberration is most visible) as a faithful-enough
+   preview hint. */
+.video-chromatic-aberration {
+  opacity: 0.35;
+  mix-blend-mode: screen;
+  background-image:
+    radial-gradient(ellipse at 51% 50%, transparent 62%, rgba(255,0,64,0.5) 100%),
+    radial-gradient(ellipse at 49% 50%, transparent 62%, rgba(0,255,255,0.5) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-film-grain { animation: none; }
+}
+
 .video-cinematic-underlay {
   background-image: linear-gradient(to bottom right, rgba(99,102,241,0.05), transparent, rgba(217,70,239,0.05));
 }

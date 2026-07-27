@@ -844,6 +844,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     ? (effectiveFiltersAtTime.vignette / 100) * 0.75
     : 0
 
+  // vfx parity: the server render BAKES film-grain / chromatic-aberration for the
+  // grades that carry those tags (Vintage, Film Noir, Cyberpunk, Vaporwave). The
+  // preview previously dropped them, so those grades looked flatter here than in
+  // the export. Approximate them with blended overlays (see EditorComponents.css)
+  // so the grade previews truthfully. `filters.vfx` is the union applyGrade keeps.
+  const activeVfx = showAppliedFilters && Array.isArray(filters.vfx) ? filters.vfx : []
+  const showFilmGrain = activeVfx.includes('film-grain')
+  const showChromaticAberration = activeVfx.includes('chromatic-aberration')
+
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.currentTarget
     // Only the BASE source defines the timeline duration — a switched-in clip
@@ -1692,6 +1701,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         {/* Global Filter Overlays */}
         {vignetteOpacity > 0 && (
           <div className="absolute inset-0 pointer-events-none video-vignette" style={{ '--vignette-opacity': vignetteOpacity } as any} />
+        )}
+        {/* vfx overlays — preview parity for baked grain / chromatic aberration */}
+        {showChromaticAberration && (
+          <div className="absolute inset-0 pointer-events-none video-chromatic-aberration" aria-hidden="true" />
+        )}
+        {showFilmGrain && (
+          <div className="absolute inset-0 pointer-events-none video-film-grain" aria-hidden="true" />
         )}
       </div>
     </>
