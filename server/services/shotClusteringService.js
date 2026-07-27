@@ -853,6 +853,7 @@ function calculateCoherence(clusters, shotFeatures) {
 module.exports = {
   clusterShotsIntoScenes,
   extractShotFeatures,
-  calculateShotSimilarity
+  calculateShotSimilarity,
+  clusterBySimilarity
 };
 

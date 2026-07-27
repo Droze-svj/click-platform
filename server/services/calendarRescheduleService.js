@@ -4,7 +4,9 @@
 const ScheduledPost = require('../models/ScheduledPost');
 const { handlePostRescheduled, handleBulkReschedule } = require('./calendarRealtimeService');
 const { getCalendarConflicts } = require('./masterCalendarService');
-const { getOptimalPostingTimes } = require('./smartScheduleOptimizationService');
+// getOptimalPostingTimes is defined in contentCalendarService (returns a
+// platform-keyed object); smartScheduleOptimizationService never exported it.
+const { getOptimalPostingTimes } = require('./contentCalendarService');
 const logger = require('../utils/logger');
 
 /**
@@ -123,11 +125,10 @@ async function bulkReschedule(agencyWorkspaceId, rescheduleData, options = {}) {
           const clientWorkspace = await Workspace.findById(post.clientWorkspaceId);
           if (!clientWorkspace) continue;
 
-          const optimalTimes = await getOptimalPostingTimes(
+          const optimalTimes = (await getOptimalPostingTimes(
             clientWorkspace.ownerId,
-            post.platform,
-            new Date(post.scheduledTime)
-          );
+            [post.platform]
+          ))[post.platform] || [];
 
           if (optimalTimes.length > 0) {
             const [hour, minute] = optimalTimes[0].split(':').map(Number);
@@ -268,11 +269,10 @@ async function getRescheduleSuggestions(postId, options = {}) {
         const Workspace = require('../models/Workspace');
         const clientWorkspace = await Workspace.findById(post.clientWorkspaceId);
         if (clientWorkspace) {
-          const optimalTimes = await getOptimalPostingTimes(
+          const optimalTimes = (await getOptimalPostingTimes(
             clientWorkspace.ownerId,
-            post.platform,
-            new Date(post.scheduledTime)
-          );
+            [post.platform]
+          ))[post.platform] || [];
 
           optimalTimes.slice(0, maxSuggestions).forEach(time => {
             const [hour, minute] = time.split(':').map(Number);

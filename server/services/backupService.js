@@ -4,7 +4,9 @@ const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const Script = require('../models/Script');
 const User = require('../models/User');
-const { uploadFileToS3, isCloudStorageEnabled } = require('./storageService');
+// storageService exposes uploadBuffer (there was never an uploadFileToS3 export),
+// which returns { url, ... }.
+const { uploadBuffer, isCloudStorageEnabled } = require('./storageService');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const fs = require('fs');
@@ -154,12 +156,12 @@ async function createUserBackup(userId, options = {}) {
     if (isCloudStorageEnabled()) {
       try {
         const fileBuffer = fs.readFileSync(filepath);
-        backupUrl = await uploadFileToS3(
+        const uploadResult = await uploadBuffer(
           fileBuffer,
           `backups/${filename}`,
-          format === 'json' ? 'application/json' : 'text/csv',
-          'backups'
+          format === 'json' ? 'application/json' : 'text/csv'
         );
+        backupUrl = uploadResult.url;
         logger.info('Backup uploaded to cloud storage', { userId, backupUrl });
       } catch (error) {
         logger.error('Failed to upload backup to cloud', { error: error.message });

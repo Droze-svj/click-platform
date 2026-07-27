@@ -2,7 +2,10 @@
 // Enhanced with ML, adaptive thresholds, and temporal consistency
 
 const logger = require('../utils/logger');
-const { fuseVisualAudioBoundaries } = require('./visualAudioFusion');
+// visualAudioFusion is an unimplemented stub (empty module) — every function is
+// undefined. Guarded at each call site below so this service degrades to an
+// honest no-op instead of throwing "X is not a function".
+const visualAudioFusion = require('./visualAudioFusion');
 
 /**
  * Advanced visual-audio fusion with ML and adaptive thresholds
@@ -38,8 +41,17 @@ function fuseVisualAudioBoundariesAdvanced(visualBoundaries, audioFeatures, opti
     tunedThresholds = autoTuneFusionThresholds(visualBoundaries, audioFeatures);
   }
 
-  // Perform initial fusion
-  const fusionResult = fuseVisualAudioBoundaries(
+  // Perform initial fusion. Base module is an unimplemented stub → degrade to an
+  // honest no-op (visual boundaries as shot cuts, no scene fusion).
+  if (typeof visualAudioFusion.fuseVisualAudioBoundaries !== 'function') {
+    logger.warn('visualAudioFusionAdvanced: base fusion unavailable — returning visual boundaries unfused');
+    return {
+      sceneBoundaries: [],
+      shotCuts: visualBoundaries.map((b) => ({ timestamp: b.timestamp })),
+      statistics: { skipped: true, reason: 'visual_audio_fusion_unavailable' }
+    };
+  }
+  const fusionResult = visualAudioFusion.fuseVisualAudioBoundaries(
     visualBoundaries,
     audioFeatures,
     {
@@ -122,8 +134,12 @@ function autoTuneFusionThresholds(visualBoundaries, audioFeatures) {
     };
   }
 
-  // Calculate audio feature statistics
-  const { compareShotAudioFeatures } = require('./visualAudioFusion');
+  // Calculate audio feature statistics. Base module is an unimplemented stub →
+  // fall back to the same default thresholds used when audio is absent.
+  const compareShotAudioFeatures = visualAudioFusion.compareShotAudioFeatures;
+  if (typeof compareShotAudioFeatures !== 'function') {
+    return { audioThreshold: 0.3, visualThreshold: 0.5, classChangeThreshold: 0.5 };
+  }
   const distances = [];
   const classChanges = [];
 

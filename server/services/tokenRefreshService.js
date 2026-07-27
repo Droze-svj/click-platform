@@ -114,7 +114,34 @@ function initScheduler() {
   });
 }
 
+/**
+ * Return a currently-valid access token for a user+platform. Prefers a service
+ * that refreshes-on-read (twitter/linkedin expose getAccessTokenForAccount);
+ * otherwise reads the stored credentials (proactive rotation still runs via the
+ * cron). audienceGrowthSyncService + platformAnalyticsService imported this name
+ * but it never existed → they threw on every analytics read.
+ *
+ * @param {string} userId
+ * @param {string} platform  twitter|linkedin|facebook|instagram|tiktok|youtube
+ * @returns {Promise<string>} access token
+ */
+async function getValidAccessToken(userId, platform) {
+  const entry = platforms.find((p) => p.name === platform);
+  const svc = entry && entry.service;
+  if (svc && typeof svc.getAccessTokenForAccount === 'function') {
+    return svc.getAccessTokenForAccount(userId); // validates + refreshes on read
+  }
+  // Lazy require avoids any oauthService <-> tokenRefreshService require cycle.
+  const oauthService = require('./oauthService');
+  const creds = await oauthService.getSocialCredentials(userId, platform);
+  if (!creds || !creds.accessToken) {
+    throw new Error(`${platform} not connected`);
+  }
+  return creds.accessToken;
+}
+
 module.exports = {
   refreshExpiringTokens,
-  initScheduler
+  initScheduler,
+  getValidAccessToken
 };

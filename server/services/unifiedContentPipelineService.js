@@ -1089,13 +1089,16 @@ async function smartContentRefresh(userId, contentId, options = {}) {
  */
 async function getOptimalPostingTimes(userId, platforms = SUPPORTED_PLATFORMS) {
   try {
-    const { getOptimalPostingTimes: getOptimalTimes } = require('./smartScheduleOptimizationService');
+    // The real getter lives in contentCalendarService (smartScheduleOptimizationService
+    // never re-exported it → this was undefined). It returns a platform-keyed
+    // object, so ask for [platform] and read that key.
+    const { getOptimalPostingTimes: getOptimalTimes } = require('./contentCalendarService');
     const optimalTimes = {};
 
     for (const platform of platforms) {
       try {
-        const times = await getOptimalTimes(userId, platform);
-        optimalTimes[platform] = times;
+        const perPlatform = await getOptimalTimes(userId, [platform]);
+        optimalTimes[platform] = (perPlatform && perPlatform[platform]) || null;
       } catch (error) {
         logger.warn('Error getting optimal times for platform', { error: error.message, platform });
         optimalTimes[platform] = null;

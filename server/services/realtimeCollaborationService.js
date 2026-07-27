@@ -2,7 +2,10 @@
 
 const Content = require('../models/Content');
 const User = require('../models/User');
-const { emitToUser } = require('./realtimeService');
+// emitToUser is the canonical socket emitter in socketService (realtimeService
+// never exported it — this destructure was `undefined`, throwing on every
+// collaboration emit).
+const { emitToUser } = require('./socketService');
 const logger = require('../utils/logger');
 
 // Store active editing sessions

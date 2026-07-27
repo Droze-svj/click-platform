@@ -221,8 +221,15 @@ try {
  */
 async function detectScenes(config, context) {
   try {
-    const { detectScenes: detectScenesService } = require('./sceneDetectionService');
+    // sceneDetectionService is an unimplemented stub (empty module). Degrade
+    // honestly instead of throwing "detectScenes is not a function".
+    const sceneDetection = require('./sceneDetectionService');
+    const detectScenesService = sceneDetection && sceneDetection.detectScenes;
     const { videoUrl, videoId, sensitivity, minSceneLength, maxScenes, fps, extractMetadata } = config;
+    if (typeof detectScenesService !== 'function') {
+      logger.warn('Automation: scene detection unavailable (sceneDetectionService not implemented) — skipping', { videoId: videoId || videoUrl });
+      return { scenes: [], skipped: true, reason: 'scene_detection_unavailable' };
+    }
     const userId = context.userId || context.user?._id?.toString();
 
     // Determine video identifier

@@ -506,7 +506,8 @@ module.exports = {
   detectAudioChangePoints,
   detectChangePointsFromAudio,
   computeFeatureDistances,
-  classifySegmentsAndDetectTransitions
+  classifySegmentsAndDetectTransitions,
+  combineChangePoints
 };
 
 

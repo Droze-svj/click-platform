@@ -356,9 +356,23 @@ async function getSmartSuggestions(userId, limit = 5) {
   }
 }
 
+/**
+ * Compatibility wrapper: some callers (abVariantService) pass
+ * (userId, contentObject, platform) and expect a platform-adapted result.
+ * Bridge that to adaptForPlatform(platform, text, title, userId). This export
+ * never existed, so those call sites threw "adaptContentForPlatform is not a
+ * function" at runtime.
+ */
+async function adaptContentForPlatform(userId, content, platform) {
+  const text = content?.content?.text || content?.text || '';
+  const title = content?.title || '';
+  return adaptForPlatform(platform, text, title, userId);
+}
+
 module.exports = {
   adaptContent,
   adaptForPlatform,
+  adaptContentForPlatform,
   oneClickRepurpose,
   getSmartSuggestions,
 };
