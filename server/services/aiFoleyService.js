@@ -123,7 +123,89 @@ async function alignFoleyToTimeline(timelineClips, videoId) {
   return foleyNodes;
 }
 
+/**
+ * Analyze a timeline into discrete foley EVENTS — one per cut/transition where a
+ * sound effect should land. Pure + deterministic (no provider calls) so
+ * POST /api/dubbing/foley/analyze works even when no SFX provider is configured;
+ * the returned events feed generateFoleyAudio().
+ *
+ * @param {Array} segments timeline clips: { startTime, duration, type }
+ * @param {Array} effects  applied effects/transitions: string | { type, startTime }
+ * @returns {Array} events: { index, startTime, durationSeconds, transitionType, prompt }
+ */
+function analyzeTimelineTransitions(segments = [], effects = []) {
+  if (!Array.isArray(segments) || segments.length === 0) return [];
+
+  // Normalize effects to { type, startTime } so we can match one to a cut.
+  const norm = (Array.isArray(effects) ? effects : []).map((e) => {
+    if (typeof e === 'string') return { type: e.toLowerCase(), startTime: null };
+    return {
+      type: String(e?.type || e?.name || 'cut').toLowerCase(),
+      startTime: Number.isFinite(e?.startTime) ? e.startTime : null,
+    };
+  });
+
+  const events = [];
+  // A foley hit lands at each cut BETWEEN clips (start at i=1) — transitions, not
+  // the clips themselves, matching alignFoleyToTimeline's rule.
+  for (let i = 1; i < segments.length; i++) {
+    const clip = segments[i] || {};
+    const startTime = Number.isFinite(clip.startTime) ? clip.startTime : null;
+    const durationSeconds = Math.min(6, Math.max(0.1, Number.isFinite(clip.duration) ? clip.duration : 1.0));
+
+    // Transition type: an effect whose startTime is ~at this cut wins; else the
+    // clip's own type hint (zoom/scale/slide); else a plain cut.
+    let transitionType = 'cut';
+    const nearby = startTime != null
+      ? norm.find((e) => e.startTime != null && Math.abs(e.startTime - startTime) < 0.25)
+      : null;
+    if (nearby) transitionType = nearby.type;
+    else if (clip.type && /zoom|scale|slide/i.test(clip.type)) transitionType = String(clip.type).toLowerCase();
+
+    events.push({
+      index: i,
+      startTime,
+      durationSeconds,
+      transitionType,
+      prompt: determineSFXPrompt(durationSeconds, transitionType),
+    });
+  }
+  return events;
+}
+
+/**
+ * Generate an SFX clip for each detected foley event via generateFoley(). Events
+ * that can't be rendered (provider off / failure → null) are dropped, so an empty
+ * result honestly means "no SFX produced" rather than a crash or a fake success.
+ *
+ * @param {Array} events   from analyzeTimelineTransitions()
+ * @param {string} videoId owner-scoped id used only for the cached filename
+ * @returns {Promise<Array>} audioSegments: { startTime, url, volume, transitionType }
+ */
+async function generateFoleyAudio(events = [], videoId = 'foley') {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  const out = [];
+  for (const ev of events) {
+    const url = await generateFoley(
+      Number.isFinite(ev?.durationSeconds) ? ev.durationSeconds : 1.0,
+      ev?.transitionType || 'cut',
+      videoId
+    );
+    if (url) {
+      out.push({
+        startTime: Number.isFinite(ev?.startTime) ? ev.startTime : 0,
+        url,
+        volume: 0.8,
+        transitionType: ev?.transitionType || 'cut',
+      });
+    }
+  }
+  return out;
+}
+
 module.exports = {
   generateFoley,
-  alignFoleyToTimeline
+  alignFoleyToTimeline,
+  analyzeTimelineTransitions,
+  generateFoleyAudio
 };
