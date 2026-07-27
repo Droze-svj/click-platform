@@ -2,7 +2,10 @@
 
 const User = require('../models/User');
 const Content = require('../models/Content');
-const { jobQueueService } = require('./jobQueueService');
+// jobQueueService exports named functions (addJob, getQueue, …), NOT a
+// `jobQueueService` key — destructuring it yielded `undefined` and every
+// enqueue below threw "Cannot read properties of undefined" at request time.
+const jobQueueService = require('./jobQueueService');
 const logger = require('../utils/logger');
 
 /**
@@ -114,7 +117,7 @@ async function bulkDeleteContent(contentIds) {
   try {
     // Process in background job for large batches
     if (contentIds.length > 100) {
-      await jobQueueService.add('bulk-delete-content', {
+      await jobQueueService.addJob('bulk-delete-content', {
         contentIds,
       }, {
         priority: 5,
@@ -146,7 +149,7 @@ async function bulkDeleteContent(contentIds) {
 async function bulkExportData(userIds, format = 'json') {
   try {
     // Process in background job
-    await jobQueueService.add('bulk-export-data', {
+    await jobQueueService.addJob('bulk-export-data', {
       userIds,
       format,
     }, {

@@ -6,9 +6,12 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { requireWorkspaceAccess } = require('../middleware/workspaceIsolation');
+// templateAnalyticsService exports getTemplatePerformance / getTemplateSuggestions
+// (the old getTemplateAnalytics / getTemplateRecommendations names never existed,
+// so these two routes 500'd on every call).
 const {
-  getTemplateAnalytics,
-  getTemplateRecommendations
+  getTemplatePerformance,
+  getTemplateSuggestions
 } = require('../services/templateAnalyticsService');
 const {
   fillContentGaps,
@@ -34,7 +37,7 @@ const router = express.Router();
  */
 router.get('/:agencyWorkspaceId/templates/:templateId/analytics', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { templateId } = req.params;
-  const analytics = await getTemplateAnalytics(templateId, req.query);
+  const analytics = await getTemplatePerformance(templateId, req.query.period || null);
   sendSuccess(res, 'Template analytics retrieved', 200, analytics);
 }));
 
@@ -43,8 +46,11 @@ router.get('/:agencyWorkspaceId/templates/:templateId/analytics', auth, requireW
  * Get template recommendations
  */
 router.get('/:agencyWorkspaceId/templates/recommendations', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
-  const { agencyWorkspaceId } = req.params;
-  const recommendations = await getTemplateRecommendations(agencyWorkspaceId, req.query);
+  const recommendations = await getTemplateSuggestions(
+    req.query.contentType || null,
+    req.query.platform || null,
+    req.query.brandStyle || null
+  );
   sendSuccess(res, 'Template recommendations retrieved', 200, { recommendations });
 }));
 

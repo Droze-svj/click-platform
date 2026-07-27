@@ -703,9 +703,51 @@ function generateHealthRecommendations(webhook, successRate, avgResponseTime) {
   return recommendations;
 }
 
+/**
+ * Fire a one-off webhook POST to an arbitrary URL (used by the workflow-webhook
+ * "Test" button, whose WorkflowWebhook records aren't the Webhook model that
+ * deliverWebhook/testWebhook operate on). Reuses the same SSRF guard
+ * (assertSafeWebhookUrl + maxRedirects:0) and HMAC signature as deliverWebhook,
+ * so a user-supplied URL can't be turned into an internal-network probe.
+ *
+ * @param {string} url       destination URL
+ * @param {object} payload   JSON body to send
+ * @param {object} [options] { secret, retries, timeout }
+ * @returns {Promise<{ success: boolean, status: number|null, attempts: number, error?: string }>}
+ */
+async function sendWebhook(url, payload, options = {}) {
+  const { secret = null, retries = 1, timeout = 10000 } = options;
+  const maxAttempts = Math.max(1, Math.min(5, Number(retries) || 1));
+  const body = payload && typeof payload === 'object' ? payload : { data: payload };
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (secret) headers['X-Webhook-Signature'] = generateSignature(JSON.stringify(body), secret);
+
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await assertSafeWebhookUrl(url);
+      const response = await axios.post(url, body, {
+        headers,
+        timeout,
+        maxRedirects: 0, // SSRF: never follow a 3xx to an internal address
+        validateStatus: () => true,
+      });
+      if (response.status >= 200 && response.status < 300) {
+        return { success: true, status: response.status, attempts: attempt };
+      }
+      lastError = new Error(`HTTP ${response.status}`);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  return { success: false, status: null, attempts: maxAttempts, error: lastError ? String(lastError.message || lastError).slice(0, 200) : 'delivery failed' };
+}
+
 module.exports = {
   createWebhook,
   deliverWebhook,
+  sendWebhook,
   verifySignature,
   triggerWebhook,
   testWebhook,
