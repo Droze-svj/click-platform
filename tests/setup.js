@@ -180,6 +180,41 @@ jest.mock('ioredis', () => {
   }));
 });
 
+// node-redis (@redis/client) is used by tierGate / enhancedRateLimiter /
+// cronLock / redisCache. Unlike ioredis (mocked above), it was NOT mocked, so
+// createClient({url: 'redis://localhost:6379'}).connect() dialed a Redis that
+// doesn't exist in CI/local test envs — the lazy ECONNREFUSED AggregateError
+// escaped as an unhandledRejection and killed jest workers at random (the
+// long-standing "suite fails in batch, passes in isolation" flake). Mock the
+// full API surface those four modules use; get() resolves null (cache miss /
+// no lock), so every consumer takes its normal no-data path.
+jest.mock('redis', () => ({
+  createClient: jest.fn(() => ({
+    on: jest.fn(),
+    connect: jest.fn().mockResolvedValue(),
+    disconnect: jest.fn().mockResolvedValue(),
+    quit: jest.fn().mockResolvedValue(),
+    ping: jest.fn().mockResolvedValue('PONG'),
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue('OK'),
+    setEx: jest.fn().mockResolvedValue('OK'),
+    del: jest.fn().mockResolvedValue(1),
+    keys: jest.fn().mockResolvedValue([]),
+    info: jest.fn().mockResolvedValue(''),
+    // rate-limit-redis drives its Lua script through sendCommand and VALIDATES
+    // the reply shape: SCRIPT LOAD → sha string, EVALSHA/EVAL → [hits, ttlMs].
+    // A null reply throws "unexpected reply from redis client", so answer in kind.
+    sendCommand: jest.fn().mockImplementation((args) => {
+      const cmd = Array.isArray(args) ? String(args[0] || '').toUpperCase() : String(args || '').toUpperCase();
+      if (cmd === 'SCRIPT') return Promise.resolve('mocked-script-sha');
+      if (cmd === 'EVALSHA' || cmd === 'EVAL') return Promise.resolve([1, 60000]);
+      return Promise.resolve(null);
+    }),
+    isOpen: true,
+    isReady: true,
+  })),
+}));
+
 jest.mock('../server/services/emailService', () => ({
   sendEmail: jest.fn(() => Promise.resolve({ success: true })),
   sendWelcomeEmail: jest.fn(() => Promise.resolve({ success: true })),
