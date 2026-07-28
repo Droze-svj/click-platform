@@ -103,7 +103,9 @@ class SovereignToolboxService {
       return await openShortsService.generateShortContent(userId, options.topic, options.niche);
 
     case 'auto-captions':
-      return await videoCaptionService.generateCaptions(videoId, options);
+      // Service method is generateAutoCaptions (generateCaptions never existed →
+      // the auto-captions toolbox tool 500'd). Same (videoId, options) signature.
+      return await videoCaptionService.generateAutoCaptions(videoId, options);
 
     case 'bg-swap':
       return await creativeToolsService.swapBackground(videoId, options.backgroundUrl, options.blurAmount, userId);

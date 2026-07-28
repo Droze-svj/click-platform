@@ -65,6 +65,15 @@ describe('target services export what their callers import (MED sweep)', () => {
   it('aiVideoEditingService.detectKeyMoments (autoClipService)', () => {
     fns('../../server/services/aiVideoEditingService', ['detectKeyMoments', 'buildClipPlan']);
   });
+  it('videoCaptionService.generateAutoCaptions (sovereignToolboxService auto-captions tool)', () => {
+    fns('../../server/services/videoCaptionService', ['generateAutoCaptions']);
+  });
+  it('governanceLedgerService.recordAction (fiscalAutonomy + neuralBroadcaster)', () => {
+    fns('../../server/services/governanceLedgerService', ['recordAction']);
+  });
+  it('advancedEvergreenService.detectEvergreenContent (contentAnalytics)', () => {
+    fns('../../server/services/advancedEvergreenService', ['detectEvergreenContent']);
+  });
 });
 
 describe('touched importer modules load without throwing', () => {
