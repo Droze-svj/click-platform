@@ -50,6 +50,30 @@ describe('target services export what their callers import (MED sweep)', () => {
   it('contentCalendarService.getOptimalPostingTimes', () => {
     fns('../../server/services/contentCalendarService', ['getOptimalPostingTimes']);
   });
+
+  // Namespace-call variant (svc.method() where method was unexported) — the
+  // "double-check" pass found these reachable-but-missed instances.
+  it('videoProgressService.createJob/updateJob (routes/video/advanced.js job facade)', () => {
+    fns('../../server/services/videoProgressService', ['createJob', 'updateJob', 'startTracking', 'complete', 'fail']);
+  });
+  it('twitterOAuthService.postTweet (routes/oauth/twitter.js)', () => {
+    fns('../../server/services/twitterOAuthService', ['postTweet']);
+  });
+  it('aeoMetadataService.buildAEOPayload (routes/phase8.js)', () => {
+    fns('../../server/services/aeoMetadataService', ['buildAEOPayload']);
+  });
+  it('aiVideoEditingService.detectKeyMoments (autoClipService)', () => {
+    fns('../../server/services/aiVideoEditingService', ['detectKeyMoments', 'buildClipPlan']);
+  });
+  it('videoCaptionService.generateAutoCaptions (sovereignToolboxService auto-captions tool)', () => {
+    fns('../../server/services/videoCaptionService', ['generateAutoCaptions']);
+  });
+  it('governanceLedgerService.recordAction (fiscalAutonomy + neuralBroadcaster)', () => {
+    fns('../../server/services/governanceLedgerService', ['recordAction']);
+  });
+  it('advancedEvergreenService.detectEvergreenContent (contentAnalytics)', () => {
+    fns('../../server/services/advancedEvergreenService', ['detectEvergreenContent']);
+  });
 });
 
 describe('touched importer modules load without throwing', () => {

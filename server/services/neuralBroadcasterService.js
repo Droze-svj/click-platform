@@ -197,11 +197,16 @@ class NeuralBroadcasterService {
       await post.save();
 
       const governanceLedger = require('./governanceLedgerService');
-      await governanceLedger.logAction(post.userId, 'neural_broadcaster_dispatch', {
-        platform: post.platform,
-        postId: post._id,
-        liveId: result.postId,
-        status: post.status
+      // Ledger method is recordAction(userId, { actionType, resourceId, metadata })
+      // — logAction never existed, so this audit entry was silently dropped.
+      await governanceLedger.recordAction(post.userId, {
+        actionType: 'neural_broadcaster_dispatch',
+        resourceId: post._id,
+        metadata: {
+          platform: post.platform,
+          liveId: result.postId,
+          status: post.status
+        }
       });
 
       return result;

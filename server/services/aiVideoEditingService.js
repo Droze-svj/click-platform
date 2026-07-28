@@ -5929,6 +5929,7 @@ module.exports = {
   computeVideoScore,
   detectScenes,
   detectSceneChanges,
+  detectKeyMoments,
   analyzeSentimentAndEmotions,
   detectSilencePeriods,
   detectSmartCuts,

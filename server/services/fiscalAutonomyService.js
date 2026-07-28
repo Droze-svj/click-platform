@@ -101,10 +101,15 @@ class FiscalAutonomyService {
         });
         
         const governanceLedger = require('./governanceLedgerService');
-        await governanceLedger.logAction(userId, 'fiscal_autonomy_pivot', {
-          newWinner: steer.activeSteer.name,
-          superiority: steer.autonomyState.superiority,
-          status: 'executed'
+        // Ledger method is recordAction(userId, { actionType, metadata }) —
+        // logAction never existed, so this audit entry was silently dropped.
+        await governanceLedger.recordAction(userId, {
+          actionType: 'fiscal_autonomy_pivot',
+          metadata: {
+            newWinner: steer.activeSteer.name,
+            superiority: steer.autonomyState.superiority,
+            status: 'executed'
+          }
         });
 
         return { pivoted: true, offer: steer.activeSteer };

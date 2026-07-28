@@ -204,15 +204,22 @@ async function getContentInsights(userId) {
 
   // Phase 17: Evolutionary Evergreen Detection
   try {
-    const evergreenCandidates = await advancedEvergreenService.detectEvergreenCandidates(userId);
+    // Service method is detectEvergreenContent (detectEvergreenCandidates never
+    // existed → this insight was silently skipped). Entries are grouped as
+    // { contentId, content(doc), platforms:[{engagementRate(0-1),...}] }, so map
+    // the message fields off that shape rather than nonexistent top-level ones.
+    const evergreenCandidates = await advancedEvergreenService.detectEvergreenContent(userId);
     if (evergreenCandidates && evergreenCandidates.length > 0) {
       const topEvergreen = evergreenCandidates[0];
+      const evTitle = topEvergreen.content?.title || 'a top post';
+      const evRate = topEvergreen.platforms?.[0]?.engagementRate ?? topEvergreen.engagementRate ?? 0;
+      const evPct = Math.round(evRate <= 1 ? evRate * 100 : evRate);
       insights.recommendations.push({
         type: 'evergreen',
-        message: `🔥 Evergreen Alert: "${topEvergreen.title}" has maintained >${Math.round(topEvergreen.engagementRate)}% engagement for weeks. This is a Golden Record.`,
+        message: `🔥 Evergreen Alert: "${evTitle}" has maintained >${evPct}% engagement for weeks. This is a Golden Record.`,
         priority: 'high',
-        data: { 
-          originalPostId: topEvergreen.id,
+        data: {
+          originalPostId: topEvergreen.contentId || topEvergreen.id,
           repostPotential: 'extreme'
         }
       });

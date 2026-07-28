@@ -109,7 +109,10 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   if (mediaIds && mediaIds.length > 0) options.media = { media_ids: mediaIds };
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const tweet = await twitterService.postTweetForUser(userId, text, options, platform_user_id);
+  // Service exports postTweet(userId, text, options) — postTweetForUser never
+  // existed, so this endpoint 500'd on every call. postTweet resolves the account
+  // token via getAccessTokenForAccount(userId) internally.
+  const tweet = await twitterService.postTweet(userId, text, options);
 
   sendSuccess(res, 'Tweet posted successfully', 200, { tweet });
 }));
