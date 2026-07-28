@@ -311,8 +311,54 @@ async function checkAutoApprove(approvalId, stageOrder) {
   }
 }
 
+/**
+ * Per-client-workspace SLA rollup. agencyService (getSLAStatusSummary +
+ * monitorAndFulfillSLAs) called a nonexistent getSLAStatus and, guarded,
+ * silently produced an empty/at-risk-blind summary. This computes a real rollup
+ * from the workspace's approval SLAs, in the vocabulary the caller expects
+ * (healthy | at_risk | missed).
+ *
+ * @param {string} clientWorkspaceId
+ * @returns {Promise<{ status: 'healthy'|'at_risk'|'missed', score: number, lastFulfillment: Date|null, total: number }>}
+ */
+async function getSLAStatus(clientWorkspaceId) {
+  const healthy = { status: 'healthy', score: 100, lastFulfillment: null, total: 0 };
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) return healthy;
+
+    const approvals = await ContentApproval.find({ workspaceId: clientWorkspaceId })
+      .select('_id completedAt')
+      .lean();
+    if (!approvals.length) return healthy;
+
+    const approvalIds = approvals.map((a) => a._id);
+    const slas = await ApprovalSLA.find({ approvalId: { $in: approvalIds } })
+      .select('status updatedAt')
+      .lean();
+    if (!slas.length) return healthy;
+
+    const overdue = slas.filter((s) => s.status === 'overdue').length;
+    const atRisk = slas.filter((s) => s.status === 'at_risk').length;
+    const onTrack = slas.length - overdue - atRisk;
+
+    const status = overdue > 0 ? 'missed' : (atRisk > 0 ? 'at_risk' : 'healthy');
+    const score = Math.round((onTrack / slas.length) * 100);
+    const lastFulfillment = approvals
+      .map((a) => a.completedAt)
+      .filter(Boolean)
+      .sort((a, b) => new Date(b) - new Date(a))[0] || null;
+
+    return { status, score, lastFulfillment, total: slas.length };
+  } catch (error) {
+    logger.error('Error computing SLA status rollup', { error: error.message, clientWorkspaceId });
+    return healthy;
+  }
+}
+
 module.exports = {
   checkSLAStatus,
+  getSLAStatus,
   escalateApproval,
   getSLAAnalytics,
   checkAutoApprove

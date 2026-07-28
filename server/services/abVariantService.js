@@ -8,7 +8,12 @@ const logger = require('../utils/logger');
 
 // Moved imports from internal functions to top of file to avoid lazy-loading sync overhead
 const { generateContentVariation } = require('./contentVariationService');
-const aiService = require('./aiService');
+// Raw prompt→text LLM primitive. The variant generators below need
+// prompt-guided rewriting, which aiService's high-level helpers don't expose
+// (they never had generateContent/generateHashtags — those calls silently threw,
+// so every A/B "variant" came back identical to the base). generateContent
+// returns the text, or null when AI isn't configured (honest — caller falls back).
+const googleAI = require('../utils/googleAI');
 const { predictOptimalTime } = require('./smartScheduleOptimizationService');
 const { adaptContentForPlatform } = require('./contentAdaptationService');
 
@@ -128,15 +133,16 @@ async function generateHeadlineVariant(baseContent, index) {
   const safeIndex = Math.abs(parseInt(index, 10) || 0) % prompts.length;
   const prompt = prompts[safeIndex];
   
+  const baseText = baseContent.title || baseContent.content?.text || '';
+  const tone = baseContent.metadata?.tone || 'professional';
   try {
-    const result = await aiService.generateContent({
-      type: 'headline',
-      baseText: baseContent.title || baseContent.content?.text || '',
-      prompt,
-      tone: baseContent.metadata?.tone || 'professional',
-      safetySettings
-    });
-    return result.content || result;
+    const text = await googleAI.generateContent(
+      `${prompt} in a ${tone} tone for this content: "${baseText}". Return ONLY the new headline as plain text, no quotes or preamble.`,
+      { safetySettings }
+    );
+    const headline = (text || '').trim().replace(/^["']|["']$/g, '');
+    if (!headline) throw new Error('AI unavailable');
+    return headline;
   } catch (error) {
     logger.warn('Error generating headline variant', { error: error.message });
     return baseContent.title || `Variant ${index + 1}`;
@@ -157,15 +163,15 @@ async function generateCaptionVariant(baseContent, index) {
   const safeIndex = Math.abs(parseInt(index, 10) || 0) % styles.length;
   const style = styles[safeIndex];
   
+  const baseText = baseContent.content?.text || '';
   try {
-    const result = await aiService.generateContent({
-      type: 'caption',
-      baseText: baseContent.content?.text || '',
-      style,
-      length: 'medium',
-      safetySettings
-    });
-    return result.content || result;
+    const text = await googleAI.generateContent(
+      `Rewrite this social caption to be ${style}, medium length, preserving the core message: "${baseText}". Return ONLY the rewritten caption as plain text.`,
+      { safetySettings }
+    );
+    const caption = (text || '').trim();
+    if (!caption) throw new Error('AI unavailable');
+    return caption;
   } catch (error) {
     logger.warn('Error generating caption variant', { error: error.message });
     return baseContent.content?.text || '';
@@ -186,9 +192,18 @@ async function generateHashtagVariant(baseContent, index) {
   const safeIndex = Math.abs(parseInt(index, 10) || 0) % strategies.length;
   const strategy = strategies[safeIndex];
   
+  const baseText = baseContent.content?.text || '';
   try {
-    const result = await aiService.generateHashtags(baseContent.content?.text || '', strategy);
-    return Array.isArray(result) ? result : result.hashtags || [];
+    const text = await googleAI.generateContent(
+      `Generate 8-12 ${strategy} hashtags for this content: "${baseText}". Return ONLY a comma-separated list of hashtags, each starting with #.`,
+      { safetySettings }
+    );
+    const tags = (text || '')
+      .split(/[,\s]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.startsWith('#') && t.length > 1);
+    if (!tags.length) throw new Error('AI unavailable');
+    return tags;
   } catch (error) {
     logger.warn('Error generating hashtag variant', { error: error.message });
     return baseContent.hashtags || [];
@@ -687,6 +702,10 @@ module.exports = {
   checkStatisticalSignificance,
   autoSelectWinner,
   predictVariantPerformance,
-  learnFromCrossPlatformVariants
+  learnFromCrossPlatformVariants,
+  // Exported for testing the AI-driven variant generation.
+  generateHeadlineVariant,
+  generateCaptionVariant,
+  generateHashtagVariant
 };
 
