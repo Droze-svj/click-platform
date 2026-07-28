@@ -18,14 +18,15 @@ const featureRoutesSrc = fs.readFileSync(path.join(ROUTES_DIR, 'featureRoutes.js
 //   - music-*           → the whole family is unmounted (confirmed in the security audit)
 //   - creatorDna/digitalTwin/hookEnsemble/dubbing/creative/ai-enhanced/toolbox/trust/
 //     style-vault/remix/videoSharing/retention-heatmap/automation-analytics/admin-new/dmca
+// (hookEnsemble, music-catalog, music-catalog-sync, music-editing,
+//  music-ai-suggestions were DELETED in the dead-code purge — pruned from here.)
 const KNOWN_DEAD = new Set([
   'admin-new', 'ai-content', 'ai-enhanced', 'ai-music-admin', 'ai-music-analytics',
   'ai-music-batch', 'ai-music-generation', 'ai-music-recommendations', 'ai-music-templates',
   'automation-analytics', 'creative', 'creatorDna', 'dmca',
-  'hookEnsemble', 'music-ai-suggestions', 'music-catalog-playlists', 'music-catalog-sync',
-  'music-catalog', 'music-dynamic-generation', 'music-editing', 'music-learning',
+  'music-catalog-playlists', 'music-dynamic-generation', 'music-learning',
   'music-licensing-admin', 'music-licensing-analytics', 'music-licensing-compliance',
-  'music-licensing-favorites', 'music-licensing-sync', 'music-licensing-tools',
+  'music-licensing-favorites', 'music-licensing-tools',
   'music-licensing-transparency', 'music-licensing', 'music-smart-sync', 'remix',
   'style-vault', 'videoSharing',
   // digitalTwin, retention-heatmap, trust, toolbox, dubbing were REVIVED (Phase F)
@@ -67,16 +68,10 @@ describe('route mount coverage', () => {
 const VIDEO_DIR = path.join(ROUTES_DIR, 'video');
 const videoParentSrc = fs.readFileSync(path.join(ROUTES_DIR, 'video.js'), 'utf8');
 
-// Genuinely unmounted experimental files (an in-progress "scenes" pipeline +
-// openshorts), confirmed not referenced anywhere in server/. Wire one up? Mount
-// it and prune it from here.
-const VIDEO_KNOWN_DEAD = new Set([
-  'openshorts', 'scenes',
-  'scenes-advanced', 'scenes-analytics', 'scenes-audio-change-points',
-  'scenes-audio-features', 'scenes-audio-visualization', 'scenes-editing',
-  'scenes-job', 'scenes-quality', 'scenes-settings', 'scenes-shot-clustering',
-  'scenes-visual-audio-fusion', 'scenes-workflow',
-]);
+// The unmounted experimental scenes*/openshorts route files were DELETED in the
+// dead-code purge. Any NEW unmounted video/ route file must be mounted or added
+// here on purpose.
+const VIDEO_KNOWN_DEAD = new Set([]);
 
 const isVideoMounted = (name) =>
   indexSrc.includes(`video/${name}'`) || indexSrc.includes(`video/${name}"`) ||
