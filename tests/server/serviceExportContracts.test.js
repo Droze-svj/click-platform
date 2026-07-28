@@ -74,6 +74,9 @@ describe('target services export what their callers import (MED sweep)', () => {
   it('advancedEvergreenService.detectEvergreenContent (contentAnalytics)', () => {
     fns('../../server/services/advancedEvergreenService', ['detectEvergreenContent']);
   });
+  it('slaTrackingService.getSLAStatus (agencyService per-workspace rollup)', () => {
+    fns('../../server/services/slaTrackingService', ['getSLAStatus', 'checkSLAStatus']);
+  });
 });
 
 describe('touched importer modules load without throwing', () => {
