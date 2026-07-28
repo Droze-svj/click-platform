@@ -42,12 +42,10 @@ router.post('/spatial/build', auth, async (req, res) => {
 // 🌐 AEO Metadata
 router.post('/aeo/build', auth, async (req, res) => {
   try {
-    const { contentId, videoData, productData, creatorData } = req.body;
-    const result = await aeoMetadata.buildAEOMeta(contentId || `temp_${Date.now()}`, req.user.id, {
-      videoData,
-      productData,
-      creatorData
-    });
+    const { videoData, productData, creatorData } = req.body;
+    // Service method is buildAEOPayload(videoData, productData, creatorData) —
+    // buildAEOMeta never existed, so this endpoint 500'd on every call.
+    const result = await aeoMetadata.buildAEOPayload(videoData, productData, creatorData);
     res.json(result);
   } catch (err) {
     logger.error('AEO Metadata API error', { error: err.message });

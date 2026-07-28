@@ -7,6 +7,8 @@ class VideoProgressTracker extends EventEmitter {
   constructor() {
     super();
     this.progressMap = new Map();
+    // Opaque jobId → { videoId, operation } for the job-oriented facade below.
+    this.jobs = new Map();
     // Keep completed/failed results briefly so the client can fetch them after finishing.
     // (If we delete immediately, the UI often misses the final status/result.)
     this.retentionMs = parseInt(process.env.VIDEO_PROGRESS_RETENTION_MS, 10) || 5 * 60 * 1000; // 5 min
@@ -118,6 +120,42 @@ class VideoProgressTracker extends EventEmitter {
    */
   getActiveOperations() {
     return Array.from(this.progressMap.values());
+  }
+
+  /**
+   * Job-oriented facade used by routes/video/advanced.js. That router creates a
+   * job up front and settles it by an opaque jobId — but the core tracker keys by
+   * (videoId, operation). These map between the two. Without them every
+   * /api/video/advanced/* operation 500'd on `progressTracker.createJob(...)`
+   * because the method didn't exist.
+   *
+   * @returns {string} the jobId
+   */
+  createJob(userId, operation, meta = {}) {
+    const videoId = (meta && meta.videoId) || String(userId || 'anon');
+    const jobId = `${operation}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+    this.jobs.set(jobId, { videoId, operation, userId });
+    this.startTracking(videoId, operation);
+    return jobId;
+  }
+
+  /**
+   * Settle or advance a job by id. status 'completed' | 'failed' finalize;
+   * anything else is treated as a progress update (numeric progress or message).
+   */
+  updateJob(jobId, status, result = null, errorMessage = null) {
+    const job = this.jobs.get(jobId);
+    if (!job) return;
+    if (status === 'completed') {
+      this.complete(job.videoId, job.operation, result);
+      this.jobs.delete(jobId);
+    } else if (status === 'failed') {
+      this.fail(job.videoId, job.operation, new Error(errorMessage || 'Operation failed'));
+      this.jobs.delete(jobId);
+    } else {
+      const progress = typeof status === 'number' ? status : 50;
+      this.updateProgress(job.videoId, job.operation, progress, errorMessage);
+    }
   }
 }
 
