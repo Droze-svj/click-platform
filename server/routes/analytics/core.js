@@ -593,8 +593,12 @@ router.get('/insights/:postId', auth, asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const aiService = require('../../services/aiService');
 
-    // Verify user owns the post
+    // Verify user owns the post. Without the Supabase posts store no post can
+    // exist/be owned — honest 404, not a 500 from calling .from() on null.
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
     const { data: post, error: postError } = await supabase
       .from('posts')
       .select('id, author_id, title, content, tags, categories')
