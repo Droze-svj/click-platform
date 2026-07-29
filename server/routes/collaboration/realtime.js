@@ -29,6 +29,12 @@ router.post('/:contentId/join', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
   const socketId = req.body.socketId || req.headers['x-socket-id'];
 
+  // IDOR guard: joining enrolls the caller in the session and leaks activeUsers +
+  // subscribes them to future cursor/comment/change broadcasts — restrict to the
+  // owner (mirrors /change, which was already guarded).
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
+
   try {
     const result = await joinEditingSession(
       contentId,
@@ -54,6 +60,9 @@ router.post('/:contentId/join', auth, asyncHandler(async (req, res) => {
 router.post('/:contentId/leave', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
 
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
+
   try {
     await leaveEditingSession(contentId, req.user._id);
     sendSuccess(res, 'Left editing session', 200);
@@ -75,6 +84,9 @@ router.post('/:contentId/leave', auth, asyncHandler(async (req, res) => {
 router.post('/:contentId/cursor', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
   const { cursor } = req.body;
+
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
 
   try {
     updateCursor(contentId, req.user._id, cursor);
@@ -156,6 +168,10 @@ router.post('/:contentId/comment', auth, asyncHandler(async (req, res) => {
   if (!text) {
     return sendError(res, 'Comment text is required', 400);
   }
+
+  // IDOR guard: broadcasts the caller's comment into the content's session.
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
 
   try {
     await sendRealtimeComment(contentId, req.user._id, {

@@ -3,7 +3,12 @@
 
 const logger = require('../utils/logger');
 const { AppError } = require('../utils/errorHandler');
-const { FREE_AI_PROVIDERS } = require('./freeAIModelService');
+// Resolve lazily. Destructuring at load time captured `undefined` because of the
+// circular require with freeAIModelService (that module requires this limiter at
+// its top, so its exports are still empty when this line runs) — which crashed
+// checkRateLimit with "Cannot read properties of undefined (reading 'openrouter')"
+// on every /generate call.
+const getFreeAIProviders = () => require('./freeAIModelService').FREE_AI_PROVIDERS || {};
 
 // In-memory rate limit tracking (in production, use Redis)
 const rateLimitStore = new Map();
@@ -12,7 +17,7 @@ const rateLimitStore = new Map();
  * Check if request is within rate limits
  */
 function checkRateLimit(provider, options = {}) {
-  const providerConfig = FREE_AI_PROVIDERS[provider];
+  const providerConfig = getFreeAIProviders()[provider];
   if (!providerConfig) {
     throw new AppError(`Provider '${provider}' not found`, 400);
   }
@@ -163,7 +168,7 @@ function getUsage(provider) {
     requests: [],
   };
 
-  const providerConfig = FREE_AI_PROVIDERS[provider];
+  const providerConfig = getFreeAIProviders()[provider];
   const limits = providerConfig?.freeTier || {};
 
   return {
@@ -196,11 +201,12 @@ function getUsage(provider) {
 function getAllUsage() {
   const usage = {};
 
-  if (!FREE_AI_PROVIDERS) {
+  const providers = getFreeAIProviders();
+  if (!providers || Object.keys(providers).length === 0) {
     return {};
   }
 
-  for (const provider of Object.keys(FREE_AI_PROVIDERS)) {
+  for (const provider of Object.keys(providers)) {
     try {
       usage[provider] = getUsage(provider);
     } catch (error) {

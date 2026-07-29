@@ -1519,6 +1519,11 @@ router.post('/timeline/:videoId/track', auth, asyncHandler(async (req, res) => {
   const owned = await guardOwnership(req, res, videoId);
   if (!owned) return;
 
+  // addTrack destructures trackData.type — a missing body is a 400, not a 500.
+  if (!trackData || typeof trackData !== 'object') {
+    return sendError(res, 'trackData (object) is required', 400);
+  }
+
   try {
     const result = await multiTrackService.addTrack(videoId, trackData);
     sendSuccess(res, 'Track added', 200, result);
@@ -1921,6 +1926,10 @@ router.post('/cloud/:videoId/restore', auth, asyncHandler(async (req, res) => {
 
   const owned = await guardOwnership(req, res, videoId);
   if (!owned) return;
+
+  if (version === undefined || version === null || version === '') {
+    return sendError(res, 'version is required', 400);
+  }
 
   try {
     const result = await cloudSyncService.restoreProjectVersion(videoId, version);

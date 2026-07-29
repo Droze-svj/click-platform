@@ -246,6 +246,10 @@ const aiLimiter = createRateLimiter({
     }
     return req.ip;
   },
+  // In development/test, don't lock out after 50 calls — consistent with
+  // apiLimiter/uploadLimiter/oauthLimiter, which all skip non-production.
+  // Prod behavior is unchanged.
+  skip: (req) => process.env.NODE_ENV !== 'production',
 });
 
 // Video render rate limiter — renders are expensive (FFmpeg+Remotion).

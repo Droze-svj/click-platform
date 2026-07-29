@@ -43,8 +43,11 @@ router.post('/spatial/build', auth, async (req, res) => {
 router.post('/aeo/build', auth, async (req, res) => {
   try {
     const { videoData, productData, creatorData } = req.body;
-    // Service method is buildAEOPayload(videoData, productData, creatorData) —
-    // buildAEOMeta never existed, so this endpoint 500'd on every call.
+    // buildAEOPayload dereferences all three payloads (productData.name, etc.)
+    // without guards — a missing one is a bad request (400), not a server fault.
+    if (!videoData || !productData || !creatorData) {
+      return res.status(400).json({ error: 'videoData, productData and creatorData are required' });
+    }
     const result = await aeoMetadata.buildAEOPayload(videoData, productData, creatorData);
     res.json(result);
   } catch (err) {

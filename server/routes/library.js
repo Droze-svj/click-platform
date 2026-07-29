@@ -333,16 +333,17 @@ router.post('/content/:id/duplicate', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Content not found', 404);
   }
 
-  const duplicated = new Content({
-    ...original.toObject(),
-    _id: undefined,
-    title: `${original.title} (Copy)`,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
-
-  await duplicated.save();
-  sendSuccess(res, 'Content duplicated', 201, duplicated);
+  // Canonical Mongoose document clone: reuse the hydrated doc (its Map paths —
+  // assets/performance/variations — stay REAL Maps) with a fresh _id + isNew.
+  // Spreading original.toObject() serialized those Maps to plain objects that
+  // Mongoose 8 then can't validate on save → an UNCAUGHT TypeError ("val.keys is
+  // not a function") that escaped asyncHandler and could crash the process.
+  original._id = new Content.base.Types.ObjectId();
+  original.isNew = true;
+  original.title = `${original.title} (Copy)`;
+  original.createdAt = new Date();
+  await original.save();
+  sendSuccess(res, 'Content duplicated', 201, original);
 }));
 
 // Library items routes

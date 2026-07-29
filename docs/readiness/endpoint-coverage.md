@@ -13,6 +13,7 @@ Two jest artifacts boot the app in-memory (on the DB-safety guard in
 |---|---|---|
 | `tests/server/routes/smokeCore.test.js` | **Gating** — the core tester flow (auth/me, content, video, analytics, AI generators). Fails on any 5xx/wrong-status. | part of `npm run test:unit` |
 | `tests/smoke/smokeFull.test.js` | **Breadth sweep** — walks `app._router` (`tests/smoke/walkRoutes.js`), calls every safe GET with seeded fixtures, categorizes, writes `tests/reports/endpoint-smoke.json`. Ratchet ceiling on 5xx. | `npm run smoke:full` |
+| `tests/smoke/writeSweep.js` | **Write breadth sweep** — the same walker over every mounted POST/PUT/PATCH/DELETE. Seeds two users, fires each write, retries 5xx once, probes cross-user write IDOR (user B against user A's ids), runs DELETEs against throwaway ids only. Standalone Node (not jest) so post-response background rejections are attributed to the process, not a test. Writes `tests/reports/endpoint-writes.json`. Exit 0 = 0 real 5xx / 0 IDOR / 0 malformed. | `npm run smoke:writes` |
 | `scripts/ai-smoke.js` | Live-AI smoke against a running env (`BASE=… [TOKEN=…]`). | `npm run smoke:ai` |
 
 ## Sweep result (984 GET endpoints called)
@@ -60,10 +61,41 @@ Two jest artifacts boot the app in-memory (on the DB-safety guard in
 4. **Render quality:** vertical `smartReframe`-by-default and FFmpeg-logs→`logs/` are
    deliberately **not** flipped blind before testing — they change render output and need
    real-render verification.
-5. **POST/PUT/DELETE** weren't swept (read-only sweep). The gating `smokeCore` covers the
-   core mutations; broaden the safe-POST allowlist over time.
+5. **POST/PUT/PATCH/DELETE now swept** by `writeSweep.js` (1,180 write endpoints). Baseline
+   found **22 real 5xx + 5 real cross-user IDOR**; all fixed → **0 5xx / 0 IDOR / 0 malformed**.
+   Fixes: supabase-off crashes (auth logout/2fa, posts CRUD → honest 200/503/404); business-rule
+   errors surfaced as 500 (pipeline/forecast/sync/pulse/aeo/analytics/cloud-restore → 4xx/409/422
+   via the errorHandler message map + `statusCode` tags); a circular-require in
+   `freeAIModelRateLimiter`; unguarded destructures (`manual-editing` track/restore → 400);
+   two latent process-crash bugs — `videoProgressService.fail()` emitting `'error'` with no
+   listener, and `/library/.../duplicate` serializing Map fields via `toObject()`
+   (`val.keys is not a function`). `aiLimiter` now skips non-production like its sibling
+   limiters (was locking out dev/test — and the sweep — after 50 AI calls).
+
+### Write-sweep residual known-non-bugs (NOT defects)
+
+- **SERVICE_UNAVAILABLE (11):** dependency-off-in-test 503s (Supabase/monitoring alert relay).
+- **OTHER (3):** correct **409 Conflict** — `POST /api/pipeline/:id/refresh`,
+  `/api/pipeline/:id/schedule-optimal` (pipeline not completed), `/api/pricing/resume`
+  (subscription not paused). These are honest business-rule statuses, not failures.
+- **Skipped by design:** external publish/send/push, `/api/backup` (restore overwrites),
+  `/api/video/render`+`/advanced`, webhooks/oauth/billing (see `SKIP_PREFIXES` in the script).
+- **IDOR allowlist (2):** `POST /api/help/articles/:id/helpful`, `POST /api/moderation/flag/:contentId`
+  are cross-user **by design** (public vote / abuse report).
+
+### User-profile accuracy (identity-key split — fixed)
+
+`UserPreferences.userId` is `Mixed`, and callers keyed it inconsistently (ObjectId vs hex
+string), so **a user's settings reached a different document than the AI read**. Fixed:
+`creatorDna`/`digitalTwin` now use the canonical `_id` key; `personalizationService.getPersona`
+reads both id-forms (`$in` legacy fallback, no destructive migration), bridges `videoEditing`
+from **both** `UserSettings` and `UserPreferences` (prefs win on conflict), and guards the
+prefs read. Verified by `tests/server/personalizationAccuracy.test.js` (5 tests: Settings→AI
+bridge, legacy-key fallback, precedence, cross-user isolation, one-doc-per-user). Out of scope
+(documented follow-up): the ~17 AI surfaces that bypass `personalizationService` entirely.
 
 ## Bottom line
 
-Core flow is solid and gated; the broad surface went from **49 server-errors + 52 malformed**
-to **2–3 edge 5xx + 0 malformed**, with a permanent harness to keep it there.
+Core flow is solid and gated. The GET surface went from **49 server-errors + 52 malformed**
+to **2–3 edge 5xx + 0 malformed**; the write surface (never swept before) went from **22 5xx +
+5 IDOR** to **0 / 0 / 0**. Both now have a permanent harness (`smoke:full`, `smoke:writes`).

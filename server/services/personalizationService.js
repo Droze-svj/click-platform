@@ -16,6 +16,7 @@
 const mongoose = require('mongoose');
 const UserStyleProfile = require('../models/UserStyleProfile');
 const UserPreferences = require('../models/UserPreferences');
+const UserSettings = require('../models/UserSettings');
 const SuggestionFeedback = require('../models/SuggestionFeedback');
 const marketingKnowledge = require('./marketingKnowledge');
 const logger = require('../utils/logger');
@@ -99,20 +100,37 @@ async function getPersona(userId, { niche, platform } = {}) {
   const cached = _personaCache.get(cacheKey);
   if (cached && cached.expires > Date.now()) return cached.value;
 
-  const [profileR, topR, prefsR, avoidR] = await Promise.allSettled([
+  // UserPreferences.userId is a Mixed field, so historically the SAME user could
+  // be keyed by a BSON ObjectId (writers using req.user._id) OR its hex string
+  // (writers using req.user.id) — two different documents. Match BOTH forms so a
+  // preference set under either key is honored (legacy-safe, no migration).
+  const uidStr = String(userId);
+  const uidVariants = [userId];
+  if (isObjectId(userId)) { if (!uidVariants.includes(uidStr)) uidVariants.push(uidStr); }
+  else if (/^[a-f0-9]{24}$/i.test(uidStr)) { try { uidVariants.push(new mongoose.Types.ObjectId(uidStr)); } catch { /* not castable */ } }
+
+  const [profileR, topR, prefsR, settingsR, avoidR] = await Promise.allSettled([
     isObjectId(userId) ? UserStyleProfile.findOne({ userId }).lean() : Promise.resolve(null),
     marketingKnowledge.getTopPerformingPlaybook(userId, niche, platform, { minSamples: 3 }),
-    UserPreferences.findOne({ userId }).lean(),
+    UserPreferences.findOne({ userId: { $in: uidVariants } }).lean(),
+    // UserSettings (String userId) also holds videoEditing.* — bridge it so a tone
+    // set via /api/user/settings reaches the AI, not just /api/me. Keyed by the
+    // hex/string form user.js writes.
+    UserSettings.findOne({ userId: uidStr }).lean(),
     getAvoidSignals(userId),
   ]);
 
   const styleProfile = profileR.status === 'fulfilled' ? profileR.value : null;
   const topPerformers = topR.status === 'fulfilled' ? topR.value : null;
   const prefs = prefsR.status === 'fulfilled' ? prefsR.value : null;
+  const settings = settingsR.status === 'fulfilled' ? settingsR.value : null;
   const avoidSignals = avoidR.status === 'fulfilled' && Array.isArray(avoidR.value) ? avoidR.value : [];
   if (profileR.status === 'rejected') logger.warn('[personalization] style profile read failed', { error: profileR.reason?.message });
+  if (prefsR.status === 'rejected') logger.warn('[personalization] preferences read failed', { error: prefsR.reason?.message });
 
-  const ve = prefs?.videoEditing || {};
+  // Merge videoEditing from both stores; UserPreferences (the richer, /api/me
+  // store) wins field-by-field over UserSettings on conflict.
+  const ve = { ...(settings?.videoEditing || {}), ...(prefs?.videoEditing || {}) };
   const bk = prefs?.brandKit || {};
   const persona = {
     styleProfile: styleProfile || null,

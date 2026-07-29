@@ -116,9 +116,14 @@ router.get('/s2s/network-health', auth, async (req, res) => {
 
 router.post('/intelligence/pulse', auth, async (req, res) => {
   try {
+    // 'tactic' is required by the service; a missing field is a 400, not a 500.
+    if (!req.body || !req.body.tactic) {
+      return res.status(400).json({ error: 'tactic is required to broadcast a pulse' });
+    }
     const result = await s2sIntelligence.broadcastPulse(req.user.id, req.body);
     res.json(result);
   } catch (err) {
+    logger.error('Pulse broadcast failed', { error: err.message });
     res.status(500).json({ error: 'Pulse broadcast failed' });
   }
 });

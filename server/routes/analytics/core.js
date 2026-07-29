@@ -1157,7 +1157,16 @@ router.post('/process-insights/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const supabase = getSupabaseClient();
-    const { generateContent: geminiGenerate } = require('../../utils/googleAI');
+    const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../../utils/googleAI');
+
+    // Supabase (post store) + Gemini (synthesis) are hard deps for a Neural Scan.
+    // Unconfigured → dependency outage → honest 503, not a null-deref 500.
+    if (!supabase) {
+      return res.status(503).json({ success: false, error: 'Analytics store unavailable' });
+    }
+    if (!geminiConfigured) {
+      return res.status(503).json({ success: false, error: 'AI synthesis unavailable' });
+    }
 
     // 1. Fetch Post and Analytics Context
     const { data: post, error: postErr } = await supabase
