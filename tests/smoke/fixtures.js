@@ -41,7 +41,28 @@ async function seedSmokeFixtures() {
       'endpoints end to end without needing a real media file.',
   }).save();
 
-  return { user, content, userToken: signToken(user._id) };
+  // A SECOND, unrelated user — used by the write sweep to send user-B requests
+  // against user-A's ids (cross-tenant IDOR probing). Never shares any resource
+  // with user A.
+  const userB = await new User({
+    email: 'smoke-user-b@example.com',
+    password: 'password123',
+    name: 'Smoke User B',
+    emailVerified: true,
+  }).save();
+
+  const contentB = await new Content({
+    userId: userB._id,
+    title: 'Smoke Content B',
+    type: 'video',
+    status: 'completed',
+    transcript: 'User B transcript.',
+  }).save();
+
+  return {
+    user, content, userToken: signToken(user._id),
+    userB, contentB, userBToken: signToken(userB._id),
+  };
 }
 
 async function cleanupSmokeFixtures() {

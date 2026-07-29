@@ -9,7 +9,10 @@ const logger = require('../utils/logger');
  */
 async function createVersion(contentId, userId, changeSummary = '') {
   try {
-    const content = await Content.findById(contentId);
+    // Ownership scope: a version snapshots the content's body, so only the owner
+    // may create one. Fetching by _id alone let any authed user version another
+    // user's content (IDOR). 'not found' (not 403) avoids leaking existence.
+    const content = await Content.findOne({ _id: contentId, userId });
     if (!content) {
       throw new Error('Content not found');
     }
@@ -102,7 +105,8 @@ async function restoreToVersion(contentId, versionNumber, userId) {
       throw new Error('Version not found');
     }
 
-    const content = await Content.findById(contentId);
+    // Ownership scope (same IDOR fix as createVersion): only the owner restores.
+    const content = await Content.findOne({ _id: contentId, userId });
     if (!content) {
       throw new Error('Content not found');
     }

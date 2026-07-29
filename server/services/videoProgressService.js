@@ -102,7 +102,14 @@ class VideoProgressTracker extends EventEmitter {
       tracking.status = 'failed';
       tracking.error = error.message;
       tracking.completedAt = Date.now();
-      this.emit('error', { videoId, operation, error, tracking });
+      // EventEmitter special-cases 'error': emitting it with NO listener THROWS
+      // (uncaught → process crash). A background video job that fails while no
+      // SSE progress client is attached would take the server down. Emit a
+      // neutral 'failed' event always, and 'error' only when someone listens.
+      this.emit('failed', { videoId, operation, error, tracking });
+      if (this.listenerCount('error') > 0) {
+        this.emit('error', { videoId, operation, error, tracking });
+      }
       this.scheduleCleanup(videoId, operation);
     }
   }

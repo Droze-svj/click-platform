@@ -133,7 +133,11 @@ async function restoreProjectVersion(videoId, version) {
     const project = await getProjectFromCloud(videoId, version);
     
     if (!project.success) {
-      throw new Error('Failed to get project version');
+      // Requested version isn't in the cloud store — a missing-resource state,
+      // not a server fault. Tag it so the route answers 404, not 500.
+      const err = new Error('Project version not found');
+      err.statusCode = 404;
+      throw err;
     }
 
     // Save as new version

@@ -244,6 +244,18 @@ const errorHandler = (err, req, res, next) => {
     if (/already exists|duplicate key|e11000/.test(m)) {
       return res.status(409).json({ success: false, error: 'Resource already exists', code: 'CONFLICT' });
     }
+    // Business-rule preconditions that services throw as bare Errors — these are
+    // normal states (409/422/400), not server faults, and were surfacing as 500s
+    // (write-sweep). Keep the honest message.
+    if (/pipeline not completed/.test(m)) {
+      return res.status(409).json({ success: false, error: err.message, code: 'PIPELINE_NOT_COMPLETED' });
+    }
+    if (/insufficient .*data|not enough .*data/.test(m)) {
+      return res.status(422).json({ success: false, error: err.message, code: 'INSUFFICIENT_DATA' });
+    }
+    if (/no active connection|not connected|sync not supported|not supported for/.test(m)) {
+      return res.status(400).json({ success: false, error: err.message, code: 'PRECONDITION_FAILED' });
+    }
   }
 
   // Default error - wrap in try-catch to ensure we always send a response

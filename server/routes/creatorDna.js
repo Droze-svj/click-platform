@@ -20,7 +20,11 @@ router.get(
   '/',
   auth,
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?._id?.toString();
+    // Canonical Mongo key = the ObjectId, IDENTICAL to me-personalization's uid()
+    // (UserPreferences.userId is Mixed — an ObjectId and its hex string are stored
+    // as different documents, so the exact form must match). id-first split
+    // creatorDNA into a separate doc the personalization reader never saw.
+    const userId = req.user?._id || req.user?.id;
     if (!userId) return sendError(res, 'Unauthenticated', 401);
     const dna = await creatorDnaService.getCreatorDNA(userId);
     return sendSuccess(res, dna);
@@ -31,7 +35,11 @@ router.get(
   '/project-defaults',
   auth,
   asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.user?._id?.toString();
+    // Canonical Mongo key = the ObjectId, IDENTICAL to me-personalization's uid()
+    // (UserPreferences.userId is Mixed — an ObjectId and its hex string are stored
+    // as different documents, so the exact form must match). id-first split
+    // creatorDNA into a separate doc the personalization reader never saw.
+    const userId = req.user?._id || req.user?.id;
     if (!userId) return sendError(res, 'Unauthenticated', 401);
     const defaults = await creatorDnaService.projectDefaultsFromDNA(userId);
     return sendSuccess(res, defaults);

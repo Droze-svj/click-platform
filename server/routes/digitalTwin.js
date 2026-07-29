@@ -12,7 +12,9 @@ const logger = require('../utils/logger');
 router.post('/generate', authenticateToken, async (req, res) => {
   try {
     const { voiceNoteUrl, options } = req.body;
-    const userId = req.user.id || req.user._id;
+    // Canonical Mongo key = ObjectId, matching me-personalization/UserPreferences
+    // (Mixed field: an ObjectId and its hex string are DIFFERENT documents).
+    const userId = req.user._id || req.user.id;
 
     if (!voiceNoteUrl) {
       return res.status(400).json({ error: 'voiceNoteUrl is required' });

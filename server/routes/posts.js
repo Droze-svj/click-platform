@@ -148,6 +148,17 @@ router.post('/', auth, asyncHandler(async (req, res) => {
       scheduled_at
     } = req.body;
 
+    if (!title || typeof title !== 'string') {
+      return res.status(400).json({ success: false, error: 'title is required' });
+    }
+    // The blog-post store is Supabase-only; without it (dev/Mongoose-mode) a post
+    // can't be persisted — honest 503 instead of a createClient('','') 500.
+    const isDevUser = require('../utils/devUser').isDevUser(req.user._id || req.user.id);
+    const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (isDevUser || !supabaseConfigured) {
+      return res.status(503).json({ success: false, error: 'Blog post store is not configured' });
+    }
+
     // Generate slug from title
     const slug = title
       .toLowerCase()
@@ -259,6 +270,11 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
 router.put('/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    const isDevUser = require('../utils/devUser').isDevUser(req.user._id || req.user.id);
+    const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (isDevUser || !supabaseConfigured) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
     const {
       title,
       content,
@@ -330,6 +346,11 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
 router.delete('/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    const isDevUser = require('../utils/devUser').isDevUser(req.user._id || req.user.id);
+    const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (isDevUser || !supabaseConfigured) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
 
     const { data: post, error } = await createSupabaseClient()
       .from('posts')

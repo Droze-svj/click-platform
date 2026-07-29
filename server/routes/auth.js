@@ -1450,6 +1450,10 @@ router.post('/2fa/setup', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
 
+    if (!supabase) {
+      return res.status(503).json({ success: false, error: '2FA store not configured' });
+    }
+
     // Check if 2FA is already enabled
     const { data: user, error: fetchError } = await supabase
       .from('users')
@@ -1590,6 +1594,10 @@ router.post('/2fa/enable', require('../middleware/auth'), async (req, res) => {
 router.post('/2fa/disable', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
+
+    if (!supabase) {
+      return res.status(503).json({ success: false, error: '2FA store not configured' });
+    }
 
     // Get user data
     const { data: user, error: fetchError } = await supabase
@@ -2011,6 +2019,10 @@ router.post('/cancel-deletion', require('../middleware/auth'), async (req, res) 
   try {
     const userId = req.user.id;
 
+    if (!supabase) {
+      return res.status(503).json({ success: false, error: 'Account store not configured' });
+    }
+
     const { error: updateError } = await supabase
       .from('users')
       .update({
@@ -2136,6 +2148,13 @@ router.post('/logout', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // Logout is client-side token disposal; the Supabase last_logout_at write is
+    // best-effort. Without a Supabase store (Mongoose-mode / local), still succeed
+    // rather than 500 — the client discards the token either way.
+    if (!supabase) {
+      return res.json({ success: true, message: 'Logged out successfully' });
+    }
+
     // Update last logout time
     await supabase
       .from('users')
@@ -2215,6 +2234,12 @@ router.get('/sessions', require('../middleware/auth'), async (req, res) => {
 router.post('/revoke-sessions', require('../middleware/auth'), async (req, res) => {
   try {
     const userId = req.user.id;
+
+    // Best-effort like logout: without a Supabase store, report success (the
+    // client-held token is the session) instead of 500ing.
+    if (!supabase) {
+      return res.json({ success: true, message: 'Sessions revoked' });
+    }
 
     // In a real implementation, you'd invalidate all refresh tokens
     // For now, we'll just update the logout time and reset login attempts
