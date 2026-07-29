@@ -39,3 +39,14 @@ process.env.REDIS_URL = 'redis://localhost:6379';
 
 // Force Mongoose fallback for auth to keep tests sandboxed
 process.env.ENABLE_SUPABASE_AUTH = 'false';
+
+// Full Supabase isolation — same principle as MONGODB_URI/REDIS_URL above.
+// Disabling only SUPABASE AUTH left the DATA clients live: routes with
+// module-level `createClient(SUPABASE_URL, ...)` (posts, analytics/core) made
+// real remote round-trips that slow-failed at ~7s per request, which is what
+// produced the smoke sweep's whole-family "TIMEOUT" artifacts (the hung batches
+// also dragged the endpoints walked after them over the 6s cap). With the URL
+// blank those routes take their instant supabase-off fallback paths.
+process.env.SUPABASE_URL = '';
+process.env.SUPABASE_ANON_KEY = '';
+process.env.SUPABASE_SERVICE_ROLE_KEY = '';

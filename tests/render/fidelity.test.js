@@ -14,7 +14,10 @@ const { resolveTransition } = require('../../server/services/transitionPresetSer
 const FFMPEG = hasFfmpeg();
 const d = FFMPEG ? describe : describe.skip;
 
-const TMP = path.join(os.tmpdir(), 'click-fidelity');
+// Fixtures MUST live under <root>/uploads — toAbsolutePath() (LFI containment)
+// returns null for anything outside it, so an os.tmpdir() source makes
+// renderFromEditorState reject the input. Cleaned up in afterAll.
+const TMP = path.join(process.cwd(), 'uploads', 'tmp-fidelity');
 let SRC;
 const outputs = [];
 

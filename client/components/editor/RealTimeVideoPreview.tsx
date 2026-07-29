@@ -889,12 +889,20 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
   // Determine aspect ratio from layout
   const currentLayout = TEMPLATE_LAYOUTS.find(l => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1] // Default to standard 16/9
+  // Size the stage as "the largest aspect-correct box inside the parent".
+  // ⚠ width/height:'auto' + aspect-ratio COLLAPSED the stage to ~0×0: every
+  // child is absolutely positioned, so the intrinsic content size is zero and
+  // aspect-ratio had nothing to resolve against — the preview rendered 4×2px
+  // (video invisible) for every non-'auto' layout, INCLUDING the default
+  // 'standard'. As a flex item, height:100% + aspect-ratio derives the width,
+  // and max-width transfers back through the ratio when the parent is narrow —
+  // the standard contained-aspect-box pattern, no JS measurement needed.
   const aspectStyle = currentLayout.id === 'auto'
     ? {}
     : {
         aspectRatio: currentLayout.aspect.replace('/', ' / '),
+        height: '100%',
         width: 'auto',
-        height: 'auto',
         maxWidth: '100%',
         maxHeight: '100%'
       };

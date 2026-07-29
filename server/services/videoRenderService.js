@@ -1393,6 +1393,11 @@ async function renderFromEditorState(options) {
 
   const inputPath = await resolveInputPath(videoId, videoUrl)
 
+  // toAbsolutePath() returns null for paths outside <root>/uploads (LFI
+  // containment) — surface that as a clear input error, not a TypeError on null.
+  if (!inputPath) {
+    throw new Error(`Input video not found or outside the uploads directory: ${videoUrl || videoId}`)
+  }
   if (!inputPath.startsWith('http') && !fs.existsSync(inputPath)) {
     throw new Error(`Input video not found: ${inputPath}`)
   }
@@ -1882,7 +1887,12 @@ async function renderFromEditorState(options) {
 
         if (hasAudio) {
         // Source has audio + an audio bed -> duck the bed under the source voice, then mix.
-          let audPart = `${bedGraph};[bed][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice}[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
+          // Channel/rate are normalized BEFORE the aeval dither: ffmpeg 8's aeval +
+          // any DOWNSTREAM channel conversion (our -ac 2 on a mono source) SIGSEGVs,
+          // which crashed every mono-mic render. Pre-normalizing makes -ac 2/-ar a
+          // no-op afterwards; the dither stays (it keeps loudnorm converging on
+          // silent/near-silent audio — dropping it fails pure-silence renders).
+          let audPart = `${bedGraph};[bed][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a]aresample=48000,aformat=channel_layouts=stereo,aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice}[clarity];[clarity][ducked]amix=inputs=2:duration=first:dropout_transition=1,${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`
           const complexStr = `${vidPart};${audPart}`
           command = command
             .complexFilter(complexStr)
@@ -1906,7 +1916,9 @@ async function renderFromEditorState(options) {
           // would error on the mapped [vout] pad.
             const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
             const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
-            command = command.complexFilter(`${vidPart};[0:a]aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice},${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
+            // Pre-normalize channels/rate BEFORE the aeval dither (mono + -ac 2
+            // SIGSEGV on ffmpeg 8) — see the note in the bed-mix branch above.
+            command = command.complexFilter(`${vidPart};[0:a]aresample=48000,aformat=channel_layouts=stereo,aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice},${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
               .outputOptions(['-map', '[vout]', '-map', '[aout]'])
             videoMappedViaFiltergraph = true
           } else {
@@ -1992,11 +2004,14 @@ async function renderFromEditorState(options) {
             }, RENDER_JOB_TIMEOUT_MS)
 
             commandChain
-              .on('start', () => {
+              .on('start', (cmd) => {
+                // Log the assembled ffmpeg command (truncated) — without it a
+                // filter-level crash (e.g. an ffmpeg SIGSEGV) is undiagnosable.
                 logger.info('Neural Node Dispatch: Render Process Initialized', {
                   videoId,
                   outputPath,
-                  node: 'Alpha-1'
+                  node: 'Alpha-1',
+                  command: typeof cmd === 'string' ? cmd.slice(0, 4000) : undefined
                 })
               })
               .on('progress', (p) => {

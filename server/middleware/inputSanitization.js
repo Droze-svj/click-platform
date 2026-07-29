@@ -44,7 +44,12 @@ const SANITIZER_BYPASS_PATHS = [
   // reflected as HTML. HTML-escaping videoUrl turns `/`→`&#x2F;` and `&`→`&amp;`,
   // corrupting the source path so the timeline waveform/filmstrip/beats 404. The
   // SSRF guard (utils/urlGuard) — not HTML-escaping — protects the URL here.
-  /^\/api\/video\/manual-editing\/(waveform-peaks|filmstrip|beats)(\/|$|\?)/,
+  // `render` belongs here for the same reason as repurpose: its body is a
+  // videoUrl (path fed to ffmpeg — HTML-escaping `/`→`&#x2F;` makes the input
+  // unresolvable) + overlay/caption text BURNED INTO PIXELS (never reflected as
+  // HTML — escaping burned `&#x27;` into exported videos wherever a caption had
+  // an apostrophe). SSRF guard + ownership checks protect it, not HTML-escaping.
+  /^\/api\/video\/manual-editing\/(render|waveform-peaks|filmstrip|beats)(\/|$|\?)/,
 ];
 
 function sanitizeInput(req, res, next) {

@@ -18,6 +18,9 @@ const SKIP_PREFIXES = [
   '/api/webhooks', '/api/oauth', '/api/billing', '/api/subscription',
   '/api/social', '/api/upload', '/api/video/render', '/api/export',
   '/api/health/trigger-sentry', '/api/health/test-sentry',
+  // SSE stream never closes — it always hits the per-call timeout by design,
+  // polluting the report with a fake TIMEOUT. Not sweepable via one-shot GET.
+  '/api/events/stream',
 ];
 
 const PER_CALL_TIMEOUT_MS = 6000;

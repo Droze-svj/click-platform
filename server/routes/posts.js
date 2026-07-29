@@ -207,6 +207,16 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Same guard as the list route: with no Supabase posts store (dev user or
+    // supabase-less stack) no post can exist — honest 404, not a 500 from
+    // createClient('', '') throwing.
+    const userId = req.user._id || req.user.id;
+    const isDevUser = require('../utils/devUser').isDevUser(userId);
+    const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (isDevUser || !supabaseConfigured) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
+
     const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .select(`
