@@ -118,6 +118,10 @@ const MODEL_DEFAULTS = {
 // publishes Retry-After but a flat 4s is close enough for our purposes.
 const PROVIDER_RETRY_MS = { gemini: 2000, openai: 4000, anthropic: 4000 };
 
+// Ceiling for the truncation-retry budget bump on OpenAI/Anthropic (a partial
+// completion at finish_reason 'length'/'max_tokens' gets one retry up to this).
+const OUTPUT_TOKEN_CAP = parseInt(process.env.AI_OUTPUT_TOKEN_CAP, 10) || 8192;
+
 /**
  * Cheap token estimator (~chars/4). Not exact — it's a guard rail, not a
  * billing meter. Lets callers refuse / log oversized prompts before they
@@ -205,16 +209,35 @@ async function callOpenAI(prompt, opts) {
   messages.push({ role: 'user', content: prompt });
   const taskKind = opts.taskKind || 'default';
   const model = opts.openaiModel || MODEL_DEFAULTS.openai[taskKind] || MODEL_DEFAULTS.openai.default;
-  try {
+
+  // One upstream call at a given budget → { text, truncated }. OpenAI signals a
+  // cut-off completion with finish_reason 'length'; a JSON caller then parses a
+  // partial object to its fallback and silently loses the real answer.
+  const once = async (maxTokens) => {
     const completion = await openai.chat.completions.create({
       model,
       messages,
-      max_tokens: opts.maxTokens || 1024,
+      max_tokens: maxTokens,
       temperature: opts.temperature ?? 0.7,
       user: opts.userId || 'anonymous-click-user',
       ...(opts.jsonMode ? { response_format: { type: 'json_object' } } : {}),
     });
-    const text = completion?.choices?.[0]?.message?.content;
+    const choice = completion?.choices?.[0];
+    return { text: choice?.message?.content, truncated: choice?.finish_reason === 'length' };
+  };
+
+  try {
+    const budget = opts.maxTokens || 1024;
+    let { text, truncated } = await once(budget);
+    // Truncation guard (mirrors googleAI's MAX_TOKENS retry): retry once at a
+    // larger budget so the model can actually finish before falling back.
+    if (truncated && budget < OUTPUT_TOKEN_CAP) {
+      const bigger = Math.min(budget * 2, OUTPUT_TOKEN_CAP);
+      logger.warn('callOpenAI: output truncated (length); retrying at larger budget', { from: budget, to: bigger });
+      const retry = await once(bigger);
+      if (retry.text) { text = retry.text; truncated = retry.truncated; }
+      if (truncated) logger.warn('callOpenAI: output STILL truncated after retry', { budget: bigger });
+    }
     if (!text) throw new Error('openai-empty-response');
     return text;
   } catch (err) {
@@ -245,17 +268,29 @@ async function callAnthropic(prompt, opts) {
     // (or top_p/top_k) returns a 400. Only include it for models that accept it.
     const rejectsSampling = /claude-opus-4-(7|8)/.test(model);
 
-    const params = {
-      model,
-      max_tokens: opts.maxTokens || 1024,
-      system: systemParam,
-      messages: [{ role: 'user', content: prompt }],
-      metadata: { user_id: hashedUserId },
+    const call = async (maxTokens) => {
+      const params = {
+        model,
+        max_tokens: maxTokens,
+        system: systemParam,
+        messages: [{ role: 'user', content: prompt }],
+        metadata: { user_id: hashedUserId },
+      };
+      if (!rejectsSampling) params.temperature = opts.temperature ?? 0.7;
+      const msg = await anthropic.messages.create(params);
+      // Anthropic flags a cut-off completion with stop_reason 'max_tokens'.
+      return { text: msg?.content?.[0]?.text, truncated: msg?.stop_reason === 'max_tokens' };
     };
-    if (!rejectsSampling) params.temperature = opts.temperature ?? 0.7;
 
-    const msg = await anthropic.messages.create(params);
-    const text = msg?.content?.[0]?.text;
+    const budget = opts.maxTokens || 1024;
+    let { text, truncated } = await call(budget);
+    if (truncated && budget < OUTPUT_TOKEN_CAP) {
+      const bigger = Math.min(budget * 2, OUTPUT_TOKEN_CAP);
+      logger.warn('callAnthropic: output truncated (max_tokens); retrying at larger budget', { from: budget, to: bigger });
+      const retry = await call(bigger);
+      if (retry.text) { text = retry.text; truncated = retry.truncated; }
+      if (truncated) logger.warn('callAnthropic: output STILL truncated after retry', { budget: bigger });
+    }
     if (!text) throw new Error('anthropic-empty-response');
     return text;
   } catch (err) {
