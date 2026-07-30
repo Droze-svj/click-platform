@@ -24,4 +24,20 @@ async function applyPersona(taskPrompt, { deps, userId, platform, niche, stage, 
   }
 }
 
-module.exports = { applyPersona };
+// Variant for services that call the AI client DIRECTLY (no injectable `deps`
+// object) — it imports personalizationService itself. Same best-effort contract:
+// no userId / empty persona / a thrown call all return the untouched task prompt.
+async function personalizePrompt(taskPrompt, { userId, platform, niche, stage, role = 'creative-director' } = {}) {
+  try {
+    if (!userId) return taskPrompt;
+    // Lazy require avoids a personalizationService <-> service require cycle.
+    const svc = require('../services/personalizationService');
+    const sys = await svc.buildPersonalizedSystemPrompt({ userId, platform, niche, role, stage });
+    if (!sys || !String(sys).trim()) return taskPrompt;
+    return `${sys}\n\n── Task ──\n${taskPrompt}`;
+  } catch (_) {
+    return taskPrompt;
+  }
+}
+
+module.exports = { applyPersona, personalizePrompt };

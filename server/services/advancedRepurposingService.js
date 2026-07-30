@@ -162,7 +162,8 @@ Format as JSON object with fields: adaptedCaption, visualRecommendations (array)
     }
 
     const fullPrompt = `You are a visual content adaptation expert. Adapt content for different visual platforms.\n\n${prompt}`;
-    const adaptedText = await geminiGenerate(fullPrompt, { temperature: 0.6, maxTokens: 1500 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const adaptedText = await geminiGenerate(await personalizePrompt(fullPrompt, { userId, platform: targetPlatform, stage: 'repurpose' }), { temperature: 0.6, maxTokens: 1500 });
 
     let adapted;
     try {
