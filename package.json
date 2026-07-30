@@ -119,6 +119,7 @@
     "@sentry/node": "^10.32.1",
     "@sentry/profiling-node": "^10.26.0",
     "@slack/web-api": "^7.13.0",
+    "@socket.io/redis-adapter": "^8.3.0",
     "@supabase/supabase-js": "^2.89.0",
     "@tus/file-store": "^1.5.1",
     "@tus/server": "^1.10.2",
