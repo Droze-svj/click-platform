@@ -59,7 +59,13 @@ function getOptimalSettings() {
     threads: Math.max(1, Math.floor(cores * 0.75)),
     preset: memoryGB > 8 ? 'medium' : 'fast',
     useGPU: capabilities.gpu.available,
-    maxConcurrentJobs: Math.max(1, Math.floor(cores / 2)),
+    // Default to cores/2, but let ops override: small boxes (2 cores → cap 1)
+    // may want to bump it, big boxes may want to cap it down to protect memory.
+    maxConcurrentJobs: (() => {
+      const override = parseInt(process.env.RENDER_MAX_CONCURRENT, 10);
+      if (Number.isFinite(override) && override >= 1) return override;
+      return Math.max(1, Math.floor(cores / 2));
+    })(),
     cacheSize: Math.floor(memoryGB * 0.1) * 1024 * 1024 * 1024 // 10% of memory
   };
 }

@@ -22,7 +22,11 @@ FROM node:20.19.0-bookworm-slim
 WORKDIR /app
 
 # System deps for video processing + native canvas/sharp build.
-# fonts-liberation = baseline fonts for ffmpeg drawtext.
+# fonts-liberation = baseline Latin fonts for ffmpeg drawtext.
+# fonts-noto-cjk   = CJK (Chinese/Japanese/Korean) glyphs — without it, CJK
+#                    captions render as tofu boxes. Installs NotoSansCJK-Regular.ttc
+#                    at the exact path server/utils/scriptFont.js already probes.
+# fonts-noto-core  = Arabic/Thai/Devanagari coverage for the same registry.
 # fontconfig       = needed for `fontfile=` resolution in drawtext.
 # libfreetype6     = freetype rendering for caption overlays.
 # libass9          = subtitle rendering (ASS/SSA) used by exports.
@@ -39,6 +43,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libgif-dev \
       librsvg2-dev \
       fonts-liberation \
+      fonts-noto-cjk \
+      fonts-noto-core \
       fontconfig \
       libfreetype6 \
       libass9 \
