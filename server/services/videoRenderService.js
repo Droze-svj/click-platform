@@ -2214,10 +2214,18 @@ function selectPrimarySegments(timelineSegments) {
     .map(({ s }) => s)
 }
 
+/** J-cut / L-cut: audio that leads into (leadIn) or tails past (tailOut) the
+ *  segment's own video edge, overlapping the neighbour clip. */
+function segmentHasJLCut(s) {
+  return !!s && (Number(s.audioLeadInSec) > 0 || Number(s.audioTailOutSec) > 0)
+}
+
 /** True when a segment carries a per-segment flag that the single-source render can't honor. */
 function segmentHasSpecial(s) {
   if (!s) return false
   if (s.reversed) return true
+  // J/L cuts need the amix-based segment renderer (delegated inside stitchSegments).
+  if (segmentHasJLCut(s)) return true
   if (normSegSpeed(s.playbackSpeed) !== 1) return true
   if (s.transitionOut && s.transitionOut !== 'none' && Number(s.transitionDuration) > 0) return true
   // An explicit source-trim window (other than "from 0") also needs the pre-pass
@@ -2294,6 +2302,34 @@ async function stitchSegments(inputPath, segments, opts = {}) {
   const W = Math.max(2, Math.round(opts.width ?? 1920))
   const H = Math.max(2, Math.round(opts.height ?? 1080))
   const FPS = Math.max(1, Math.round(opts.fps ?? 30))
+
+  // ── J/L-cut delegation ──
+  // This function's concat fold places each segment's audio strictly under its
+  // own video, so it CANNOT honor a J-cut/L-cut (audio that overlaps the
+  // neighbour clip). segmentTimelineRenderer does — it lays each audio stream on
+  // the timeline with adelay + amix. Route J/L single-source timelines there.
+  // Best-effort: on any failure fall through to the concat stitch (J/L dropped,
+  // but the rest of the edit still exports) — export must never hard-fail.
+  if (segs.some(segmentHasJLCut)) {
+    const distinctSources = new Set(segs.map((s) => s.sourceUrl).filter(Boolean))
+    if (distinctSources.size <= 1) {
+      try {
+        const { renderSegmentTimeline } = require('./segmentTimelineRenderer')
+        const jlDir = path.join(__dirname, '../../uploads/exports')
+        if (!fs.existsSync(jlDir)) fs.mkdirSync(jlDir, { recursive: true })
+        const jlOut = path.join(jlDir, `stitch-jl-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.mp4`)
+        const r = await renderSegmentTimeline({
+          inputPath, segments: segs, outputPath: jlOut,
+          exportOptions: { width: W, height: H, fps: FPS, codec: opts.codec, quality: opts.quality },
+        })
+        return r.outputPath
+      } catch (jlErr) {
+        logger.warn('J/L-cut segment render failed; falling back to concat stitch (J/L cuts dropped)', { error: jlErr.message })
+      }
+    } else {
+      logger.info('J/L cuts present but timeline is multi-source; using concat stitch (J/L deferred)')
+    }
+  }
 
   // Build one ffmpeg invocation. Input index === segment index.
   const cmd = ffmpeg()
