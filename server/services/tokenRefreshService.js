@@ -24,6 +24,9 @@ const platforms = [
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
 const notificationService = require('./notificationService');
 
+// Batch size for the _id-cursor token-rotation scan (read at call-time).
+const tokenScanBatch = () => parseInt(process.env.CRON_SCAN_BATCH, 10) || 500;
+
 /**
  * Scan all users and refresh tokens that are close to expiring
  */
@@ -34,66 +37,84 @@ async function refreshExpiringTokens() {
   const refreshWindow = new Date(now.getTime() + 24 * 60 * 60 * 1000); 
 
   try {
-    // Find users requiring rotation for any platform
-    const users = await User.find({
+    // Users requiring rotation for any platform.
+    const filter = {
       $or: platforms.map(p => ({
         [`oauth.${p.name}.expiresAt`]: { $lte: refreshWindow },
         [`oauth.${p.name}.connected`]: true
       }))
-    });
-
-    logger.info(`Found ${users.length} users requiring token rotation checks.`);
+    };
 
     let successCount = 0;
     let failCount = 0;
+    let scanned = 0;
+    const batchSize = tokenScanBatch();
 
-    for (const user of users) {
-      for (const p of platforms) {
-        const oauth = user.oauth?.[p.name];
+    // _id-cursor pagination so a large connected-account base can't load every
+    // matching user into memory at once. A rotated token's expiresAt moves past
+    // the window, so the user drops out of the filter; cursoring by `_id > after`
+    // means the next batch never re-fetches an already-processed row.
+    let after = null;
+    // Bounded guard (defensive cap, not a real limit) so a cursor bug can never
+    // spin forever; batchSize*guard covers far more users than exist.
+    for (let guard = 0; guard < 100000; guard++) {
+      const batchFilter = after ? { ...filter, _id: { $gt: after } } : filter;
+      const users = await User.find(batchFilter).sort({ _id: 1 }).limit(batchSize);
+      if (!users.length) break;
+      const lastId = users[users.length - 1]._id;
+      scanned += users.length;
+
+      for (const user of users) {
+        for (const p of platforms) {
+          const oauth = user.oauth?.[p.name];
         
-        if (oauth?.connected && oauth?.expiresAt <= refreshWindow) {
-          try {
-            logger.info(`Rotating ${p.name} token for user ${user._id}`);
-            
-            // Apply retry logic with exponential backoff
-            await retryWithBackoff(async () => {
-              await p.service[p.method](user._id);
-            }, {
-              maxRetries: 3,
-              initialDelay: 2000,
-              onRetry: (attempt) => logger.warn(`Retrying ${p.name} refresh for user ${user._id} (Attempt ${attempt})`)
-            });
-
-            successCount++;
-          } catch (err) {
-            logger.error(`Failed to rotate ${p.name} token for user ${user._id} after retries`, { error: err.message });
-            failCount++;
-
-            // Notify user about connection issue
+          if (oauth?.connected && oauth?.expiresAt <= refreshWindow) {
             try {
-              await notificationService.createNotification(
-                user._id,
-                `${p.name.charAt(0).toUpperCase() + p.name.slice(1)} Connection Issue`,
-                `We were unable to automatically refresh your ${p.name} connection. Please reconnect your account to ensure continued posting access.`,
-                'warning',
-                '/dashboard/social',
-                { category: 'system', priority: 'high', data: { platform: p.name } }
-              );
+              logger.info(`Rotating ${p.name} token for user ${user._id}`);
+            
+              // Apply retry logic with exponential backoff
+              await retryWithBackoff(async () => {
+                await p.service[p.method](user._id);
+              }, {
+                maxRetries: 3,
+                initialDelay: 2000,
+                onRetry: (attempt) => logger.warn(`Retrying ${p.name} refresh for user ${user._id} (Attempt ${attempt})`)
+              });
+
+              successCount++;
+            } catch (err) {
+              logger.error(`Failed to rotate ${p.name} token for user ${user._id} after retries`, { error: err.message });
+              failCount++;
+
+              // Notify user about connection issue
+              try {
+                await notificationService.createNotification(
+                  user._id,
+                  `${p.name.charAt(0).toUpperCase() + p.name.slice(1)} Connection Issue`,
+                  `We were unable to automatically refresh your ${p.name} connection. Please reconnect your account to ensure continued posting access.`,
+                  'warning',
+                  '/dashboard/social',
+                  { category: 'system', priority: 'high', data: { platform: p.name } }
+                );
               
-              // Mark as remediation required
-              await User.updateOne(
-                { _id: user._id },
-                { $set: { [`oauth.${p.name}.status`]: 'remediation_required', [`oauth.${p.name}.lastError`]: err.message } }
-              );
-            } catch (notifyErr) {
-              logger.error('Failed to send refresh failure notification', { userId: user._id, error: notifyErr.message });
+                // Mark as remediation required
+                await User.updateOne(
+                  { _id: user._id },
+                  { $set: { [`oauth.${p.name}.status`]: 'remediation_required', [`oauth.${p.name}.lastError`]: err.message } }
+                );
+              } catch (notifyErr) {
+                logger.error('Failed to send refresh failure notification', { userId: user._id, error: notifyErr.message });
+              }
             }
           }
         }
-      }
+      } // end for user of batch
+
+      after = lastId;
+      if (users.length < batchSize) break;
     }
 
-    logger.info('Proactive token refresh scan complete.', { successCount, failCount });
+    logger.info('Proactive token refresh scan complete.', { scanned, successCount, failCount });
     return { successCount, failCount };
   } catch (error) {
     logger.error('Error during proactive token refresh scan', { error: error.message });

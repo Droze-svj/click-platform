@@ -7,6 +7,11 @@ const Notification = require('../models/Notification');
 const notificationService = require('./notificationService');
 const logger = require('../utils/logger');
 
+// Batch size for the _id-cursor cron scans below — keeps a large subscriber
+// base from loading every matching user into memory in one query. Read at
+// call-time so it can be tuned (or shrunk in tests) via env.
+const cronScanBatch = () => parseInt(process.env.CRON_SCAN_BATCH, 10) || 500;
+
 /**
  * Check if subscription is expired
  */
@@ -95,44 +100,66 @@ async function handleSubscriptionExpiration(user) {
 async function sendExpirationWarnings(daysBefore = [7, 3, 1]) {
   try {
     const now = new Date();
-    const users = await User.find({
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const batchSize = cronScanBatch();
+    const filter = {
       'subscription.status': 'active',
-      'subscription.endDate': { $exists: true }
-    }).populate('membershipPackage');
+      'subscription.endDate': { $exists: true },
+    };
 
-    for (const user of users) {
-      const daysUntilExpiry = getDaysUntilExpiry(user);
+    // _id-cursor pagination so a large active-subscriber base can't load every
+    // matching user into memory at once (mirrors weeklyDigestService). Within
+    // each batch the per-user Notification.findOne N+1 is collapsed into a single
+    // bulk lookup keyed by userId:daysUntilExpiry.
+    let after = null;
+    // Bounded guard (defensive cap, not a real limit) against a cursor bug.
+    for (let guard = 0; guard < 100000; guard++) {
+      const batchFilter = after ? { ...filter, _id: { $gt: after } } : filter;
+      const batch = await User.find(batchFilter)
+        .sort({ _id: 1 })
+        .limit(batchSize)
+        .populate('membershipPackage');
+      if (!batch.length) break;
 
-      if (daysBefore.includes(daysUntilExpiry)) {
-        // Check if notification already sent for this day
-        const existingNotification = await Notification.findOne({
-          userId: user._id,
-          'data.daysUntilExpiry': daysUntilExpiry,
-          createdAt: {
-            $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate())
-          }
-        });
+      // Users due for a warning this run.
+      const due = [];
+      for (const user of batch) {
+        const daysUntilExpiry = getDaysUntilExpiry(user);
+        if (daysBefore.includes(daysUntilExpiry)) due.push({ user, daysUntilExpiry });
+      }
 
-        if (!existingNotification) {
+      if (due.length) {
+        // One query for all already-sent warnings in this batch (was 1/user).
+        const sent = await Notification.find({
+          userId: { $in: due.map((d) => d.user._id) },
+          'data.daysUntilExpiry': { $in: daysBefore },
+          createdAt: { $gte: startOfToday },
+        }).select('userId data.daysUntilExpiry').lean();
+        const sentKeys = new Set(sent.map((n) => `${n.userId}:${n.data?.daysUntilExpiry}`));
+
+        for (const { user, daysUntilExpiry } of due) {
+          if (sentKeys.has(`${user._id}:${daysUntilExpiry}`)) continue;
+          const message = `Your subscription expires in ${daysUntilExpiry} day${daysUntilExpiry > 1 ? 's' : ''}. Renew now to continue enjoying all features.`;
           await notificationService.notifyUser(user._id, {
             type: 'warning',
             title: 'Subscription Expiring Soon',
-            message: `Your subscription expires in ${daysUntilExpiry} day${daysUntilExpiry > 1 ? 's' : ''}. Renew now to continue enjoying all features.`,
-            data: { daysUntilExpiry, subscriptionEndDate: user.subscription.endDate }
+            message,
+            data: { daysUntilExpiry, subscriptionEndDate: user.subscription.endDate },
           });
-
           await Notification.create({
             userId: user._id,
             type: 'warning',
             priority: 'high',
             title: 'Subscription Expiring Soon',
-            message: `Your subscription expires in ${daysUntilExpiry} day${daysUntilExpiry > 1 ? 's' : ''}. Renew now to continue enjoying all features.`,
-            data: { daysUntilExpiry, subscriptionEndDate: user.subscription.endDate }
+            message,
+            data: { daysUntilExpiry, subscriptionEndDate: user.subscription.endDate },
           });
-
           logger.info('Expiration warning sent', { userId: user._id, daysUntilExpiry });
         }
       }
+
+      after = batch[batch.length - 1]._id;
+      if (batch.length < batchSize) break;
     }
   } catch (error) {
     logger.error('Error sending expiration warnings', { error: error.message });
@@ -145,18 +172,32 @@ async function sendExpirationWarnings(daysBefore = [7, 3, 1]) {
 async function processExpiredSubscriptions() {
   try {
     const now = new Date();
-    const expiredUsers = await User.find({
+    const batchSize = cronScanBatch();
+    const filter = {
       'subscription.status': 'active',
-      'subscription.endDate': { $lt: now }
-    });
+      'subscription.endDate': { $lt: now },
+    };
 
-    logger.info(`Processing ${expiredUsers.length} expired subscriptions`);
-
-    for (const user of expiredUsers) {
-      await handleSubscriptionExpiration(user);
+    // _id-cursor pagination. handleSubscriptionExpiration flips status→'expired'
+    // (and saves), so a processed user drops out of the `active` filter and the
+    // next `_id > after` batch never re-fetches them — no double-processing.
+    let processed = 0;
+    let after = null;
+    // Bounded guard (defensive cap, not a real limit) against a cursor bug.
+    for (let guard = 0; guard < 100000; guard++) {
+      const batchFilter = after ? { ...filter, _id: { $gt: after } } : filter;
+      const batch = await User.find(batchFilter).sort({ _id: 1 }).limit(batchSize);
+      if (!batch.length) break;
+      const lastId = batch[batch.length - 1]._id;
+      for (const user of batch) {
+        await handleSubscriptionExpiration(user);
+      }
+      processed += batch.length;
+      after = lastId;
+      if (batch.length < batchSize) break;
     }
 
-    logger.info('Expired subscriptions processed', { count: expiredUsers.length });
+    logger.info('Expired subscriptions processed', { count: processed });
   } catch (error) {
     logger.error('Error processing expired subscriptions', { error: error.message });
   }
