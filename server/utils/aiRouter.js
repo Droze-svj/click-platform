@@ -234,9 +234,16 @@ async function callOpenAI(prompt, opts) {
     if (truncated && budget < OUTPUT_TOKEN_CAP) {
       const bigger = Math.min(budget * 2, OUTPUT_TOKEN_CAP);
       logger.warn('callOpenAI: output truncated (length); retrying at larger budget', { from: budget, to: bigger });
-      const retry = await once(bigger);
-      if (retry.text) { text = retry.text; truncated = retry.truncated; }
-      if (truncated) logger.warn('callOpenAI: output STILL truncated after retry', { budget: bigger });
+      // Guard the retry: doubling max_tokens can itself 429/400. If it throws we
+      // must KEEP the usable (if short) first response, not discard it — a
+      // slightly-truncated answer beats a total provider failure.
+      try {
+        const retry = await once(bigger);
+        if (retry.text) { text = retry.text; truncated = retry.truncated; }
+        if (truncated) logger.warn('callOpenAI: output STILL truncated after retry', { budget: bigger });
+      } catch (retryErr) {
+        logger.warn('callOpenAI: truncation retry failed; keeping the first response', { error: retryErr.message });
+      }
     }
     if (!text) throw new Error('openai-empty-response');
     return text;
@@ -287,9 +294,15 @@ async function callAnthropic(prompt, opts) {
     if (truncated && budget < OUTPUT_TOKEN_CAP) {
       const bigger = Math.min(budget * 2, OUTPUT_TOKEN_CAP);
       logger.warn('callAnthropic: output truncated (max_tokens); retrying at larger budget', { from: budget, to: bigger });
-      const retry = await call(bigger);
-      if (retry.text) { text = retry.text; truncated = retry.truncated; }
-      if (truncated) logger.warn('callAnthropic: output STILL truncated after retry', { budget: bigger });
+      // Guard the retry (see callOpenAI): a throwing retry must fall back to the
+      // usable first response, not nullify it.
+      try {
+        const retry = await call(bigger);
+        if (retry.text) { text = retry.text; truncated = retry.truncated; }
+        if (truncated) logger.warn('callAnthropic: output STILL truncated after retry', { budget: bigger });
+      } catch (retryErr) {
+        logger.warn('callAnthropic: truncation retry failed; keeping the first response', { error: retryErr.message });
+      }
     }
     if (!text) throw new Error('anthropic-empty-response');
     return text;

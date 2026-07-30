@@ -246,10 +246,11 @@ const aiLimiter = createRateLimiter({
     }
     return req.ip;
   },
-  // In development/test, don't lock out after 50 calls — consistent with
-  // apiLimiter/uploadLimiter/oauthLimiter, which all skip non-production.
-  // Prod behavior is unchanged.
-  skip: (req) => process.env.NODE_ENV !== 'production',
+  // In genuine dev/test, don't lock out after 50 calls. But do NOT skip in
+  // STAGING: unlike the other limiters, this one caps real AI spend, and staging
+  // may hold live provider keys — an uncapped staging is a cost bomb. Skip only
+  // when we're neither production nor staging (isProd covers both).
+  skip: () => !isProd,
 });
 
 // Video render rate limiter — renders are expensive (FFmpeg+Remotion).

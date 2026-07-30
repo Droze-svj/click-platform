@@ -46,7 +46,7 @@ router.post('/generate', (req, res, next) => {
     }
 
     const quotes = contentId && content
-      ? await extractQuotes(content.transcript || content.description, req.user.niche, { userId: req.user._id })
+      ? await extractQuotes(content.transcript || content.description, req.user.niche)
       : quoteText ? [{ quote: quoteText, context: '', impact: '' }] : [];
 
     // #region agent log

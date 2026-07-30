@@ -128,7 +128,6 @@ async function generateContentFromLongForm(content, options = {}) {
         trending: true
       },
       examples: [],
-      userId: content.userId || options.userId,
     });
 
     if (adaptationResult && adaptationResult.content) {

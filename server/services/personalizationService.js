@@ -220,7 +220,10 @@ async function buildPersonalizedSystemPrompt({ userId, niche, platform, role = '
   } catch (e) {
     logger.warn('[personalization] buildPersonalizedSystemPrompt failed; using base prompt', { error: e.message });
     try {
-      return marketingKnowledge.buildSystemPrompt({ persona: role, niche, platform, stage, language });
+      // Forward `extra`: it carries the CALLER'S task instructions (e.g. the
+      // output JSON schema for /strategist/variants), not just personalization —
+      // dropping it on the fallback path would strip the schema and break parsing.
+      return marketingKnowledge.buildSystemPrompt({ persona: role, niche, platform, stage, language, extra });
     } catch (_) {
       return '';
     }
