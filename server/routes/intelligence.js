@@ -20,7 +20,7 @@ const { resolveTier } = require('../config/entitlements');
 const {
   HOOK_FRAMEWORKS, NICHE_PLAYBOOKS, NICHE_POSTING_WINDOWS, CTA_LIBRARY,
   RETENTION_CURVES,
-  getKnowledgeSlice, buildSystemPrompt, normaliseNiche, normalisePlatform,
+  getKnowledgeSlice, normaliseNiche, normalisePlatform,
 } = require('../services/marketingKnowledge');
 const SuggestionHistory = require('../models/SuggestionHistory');
 
@@ -130,10 +130,14 @@ router.post('/factory/create', costGuard(), async (req, res) => {
     }
 
     const { aiCall, aiCallJson, safeJsonParse } = require('../utils/aiRouter');
-    const { buildSystemPrompt } = require('../services/marketingKnowledge');
+    const personalizationService = require('../services/personalizationService');
 
-    const baseSystem = buildSystemPrompt({
-      persona: 'script-writer',
+    // Personalized: composes the niche/platform craft (marketingKnowledge) WITH
+    // this creator's learned voice/style/brand, so the Forge's 5-stage output
+    // sounds like them. Falls back to the base marketingKnowledge prompt on error.
+    const baseSystem = await personalizationService.buildPersonalizedSystemPrompt({
+      userId: req.user._id,
+      role: 'script-writer',
       niche: tone,
       platform,
       stage: 'script',
@@ -554,8 +558,9 @@ router.post('/strategist/variants', aiLimiter, async (req, res) => {
     const platform = normalisePlatform(rawPlatform);
     const userId = req.user?._id || req.user?.id;
 
-    const system = buildSystemPrompt({
-      persona: 'hook-writer',
+    const system = await require('../services/personalizationService').buildPersonalizedSystemPrompt({
+      userId,
+      role: 'hook-writer',
       niche, platform, stage: 'script',
       language: 'en',
       extra:

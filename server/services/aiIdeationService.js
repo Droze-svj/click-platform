@@ -8,7 +8,13 @@ async function callGemini(systemPrompt, userPrompt, options = {}) {
   if (!geminiConfigured) {
     throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
   }
-  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+  // Personalize: when a userId is present, prepend the creator's learned
+  // voice/brand/style so ideas sound like THEM. Best-effort — falls back to the
+  // base prompt if personalization is unavailable.
+  const { personalizePrompt } = require('../utils/applyPersona');
+  const fullPrompt = await personalizePrompt(`${systemPrompt}\n\n${userPrompt}`, {
+    userId: options.userId, platform: options.platform, niche: options.niche, stage: options.stage || 'ideas',
+  });
   return geminiGenerate(fullPrompt, { temperature: options.temperature ?? 0.7, maxTokens: options.maxTokens ?? 2000 });
 }
 
@@ -44,7 +50,7 @@ Format as JSON array with fields: title, description, format, keyPoints (array),
     const ideasText = await callGemini(
       'You are a creative content strategist. Generate innovative and engaging content ideas that resonate with audiences.',
       prompt,
-      { temperature: 0.9, maxTokens: 2000 }
+      { temperature: 0.9, maxTokens: 2000, userId, platform: safePlatform, stage: 'ideas' }
     );
 
     let ideas;
@@ -135,7 +141,7 @@ Format as JSON array with fields: angle, tone, format, keyPoints (array), descri
     const variationsText = await callGemini(
       'You are a creative content strategist. Generate innovative variations that maintain the core message while exploring new angles.',
       prompt,
-      { temperature: 0.8, maxTokens: 2000 }
+      { temperature: 0.8, maxTokens: 2000, userId, stage: 'variations' }
     );
 
     let variations;
@@ -186,7 +192,7 @@ Format as JSON array with fields: title, description, reasoning, tags (array). R
     const suggestionsText = await callGemini(
       'You are a data-driven content strategist. Analyze successful content and suggest similar high-performing ideas.',
       prompt,
-      { temperature: 0.7, maxTokens: 2000 }
+      { temperature: 0.7, maxTokens: 2000, userId, stage: 'suggestions' }
     );
 
     let suggestions;

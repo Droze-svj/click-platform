@@ -58,6 +58,20 @@ describe('aiRouter truncation retry', () => {
     expect(mockCreate).toHaveBeenCalledTimes(1);
   });
 
+  it('OpenAI: keeps the usable first response when the truncation RETRY throws', async () => {
+    // First call: truncated but non-empty. Retry (bigger budget) 429s.
+    mockCreate
+      .mockResolvedValueOnce({ choices: [{ message: { content: 'a usable partial' }, finish_reason: 'length' }] })
+      .mockRejectedValueOnce(Object.assign(new Error('rate_limit'), { status: 429 }));
+
+    const res = await aiCall('do it', { preferredProvider: 'openai', maxTokens: 1024 });
+
+    // The good first response survives — a short answer beats a provider failure.
+    expect(res.text).toBe('a usable partial');
+    expect(res.provider).toBe('openai');
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
+
   it('Anthropic: retries once at a larger budget when stop_reason is max_tokens', async () => {
     mockMessagesCreate
       .mockResolvedValueOnce({ content: [{ text: '{"partial":' }], stop_reason: 'max_tokens' })

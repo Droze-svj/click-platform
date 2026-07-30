@@ -132,7 +132,8 @@ Generate 6 prompts — 2 questions, 2 CTAs, 1 poll, 1 challenge. Each must be:
 Return JSON with "prompts" array. Each: text, type (question/cta/poll/challenge), estimatedLift (% engagement increase), psychTrigger.
 Return only valid JSON.`;
 
-    const response = await geminiGenerate(prompt, { maxTokens: 1000, temperature: 0.88 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const response = await geminiGenerate(await personalizePrompt(prompt, { userId, platform, niche, stage: 'engagement-prompts' }), { maxTokens: 1000, temperature: 0.88 });
     const parsed = JSON.parse(response || '{}');
     return { prompts: parsed.prompts || fallbackTemplates, platform, niche, source: 'ai-generated', generatedAt: new Date().toISOString() };
   } catch (error) {
@@ -214,7 +215,8 @@ Return JSON with:
 
 Make each touchpoint distinctly different. Return only valid JSON.`;
 
-    const response = await geminiGenerate(prompt, { maxTokens: 1000, temperature: 0.85 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const response = await geminiGenerate(await personalizePrompt(prompt, { userId, platform, niche, stage: 'engagement-loop' }), { maxTokens: 1000, temperature: 0.85 });
     const parsed = JSON.parse(response || '{}');
     return { ...parsed, postId, niche, platform, generatedAt: new Date().toISOString(), source: 'ai-generated' };
   } catch (error) {

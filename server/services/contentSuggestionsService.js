@@ -45,7 +45,8 @@ Make the ideas fresh, engaging, and tailored to the ${niche} niche.`;
     }
 
     const fullPrompt = `You are a creative content strategist. Generate engaging, platform-specific content ideas.\n\n${prompt}`;
-    const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 1500 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const content = await geminiGenerate(await personalizePrompt(fullPrompt, { userId, stage: 'daily-ideas' }), { temperature: 0.8, maxTokens: 1500 });
     let ideas = [];
 
     try {

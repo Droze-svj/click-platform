@@ -51,7 +51,7 @@ router.post('/autofill', auth, aiLimiter, costGuard(), asyncHandler(async (req, 
     return sendError(res, err.message, err.statusCode || 402);
   }
 
-  const ideas = await aiService.generateViralIdeas(subject, niche, count);
+  const ideas = await aiService.generateViralIdeas(subject, niche, count, { userId: req.user._id });
 
   // Meter the real spend (settles the reservation when atomic-reserve is on).
   await req.recordAiUsage({

@@ -451,7 +451,8 @@ Return JSON with:
 
 Return only valid JSON.`;
 
-    const response = await geminiGenerate(prompt, { maxTokens: 1400, temperature: 0.88 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const response = await geminiGenerate(await personalizePrompt(prompt, { userId, platform, niche, stage: 'ab-variants' }), { maxTokens: 1400, temperature: 0.88 });
     const parsed = safeJsonParse(response, {});
 
     if (!parsed.variants || !Array.isArray(parsed.variants)) {

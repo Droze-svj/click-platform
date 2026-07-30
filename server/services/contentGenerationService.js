@@ -47,7 +47,7 @@ async function generateContentFromText(contentId, text, user, platforms = DEFAUL
     const blogSummary = await generateBlogSummary(text, niche);
 
     report(75, 'Generating viral ideas...');
-    const viralIdeas = await generateViralIdeas(content.title || 'Content', niche, 5);
+    const viralIdeas = await generateViralIdeas(content.title || 'Content', niche, 5, { userId: content.userId });
 
     content.generatedContent = {
       socialPosts,
@@ -127,7 +127,7 @@ async function generateContentFromLongForm(content, options = {}) {
         visual: false,
         trending: true
       },
-      examples: []
+      examples: [],
     });
 
     if (adaptationResult && adaptationResult.content) {

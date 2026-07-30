@@ -42,7 +42,12 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
   };
 
   // `exclude`: captions already shown (regenerate) → produce different angles.
-  const exclude = Array.isArray(body.exclude) ? body.exclude.slice(0, 40).map((x) => (x && x.text) || String(x || '')) : [];
+  // Merge the server-remembered recents (cross-call dedup) so a fresh session
+  // still avoids repeats without the client tracking an exclude list.
+  const clientExclude = Array.isArray(body.exclude) ? body.exclude.slice(0, 40).map((x) => (x && x.text) || String(x || '')) : [];
+  const genHistory = require('../services/generationHistoryService');
+  const recalled = await genHistory.recentExclude(req.user._id, 'captions');
+  const exclude = [...clientExclude, ...recalled];
 
   let result;
   try {
@@ -50,6 +55,7 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
   } catch (err) {
     return sendError(res, err.message, err.statusCode || 500);
   }
+  await genHistory.recordOutputs(req.user._id, 'captions', (result.captions || []).map((c) => (c && c.text) || c));
   return sendSuccess(res, 'Captions generated', 200, result);
 }));
 
