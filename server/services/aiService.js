@@ -362,7 +362,8 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
 
     Return only valid JSON.`;
 
-    const response = await geminiGenerate(prompt, { maxTokens: 1200, temperature: 0.9 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const response = await geminiGenerate(await personalizePrompt(prompt, { userId: options.userId, niche, stage: 'viral-ideas' }), { maxTokens: 1200, temperature: 0.9 });
     const result = safeJsonParse(response, { ideas: [] });
     // Coerce to an array — a non-array (e.g. the model apologising in a string)
     // would flow into .map() below and throw.
@@ -506,7 +507,8 @@ async function extractQuotes(text, niche, options = {}) {
 
     Return only valid JSON.`;
 
-    const response = await geminiGenerate(prompt, { maxTokens: 800, temperature: 0.8 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const response = await geminiGenerate(await personalizePrompt(prompt, { userId: options.userId, niche, stage: 'quotes' }), { maxTokens: 800, temperature: 0.8 });
     let result = safeJsonParse(response, { quotes: [] });
     // Coerce to an array so a non-array can't reach .map() below.
     let quotes = Array.isArray(result.quotes) ? result.quotes : [];
@@ -662,7 +664,8 @@ ${examples.length > 0 ? `Examples of high-performing ${platform} content:\n${exa
 
 Return a JSON object with: content, hashtags (array), score (0-100), suggestions (array). Return only valid JSON.`;
 
-    const response = await geminiGenerate(prompt, { maxTokens: 1000 });
+    const { personalizePrompt } = require('../utils/applyPersona');
+    const response = await geminiGenerate(await personalizePrompt(prompt, { userId: data.userId, platform: data.platform || data.targetPlatform, stage: 'adaptation' }), { maxTokens: 1000 });
     const result = safeJsonParse(response, {});
     return {
       content: result.content || text,

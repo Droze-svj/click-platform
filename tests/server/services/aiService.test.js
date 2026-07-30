@@ -14,6 +14,36 @@ jest.mock('../../../server/utils/logger', () => ({
   debug: jest.fn(),
 }));
 
+jest.mock('../../../server/services/personalizationService', () => ({
+  buildPersonalizedSystemPrompt: jest.fn(),
+}));
+const personalizationService = require('../../../server/services/personalizationService');
+
+describe('AIService personalization (batch 3)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    personalizationService.buildPersonalizedSystemPrompt.mockResolvedValue('PERSONA-XYZ');
+    googleAI.generateContent.mockResolvedValue('{"ideas":[]}');
+  });
+
+  it('generateViralIdeas prepends the persona when options.userId is set', async () => {
+    await aiService.generateViralIdeas('growth', 'fitness', 2, { userId: 'u-77' });
+    expect(personalizationService.buildPersonalizedSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u-77', niche: 'fitness' })
+    );
+    // The persona must be in the actual prompt sent to the model.
+    const promptSent = googleAI.generateContent.mock.calls.at(-1)[0];
+    expect(promptSent).toContain('PERSONA-XYZ');
+  });
+
+  it('generateViralIdeas does NOT personalize when no userId (backward-compatible)', async () => {
+    await aiService.generateViralIdeas('growth', 'fitness', 2);
+    expect(personalizationService.buildPersonalizedSystemPrompt).not.toHaveBeenCalled();
+    const promptSent = googleAI.generateContent.mock.calls.at(-1)[0];
+    expect(promptSent).not.toContain('PERSONA-XYZ');
+  });
+});
+
 describe('AIService', () => {
   beforeEach(() => {
     jest.clearAllMocks();

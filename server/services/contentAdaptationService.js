@@ -66,7 +66,8 @@ async function adaptForPlatform(platform, text, title, userId) {
       title,
       platform,
       rules: platformRules,
-      examples: bestPerforming
+      examples: bestPerforming,
+      userId,
     });
 
     // The model was unavailable (null) or returned no adapted text. Don't pass the
