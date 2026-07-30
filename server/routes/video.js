@@ -1002,15 +1002,30 @@ router.get('/', auth, async (req, res) => {
     // Exclude the heavy, unbounded blobs the list view never reads (captions.words
     // can be megabytes on long videos; editorState/transcript likewise) and cap +
     // lean the query so a large library can't load tens of MB into memory.
-    // TODO(scale): replace the 200 cap with cursor pagination (page/limit params).
-    const videos = await Content.find({ userId, type: 'video' })
-      .select('-captions -editorState -transcript')
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .lean();
+    //
+    // Pagination is OPT-IN and backward-compatible: a caller that passes no
+    // params still gets the first page at the historical 200 cap (existing
+    // clients read `.data` and ignore the added `pagination` block). Passing
+    // page/limit pages a large library instead of silently truncating at 200.
+    const query = { userId, type: 'video' };
+    if (req.query.status) query.status = String(req.query.status);
+    const limit = clampInt(req.query.limit, 200, 200, 1); // (value, def, max, min)
+    const page = clampInt(req.query.page, 1, 100000, 1);
+    const skip = (page - 1) * limit;
+
+    const [videos, total] = await Promise.all([
+      Content.find(query)
+        .select('-captions -editorState -transcript')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Content.countDocuments(query),
+    ]);
     res.json({
       success: true,
-      data: videos
+      data: videos,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     logger.error('Error fetching videos:', error);
@@ -1269,106 +1284,11 @@ router.get('/test', (req, res) => {
   res.json({ success: true, message: 'Video test route works' });
 });
 
-router.get('/', auth, async (req, res) => {
-  try {
-    const { status, limit = 50, page = 1 } = req.query;
-    const userId = req.user?._id || req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: 'User ID not found'
-      });
-    }
-
-    // In development mode OR when running on localhost, return empty array for dev users
-    // This prevents MongoDB queries with invalid ObjectIds
-    // Check both host header and x-forwarded-host (for proxy requests)
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const referer = req.headers.referer || req.headers.origin || '';
-    const forwardedFor = req.headers['x-forwarded-for'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
-      referer.includes('localhost') || referer.includes('127.0.0.1') ||
-      (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
-    // Always allow dev mode when NODE_ENV is not production OR when on localhost
-    const nodeEnv = process.env.NODE_ENV;
-    const allowDevMode = !nodeEnv || nodeEnv !== 'production' || isLocalhost;
-
-    // Check for dev users FIRST, before any MongoDB operations
-    // ALWAYS return early for dev users to prevent MongoDB CastError with invalid ObjectIds
-    if (userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
-      // Always return empty array for dev users, regardless of allowDevMode
-      // This prevents MongoDB queries with invalid ObjectIds like 'dev-user-123'
-      return res.json({
-        success: true,
-        data: [],
-        pagination: {
-          page: parseInt(page, 10),
-          limit: parseInt(limit, 10),
-          total: 0,
-          pages: 0
-        }
-      });
-    }
-
-    // Check if MongoDB is connected before attempting queries
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState !== 1) {
-      // MongoDB not connected - return empty array for dev mode, error for production
-      if (allowDevMode) {
-        logger.warn('MongoDB not connected, returning empty array for dev mode');
-        return res.json({
-          success: true,
-          data: [],
-          pagination: {
-            page: parseInt(page, 10),
-            limit: parseInt(limit, 10),
-            total: 0,
-            pages: 0
-          }
-        });
-      }
-      return res.status(503).json({
-        success: false,
-        error: 'Database connection unavailable'
-      });
-    }
-
-    // For production or non-dev users, query the database
-    // Note: In development, non-dev users can still query the database
-    const query = { userId };
-    if (status) query.status = status;
-
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-
-    const videos = await Content.find(query)
-      .select('title description originalFile status createdAt processingOptions')
-      .sort({ createdAt: -1 })
-      .limit(clampInt(limit, 20, 500))
-      .skip(clampInt(skip, 0, 100000, 0))
-      .lean();
-
-    const total = await Content.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: videos || [],
-      pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
-        total: total || 0,
-        pages: Math.ceil((total || 0) / parseInt(limit, 10))
-      }
-    });
-  } catch (error) {
-    const userId = req.user?._id || req.user?.id;
-    logger.error('Get videos error', { error: error.message, stack: error.stack, userId });
-    res.status(500).json({
-      success: false,
-      error: process.env.NODE_ENV === 'production' ? 'Failed to load videos' : error.message
-    });
-  }
-});
+// NOTE: a second `router.get('/')` used to live here. Express matches the
+// first-registered route, so it was DEAD — the handler above (~L989) always
+// won. Its only advantage was pagination, which is now folded into that live
+// handler (opt-in page/limit + a `pagination` envelope). Removed to end the
+// confusion of a paginated-but-unreachable duplicate.
 
 // Delete video
 router.delete('/:contentId', auth, async (req, res) => {
