@@ -48,6 +48,32 @@ describe('Video Routes', () => {
         .get('/api/video')
         .expect(401);
     });
+
+    it('paginates with page/limit and returns a pagination envelope', async () => {
+      // Seed 3 videos so a limit=2 page shows the cap + a correct total.
+      const seeded = await Content.insertMany([
+        { userId: testUser._id, title: 'v1', type: 'video', status: 'completed' },
+        { userId: testUser._id, title: 'v2', type: 'video', status: 'completed' },
+        { userId: testUser._id, title: 'v3', type: 'video', status: 'completed' },
+      ]);
+      try {
+        const res = await request(app)
+          .get('/api/video?page=1&limit=2')
+          .set('Authorization', `Bearer ${authToken}`)
+          .expect(200);
+        expect(res.body.success).toBe(true);
+        expect(Array.isArray(res.body.data)).toBe(true);
+        expect(res.body.data.length).toBe(2); // limit honored
+        expect(res.body.pagination).toMatchObject({ page: 1, limit: 2 });
+        expect(res.body.pagination.total).toBeGreaterThanOrEqual(3);
+        expect(res.body.pagination.pages).toBeGreaterThanOrEqual(2);
+        // The list view must NOT ship the heavy blobs.
+        expect(res.body.data[0]).not.toHaveProperty('editorState');
+        expect(res.body.data[0]).not.toHaveProperty('transcript');
+      } finally {
+        await Content.deleteMany({ _id: { $in: seeded.map((s) => s._id) } });
+      }
+    });
   });
 
   describe('POST /api/video/upload', () => {
