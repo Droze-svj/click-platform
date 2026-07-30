@@ -76,12 +76,13 @@ function shapeOptions(raw, goal) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function generateFirstComments(input, deps) {
-  const { platform, goal, sourceText } = input || {};
+  const { platform, goal, sourceText, userId } = input || {};
   const safe = deps.sanitize(sourceText, 1500);
   if (!safe || !String(safe).trim()) {
     const e = new Error('post text is required'); e.statusCode = 400; throw e;
   }
-  const prompt = buildPrompt({ platform, goal, sourceText: safe });
+  const { applyPersona } = require('../utils/applyPersona');
+  const prompt = await applyPersona(buildPrompt({ platform, goal, sourceText: safe }), { deps, userId, platform, stage: 'comment' });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 400 });
   }

@@ -11,6 +11,7 @@ const { costGuard } = require('../middleware/costGuard');
 const { capForPrompt } = require('../utils/promptSafe');
 const { guardOwnership } = require('../utils/ownership');
 const googleAI = require('../utils/googleAI');
+const personalizationService = require('../services/personalizationService');
 const { composeSlides, FORMATS, normalizeFormat } = require('../services/carouselComposerService');
 
 /**
@@ -35,13 +36,14 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
   const deps = {
     sanitize: capForPrompt,
     generate: (prompt, opts) => googleAI.generateContent(prompt, opts),
+    buildSystemPrompt: (args) => personalizationService.buildPersonalizedSystemPrompt(args),
     assertBudget: (args) => req.assertBudget(args),
     recordUsage: (args) => req.recordAiUsage(args),
   };
 
   let result;
   try {
-    result = await composeSlides({ format, topic, count: body.count }, deps);
+    result = await composeSlides({ format, topic, count: body.count, userId: req.user._id, platform: body.platform }, deps);
   } catch (err) {
     return sendError(res, err.message, err.statusCode || 500);
   }

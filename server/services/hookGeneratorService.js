@@ -91,13 +91,18 @@ function shapeHooks(raw, style, count) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function generateHooks(input, deps) {
-  const { platform, style, topic, count, exclude } = input || {};
+  const { platform, style, topic, count, exclude, userId } = input || {};
   const safe = deps.sanitize(topic, 1500);
   if (!safe || !String(safe).trim()) {
     const e = new Error('topic is required'); e.statusCode = 400; throw e;
   }
   const n = clampCount(count);
-  const prompt = buildPrompt({ platform, style, topic: safe, count: n, exclude });
+  const { applyPersona } = require('../utils/applyPersona');
+  const taskPrompt = buildPrompt({ platform, style, topic: safe, count: n, exclude });
+  // Personalize: prepend the creator's learned voice/brand system prompt so hooks
+  // sound like THEM, not a generic model. Falls back to the base prompt if the
+  // dep isn't wired or personalization fails (never blocks generation).
+  const prompt = await applyPersona(taskPrompt, { deps, userId, platform, stage: 'hook' });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 400 });
   }

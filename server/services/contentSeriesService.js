@@ -63,13 +63,14 @@ function shapeSeries(raw, parts) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function generateSeries(input, deps) {
-  const { theme, niche = 'other', parts, platform = 'tiktok' } = input || {};
+  const { theme, niche = 'other', parts, platform = 'tiktok', userId } = input || {};
   const safeTheme = deps.sanitize(theme, 400);
   if (!safeTheme || !String(safeTheme).trim()) {
     const e = new Error('theme is required'); e.statusCode = 400; throw e;
   }
   const n = clampParts(parts);
-  const prompt = buildSeriesPrompt({ theme: safeTheme, niche, parts: n, platform });
+  const { applyPersona } = require('../utils/applyPersona');
+  const prompt = await applyPersona(buildSeriesPrompt({ theme: safeTheme, niche, parts: n, platform }), { deps, userId, platform, niche, stage: 'series' });
 
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 200 * n });

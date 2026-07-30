@@ -12,6 +12,7 @@ const { costGuard } = require('../middleware/costGuard');
 const { capForPrompt } = require('../utils/promptSafe');
 const User = require('../models/User');
 const googleAI = require('../utils/googleAI');
+const personalizationService = require('../services/personalizationService');
 const { generateSeries, seriesToIdeas } = require('../services/contentSeriesService');
 const { createCalendarDrafts } = require('../services/calendarAutofillService');
 
@@ -34,13 +35,14 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
   const deps = {
     sanitize: capForPrompt,
     generate: (prompt, opts) => googleAI.generateContent(prompt, opts),
+    buildSystemPrompt: (args) => personalizationService.buildPersonalizedSystemPrompt(args),
     assertBudget: (args) => req.assertBudget(args),
     recordUsage: (args) => req.recordAiUsage(args),
   };
 
   let series;
   try {
-    series = await generateSeries({ theme: body.theme, niche, parts: body.parts, platform }, deps);
+    series = await generateSeries({ theme: body.theme, niche, parts: body.parts, platform, userId: req.user._id }, deps);
   } catch (err) {
     return sendError(res, err.message, err.statusCode || 500);
   }

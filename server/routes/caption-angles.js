@@ -11,6 +11,7 @@ const { costGuard } = require('../middleware/costGuard');
 const { capForPrompt } = require('../utils/promptSafe');
 const { guardOwnership } = require('../utils/ownership');
 const googleAI = require('../utils/googleAI');
+const personalizationService = require('../services/personalizationService');
 const { generateCaptions } = require('../services/captionAnglesService');
 
 /**
@@ -35,6 +36,7 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
   const deps = {
     sanitize: capForPrompt,
     generate: (prompt, opts) => googleAI.generateContent(prompt, opts),
+    buildSystemPrompt: (args) => personalizationService.buildPersonalizedSystemPrompt(args),
     assertBudget: (args) => req.assertBudget(args),
     recordUsage: (args) => req.recordAiUsage(args),
   };
@@ -44,7 +46,7 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
 
   let result;
   try {
-    result = await generateCaptions({ platform, topic, count: body.count, exclude }, deps);
+    result = await generateCaptions({ platform, topic, count: body.count, exclude, userId: req.user._id }, deps);
   } catch (err) {
     return sendError(res, err.message, err.statusCode || 500);
   }
