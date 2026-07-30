@@ -108,13 +108,14 @@ function shapeCaptions(raw, count) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function generateCaptions(input, deps) {
-  const { platform, topic, count, exclude } = input || {};
+  const { platform, topic, count, exclude, userId } = input || {};
   const safe = deps.sanitize(topic, 1500);
   if (!safe || !String(safe).trim()) {
     const e = new Error('topic is required'); e.statusCode = 400; throw e;
   }
   const n = clampCount(count);
-  const prompt = buildPrompt({ platform, topic: safe, count: n, exclude });
+  const { applyPersona } = require('../utils/applyPersona');
+  const prompt = await applyPersona(buildPrompt({ platform, topic: safe, count: n, exclude }), { deps, userId, platform, stage: 'caption' });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 500 });
   }

@@ -11,6 +11,7 @@ const { costGuard } = require('../middleware/costGuard');
 const { capForPrompt } = require('../utils/promptSafe');
 const { guardOwnership } = require('../utils/ownership');
 const googleAI = require('../utils/googleAI');
+const personalizationService = require('../services/personalizationService');
 const { generateHooks, STYLES, normalizeStyle } = require('../services/hookGeneratorService');
 
 /**
@@ -38,6 +39,7 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
     generate: (prompt, opts) => googleAI.generateContent(prompt, opts),
     assertBudget: (args) => req.assertBudget(args),
     recordUsage: (args) => req.recordAiUsage(args),
+    buildSystemPrompt: (args) => personalizationService.buildPersonalizedSystemPrompt(args),
   };
 
   // `exclude`: hooks already shown to the user (e.g. on "regenerate") so the model
@@ -46,7 +48,7 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
 
   let result;
   try {
-    result = await generateHooks({ platform, style, topic, count: body.count, exclude }, deps);
+    result = await generateHooks({ platform, style, topic, count: body.count, exclude, userId: req.user._id }, deps);
   } catch (err) {
     return sendError(res, err.message, err.statusCode || 500);
   }

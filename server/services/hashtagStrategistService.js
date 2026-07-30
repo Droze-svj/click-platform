@@ -122,13 +122,14 @@ function groupByTier(tags) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function generateHashtags(input, deps) {
-  const { platform, topic, count } = input || {};
+  const { platform, topic, count, userId } = input || {};
   const safe = deps.sanitize(topic, 1500);
   if (!safe || !String(safe).trim()) {
     const e = new Error('topic is required'); e.statusCode = 400; throw e;
   }
   const n = clampCount(count);
-  const prompt = buildPrompt({ platform, topic: safe, count: n });
+  const { applyPersona } = require('../utils/applyPersona');
+  const prompt = await applyPersona(buildPrompt({ platform, topic: safe, count: n }), { deps, userId, platform, stage: 'hashtags' });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 500 });
   }

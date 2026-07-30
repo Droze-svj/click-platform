@@ -106,4 +106,31 @@ describe('hookGenerator.generateHooks (injected deps, no AI/network)', () => {
     const out = await generateHooks({ platform: 'x', style: 'bogus', topic: 'hi' }, deps);
     expect(out.style).toBe('mix');
   });
+
+  test('prepends the personalized system prompt when buildSystemPrompt + userId are provided', async () => {
+    const deps = baseDeps();
+    let capturedPrompt = null;
+    deps.generate = async (prompt) => { capturedPrompt = prompt; return JSON.stringify(['A', 'B', 'C']); };
+    deps.buildSystemPrompt = jest.fn(async ({ userId, platform, stage }) =>
+      `PERSONA[user=${userId},platform=${platform},stage=${stage}]`);
+
+    await generateHooks({ platform: 'tiktok', style: 'bold', topic: 'x', count: 3, userId: 'user-123' }, deps);
+
+    expect(deps.buildSystemPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-123', platform: 'tiktok', stage: 'hook' })
+    );
+    // The creator's persona must ride in front of the task prompt sent to the model.
+    expect(capturedPrompt).toContain('PERSONA[user=user-123,platform=tiktok,stage=hook]');
+    expect(capturedPrompt).toContain('── Task ──');
+    expect(capturedPrompt).toContain('scroll-stopping HOOKS');
+  });
+
+  test('falls back to the base prompt when buildSystemPrompt is absent (no userId leak)', async () => {
+    const deps = baseDeps();
+    let capturedPrompt = null;
+    deps.generate = async (prompt) => { capturedPrompt = prompt; return JSON.stringify(['A', 'B', 'C']); };
+    await generateHooks({ platform: 'tiktok', topic: 'x', count: 3, userId: 'user-123' }, deps);
+    expect(capturedPrompt).not.toContain('── Task ──'); // no persona wrapper
+    expect(capturedPrompt).toContain('scroll-stopping HOOKS');
+  });
 });

@@ -84,13 +84,14 @@ function shapeSlides(raw, count) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function composeSlides(input, deps) {
-  const { format, topic, count } = input || {};
+  const { format, topic, count, userId, platform } = input || {};
   const safe = deps.sanitize(topic, 2000);
   if (!safe || !String(safe).trim()) {
     const e = new Error('topic is required'); e.statusCode = 400; throw e;
   }
   const n = clampCount(count);
-  const prompt = buildPrompt({ format, topic: safe, count: n });
+  const { applyPersona } = require('../utils/applyPersona');
+  const prompt = await applyPersona(buildPrompt({ format, topic: safe, count: n }), { deps, userId, platform, stage: 'carousel' });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 600 });
   }

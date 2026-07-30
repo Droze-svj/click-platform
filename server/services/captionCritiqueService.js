@@ -86,12 +86,13 @@ function shapeCritique(raw) {
  *   { sanitize, generate, assertBudget?, recordUsage? }
  */
 async function critiquePost(input, deps) {
-  const { platform, text } = input || {};
+  const { platform, text, userId } = input || {};
   const safe = deps.sanitize(text, 2000);
   if (!safe || !String(safe).trim()) {
     const e = new Error('text is required'); e.statusCode = 400; throw e;
   }
-  const prompt = buildPrompt({ platform, text: safe });
+  const { applyPersona } = require('../utils/applyPersona');
+  const prompt = await applyPersona(buildPrompt({ platform, text: safe }), { deps, userId, platform, stage: 'critique' });
   if (deps.assertBudget) {
     await deps.assertBudget({ provider: 'gemini', model: 'gemini-2.5-flash', prompt, expectedOutputTokens: 500 });
   }
