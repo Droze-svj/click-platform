@@ -103,6 +103,59 @@ jobs:
         files: ./coverage/lcov.info
         fail_ci_if_error: false
 
+  # Breadth sweeps over every mounted endpoint. These are the two checks that
+  # actually catch a route regressing to a 5xx or leaking across tenants, and
+  # they were manual-only until now (see docs/readiness/endpoint-coverage.md).
+  # Both are hermetic and self-isolating — writeSweep.js forces an in-memory
+  # Mongo and blanks REDIS_URL/SUPABASE_URL itself, and smokeFull boots the app
+  # in-process — so they need no service containers and no secrets. Kept in
+  # their own job so a sweep failure is legible at a glance instead of being
+  # buried at the end of the long `test` job.
+  sweeps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate Prisma Client
+      run: npm run prisma:generate
+
+    # Walks every mounted GET endpoint. Fails if SERVER_ERROR exceeds the
+    # ratchet in tests/smoke/smokeFull.test.js (MAX_SERVER_ERRORS = 0) — any new
+    # GET 5xx is a regression.
+    - name: GET breadth sweep
+      run: npm run smoke:full
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-secret-key
+
+    # Walks every mounted POST/PUT/PATCH/DELETE as user A, then replays each
+    # successful write on an owned resource as user B. Exit 1 on any 5xx, any
+    # cross-tenant write (IDOR), or any 2xx carrying success:false.
+    - name: WRITE breadth sweep (incl. cross-tenant IDOR)
+      run: npm run smoke:writes
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-secret-key
+
+    - name: Upload sweep reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: endpoint-sweep-reports
+        path: tests/reports/
+        if-no-files-found: ignore
+
   build:
     runs-on: ubuntu-latest
     needs: test

@@ -14,6 +14,18 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json'],
+  // V8 coverage, NOT the default babel-plugin-istanbul provider.
+  //
+  // WHY: the security-audit override pins `minimatch: ^10` for every package in
+  // the tree, but babel-plugin-istanbul@6 depends on test-exclude@6, which
+  // declares `minimatch: ^3.0.4` and calls it as a CALLABLE DEFAULT. minimatch
+  // dropped that default export in v7+, so instrumentation threw
+  // `TypeError: minimatch is not a function` and EVERY suite failed to run the
+  // moment --coverage was passed. That is the real reason coverage collapsed to
+  // 0/0 (the old "no --selectProjects" theory in ci.yml was a misdiagnosis).
+  // The v8 provider reads coverage straight from the VM, so it never loads
+  // test-exclude and the override can keep doing its security job untouched.
+  coverageProvider: 'v8',
   coverageThreshold: {
     global: {
       branches: 70,
