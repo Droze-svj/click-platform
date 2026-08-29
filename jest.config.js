@@ -26,12 +26,18 @@ module.exports = {
   // The v8 provider reads coverage straight from the VM, so it never loads
   // test-exclude and the override can keep doing its security job untouched.
   coverageProvider: 'v8',
+  // RATCHET, not an aspiration. 70/70/70/70 was configured but never enforced —
+  // coverage had been silently reporting 0/0 (see coverageProvider below), so the
+  // number was never true and the CI step was continue-on-error. These are the
+  // real measured values for `unit`+`integration` (the projects `test:coverage`
+  // runs), set a couple of points below current so normal churn doesn't trip it.
+  // Raise them as coverage improves; never lower them to make a red build green.
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70
+      branches: 55,
+      functions: 20,
+      lines: 30,
+      statements: 30
     }
   },
   setupFiles: ['<rootDir>/tests/setup-env.js'],

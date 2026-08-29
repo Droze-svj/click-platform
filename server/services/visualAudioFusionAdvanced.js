@@ -2,9 +2,9 @@
 // Enhanced with ML, adaptive thresholds, and temporal consistency
 
 const logger = require('../utils/logger');
-// visualAudioFusion is an unimplemented stub (empty module) — every function is
-// undefined. Guarded at each call site below so this service degrades to an
-// honest no-op instead of throwing "X is not a function".
+// visualAudioFusion is the real base fusion (it was a blank stub for a while,
+// which silently made every fused result empty). The typeof guards at the call
+// sites below are kept as cheap insurance against that regressing again.
 const visualAudioFusion = require('./visualAudioFusion');
 
 /**
@@ -41,8 +41,8 @@ function fuseVisualAudioBoundariesAdvanced(visualBoundaries, audioFeatures, opti
     tunedThresholds = autoTuneFusionThresholds(visualBoundaries, audioFeatures);
   }
 
-  // Perform initial fusion. Base module is an unimplemented stub → degrade to an
-  // honest no-op (visual boundaries as shot cuts, no scene fusion).
+  // Perform initial fusion. Defensive: if the base module ever regresses to a
+  // blank stub again, degrade to an honest no-op instead of throwing.
   if (typeof visualAudioFusion.fuseVisualAudioBoundaries !== 'function') {
     logger.warn('visualAudioFusionAdvanced: base fusion unavailable — returning visual boundaries unfused');
     return {
@@ -134,8 +134,8 @@ function autoTuneFusionThresholds(visualBoundaries, audioFeatures) {
     };
   }
 
-  // Calculate audio feature statistics. Base module is an unimplemented stub →
-  // fall back to the same default thresholds used when audio is absent.
+  // Calculate audio feature statistics. Defensive fallback to the same default
+  // thresholds used when audio is absent.
   const compareShotAudioFeatures = visualAudioFusion.compareShotAudioFeatures;
   if (typeof compareShotAudioFeatures !== 'function') {
     return { audioThreshold: 0.3, visualThreshold: 0.5, classChangeThreshold: 0.5 };

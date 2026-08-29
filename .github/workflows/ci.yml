@@ -84,13 +84,13 @@ jobs:
         REDIS_URL: redis://localhost:6379
 
     - name: Generate test coverage
-      # Informational. `jest --coverage` runs at the ROOT config (no
-      # --selectProjects), so it matches every *.test.js under one config and the
-      # client/e2e suites fail in the wrong environment (collapses to 0%). That's a
-      # coverage-tooling config issue, independent of the now-gating unit +
-      # integration + security projects; kept non-gating until the coverage config
-      # is reworked to run per-project.
-      continue-on-error: true
+      # GATING against a ratchet. This was non-gating because coverage always
+      # reported 0/0 — not because of --selectProjects (the old theory here) but
+      # because the tree-wide `minimatch: ^10` security override broke
+      # test-exclude@6 inside babel-plugin-istanbul, so every suite failed to run
+      # under --coverage. jest.config.js now uses the v8 provider, the script is
+      # scoped to unit+integration, and coverageThreshold holds the real measured
+      # numbers so coverage can't silently regress.
       run: npm run test:coverage
       env:
         NODE_ENV: test

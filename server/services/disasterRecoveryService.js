@@ -307,11 +307,48 @@ async function deleteBackup(backupId) {
 }
 
 /**
- * Calculate backup size
+ * Total size in bytes of everything written under a backup directory.
+ *
+ * Walks the tree rather than stat-ing the directory itself (a directory's own
+ * st_size is the size of its entry table, not its contents). Returns whatever
+ * it managed to sum if part of the tree is unreadable — a size is reporting
+ * metadata, so it must never be the reason a completed backup is marked failed.
+ *
+ * @param {string} backupDir absolute path to the backup root
+ * @returns {Promise<number>} total bytes
  */
 async function calculateBackupSize(backupDir) {
-  // In production, calculate actual size. Placeholder for now.
-  return 0;
+  let total = 0;
+
+  async function walk(dir) {
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch (error) {
+      logger.warn('Could not read backup directory while sizing', { dir, error: error.message });
+      return;
+    }
+
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(full);
+      } else if (entry.isFile()) {
+        try {
+          const { size } = await fs.stat(full);
+          total += size;
+        } catch (error) {
+          // File vanished mid-walk (rotation/cleanup) — skip it.
+          logger.debug('Skipping unreadable backup file while sizing', { full, error: error.message });
+        }
+      }
+      // Symlinks are intentionally not followed: a link into uploads/ would
+      // double-count real data and could walk out of the backup tree.
+    }
+  }
+
+  await walk(backupDir);
+  return total;
 }
 
 /**
