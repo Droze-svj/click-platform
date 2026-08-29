@@ -1,11 +1,21 @@
-const { nanoid } = require('nanoid');
+const mongoose = require('mongoose');
+const BrandProfile = require('../models/BrandProfile');
 
 /**
  * Brand Service - Manages Creator Style DNA and Brand Profiles.
+ *
+ * Profiles are per-user and persisted in MongoDB (models/BrandProfile). The
+ * ELITE_PRESETS below are read-only built-ins shown to everyone; they are not
+ * stored per user and cannot be edited or deleted.
+ *
+ * History: getProfiles/saveProfile/deleteProfile used to operate on a single
+ * process-memory array shared across all users — getProfiles ignored its userId
+ * argument and returned everyone's saved profiles, and a restart dropped them.
+ * That is why /api/brand was never mounted.
  */
 class BrandService {
   constructor() {
-    this.profiles = [
+    this.presets = [
       {
         id: 'preset-apple',
         name: 'The Minimalism of Apple',
@@ -51,25 +61,62 @@ class BrandService {
     ];
   }
 
-  async getProfiles(userId) {
-    // In a real app, we'd query MongoDB/Prisma here filtering by userId or isElite
-    return this.profiles;
-  }
-
-  async saveProfile(userId, profileData) {
-    const newProfile = {
-      id: nanoid(),
-      ...profileData,
-      userId,
-      lastTrained: Date.now()
+  /**
+   * Shape a stored document like the preset objects the client already renders.
+   */
+  _serialize(doc) {
+    const dna = typeof doc.dna?.toObject === 'function' ? doc.dna.toObject() : (doc.dna || {});
+    // assetAffinity is a Map on the schema; the client expects a plain object.
+    if (dna.assetAffinity instanceof Map) dna.assetAffinity = Object.fromEntries(dna.assetAffinity);
+    return {
+      id: String(doc._id),
+      name: doc.name,
+      description: doc.description,
+      isAiOptimized: doc.isAiOptimized,
+      isElite: false,
+      lastTrained: doc.lastTrained ? new Date(doc.lastTrained).getTime() : null,
+      dna,
     };
-    this.profiles.push(newProfile);
-    return newProfile;
   }
 
+  /**
+   * The built-in elite presets plus this user's own saved profiles.
+   * Scoped by userId — a user never sees another user's profiles.
+   */
+  async getProfiles(userId) {
+    if (!userId) return [...this.presets];
+    const owned = await BrandProfile.find({ userId }).sort({ createdAt: -1 }).lean();
+    return [...this.presets, ...owned.map((d) => this._serialize(d))];
+  }
+
+  /**
+   * Persist a new profile owned by userId. `id`/`userId`/`isElite` from the
+   * client body are ignored — the owner comes from the authenticated request
+   * and elite status is never client-assignable.
+   */
+  async saveProfile(userId, profileData = {}) {
+    if (!userId) throw new Error('userId is required to save a brand profile');
+    const doc = await BrandProfile.create({
+      userId,
+      name: profileData.name || 'Untitled Profile',
+      description: profileData.description || '',
+      isAiOptimized: !!profileData.isAiOptimized,
+      dna: profileData.dna || {},
+      lastTrained: Date.now(),
+    });
+    return this._serialize(doc);
+  }
+
+  /**
+   * Delete one of this user's own profiles. Scoped by userId so a caller can't
+   * delete someone else's, and presets (which have no document) are untouched.
+   * Returns { success: false } when nothing matched.
+   */
   async deleteProfile(userId, profileId) {
-    this.profiles = this.profiles.filter(p => !(p.id === profileId && (p.userId === userId || p.isElite)));
-    return { success: true };
+    if (!userId || !profileId) return { success: false };
+    if (!mongoose.Types.ObjectId.isValid(profileId)) return { success: false };
+    const res = await BrandProfile.deleteOne({ _id: profileId, userId });
+    return { success: res.deletedCount > 0 };
   }
 
   /**
