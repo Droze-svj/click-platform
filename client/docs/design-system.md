@@ -66,8 +66,9 @@ header would repeat them. The archetype supplies the frame, not a fixed layout.
 
 Use `ClickLoadingState`, `ClickEmptyState` and `ClickErrorRecovery`. They carry
 Click's voice from `lib/clickVoice.ts`. `ClickErrorRecovery` is already used by
-all 47 dashboard `error.tsx` boundaries — the other two are still under-adopted
-(162 files hand-roll `animate-spin`), so prefer them in anything you touch.
+all 47 dashboard `error.tsx` boundaries. Prefer the other two in anything you
+touch — but read "What the raw debt counts actually mean" below before doing a
+sweep: most existing spinners are NOT wrong.
 
 ## Navigation
 
@@ -85,35 +86,96 @@ but is neither mounted nor listed as intentionally dead.
 
 ## Where it still isn't consistent
 
-**58 of 104 pages** use `PageShell`. The remaining 46:
+**77 of 104 pages** use a shared frame — 62 `PageShell`, 5 `AuthShell`,
+10 `LegalPage`. The remaining 27:
 
-| Kind | Count | Why they're still on their own frames |
+| Kind | Count | Why |
 |---|---|---|
-| dashboard | 20 | Genuinely different layouts — the video editor and clips canvas manage their own bounds, `forge`/`marketing-ai` lead with a custom hero, `phase8`/`phase9`/`overlord` are experimental, and several are centred loading/empty states rather than framed pages. Each needs a judgement call, not a codemod. |
-| public/marketing | 11 | The landing page and marketing surfaces have their own design language. The 7 legal/trust pages were made theme-aware in this pass but keep their own reading-width frame. |
-| auth | 7 | Centred single-card layouts. |
-| test/debug | 8 | Dev-only pages (`test-*`, `debug-dashboard`). Not worth styling. |
+| dashboard | 15 | Genuinely different layouts — the video editor and clips canvas own their bounds, `forge`/`marketing-ai` lead with a custom hero, `phase8`/`phase9`/`overlord` are experimental, and several are centred loading/empty states rather than framed pages. |
+| public/marketing | 1 | The landing page has its own design language. |
+| auth | 3 | `register` and two invite/portal flows with bespoke layouts. |
+| test/debug | 8 | `middleware.ts` 404s these in production. Not worth styling. |
 
-Other known gaps, measured rather than guessed:
-- **1,371 raw `<button>` across 346 files** vs the shared `Button`. Concentrated
-  in `components/editor/**`.
-- **68 files** hand-roll `fixed inset-0` overlays instead of `Modal`/`Sheet`.
-- **162 files** use a raw spinner instead of `ClickLoadingState`.
-- **754 hardcoded hex colours** and **3,228 arbitrary `[NNpx]` values**, again
-  worst in the editor.
+### What the raw debt counts actually mean
 
-Migrate opportunistically: when you touch a file for another reason, bring it
-onto the primitives. The editor surface holds both the worst styling debt *and*
-the most delicate interaction code (timeline, snapping, playback) — hand-migrate
-it with real render checks, never with a bulk find-and-replace.
+Three "obvious" cleanups were measured before being attempted, and the numbers
+did not survive contact with what the code does. Recorded here so nobody spends
+a week on them again:
+
+**Spinners (236 occurrences).** Not a component-swap problem. ~61 are in-control
+refresh spinners (an icon spinning inside a button) which are correct as-is. 53
+loading blocks already carry copy, and on most pages that copy is TRANSLATED via
+`useTranslation` — `clickVoice` is English-only, so converting them would have
+lost i18n on the 60 pages using it. Only 11 were genuinely bare. The real defect
+was that 23 of these blocks sat in no live region, so screen readers announced
+nothing at all; those now carry `role="status" aria-live="polite"`.
+
+**Hardcoded hex (727 occurrences).** Most are legitimate: default values for
+`<input type="color">` (a CSS variable renders nothing there), SVG presentation
+attributes, canvas fills, and OG-image generation. The genuine issue is a
+different one — ~105 dark background hexes that render dark regardless of theme.
+Some of those are deliberate (the video editor is a dark canvas by design); the
+rest need a design decision about which surfaces are theme-following, not a
+find-and-replace.
+
+**Raw `<button>` (1,348, ~1,030 outside the editor).** Only ~117 are
+unambiguously "a button" in the `<Button>` sense. The rest are icon triggers,
+list rows, tabs, chips and toggles — converting them wholesale would change the
+appearance of hundreds of controls. Checked for the real bug class instead: a
+typeless `<button>` inside a `<form>` defaults to submit, and there are **none**.
+
+The pattern: convert opportunistically when you are in a file for another
+reason, and measure before believing a count.
+
+### The editor
+
+`components/editor/**` (105 files) holds ~34% of the raw buttons and ~half the
+hex/px values. Its buttons are deliberately out of scope: timeline, snapping,
+playback and drag handlers hang off those elements, and a `<Button>` swap can
+break them silently. Tokens and loading states there are fair game, file by file
+with a render check.
+
+## Motion
+
+Every `motion.*` is `m.*`, with one `LazyMotion features={domMax}` provider at
+the root (`components/MotionProvider.tsx`). This took 28 kB off the first load
+of the heaviest routes — framer-motion was being bundled per-route, and now
+loads once on demand.
+
+Two rules:
+- **Never import `motion`.** `m` renders nothing without a LazyMotion ancestor,
+  and mixing the two defeats the code-splitting.
+- **`domMax`, not `domAnimation`.** `drag`, `layout` and `layoutId` are absent
+  from `domAnimation` and fail SILENTLY — the animation simply doesn't run.
+  `ClickDynamicIsland` drags and is always mounted; 34 components use `layout`.
+
+If a file already binds `m` to something else, import as
+`import { m as Motion } from 'framer-motion'`.
+
+## Dialogs
+
+`Modal` and `Sheet` own Escape, a focus trap, focus restore and background
+scroll lock. Overlays that are already built as bespoke JSX can adopt the same
+behaviour without being rewritten:
+
+```tsx
+const panelRef = useDialogBehavior(isOpen, close)
+<div className="fixed inset-0 …">
+  <div ref={panelRef} role="dialog" aria-modal="true"> … </div>
+</div>
+```
+
+`aria-modal="true"` claims the rest of the page is inert. If nothing enforces
+that, the claim is false — which is what it was across every hand-rolled overlay
+until this was added.
 
 ## Verifying UI work
 
 ```
 cd client
 npx tsc --noEmit                       # clean today
-npm test -- --ci --watchAll=false      # 37 suites / 278 tests green today
-npx next build                         # eslint runs here now and is a hard gate
+npm test -- --ci --watchAll=false      # 38 suites / 290 tests green today
+npx next build                         # eslint is a hard gate here now
 ```
 
 Tests alone don't prove UI. Drive it: `npm run dev:test:server` (backend :5001,
