@@ -12,6 +12,7 @@ const {
   mergeSectionIntoTrack
 } = require('../services/dynamicMusicGenerationService');
 const { aiLimiter } = require("../middleware/enhancedRateLimiter");
+const { costGuard } = require('../middleware/costGuard');
 const router = express.Router();
 
 // AI generation — apply the tight AI rate limiter to POSTs (was only under the global limiter).
@@ -22,7 +23,7 @@ router.use((req, res, next) => (req.method === "POST" ? aiLimiter(req, res, next
  * @desc Generate music with exact video length
  * @access Private
  */
-router.post('/dynamic/generate', auth, asyncHandler(async (req, res) => {
+router.post('/dynamic/generate', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => {
   const {
     videoDuration,
     params,
@@ -64,7 +65,7 @@ router.post('/dynamic/generate', auth, asyncHandler(async (req, res) => {
  * @desc Regenerate section of track while maintaining theme and key
  * @access Private
  */
-router.post('/dynamic/regenerate-section', auth, asyncHandler(async (req, res) => {
+router.post('/dynamic/regenerate-section', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => {
   const {
     originalTrackId,
     section,
@@ -105,7 +106,7 @@ router.post('/dynamic/regenerate-section', auth, asyncHandler(async (req, res) =
  * @desc Generate structured track with sections
  * @access Private
  */
-router.post('/dynamic/structured', auth, asyncHandler(async (req, res) => {
+router.post('/dynamic/structured', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => {
   const {
     videoDuration,
     params,
@@ -143,7 +144,7 @@ router.post('/dynamic/structured', auth, asyncHandler(async (req, res) => {
  * @desc Get instructions for merging section into track
  * @access Private
  */
-router.post('/dynamic/merge-section', auth, asyncHandler(async (req, res) => {
+router.post('/dynamic/merge-section', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => {
   const {
     originalTrackId,
     sectionGenerationId,

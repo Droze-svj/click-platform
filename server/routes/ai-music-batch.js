@@ -9,6 +9,7 @@ const { generateMusicTrack } = require('../services/aiMusicGenerationService');
 const { queueGeneration } = require('../services/aiMusicGenerationQueue');
 const MusicGeneration = require('../models/MusicGeneration');
 const { aiLimiter } = require("../middleware/enhancedRateLimiter");
+const { costGuard } = require('../middleware/costGuard');
 const router = express.Router();
 
 // AI generation — apply the tight AI rate limiter to POSTs (was only under the global limiter).
@@ -19,7 +20,7 @@ router.use((req, res, next) => (req.method === "POST" ? aiLimiter(req, res, next
  * @desc Generate multiple tracks in batch
  * @access Private
  */
-router.post('/batch/generate', auth, asyncHandler(async (req, res) => {
+router.post('/batch/generate', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => {
   const {
     requests, // Array of { provider, params, priority }
     maxConcurrent = 3
@@ -102,7 +103,7 @@ router.post('/batch/generate', auth, asyncHandler(async (req, res) => {
  * @desc Generate music for multiple scenes
  * @access Private
  */
-router.post('/batch/scenes', auth, asyncHandler(async (req, res) => {
+router.post('/batch/scenes', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => {
   const {
     sceneIds,
     provider,

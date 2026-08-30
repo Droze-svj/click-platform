@@ -15,18 +15,17 @@ const featureRoutesSrc = fs.readFileSync(path.join(ROUTES_DIR, 'featureRoutes.js
 // Intentionally NOT mounted (dead / superseded duplicates / experimental). Adding a
 // new route file? Mount it in server/index.js, or add it here ON PURPOSE.
 //   - ai-content        → superseded by routes/ai/content-generation (mounted)
-//   - music-*           → the whole family is unmounted (confirmed in the security audit)
 //   - creative/ai-enhanced/videoSharing/automation-analytics/admin-new
 // (hookEnsemble, music-catalog, music-catalog-sync, music-editing,
 //  music-ai-suggestions were DELETED in the dead-code purge — pruned from here.)
+//
+// The music-licensing (10) and ai-music (6) clusters were MOUNTED in the
+// production-readiness pass — see the prefix map in featureRoutes.js. Only the
+// 0-byte music-licensing.js file remains dead.
 const KNOWN_DEAD = new Set([
-  'ai-content', 'ai-enhanced', 'ai-music-admin', 'ai-music-analytics',
-  'ai-music-batch', 'ai-music-generation', 'ai-music-recommendations', 'ai-music-templates',
-  'creative',
-  'music-catalog-playlists', 'music-dynamic-generation', 'music-learning',
-  'music-licensing-admin', 'music-licensing-analytics', 'music-licensing-compliance',
-  'music-licensing-favorites', 'music-licensing-tools',
-  'music-licensing-transparency', 'music-licensing', 'music-smart-sync',
+  'ai-content', 'ai-enhanced', 'creative',
+  // 'music-licensing' (the 0-byte file) stays dead — see the note below.
+  'music-licensing',
   // digitalTwin, retention-heatmap, trust, toolbox, dubbing were REVIVED (Phase F)
   // — mounted because the frontend already calls them; verified by the smoke sweep.
   //
