@@ -46,6 +46,13 @@ async function detectScenes(videoPath, options = {}) {
     return { scenes: [] };
   }
 
+  // Callers aren't consistent about what they pass: automationService hands this
+  // a Content id when it has no URL. A bare ObjectId is not a path, so resolve
+  // it to the asset's file instead of handing ffmpeg a 24-char hex string.
+  if (/^[0-9a-f]{24}$/i.test(String(videoPath))) {
+    return getScenesForAsset(String(videoPath), options);
+  }
+
   // Accept either a real filesystem path or an uploads-relative URL.
   const resolved = toAbsolutePath(videoPath) || videoPath;
 
