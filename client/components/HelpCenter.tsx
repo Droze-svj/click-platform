@@ -173,7 +173,7 @@ export default function HelpCenter() {
           {t('helpCenter.supportPrompt')}
         </p>
         <a
-          href="/help/support"
+          href="/contact"
           className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
           {t('helpCenter.contactSupport')}

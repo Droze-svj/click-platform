@@ -305,7 +305,7 @@ export default function DashboardHeader() {
                   {user?.email && <p className="ds-text-caption truncate">{user.email}</p>}
                 </div>
                 <Link
-                  href="/dashboard/profile"
+                  href="/dashboard/settings/profile"
                   role="menuitem"
                   onClick={() => setUserOpen(false)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg ds-text-label text-[var(--text-strong)] hover:bg-[var(--glass-surface-heavy)] transition-colors"

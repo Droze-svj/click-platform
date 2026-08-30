@@ -37,7 +37,7 @@ export default function TrustPage() {
           <Card title="Privacy" href="/privacy" desc="GDPR, UK GDPR, CCPA/CPRA. Export, delete, correct in one click." />
           <Card title="Security" href="/security" desc="Encryption, access controls, audit logs, vuln disclosure." />
           <Card title="Compliance" href="/compliance" desc="EU AI Act, COPPA, FTC, accessibility (WCAG 2.2 AA)." />
-          <Card title="Acceptable Use" href="/legal/aup" desc="What you can and can't do with Click." />
+          <Card title="Acceptable Use" href="/acceptable-use" desc="What you can and can't do with Click." />
           <Card title="DMCA" href="/legal/dmca" desc="File a takedown or counter-notice." />
           <Card title="Vulnerability Disclosure" href="/.well-known/security.txt" desc="Report issues responsibly. We respond." />
         </div>
