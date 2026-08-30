@@ -72,6 +72,10 @@ export type {
   AuthWidth,
 } from "./page"
 
+// Public document pages (privacy, terms, security, …).
+export { LegalPage } from "./legal-page"
+export type { LegalPageProps } from "./legal-page"
+
 // Tabular data — owns its own loading / empty / error states.
 export { DataTable } from "./data-table"
 export type { DataTableProps, Column, SortDirection } from "./data-table"

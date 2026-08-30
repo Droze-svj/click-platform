@@ -1,17 +1,9 @@
-import Link from 'next/link';
+import { LegalPage } from '../../components/ui/legal-page'
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 px-6 py-24 font-inter">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs text-surface-500 hover:text-surface-900 dark:hover:text-surface-50 uppercase tracking-widest font-bold mb-12"
-        >
-          ← Back to home
-        </Link>
-        <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-8">Privacy Policy</h1>
-        <p className="text-surface-600 dark:text-surface-400 text-sm font-medium mb-12">
+    <LegalPage kicker="Legal" title="Privacy Policy">
+      <p className="text-surface-600 dark:text-surface-400 text-sm font-medium mb-12">
           Effective: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
 
@@ -52,7 +44,6 @@ export default function PrivacyPage() {
             This is a placeholder policy. Replace with your real legal text before launch.
           </p>
         </div>
-      </div>
-    </div>
+    </LegalPage>
   );
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LegalPage } from '../../components/ui/legal-page'
 
 export const metadata = {
   title: 'Cookie Policy — Click',
@@ -7,13 +8,7 @@ export const metadata = {
 
 export default function CookiePolicyPage() {
   return (
-    <main className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 px-6 py-24 font-inter">
-      <div className="max-w-3xl mx-auto space-y-10">
-        <header className="space-y-3">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary-500">Legal</p>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight">Cookie Policy</h1>
-          <p className="text-sm text-surface-500">Last updated: {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </header>
+    <LegalPage kicker="Legal" title="Cookie Policy" updated={new Date()}>
 
         <section className="space-y-4 text-surface-700 dark:text-slate-300 leading-relaxed">
           <p>
@@ -84,7 +79,6 @@ export default function CookiePolicyPage() {
         <footer className="pt-10 border-t border-surface-100 dark:border-surface-800 text-xs text-surface-400">
           <Link href="/" className="hover:text-primary-500">← Back to home</Link>
         </footer>
-      </div>
-    </main>
+    </LegalPage>
   )
 }
