@@ -8,7 +8,7 @@ import {
   Settings, User, Lock, Bell, EyeOff, Palette, Sliders, Sparkles, Plug,
   CreditCard, Search, Plus, Trash2, Check, ChevronRight,
   Monitor, Sun, Moon, ArrowLeft, KeyRound, Gauge, ShieldAlert, LayoutGrid,
-  RefreshCw, Bot,
+  RefreshCw, Bot, X,
 } from 'lucide-react'
 import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
@@ -22,6 +22,7 @@ import { useTheme } from '../../../components/ThemeProvider'
 import { API_URL, apiPost, apiDelete, handleApiError } from '../../../lib/api'
 import { cn } from '../../../lib/utils'
 import { useContainerWidth } from '../../../hooks/useContainerWidth'
+import { useWorkspacePrefs } from '../../../hooks/useWorkspacePrefs'
 import { FormField, Input } from '../../../components/ui/form-field'
 import { Switch } from '../../../components/ui/switch'
 import { Slider } from '../../../components/ui/slider'
@@ -130,7 +131,7 @@ const SECTIONS: SectionDef[] = [
   { id: 'security', label: 'Account & Security', icon: <Lock size={18} />, keywords: ['password', 'security', 'change password', 'delete account', 'danger'] },
   { id: 'notifications', label: 'Notifications', icon: <Bell size={18} />, keywords: ['notifications', 'email', 'push', 'digest', 'alerts', 'mentions'] },
   { id: 'privacy', label: 'Privacy', icon: <EyeOff size={18} />, keywords: ['privacy', 'analytics', 'consent', 'data', 'marketing'] },
-  { id: 'appearance', label: 'Appearance', icon: <Palette size={18} />, keywords: ['theme', 'dark', 'light', 'density', 'compact', 'motion', 'accent', 'appearance', 'display', 'language', 'timezone'] },
+  { id: 'appearance', label: 'Appearance', icon: <Palette size={18} />, keywords: ['theme', 'dark', 'light', 'density', 'compact', 'motion', 'accent', 'appearance', 'display', 'language', 'timezone', 'workspace', 'pinned', 'sidebar', 'landing', 'start page'] },
   { id: 'editing', label: 'Editing Defaults', icon: <Sliders size={18} />, keywords: ['video', 'editing', 'captions', 'pacing', 'hook', 'voice', 'music', 'broll', 'platform'] },
   { id: 'automation', label: 'Automation', icon: <Bot size={18} />, keywords: ['automation', 'agentic', 'agent', 'autonomous', 'swarm', 'sla', 'auto-fulfill', 'predictive', 'threshold', 'digital twin', 'heygen', 'sora', 'avatar'] },
   { id: 'ai', label: 'AI', icon: <Sparkles size={18} />, keywords: ['ai', 'provider', 'claude', 'gemini', 'creativity', 'auto apply', 'model'] },
@@ -706,6 +707,10 @@ function AppearanceSection({ settings, setField, saving, onSave, applyAppearance
         />
       </div>
 
+      {/* Workspace arrangement — stored on the account, so it follows the user
+          to another browser or device rather than living in localStorage. */}
+      <WorkspaceSection />
+
       <SubHeader>Regional</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
         <SelectRow label="Language" value={settings.preferences.language}
@@ -726,6 +731,65 @@ function AppearanceSection({ settings, setField, saving, onSave, applyAppearance
 
       <SaveBar saving={saving} onSave={onSave} />
     </Card>
+  )
+}
+
+/**
+ * Workspace arrangement. These live on the ACCOUNT (UserSettings.preferences
+ * via useWorkspacePrefs), not in localStorage, so a user's arrangement follows
+ * them between browsers and devices — which is the whole point, and was not
+ * true of any of Click's other UI customization.
+ */
+function WorkspaceSection() {
+  const { prefs, isPinned, togglePin, setDefaultLanding } = useWorkspacePrefs()
+
+  // Somewhere to land other than Home. Kept to the primary destinations so this
+  // can't strand a user on a page they rarely use.
+  const LANDING_OPTIONS = [
+    { id: '', label: 'Home (default)' },
+    { id: '/dashboard/forge', label: 'AI Video Creator' },
+    { id: '/dashboard/video', label: 'Video Editor' },
+    { id: '/dashboard/clips/hub', label: 'Clips' },
+    { id: '/dashboard/scheduler', label: 'Scheduler' },
+    { id: '/dashboard/calendar', label: 'Calendar' },
+    { id: '/dashboard/analytics', label: 'Analytics' },
+  ]
+
+  return (
+    <>
+      <SubHeader>Workspace</SubHeader>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+        <SelectRow
+          label="Start me on"
+          description="Where Click opens when you sign in"
+          value={prefs.defaultLanding}
+          options={LANDING_OPTIONS}
+          onChange={(v) => setDefaultLanding(v)}
+        />
+        <FormField label="Pinned in the sidebar" hint="Pin any item from the sidebar's More menu">
+          {prefs.pinnedNav.length === 0 ? (
+            <p className="text-sm text-theme-muted">
+              Nothing pinned yet. Hover a sidebar item and click the pin to keep it always visible.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {prefs.pinnedNav.map((path) => (
+                <button
+                  key={path}
+                  type="button"
+                  onClick={() => togglePin(path)}
+                  aria-label={`Unpin ${path}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-input px-2 py-1 text-xs text-theme-secondary transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {path.replace('/dashboard/', '').replace('/dashboard', 'home') || 'home'}
+                  <X size={12} aria-hidden />
+                </button>
+              ))}
+            </div>
+          )}
+        </FormField>
+      </div>
+    </>
   )
 }
 
