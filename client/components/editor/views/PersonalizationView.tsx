@@ -60,25 +60,43 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
   const toast = useCallback((m: string, t: 'success' | 'error' | 'info' = 'info') => showToast?.(m, t), [showToast])
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiGet<any>('/me/ai-preferences', undefined, false)
+    let cancelled = false
+
+    // These three reads are independent, but they used to be awaited one after
+    // another, so the view waited for the sum of three round-trips before it
+    // was complete. Fired together they cost the slowest one instead.
+    // allSettled, not all: insights and recommendations are best-effort and
+    // must not stop preferences from loading.
+    ;(async () => {
+      const [prefsRes, insightsRes, recsRes] = await Promise.allSettled([
+        apiGet<any>('/me/ai-preferences', undefined, false),
+        apiGet<any>('/me/personalization/insights', undefined, false),
+        apiGet<any>('/me/personalization/recommendations', undefined, false),
+      ])
+      if (cancelled) return
+
+      if (prefsRes.status === 'fulfilled') {
+        const res = prefsRes.value
         const d = (res?.data ?? res) as AiPreferences
         if (d?.voice) {
           setPrefs({ voice: { ...EMPTY.voice, ...d.voice }, brand: { ...EMPTY.brand, ...d.brand }, defaults: { ...EMPTY.defaults, ...d.defaults } })
           setVocabText((d.voice.vocab || []).join(', '))
           setBannedText((d.voice.banned || []).join(', '))
         }
-      } catch { /* defaults */ } finally { setLoading(false) }
-      try {
-        const ir = await apiGet<any>('/me/personalization/insights', undefined, false)
+      }
+      setLoading(false)
+
+      if (insightsRes.status === 'fulfilled') {
+        const ir = insightsRes.value
         setInsights((ir?.data ?? ir) as Insights)
-      } catch { /* best-effort */ }
-      try {
-        const rr = await apiGet<any>('/me/personalization/recommendations', undefined, false)
+      }
+      if (recsRes.status === 'fulfilled') {
+        const rr = recsRes.value
         setRecs((rr?.data ?? rr) as Recommendations)
-      } catch { /* best-effort */ }
+      }
     })()
+
+    return () => { cancelled = true }
   }, [])
 
   const save = async () => {

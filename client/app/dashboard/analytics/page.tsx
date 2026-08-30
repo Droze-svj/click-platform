@@ -85,11 +85,20 @@ export default function AnalyticsPage() {
     setRefreshing(true)
     setFetchError(false)
     try {
-      const res: any = await apiGet('/analytics/dashboard')
+      // Independent reads — fired together so the page costs the slower of the
+      // two round-trips instead of their sum. allSettled so creator stats
+      // failing doesn't blank the whole dashboard.
+      const [dashboardRes, statsRes] = await Promise.allSettled([
+        apiGet<any>('/analytics/dashboard'),
+        apiGet<any>('/analytics/creator/stats'),
+      ])
+
+      if (dashboardRes.status === 'rejected') throw dashboardRes.reason
+      const res: any = dashboardRes.value
       const overview = res?.overview ? { ...res.overview, isFallback: !!(res.isFallback || res.overview.isFallback) } : null
       setData(overview)
 
-      const nodeRes: any = await apiGet('/analytics/creator/stats')
+      const nodeRes: any = statsRes.status === 'fulfilled' ? statsRes.value : null
       setNodes(Array.isArray(nodeRes?.stats) ? nodeRes.stats : [])
     } catch (err) {
       console.error('Analytics fetch failed', err)

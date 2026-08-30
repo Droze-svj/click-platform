@@ -143,7 +143,9 @@ export default function KeywordExplorerPage() {
     }
   }
 
-  const useAsTarget = async (keyword?: string) => {
+  // NOT a hook — a click handler. The `use` prefix made eslint's
+// rules-of-hooks treat it as one and error on the call below.
+  const copyKeywordAsTarget = async (keyword?: string) => {
     const value = keyword?.trim() || ''
     if (!value) {
       toast.info('Nothing to copy for this keyword')
@@ -299,7 +301,7 @@ export default function KeywordExplorerPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => useAsTarget(idea?.keyword)}
+                    onClick={() => copyKeywordAsTarget(idea?.keyword)}
                     leftIcon={<Copy className="h-3.5 w-3.5" aria-hidden />}
                     title="Copy keyword to clipboard"
                     aria-label="Use as target keyword"
