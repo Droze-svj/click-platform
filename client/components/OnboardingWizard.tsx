@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 import { apiPut } from '@/lib/api'
+import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
 
 interface OnboardingWizardProps {
   onComplete: () => void
@@ -89,6 +90,11 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const [platformTarget, setPlatformTarget] = useState<string | null>(null)
   const [creatorGoal, setCreatorGoal] = useState<string | null>(null)
   const [quizStep, setQuizStep] = useState(0)
+  // Step 4: make the workspace preferences discoverable at first run rather
+  // than leaving them buried in Settings → Appearance.
+  const [landing, setLanding] = useState<string>('')
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')
+  const { setDefaultLanding } = useWorkspacePrefs()
 
   // The creator goal maps to a starting hook style. Kept as one table so the
   // local defaults and the value we sync to the account can't drift apart.
@@ -116,6 +122,14 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
     // localStorage, so a creator who onboarded on a laptop got a completely
     // un-personalized Click on their desktop — and the marketing brain, which
     // reads these same fields server-side, never saw them at all.
+    // Workspace choices go to the account too (UserSettings.preferences), so
+    // the arrangement follows the creator to another device.
+    setDefaultLanding(landing)
+    try {
+      document.documentElement.setAttribute('data-density', density)
+    } catch {}
+    void apiPut('/user/settings', { appearance: { density } }).catch(() => {})
+
     void apiPut('/me/ai-preferences', {
       voice: mapping ? { hookStyle: mapping.hookStyle } : undefined,
       defaults: {
@@ -126,10 +140,10 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
     }).catch(() => {
       /* Best effort: the local cache above still personalizes this device. */
     })
-  }, [nicheType, platformTarget, creatorGoal])
+  }, [nicheType, platformTarget, creatorGoal, landing, density, setDefaultLanding])
 
   const advanceQuiz = useCallback(() => {
-    if (quizStep < 2) {
+    if (quizStep < 3) {
       setQuizStep(q => q + 1)
     } else {
       saveNicheProfile()
@@ -164,7 +178,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const step = currentStep >= 0 ? STEPS[currentStep] : null
   const progress = currentStep < 0 ? 0 : ((currentStep + 1) / STEPS.length) * 100
   const selectedGoal = CREATOR_GOALS.find(g => g.id === creatorGoal)
-  const quizCanAdvance = (quizStep === 0 && !!nicheType) || (quizStep === 1 && !!platformTarget) || (quizStep === 2 && !!creatorGoal)
+  // Step 3 has sensible defaults selected, so it can always advance.
+  const quizCanAdvance = (quizStep === 0 && !!nicheType) || (quizStep === 1 && !!platformTarget) || (quizStep === 2 && !!creatorGoal) || quizStep === 3
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md">
@@ -203,7 +218,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   </div>
                   <div>
                     <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{t('onboardingWizard.aiCalibration')}</div>
-                    <div className="text-[10px] text-slate-500">{t('onboardingWizard.stepOfThree', { step: quizStep + 1 })}</div>
+                    <div className="text-[10px] text-slate-500">{`${quizStep + 1} / 4`}</div>
                   </div>
                   <div className="ml-auto flex gap-1.5">
                     {[0,1,2].map(i => (
@@ -241,6 +256,49 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                         >
                           <span className="text-xl">{p.emoji}</span>
                           <span className="text-xs font-black text-white">{t(p.labelKey)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {quizStep === 3 && (
+                  <>
+                    <h3 className="text-xl font-black tracking-tight mb-1">Make it yours</h3>
+                    <p className="text-slate-500 text-xs mb-5">
+                      Both of these follow you to any device, and you can change them any time in Settings.
+                    </p>
+
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Open Click on</p>
+                    <div className="grid grid-cols-2 gap-2 mb-5">
+                      {[
+                        { id: '', label: 'Home', emoji: '🏠' },
+                        { id: '/dashboard/forge', label: 'AI Video Creator', emoji: '🎬' },
+                        { id: '/dashboard/clips/hub', label: 'Clips', emoji: '✂️' },
+                        { id: '/dashboard/calendar', label: 'Calendar', emoji: '🗓️' },
+                      ].map(o => (
+                        <button type="button" key={o.id || 'home'} onClick={() => setLanding(o.id)}
+                          aria-pressed={landing === o.id}
+                          className={`p-3 rounded-2xl border text-left transition-all ${landing === o.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
+                        >
+                          <div className="text-xl mb-0.5">{o.emoji}</div>
+                          <div className="text-xs font-black text-white">{o.label}</div>
+                        </button>
+                      ))}
+                    </div>
+
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Spacing</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { id: 'comfortable', label: 'Comfortable', tip: 'Roomier, easier to scan' },
+                        { id: 'compact', label: 'Compact', tip: 'More on screen at once' },
+                      ] as const).map(o => (
+                        <button type="button" key={o.id} onClick={() => setDensity(o.id)}
+                          aria-pressed={density === o.id}
+                          className={`p-3 rounded-2xl border text-left transition-all ${density === o.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
+                        >
+                          <div className="text-xs font-black text-white">{o.label}</div>
+                          <div className="text-[9px] text-slate-500 mt-0.5">{o.tip}</div>
                         </button>
                       ))}
                     </div>
