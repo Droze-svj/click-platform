@@ -1,6 +1,7 @@
 // Template Analytics Service
 // Track template performance and A/B testing
 
+const mongoose = require('mongoose');
 const AITemplate = require('../models/AITemplate');
 const AITemplateVersion = require('../models/AITemplateVersion');
 const AIConfidenceScore = require('../models/AIConfidenceScore');
@@ -18,13 +19,14 @@ async function getTemplatePerformance(templateId, period = null) {
 
     // Get content generated with this template
     const GeneratedContent = require('../models/Content');
-    const content = await GeneratedContent.find({
-      'metadata.templateId': templateId,
-      createdAt: period ? {
-        $gte: period.startDate,
-        $lte: period.endDate
-      } : {}
-    }).select('_id').lean();
+    // `createdAt: {}` is an exact-match on an empty object, so the no-period call
+    // matched NOTHING and every unscoped lookup reported zero usage. Omit the
+    // field entirely instead when there's no window.
+    const query = { 'metadata.templateId': templateIdMatch(templateId) };
+    if (period?.startDate && period?.endDate) {
+      query.createdAt = { $gte: period.startDate, $lte: period.endDate };
+    }
+    const content = await GeneratedContent.find(query).select('_id').lean();
 
     const contentIds = content.map(c => c._id);
 
@@ -48,7 +50,9 @@ async function getTemplatePerformance(templateId, period = null) {
     // Flag distribution
     const flagDistribution = {};
     scores.forEach(score => {
-      score.uncertaintyFlags.forEach(flag => {
+      // uncertaintyFlags is optional on the schema — a score saved without it
+      // would throw here and take down the whole analytics call.
+      (score.uncertaintyFlags || []).forEach(flag => {
         flagDistribution[flag.type] = (flagDistribution[flag.type] || 0) + 1;
       });
     });
@@ -214,16 +218,205 @@ function calculateMatchScore(template, contentType, platform, brandStyle) {
   return score;
 }
 
-// Honest 501 stubs for analytics the routes import but that aren't implemented
-// yet (return a clean "Not Implemented" instead of crashing with 500).
-function _notImplemented(feature) {
-  const e = new Error(`${feature} is not available yet`);
-  e.statusCode = 501;
-  e.code = 'NOT_IMPLEMENTED';
-  return e;
+/**
+ * Content.metadata is Mixed, so metadata.templateId may have been written as an
+ * ObjectId or as its hex string depending on the caller. Routes pass the string
+ * from the URL. Match both forms so the join can't silently miss usage.
+ */
+function templateIdMatch(templateId) {
+  const asString = String(templateId);
+  const forms = [asString];
+  if (mongoose.Types.ObjectId.isValid(asString)) forms.push(new mongoose.Types.ObjectId(asString));
+  return { $in: forms };
 }
-async function getTemplateTrends() { throw _notImplemented('Template trends'); }
-async function getCreatorAnalytics() { throw _notImplemented('Creator analytics'); }
+
+/** Start of the window `days` before now. */
+function windowStart(days) {
+  const since = new Date();
+  since.setDate(since.getDate() - (Number(days) > 0 ? Number(days) : 30));
+  return since;
+}
+
+/** YYYY-MM-DD key for day-bucketing. */
+function dayKey(date) {
+  return new Date(date).toISOString().slice(0, 10);
+}
+
+/**
+ * Mean of a numeric field over a set of docs, rounded to 2dp.
+ */
+function avgOf(docs, field) {
+  if (!docs.length) return 0;
+  const sum = docs.reduce((acc, d) => acc + (Number(d[field]) || 0), 0);
+  return Math.round((sum / docs.length) * 100) / 100;
+}
+
+/**
+ * Daily trend of a template's usage and output quality.
+ *
+ * Same join as getTemplatePerformance (Content.metadata.templateId →
+ * AIConfidenceScore.contentId), bucketed by day instead of aggregated into a
+ * single window. Days with no usage are emitted as zeros so the series is
+ * continuous and a client can chart it without filling gaps itself.
+ *
+ * @param {string} templateId
+ * @param {number} period days back from now (default 30)
+ */
+async function getTemplateTrends(templateId, period = 30) {
+  try {
+    const template = await AITemplate.findById(templateId).lean();
+    if (!template) throw new Error('Template not found');
+
+    const days = Number(period) > 0 ? Number(period) : 30;
+    const since = windowStart(days);
+
+    const Content = require('../models/Content');
+    const content = await Content.find({
+      'metadata.templateId': templateIdMatch(templateId),
+      createdAt: { $gte: since },
+    }).select('_id createdAt').lean();
+
+    const scores = await AIConfidenceScore.find({
+      contentId: { $in: content.map((c) => c._id) },
+    }).lean();
+
+    // contentId → its score, so each day's content can pull its own quality data.
+    const scoreByContent = new Map(scores.map((s) => [String(s.contentId), s]));
+
+    const buckets = new Map();
+    for (let i = 0; i < days; i++) {
+      const d = new Date(since);
+      d.setDate(d.getDate() + i);
+      buckets.set(dayKey(d), { date: dayKey(d), usage: 0, _scores: [] });
+    }
+
+    for (const c of content) {
+      const bucket = buckets.get(dayKey(c.createdAt));
+      if (!bucket) continue; // outside the window after rounding
+      bucket.usage += 1;
+      const score = scoreByContent.get(String(c._id));
+      if (score) bucket._scores.push(score);
+    }
+
+    const series = [...buckets.values()].map((b) => ({
+      date: b.date,
+      usage: b.usage,
+      avgConfidence: avgOf(b._scores, 'overallConfidence'),
+      avgEditEffort: avgOf(b._scores, 'editEffort'),
+      needsReviewCount: b._scores.filter((s) => s.needsHumanReview).length,
+      scoredCount: b._scores.length,
+    }));
+
+    // Direction of travel: first half of the window vs second half.
+    const mid = Math.floor(series.length / 2);
+    const usageFirst = series.slice(0, mid).reduce((a, b) => a + b.usage, 0);
+    const usageSecond = series.slice(mid).reduce((a, b) => a + b.usage, 0);
+
+    return {
+      template: { id: template._id, name: template.name },
+      periodDays: days,
+      series,
+      totals: {
+        usage: content.length,
+        avgConfidence: avgOf(scores, 'overallConfidence'),
+        avgEditEffort: avgOf(scores, 'editEffort'),
+        needsReviewRate: scores.length
+          ? Math.round((scores.filter((s) => s.needsHumanReview).length / scores.length) * 10000) / 100
+          : 0,
+      },
+      trend: {
+        usageChange: usageSecond - usageFirst,
+        direction: usageSecond > usageFirst ? 'up' : usageSecond < usageFirst ? 'down' : 'flat',
+      },
+    };
+  } catch (error) {
+    logger.error('Error getting template trends', { error: error.message, templateId });
+    throw error;
+  }
+}
+
+/**
+ * Analytics across every template a creator owns.
+ *
+ * Scoped by createdBy so one creator never sees another's templates.
+ *
+ * @param {string|ObjectId} userId owner (req.user._id)
+ * @param {number} period days back from now (default 30)
+ */
+async function getCreatorAnalytics(userId, period = 30) {
+  try {
+    if (!userId) throw new Error('userId is required');
+
+    const days = Number(period) > 0 ? Number(period) : 30;
+    const since = windowStart(days);
+
+    const templates = await AITemplate.find({ createdBy: userId })
+      .select('_id name usageCount performance')
+      .lean();
+
+    if (templates.length === 0) {
+      return {
+        periodDays: days,
+        totals: { templates: 0, usage: 0, avgConfidence: 0, avgEditEffort: 0, needsReviewRate: 0 },
+        templates: [],
+      };
+    }
+
+    // Both id forms, for the same Mixed-field reason as templateIdMatch().
+    const templateIds = templates.flatMap((t) => [String(t._id), t._id]);
+
+    const Content = require('../models/Content');
+    const content = await Content.find({
+      'metadata.templateId': { $in: templateIds },
+      createdAt: { $gte: since },
+    }).select('_id metadata.templateId').lean();
+
+    const scores = await AIConfidenceScore.find({
+      contentId: { $in: content.map((c) => c._id) },
+    }).lean();
+    const scoreByContent = new Map(scores.map((s) => [String(s.contentId), s]));
+
+    // Group each template's content + scores.
+    const perTemplate = new Map(templates.map((t) => [String(t._id), { template: t, content: [], scores: [] }]));
+    for (const c of content) {
+      const entry = perTemplate.get(String(c.metadata?.templateId));
+      if (!entry) continue;
+      entry.content.push(c);
+      const score = scoreByContent.get(String(c._id));
+      if (score) entry.scores.push(score);
+    }
+
+    const perTemplateStats = [...perTemplate.values()].map(({ template, content: tContent, scores: tScores }) => ({
+      id: template._id,
+      name: template.name,
+      usage: tContent.length,
+      lifetimeUsage: template.usageCount || 0,
+      avgConfidence: avgOf(tScores, 'overallConfidence'),
+      avgEditEffort: avgOf(tScores, 'editEffort'),
+      needsReviewCount: tScores.filter((s) => s.needsHumanReview).length,
+    })).sort((a, b) => b.usage - a.usage);
+
+    return {
+      periodDays: days,
+      totals: {
+        templates: templates.length,
+        usage: content.length,
+        avgConfidence: avgOf(scores, 'overallConfidence'),
+        avgEditEffort: avgOf(scores, 'editEffort'),
+        needsReviewRate: scores.length
+          ? Math.round((scores.filter((s) => s.needsHumanReview).length / scores.length) * 10000) / 100
+          : 0,
+      },
+      // Most-used first; the tail is what a creator prunes.
+      templates: perTemplateStats,
+      mostUsed: perTemplateStats[0] || null,
+      unused: perTemplateStats.filter((t) => t.usage === 0).map((t) => ({ id: t.id, name: t.name })),
+    };
+  } catch (error) {
+    logger.error('Error getting creator analytics', { error: error.message, userId });
+    throw error;
+  }
+}
 
 module.exports = {
   getTemplatePerformance,
