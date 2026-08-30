@@ -452,8 +452,46 @@ html[data-reduced-motion="true"] *::after {
 
 /* User-controlled density (Settings → Appearance). Compact tightens the
    global rhythm token so spacing-driven layouts breathe less. */
+/* ── Display density ─────────────────────────────────────────────────────────
+ * Settings → Appearance → Density writes `data-density` onto <html>.
+ *
+ * `--density-scale` was declared here but consumed by NOTHING, so choosing
+ * "Compact" changed nothing on screen. The utilities below give it effect:
+ * page frames, section rhythm and card padding all scale from this one number,
+ * so compact genuinely removes chrome instead of only shrinking text.
+ */
+:root {
+  --density-scale: 1;
+}
+
 html[data-density="compact"] {
-  --density-scale: 0.85;
+  --density-scale: 0.78;
+}
+
+/* Vertical page frame. Paired with horizontal padding utilities in PageShell. */
+.ds-density-pad {
+  padding-top: calc(1.5rem * var(--density-scale));
+  padding-bottom: calc(1.5rem * var(--density-scale));
+}
+
+@media (min-width: 1024px) {
+  .ds-density-pad {
+    padding-top: calc(2rem * var(--density-scale));
+    padding-bottom: calc(2rem * var(--density-scale));
+  }
+}
+
+/* Rhythm between the major blocks of a page. */
+.ds-density-stack {
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.5rem * var(--density-scale));
+}
+
+@media (min-width: 1024px) {
+  .ds-density-stack {
+    gap: calc(2rem * var(--density-scale));
+  }
 }
 
 /* ── Focus Mode (toggled via SidebarNav) ──────────────────────────────────────
