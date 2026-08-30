@@ -80,10 +80,24 @@ export interface PageHeaderProps
   /** Small status element (badge, autosave pill) beside the title. */
   meta?: React.ReactNode
   icon?: React.ReactNode
+  /**
+   * Heading level for the title.
+   *
+   * Defaults to `h1` — correct for standalone routes (auth, legal, marketing).
+   *
+   * Dashboard routes pass `h2` while the migration is in flight, because
+   * `components/dashboard/DashboardHeader` still renders a route-derived `h1`
+   * in the app bar and two h1s on one page is invalid. Once every dashboard
+   * page owns a PageHeader, that app-bar title becomes a plain label and this
+   * drops back to `h1` everywhere.
+   */
+  as?: "h1" | "h2"
 }
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
-  ({ className, title, description, breadcrumbs, actions, tabs, meta, icon, ...props }, ref) => (
+  ({ className, title, description, breadcrumbs, actions, tabs, meta, icon, as = "h1", ...props }, ref) => {
+    const Heading = as
+    return (
     <header ref={ref} className={cn("flex flex-col gap-4", className)} {...props}>
       {breadcrumbs && breadcrumbs.length > 0 ? (
         <nav aria-label="Breadcrumb">
@@ -115,8 +129,8 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
           {icon ? <div className="mt-0.5 shrink-0 text-theme-secondary">{icon}</div> : null}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              {/* One <h1> per route — headings below this use SectionHeader. */}
-              <h1 className="ds-text-h1 text-theme-primary">{title}</h1>
+              {/* One top-level heading per route — headings below use SectionHeader. */}
+              <Heading className="ds-text-h1 text-theme-primary">{title}</Heading>
               {meta}
             </div>
             {description ? (
@@ -129,7 +143,8 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
 
       {tabs ? <div className="-mb-px">{tabs}</div> : null}
     </header>
-  )
+    )
+  }
 )
 PageHeader.displayName = "PageHeader"
 

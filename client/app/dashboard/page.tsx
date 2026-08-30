@@ -25,6 +25,7 @@ import {
   SectionHeader,
   EmptyState,
   Button,
+  PageShell,
 } from '../../components/ui'
 
 type SwarmMode = 'viral' | 'trust' | 'coach' | 'authority'
@@ -287,9 +288,12 @@ export default function DashboardHome() {
       <SubscriptionBanner />
       <ToastContainer />
 
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden">
-        {/* The layout already renders DashboardHeader (page title + breadcrumb),
-            so we start straight into the greeting hero and bento content. */}
+      {/* No PageHeader here on purpose: the bento hero below already carries
+          the greeting, the user's name and the two primary CTAs, so a header
+          would repeat all three. PageShell still supplies the shared frame —
+          width, horizontal padding and density-aware rhythm — which is what
+          made this page's margins differ from every other route. */}
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
 
         {/* Post-signup welcome — additive, dismissible. Reflects the real niche
             the user chose at signup; falls back to honest generic copy when
@@ -729,7 +733,7 @@ export default function DashboardHome() {
           </Panel>
 
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }
