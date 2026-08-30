@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { LegalPage } from '../../../components/ui/legal-page'
 
 type Mode = 'notice' | 'counter';
 
@@ -46,17 +46,7 @@ export default function DmcaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 px-6 py-24 font-inter">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href="/trust"
-          className="inline-flex items-center gap-2 text-xs text-surface-500 hover:text-surface-900 dark:hover:text-surface-50 uppercase tracking-widest font-bold mb-12"
-        >
-          ← Trust Center
-        </Link>
-
-        <div className="mb-2 text-xs uppercase tracking-[0.4em] text-indigo-400 font-black">DMCA</div>
-        <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-6">Copyright takedown.</h1>
+    <LegalPage kicker="DMCA" title="Copyright takedown." backHref="/trust" backLabel="Trust Center">
         <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed mb-10">
           Click respects copyright. Use this form to file a takedown notice under 17 U.S.C. §512(c)
           or a counter-notice under §512(g). Knowingly false statements may carry liability under §512(f).
@@ -161,8 +151,7 @@ export default function DmcaPage() {
         <p className="text-surface-500 text-xs mt-12 leading-relaxed">
           You can also submit by email to <a href="mailto:dmca@click.example" className="text-indigo-400 hover:text-indigo-300 underline">dmca@click.example</a> or by post to Click, Inc., DMCA Agent, 1 Market St., Wilmington DE 19801, USA.
         </p>
-      </div>
-    </div>
+          </LegalPage>
   );
 }
 

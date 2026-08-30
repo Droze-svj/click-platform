@@ -27,11 +27,16 @@ export interface LegalPageProps
   backLabel?: string
   /** Optional standfirst under the header. */
   intro?: React.ReactNode
+  /**
+   * Reading column width. `prose` (default) is the document width; `wide` is
+   * for hub pages like the Trust Center that carry tables or card grids.
+   */
+  width?: "prose" | "wide"
 }
 
 const LegalPage = React.forwardRef<HTMLElement, LegalPageProps>(
   (
-    { className, kicker, title, updated, backHref = "/", backLabel = "Back to home", intro, children, ...props },
+    { className, kicker, title, updated, backHref = "/", backLabel = "Back to home", intro, width = "prose", children, ...props },
     ref
   ) => {
     const updatedLabel =
@@ -48,7 +53,7 @@ const LegalPage = React.forwardRef<HTMLElement, LegalPageProps>(
         )}
         {...props}
       >
-        <div className="mx-auto max-w-3xl space-y-10">
+        <div className={cn("mx-auto space-y-10", width === "wide" ? "max-w-4xl" : "max-w-3xl")}>
           {backHref ? (
             <Link
               href={backHref}
