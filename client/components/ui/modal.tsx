@@ -32,8 +32,16 @@ interface BaseOverlayProps {
  * @param open whether the overlay is showing
  * @param onClose called on Escape
  * @returns ref to attach to the dialog panel (the element focus is trapped in)
+ *
+ * Exported so the overlays that are already built as bespoke JSX can adopt the
+ * behaviour without being rewritten as <Modal>:
+ *
+ *   const panelRef = useDialogBehavior(isOpen, close)
+ *   <div className="fixed inset-0 …">
+ *     <div ref={panelRef} role="dialog" aria-modal="true"> … </div>
+ *   </div>
  */
-function useOverlay(open: boolean, onClose: () => void) {
+export function useDialogBehavior(open: boolean, onClose: () => void) {
   const panelRef = React.useRef<HTMLDivElement | null>(null)
 
   React.useEffect(() => {
@@ -141,7 +149,7 @@ const Modal: React.FC<ModalProps> = ({
   closeOnBackdrop = true,
   hideClose = false,
 }) => {
-  const panelRef = useOverlay(open, onClose)
+  const panelRef = useDialogBehavior(open, onClose)
   if (!open) return null
 
   return (
@@ -200,7 +208,7 @@ const Sheet: React.FC<SheetProps> = ({
   closeOnBackdrop = true,
   hideClose = false,
 }) => {
-  const panelRef = useOverlay(open, onClose)
+  const panelRef = useDialogBehavior(open, onClose)
   if (!open) return null
 
   return (

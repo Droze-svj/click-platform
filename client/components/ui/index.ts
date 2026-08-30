@@ -42,7 +42,7 @@ export {
 } from "./select"
 
 // Overlays
-export { Modal, Sheet } from "./modal"
+export { Modal, Sheet, useDialogBehavior } from "./modal"
 export type { ModalProps, SheetProps, SheetSide } from "./modal"
 
 // Entitlements / paywall

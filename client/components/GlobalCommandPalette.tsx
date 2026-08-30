@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import ClickLogo from './ClickLogo'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type CommandKind = 'page' | 'action' | 'create'
@@ -130,6 +131,7 @@ const GlobalCommandPalette: React.FC = () => {
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const panelRef = useDialogBehavior(open, () => setOpen(false))
   const [query, setQuery] = useState('')
   const [activeIdx, setActiveIdx] = useState(0)
   const [recentIds, setRecentIds] = useState<string[]>([])
@@ -250,10 +252,14 @@ const GlobalCommandPalette: React.FC = () => {
     <AnimatePresence>
       {open && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('globalCommandPalette.searchPlaceholder')}
           className="fixed inset-0 z-[200] flex items-start justify-center pt-[12vh] px-4 bg-black/60 backdrop-blur-md"
           onClick={() => setOpen(false)}
         >
           <motion.div
+            ref={panelRef}
             initial={{ opacity: 0, y: -16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
