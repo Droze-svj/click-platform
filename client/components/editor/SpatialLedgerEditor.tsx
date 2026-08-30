@@ -93,7 +93,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20 gap-4 opacity-50">
+    <div role="status" aria-live="polite" className="flex flex-col items-center justify-center p-20 gap-4 opacity-50">
       <RefreshCw className="animate-spin text-indigo-400" />
       <span className="text-[10px] font-black uppercase tracking-widest italic">Syncing Spatial Ledger...</span>
     </div>

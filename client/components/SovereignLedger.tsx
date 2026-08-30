@@ -75,7 +75,7 @@ export const SovereignLedger: React.FC = () => {
 
   if (loading && !state) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 min-h-[400px]">
+      <div role="status" aria-live="polite" className="flex flex-col items-center justify-center p-20 min-h-[400px]">
         <Activity className="text-primary-500 animate-spin mb-6" size={48} />
         <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic animate-pulse">{t('sovereignLedger.syncingNodes')}</p>
       </div>

@@ -82,7 +82,7 @@ function RegistrationSuccessContent() {
     return (
       <Shell>
         <div role="status" aria-live="polite" className="text-center space-y-5 py-6">
-          <div className="mx-auto w-16 h-16 rounded-2xl ds-surface-subtle flex items-center justify-center">
+          <div role="status" aria-live="polite" className="mx-auto w-16 h-16 rounded-2xl ds-surface-subtle flex items-center justify-center">
             <Loader2 className="w-7 h-7 animate-spin text-primary" />
           </div>
           <h1 className="ds-text-h2 text-theme-primary">Verifying your account…</h1>

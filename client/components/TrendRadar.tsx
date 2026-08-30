@@ -122,7 +122,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
       </div>
 
       {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-50">
+          <div role="status" aria-live="polite" className="py-20 flex flex-col items-center justify-center gap-4 opacity-50">
              <Activity className="w-10 h-10 text-indigo-500 animate-spin" />
              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('trendRadar.scanningNeuralPathways')}</span>
           </div>

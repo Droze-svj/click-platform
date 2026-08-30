@@ -261,7 +261,7 @@ export default function VideoStudioPage() {
   })
 
   if (loading) return (
-    <div className="ds-bg-mesh-soft flex flex-col items-center justify-center py-48 min-h-screen">
+    <div role="status" aria-live="polite" className="ds-bg-mesh-soft flex flex-col items-center justify-center py-48 min-h-screen">
        <Loader2 size={48} className="text-indigo-500 animate-spin mb-6" />
        <p className="ds-text-label text-theme-muted">{tr('studio.syncingStudio', 'Syncing Neural Studio...')}</p>
     </div>

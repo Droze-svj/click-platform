@@ -148,7 +148,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-48 space-y-12 bg-transparent min-h-[600px]">
+      <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-48 space-y-12 bg-transparent min-h-[600px]">
         <Loader2 size={80} className="text-primary-500 animate-spin" />
         <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic animate-pulse">{t('sovereignToolbox.syncingModules')}</p>
       </div>

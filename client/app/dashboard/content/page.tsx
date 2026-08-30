@@ -255,7 +255,7 @@ export default function NeuralForgePage() {
 
             <div className="flex-1 flex flex-col">
               {loading && (
-                <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                <div role="status" aria-live="polite" className="flex-1 flex flex-col items-center justify-center gap-4">
                   <RefreshCw size={32} className="text-primary animate-spin" aria-hidden />
                   <p className="ds-text-label text-theme-muted">{t('contentPage.forgingSyntheticLogic')}</p>
                 </div>

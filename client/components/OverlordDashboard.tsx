@@ -222,7 +222,7 @@ export default function OverlordDashboard() {
 
   if (loading && !fleetStatus) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div role="status" aria-live="polite" className="flex items-center justify-center h-screen">
         <RefreshCw className="w-12 h-12 text-indigo-500 animate-spin" />
       </div>
     )

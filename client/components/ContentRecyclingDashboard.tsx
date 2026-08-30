@@ -142,7 +142,7 @@ export default function EntropyReversalNode() {
 
   if (loading) {
     return (
-      <div className="py-32 flex flex-col items-center justify-center gap-10 bg-[var(--page-bg)] rounded-[5rem] border-2 border-white/5 shadow-2xl backdrop-blur-3xl">
+      <div role="status" aria-live="polite" className="py-32 flex flex-col items-center justify-center gap-10 bg-[var(--page-bg)] rounded-[5rem] border-2 border-white/5 shadow-2xl backdrop-blur-3xl">
         <RefreshCw size={64} className="text-indigo-500 animate-spin" />
         <div className="space-y-4 text-center">
            <p className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">{t('contentRecyclingDashboard.loadingPrimary')}</p>
