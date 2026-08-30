@@ -116,6 +116,106 @@ function getEventTime(event) {
 }
 
 /**
+ * The amount a Whop payment event carries, normalized to major units.
+ *
+ * Whop has sent amounts under several keys across API versions, and some
+ * integrations report minor units (cents). Returns null when no amount is
+ * present — an invoice with a guessed total is worse than no invoice.
+ */
+function getEventAmount(event) {
+  const d = event?.data || {};
+  const raw = d.final_amount ?? d.amount ?? d.subtotal ?? d.total ?? event?.amount ?? null;
+  if (raw == null) return null;
+  const num = typeof raw === 'string' ? Number(raw) : raw;
+  if (!Number.isFinite(num)) return null;
+
+  // `amount_in_cents`/`currency_minor` style fields mean the value is minor units.
+  const isMinor = d.amount_in_cents != null || d.currency_minor === true;
+  return isMinor ? num / 100 : num;
+}
+
+/**
+ * Persist a paid invoice to BillingHistory.
+ *
+ * Nothing in the codebase created these documents, so billingHistoryService —
+ * and every endpoint behind it (/billing/history, /billing/summary,
+ * /billing/invoices/:n, and the PDF download) — read an always-empty collection.
+ * The subscription state was recorded on the User; the money never was.
+ *
+ * Idempotent on the Whop transaction id so a webhook replay (Whop retries, and
+ * the receipt table is replay-safe by design) cannot double-invoice.
+ *
+ * Never throws: a bookkeeping failure must not fail the webhook and cause Whop
+ * to retry a payment that was already applied to the user's plan.
+ */
+async function recordBillingHistory({ user, event, mapping, subId, stampTime }) {
+  try {
+    const BillingHistory = require('../models/BillingHistory');
+
+    const transactionId = event?.data?.id || event?.id || subId || null;
+    if (transactionId) {
+      const existing = await BillingHistory.findOne({ 'payment.transactionId': transactionId }).select('_id').lean();
+      if (existing) {
+        logger.info('[whop] billing history already recorded for this transaction', { transactionId });
+        return;
+      }
+    }
+
+    const amount = getEventAmount(event);
+    if (amount == null) {
+      // Record the event without inventing a total: the invoice exists and is
+      // marked as needing reconciliation rather than showing a made-up figure.
+      logger.warn('[whop] payment event carried no recognizable amount — invoice recorded without a total', {
+        transactionId, userId: user._id?.toString(),
+      });
+    }
+
+    const currency = (event?.data?.currency || 'USD').toUpperCase();
+    const date = stampTime || new Date();
+
+    await BillingHistory.create({
+      userId: user._id,
+      invoice: {
+        date,
+        period: mapping?.period === 'yearly'
+          ? { start: date, end: new Date(new Date(date).setFullYear(date.getFullYear() + 1)) }
+          : { start: date, end: new Date(new Date(date).setMonth(date.getMonth() + 1)) },
+        amount: {
+          subtotal: amount,
+          tax: 0,
+          discount: 0,
+          total: amount,
+          currency,
+        },
+        items: [{
+          description: `Click ${mapping?.planId || 'subscription'} (${mapping?.period || 'monthly'})`,
+          quantity: 1,
+          unitPrice: amount,
+          total: amount,
+        }],
+      },
+      payment: {
+        method: 'other', // Whop does not report the underlying instrument here.
+        transactionId,
+        status: 'completed',
+        paidAt: date,
+      },
+      subscription: { billingCycle: mapping?.period === 'yearly' ? 'yearly' : 'monthly' },
+      // 'draft' (not 'paid') when no amount came through, so an invoice with no
+      // total is visibly incomplete and can be reconciled rather than presented
+      // to the customer as a finished record. ('pending' is not in this enum.)
+      status: amount == null ? 'draft' : 'paid',
+    });
+
+    logger.info('[whop] billing history recorded', { userId: user._id?.toString(), transactionId, amount, currency });
+  } catch (error) {
+    logger.error('[whop] failed to record billing history (payment itself was applied)', {
+      error: error.message, userId: user._id?.toString(),
+    });
+  }
+}
+
+/**
  * Process a single Whop event and apply it to the user.
  * Returns { ok, action, userId, plan } for logging.
  *
@@ -188,6 +288,16 @@ async function processEvent(event, deps) {
     if (event?.data?.user_id && !user.whopUserId) user.whopUserId = event.data.user_id;
     if (stampTime) user.subscription.lastEventAt = stampTime;
     await user.save();
+
+    // Record the money. Nothing in this codebase wrote a BillingHistory document
+    // before, so the billing-history and invoice endpoints had no data at all —
+    // the subscription state was persisted but the amount paid never was.
+    // Only actual payment events carry an amount; membership/subscription
+    // lifecycle events do not, so they are not invoiced.
+    if (eventType === 'payment.succeeded' || eventType === 'payment_succeeded') {
+      await recordBillingHistory({ user, event, mapping, subId, stampTime });
+    }
+
     return { ok: true, action: eventType, userId: user._id.toString(), plan: mapping.planId, period: mapping.period };
   }
 

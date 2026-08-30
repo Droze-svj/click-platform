@@ -336,6 +336,18 @@ router.get('/billing/invoices/:invoiceNumber/download', auth, asyncHandler(async
   const { invoiceNumber } = req.params;
   const userId = req.user._id;
   const pdf = await downloadInvoicePDF(invoiceNumber, userId);
+
+  // Stream the generated PDF as a real download. Sending it through sendSuccess
+  // would JSON-serialize the Buffer into {type:'Buffer', data:[...]}. (Before
+  // the generator existed this endpoint answered 200 with {url:null} — nothing
+  // to download at all.)
+  if (pdf?.content) {
+    res.setHeader('Content-Type', pdf.contentType || 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${pdf.filename}"`);
+    return res.send(pdf.content);
+  }
+
+  // A previously-stored PDF is handed back as a URL.
   sendSuccess(res, 'Invoice PDF ready', 200, pdf);
 }));
 

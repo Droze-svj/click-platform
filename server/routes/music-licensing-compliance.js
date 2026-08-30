@@ -253,6 +253,14 @@ router.get('/report', auth, asyncHandler(async (req, res) => {
       return res.send(report.content);
     }
 
+    // PDF is a Buffer — sending it through sendSuccess would JSON-serialize it
+    // into a {type:'Buffer', data:[...]} blob instead of downloading a file.
+    if (format === 'pdf') {
+      res.setHeader('Content-Type', report.contentType || 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${report.filename}"`);
+      return res.send(report.content);
+    }
+
     sendSuccess(res, 'Compliance report generated', 200, report);
   } catch (error) {
     logger.error('Error generating compliance report', { error: error.message });
