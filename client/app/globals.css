@@ -7,44 +7,60 @@
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ===== MODERN DESIGN SYSTEM ===== */
+/* ===== MODERN DESIGN SYSTEM =====
+ *
+ * COLOUR SOURCE OF TRUTH
+ *
+ * Click has exactly one brand hue: indigo `#6366f1`. It is expressed three ways,
+ * and all three MUST stay in agreement:
+ *
+ *   1. `--primary: 243 75% 59%`  (semantic HSL, below) — what components/ui/*
+ *      renders through Tailwind's `bg-primary` / `text-primary` / `ring`.
+ *   2. `primary.50…950` in tailwind.config.js — the numeric utility ramp
+ *      (`bg-primary-600`), used by ~32 files.
+ *   3. `--color-primary-50…900` (right below) — the same ramp as CSS variables,
+ *      consumed by the legacy `.btn-modern` / `.form-input-modern` /
+ *      `.gradient-primary` utility classes further down this file.
+ *
+ * These had drifted: this ramp used to be a SKY ramp (#0ea5e9) while the other
+ * two were indigo, so a `.btn-modern-primary` and a `<Button variant="primary">`
+ * rendered as two different brands on the same screen. Realigned to indigo.
+ *
+ * Also cleaned up here:
+ *   • `--color-secondary-*` was a NEUTRAL slate ramp, but Tailwind's `secondary`
+ *     is fuchsia — the same name meaning two different colours. Renamed to
+ *     `--color-neutral-*`.
+ *   • `--color-gray-*` (10 tokens) and `--color-error-*` (5) had zero references
+ *     anywhere and were removed.
+ *
+ * If you add a colour, add it to the semantic tokens and derive from them.
+ * Don't start a fourth ramp.
+ */
 
 :root {
-  /* Modern Color Palette */
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
+  /* Brand ramp — mirrors tailwind.config.js `primary` exactly. */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
 
   /* Enhanced Secondary Colors for Better Contrast */
-  --color-secondary-50: #f8fafc;
-  --color-secondary-100: #f1f5f9;
-  --color-secondary-200: #e2e8f0;
-  --color-secondary-300: #cbd5e1;
-  --color-secondary-400: #94a3b8;
-  --color-secondary-500: #64748b;
-  --color-secondary-600: #475569;
-  --color-secondary-700: #334155;
-  --color-secondary-800: #1e293b; /* Enhanced for better contrast */
-  --color-secondary-900: #0f172a; /* Enhanced for better contrast */
-
-  /* Improved Gray Scale for Better Readability */
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563; /* Enhanced for better contrast */
-  --color-gray-700: #374151; /* Enhanced for better contrast */
-  --color-gray-800: #1f2937; /* Enhanced for better contrast */
-  --color-gray-900: #111827; /* Enhanced for better contrast */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b; /* Enhanced for better contrast */
+  --color-neutral-900: #0f172a; /* Enhanced for better contrast */
 
   --color-accent-50: #fef7ff;
   --color-accent-100: #fdf4ff;
@@ -68,12 +84,6 @@
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
   --color-warning-700: #b45309;
-
-  --color-error-50: #fef2f2;
-  --color-error-100: #fee2e2;
-  --color-error-500: #ef4444;
-  --color-error-600: #dc2626;
-  --color-error-700: #b91c1c;
 
   /* Enhanced Spacing Scale for Better Readability */
   --space-1: 0.25rem; /* 4px */
@@ -1179,7 +1189,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--color-secondary-200),
+    var(--color-neutral-200),
     transparent
   );
   margin: var(--space-readable-lg) 0;
@@ -1191,7 +1201,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--color-secondary-700),
+    var(--color-neutral-700),
     transparent
   );
   margin: var(--space-readable-lg) 0;
@@ -1221,7 +1231,7 @@ select {
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
   padding: var(--space-readable-sm) var(--space-readable-md);
-  border: 2px solid var(--color-secondary-300);
+  border: 2px solid var(--color-neutral-300);
   border-radius: var(--radius-md);
   transition: border-color var(--transition-fast);
 }
@@ -1344,8 +1354,8 @@ select:focus {
 .gradient-secondary {
   background: linear-gradient(
     135deg,
-    var(--color-secondary-500),
-    var(--color-secondary-700)
+    var(--color-neutral-500),
+    var(--color-neutral-700)
   );
 }
 
@@ -1591,7 +1601,7 @@ select:focus {
 
 .btn-ghost {
   background: rgba(255, 255, 255, 0.1);
-  color: var(--color-secondary-700);
+  color: var(--color-neutral-700);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-lg);
   padding: 0.75rem 2rem;
@@ -1614,7 +1624,7 @@ select:focus {
   font-weight: 800;
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-secondary-900);
+  color: var(--color-neutral-900);
 }
 
 /* Mobile-First Typography Enhancements */
@@ -1645,27 +1655,27 @@ select:focus {
   font-weight: 700;
   line-height: var(--line-height-snug);
   letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-secondary-800);
+  color: var(--color-neutral-800);
 }
 
 .text-lead {
   font-size: var(--font-size-lg);
   font-weight: 500;
   line-height: var(--line-height-relaxed);
-  color: var(--color-secondary-700);
+  color: var(--color-neutral-700);
 }
 
 .text-body-enhanced {
   font-size: var(--font-size-base);
   line-height: var(--line-height-relaxed);
-  color: var(--color-secondary-800);
+  color: var(--color-neutral-800);
 }
 
 /* New Enhanced Text Classes */
 .text-readable {
   font-size: var(--font-size-base);
   line-height: var(--line-height-relaxed);
-  color: var(--color-secondary-800);
+  color: var(--color-neutral-800);
   font-weight: 400;
   letter-spacing: var(--letter-spacing-normal);
 }
@@ -1673,44 +1683,44 @@ select:focus {
 .text-readable-lg {
   font-size: var(--font-size-lg);
   line-height: var(--line-height-relaxed);
-  color: var(--color-secondary-800);
+  color: var(--color-neutral-800);
   font-weight: 400;
 }
 
 .text-readable-sm {
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
-  color: var(--color-secondary-700);
+  color: var(--color-neutral-700);
   font-weight: 400;
 }
 
 /* Dark mode text improvements */
 .dark .text-readable {
-  color: var(--color-secondary-100);
+  color: var(--color-neutral-100);
 }
 
 .dark .text-readable-lg {
-  color: var(--color-secondary-100);
+  color: var(--color-neutral-100);
 }
 
 .dark .text-readable-sm {
-  color: var(--color-secondary-200);
+  color: var(--color-neutral-200);
 }
 
 .dark .text-hero {
-  color: var(--color-secondary-50);
+  color: var(--color-neutral-50);
 }
 
 .dark .text-display {
-  color: var(--color-secondary-100);
+  color: var(--color-neutral-100);
 }
 
 .dark .text-lead {
-  color: var(--color-secondary-200);
+  color: var(--color-neutral-200);
 }
 
 .dark .text-body-enhanced {
-  color: var(--color-secondary-100);
+  color: var(--color-neutral-100);
 }
 
 /* ===== MODERN FORM STYLES ===== */
@@ -1724,7 +1734,7 @@ select:focus {
   padding: 0.875rem 1rem;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--color-secondary-900);
+  color: var(--color-neutral-900);
   transition: all var(--transition-base);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
@@ -1740,7 +1750,7 @@ select:focus {
 }
 
 .form-input-modern::placeholder {
-  color: var(--color-secondary-400);
+  color: var(--color-neutral-400);
   font-weight: 400;
 }
 
@@ -1753,7 +1763,7 @@ select:focus {
   padding: 0.875rem 1rem;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--color-secondary-100);
+  color: var(--color-neutral-100);
   transition: all var(--transition-base);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
@@ -1769,7 +1779,7 @@ select:focus {
 }
 
 .form-input-modern-dark::placeholder {
-  color: var(--color-secondary-500);
+  color: var(--color-neutral-500);
   font-weight: 400;
 }
 
@@ -1794,7 +1804,7 @@ select:focus {
   padding: 1rem;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--color-secondary-900);
+  color: var(--color-neutral-900);
   transition: all var(--transition-base);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   resize: vertical;
@@ -1812,7 +1822,7 @@ select:focus {
 }
 
 .form-textarea-modern::placeholder {
-  color: var(--color-secondary-400);
+  color: var(--color-neutral-400);
   font-weight: 400;
 }
 
@@ -1826,7 +1836,7 @@ select:focus {
   padding: 0.875rem 1rem;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--color-secondary-900);
+  color: var(--color-neutral-900);
   transition: all var(--transition-base);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   cursor: pointer;
@@ -1855,7 +1865,7 @@ select:focus {
 .form-label-modern {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-secondary-700);
+  color: var(--color-neutral-700);
   margin-bottom: 0.5rem;
   display: block;
   letter-spacing: 0.025em;
@@ -1863,7 +1873,7 @@ select:focus {
 }
 
 .form-label-modern-dark {
-  color: var(--color-secondary-300);
+  color: var(--color-neutral-300);
 }
 
 /* Form groups */
@@ -2215,9 +2225,9 @@ select:focus {
 .loading-shimmer {
   background: linear-gradient(
     90deg,
-    var(--color-secondary-100) 25%,
-    var(--color-secondary-200) 50%,
-    var(--color-secondary-100) 75%
+    var(--color-neutral-100) 25%,
+    var(--color-neutral-200) 50%,
+    var(--color-neutral-100) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -2249,7 +2259,7 @@ select:focus {
 .bg-dots {
   background-image: radial-gradient(
     circle,
-    var(--color-secondary-300) 1px,
+    var(--color-neutral-300) 1px,
     transparent 1px
   );
   background-size: 20px 20px;
@@ -2297,8 +2307,8 @@ select:focus {
 
 .btn-modern-secondary {
   background: rgba(255, 255, 255, 0.9);
-  color: var(--color-secondary-700);
-  border: 1px solid var(--color-secondary-300);
+  color: var(--color-neutral-700);
+  border: 1px solid var(--color-neutral-300);
 }
 
 .btn-modern-secondary:hover {
@@ -2309,7 +2319,7 @@ select:focus {
 
 .btn-modern-ghost {
   background: transparent;
-  color: var(--color-secondary-600);
+  color: var(--color-neutral-600);
   border: 1px solid transparent;
 }
 
@@ -2325,10 +2335,10 @@ select:focus {
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   line-height: 1.25rem;
-  color: var(--color-secondary-900);
+  color: var(--color-neutral-900);
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
-  border: 1px solid var(--color-secondary-300);
+  border: 1px solid var(--color-neutral-300);
   border-radius: var(--radius-lg);
   transition: all var(--transition-fast);
 }
@@ -2340,7 +2350,7 @@ select:focus {
 }
 
 .input-modern::placeholder {
-  color: var(--color-secondary-500);
+  color: var(--color-neutral-500);
 }
 
 /* ===== EDITOR AUTO-ADJUST: TEXT & LAYOUT FOR ALL EDITING TOOLS ===== */
@@ -2517,16 +2527,16 @@ select:focus {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-secondary-50: #0f172a;
-    --color-secondary-100: #1e293b;
-    --color-secondary-200: #334155;
-    --color-secondary-300: #475569;
-    --color-secondary-400: #64748b;
-    --color-secondary-500: #94a3b8;
-    --color-secondary-600: #cbd5e1;
-    --color-secondary-700: #e2e8f0;
-    --color-secondary-800: #f1f5f9;
-    --color-secondary-900: #f8fafc;
+    --color-neutral-50: #0f172a;
+    --color-neutral-100: #1e293b;
+    --color-neutral-200: #334155;
+    --color-neutral-300: #475569;
+    --color-neutral-400: #64748b;
+    --color-neutral-500: #94a3b8;
+    --color-neutral-600: #cbd5e1;
+    --color-neutral-700: #e2e8f0;
+    --color-neutral-800: #f1f5f9;
+    --color-neutral-900: #f8fafc;
   }
 }
 
@@ -2562,18 +2572,18 @@ select:focus {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-secondary-100);
+  background: var(--color-neutral-100);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-secondary-400);
+  background: var(--color-neutral-400);
   border-radius: var(--radius-full);
   transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-secondary-500);
+  background: var(--color-neutral-500);
 }
 
 /* ===== VIDEO EDITOR SPECIFIC ===== */
@@ -2597,7 +2607,7 @@ select:focus {
 .slider::-webkit-slider-track {
   width: 100%;
   height: 6px;
-  background: var(--color-secondary-200);
+  background: var(--color-neutral-200);
   border-radius: var(--radius-full);
 }
 
@@ -2620,7 +2630,7 @@ select:focus {
 .slider::-moz-range-track {
   width: 100%;
   height: 6px;
-  background: var(--color-secondary-200);
+  background: var(--color-neutral-200);
   border-radius: var(--radius-full);
   border: none;
 }
