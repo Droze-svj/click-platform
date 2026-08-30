@@ -17,6 +17,7 @@ import { Button } from '../../../components/ui/button'
 import { StatCard } from '../../../components/ui/stat-card'
 
 import { API_URL } from '../../../lib/api'
+import { PageShell } from '../../../components/ui'
 
 interface Achievement {
   _id: string; achievementType: string; unlockedAt: string; metadata?: any;
@@ -102,7 +103,7 @@ export default function AscensionLedgerPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1500px] mx-auto space-y-8">
+      <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
         <ToastContainer />
 
         {/* Header */}
@@ -213,7 +214,7 @@ export default function AscensionLedgerPage() {
             })}
           </div>
         </section>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

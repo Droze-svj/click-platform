@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ContentSkeleton } from '../../../../components/LoadingSkeleton'
+import { PageShell } from '../../../../components/ui'
 
 // Lazy load heavy components
 const VersionHistory = lazy(() => import('../../../../components/VersionHistory'))
@@ -176,9 +177,9 @@ export default function ContentDetailPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-[var(--page-bg)] px-4 sm:px-6 lg:px-12 pt-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label="Loading">
+    <PageShell width="wide" className="min-h-screen bg-[var(--page-bg)]" aria-busy="true" aria-label="Loading">
       <ContentSkeleton />
-    </div>
+    </PageShell>
   )
 
   if (!content) return (
@@ -193,7 +194,10 @@ export default function ContentDetailPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24">
+      {/* flush: this page is deliberately airy (space-y-24, pb-48) and owns its
+          own rhythm, so it takes the shell's width and centring but not the
+          density stack's much tighter gap. */}
+      <PageShell width="wide" flush className="min-h-screen relative z-10 px-10 pt-16 pb-48 space-y-24">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -529,7 +533,7 @@ export default function ContentDetailPage() {
           .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
           .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
         `}</style>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }
