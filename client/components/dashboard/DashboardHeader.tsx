@@ -32,6 +32,7 @@ import {
 import { IconButton } from '../ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../ThemeProvider'
+import NotificationBell from '../NotificationBell'
 import { useTranslation } from '../../hooks/useTranslation'
 import { useContainerWidth } from '../../hooks/useContainerWidth'
 import { cn } from '../../lib/utils'
@@ -217,13 +218,11 @@ export default function DashboardHeader() {
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {!compactActions && (
             <>
-              <IconButton
-                aria-label={t('notificationsPage.title') || 'Notifications'}
-                variant="ghost"
-                onClick={() => router.push('/dashboard/notifications')}
-              >
-                <Bell size={18} aria-hidden="true" />
-              </IconButton>
+              {/* The real inbox: unread count, live socket updates and
+                  pending approvals. It already existed and was wired into
+                  MobileNavbar only, so desktop users got a bell that just
+                  navigated away with no indication anything was waiting. */}
+              <NotificationBell />
               <IconButton
                 aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
                 variant="ghost"
