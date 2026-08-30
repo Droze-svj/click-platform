@@ -29,6 +29,7 @@ import { Slider } from '../../../components/ui/slider'
 import { Modal } from '../../../components/ui/modal'
 import { Button } from '../../../components/ui/button'
 import { EmptyState } from '../../../components/ui/empty-state'
+import { PageShell } from '../../../components/ui'
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -329,18 +330,18 @@ export default function SettingsPage() {
   }, [matchingSections, activeSection])
 
   if (loading) return (
-    <div className="min-h-screen ds-bg-mesh-soft px-4 sm:px-8 pt-8 pb-24 max-w-[1500px] mx-auto" aria-busy="true">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen" aria-busy="true">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
       </div>
-    </div>
+    </PageShell>
   )
 
   const activeDef = SECTIONS.find(s => s.id === activeSection)!
 
   return (
     <ErrorBoundary>
-      <div ref={shellRef} className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1500px] mx-auto">
+      <PageShell ref={shellRef} width="wide" className="ds-bg-mesh-soft min-h-screen">
         <ToastContainer />
 
         {/* Header */}
@@ -490,7 +491,7 @@ export default function SettingsPage() {
             {activeSection === 'billing' && <BillingSection />}
           </main>
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

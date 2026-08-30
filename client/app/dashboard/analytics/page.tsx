@@ -7,6 +7,7 @@ import {
   Music, Instagram, Youtube, Video as VideoIcon, ArrowUpRight,
 } from 'lucide-react'
 import { apiGet } from '@/lib/api'
+import { PageShell } from '../../../components/ui'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import ToastContainer from '@/components/ToastContainer'
 import { StatsCardSkeleton, ContentSkeleton } from '@/components/LoadingSkeleton'
@@ -128,19 +129,20 @@ export default function AnalyticsPage() {
   const compact = width > 0 && width < 640
 
   if (loading) return (
-    <div className="min-h-screen ds-bg-mesh-soft px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('analyticsPage.loading')}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen" aria-busy="true" aria-label={t('analyticsPage.loading')}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
       </div>
       <ContentSkeleton />
-    </div>
+    </PageShell>
   )
 
   return (
     <ErrorBoundary>
-      <div
+      <PageShell
         ref={shellRef}
-        className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary"
+        width="wide"
+        className="ds-bg-mesh-soft min-h-screen overflow-x-hidden"
       >
         <ToastContainer />
 
@@ -393,7 +395,7 @@ export default function AnalyticsPage() {
             </span>
           </div>
         </Panel>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }
