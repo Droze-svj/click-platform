@@ -8,11 +8,11 @@ export const metadata = {
 
 export default function SecurityPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white px-6 py-24">
+    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 px-6 py-24 font-inter">
       <div className="max-w-3xl mx-auto">
         <Link
           href="/trust"
-          className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-white uppercase tracking-widest font-bold mb-12"
+          className="inline-flex items-center gap-2 text-xs text-surface-500 hover:text-surface-900 dark:hover:text-surface-50 uppercase tracking-widest font-bold mb-12"
         >
           ← Trust Center
         </Link>
@@ -110,7 +110,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section>
       <h2 className="text-2xl font-black mb-3 tracking-tight">{title}</h2>
-      <div className="text-slate-300 leading-relaxed">{children}</div>
+      <div className="text-surface-700 dark:text-surface-300 leading-relaxed">{children}</div>
     </section>
   );
 }

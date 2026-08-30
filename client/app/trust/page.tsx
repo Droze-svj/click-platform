@@ -21,18 +21,18 @@ const SUBPROCESSORS = [
 
 export default function TrustPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white px-6 py-24">
+    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 px-6 py-24 font-inter">
       <div className="max-w-4xl mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-white uppercase tracking-widest font-bold mb-12"
+          className="inline-flex items-center gap-2 text-xs text-surface-500 hover:text-surface-900 dark:hover:text-surface-50 uppercase tracking-widest font-bold mb-12"
         >
           ← Back to home
         </Link>
 
         <div className="mb-2 text-xs uppercase tracking-[0.4em] text-indigo-400 font-black">Trust Center</div>
         <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-4">Built for trust.</h1>
-        <p className="text-slate-400 text-lg leading-relaxed mb-10 max-w-2xl">
+        <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed mb-10 max-w-2xl">
           Click is the creative-AI platform creators publish from. We treat your work and your
           data the way we'd want ours treated: visibly, accountably, and with controls you can
           actually use.
@@ -53,7 +53,7 @@ export default function TrustPage() {
 
         <section className="mb-16">
           <h2 className="text-2xl font-black mb-6 tracking-tight">Our commitments</h2>
-          <ul className="text-slate-300 leading-relaxed space-y-3 list-disc pl-6">
+          <ul className="text-surface-700 dark:text-surface-300 leading-relaxed space-y-3 list-disc pl-6">
             <li><strong>No training on your private content</strong> — see Privacy §4.</li>
             <li><strong>AI outputs are marked</strong> — every AI-generated export carries a visible AI-disclosure marker and a C2PA cryptographic provenance manifest.</li>
             <li><strong>30-day data export &amp; deletion SLA</strong> — self-serve from Settings, or via privacy@click.example.</li>
@@ -68,7 +68,7 @@ export default function TrustPage() {
           <h2 className="text-2xl font-black mb-6 tracking-tight">Sub-processors</h2>
           <div className="border border-white/10 rounded-2xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-white/[0.03] text-[10px] uppercase tracking-widest text-slate-500">
+              <thead className="bg-white/[0.03] text-[10px] uppercase tracking-widest text-surface-500">
                 <tr>
                   <th className="text-left px-4 py-3 font-black">Provider</th>
                   <th className="text-left px-4 py-3 font-black">Purpose</th>
@@ -76,10 +76,10 @@ export default function TrustPage() {
                   <th className="text-left px-4 py-3 font-black">DPA</th>
                 </tr>
               </thead>
-              <tbody className="text-slate-300">
+              <tbody className="text-surface-700 dark:text-surface-300">
                 {SUBPROCESSORS.map((s) => (
                   <tr key={s.name} className="border-t border-white/5">
-                    <td className="px-4 py-3 font-bold text-white">{s.name}</td>
+                    <td className="px-4 py-3 font-bold text-surface-900 dark:text-surface-50">{s.name}</td>
                     <td className="px-4 py-3">{s.purpose}</td>
                     <td className="px-4 py-3">{s.region}</td>
                     <td className="px-4 py-3">
@@ -92,7 +92,7 @@ export default function TrustPage() {
               </tbody>
             </table>
           </div>
-          <p className="text-slate-500 text-xs mt-3">
+          <p className="text-surface-500 text-xs mt-3">
             We notify customers 30 days before adding a new sub-processor. Subscribe to updates at{' '}
             <a href="mailto:trust@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
               trust@click.example
@@ -103,7 +103,7 @@ export default function TrustPage() {
 
         <section className="mb-16">
           <h2 className="text-2xl font-black mb-6 tracking-tight">Documents on request</h2>
-          <p className="text-slate-300 leading-relaxed">
+          <p className="text-surface-700 dark:text-surface-300 leading-relaxed">
             Data Processing Addendum (DPA), Standard Contractual Clauses (SCCs), security
             questionnaire (CAIQ), penetration-test executive summary, SOC 2 Type II (in
             progress), AI risk assessment (EU AI Act). Email{' '}
@@ -125,7 +125,7 @@ function Card({ title, href, desc }: { title: string; href: string; desc: string
       className="block p-6 rounded-2xl border border-white/10 bg-white/[0.02] hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all group"
     >
       <div className="text-lg font-black mb-1 group-hover:text-indigo-300 transition-colors">{title}</div>
-      <div className="text-sm text-slate-400 leading-relaxed">{desc}</div>
+      <div className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">{desc}</div>
     </Link>
   );
 }

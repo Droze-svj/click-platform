@@ -3,16 +3,16 @@ import { Mail, MessageCircle, Building2 } from 'lucide-react';
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white px-6 py-24">
+    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 px-6 py-24 font-inter">
       <div className="max-w-3xl mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-white uppercase tracking-widest font-bold mb-12"
+          className="inline-flex items-center gap-2 text-xs text-surface-500 hover:text-surface-900 dark:hover:text-surface-50 uppercase tracking-widest font-bold mb-12"
         >
           ← Back to home
         </Link>
         <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-6">Get in Touch</h1>
-        <p className="text-slate-400 text-lg font-medium leading-relaxed mb-12 max-w-2xl">
+        <p className="text-surface-600 dark:text-surface-400 text-lg font-medium leading-relaxed mb-12 max-w-2xl">
           We answer fast. Pick the channel that fits, and we’ll route from there.
         </p>
 
@@ -25,7 +25,7 @@ export default function ContactPage() {
               <Mail className="w-6 h-6" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-black mb-2 tracking-tight">General</h2>
-            <p className="text-sm text-slate-400 font-medium">
+            <p className="text-sm text-surface-600 dark:text-surface-400 font-medium">
               Questions about the product, integrations, or partnerships.
             </p>
             <p className="mt-4 text-sm text-indigo-300 font-bold">hello@click.example</p>
@@ -39,7 +39,7 @@ export default function ContactPage() {
               <MessageCircle className="w-6 h-6" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-black mb-2 tracking-tight">Support</h2>
-            <p className="text-sm text-slate-400 font-medium">
+            <p className="text-sm text-surface-600 dark:text-surface-400 font-medium">
               Account, billing, or something’s broken — we’re on it.
             </p>
             <p className="mt-4 text-sm text-emerald-300 font-bold">support@click.example</p>
@@ -53,7 +53,7 @@ export default function ContactPage() {
               <Building2 className="w-6 h-6" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-black mb-2 tracking-tight">Agencies</h2>
-            <p className="text-sm text-slate-400 font-medium">
+            <p className="text-sm text-surface-600 dark:text-surface-400 font-medium">
               Volume pricing, white-label, custom AI playbooks — let’s talk.
             </p>
             <p className="mt-4 text-sm text-amber-300 font-bold">sales@click.example</p>
