@@ -18,7 +18,9 @@
 import Link from 'next/link'
 import { CheckCircle, Loader2, Calendar, Lightbulb, Sparkles, ExternalLink, type LucideIcon } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
-import { Panel, SectionHeader, Badge } from '../../../components/ui'
+import { Panel, SectionHeader, Badge,
+  PageShell,
+} from '../../../components/ui'
 import { cn } from '../../../lib/utils'
 
 type Status = 'shipped' | 'in-progress' | 'next-up' | 'exploring'
@@ -78,7 +80,7 @@ export default function RoadmapPage() {
   const grouped = sections.map(s => ({ status: s, items: ROADMAP.filter(r => r.status === s) }))
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1400px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <SectionHeader
         as="h1"
         title={t('roadmapPage.title')}
@@ -132,6 +134,6 @@ export default function RoadmapPage() {
           {t('roadmapPage.feedbackPrompt')} <a href="mailto:hello@click.example" className="text-primary hover:underline">hello@click.example</a>.
         </p>
       </footer>
-    </div>
+    </PageShell>
   )
 }

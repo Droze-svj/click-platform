@@ -45,7 +45,9 @@ const PageShell = React.forwardRef<HTMLDivElement, PageShellProps>(
     <div
       ref={ref}
       className={cn(
-        "mx-auto w-full min-w-0",
+        // text colour is part of the page frame — every hand-rolled wrapper
+        // this replaced set text-theme-primary itself.
+        "mx-auto w-full min-w-0 text-theme-primary",
         WIDTHS[width],
         // Vertical rhythm comes from ds-density-pad (scales with the user's
         // Appearance → Density setting), horizontal padding from Tailwind.

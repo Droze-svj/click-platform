@@ -28,6 +28,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 interface Workflow {
@@ -206,7 +207,7 @@ export default function WorkflowsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -426,7 +427,7 @@ export default function WorkflowsPage() {
             </footer>
           </div>
         </Modal>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

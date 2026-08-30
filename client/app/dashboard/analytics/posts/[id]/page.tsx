@@ -22,6 +22,7 @@ import { ErrorBoundary } from '../../../../../components/ErrorBoundary'
 import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel, StatCard, SectionHeader, EmptyState, Button, IconButton,
+  PageShell,
 } from '@/components/ui'
 
 interface PostStats {
@@ -81,7 +82,7 @@ export default function SovereignPostDiagnosticHub() {
   if (loading) return <SpectralLoader message={t('analyticsPostPage.loaderMessage')} />;
 
   if (!data) return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
       <EmptyState
         icon={Target}
         title={t('analyticsPostPage.nodeNotFound')}
@@ -92,7 +93,7 @@ export default function SovereignPostDiagnosticHub() {
           </Button>
         }
       />
-    </div>
+    </PageShell>
   )
 
   const mainStat = data.analytics[0] || { views: 0, likes: 0, shares: 0, comments: 0, engagement_rate: 0 }

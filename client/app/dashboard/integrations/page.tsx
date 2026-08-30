@@ -25,6 +25,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 interface Integration {
@@ -163,7 +164,7 @@ export default function IntegrationsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -325,7 +326,7 @@ export default function IntegrationsPage() {
             </div>
           )}
         </Modal>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

@@ -19,6 +19,7 @@ import {
   Badge,
   EmptyState,
   SectionHeader,
+  PageShell,
 } from '../../../components/ui'
 
 interface Template {
@@ -107,7 +108,7 @@ export default function TemplatesPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         {/* Header (global DashboardHeader provides the breadcrumb) */}
         <SectionHeader
           as="h1"
@@ -254,7 +255,7 @@ export default function TemplatesPage() {
             </div>
           </div>
         )}
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

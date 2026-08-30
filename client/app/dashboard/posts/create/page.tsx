@@ -21,6 +21,7 @@ import {
   Input,
   Textarea,
   SectionHeader,
+  PageShell,
 } from '../../../../components/ui'
 
 const PLATFORMS: { id: string; name: string; icon: LucideIcon }[] = [
@@ -138,7 +139,7 @@ export default function CreatePostPage() {
   }
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-4xl mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="narrow" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       {/* Header (global DashboardHeader provides the breadcrumb) */}
       <SectionHeader
         as="h1"
@@ -369,6 +370,6 @@ export default function CreatePostPage() {
           </FormField>
         </Panel>
       </form>
-    </div>
+    </PageShell>
   )
 }

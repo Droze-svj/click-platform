@@ -18,7 +18,9 @@ import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { apiGet, apiPost, apiDelete, api } from '../../../lib/api'
 import ToastContainer from '../../../components/ToastContainer'
-import { Button, IconButton, Panel, StatCard, SectionHeader, Badge, Input, Modal } from '../../../components/ui'
+import { Button, IconButton, Panel, StatCard, SectionHeader, Badge, Input, Modal,
+  PageShell,
+} from '../../../components/ui'
 import { cn } from '../../../lib/utils'
 
 interface Script {
@@ -167,7 +169,7 @@ export default function ScriptsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1750px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -355,7 +357,7 @@ export default function ScriptsPage() {
             </Button>
           </div>
         </Modal>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }
