@@ -202,22 +202,31 @@ async function processRefund(cancellationId, refund) {
       throw new Error('Cancellation not found');
     }
 
-    // Update refund status
+    // Mark the attempt in flight so a concurrent call doesn't double-refund.
     cancellation.refund.status = 'processing';
+    cancellation.refund.failureReason = undefined;
     await cancellation.save();
 
-    // Process refund with payment provider
-    // Would integrate with Stripe, PayPal, etc.
-    const transactionId = await processPaymentRefund(cancellation.userId, refund);
+    const result = await processPaymentRefund(cancellation, refund);
 
-    // Update cancellation
+    if (!result.success) {
+      // The money did NOT move. Record that honestly and leave the cancellation
+      // open so it surfaces in the operator queue — reporting 'processed' here
+      // would tell the customer they were refunded when they weren't.
+      cancellation.refund.status = 'failed';
+      cancellation.refund.failureReason = result.reason;
+      await cancellation.save();
+      logger.error('Refund could not be processed', { cancellationId, reason: result.reason });
+      return cancellation;
+    }
+
     cancellation.refund.status = 'processed';
     cancellation.refund.processedAt = new Date();
-    cancellation.refund.transactionId = transactionId;
+    cancellation.refund.transactionId = result.transactionId;
     cancellation.status = 'completed';
     await cancellation.save();
 
-    logger.info('Refund processed', { cancellationId, amount: refund.amount });
+    logger.info('Refund processed', { cancellationId, amount: refund.amount, transactionId: result.transactionId });
     return cancellation;
   } catch (error) {
     logger.error('Error processing refund', { error: error.message, cancellationId });
@@ -226,12 +235,34 @@ async function processRefund(cancellationId, refund) {
 }
 
 /**
- * Process payment refund (placeholder)
+ * Issue the refund with the payment provider.
+ *
+ * Whop is the only provider Click charges through (the signed Whop webhook is
+ * what grants paid tiers), so that's what we refund through.
+ *
+ * This previously returned a fabricated `REF-<timestamp>-<random>` id, which the
+ * caller then stored while marking the refund 'processed' — telling the customer
+ * their money was returned when nothing had been charged back. It now reports
+ * success only when Whop confirms it.
+ *
+ * @param {object} cancellation the CancellationRequest document
+ * @param {object} refund the calculated refund ({ amount, currency, ... })
+ * @returns {Promise<{success:boolean, transactionId:string|null, reason:string|null}>}
  */
-async function processPaymentRefund(userId, refund) {
-  // Would integrate with payment provider
-  // For now, return placeholder transaction ID
-  return `REF-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+async function processPaymentRefund(cancellation, refund) {
+  const { refundWhopPayment } = require('./whopMonetizationService');
+
+  // The subscription id captured at cancellation time is what Whop refunds against.
+  const receiptId = cancellation.subscriptionId;
+
+  const result = await refundWhopPayment(receiptId, { amount: refund?.amount });
+
+  if (!result.success && !result.configured) {
+    // No provider credentials in this environment: the refund is legitimately
+    // pending a manual action rather than broken.
+    return { success: false, transactionId: null, reason: result.reason };
+  }
+  return result;
 }
 
 /**
