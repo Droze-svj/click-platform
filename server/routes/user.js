@@ -134,7 +134,28 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
     update.privacy = privacy;
   }
   if (preferences && typeof preferences === 'object') {
-    update.preferences = preferences;
+    // Field-level merge, not wholesale replacement: `update.preferences = …`
+    // meant a client sending only { theme } silently wiped language, timezone
+    // and the workspace personalization below.
+    if (typeof preferences.theme === 'string') update['preferences.theme'] = preferences.theme;
+    if (typeof preferences.language === 'string') update['preferences.language'] = preferences.language;
+    if (typeof preferences.timezone === 'string') update['preferences.timezone'] = preferences.timezone;
+    if (typeof preferences.lastUsedWorkflowTemplateId === 'string') {
+      update['preferences.lastUsedWorkflowTemplateId'] = preferences.lastUsedWorkflowTemplateId;
+    }
+    // Pinned nav paths — clamped in count and length, and restricted to
+    // in-app dashboard routes so this can't be used to store arbitrary data
+    // or smuggle an off-site URL into the user's own sidebar.
+    if (Array.isArray(preferences.pinnedNav)) {
+      update['preferences.pinnedNav'] = preferences.pinnedNav
+        .filter((p) => typeof p === 'string' && /^\/dashboard(\/[A-Za-z0-9\-_/[\]]*)?$/.test(p))
+        .slice(0, 24);
+    }
+    if (typeof preferences.defaultLanding === 'string') {
+      const landing = preferences.defaultLanding;
+      update['preferences.defaultLanding'] =
+        landing === '' || /^\/dashboard(\/[A-Za-z0-9\-_/[\]]*)?$/.test(landing) ? landing : '';
+    }
   }
   if (req.body.agentic && typeof req.body.agentic === 'object') {
     update.agentic = req.body.agentic;

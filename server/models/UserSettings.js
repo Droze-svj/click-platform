@@ -36,10 +36,21 @@ const userSettingsSchema = new mongoose.Schema({
     analyticsConsent: { type: Boolean, default: true }
   },
   preferences: {
-    theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'auto' },
+    // 'oled' is included because the client's PreferencesProvider has always
+    // sent it for the OLED theme. The update path runs with runValidators:false
+    // so it was being stored regardless — the enum just didn't admit it.
+    theme: { type: String, enum: ['light', 'dark', 'auto', 'oled'], default: 'auto' },
     language: { type: String, default: 'en' },
     timezone: { type: String, default: '' },
-    lastUsedWorkflowTemplateId: { type: String, default: '' }
+    lastUsedWorkflowTemplateId: { type: String, default: '' },
+    // Workspace personalization. These live server-side (not localStorage) so a
+    // user's arrangement follows them to another browser or device.
+    //
+    // pinnedNav: nav item paths the user promoted into the always-visible part
+    // of the sidebar. Order is meaningful — it's the order they're shown in.
+    pinnedNav: { type: [String], default: [] },
+    // Where "Click" / the logo takes the user. Empty = the dashboard home.
+    defaultLanding: { type: String, default: '' }
   },
   agentic: {
     autonomousSwarm: { type: Boolean, default: true },
