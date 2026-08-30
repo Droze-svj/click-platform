@@ -19,6 +19,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 type TrendCategory = 'hooks' | 'sounds' | 'formats' | 'hashtags'
@@ -138,7 +139,7 @@ export default function TrendsPage() {
 
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       {/* ── Header (global DashboardHeader provides the breadcrumb) ── */}
@@ -316,6 +317,6 @@ export default function TrendsPage() {
           className="ds-surface-card"
         />
       )}
-    </div>
+    </PageShell>
   )
 }

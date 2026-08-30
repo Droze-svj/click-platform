@@ -13,7 +13,9 @@ import { useTranslation } from '@/hooks/useTranslation'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { StatsCardSkeleton, ContentSkeleton } from '../../../components/LoadingSkeleton'
-import { Panel, Button, IconButton, StatCard, SectionHeader, Badge, EmptyState } from '../../../components/ui'
+import { Panel, Button, IconButton, StatCard, SectionHeader, Badge, EmptyState,
+  PageShell,
+} from '../../../components/ui'
 import { cn } from '../../../lib/utils'
 
 interface AudienceOverview {
@@ -161,7 +163,7 @@ export default function CognitiveForecasterPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1900px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -345,7 +347,7 @@ export default function CognitiveForecasterPage() {
             )
           })}
         </section>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

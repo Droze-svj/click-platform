@@ -18,6 +18,7 @@ import {
   SectionHeader,
   Input,
   Button,
+  PageShell,
 } from '../../../../components/ui'
 
 // ── Live response shape from GET /api/agency/:id/calendar/capacity ──
@@ -105,7 +106,7 @@ function CapacityInner() {
   const overCapacityDays = overflow.filter(o => (o?.count ?? 0) > (o?.max ?? 0)).length
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       <SectionHeader
@@ -305,7 +306,7 @@ function CapacityInner() {
           </Panel>
         </>
       )}
-    </div>
+    </PageShell>
   )
 }
 

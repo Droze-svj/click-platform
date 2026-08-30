@@ -19,7 +19,9 @@ import ToastContainer from '../../../components/ToastContainer'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { cn } from '@/lib/utils'
-import { Panel, SectionHeader, Button } from '@/components/ui'
+import { Panel, SectionHeader, Button,
+  PageShell,
+} from '@/components/ui'
 
 interface OnboardingStep {
   id: string
@@ -155,7 +157,7 @@ export default function OnboardingPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1400px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -336,7 +338,7 @@ export default function OnboardingPage() {
             </Link>
           </Panel>
         )}
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

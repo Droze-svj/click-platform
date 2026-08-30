@@ -37,6 +37,7 @@ import {
   SectionHeader,
   EmptyState,
   UpgradeModal,
+  PageShell,
 } from '../../../components/ui'
 
 // Per-feature icon map (real catalog feature ids → lucide icon). Unknown ids
@@ -85,7 +86,7 @@ export default function LabsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
         <SectionHeader
           as="h1"
           title={t('labsPage.title')}
@@ -204,7 +205,7 @@ export default function LabsPage() {
             })}
           </div>
         )}
-      </div>
+      </PageShell>
 
       <UpgradeModal
         open={upgradeOpen}

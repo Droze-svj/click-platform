@@ -21,6 +21,7 @@ import {
   StatCard,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 interface Workspace {
@@ -152,7 +153,7 @@ export default function WorkspacesPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -248,7 +249,7 @@ export default function WorkspacesPage() {
             )}
           </div>
         </div>
-      </div>
+      </PageShell>
 
       {/* Create modal */}
       <Modal open={showCreate} onClose={() => { if (!creating) { setShowCreate(false); setNewName(''); setNewNiche('') } }} title={t('workspacesPage.modalTitle')} description={t('workspacesPage.spawnProtocol')} className="max-w-lg">

@@ -29,6 +29,7 @@ import {
   Button,
   IconButton,
   Input,
+  PageShell,
 } from '../../../components/ui'
 
 interface VideoItem {
@@ -268,7 +269,7 @@ export default function VideoStudioPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto space-y-8 text-theme-primary overflow-x-hidden">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <AnimatePresence>
@@ -418,7 +419,7 @@ export default function VideoStudioPage() {
               </span>
            </div>
         </Panel>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

@@ -28,6 +28,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 // ── Constants ───────────────────────────────────────────────────────
@@ -143,7 +144,7 @@ export default function TasksPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-36 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         {/* ── Header (global DashboardHeader provides the breadcrumb) ── */}
@@ -318,7 +319,7 @@ export default function TasksPage() {
         {selectedTask && (
           <TaskModal task={selectedTask} onClose={() => { setSelectedTask(null); setAddingForParent(null) }} onUpdate={(u: any) => updateTask(selectedTask._id, u)} onDelete={() => deleteTask(selectedTask._id)} onAddSub={() => { setAddingForParent(selectedTask._id); setSelectedTask(null) }} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} socket={socket} userId={user?.id} />
         )}
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }
