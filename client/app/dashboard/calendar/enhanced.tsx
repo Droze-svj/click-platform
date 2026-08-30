@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -89,7 +89,7 @@ export default function EnhancedCalendar({ onDateSelect }: EnhancedCalendarProps
           const isHovered = hoveredDate === day
 
           return (
-            <motion.div
+            <m.div
               key={day}
               onMouseEnter={() => setHoveredDate(day)}
               onMouseLeave={() => setHoveredDate(null)}
@@ -104,12 +104,12 @@ export default function EnhancedCalendar({ onDateSelect }: EnhancedCalendarProps
             >
               <span className="text-[12px] font-black italic tabular-nums relative z-10">{day}</span>
               {isHovered && !isToday && (
-                <motion.div layoutId="flare" className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent" />
+                <m.div layoutId="flare" className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent" />
               )}
               {isToday && (
                  <div className="absolute top-1 right-1 w-1 h-1 rounded-full bg-white animate-ping" />
               )}
-            </motion.div>
+            </m.div>
           )
         })}
       </div>

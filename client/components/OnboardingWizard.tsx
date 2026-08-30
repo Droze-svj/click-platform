@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Upload, Download, ChevronRight, X, Check,
   Sparkles, Zap, ArrowRight, Brain, Target, Rocket
@@ -168,7 +168,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -182,7 +182,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
         <div className="bg-gradient-to-b from-slate-900 to-black border border-white/10 rounded-3xl overflow-hidden shadow-2xl shadow-black/60">
           <div className="h-0.5 bg-white/5">
-            <motion.div
+            <m.div
               className="h-full bg-gradient-to-r from-indigo-600 to-purple-500"
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.4 }}
@@ -193,7 +193,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
             {/* ── NICHE QUIZ ─────────────────────────────── */}
             {currentStep === -2 && (
-              <motion.div key={`quiz-${quizStep}`}
+              <m.div key={`quiz-${quizStep}`}
                 initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
                 className="p-8"
               >
@@ -263,13 +263,13 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                       ))}
                     </div>
                     {selectedGoal && (
-                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                      <m.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                         className="mt-4 p-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20"
                       >
                         <p className="text-[10px] text-indigo-300">
                           <span className="font-black">{t('onboardingWizard.aiModePrefix')}</span>{t(selectedGoal.tipKey)}
                         </p>
-                      </motion.div>
+                      </m.div>
                     )}
                   </>
                 )}
@@ -279,12 +279,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 >
                   {quizStep < 2 ? t('onboardingWizard.continue') : t('onboardingWizard.configureMyAi')} <ArrowRight className="w-4 h-4" />
                 </button>
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── WELCOME ────────────────────────────────── */}
             {currentStep === -1 && (
-              <motion.div key="welcome"
+              <m.div key="welcome"
                 initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="p-8"
               >
@@ -322,12 +322,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   {t('onboardingWizard.startCreating')} <ArrowRight className="w-4 h-4" />
                 </button>
                 <p className="text-center text-[9px] text-slate-600 mt-3">{t('onboardingWizard.takesNinetySeconds')}</p>
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── STEP SCREENS ───────────────────────────── */}
             {currentStep >= 0 && step && !showConfetti && (
-              <motion.div key={`step-${currentStep}`}
+              <m.div key={`step-${currentStep}`}
                 initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
                 className="p-8"
               >
@@ -371,12 +371,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 >
                   {t(step.skipKey)}
                 </button>
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── COMPLETION ─────────────────────────────── */}
             {showConfetti && (
-              <motion.div key="done"
+              <m.div key="done"
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                 className="p-8 text-center"
               >
@@ -387,12 +387,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   <span className="text-indigo-400 font-bold">{(() => { const g = CREATOR_GOALS.find(g => g.id === creatorGoal); return g ? t(g.labelKey) : t('onboardingWizard.fallbackSuccess') })()}</span>.
                   {' '}{t('onboardingWizard.makeFirstVideoViral')}
                 </p>
-              </motion.div>
+              </m.div>
             )}
 
           </AnimatePresence>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

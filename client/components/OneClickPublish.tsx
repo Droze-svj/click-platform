@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Send, 
   CheckCircle2, 
@@ -135,7 +135,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className={`${glassStyle} rounded-[3rem] max-w-2xl w-full p-10 overflow-hidden relative`}
@@ -274,7 +274,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
         {/* Salvage Alert Overlay */}
         <AnimatePresence>
            {showSalvageAlert && (
-             <motion.div 
+             <m.div 
                initial={{ opacity: 0, scale: 0.9 }}
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0, scale: 0.9 }}
@@ -306,10 +306,10 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                       </button>
                    </div>
                 </div>
-             </motion.div>
+             </m.div>
            )}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

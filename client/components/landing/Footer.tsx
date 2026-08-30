@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import ClickLogo from '../ClickLogo';
 import { ShieldCheck, Cpu, Network, Sparkles, Activity } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 export function Footer() {
   return (

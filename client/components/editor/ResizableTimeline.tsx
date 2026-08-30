@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import './EditorComponents.css'
 import {
   Layers,
@@ -1739,7 +1739,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
                  {/* Viewport Bounds Indicator */}
                  {visibleTimeRange && (
-                    <motion.div
+                    <m.div
                       layout
                       className="absolute inset-y-1 rounded-md border-2 border-white/40 bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.1)] cursor-grab active:cursor-grabbing hover:bg-white/20 transition-colors"
                       style={{
@@ -1749,7 +1749,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     >
                       <div className="absolute inset-y-0 left-0 w-1 bg-white/50 rounded-l-sm" />
                        <div className="absolute inset-y-0 right-0 w-1 bg-white/50 rounded-r-sm" />
-                    </motion.div>
+                    </m.div>
                  )}
                  {/* Mini Playhead */}
                  <div
@@ -2049,7 +2049,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                             className="transition-all duration-700"
                           />
                        </svg>
-                       <motion.div
+                       <m.div
                           animate={{ x: ['-20%', '120%'], opacity: [0, 0.2, 0] }}
                           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                           className="absolute inset-y-0 w-80 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[30deg]"
@@ -2063,7 +2063,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     {transcript?.scenes?.map((scene, i) => {
                        if (i === 0) return null
                        return (
-                          <motion.div
+                          <m.div
                             key={`portal-${i}`}
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -2081,14 +2081,14 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 p-2 rounded-lg opacity-0 group-hover/portal:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
                                 <p className="text-[10px] font-black uppercase text-fuchsia-400">Suggest: Glitch Dissolve</p>
                              </div>
-                          </motion.div>
+                          </m.div>
                        )
                     })}
 
                   {(!focusLane || focusLane === 'ai') && (
                          <div className="h-20 relative rounded-2xl bg-indigo-500/5 border border-indigo-500/10 transition-all duration-500 mb-2">
                             {aiDirectorSuggestions.map(suggestion => (
-                              <motion.div
+                              <m.div
                                 key={suggestion.id}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -2108,7 +2108,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                               >
                                 <Zap className={`w-3 h-3 ${suggestion.impact === 'high' ? 'fill-white' : 'fill-indigo-400'}`} />
                                 <span className="text-[10px] font-bold">{suggestion.label}</span>
-                              </motion.div>
+                              </m.div>
                             ))}
                          </div>
                        )}
@@ -2125,7 +2125,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                {visibleWords.map((word, idx) => {
                                  const isActive = currentTime >= word.start && currentTime <= word.end
                                  return (
-                                   <motion.div
+                                   <m.div
                                      key={idx}
                                      onClick={() => onTimeUpdate(word.start)}
                                      style={{
@@ -2138,7 +2138,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                      }`}
                                    >
                                      {word.text}
-                                   </motion.div>
+                                   </m.div>
                                  )
                                })}
                             </div>
@@ -2176,7 +2176,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                               </div>
                             ))}
                            {visibleTextOverlays.map(o => (
-                             <motion.div
+                             <m.div
                                key={o.id}
                                layoutId={o.id}
                                style={{ '--overlay-left': `${timeToX(o.startTime)}%`, '--overlay-width': `${timeToX(o.endTime) - timeToX(o.startTime)}%`, left: 'var(--overlay-left)', width: 'var(--overlay-width)' } as any}
@@ -2187,7 +2187,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                onMouseDown={(e) => handleOverlayBodyMouseDown(e, o)}
                              >
                                 {selectedIds.includes(o.id) && (
-                                   <motion.div
+                                   <m.div
                                       layoutId={`selection-glow-${o.id}`}
                                       className="absolute -inset-[2px] rounded-xl border-2 border-white/40 pointer-events-none"
                                    />
@@ -2203,7 +2203,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                 {/* Precision Resize Handles (Bug 2: overlay-specific retiming) */}
                                 <div onMouseDown={(e) => handleOverlayEdgeMouseDown(e, o, 'start')} className="absolute left-0 top-0 bottom-0 w-2 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity" />
                                 <div onMouseDown={(e) => handleOverlayEdgeMouseDown(e, o, 'end')} className="absolute right-0 top-0 bottom-0 w-2 hover:bg-white/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity" />
-                             </motion.div>
+                             </m.div>
                            ))}
                         </div>
                       )}
@@ -2262,7 +2262,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                  </div>
                                )}
 
-                               <motion.div
+                               <m.div
                                  layoutId={s.id}
                                  style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
                                  className={`absolute top-1 bottom-1 rounded-lg flex flex-col justify-center px-3 cursor-pointer group/node transition-all overflow-hidden
@@ -2383,7 +2383,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                     />
                                   )
                                 })}
-                             </motion.div>
+                             </m.div>
                             </React.Fragment>
                            ))}
                         </div>
@@ -2398,7 +2398,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           onDrop={(e) => handleTrackDrop(e, 2)}
                         >
                            {visibleSegments.filter(s => s.track >= 2 && s.track < 5).map(s => (
-                             <motion.div
+                             <m.div
                                key={s.id}
                                layoutId={s.id}
                                style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
@@ -2497,7 +2497,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                     />
                                   )
                                 })}
-                             </motion.div>
+                             </m.div>
                            ))}
                         </div>
                       )}
@@ -2511,7 +2511,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           onDrop={(e) => handleTrackDrop(e, 6)}
                         >
                            {visibleSegments.filter(s => s.track >= 6).map(s => (
-                             <motion.div
+                             <m.div
                                key={s.id}
                                layoutId={s.id}
                                style={{ left: `${timeToX(s.startTime)}%`, width: `${timeToX(s.endTime) - timeToX(s.startTime)}%` }}
@@ -2555,7 +2555,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                 <div onMouseDown={(e) => handleSegmentEdgeMouseDown(e, s, 'end')} className="absolute right-0 top-0 bottom-0 w-4 hover:bg-white/10 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center border-l border-transparent hover:border-orange-400/50 transition-colors">
                                     <div className="w-0.5 h-4 bg-white/50 rounded-full" />
                                 </div>
-                             </motion.div>
+                             </m.div>
                            ))}
                         </div>
                       )}
@@ -2578,7 +2578,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                              const isSelected = selectedEffectId === eff.id
                              const disabled = eff.enabled === false
                              return (
-                               <motion.div
+                               <m.div
                                  key={eff.id}
                                  layoutId={`effect-${eff.id}`}
                                  style={{ left: `${left}%`, width: `${width}%`, backgroundColor: `${color}33`, borderColor: `${color}80` }}
@@ -2606,7 +2606,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                       </div>
                                     </>
                                   )}
-                               </motion.div>
+                               </m.div>
                              )
                            })}
                         </div>
@@ -2711,7 +2711,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    </div>
 
                    {/* Master Playhead (Neural Thread) */}
-                   <motion.div
+                   <m.div
                      className="absolute top-0 bottom-0 w-[1px] bg-fuchsia-500 z-50 pointer-events-none timeline-playhead-glow"
                      style={{ '--progress-left-vis': `${progress}%`, left: 'var(--progress-left-vis)' } as any}
                    >
@@ -2725,7 +2725,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 px-2 py-0.5 bg-fuchsia-950/80 backdrop-blur-md border border-fuchsia-500/30 rounded text-[10px] font-black text-fuchsia-100 uppercase shadow-2xl tracking-widest whitespace-nowrap">
                         {displayTime(currentTime)}
                      </div>
-                   </motion.div>
+                   </m.div>
 
                     {/* GHOSTING & SPATIAL TRANSFORM OVERLAY (MULTI-SUPPORT) */}
                     {draggingSegmentId && (
@@ -2884,7 +2884,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    onClick={() => setSnapEnabled(!snapEnabled)}
                    className={`w-12 h-6 rounded-full border transition-all relative ${snapEnabled ? 'bg-indigo-600 border-indigo-400' : 'bg-black/40 border-white/10'}`}
                  >
-                    <motion.div animate={{ x: snapEnabled ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
+                    <m.div animate={{ x: snapEnabled ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
                  </button>
               </div>
 
@@ -2901,7 +2901,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    onClick={() => setSnapToSpeech(!snapToSpeech)}
                    className={`w-12 h-6 rounded-full border transition-all relative disabled:cursor-not-allowed ${snapToSpeech ? 'bg-emerald-600 border-emerald-400' : 'bg-black/40 border-white/10'}`}
                  >
-                    <motion.div animate={{ x: snapToSpeech ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
+                    <m.div animate={{ x: snapToSpeech ? 24 : 4 }} className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
                  </button>
               </div>
 
@@ -2934,7 +2934,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       {/* Advanced Transition Animation Helper (Ghosting Effect) */}
       <AnimatePresence>
         {draggingSegmentId && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -2946,7 +2946,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       {/* ELITE NLE CONTEXT MENU */}
       <AnimatePresence>
          {contextMenu && (
-           <motion.div
+           <m.div
              ref={contextMenuRef}
              initial={{ opacity: 0, scale: 0.95, y: -5 }}
              animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -3020,7 +3020,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    </button>
                 </>
               )}
-           </motion.div>
+           </m.div>
          )}
       </AnimatePresence>
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { TrendingUp, ArrowRight, Lightbulb, Zap, Target, BarChart3, ShieldCheck } from 'lucide-react'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 
@@ -29,7 +29,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
@@ -111,7 +111,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
 
               <div className="space-y-6">
                  {pivots.length > 0 ? pivots.map((pivot, i) => (
-                   <motion.div
+                   <m.div
                      key={i}
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
@@ -141,7 +141,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
                             </div>
                         </div>
                      </div>
-                   </motion.div>
+                   </m.div>
                  )) : (
                      <div className="h-64 flex flex-col items-center justify-center text-slate-600 gap-4 opacity-40 italic">
                        {loading ? <Zap className="w-12 h-12 animate-pulse text-violet-400" /> : <BarChart3 className="w-12 h-12" />}
@@ -171,7 +171,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
           onScale(selectedNiche)
         }}
       />
-    </motion.div>
+    </m.div>
   )
 }
 

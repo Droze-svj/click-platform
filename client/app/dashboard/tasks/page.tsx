@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
 import { useSocket } from '../../../hooks/useSocket'
 import { apiGet, apiPost, apiPut, apiDelete, clearApiCache } from '../../../lib/api'
@@ -335,7 +335,7 @@ function TaskCard({ task, onSelect, onDragStart, reduceMotion }: any) {
   }
 
   return (
-    <motion.div
+    <m.div
       layout draggable
       onDragStart={(e: any) => { e.dataTransfer?.setData('text/plain', task._id); onDragStart() }}
       onClick={onSelect}
@@ -359,7 +359,7 @@ function TaskCard({ task, onSelect, onDragStart, reduceMotion }: any) {
         </Badge>
         <Badge className={priorityColors[task.priority]}>{t(`tasksPage.priorityLabels.${task.priority}`)}</Badge>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   RefreshCw, TrendingUp, Clock, CheckCircle, XCircle, 
   Play, Pause, Plus, BarChart3, Shield, Zap, Target, 
@@ -214,7 +214,7 @@ export default function EntropyReversalNode() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 {suggestions.map((item) => (
-                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                  <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                     key={item.postId}
                     className={`${glassStyle} rounded-[4rem] p-12 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col`}
                   >
@@ -259,7 +259,7 @@ export default function EntropyReversalNode() {
                         <Plus className="w-6 h-6 group-btn:rotate-90 transition-transform duration-700" /> {t('contentRecyclingDashboard.initiateReversion')}
                       </button>
                     </div>
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
             )}
@@ -277,7 +277,7 @@ export default function EntropyReversalNode() {
             ) : (
               <div className="space-y-10">
                 {plans.map((plan) => (
-                  <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }}
+                  <m.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }}
                     key={plan._id}
                     className={`${glassStyle} rounded-[5rem] p-16 flex flex-col lg:flex-row items-center gap-16 hover:border-indigo-500/30 group relative overflow-hidden transition-all duration-1000`}
                   >
@@ -334,7 +334,7 @@ export default function EntropyReversalNode() {
                       <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/ctl:opacity-100 transition-opacity duration-1000" />
                       {plan.repostSchedule.isActive ? <Pause size={48} className="relative z-10" /> : <Play size={48} className="relative z-10 translate-x-1" />}
                     </button>
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
             )}
@@ -412,7 +412,7 @@ export default function EntropyReversalNode() {
       <AnimatePresence>
         {selectedContent && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-12 bg-black/90 backdrop-blur-2xl" onClick={() => setSelectedContent(null)}>
-            <motion.div initial={{ opacity: 0, scale: 0.8, rotate: -2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.8, rotate: 2 }}
+            <m.div initial={{ opacity: 0, scale: 0.8, rotate: -2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.8, rotate: 2 }}
               className={`${glassStyle} rounded-[6rem] p-24 max-w-3xl w-full border-white/20 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-[0_0_500px_rgba(79,70,229,0.3)]`}
               onClick={e => e.stopPropagation()}
             >
@@ -448,7 +448,7 @@ export default function EntropyReversalNode() {
                 onCancel={() => setSelectedContent(null)} 
                 onCreate={createRecyclingPlan} 
               />
-            </motion.div>
+            </m.div>
           </div>
         )}
       </AnimatePresence>

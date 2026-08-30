@@ -33,7 +33,7 @@ import {
   Share2,
   type LucideIcon,
 } from 'lucide-react'
-import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
+import { m, AnimatePresence, useMotionValue } from 'framer-motion'
 
 // Clinical Utilities
 import { getStatusColor, loadEditorContentPreferences, pushRecentSection } from '../utils/editorUtils'
@@ -2459,7 +2459,7 @@ const ModernVideoEditor: React.FC<{
           <div className="px-4 pt-2 relative z-20">
             <AnimatePresence>
               {(activeCategory === 'insights' || activeCategory === 'ai-edit') && (
-                <motion.div
+                <m.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
@@ -2471,7 +2471,7 @@ const ModernVideoEditor: React.FC<{
                     duration={videoState.duration}
                   />
                   <div className="h-4" />
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>
@@ -2719,7 +2719,7 @@ const ModernVideoEditor: React.FC<{
                 </div>
                 <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
                   <AnimatePresence mode="wait">
-                    <motion.div
+                    <m.div
                       key={activeCategory}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -2727,7 +2727,7 @@ const ModernVideoEditor: React.FC<{
                       transition={{ duration: 0.4, ease: 'circOut' }}
                     >
                       {getCategoryContent()}
-                    </motion.div>
+                    </m.div>
                   </AnimatePresence>
                 </div>
               </div>

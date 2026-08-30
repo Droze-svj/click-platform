@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Play, Trash2, Pencil, Plus, X, ChevronRight,
   Sparkles, Zap, Cpu, Layers, RefreshCw,
@@ -268,7 +268,7 @@ export default function WorkflowsPage() {
         ) : (
           <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {workflows.map((w) => (
-              <motion.div
+              <m.div
                 key={w._id}
                 layout
                 whileHover={reduceMotion ? undefined : { y: -4 }}
@@ -325,7 +325,7 @@ export default function WorkflowsPage() {
                     <Trash2 size={16} aria-hidden />
                   </IconButton>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </section>
         )}
@@ -333,7 +333,7 @@ export default function WorkflowsPage() {
         {/* Execution Overlay */}
         <AnimatePresence>
           {executingId && (
-            <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-6">
+            <m.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-6">
               <div className="ds-surface-elevated ds-anim-rise max-w-xl w-full p-8 space-y-6 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mx-auto">
                   <Zap size={32} className="text-primary animate-pulse" aria-hidden />
@@ -358,7 +358,7 @@ export default function WorkflowsPage() {
                   })}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

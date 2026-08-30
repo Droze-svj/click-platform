@@ -16,7 +16,7 @@ import {
   Clock,
   Fingerprint, ChevronRight
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../../lib/api'
 
 interface GovernanceAction {
@@ -114,7 +114,7 @@ export const GovernanceDashboard: React.FC = () => {
                                     </tr>
                                 ))
                             ) : actions.map((action, i) => (
-                                <motion.tr 
+                                <m.tr 
                                     key={action._id}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
@@ -164,7 +164,7 @@ export const GovernanceDashboard: React.FC = () => {
                                             <ExternalLink className="w-4 h-4" />
                                         </button>
                                     </td>
-                                </motion.tr>
+                                </m.tr>
                             ))}
                         </tbody>
                     </table>

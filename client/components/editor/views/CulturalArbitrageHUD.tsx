@@ -18,7 +18,7 @@ import {
   Search,
   Timer
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface ArbitrageTrigger {
@@ -134,7 +134,7 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                 </div>
                             ) : triggers.length > 0 ? (
                                 triggers.map((signal, i) => (
-                                    <motion.div 
+                                    <m.div 
                                         key={i}
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
@@ -160,14 +160,14 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                                 <span>Breakout Threshold: {(signal.threshold * 100).toFixed(0)}%</span>
                                             </div>
                                             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                <motion.div 
+                                                <m.div 
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${(signal.velocity / 0.5) * 100}%` }}
                                                     className="h-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
                                                 />
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </m.div>
                                 ))
                             ) : (
                                 <div className="p-20 text-center space-y-4 italic opacity-20">
@@ -199,7 +199,7 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                     <div key={i} className="h-64 bg-white/5 animate-pulse rounded-3xl" />
                                 ))
                             ) : candidates.map((asset, i) => (
-                                <motion.div 
+                                <m.div 
                                     key={i}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -262,7 +262,7 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                             </>
                                         )}
                                     </button>
-                                </motion.div>
+                                </m.div>
                             ))}
                         </div>
                     </div>

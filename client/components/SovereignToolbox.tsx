@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Zap, 
   Sparkles, 
@@ -186,7 +186,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
           const isExecuting = executingToolId === tool.id
 
           return (
-            <motion.div
+            <m.div
               key={tool.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -250,21 +250,21 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                    </div>
                 </div>
               )}
-            </motion.div>
+            </m.div>
           )
         })}
       </div>
 
       <AnimatePresence>
         {selectedToolId && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedToolId(null)}
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/95 backdrop-blur-3xl"
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, opacity: 0, y: 50 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 50 }}
@@ -332,8 +332,8 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
                   </div>
                 )
               })()}
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

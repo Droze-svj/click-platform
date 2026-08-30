@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { type LucideIcon, Zap, Network, BrainCircuit, Activity, Terminal, Fingerprint } from 'lucide-react';
 import { useLandingTheme } from './LandingThemeContext';
 
@@ -74,7 +74,7 @@ export function EnginePillars() {
           {PILLARS.map((p, i) => {
             const Icon = p.icon;
             return (
-              <motion.div
+              <m.div
                 key={p.title}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -110,7 +110,7 @@ export function EnginePillars() {
                    <Terminal size={14} className="text-primary-500" />
                    <span className="text-[9px] font-black uppercase tracking-[0.5em] italic text-primary-500">Step {i + 1}</span>
                 </div>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>

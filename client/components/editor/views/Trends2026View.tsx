@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, Zap, Music, Hash, Eye, Target, Activity, Globe,
   Mic, Volume2, Wand2, Clock, Flame, TrendingUp, Layers,

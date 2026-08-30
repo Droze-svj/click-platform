@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Activity, Zap, Shield, Cpu, Binary, Globe,
   Terminal, Search, Database, MessageSquare, Flame
@@ -65,7 +65,7 @@ export default function LiveActivityFeed() {
 
         <AnimatePresence mode="popLayout">
           {activeSignals.map((signal, i) => (
-            <motion.div
+            <m.div
               key={signal.id}
               initial={{ opacity: 0, x: -20, height: 0 }}
               animate={{ opacity: 1, x: 0, height: 'auto' }}
@@ -86,7 +86,7 @@ export default function LiveActivityFeed() {
                   {t(`liveActivityFeed.${signal.messageKey}`)}
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

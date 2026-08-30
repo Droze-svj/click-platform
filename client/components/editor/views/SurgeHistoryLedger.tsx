@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Rocket, TrendingUp, History, ShieldCheck, Zap } from 'lucide-react'
 
 interface LedgerEntry {
@@ -23,7 +23,7 @@ interface SurgeHistoryLedgerProps {
 
 const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClose }) => {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
@@ -88,7 +88,7 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">No autonomous surges recorded yet</p>
               </div>
             ) : entries.map((entry, i) => (
-              <motion.div
+              <m.div
                 key={entry.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -121,7 +121,7 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
                        <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Bridged</span>
                     </div>
                  </div>
-              </motion.div>
+              </m.div>
             ))}
          </div>
       </div>
@@ -135,13 +135,13 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
             <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Ledger Accuracy</span>
             <div className="flex items-center gap-2 mt-1">
                <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                  <motion.div animate={{ width: '92%' }} className="h-full bg-gradient-to-r from-emerald-500 to-amber-500" />
+                  <m.div animate={{ width: '92%' }} className="h-full bg-gradient-to-r from-emerald-500 to-amber-500" />
                </div>
                <span className="text-[10px] font-black text-white">99%</span>
             </div>
          </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

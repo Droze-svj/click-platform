@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 import LoadingSpinner from './LoadingSpinner'
@@ -104,7 +104,7 @@ export default function DashboardOverview() {
   }
 
   return (
-    <motion.div
+    <m.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -112,7 +112,7 @@ export default function DashboardOverview() {
     >
       {/* Welcome Hero Area */}
       {overview?.user && (
-        <motion.div variants={itemVariants} className="relative group">
+        <m.div variants={itemVariants} className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 via-blue-600/20 to-purple-600/20 blur-3xl group-hover:opacity-100 transition-opacity opacity-50" />
           <div className={`relative ${glassStyle} p-10 md:p-12 rounded-[3.5rem] overflow-hidden`}>
             {/* Animated Pattern */}
@@ -157,7 +157,7 @@ export default function DashboardOverview() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Modern Stats Grid */}
@@ -169,7 +169,7 @@ export default function DashboardOverview() {
             { label: t('dashboardOverview.engagementVelocity'), value: `${stats.engagementRate}%`, sub: t('dashboardOverview.aboveBenchmark'), icon: <TrendingUp className="text-emerald-400" />, color: 'emerald' },
             { label: t('dashboardOverview.retentionHealth'), value: stats.trialDaysLeft, sub: t('dashboardOverview.daysRemaining'), icon: <Clock className="text-amber-400" />, color: 'amber' }
           ].map((s, i) => (
-            <motion.div
+            <m.div
               key={i}
               variants={itemVariants}
               whileHover={{ y: -6 }}
@@ -193,14 +193,14 @@ export default function DashboardOverview() {
                 </div>
               </div>
               <ArrowUpRight className="absolute bottom-8 right-8 w-4 h-4 text-slate-700 group-hover:text-white transition-colors" />
-            </motion.div>
+            </m.div>
           ))}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Quick Actions Panel */}
-        <motion.div variants={itemVariants} className="lg:col-span-12">
+        <m.div variants={itemVariants} className="lg:col-span-12">
           {overview?.quickActions && (
             <div className={`relative ${glassStyle} p-10 rounded-[3rem] overflow-hidden`}>
               <div className="flex items-center justify-between mb-10">
@@ -227,10 +227,10 @@ export default function DashboardOverview() {
               </div>
             </div>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Intelligence Feed / Notifications */}
-        <motion.div variants={itemVariants} className="lg:col-span-12">
+        <m.div variants={itemVariants} className="lg:col-span-12">
           {overview?.notifications && (
             <div className={`relative ${glassStyle} p-10 rounded-[3rem] overflow-hidden`}>
               <div className="flex items-center justify-between mb-10">
@@ -248,7 +248,7 @@ export default function DashboardOverview() {
 
               <div className="space-y-4">
                 {overview.notifications.map((notif: any) => (
-                  <motion.div
+                  <m.div
                     key={notif.id}
                     whileHover={{ x: 6 }}
                     className="p-6 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer"
@@ -275,14 +275,14 @@ export default function DashboardOverview() {
                         <div className="w-2 h-2 bg-indigo-500 rounded-full ml-auto mt-2 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                       )}
                     </div>
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
             </div>
           )}
-        </motion.div>
+        </m.div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

@@ -21,7 +21,7 @@ import { apiGet, apiPost, API_URL } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useWorkflow } from '../contexts/WorkflowContext'
 import { useTranslation } from '../hooks/useTranslation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 type Tab = 'file' | 'link' | 'record' | 'screen' | 'cloud' | 'remix'
 
@@ -299,7 +299,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
       <div className="p-8 lg:p-12 min-h-[350px] relative flex flex-col justify-center">
         <AnimatePresence mode="wait">
           {busy ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-surface-page/80 dark:bg-surface-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-6 rounded-b-[3.5rem]">
+            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-surface-page/80 dark:bg-surface-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-6 rounded-b-[3.5rem]">
                <div className="relative">
                   <div className="w-24 h-24 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -314,12 +314,12 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                </div>
                {progress != null && (
                  <div className="w-64 h-2 bg-surface-card dark:bg-surface-900 rounded-full overflow-hidden shadow-inner border border-surface-100 dark:border-surface-800">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-[width] duration-300" />
+                    <m.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-[width] duration-300" />
                  </div>
                )}
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={tab} className="w-full">
+            <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={tab} className="w-full">
               {tab === 'file' && (
                 <div onDragOver={(e) => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} onDrop={onDrop}
                   className={`rounded-[3rem] border-4 border-dashed transition-all p-12 lg:p-16 flex flex-col items-center justify-center text-center gap-8 shadow-inner ${
@@ -481,12 +481,12 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                   )}
                 </div>
               )}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
         {error && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 rounded-2xl border-2 border-rose-500/30 bg-rose-500/10 p-6 flex items-start gap-4 shadow-xl backdrop-blur-xl relative overflow-hidden group/error">
+          <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 rounded-2xl border-2 border-rose-500/30 bg-rose-500/10 p-6 flex items-start gap-4 shadow-xl backdrop-blur-xl relative overflow-hidden group/error">
              <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
              <AlertCircle size={22} className="text-rose-500 flex-shrink-0 mt-1 relative z-10" />
              <div className="flex-1 relative z-10">
@@ -496,7 +496,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
              <button type="button" onClick={() => setError(null)} aria-label="Dismiss error" title="Dismiss error" className="text-rose-400 hover:text-white transition-all relative z-10 hover:rotate-90">
                <X size={20} />
              </button>
-          </motion.div>
+          </m.div>
         )}
       </div>
 

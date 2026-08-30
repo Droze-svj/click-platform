@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Sparkles, Zap, FileText, Video, Mic, Copy, TrendingUp, ShieldCheck, RefreshCcw } from 'lucide-react'
 import axios from 'axios'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
@@ -191,7 +191,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
       <AnimatePresence>
         {showModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -259,7 +259,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                   
                   <AnimatePresence>
                     {loading && (
-                      <motion.div 
+                      <m.div 
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -270,7 +270,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                           <span className="text-[10px] font-bold text-indigo-300 uppercase italic">{t('quickContentCreator.sovereigntyIntegrityCheck')}</span>
                         </div>
                         <div className="text-[10px] font-black text-indigo-400">{t('quickContentCreator.percentOriginal', { percent: 92 })}</div>
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
 
@@ -335,7 +335,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                    </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           </div>
         )}
       </AnimatePresence>

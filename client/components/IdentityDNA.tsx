@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Fingerprint, Sparkles, User, MessageSquare, Target, 
   ShieldCheck, Zap, Activity, Info, Save, Undo,
@@ -52,7 +52,7 @@ export default function IdentityDNA() {
         
         <div className="flex items-center gap-4">
            {pulse && (
-             <motion.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic pr-4">{t('identityDna.latticeSyncedSuccess')}</motion.span>
+             <m.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic pr-4">{t('identityDna.latticeSyncedSuccess')}</m.span>
            )}
            <button
              type="button"
@@ -107,7 +107,7 @@ export default function IdentityDNA() {
         <div className="col-span-12 lg:col-span-9">
           <AnimatePresence mode="wait">
              {activeTab === 'voice' && (
-               <motion.div 
+               <m.div 
                  key="voice"
                  initial={{ opacity: 0, x: 20 }}
                  animate={{ opacity: 1, x: 0 }}
@@ -168,11 +168,11 @@ export default function IdentityDNA() {
                        {t('identityDna.startLatticeSync')}
                     </button>
                  </div>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'character' && (
-               <motion.div 
+               <m.div 
                  key="character"
                  initial={{ opacity: 0, x: 20 }}
                  animate={{ opacity: 1, x: 0 }}
@@ -214,11 +214,11 @@ export default function IdentityDNA() {
                        </div>
                     </div>
                  </div>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'content' && (
-               <motion.div 
+               <m.div 
                  key="content"
                  initial={{ opacity: 0, x: 20 }}
                  animate={{ opacity: 1, x: 0 }}
@@ -247,20 +247,20 @@ export default function IdentityDNA() {
                     <div className="flex-1 flex items-end justify-between gap-4 px-6 relative z-10">
                        {[60, 45, 90, 70, 85, 95, 80, 50, 65, 98, 88].map((h, i) => (
                          <div key={i} className="flex-1 space-y-4 group">
-                            <motion.div 
+                            <m.div 
                               initial={{ height: '0%' }}
                               animate={{ height: `${h}%` }}
                               transition={{ duration: 2.5, delay: i * 0.1, ease: 'circOut' }}
                               className={`w-full rounded-2xl bg-gradient-to-t from-indigo-500/40 via-indigo-500 to-indigo-400 shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform duration-700`}
                             >
                                <div className="absolute inset-0 bg-white/20 animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </motion.div>
+                            </m.div>
                             <p className="text-[8px] font-black text-slate-950 uppercase italic text-center opacity-0 group-hover:opacity-100 transition-opacity">V_0{i+1}</p>
                          </div>
                        ))}
                     </div>
                  </div>
-               </motion.div>
+               </m.div>
              )}
           </AnimatePresence>
         </div>

@@ -17,7 +17,7 @@ import {
   Radio,
   Fingerprint
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { EditorCategory } from '../../../types/editor'
 import { TimelineSegment } from '../../../types/editor'
 
@@ -96,14 +96,14 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
   }
 
   return (
-    <motion.div
+    <m.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
       className="space-y-10 max-w-[1200px] mx-auto py-4"
     >
       {/* Primary Scanner Section */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className={`${glassStyle} rounded-[3rem] p-10 relative overflow-hidden group shadow-3xl`}
       >
@@ -125,7 +125,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
             </p>
           </div>
 
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.05, y: -4 }}
             whileTap={{ scale: 0.95 }}
             onClick={runSceneDetection}
@@ -143,7 +143,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
                 INITIATE SCAN
               </>
             )}
-          </motion.button>
+          </m.button>
         </div>
 
         {/* HUD Footer */}
@@ -154,12 +154,12 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
           </div>
           <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic">Neural Repository ID: 0xFF92</span>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Suggested Edits Command Center */}
       <AnimatePresence>
         {suggestions.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -182,7 +182,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {suggestions.map((s, idx) => (
-                <motion.div
+                <m.div
                   key={s.time}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -194,35 +194,35 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
                       <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic leading-none">{s.type.toUpperCase()} NODE</span>
                       <p className="text-xl font-black text-white italic tracking-tighter uppercase tabular-nums">@{s.time.toFixed(1)}s</p>
                     </div>
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => addSegmentFromSuggestion(s.time)}
                       className="p-4 rounded-2xl bg-indigo-600 text-white shadow-2xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all border border-white/20"
                     >
                       <Scissors className="w-4 h-4" />
-                    </motion.button>
+                    </m.button>
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs text-slate-500 font-medium italic truncate">{s.label}</p>
                     <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div
+                      <m.div
                         className="h-full bg-indigo-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${(s.time / videoDuration) * 100}%` }}
                       />
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Mode Navigation (Elite) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <motion.button
+        <m.button
           variants={itemVariants}
           whileHover={{ scale: 1.02, y: -4 }}
           whileTap={{ scale: 0.98 }}
@@ -243,9 +243,9 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
             <ChevronRight className="w-8 h-8 text-slate-800 group-hover:text-white transition-colors ml-auto" />
           </div>
           <p className="text-slate-500 text-sm font-medium italic group-hover:text-slate-300 transition-colors">Invoke core transcription and semantics to auto-craft high-ROI segments.</p>
-        </motion.button>
+        </m.button>
 
-        <motion.button
+        <m.button
           variants={itemVariants}
           whileHover={{ scale: 1.02, y: -4 }}
           whileTap={{ scale: 0.98 }}
@@ -266,11 +266,11 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
             <ChevronRight className="w-8 h-8 text-slate-800 group-hover:text-white transition-colors ml-auto" />
           </div>
           <p className="text-slate-500 text-sm font-medium italic group-hover:text-slate-300 transition-colors">Bridge to the Chrono Matrix for pixel-perfect segment management.</p>
-        </motion.button>
+        </m.button>
       </div>
 
       {/* Advisory HUD */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className="p-8 bg-indigo-600/5 rounded-[2.5rem] border border-indigo-500/10 relative overflow-hidden group shadow-inner"
       >
@@ -281,8 +281,8 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
           <TrendingUp className="w-5 h-5 text-indigo-400 shrink-0" />
           PRO ADVISORY: Transcribe in Elite AI Hub first for deep semantic mapping. Sync suggested edit points here to initialize clips.
         </p>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   )
 }
 

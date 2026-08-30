@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../hooks/useAuth'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight,
   // Zone headers
@@ -258,7 +258,7 @@ export default function SidebarNav() {
 
   return (
     <>
-    <motion.aside
+    <m.aside
       animate={{ width: collapsed ? 84 : 280 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
       className="relative hidden lg:flex flex-shrink-0 h-screen flex-col ds-surface-card !rounded-none border-y-0 border-l-0 border-r border-[var(--glass-border)] backdrop-blur-xl overflow-hidden z-40"
@@ -267,9 +267,9 @@ export default function SidebarNav() {
       <div className="flex items-center justify-between px-6 h-16 border-b border-[var(--glass-border)]">
         <AnimatePresence mode="wait">
           {!collapsed && (
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+            <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
               <ClickLogo size={36} showWordmark wordmarkClassName={isDark ? 'text-white' : 'text-slate-900'} />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
         {collapsed && <div className="mx-auto"><ClickLogo size={32} /></div>}
@@ -339,7 +339,7 @@ export default function SidebarNav() {
 
               <AnimatePresence initial={false}>
                 {isExpanded && (
-                  <motion.div
+                  <m.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
@@ -372,7 +372,7 @@ export default function SidebarNav() {
                             .map(item => renderItem(zone, item))}
                       </>
                     )}
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
@@ -443,7 +443,7 @@ export default function SidebarNav() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--primary) / 0.35); border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
       `}</style>
-    </motion.aside>
+    </m.aside>
 
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 ds-surface-card !rounded-none border-x-0 border-b-0 border-t border-[var(--glass-border)] backdrop-blur-xl flex items-center justify-around px-3 py-2.5 safe-area-pb">
       {MOBILE_TABS.map(item => {

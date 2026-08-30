@@ -31,7 +31,7 @@ import {
   ZapOff
 } from 'lucide-react'
 import { apiGet, apiPost, apiPatch } from '../../../lib/api'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { loadEditorContentPreferences, saveEditorContentPreferences } from '../../../utils/editorUtils'
 import OptimalPostingWindow from '../OptimalPostingWindow'
 import { Panel, Button, Badge, SectionHeader } from '../../ui'

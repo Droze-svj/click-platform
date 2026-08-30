@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Calendar, 
   Clock, 
@@ -111,7 +111,7 @@ export default function AdvancedSchedulingHub() {
           { label: 'Signal Conflicts', val: analytics?.conflictRate ? Math.round(analytics.conflictRate) : 0, icon: AlertTriangle, color: 'text-rose-400' },
           { label: 'Active Recursions', val: analytics?.byStatus?.active || 0, icon: RefreshCw, color: 'text-indigo-400' },
         ].map((stat, i) => (
-          <motion.div 
+          <m.div 
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -125,7 +125,7 @@ export default function AdvancedSchedulingHub() {
               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-1 italic">{stat.label}</p>
               <p className={`text-3xl font-black italic tracking-tighter ${stat.color}`}>{stat.val}</p>
             </div>
-          </motion.div>
+          </m.div>
         ))}
       </div>
 
@@ -138,14 +138,14 @@ export default function AdvancedSchedulingHub() {
             </h2>
             <div className="flex items-center gap-4">
               {selectedPosts.length > 0 && (
-                <motion.button 
+                <m.button 
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   onClick={() => setShowBulkModal(true)}
                   className="px-8 py-3 bg-indigo-500 text-white rounded-full text-[12px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors shadow-[0_0_30px_rgba(99,102,241,0.4)]"
                 >
                   Bulk Ops ({selectedPosts.length})
-                </motion.button>
+                </m.button>
               )}
               <button
                 type="button"
@@ -173,7 +173,7 @@ export default function AdvancedSchedulingHub() {
           <div className="space-y-6">
             <AnimatePresence mode="popLayout">
               {activeTab === 'timeline' && posts.map((post, i) => (
-                <motion.div
+                <m.div
                   key={post._id}
                   layout
                   initial={{ opacity: 0, x: -30 }}
@@ -227,7 +227,7 @@ export default function AdvancedSchedulingHub() {
                       <ChevronRight size={20} aria-hidden="true" />
                     </button>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
 
               {activeTab === 'templates' && (
@@ -236,7 +236,7 @@ export default function AdvancedSchedulingHub() {
                     <div className="col-span-full py-20 text-center opacity-30 italic uppercase tracking-[0.5em] text-[12px] font-black">No active templates found</div>
                   ) : (
                     templates.map((tpl, i) => (
-                      <motion.div
+                      <m.div
                         key={tpl._id}
                         initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                         className={`${glassStyle} p-8 rounded-[4rem] group hover:bg-white/[0.05] relative overflow-hidden`}
@@ -248,7 +248,7 @@ export default function AdvancedSchedulingHub() {
                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">{tpl.usageCount} Deployments</span>
                            <button className="px-6 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all">Apply Pattern</button>
                         </div>
-                      </motion.div>
+                      </m.div>
                     ))
                   )}
                 </div>
@@ -381,7 +381,7 @@ export default function AdvancedSchedulingHub() {
       <AnimatePresence>
         {showBulkModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/80 backdrop-blur-sm">
-             <motion.div 
+             <m.div 
                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -413,7 +413,7 @@ export default function AdvancedSchedulingHub() {
                   <AlertTriangle className="text-rose-400 mt-1" size={24} />
                   <p className="text-[12px] font-black text-slate-400 uppercase italic leading-relaxed">WARNING: Bulk temporal shifts may introduce new signal conflicts. AI auto-resolution will attempt to mitigate during sync.</p>
                 </div>
-             </motion.div>
+             </m.div>
           </div>
         )}
       </AnimatePresence>

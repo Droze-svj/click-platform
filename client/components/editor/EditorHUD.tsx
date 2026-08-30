@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Zap,
   Search,
@@ -85,7 +85,7 @@ function HUDTooltip({
       {children}
       <AnimatePresence>
         {show && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
@@ -98,7 +98,7 @@ function HUDTooltip({
                 <div className="text-[10px] text-slate-500 mt-0.5">{shortcut}</div>
               )}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -249,7 +249,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   const gpuLabel = gpuBackend === 'webgpu' ? 'WebGPU' : gpuBackend === 'webgl2' ? 'WebGL2' : 'Canvas'
 
   return (
-    <motion.div
+    <m.div
       initial={reduceMotion ? false : { y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -274,7 +274,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
             />
             <AnimatePresence mode="wait">
               {L.categoryLabel && categoryLabel && (
-                <motion.span
+                <m.span
                   key={categoryLabel}
                   initial={reduceMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -283,7 +283,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
                   className="text-[10px] uppercase tracking-wide text-slate-500 leading-none truncate"
                 >
                   {categoryLabel}
-                </motion.span>
+                </m.span>
               )}
             </AnimatePresence>
           </div>
@@ -398,7 +398,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               </HUDTooltip>
               <AnimatePresence>
                 {layoutOpen && (
-                  <motion.div
+                  <m.div
                     initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
@@ -423,7 +423,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
                         </button>
                       )
                     })}
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
@@ -489,7 +489,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               </button>
               <AnimatePresence>
                 {moreOpen && (
-                  <motion.div
+                  <m.div
                     initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
@@ -548,7 +548,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
                       <span className="text-[12px] font-medium text-white flex-1">Keyboard shortcuts</span>
                       <span className="text-[10px] text-slate-500">?</span>
                     </button>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
@@ -567,7 +567,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
         </div>
 
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

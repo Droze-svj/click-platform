@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Search, X, ArrowRight, Cpu, Send, Calendar, Users, BarChart3, Brain,
   RefreshCw, Hammer, Plug, Boxes, Compass, Flame, Gem, Settings, Bell,
@@ -258,7 +258,7 @@ const GlobalCommandPalette: React.FC = () => {
           className="fixed inset-0 z-[200] flex items-start justify-center pt-[12vh] px-4 bg-black/60 backdrop-blur-md"
           onClick={() => setOpen(false)}
         >
-          <motion.div
+          <m.div
             ref={panelRef}
             initial={{ opacity: 0, y: -16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -353,7 +353,7 @@ const GlobalCommandPalette: React.FC = () => {
                 <span>{t('globalCommandPalette.clickHint')}</span>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>

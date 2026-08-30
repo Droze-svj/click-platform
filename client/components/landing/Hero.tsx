@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Sparkles, ArrowRight, Play, Zap, ShieldCheck, Globe, Cpu, Terminal, Activity } from 'lucide-react';
 import { useLandingTheme } from './LandingThemeContext';
 
@@ -25,7 +25,7 @@ export function Hero() {
       <div className="max-w-[1900px] mx-auto text-center space-y-16 relative z-10">
         
         {/* Release Protocol Pill */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
@@ -33,11 +33,11 @@ export function Hero() {
         >
           <Sparkles className="w-3 h-3 md:w-4 md:h-4 animate-pulse text-spectral-glow shrink-0" />
           <span className="truncate md:whitespace-normal">Meet Click — the editor that ships while you sleep</span>
-        </motion.div>
+        </m.div>
 
         {/* Cinematic Headline Matrix */}
         <div className="space-y-4 md:space-y-8">
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
@@ -45,7 +45,7 @@ export function Hero() {
           >
             <span className="block relative">
               CLICK EDITS.
-              <motion.span
+              <m.span
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
                 transition={{ delay: 0.8, duration: 1.5, ease: "easeInOut" }}
@@ -55,9 +55,9 @@ export function Hero() {
             <span className={`text-transparent bg-clip-text ${headlineGradient} drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all duration-500`}>
               YOU SHOW UP.
             </span>
-          </motion.h1>
+          </m.h1>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -77,20 +77,20 @@ export function Hero() {
               <ShieldCheck size={16} className="text-emerald-500 group-hover:rotate-12 transition-transform shrink-0" />
               <span className="text-[8px] md:text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.2em] md:tracking-[0.6em] italic break-words">Learns every post</span>
             </div>
-          </motion.div>
+          </m.div>
         </div>
 
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 1 }}
           className="text-surface-600 dark:text-slate-400 text-xl md:text-3xl font-medium max-w-4xl mx-auto leading-relaxed italic uppercase tracking-tight opacity-80"
         >
           Drop one raw video. Click cuts the dead air, writes the hooks, picks the post time, and ships it to TikTok, Reels, Shorts, X, and LinkedIn — then watches what works and gets sharper for tomorrow. You stay creative. Click stays awake.
-        </motion.p>
+        </m.p>
 
         {/* Tactical Actions HUD */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 1 }}
@@ -110,17 +110,17 @@ export function Hero() {
             <Play className="w-6 h-6 fill-current group-hover:scale-125 transition-transform duration-500" />
             See it in 60 seconds
           </a>
-        </motion.div>
+        </m.div>
 
         {/* Trust micro-line under the CTAs */}
-        <motion.p
+        <m.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9, duration: 1 }}
           className="text-[10px] md:text-xs text-surface-400 dark:text-slate-600 font-bold uppercase tracking-[0.4em] italic pt-2"
         >
           Free forever. No card. First clip out in 90 seconds.
-        </motion.p>
+        </m.p>
       </div>
 
       {/* High-Fidelity HUD Decorations — ambient signals of Click being alive.
@@ -134,7 +134,7 @@ export function Hero() {
             <span className="text-[10px] font-black uppercase tracking-[0.8em] italic text-primary-500">Click is cooking</span>
          </div>
          <div className="h-[2px] w-64 bg-surface-100 dark:bg-white/5 rounded-full overflow-hidden border border-white/5">
-            <motion.div
+            <m.div
               initial={{ width: 0 }}
               animate={{ width: '92%' }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -151,7 +151,7 @@ export function Hero() {
          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none max-w-[180px]">TikTok · Reels · Shorts · X · LinkedIn</p>
          <div className="flex gap-1">
             {[1,2,3,4,5].map(i => (
-              <motion.div
+              <m.div
                 key={i}
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 2, delay: i * 0.2, repeat: Infinity }}

@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { AlertCircle, RotateCcw, Home, RefreshCw, Trash2 } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { clickVoice } from '@/lib/clickVoice'
 
 /**
@@ -66,7 +66,7 @@ export default function ClickErrorRecovery({ error, reset, scope }: ClickErrorRe
         <div className="absolute bottom-1/4 right-1/4 w-[40vw] h-[40vh] bg-indigo-600/8 blur-[120px] rounded-full" />
       </div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 max-w-xl w-full bg-white/[0.03] border border-white/[0.08] rounded-[3rem] p-10 text-center shadow-2xl"
@@ -138,7 +138,7 @@ export default function ClickErrorRecovery({ error, reset, scope }: ClickErrorRe
             <Home className="w-4 h-4" /> Dashboard
           </Link>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

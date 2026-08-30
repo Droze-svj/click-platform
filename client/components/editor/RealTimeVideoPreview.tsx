@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react'
 import { Play, Pause, Eye, EyeOff, Circle, Activity, Crosshair, Fingerprint } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import './EditorComponents.css'
 import { 
   TimelineSegment, TimelineEffect, TextOverlay, CaptionStyle, CAPTION_SIZE_PX, 
@@ -1691,7 +1691,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         {/* AI styling active — quiet, honest indicator (no fabricated metrics) */}
         <AnimatePresence>
           {isNeuralActive && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -1702,7 +1702,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 <Fingerprint className="w-3.5 h-3.5 text-primary-400" />
                 <span className="text-[11px] font-medium text-white/80 leading-none">AI styling active</span>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

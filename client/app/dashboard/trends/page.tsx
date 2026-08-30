@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Music, Hash, Sparkles, Search, Zap,
   ChevronDown, BarChart3,
@@ -266,7 +266,7 @@ export default function TrendsPage() {
               const cfg = CATEGORY_CFG[item.category]
               const CatIcon = cfg.icon
               return (
-                <motion.div
+                <m.div
                   key={item.id}
                   layout
                   initial={reduceMotion ? false : { opacity: 0, y: 16 }}
@@ -301,7 +301,7 @@ export default function TrendsPage() {
                       </IconButton>
                     </div>
                   </Panel>
-                </motion.div>
+                </m.div>
               )
             })}
           </AnimatePresence>

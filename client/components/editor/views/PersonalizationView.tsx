@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Fingerprint, Save, Loader2, Sparkles } from 'lucide-react'
 import { apiGet, apiPut } from '../../../lib/api'
 
@@ -257,10 +257,10 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
               <input className={input} value={prefs.defaults.niche} onChange={(e) => setDefault('niche', e.target.value)} placeholder="finance / fitness / tech…" />
             </div>
 
-            <motion.button whileTap={{ scale: saving ? 1 : 0.97 }} disabled={saving} onClick={save}
+            <m.button whileTap={{ scale: saving ? 1 : 0.97 }} disabled={saving} onClick={save}
               className={`h-12 px-6 rounded-2xl inline-flex items-center gap-2 text-white font-black uppercase tracking-widest text-sm ${saving ? 'bg-slate-700 opacity-60' : 'bg-fuchsia-600 hover:bg-fuchsia-500'}`}>
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : <><Save className="w-4 h-4" /> Save personalization</>}
-            </motion.button>
+            </m.button>
           </>
         )}
       </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   ChevronLeft,
   ChevronRight,
@@ -447,7 +447,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
 
                 {/* Pin button (hover) */}
                 {!isCollapsed && !isLocked && hoveredCategory === category.id && (
-                  <motion.button
+                  <m.button
                     initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     onClick={(e) => togglePin(category.id as EditorCategory, e)}
@@ -455,7 +455,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     title={isPinned ? 'Unpin' : 'Pin to top'}
                   >
                     <Pin className={cn('w-3 h-3', isPinned && 'text-primary fill-primary')} aria-hidden />
-                  </motion.button>
+                  </m.button>
                 )}
               </div>
             </React.Fragment>
@@ -502,7 +502,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
         {/* Keyboard shortcuts popover */}
         <AnimatePresence>
           {showShortcuts && !isCollapsed && (
-            <motion.div
+            <m.div
               initial={reduceMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
@@ -532,7 +532,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                   <kbd className="px-1.5 py-0.5 rounded bg-accent text-[10px] font-mono text-theme-primary">⌘F</kbd>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

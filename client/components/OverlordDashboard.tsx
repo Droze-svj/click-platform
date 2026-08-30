@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Shield, Globe, Zap, Activity, Cpu, 
   BarChart3, Coins, Database, Server,
@@ -754,10 +754,10 @@ export default function OverlordDashboard() {
       {/* ── Key Stats ── */}
       <AnimatePresence mode="wait">
         {!activeMetrics && loading && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-64 items-center justify-center">
+          <m.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-64 items-center justify-center">
              <RefreshCw className="w-12 h-12 text-indigo-500 animate-spin" />
              <p className="ml-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('overlordDashboard.hydratingTacticalMatrix')}</p>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
       

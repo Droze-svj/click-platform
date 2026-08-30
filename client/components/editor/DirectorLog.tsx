@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { MessageSquare, AlertTriangle, CheckCircle2, Flame, Zap } from 'lucide-react'
 
 interface DirectorLogProps {
@@ -81,7 +81,7 @@ const DirectorLog: React.FC<DirectorLogProps> = ({ persona, metrics, currentTime
       <div className="space-y-3 min-h-[120px]">
         <AnimatePresence initial={false}>
           {logs.map(log => (
-            <motion.div
+            <m.div
               key={log.id}
               initial={{ height: 0, opacity: 0, x: -10 }}
               animate={{ height: 'auto', opacity: 1, x: 0 }}
@@ -96,7 +96,7 @@ const DirectorLog: React.FC<DirectorLogProps> = ({ persona, metrics, currentTime
             >
               <MessageSquare className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>{log.text}</span>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
 

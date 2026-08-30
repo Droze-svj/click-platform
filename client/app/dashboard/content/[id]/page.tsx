@@ -19,7 +19,7 @@ import {
   Box, Fingerprint, History, MessageSquare, BarChart3, Languages, Star,
   Settings, Trash2, Edit3, ExternalLink, Heart, Award, Info, Search
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ContentSkeleton } from '../../../../components/LoadingSkeleton'
 import { PageShell } from '../../../../components/ui'
@@ -256,7 +256,7 @@ export default function ContentDetailPage() {
                className={`flex items-center gap-6 px-10 py-6 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${activeTab === t.id ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)]' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20'}`}>
                <t.icon size={28} className={activeTab === t.id ? 'text-black' : 'text-slate-500 group-hover:text-white transition-colors'} />
                <span className="text-[14px] font-black uppercase tracking-[0.2em] italic">{t.label}</span>
-               {activeTab === t.id && <motion.div layoutId="tab-glow" className="absolute inset-0 bg-white/10" />}
+               {activeTab === t.id && <m.div layoutId="tab-glow" className="absolute inset-0 bg-white/10" />}
              </button>
            ))}
         </nav>
@@ -265,7 +265,7 @@ export default function ContentDetailPage() {
         <div className="relative z-10 min-h-[1000px]">
            <AnimatePresence mode="wait">
              {activeTab === 'overview' && (
-               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="grid grid-cols-1 lg:grid-cols-3 gap-20">
+               <m.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="grid grid-cols-1 lg:grid-cols-3 gap-20">
                   <div className="lg:col-span-2 space-y-16">
                      {content.description && (
                         <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
@@ -406,35 +406,35 @@ export default function ContentDetailPage() {
                         </div>
                      </div>
                   </aside>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'versions' && (
-               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
+               <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
                      <VersionHistory contentId={content._id} onRestore={loadContent} />
                   </Suspense>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'comments' && (
-               <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
+               <m.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
                      <CommentsSection entityType="content" entityId={content._id} teamId={undefined} />
                   </Suspense>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'performance' && (
-               <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
+               <m.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
                      <ContentPerformanceAnalytics contentId={content._id} />
                   </Suspense>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'translations' && (
-               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="space-y-16">
+               <m.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="space-y-16">
                   <div className={`${glassStyle} rounded-[6rem] p-20 space-y-16 bg-black/40 border-purple-500/10`}>
                      <div className="flex items-center justify-between border-b border-white/5 pb-12">
                         <div className="flex items-center gap-10">
@@ -483,7 +483,7 @@ export default function ContentDetailPage() {
                            ? { ...translatedContent, _lang: viewingLang }
                            : { title: content.title, description: content.description, body: content.body || content.transcript, transcript: content.transcript, tags: content.tags || [], _lang: null }
                         return (
-                           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/60 shadow-[0_80px_200px_rgba(0,0,0,0.8)] border-purple-500/10 group`}>
+                           <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/60 shadow-[0_80px_200px_rgba(0,0,0,0.8)] border-purple-500/10 group`}>
                               <div className="flex items-center gap-6 mb-12 border-l-8 border-purple-500 pl-8">
                                  <div>
                                     <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 group-hover:text-purple-400 transition-colors duration-300">{display.title || 'NULL_TITLE'}</h3>
@@ -511,11 +511,11 @@ export default function ContentDetailPage() {
                                     </div>
                                  )}
                               </div>
-                           </motion.div>
+                           </m.div>
                         )
                      })()}
                   </div>
-               </motion.div>
+               </m.div>
              )}
            </AnimatePresence>
         </div>

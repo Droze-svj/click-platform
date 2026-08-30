@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, RotateCcw, RefreshCw, Home, Zap } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import './globals.css'
 
 export default function GlobalError({
@@ -43,7 +43,7 @@ export default function GlobalError({
           {/* Grid texture */}
           <div className="fixed inset-0 pointer-events-none opacity-[0.015] global-error-grid" />
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -113,7 +113,7 @@ export default function GlobalError({
               Click — AI Content Platform
               <span className="w-1 h-1 rounded-full bg-slate-700" />
             </p>
-          </motion.div>
+          </m.div>
         </div>
       </body>
     </html>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Cpu, GitBranch, Layers, FileJson, Fingerprint,
   MousePointer2, Zap, ShieldCheck, Activity, TrendingUp,
@@ -117,7 +117,7 @@ const OmniModelPanel = () => {
 
       <AnimatePresence>
         {routingDemo && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
             <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{t('phase8Dashboard.routingResult')}</p>
             <div className="grid gap-3">
               {routingDemo.scenes?.map((scene: any, i: number) => (
@@ -138,7 +138,7 @@ const OmniModelPanel = () => {
               <div><p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.totalCost')}</p><p className="text-lg font-black text-white">${routingDemo.totalEstimatedCost?.toFixed(3)}</p></div>
               <div><p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.estLatency')}</p><p className="text-lg font-black text-white">{(routingDemo.totalEstimatedLatencyMs / 1000).toFixed(0)}s</p></div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -194,7 +194,7 @@ const SpatialMemoryPanel = () => {
 
       <AnimatePresence>
         {ledger && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="grid grid-cols-3 gap-4">
               <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
                 <p className="text-2xl font-black text-white">{ledger.scenes?.length || 0}</p>
@@ -222,7 +222,7 @@ const SpatialMemoryPanel = () => {
                 ))}
               </div>
             )}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -293,7 +293,7 @@ const AEOMetadataPanel = () => {
 
       <AnimatePresence>
         {aeoData && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
               <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2">{t('phase8Dashboard.aiAgentSummary')}</p>
               <p className="text-sm text-white font-bold italic">&quot;{aeoData.summary}&quot;</p>
@@ -318,7 +318,7 @@ const AEOMetadataPanel = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -400,7 +400,7 @@ const UGCRawPanel = () => {
 
       <AnimatePresence>
         {demoResult && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/15">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest">{t('phase8Dashboard.humanizedVoiceover')}</p>
@@ -426,7 +426,7 @@ const UGCRawPanel = () => {
                 <p className="text-lg font-black text-white mt-1">±{demoResult.manifest?.pacing?.variancePercent}%</p>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -504,7 +504,7 @@ const ZeroPartyDataPanel = () => {
 
       <AnimatePresence>
         {manifest && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{t('phase8Dashboard.overlaysGeneratedCount', { count: manifest.overlays?.length })}</p>
               <span className={`${pill} text-emerald-400 border-emerald-500/20`}>{t('phase8Dashboard.projCapture', { rate: manifest.projectedCaptureRate })}</span>
@@ -535,7 +535,7 @@ const ZeroPartyDataPanel = () => {
                 </div>
               </div>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -587,13 +587,13 @@ export default function Phase8Dashboard() {
 
       {/* Active Section */}
       <AnimatePresence mode="wait">
-        <motion.div key={activeSection} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
+        <m.div key={activeSection} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
           {activeSection === 'omni' && <OmniModelPanel />}
           {activeSection === 'spatial' && <SpatialMemoryPanel />}
           {activeSection === 'aeo' && <AEOMetadataPanel />}
           {activeSection === 'ugc' && <UGCRawPanel />}
           {activeSection === 'zpd' && <ZeroPartyDataPanel />}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   )

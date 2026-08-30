@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import {
@@ -121,7 +121,7 @@ export default function NeuralWorkspaceHub() {
   }, [selectedWorkspace, loadWorkspaceData])
 
   return (
-    <motion.div
+    <m.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -151,19 +151,19 @@ export default function NeuralWorkspaceHub() {
               {t('neuralWorkspaceHub.multiBrandManagementPre')} <span className="text-indigo-400 font-bold">{t('neuralWorkspaceHub.neuralClearance')}</span> {t('neuralWorkspaceHub.multiBrandManagementPost')}
             </p>
           </div>
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             className="px-10 py-5 rounded-2xl bg-indigo-600 text-white font-black text-xs tracking-[0.2em] uppercase shadow-2xl shadow-indigo-600/20 flex items-center gap-4 transition-all"
           >
             <Building2 className="w-4 h-4" />
             {t('neuralWorkspaceHub.newWorkspaceCluster')}
-          </motion.button>
+          </m.button>
         </div>
       </div>
 
       {/* Workspace Selector */}
-      <motion.div variants={itemVariants} className={`${glassStyle} p-3 group`}>
+      <m.div variants={itemVariants} className={`${glassStyle} p-3 group`}>
         <div className="flex items-center gap-3 overflow-x-auto pb-1 px-1 custom-scrollbar">
           {workspaces.map(ws => (
             <button
@@ -185,7 +185,7 @@ export default function NeuralWorkspaceHub() {
             <div className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] py-4 px-6 italic">{t('neuralWorkspaceHub.searchingNeuralCloud')}</div>
           )}
         </div>
-      </motion.div>
+      </m.div>
 
       {selectedWorkspace && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -193,7 +193,7 @@ export default function NeuralWorkspaceHub() {
           <div className="lg:col-span-8 space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               {/* Core Attributes */}
-              <motion.div variants={itemVariants} className={`${glassStyle} p-10 group`}>
+              <m.div variants={itemVariants} className={`${glassStyle} p-10 group`}>
                 <div className="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/10 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="flex items-center justify-between mb-8 relative z-10">
                   <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400 shadow-inner">
@@ -227,10 +227,10 @@ export default function NeuralWorkspaceHub() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* Permission Matrix */}
-              <motion.div variants={itemVariants} className={`${glassStyle} p-10 group`}>
+              <m.div variants={itemVariants} className={`${glassStyle} p-10 group`}>
                 <div className="absolute -right-12 -top-12 w-48 h-48 bg-emerald-500/10 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="flex items-center justify-between mb-8 relative z-10">
                   <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 shadow-inner">
@@ -259,11 +259,11 @@ export default function NeuralWorkspaceHub() {
                     ))}
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </div>
 
             {/* Audit Log Timeline */}
-            <motion.div variants={itemVariants} className={`${glassStyle} p-10 space-y-10 group`}>
+            <m.div variants={itemVariants} className={`${glassStyle} p-10 space-y-10 group`}>
               <div className="flex items-center justify-between border-b border-white/[0.05] pb-10">
                 <div className="flex items-center gap-4">
                   <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
@@ -286,7 +286,7 @@ export default function NeuralWorkspaceHub() {
                   </div>
                 ) : (
                   auditLogs.map((log: any, index: number) => (
-                    <motion.div
+                    <m.div
                       key={index}
                       whileHover={{ x: 8 }}
                       className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/[0.05] flex items-center justify-between group cursor-default transition-all hover:bg-white/[0.05] hover:border-white/10"
@@ -303,16 +303,16 @@ export default function NeuralWorkspaceHub() {
                       <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
                         <ArrowUpRight className="w-4 h-4 text-indigo-400" />
                       </div>
-                    </motion.div>
+                    </m.div>
                   ))
                 )}
               </div>
-            </motion.div>
+            </m.div>
           </div>
           {/* Right Column: Templates, Compliance, SLA */}
           <div className="lg:col-span-4 space-y-10">
             {/* Workflow Templates */}
-            <motion.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 group`}>
+            <m.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 group`}>
               <div className="flex items-center gap-4">
                 <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
                   <Workflow className="w-5 h-5 text-purple-400" />
@@ -339,11 +339,11 @@ export default function NeuralWorkspaceHub() {
                 )}
               </div>
               <button className="w-full py-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 text-purple-400 text-[9px] font-black uppercase tracking-[0.4em] transition-all shadow-xl">{t('neuralWorkspaceHub.syncSwarmMarketplace')}</button>
-            </motion.div>
+            </m.div>
 
             {/* Compliance HUD */}
             {compliance && (
-              <motion.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 relative group`}>
+              <m.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 relative group`}>
                 <div className="absolute inset-0 bg-emerald-500/05 opacity-20 pointer-events-none" />
                 <div className="flex items-center gap-4 relative z-10">
                   <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
@@ -385,12 +385,12 @@ export default function NeuralWorkspaceHub() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {/* SLA Telemetry */}
             {sla && (
-              <motion.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 group`}>
+              <m.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 group`}>
                 <div className="flex items-center gap-4">
                   <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
                     <BarChart3 className="w-5 h-5 text-amber-400" />
@@ -411,7 +411,7 @@ export default function NeuralWorkspaceHub() {
                       </span>
                     </div>
                     <div className="h-2.5 bg-white/[0.02] rounded-full overflow-hidden p-0.5 border border-white/[0.05]">
-                      <motion.div
+                      <m.div
                         initial={{ width: 0 }}
                         animate={{ width: `${sla.actual?.uptime || 0}%` }}
                         className={`h-full rounded-full ${
@@ -440,14 +440,14 @@ export default function NeuralWorkspaceHub() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </div>
         </div>
       )}
 
       {/* AI Advisor Hub — Fixed below main grid */}
-      <motion.div variants={itemVariants} className={`${glassStyle} p-12 space-y-10 relative group bg-gradient-to-br from-indigo-500/05 to-purple-500/05`}>
+      <m.div variants={itemVariants} className={`${glassStyle} p-12 space-y-10 relative group bg-gradient-to-br from-indigo-500/05 to-purple-500/05`}>
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-600/10 blur-[100px] rounded-full group-hover:bg-indigo-600/20 transition-all duration-1000" />
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10 border-b border-white/[0.05] pb-10">
           <div className="w-20 h-20 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
@@ -488,7 +488,7 @@ export default function NeuralWorkspaceHub() {
                 }`}>{advisorData.efficiency}<span className="text-[10px] opacity-30 ml-1 font-mono font-bold">%</span></span>
               </div>
               <div className="h-3 rounded-full bg-white/[0.02] overflow-hidden p-0.5 border border-white/[0.05]">
-                <motion.div
+                <m.div
                   initial={{ width: 0 }}
                   animate={{ width: `${advisorData.efficiency}%` }}
                   transition={{ duration: 1.5, ease: 'circOut' }}
@@ -504,13 +504,13 @@ export default function NeuralWorkspaceHub() {
             {t('neuralWorkspaceHub.syncMissionProfile')}
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Footer Info */}
-      <motion.div variants={itemVariants} className="text-center pt-24 opacity-30">
+      <m.div variants={itemVariants} className="text-center pt-24 opacity-30">
         <p className="text-[9px] text-slate-500 font-black uppercase tracking-[1em] italic">{t('neuralWorkspaceHub.footerTagline')}</p>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   )
 }
 

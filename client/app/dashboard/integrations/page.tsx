@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import {
   Plus, RefreshCw, Trash2, Search, X,
   Zap, Globe, Radio, Link2, Unlink, AlertTriangle, Network,
@@ -194,7 +194,7 @@ export default function IntegrationsPage() {
         {/* Marketplace */}
         <AnimatePresence initial={false}>
           {showMarketplace && (
-            <motion.div
+            <m.div
               initial={reduceMotion ? false : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
@@ -240,7 +240,7 @@ export default function IntegrationsPage() {
                   </div>
                 )}
               </Panel>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

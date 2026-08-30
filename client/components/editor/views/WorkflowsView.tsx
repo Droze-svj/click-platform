@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   GitBranch, 
   Plus, 
@@ -94,7 +94,7 @@ const WorkflowsView: React.FC = () => {
       <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
         <AnimatePresence mode="wait">
           {isCreating ? (
-            <motion.div
+            <m.div
               key="builder"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -108,9 +108,9 @@ const WorkflowsView: React.FC = () => {
                   fetchWorkflows()
                 }} 
               />
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="list"
               className="grid grid-cols-12 gap-8"
               initial={{ opacity: 0 }}
@@ -123,7 +123,7 @@ const WorkflowsView: React.FC = () => {
                    ))
                  ) : (
                    workflows.map((workflow) => (
-                     <motion.div
+                     <m.div
                        key={workflow._id}
                        whileHover={{ y: -5, backgroundColor: 'rgba(255,255,255,0.04)' }}
                        className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/10 group cursor-pointer transition-all flex flex-col justify-between"
@@ -168,11 +168,11 @@ const WorkflowsView: React.FC = () => {
                              <span>Last Modified: {new Date(workflow.updatedAt).toLocaleDateString()}</span>
                           </div>
                        </div>
-                     </motion.div>
+                     </m.div>
                    ))
                  )}
 
-                 <motion.div
+                 <m.div
                     whileHover={{ scale: 0.98 }}
                     onClick={() => {
                       setEditingId(undefined)
@@ -184,7 +184,7 @@ const WorkflowsView: React.FC = () => {
                        <Plus className="w-6 h-6 text-slate-500 group-hover:text-black" />
                     </div>
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-violet-400 transition-all">Initialize New Protocol</span>
-                 </motion.div>
+                 </m.div>
               </div>
 
               <div className="col-span-12 grid grid-cols-2 gap-8">
@@ -232,7 +232,7 @@ const WorkflowsView: React.FC = () => {
                     </div>
                  </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

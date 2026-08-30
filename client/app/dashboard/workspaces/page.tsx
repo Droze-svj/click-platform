@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import {
   Boxes, Plus, Crown, Users, Check, Layers, Database, Globe, Sparkles,
 } from 'lucide-react'
@@ -209,7 +209,7 @@ export default function WorkspacesPage() {
               </div>
             ))}
             {!loadingWorkspaces && workspaces.map(ws => (
-              <motion.button
+              <m.button
                 key={ws.id}
                 type="button"
                 whileHover={reduceMotion ? undefined : { y: -4 }}
@@ -236,7 +236,7 @@ export default function WorkspacesPage() {
                   <Badge variant="secondary" className="gap-1"><Users size={11} aria-hidden /> {ws.members}</Badge>
                   <Badge variant="secondary">{ws.plan}</Badge>
                 </div>
-              </motion.button>
+              </m.button>
             ))}
             {!loadingWorkspaces && (
               <button type="button" onClick={() => setShowCreate(true)} className="ds-surface-subtle ds-hover-lift rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-center border border-dashed border-[var(--border-subtle)] hover:border-primary/40 min-h-[240px]">

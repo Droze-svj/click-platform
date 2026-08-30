@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Bug, X, ChevronUp, ChevronDown, RefreshCw, Trash2,
   CheckCircle2, AlertCircle, AlertTriangle, Activity,
@@ -262,7 +262,7 @@ export default function ClickDebugPanel() {
     <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end gap-2 pointer-events-none">
       <AnimatePresence>
         {open && !minimized && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.97 }}
@@ -385,7 +385,7 @@ export default function ClickDebugPanel() {
                         <span className={`text-[10px] font-black ${(health.memory ?? 0) > 300 ? 'text-amber-400' : 'text-emerald-400'}`}>{t('clickDebugPanel.heapUsage', { used: health.memory ?? 0 })}</span>
                       </div>
                       <div className="h-1 rounded-full bg-white/[0.04] overflow-hidden" aria-label={t('clickDebugPanel.heapUsageAria', { used: health.memory || 0 })}>
-                        <motion.div animate={{ width: `${Math.min(((health.memory || 0) / 512) * 100, 100)}%` }} className={`h-full rounded-full ${(health.memory || 0) > 400 ? 'bg-rose-500' : (health.memory || 0) > 200 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                        <m.div animate={{ width: `${Math.min(((health.memory || 0) / 512) * 100, 100)}%` }} className={`h-full rounded-full ${(health.memory || 0) > 400 ? 'bg-rose-500' : (health.memory || 0) > 200 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
                       </div>
                     </div>
                   )}
@@ -429,12 +429,12 @@ export default function ClickDebugPanel() {
               <kbd className="text-[7px] text-slate-700 bg-white/5 px-1.5 py-0.5 rounded font-mono">⌘⇧D</kbd>
               <span className="text-[7px] text-slate-700">{t('clickDebugPanel.toToggle')}</span>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* ── Trigger button ── */}
-      <motion.button
+      <m.button
         whileTap={{ scale: 0.93 }}
         onClick={() => { setOpen(true); setMinimized(false) }}
         title={t('clickDebugPanel.openDebugPanel')}
@@ -447,7 +447,7 @@ export default function ClickDebugPanel() {
           {unfixedErrors > 0 ? t('clickDebugPanel.errorCount', { count: unfixedErrors }) : t('clickDebugPanel.debug')}
         </span>
         {open && !minimized ? <ChevronDown size={9} /> : <ChevronUp size={9} />}
-      </motion.button>
+      </m.button>
     </div>
   )
 }

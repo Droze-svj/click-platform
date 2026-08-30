@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   ShoppingCart, 
   ExternalLink, 
@@ -198,7 +198,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
   const activeStyle = providerStyles[provider]
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -262,7 +262,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                        <span className="text-white">4.2%</span>
                     </div>
                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                       <motion.div initial={{ width: 0 }} animate={{ width: '42%' }} className={`h-full ${activeStyle.bg}`} />
+                       <m.div initial={{ width: 0 }} animate={{ width: '42%' }} className={`h-full ${activeStyle.bg}`} />
                     </div>
                  </div>
                  <div className="text-right">
@@ -332,7 +332,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                   </button>
 
                   {currentPlan && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-4"
@@ -357,7 +357,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                         {isSaving ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
                         {currentPlan.status === 'finalized' ? 'Plan Released' : 'Finalize Strategy'}
                       </button>
-                    </motion.div>
+                    </m.div>
                   )}
 
                   <div className={`flex items-center gap-2 px-3 py-1 ${activeStyle.bg}/10 border ${activeStyle.border} rounded-full`}>
@@ -368,7 +368,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
 
            <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
               <AnimatePresence mode="wait">
-                <motion.div 
+                <m.div 
                   key={provider}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -376,7 +376,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                   className="contents"
                 >
                   {currentPlan?.triggers?.map((step: any, idx: number) => (
-                    <motion.div
+                    <m.div
                       key={idx}
                       whileHover={{ y: -5 }}
                       className="p-6 rounded-[2rem] bg-white/[0.04] border border-white/10 group transition-all space-y-4"
@@ -420,9 +420,9 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                             <p className="text-[11px] font-black text-white mt-1">${step.productPrice}</p>
                          </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   )) || products.map((product) => (
-                    <motion.div
+                    <m.div
                       key={product.id}
                       whileHover={{ y: -5, backgroundColor: 'rgba(255,255,255,0.04)' }}
                       className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/10 group cursor-pointer transition-all"
@@ -459,14 +459,14 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                             Get QR
                          </button>
                       </div>
-                    </motion.div>
+                    </m.div>
                   ))}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
            </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

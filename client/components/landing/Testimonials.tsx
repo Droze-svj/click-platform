@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Sparkles, Rocket, GraduationCap, Layers, ArrowRight } from 'lucide-react';
 import { glass } from './_styles';
 
@@ -69,7 +69,7 @@ export function Testimonials() {
           {SCENARIOS.map((s, i) => {
             const { Icon } = s;
             return (
-              <motion.div
+              <m.div
                 key={s.role}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -90,7 +90,7 @@ export function Testimonials() {
                   <span className="text-slate-500">What unblocked it —</span> {s.win}
                 </p>
                 <div className={`mt-auto text-xs font-black uppercase tracking-widest ${s.accent}`}>{s.metric}</div>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>

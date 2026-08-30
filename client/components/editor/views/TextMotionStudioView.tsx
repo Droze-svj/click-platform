@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { m as Motion } from 'framer-motion'
 import {
   Type, Sparkles, Wand2, Search, X, ArrowRight,
   Flame, Coffee, Cpu, Heart, Zap, Brush, Layers,
@@ -477,7 +477,7 @@ const StyleGrid: React.FC<{ items: CaptionStyle[]; onApply: (s: CaptionStyle) =>
     {items.map(s => {
       const MoodIcon = MOOD_ICONS[s.mood] || Type
       return (
-        <motion.button
+        <Motion.button
           key={s.id}
           type="button"
           layout
@@ -496,7 +496,7 @@ const StyleGrid: React.FC<{ items: CaptionStyle[]; onApply: (s: CaptionStyle) =>
             </div>
             <Badge className="opacity-0 transition-opacity group-hover:opacity-100">Apply</Badge>
           </div>
-        </motion.button>
+        </Motion.button>
       )
     })}
   </div>
@@ -530,7 +530,7 @@ const AnimationGrid: React.FC<{ items: TextAnimation[]; onApply: (a: TextAnimati
     {items.map(a => {
       const MoodIcon = MOOD_ICONS[a.mood] || Sparkles
       return (
-        <motion.button
+        <Motion.button
           key={a.id}
           type="button"
           layout
@@ -548,7 +548,7 @@ const AnimationGrid: React.FC<{ items: TextAnimation[]; onApply: (a: TextAnimati
             </div>
             <Badge variant="secondary">+</Badge>
           </div>
-        </motion.button>
+        </Motion.button>
       )
     })}
   </div>
@@ -559,53 +559,53 @@ const AnimationPreview: React.FC<{ kind: TextAnimation['preview'] }> = ({ kind }
   const baseClass = 'text-2xl font-black text-white'
   switch (kind) {
     case 'fade-up':
-      return <motion.span className={baseClass} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.6 }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.6 }}>{sample}</Motion.span>
     case 'pop':
-      return <motion.span className={baseClass} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.45, type: 'spring', repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.6 }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.45, type: 'spring', repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.6 }}>{sample}</Motion.span>
     case 'typewriter':
       return (
         <span className={baseClass}>
           {sample.split('').map((c, i) => (
-            <motion.span key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.12, duration: 0.05, repeat: Infinity, repeatDelay: 1.2 }}>{c}</motion.span>
+            <Motion.span key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.12, duration: 0.05, repeat: Infinity, repeatDelay: 1.2 }}>{c}</Motion.span>
           ))}
-          <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.8, repeat: Infinity }}>|</motion.span>
+          <Motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.8, repeat: Infinity }}>|</Motion.span>
         </span>
       )
     case 'wave':
       return (
         <span className={baseClass}>
           {sample.split('').map((c, i) => (
-            <motion.span key={i} animate={{ y: [0, -10, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.1 }} style={{ display: 'inline-block' }}>{c}</motion.span>
+            <Motion.span key={i} animate={{ y: [0, -10, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.1 }} style={{ display: 'inline-block' }}>{c}</Motion.span>
           ))}
         </span>
       )
     case 'glitch':
-      return <motion.span className={baseClass} animate={{ x: [0, 2, -2, 0], color: ['#fff', '#ec4899', '#06b6d4', '#fff'] }} transition={{ duration: 0.4, repeat: Infinity }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} animate={{ x: [0, 2, -2, 0], color: ['#fff', '#ec4899', '#06b6d4', '#fff'] }} transition={{ duration: 0.4, repeat: Infinity }}>{sample}</Motion.span>
     case 'slide':
-      return <motion.span className={baseClass} initial={{ x: -40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.6 }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} initial={{ x: -40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.6 }}>{sample}</Motion.span>
     case 'bounce':
-      return <motion.span className={baseClass} animate={{ y: [0, -16, 0, -8, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} animate={{ y: [0, -16, 0, -8, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}>{sample}</Motion.span>
     case 'zoom':
-      return <motion.span className={baseClass} animate={{ scale: [0.9, 1.4, 0.9] }} transition={{ duration: 0.9, repeat: Infinity }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} animate={{ scale: [0.9, 1.4, 0.9] }} transition={{ duration: 0.9, repeat: Infinity }}>{sample}</Motion.span>
     case 'rotate':
-      return <motion.span className={baseClass} animate={{ rotate: [-5, 5, -5] }} transition={{ duration: 1.2, repeat: Infinity }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} animate={{ rotate: [-5, 5, -5] }} transition={{ duration: 1.2, repeat: Infinity }}>{sample}</Motion.span>
     case 'stretch':
-      return <motion.span className={baseClass} animate={{ scaleX: [1, 1.4, 1], scaleY: [1, 0.7, 1] }} transition={{ duration: 0.7, repeat: Infinity }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} animate={{ scaleX: [1, 1.4, 1], scaleY: [1, 0.7, 1] }} transition={{ duration: 0.7, repeat: Infinity }}>{sample}</Motion.span>
     case 'blur-in':
-      return <motion.span className={baseClass} animate={{ filter: ['blur(8px)', 'blur(0px)', 'blur(8px)'], opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.6, repeat: Infinity }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} animate={{ filter: ['blur(8px)', 'blur(0px)', 'blur(8px)'], opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.6, repeat: Infinity }}>{sample}</Motion.span>
     case 'shake':
-      return <motion.span className={baseClass} animate={{ x: [-2, 2, -2, 2, 0] }} transition={{ duration: 0.4, repeat: Infinity }}>{sample}</motion.span>
+      return <Motion.span className={baseClass} animate={{ x: [-2, 2, -2, 2, 0] }} transition={{ duration: 0.4, repeat: Infinity }}>{sample}</Motion.span>
     case 'wipe':
-      return <motion.span className={`${baseClass} overflow-hidden inline-block`} initial={{ clipPath: 'inset(0 100% 0 0)' }} animate={{ clipPath: 'inset(0 0% 0 0)' }} transition={{ duration: 0.7, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.4 }}>{sample}</motion.span>
+      return <Motion.span className={`${baseClass} overflow-hidden inline-block`} initial={{ clipPath: 'inset(0 100% 0 0)' }} animate={{ clipPath: 'inset(0 0% 0 0)' }} transition={{ duration: 0.7, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.4 }}>{sample}</Motion.span>
     case 'flip':
-      return <motion.span className={`${baseClass} inline-block`} animate={{ rotateY: [0, 180, 360] }} transition={{ duration: 1.6, repeat: Infinity }} style={{ transformStyle: 'preserve-3d' }}>{sample}</motion.span>
+      return <Motion.span className={`${baseClass} inline-block`} animate={{ rotateY: [0, 180, 360] }} transition={{ duration: 1.6, repeat: Infinity }} style={{ transformStyle: 'preserve-3d' }}>{sample}</Motion.span>
     case 'reveal-up':
-      return <span className={baseClass} style={{ display: 'inline-block', overflow: 'hidden' }}><motion.span style={{ display: 'inline-block' }} initial={{ y: 30 }} animate={{ y: 0 }} transition={{ duration: 0.6, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.4 }}>{sample}</motion.span></span>
+      return <span className={baseClass} style={{ display: 'inline-block', overflow: 'hidden' }}><Motion.span style={{ display: 'inline-block' }} initial={{ y: 30 }} animate={{ y: 0 }} transition={{ duration: 0.6, repeat: Infinity, repeatType: 'reverse', repeatDelay: 0.4 }}>{sample}</Motion.span></span>
     case 'split':
       return (
         <span className={baseClass}>
           {sample.split('').map((c, i) => (
-            <motion.span key={i} animate={{ y: i % 2 === 0 ? [0, -8, 0] : [0, 8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.05 }} style={{ display: 'inline-block' }}>{c}</motion.span>
+            <Motion.span key={i} animate={{ y: i % 2 === 0 ? [0, -8, 0] : [0, 8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.05 }} style={{ display: 'inline-block' }}>{c}</Motion.span>
           ))}
         </span>
       )
@@ -619,7 +619,7 @@ const MotionGrid: React.FC<{ items: MotionPreset[]; onApply: (m: MotionPreset) =
     {items.map(m => {
       const MoodIcon = MOOD_ICONS[m.mood] || Wand2
       return (
-        <motion.button
+        <Motion.button
           key={m.id}
           type="button"
           layout
@@ -637,7 +637,7 @@ const MotionGrid: React.FC<{ items: MotionPreset[]; onApply: (m: MotionPreset) =
             </div>
             <Badge variant="secondary">+</Badge>
           </div>
-        </motion.button>
+        </Motion.button>
       )
     })}
   </div>
@@ -651,34 +651,34 @@ const MotionPreview: React.FC<{ kind: MotionPreset['preview'] }> = ({ kind }) =>
   )
   switch (kind) {
     case 'ken-burns':
-      return <motion.div animate={{ scale: [1, 1.15, 1], x: [-4, 4, -4], y: [-2, 2, -2] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ scale: [1, 1.15, 1], x: [-4, 4, -4], y: [-2, 2, -2] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0">{block}</Motion.div>
     case 'parallax':
       return (
         <>
-          <motion.div animate={{ x: [-10, 10, -10] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0 opacity-50">{block}</motion.div>
-          <motion.div animate={{ x: [10, -10, 10] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+          <Motion.div animate={{ x: [-10, 10, -10] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0 opacity-50">{block}</Motion.div>
+          <Motion.div animate={{ x: [10, -10, 10] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
         </>
       )
     case 'shake':
-      return <motion.div animate={{ x: [-3, 3, -3, 3, 0], y: [-2, 2, 0] }} transition={{ duration: 0.4, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ x: [-3, 3, -3, 3, 0], y: [-2, 2, 0] }} transition={{ duration: 0.4, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'zoom-pulse':
-      return <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.8, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.8, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'tilt':
-      return <motion.div animate={{ rotate: [0, -8, 0] }} transition={{ duration: 2.4, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ rotate: [0, -8, 0] }} transition={{ duration: 2.4, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'pan-left':
-      return <motion.div animate={{ x: [40, -40, 40] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ x: [40, -40, 40] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'pan-right':
-      return <motion.div animate={{ x: [-40, 40, -40] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ x: [-40, 40, -40] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'orbit':
-      return <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} className="absolute inset-0">{block}</Motion.div>
     case 'wobble':
-      return <motion.div animate={{ rotate: [-6, 6, -6], scale: [1, 1.05, 1] }} transition={{ duration: 1.2, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ rotate: [-6, 6, -6], scale: [1, 1.05, 1] }} transition={{ duration: 1.2, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'breathe':
-      return <motion.div animate={{ scale: [1, 1.04, 1], opacity: [0.85, 1, 0.85] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ scale: [1, 1.04, 1], opacity: [0.85, 1, 0.85] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'dolly-zoom':
-      return <motion.div animate={{ scale: [1, 1.5, 1], filter: ['blur(0px)', 'blur(2px)', 'blur(0px)'] }} transition={{ duration: 2.5, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ scale: [1, 1.5, 1], filter: ['blur(0px)', 'blur(2px)', 'blur(0px)'] }} transition={{ duration: 2.5, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     case 'glitch-shake':
-      return <motion.div animate={{ x: [0, -4, 4, -2, 0], filter: ['none', 'hue-rotate(60deg)', 'none'] }} transition={{ duration: 0.6, repeat: Infinity }} className="absolute inset-0">{block}</motion.div>
+      return <Motion.div animate={{ x: [0, -4, 4, -2, 0], filter: ['none', 'hue-rotate(60deg)', 'none'] }} transition={{ duration: 0.6, repeat: Infinity }} className="absolute inset-0">{block}</Motion.div>
     default:
       return <div className="absolute inset-0">{block}</div>
   }
@@ -689,7 +689,7 @@ const FontGrid: React.FC<{ items: FontEntry[]; onApply: (f: FontEntry) => void }
     {items.map(f => {
       const MoodIcon = MOOD_ICONS[f.mood] || Type
       return (
-        <motion.button
+        <Motion.button
           key={f.id}
           type="button"
           layout
@@ -708,7 +708,7 @@ const FontGrid: React.FC<{ items: FontEntry[]; onApply: (f: FontEntry) => void }
               <Badge key={b} variant="outline">{b}</Badge>
             ))}
           </div>
-        </motion.button>
+        </Motion.button>
       )
     })}
   </div>

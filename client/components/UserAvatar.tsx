@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import Image from 'next/image'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -50,7 +50,7 @@ export default function UserAvatar({
       title={name || t('userAvatar.userAvatar')}
     >
       {/* Outer Glow Ring */}
-      <motion.div
+      <m.div
         animate={{
           scale: [1, 1.05, 1],
           opacity: [0.3, 0.6, 0.3],
@@ -84,7 +84,7 @@ export default function UserAvatar({
 
       {/* Subscription Badge Ornament */}
       {status !== 'none' && (
-        <motion.div 
+        <m.div 
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#020205] z-20 ${
@@ -95,7 +95,7 @@ export default function UserAvatar({
       )}
 
       {/* Subtle Scanline Effect */}
-      <motion.div
+      <m.div
         animate={{ y: ['-100%', '200%'] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
         className="absolute left-[10%] right-[10%] h-[1px] bg-white/20 blur-[1px] pointer-events-none z-10 opacity-30 group-hover:opacity-60"

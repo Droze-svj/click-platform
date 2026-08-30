@@ -17,7 +17,7 @@ import {
   Database, ShieldCheck, Zap
 } from 'lucide-react'
 import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { getAssetUrl, getMediaUrl } from '../../../utils/url'
@@ -274,7 +274,7 @@ export default function VideoStudioPage() {
 
         <AnimatePresence>
           {(pageDragOver || pageDropProgress !== null) && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-[9999] bg-background/90 backdrop-blur-xl flex items-center justify-center border-4 border-dashed border-indigo-500/50"
             >
@@ -292,7 +292,7 @@ export default function VideoStudioPage() {
                   </div>
                 )}
               </Panel>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

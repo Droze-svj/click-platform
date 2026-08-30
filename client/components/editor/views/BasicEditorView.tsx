@@ -68,7 +68,7 @@ import {
   CreditCard,
   Image as ImageIcon
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { getMatchingEmojiForChunk } from '../../../utils/captionEmojiMap'
 import { pickHighlightWords, pickCaptionEmoji, DEFAULT_HIGHLIGHT_COLOR } from '../../../lib/captions'
 import { VideoFilter, TextOverlay, TemplateLayout, TEMPLATE_LAYOUTS, ShapeOverlay, ShapeOverlayKind, MOTION_GRAPHIC_TEMPLATES, MotionGraphicTemplate, ImageOverlay, GradientOverlay, GradientOverlayDirection, SvgOverlay, MotionCompound, TransformKeyframe, CAPTION_FONTS } from '../../../types/editor'
@@ -205,7 +205,7 @@ function ImageOverlayKeyframePanel({
           ))}
         </select>
 
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={addKeyframeAtPlayhead}
@@ -213,7 +213,7 @@ function ImageOverlayKeyframePanel({
         >
           <PlusCircle className="w-4 h-4" />
           Add keyframe at playhead
-        </motion.button>
+        </m.button>
 
         {setActiveCategory && (
           <button
@@ -1485,7 +1485,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         {/* Global search results dropdown */}
         <AnimatePresence>
           {globalSearchResults.length > 0 && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
@@ -1500,7 +1500,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   <span className="ml-auto text-[9px] text-slate-600 font-bold uppercase tracking-widest">{r.tab}</span>
                 </button>
               ))}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -1517,7 +1517,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               }`}
             >
               {activeEditTab === id && (
-                <motion.div
+                <m.div
                   layoutId="edit-tab-bg"
                   className="absolute inset-0 rounded-xl bg-gradient-to-b from-indigo-500/10 to-indigo-500/25 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
@@ -1614,7 +1614,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   ? `${label} — coming soon`
                   : (requiresSelection && !hasSegmentSelection ? `${label} — select a clip first` : label)
                 return (
-                  <motion.button
+                  <m.button
                     key={label}
                     type="button"
                     onClick={disabled ? undefined : action}
@@ -1639,7 +1639,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                         Soon
                       </span>
                     )}
-                  </motion.button>
+                  </m.button>
                 )
               })}
             </div>
@@ -1697,10 +1697,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">{t('editor.aspectRatio')}</span>
               <div className="grid grid-cols-3 gap-1.5">
                 {TEMPLATE_LAYOUTS.map(l => (
-                  <motion.button key={l.id} whileTap={{ scale: 0.96 }}
+                  <m.button key={l.id} whileTap={{ scale: 0.96 }}
                     onClick={() => { pushSnapshot(l.id, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(l.id); showToast(`${l.label} applied`, 'success') }}
                     className={`py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${templateLayout === l.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/[0.02] text-slate-400 hover:bg-white/10 hover:text-white border border-white/[0.06]'}`}
-                  >{l.label}</motion.button>
+                  >{l.label}</m.button>
                 ))}
               </div>
             </div>
@@ -1789,7 +1789,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         {activeEditTab === 'text' && (
           <div className="space-y-3">
             {selectedTextId && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between shadow-[0_0_20px_rgba(99,102,241,0.15)] relative overflow-hidden"
@@ -1811,7 +1811,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 >
                   Deselect
                 </button>
-              </motion.div>
+              </m.div>
             )}
 
             {/* Quick add */}
@@ -1999,17 +1999,17 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 {/* Success state */}
                 <AnimatePresence>
                   {captionSuccess !== null && (
-                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    <m.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                       className="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <p className="text-[9px] text-emerald-300 font-black">{captionSuccess} captions added in {captionStyle} style</p>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
                 {/* Generate button */}
-                <motion.button
+                <m.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleAutoCaption}
                   disabled={captionLoading}
@@ -2022,7 +2022,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 >
                   {captionLoading ? (
                     <>
-                      <motion.div
+                      <m.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                         className="w-3.5 h-3.5 border-2 border-indigo-300/40 border-t-indigo-300 rounded-full"
@@ -2035,16 +2035,16 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       Generate Captions
                     </>
                   )}
-                </motion.button>
+                </m.button>
 
                 {/* Error state */}
                 <AnimatePresence>
                   {captionError && (
-                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    <m.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                       className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20"
                     >
                       <p className="text-[9px] text-rose-300 leading-relaxed">{captionError}</p>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
@@ -2096,7 +2096,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     >
                       {translatingCaptions ? (
                         <>
-                          <motion.div
+                          <m.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                             className="w-3.5 h-3.5 border border-indigo-300/40 border-t-indigo-300 rounded-full"
@@ -2299,7 +2299,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   >
                     {generatingEmojis ? (
                       <>
-                        <motion.div
+                        <m.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                           className="w-3.5 h-3.5 border-2 border-indigo-300/40 border-t-indigo-300 rounded-full"
@@ -2379,7 +2379,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             {selectedTextId && textOverlays?.find(o => o.id === selectedTextId) && (() => {
               const o = textOverlays!.find(o => o.id === selectedTextId)!
               return (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-3 rounded-2xl bg-white/[0.03] border border-indigo-500/20 space-y-3"
@@ -2495,7 +2495,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 transition-all text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest"
                   ><Upload className="w-3 h-3" /> Upload Font</button>
                   <input ref={fontInputRef} type="file" accept=".ttf,.otf,.woff,.woff2" className="hidden" onChange={handleFontUpload} aria-label="Upload custom font file" title="Upload custom font file" />
-                </motion.div>
+                </m.div>
               )
             })()}
           </div>
@@ -2564,7 +2564,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               {FILTER_PRESETS_WITH_CATEGORY
                 .filter(p => filterCategory === 'all' || p.category === filterCategory)
                 .map(p => (
-                <motion.button key={p.n} onClick={() => applyFilter(p)} whileTap={{ scale: 0.97 }}
+                <m.button key={p.n} onClick={() => applyFilter(p)} whileTap={{ scale: 0.97 }}
                   className={`relative overflow-hidden flex flex-col items-start gap-1 p-2.5 rounded-xl border transition-all group ${selectedFilterName === p.n ? 'border-indigo-500/60 bg-indigo-600/10 ring-1 ring-indigo-500/30' : 'border-white/[0.06] bg-white/[0.02] hover:border-white/20'}`}
                 >
                   {/* Live CSS filter preview on a gradient */}
@@ -2575,7 +2575,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   <span className="text-[10px] font-black text-slate-200 group-hover:text-white">{p.n}</span>
                   <span className="text-[8px] text-slate-600 group-hover:text-slate-400">{p.desc}</span>
                   {selectedFilterName === p.n && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                    <m.div initial={{ scale: 0 }} animate={{ scale: 1 }}
                       className="absolute top-2 left-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]"
                     />
                   )}
@@ -2585,7 +2585,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   >
                     <Pin className={`w-3 h-3 ${pinnedFilterNames.includes(p.n) ? 'text-indigo-400' : 'text-slate-500'}`} />
                   </div>
-                </motion.button>
+                </m.button>
               ))}
             </div>
           </div>

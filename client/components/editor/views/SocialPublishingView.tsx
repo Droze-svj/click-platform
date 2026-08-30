@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Share2, Youtube, Twitter, Instagram, Send, Sparkles, 
   Clock, AlertCircle, CheckCircle2, ChevronRight, 
@@ -227,7 +227,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
           </h2>
           <p className="text-sm text-gray-400 mt-1">Unified Distribution & Neural Metadata</p>
         </div>
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleAiForge}
@@ -236,7 +236,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
         >
           <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
           {isGenerating ? 'Forging...' : 'One-Click AI Forge'}
-        </motion.button>
+        </m.button>
       </div>
 
       {isComplianceFailed && (
@@ -286,7 +286,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
             </div>
 
             {state.enabled && (
-              <motion.div 
+              <m.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 className="space-y-4"
@@ -391,7 +391,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
                     )}
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             )}
           </div>
         ))}
@@ -442,12 +442,12 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
           className="flex-[2] py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl font-bold transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {isPublishing ? (
-            <motion.div 
+            <m.div 
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
             >
               <Send className="w-5 h-5" />
-            </motion.div>
+            </m.div>
           ) : (
             <Send className="w-5 h-5" />
           )}

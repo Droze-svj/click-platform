@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Globe, Zap, FileJson, Users, Brain, Orbit, Activity, 
   MessageSquare, Radio, ShieldCheck, Share2, Rocket
@@ -98,7 +98,7 @@ const NeuralBroadcasterPanel = () => {
 
       <AnimatePresence>
         {pipeline && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 mt-6">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 mt-6">
             <div className="flex justify-between items-center p-4 rounded-xl border border-white/5 bg-white/[0.02]">
               <div>
                 <p className="text-sm font-black text-white">{t('phase9Dashboard.algorithmicLaunchWindow')}</p>
@@ -121,7 +121,7 @@ const NeuralBroadcasterPanel = () => {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -184,7 +184,7 @@ const FederatedSwarmPanel = () => {
 
       <AnimatePresence>
         {swarmState && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+          <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-6">{t('phase9Dashboard.trendingSignals')}</p>
             <div className="grid gap-3">
               {swarmState.trendingSignals?.map((sig: any, i: number) => (
@@ -202,7 +202,7 @@ const FederatedSwarmPanel = () => {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -281,7 +281,7 @@ const AutonomicCMPaPanel = () => {
 
       <AnimatePresence>
         {running && telemetry && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-6 pt-4">
+          <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-6 pt-4">
             <div className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] text-center">
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{t('phase9Dashboard.sentiment')}</p>
               <p className="text-2xl font-black text-white italic">{(telemetry.avgSentiment * 100).toFixed(0)}%</p>
@@ -297,7 +297,7 @@ const AutonomicCMPaPanel = () => {
               <p className="text-2xl font-black text-white italic">{telemetry.activeSwarms}</p>
               <p className="text-[8px] font-bold text-slate-500 uppercase mt-1">{t('phase9Dashboard.activeNodes')}</p>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -382,12 +382,12 @@ export default function Phase9Dashboard() {
 
       {/* Active Section */}
       <AnimatePresence mode="wait">
-        <motion.div key={activeSection} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
+        <m.div key={activeSection} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
           {activeSection === 'broadcaster' && <NeuralBroadcasterPanel />}
           {activeSection === 'swarm' && <FederatedSwarmPanel />}
           {activeSection === 'cm' && <AutonomicCMPaPanel />}
           {activeSection === 'oracle' && <OracleSandboxPanel />}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   )

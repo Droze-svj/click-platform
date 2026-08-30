@@ -15,7 +15,7 @@ import {
   PieChart,
   ArrowRightLeft
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface ArbitrageOffer {

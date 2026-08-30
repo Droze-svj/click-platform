@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   X,
   ChevronRight,
@@ -124,14 +124,14 @@ export default function OnboardingFlow() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12 overflow-hidden">
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
       />
 
-      <motion.div
+      <m.div
         initial={{ scale: 0.9, opacity: 0, y: 30 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         className={`relative w-full max-w-2xl rounded-[3rem] overflow-hidden ${glassStyle}`}
@@ -162,7 +162,7 @@ export default function OnboardingFlow() {
         {/* Content Area */}
         <div className="p-8 md:p-12 min-h-[400px] flex flex-col justify-center relative">
           <AnimatePresence initial={false} custom={direction}>
-            <motion.div
+            <m.div
               key={currentStep}
               custom={direction}
               variants={stepVariants}
@@ -172,7 +172,7 @@ export default function OnboardingFlow() {
               className="w-full"
             >
               {steps[currentStep].component}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
 
@@ -209,7 +209,7 @@ export default function OnboardingFlow() {
             </button>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }
@@ -220,20 +220,20 @@ function WelcomeStep() {
     <div className="text-center space-y-8 py-4">
       <div className="relative inline-block">
         <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full" />
-        <motion.div
+        <m.div
           animate={{ rotate: 360 }}
           transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
           className="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center"
         >
           <Rocket className="w-16 h-16 md:w-20 md:h-20 text-indigo-400" />
-        </motion.div>
-        <motion.div
+        </m.div>
+        <m.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
           className="absolute -top-2 -right-2 p-3 rounded-2xl bg-indigo-600 shadow-xl"
         >
           <Sparkles className="w-6 h-6 text-white" />
-        </motion.div>
+        </m.div>
       </div>
       <div className="space-y-4">
         <h3 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">{t('onboardingFlow.clickGenesis')}</h3>
@@ -312,13 +312,13 @@ function CompleteStep({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="text-center space-y-10 py-4">
       <div className="relative">
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="w-32 h-32 md:w-40 md:h-40 bg-indigo-600 rounded-full mx-auto flex items-center justify-center"
         >
           <Rocket className="w-16 h-16 md:w-20 md:h-20 text-white" />
-        </motion.div>
+        </m.div>
         <div className="absolute inset-0 bg-indigo-600/30 blur-3xl -z-10" />
       </div>
       <div className="space-y-4">

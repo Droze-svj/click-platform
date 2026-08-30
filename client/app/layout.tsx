@@ -13,6 +13,7 @@ import ToastContainer from '../components/ToastContainer';
 import { CookieConsent } from '../components/CookieConsent';
 import LocaleSync from '../components/LocaleSync';
 import PerformanceMonitor from '../components/PerformanceMonitor';
+import MotionProvider from '../components/MotionProvider';
 
 // Body default
 const inter = Inter({
@@ -109,6 +110,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} bg-noise-grain`}>
+        <MotionProvider>
         <ThemeProvider>
           <PreferencesProvider>
             <TranslationProvider>
@@ -135,6 +137,7 @@ export default function RootLayout({
             </TranslationProvider>
           </PreferencesProvider>
         </ThemeProvider>
+        </MotionProvider>
       </body>
     </html>
   );

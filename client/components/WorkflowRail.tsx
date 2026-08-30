@@ -14,7 +14,7 @@ import {
 } from '../contexts/WorkflowContext'
 import { useTranslation } from '../hooks/useTranslation'
 import LanguagePicker from './LanguagePicker'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ACCENT_PALETTES, resolveAccentKey, isSwarmMode, type SwarmMode } from '../lib/swarmTheme'
 
 const STAGE_ICONS: Record<WorkflowStage, LucideIcon> = {
@@ -198,7 +198,7 @@ export default function WorkflowRail() {
             return (
               <React.Fragment key={s}>
                 <li className="flex-shrink-0">
-                  <motion.button
+                  <m.button
                     type="button"
                     onClick={() => {
                       if (isReachable) { setStage(s); router.push(meta.route) }
@@ -228,7 +228,7 @@ export default function WorkflowRail() {
                   >
                     {isDone && !isCurrent ? <Check size={12} className="group-hover:scale-110 transition-transform" /> : <Icon size={12} className="group-hover:scale-110 transition-transform" />}
                     <span className="hidden sm:inline">{stageLabel(s)}</span>
-                  </motion.button>
+                  </m.button>
                 </li>
                 {i < STAGE_ORDER.length - 1 && (
                   <li aria-hidden="true" className={`h-px w-4 sm:w-8 flex-shrink-0 ${state.completed[s] ? 'bg-emerald-500' : 'bg-surface-200 dark:bg-white/10'}`} />
@@ -283,7 +283,7 @@ export default function WorkflowRail() {
       {/* Stage error flash */}
       <AnimatePresence>
         {stageError && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
@@ -292,14 +292,14 @@ export default function WorkflowRail() {
           >
             <AlertTriangle size={12} className="shrink-0" />
             {stageError}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Collapsible Co-Pilot Drawer */}
       <AnimatePresence>
         {drawerOpen && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -343,7 +343,7 @@ export default function WorkflowRail() {
                 </Link>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Zap, Activity, Shield, Sparkles } from 'lucide-react'
 import { useSocket } from '../hooks/useSocket'
 import { useAuth } from '../hooks/useAuth'
@@ -59,7 +59,7 @@ export default function RealTimeActivityTicker() {
       <div className="space-y-2 py-4">
         <AnimatePresence initial={false}>
           {pulses.map((pulse) => (
-            <motion.div
+            <m.div
               key={pulse.id}
               initial={{ opacity: 0, x: -20, height: 0 }}
               animate={{ opacity: 1, x: 0, height: 'auto' }}
@@ -92,13 +92,13 @@ export default function RealTimeActivityTicker() {
               <div className="opacity-0 group-hover/pulse:opacity-100 transition-opacity">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>
 
       {/* HUD Scanning Line */}
-      <motion.div
+      <m.div
         animate={{ top: ['0%', '100%'] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
         className="absolute left-0 right-0 h-px bg-white/10 z-20 pointer-events-none"

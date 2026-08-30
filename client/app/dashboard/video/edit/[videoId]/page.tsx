@@ -6,7 +6,7 @@ import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
 import { useSocket } from '../../../../../hooks/useSocket'
 import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, Layout, Moon, Sun, Wand2, Scissors, Music, Type, Hash, Flame, Mic, Film, Gauge } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
 import { getAssetUrl, getMediaUrl } from '../../../../../utils/url'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
@@ -545,7 +545,7 @@ export default function VideoEditPage({ params }: PageProps) {
 
           <AnimatePresence mode="wait">
             {processing ? (
-              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-800 p-12 sm:p-20 text-center shadow-sm max-w-3xl mx-auto">
+              <m.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-800 p-12 sm:p-20 text-center shadow-sm max-w-3xl mx-auto">
                 <div className="w-20 h-20 rounded-2xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center mx-auto mb-8 shadow-sm">
                   <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
                 </div>
@@ -562,13 +562,13 @@ export default function VideoEditPage({ params }: PageProps) {
                        <span className="text-lg font-black text-surface-900 dark:text-white">{liveProgress?.percent || 0}%</span>
                     </div>
                     <div className="h-3 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
-                      <motion.div className="h-full bg-primary-500" initial={{ width: 0 }} animate={{ width: `${liveProgress?.percent || 0}%` }} />
+                      <m.div className="h-full bg-primary-500" initial={{ width: 0 }} animate={{ width: `${liveProgress?.percent || 0}%` }} />
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             ) : aiEditResult ? (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 max-w-4xl mx-auto">
+              <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 max-w-4xl mx-auto">
                 <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-10 flex flex-col md:flex-row items-center gap-10 shadow-sm relative overflow-hidden">
                   <div className="w-20 h-20 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
                     <CheckCircle2 size={36} className="text-emerald-600 dark:text-emerald-400" />
@@ -597,14 +597,14 @@ export default function VideoEditPage({ params }: PageProps) {
 
                 {/* Marketing Brief */}
                 <MarketingBriefPanel brief={marketingBrief} />
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 {/* Left Col: Analysis Results */}
                 <div className="lg:col-span-4 space-y-6">
                   {showAnalysis && aiAnalysis && (
-                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 rounded-3xl shadow-sm">
+                    <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 rounded-3xl shadow-sm">
                        <div className="flex items-center gap-4 mb-6">
                           <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
                             <Activity size={24} className="text-emerald-600 dark:text-emerald-400" />
@@ -618,7 +618,7 @@ export default function VideoEditPage({ params }: PageProps) {
                          <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">Suggested Length</p>
                          <p className="text-2xl font-black text-surface-900 dark:text-white tabular-nums">{Math.round(aiAnalysis.suggestedLength || 0)}s</p>
                        </div>
-                    </motion.div>
+                    </m.div>
                   )}
                   
                   <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 rounded-3xl shadow-sm">
@@ -1048,7 +1048,7 @@ export default function VideoEditPage({ params }: PageProps) {
                       </div>
                    </div>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

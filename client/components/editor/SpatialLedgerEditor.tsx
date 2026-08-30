@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Box, 
   BoxSelect, 
@@ -127,7 +127,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
 
       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
         {entities.map(([key, entity]: [string, any]) => (
-          <motion.div 
+          <m.div 
             key={key}
             whileHover={{ x: 5 }}
             onClick={() => setSelectedEntity(key)}
@@ -145,13 +145,13 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
               <span className="text-[8px] font-black text-slate-800 uppercase tracking-widest opacity-50">{entity.type}</span>
             </div>
             <p className="text-[11px] font-medium text-slate-400 mt-2 italic truncate">&ldquo;{entity.lastKnownState}&rdquo;</p>
-          </motion.div>
+          </m.div>
         ))}
       </div>
 
       <AnimatePresence>
         {selectedEntity && (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -175,7 +175,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
             >
               COMMIT_SPATIAL_SYNC
             </button>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

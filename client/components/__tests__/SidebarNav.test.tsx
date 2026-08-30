@@ -24,7 +24,8 @@ jest.mock('../../contexts/LayoutPreferencesContext', () => ({
 jest.mock('../../hooks/useTranslation', () => ({ useTranslation: () => ({ t: () => '' }) }))
 jest.mock('../ClickLogo', () => ({ __esModule: true, default: () => <div /> }))
 jest.mock('framer-motion', () => ({
-  motion: new Proxy({}, { get: () => ({ children, ...p }: any) => <div {...p}>{children}</div> }),
+  // The app uses `m` (LazyMotion) rather than `motion` — see MotionProvider.
+  m: new Proxy({}, { get: () => ({ children, ...p }: any) => <div {...p}>{children}</div> }),
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }))
 

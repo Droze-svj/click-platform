@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Plus, Send, Clock, CheckCircle2, XCircle, ShieldAlert, Sparkles, Activity, Search, AlertTriangle, Fingerprint } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -159,7 +159,7 @@ export default function SupportTicketSystem() {
               </div>
             </div>
 
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsCreating(true)}
@@ -167,13 +167,13 @@ export default function SupportTicketSystem() {
             >
               <Plus className="w-5 h-5" />
               {t('supportTicketSystem.establishUplink')}
-            </motion.button>
+            </m.button>
           </div>
         </div>
 
         <AnimatePresence>
           {isCreating && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -182,7 +182,7 @@ export default function SupportTicketSystem() {
                 onSubmit={createTicket}
                 onCancel={() => setIsCreating(false)}
               />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -204,7 +204,7 @@ export default function SupportTicketSystem() {
                 </div>
               ) : (
                 tickets.map((ticket) => (
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.02, x: 5 }}
                     key={ticket._id}
                     onClick={() => setSelectedTicket(ticket)}
@@ -230,7 +230,7 @@ export default function SupportTicketSystem() {
                       </div>
                       <span className="text-slate-600">ID: {ticket._id.slice(-6)}</span>
                     </div>
-                  </motion.button>
+                  </m.button>
                 ))
               )}
             </div>
@@ -239,7 +239,7 @@ export default function SupportTicketSystem() {
           {/* Secure Transmissions (Ticket Details) */}
           <div className="lg:col-span-8">
             {selectedTicket ? (
-              <motion.div
+              <m.div
                 key={selectedTicket._id}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -296,7 +296,7 @@ export default function SupportTicketSystem() {
                   })}
 
                   {isTyping && (
-                    <motion.div
+                    <m.div
                       key="typing-indicator"
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -308,12 +308,12 @@ export default function SupportTicketSystem() {
                       <div className="p-4 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 rounded-tr-none flex items-center justify-center gap-3">
                         <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">{t('supportTicketSystem.nexusRouting')}</span>
                         <span className="flex gap-1.5">
-                          <motion.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                          <motion.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                          <motion.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                          <m.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                          <m.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                          <m.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                         </span>
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </div>
 
@@ -351,17 +351,17 @@ export default function SupportTicketSystem() {
                         className="w-full bg-black/50 border border-white/10 rounded-3xl pl-12 pr-6 py-4 text-sm font-black text-white italic placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 transition-colors custom-scrollbar resize-none h-[60px]"
                       />
                     </div>
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={sendMessage}
                       className="h-[60px] px-8 bg-indigo-600 text-white rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(79,70,229,0.3)] border border-indigo-400/30 hover:bg-indigo-500 transition-colors group"
                     >
                       <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                    </motion.button>
+                    </m.button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ) : (
               <div className={`h-[700px] rounded-[3rem] border border-white/5 flex flex-col items-center justify-center ${glassStyle}`}>
                 <div className="p-8 rounded-full bg-white/[0.02] border border-white/5 shadow-[0_0_100px_rgba(255,255,255,0.02)] mb-8">

@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import {
   ArrowLeft, ArrowRight, Check, ChevronRight, RefreshCw, Target, Lock, ShieldCheck,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import ClickLogo from '../../components/ClickLogo'
 
 interface PasswordValidation {
@@ -254,7 +254,7 @@ export default function Register() {
       </div>
 
       <div className="relative z-10 w-full max-w-2xl">
-        <motion.div {...motionProps}>
+        <m.div {...motionProps}>
           <div className="ds-surface-elevated p-7 sm:p-10">
             {/* ── Header ─────────────────────────────────────────────── */}
             <div className="flex flex-col items-center text-center mb-8">
@@ -326,7 +326,7 @@ export default function Register() {
                   <FormField label="Password" name="password" type="password" value={password} onChange={handlePasswordChange} placeholder="••••••••••••" required showPasswordToggle />
                   <AnimatePresence>
                     {passwordValidation && password.length > 0 && (
-                      <motion.div
+                      <m.div
                         initial={prefersReducedMotion.current ? false : { opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={prefersReducedMotion.current ? undefined : { opacity: 0, height: 0 }}
@@ -346,7 +346,7 @@ export default function Register() {
                           </div>
                           <span className="ds-text-caption text-theme-muted capitalize">{passwordValidation.strength}</span>
                         </div>
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
                 </div>
@@ -439,7 +439,7 @@ export default function Register() {
                   {/* Real, sourced blurb for the selected niche. */}
                   <AnimatePresence mode="wait">
                     {niche && (
-                      <motion.p
+                      <m.p
                         key={niche}
                         initial={prefersReducedMotion.current ? false : { opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -447,7 +447,7 @@ export default function Register() {
                         className="ds-text-caption text-theme-muted mt-3 px-1"
                       >
                         {NICHE_OPTIONS.find((o) => o.value === niche)?.blurb}
-                      </motion.p>
+                      </m.p>
                     )}
                   </AnimatePresence>
                 </div>
@@ -552,7 +552,7 @@ export default function Register() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Shield, 
   Database, 
@@ -133,7 +133,7 @@ export const SovereignLedger: React.FC = () => {
         <div className="space-y-4 lg:space-y-6">
           <AnimatePresence mode='popLayout'>
             {blocks.map((block, i) => (
-              <motion.div
+              <m.div
                 key={block.hash}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -175,7 +175,7 @@ export const SovereignLedger: React.FC = () => {
 
                 {/* Expanded Data Block */}
                 {expandedBlock === block.index && (
-                  <motion.div
+                  <m.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     className="mt-8 pt-8 border-t-2 border-white/5 space-y-8"
@@ -214,9 +214,9 @@ export const SovereignLedger: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
-              </motion.div>
+              </m.div>
             ))}
           </AnimatePresence>
         </div>

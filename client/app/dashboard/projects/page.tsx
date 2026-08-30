@@ -7,7 +7,7 @@ import {
   Circle, Zap, Layers, Clock, Link2, ChevronDown, Pencil,
 } from 'lucide-react'
 import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m as Motion, useReducedMotion } from 'framer-motion'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import ToastContainer from '../../../components/ToastContainer'
@@ -335,7 +335,7 @@ export default function ProjectsPage() {
                       </div>
                       <span className="ds-text-h2 text-theme-primary tabular-nums">{dashboard.progress}%</span>
                       <div className="h-1.5 w-full ds-surface-card rounded-full overflow-hidden">
-                        <motion.div initial={reduceMotion ? false : { width: 0 }} animate={{ width: `${dashboard.progress}%` }} transition={{ duration: reduceMotion ? 0 : 1 }} className="h-full bg-primary" />
+                        <Motion.div initial={reduceMotion ? false : { width: 0 }} animate={{ width: `${dashboard.progress}%` }} transition={{ duration: reduceMotion ? 0 : 1 }} className="h-full bg-primary" />
                       </div>
                     </div>
 
@@ -402,7 +402,7 @@ export default function ProjectsPage() {
                                 <span className={cn('text-sm font-medium', m.completedAt ? 'text-theme-muted line-through' : 'text-theme-primary')}>{m.title}</span>
                               </div>
                               <div className="flex-1 h-7 ds-surface-subtle rounded-lg relative overflow-hidden">
-                                <motion.div
+                                <Motion.div
                                   initial={reduceMotion ? false : { scaleX: 0 }}
                                   animate={{ scaleX: 1 }}
                                   transition={{ duration: reduceMotion ? 0 : 1 }}

@@ -6,7 +6,7 @@ import {
   Users, Plus, MessageSquare, Network, Crown, X, Search,
   Database, ArrowRight, Inbox, ArrowUpRight, Cpu,
 } from 'lucide-react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
@@ -209,7 +209,7 @@ export default function SwarmCollectiveNodePage() {
               : r.includes('view') ? 'ds-surface-subtle text-theme-muted'
               : 'bg-primary/10 text-primary'
             return (
-              <motion.div
+              <m.div
                 key={team._id}
                 layout
                 whileHover={reduceMotion ? undefined : { y: -4 }}
@@ -262,7 +262,7 @@ export default function SwarmCollectiveNodePage() {
                 <Button variant="primary" size="md" rightIcon={<ArrowUpRight size={16} aria-hidden />} onClick={() => router.push(`/dashboard/teams/${team._id}`)} className="w-full">
                   {t('teamsPage.syncNode')}
                 </Button>
-              </motion.div>
+              </m.div>
             )
           })}
         </section>

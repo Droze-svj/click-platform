@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Activity, ShieldCheck, TrendingUp, BarChart3 } from 'lucide-react'
 
 interface HealthDeltaOverlayProps {
@@ -13,7 +13,7 @@ interface HealthDeltaOverlayProps {
 const HealthDeltaOverlay: React.FC<HealthDeltaOverlayProps> = ({ score, diversityDelta, engagementPotential }) => {
   return (
     <div className="absolute top-6 left-6 z-50 pointer-events-none">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         className="backdrop-blur-2xl bg-black/40 border border-white/10 rounded-[2rem] p-6 shadow-2xl flex flex-col gap-4 min-w-[240px]"
@@ -54,7 +54,7 @@ const HealthDeltaOverlay: React.FC<HealthDeltaOverlayProps> = ({ score, diversit
                  <span className="text-[10px] font-bold text-white italic">{engagementPotential}%</span>
               </div>
               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                 <motion.div
+                 <m.div
                    initial={{ width: 0 }}
                    animate={{ width: `${engagementPotential}%` }}
                    className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500"
@@ -69,7 +69,7 @@ const HealthDeltaOverlay: React.FC<HealthDeltaOverlayProps> = ({ score, diversit
               </p>
            </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

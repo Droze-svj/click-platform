@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 interface MagneticProps {
   children: React.ReactNode
@@ -28,7 +28,7 @@ export default function Magnetic({ children, strength = 0.5 }: MagneticProps) {
   const { x, y } = position
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -36,6 +36,6 @@ export default function Magnetic({ children, strength = 0.5 }: MagneticProps) {
       transition={{ type: 'spring', damping: 15, stiffness: 150, mass: 0.1 }}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }

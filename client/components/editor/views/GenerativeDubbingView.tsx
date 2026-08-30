@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Globe, Mic, AudioLines, Play, Loader2, CheckCircle2,
   Languages, Sparkles, Download,
@@ -182,7 +182,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
   const isRunning = step !== 'idle' && step !== 'done' && step !== 'error'
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-8 max-w-[1200px] mx-auto pb-20 px-4 py-8"
@@ -219,7 +219,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
               {LANGUAGES.map(lang => {
                 const selected = selectedLangs.has(lang.code)
                 return (
-                  <motion.button
+                  <m.button
                     key={lang.code}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -237,7 +237,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                       <p className="text-[8px] text-slate-600">{lang.speakers} speakers</p>
                     </div>
                     {selected && <CheckCircle2 className="w-3 h-3 text-violet-400 ml-auto shrink-0" />}
-                  </motion.button>
+                  </m.button>
                 )
               })}
             </div>
@@ -270,7 +270,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                 }`}
                 aria-label="Toggle voice cloning"
               >
-                <motion.div
+                <m.div
                   layout
                   className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md"
                   animate={{ left: voiceCloneEnabled ? 22 : 2 }}
@@ -300,7 +300,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                 }`}
                 aria-label="Toggle visual lip sync"
               >
-                <motion.div
+                <m.div
                   layout
                   className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md"
                   animate={{ left: lipSyncEnabled ? 22 : 2 }}
@@ -310,7 +310,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
             </div>
 
             {lipSyncEnabled && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 className="flex items-start gap-3 p-4 rounded-2xl bg-fuchsia-500/5 border border-fuchsia-500/10"
@@ -319,12 +319,12 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                 <p className="text-[10px] text-slate-500 leading-relaxed">
                   Visual lip-sync applies <strong className="text-white">frame-by-frame phoneme warping</strong> using computer vision. Processing time increases by ~3× but the result eliminates the &ldquo;dubbed movie&rdquo; effect entirely.
                 </p>
-              </motion.div>
+              </m.div>
             )}
           </div>
 
           {/* Start Button */}
-          <motion.button
+          <m.button
             whileHover={{ scale: isRunning ? 1 : 1.02 }}
             whileTap={{ scale: isRunning ? 1 : 0.98 }}
             onClick={step === 'done' ? reset : (isRunning ? undefined : startDubbing)}
@@ -344,7 +344,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
             ) : (
               <><Globe className="w-4 h-4" /> Start Dubbing ({selectedLangs.size} language{selectedLangs.size !== 1 ? 's' : ''})</>
             )}
-          </motion.button>
+          </m.button>
         </div>
 
         {/* Right Column — Progress + Info */}
@@ -352,7 +352,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           {/* Progress Panel */}
           <AnimatePresence>
             {(isRunning || step === 'done') && (
-              <motion.div
+              <m.div
                 key="progress"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -370,7 +370,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                 </div>
 
                 <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div
+                  <m.div
                     className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -404,7 +404,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                     )}
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
@@ -427,7 +427,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

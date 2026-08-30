@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Split,
   Globe,
@@ -79,7 +79,7 @@ const GlobalABSynthesisHub: React.FC<{
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
@@ -197,7 +197,7 @@ const GlobalABSynthesisHub: React.FC<{
            <span className="text-white opacity-40">Style-DNA Injection: [Minimalist v Cyberpunk]</span>
          </p>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -225,7 +225,7 @@ const Viewport: React.FC<{
         {/* Simulation Content */}
         <AnimatePresence mode="wait">
           {active ? (
-            <motion.div
+            <m.div
               key="synthesizing"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -234,7 +234,7 @@ const Viewport: React.FC<{
             >
                 <div className="flex items-center gap-4">
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <motion.div
+                    <m.div
                       key={i}
                       animate={{ height: [20, 60, 20] }}
                       transition={{ duration: 0.5 + Math.random(), repeat: Infinity, delay: i * 0.1 }}
@@ -244,9 +244,9 @@ const Viewport: React.FC<{
                   ))}
                 </div>
                 <p className="text-[10px] font-mono text-white tracking-[0.4em] uppercase">Synthesizing {metadata.style}...</p>
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="preview"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -284,7 +284,7 @@ const Viewport: React.FC<{
                       <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-indigo-600/20 flex items-center justify-center">
                          <div className="flex items-center gap-1 opacity-20">
                             {Array.from({ length: 40 }).map((_, i) => (
-                               <motion.div
+                               <m.div
                                  key={i}
                                  animate={{ height: [10, 30, 10] }}
                                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.05 }}
@@ -376,18 +376,18 @@ const Viewport: React.FC<{
 
                       {/* Play Button */}
                       {!showHeatMap && (
-                        <motion.div
+                        <m.div
                             whileHover={{ scale: 1.1 }}
                             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white z-10"
                         >
                             <Play className="w-5 h-5 fill-current" />
-                        </motion.div>
+                        </m.div>
                       )}
 
                       {/* HeatMap Overlay */}
                       <AnimatePresence>
                         {showHeatMap && (
-                          <motion.div
+                          <m.div
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 50 }}
@@ -419,7 +419,7 @@ const Viewport: React.FC<{
                               </div>
                               <div className="flex items-end gap-1 h-12">
                                 {metadata.engagement.map((score, i) => (
-                                  <motion.div
+                                  <m.div
                                     key={i}
                                     initial={{ height: '0%' }}
                                     animate={{ height: `${Number.isNaN(score) ? 0 : score}%` }}
@@ -433,7 +433,7 @@ const Viewport: React.FC<{
                                       <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-black border border-white/10 text-[7px] font-mono text-white opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
                                         {score}%
                                       </div>
-                                  </motion.div>
+                                  </m.div>
                                 ))}
                               </div>
                               <div className="flex justify-between text-[6px] font-mono text-slate-500 uppercase mt-1">
@@ -441,7 +441,7 @@ const Viewport: React.FC<{
                                 <span>Retention Zone</span>
                                 <span>0:30</span>
                               </div>
-                          </motion.div>
+                          </m.div>
                         )}
                       </AnimatePresence>
                     </>
@@ -455,7 +455,7 @@ const Viewport: React.FC<{
                       <div className="flex items-end gap-2">
                         <span className="text-xl font-black text-white italic">{metadata.fidelity}</span>
                         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-1.5">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${metadata.fidelity * 100}%` }} className="h-full bg-indigo-500" />
+                            <m.div initial={{ width: 0 }} animate={{ width: `${metadata.fidelity * 100}%` }} className="h-full bg-indigo-500" />
                         </div>
                       </div>
                   </div>
@@ -464,12 +464,12 @@ const Viewport: React.FC<{
                       <div className="flex items-end gap-2">
                         <span className="text-xl font-black text-white italic">{metadata.coherence}</span>
                         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mb-1.5">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${metadata.coherence * 100}%` }} className="h-full bg-violet-500" />
+                            <m.div initial={{ width: 0 }} animate={{ width: `${metadata.coherence * 100}%` }} className="h-full bg-violet-500" />
                         </div>
                       </div>
                   </div>
                 </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

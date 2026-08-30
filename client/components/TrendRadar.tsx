@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Radio, Zap, Activity, Target, ChevronDown, ChevronUp, Sparkles, TrendingUp, Layers } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -77,7 +77,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
   }, [loadTrendData])
 
   return (
-    <motion.div 
+    <m.div 
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -137,7 +137,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
             
             <div className="space-y-4">
                {alerts.map(alert => (
-                  <motion.div
+                  <m.div
                     key={alert.id}
                     layout
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -166,7 +166,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
 
                      <AnimatePresence>
                         {expandedAlert === alert.id && (
-                          <motion.div 
+                          <m.div 
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -192,10 +192,10 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                                  {t('trendRadar.initializeContentSequence')}
                                </button>
                              )}
-                          </motion.div>
+                          </m.div>
                         )}
                      </AnimatePresence>
-                  </motion.div>
+                  </m.div>
                 ))}
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
 
             <div className="space-y-4">
               {formats.map((fmt, i) => (
-                <motion.div
+                <m.div
                   key={i}
                   variants={itemVariants}
                   className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-emerald-500/30 transition-all hover:bg-white/[0.04]"
@@ -225,7 +225,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                     <div className="text-sm font-black text-emerald-400 italic">+{Math.round((fmt.engagement_multiplier - 1) * 100)}%</div>
                     <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">{t('trendRadar.longevityRoi', { longevity: fmt.longevity })}</div>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
 
@@ -245,7 +245,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
           </div>
         </div>
       )}
-    </motion.div>
+    </m.div>
   )
 }
 

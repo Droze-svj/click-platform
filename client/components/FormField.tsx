@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AlertCircle, CheckCircle, Eye, EyeOff, Hash, Lock, Mail, Type } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
 
 interface FormFieldProps {
@@ -187,7 +187,7 @@ export default function FormField({
       {/* Error message */}
       <AnimatePresence>
         {hasError && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -197,7 +197,7 @@ export default function FormField({
           >
             <AlertCircle size={14} />
             {displayError}
-          </motion.p>
+          </m.p>
         )}
       </AnimatePresence>
 
