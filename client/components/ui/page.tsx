@@ -213,6 +213,57 @@ const Toolbar = React.forwardRef<HTMLDivElement, ToolbarProps>(
 )
 Toolbar.displayName = "Toolbar"
 
+/* ── AuthShell ─────────────────────────────────────────────────────────── */
+
+export type AuthWidth = "sm" | "md" | "lg"
+
+const AUTH_WIDTHS: Record<AuthWidth, string> = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+}
+
+export interface AuthShellProps extends React.HTMLAttributes<HTMLElement> {
+  width?: AuthWidth
+  /** Rendered top-right, outside the card — e.g. the language picker. */
+  corner?: React.ReactNode
+  /**
+   * Classes for the centred content column (where the card lives), as opposed
+   * to `className` which styles the full-viewport <main>. Pages that stack a
+   * back-link above the card pass their spacing here.
+   */
+  contentClassName?: string
+}
+
+/**
+ * Centred single-card frame for the signed-out routes: login, register, forgot
+ * / reset password, verify email, registration success, team invite accept.
+ *
+ * Separate from PageShell rather than a variant of it: those pages centre a
+ * card in the viewport and have no sidebar, header, breadcrumb or density
+ * rhythm to inherit. All seven previously repeated
+ * `min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12`
+ * by hand, with the inner card width drifting between max-w-md and max-w-lg.
+ *
+ * Renders <main> so signed-out pages have a landmark — several used a bare div.
+ */
+const AuthShell = React.forwardRef<HTMLElement, AuthShellProps>(
+  ({ className, contentClassName, width = "md", corner, children, ...props }, ref) => (
+    <main
+      ref={ref}
+      className={cn(
+        "relative min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12",
+        className
+      )}
+      {...props}
+    >
+      {corner ? <div className="absolute top-6 right-6 z-50">{corner}</div> : null}
+      <div className={cn("w-full ds-anim-rise", AUTH_WIDTHS[width], contentClassName)}>{children}</div>
+    </main>
+  )
+)
+AuthShell.displayName = "AuthShell"
+
 /* ── DetailLayout ──────────────────────────────────────────────────────── */
 
 export interface DetailLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -244,4 +295,4 @@ const DetailLayout = React.forwardRef<HTMLDivElement, DetailLayoutProps>(
 )
 DetailLayout.displayName = "DetailLayout"
 
-export { PageShell, PageHeader, Toolbar, DetailLayout }
+export { PageShell, PageHeader, Toolbar, DetailLayout, AuthShell }

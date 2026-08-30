@@ -60,7 +60,7 @@ export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs"
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip"
 
 // Page-level layout — the frame a route sits in.
-export { PageShell, PageHeader, Toolbar, DetailLayout } from "./page"
+export { PageShell, PageHeader, Toolbar, DetailLayout, AuthShell } from "./page"
 export type {
   PageShellProps,
   PageHeaderProps,
@@ -68,6 +68,8 @@ export type {
   DetailLayoutProps,
   PageWidth,
   Breadcrumb,
+  AuthShellProps,
+  AuthWidth,
 } from "./page"
 
 // Tabular data — owns its own loading / empty / error states.

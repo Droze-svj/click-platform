@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost, handleApiError } from '@/lib/api'
-import { Button, Card, Icon } from '@/components/ui'
+import { Button, Card, Icon, AuthShell } from '@/components/ui'
 import { CheckCircle2, MailCheck, AlertCircle, Loader2, ArrowRight, User } from 'lucide-react'
 import ClickLogo from '@/components/ClickLogo'
 
@@ -73,11 +73,9 @@ function RegistrationSuccessContent() {
   }
 
   const Shell = ({ children }: { children: React.ReactNode }) => (
-    <main className="min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md ds-anim-rise">
+    <AuthShell width="md">
         <Card variant="elevated" className="p-8 sm:p-10 space-y-8">{children}</Card>
-      </div>
-    </main>
+    </AuthShell>
   )
 
   if (loading) {
