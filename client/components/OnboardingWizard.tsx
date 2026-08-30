@@ -12,6 +12,7 @@ import {
   Sparkles, Zap, ArrowRight, Brain, Target, Rocket
 } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { apiPut } from '@/lib/api'
 
 interface OnboardingWizardProps {
   onComplete: () => void
@@ -89,21 +90,42 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const [creatorGoal, setCreatorGoal] = useState<string | null>(null)
   const [quizStep, setQuizStep] = useState(0)
 
+  // The creator goal maps to a starting hook style. Kept as one table so the
+  // local defaults and the value we sync to the account can't drift apart.
+  const GOAL_DEFAULTS: Record<string, { hookStyle: string; flags: Record<string, string> }> = {
+    viral: { hookStyle: 'controversial-question', flags: { click_auto_apply_trending: 'true' } },
+    engagement: { hookStyle: 'open-loop', flags: { click_auto_add_cta: 'true' } },
+    monetize: { hookStyle: 'value-stat', flags: { click_show_rpm_insights: 'true' } },
+  }
+
   const saveNicheProfile = useCallback(() => {
     const profile = { nicheType, platformTarget, creatorGoal, configuredAt: Date.now() }
+    const mapping = creatorGoal ? GOAL_DEFAULTS[creatorGoal] : undefined
+
+    // Local cache first, so the very next screen already reflects the answers
+    // without waiting on a round-trip.
     try {
       localStorage.setItem(CLICK_NICHE_KEY, JSON.stringify(profile))
-      if (creatorGoal === 'viral') {
-        localStorage.setItem('click_default_hook_style', 'controversial-question')
-        localStorage.setItem('click_auto_apply_trending', 'true')
-      } else if (creatorGoal === 'engagement') {
-        localStorage.setItem('click_default_hook_style', 'open-loop')
-        localStorage.setItem('click_auto_add_cta', 'true')
-      } else if (creatorGoal === 'monetize') {
-        localStorage.setItem('click_default_hook_style', 'value-stat')
-        localStorage.setItem('click_show_rpm_insights', 'true')
+      if (mapping) {
+        localStorage.setItem('click_default_hook_style', mapping.hookStyle)
+        Object.entries(mapping.flags).forEach(([k, v]) => localStorage.setItem(k, v))
       }
     } catch {}
+
+    // Then persist to the ACCOUNT. These answers previously lived only in
+    // localStorage, so a creator who onboarded on a laptop got a completely
+    // un-personalized Click on their desktop — and the marketing brain, which
+    // reads these same fields server-side, never saw them at all.
+    void apiPut('/me/ai-preferences', {
+      voice: mapping ? { hookStyle: mapping.hookStyle } : undefined,
+      defaults: {
+        niche: nicheType || undefined,
+        platformFocus: platformTarget ? [platformTarget] : undefined,
+        goals: creatorGoal ? [creatorGoal] : undefined,
+      },
+    }).catch(() => {
+      /* Best effort: the local cache above still personalizes this device. */
+    })
   }, [nicheType, platformTarget, creatorGoal])
 
   const advanceQuiz = useCallback(() => {

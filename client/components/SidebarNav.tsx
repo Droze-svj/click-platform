@@ -16,7 +16,7 @@ import {
   // Grow
   BarChart3, Flame, Brain, Recycle, Award, Target, LineChart,
   // Manage
-  FolderKanban, Users, Gem, Boxes, Plug, Compass, Share2, FlaskConical,
+  FolderKanban, Users, Gem, Boxes, Plug, Compass, Share2, FlaskConical, Fingerprint,
   // Settings
   Settings, LogOut, Sun, Moon, Eye, EyeOff,
   Search, Pin, MoreHorizontal,
@@ -109,7 +109,8 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/strategist',           label: t('nav.strategist') || 'Strategist', icon: Compass,   badge: 'AI',  primary: true },
       // Was reachable only by typing the URL — the page that shows a creator
       // what Click has actually learned about them.
-      { path: '/dashboard/click-learning',       label: t('nav.clickLearning') || 'What Click Learned', icon: Brain, badge: null, primary: true },
+      { path: '/dashboard/creator-dna',          label: t('nav.creatorDna') || 'Creator DNA', icon: Fingerprint, badge: 'New', primary: true },
+      { path: '/dashboard/click-learning',       label: t('nav.clickLearning') || 'What Click Learned', icon: Brain, badge: null },
 
       { path: '/dashboard/analytics/creator',    label: t('nav.creatorStats') || 'Creator Stats', icon: Flame, badge: 'AI' },
       { path: '/dashboard/analytics/engagement', label: t('nav.engagement') || 'Engagement',  icon: LineChart, badge: null },

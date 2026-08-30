@@ -97,8 +97,17 @@ describe('SidebarNav progressive disclosure', () => {
 
   it('adopts routes that were previously unreachable from any nav', () => {
     render(<SidebarNav />)
-    // /dashboard/click-learning had zero inbound links anywhere in the app.
     openZone(/Grow/i)
+
+    // Creator DNA surfaces /api/me/creator-dna, which had no client consumer
+    // at all, and leads the Grow zone.
+    expect(screen.getByRole('link', { name: /Creator DNA/i })).toBeInTheDocument()
+
+    // click-learning had zero inbound links anywhere in the app. It's adopted
+    // as a secondary item beside Creator DNA, so it lives under "More".
+    const moreButton = screen.getAllByRole('button').find((b) => /More \(\d+\)/.test(b.textContent || ''))
+    expect(moreButton).toBeDefined()
+    fireEvent.click(moreButton!)
     expect(screen.getByRole('link', { name: /What Click Learned/i })).toBeInTheDocument()
   })
 })

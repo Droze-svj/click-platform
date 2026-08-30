@@ -163,23 +163,42 @@ async function getCreatorDNA(userId) {
   const platformMatches = profile?.platforms || [];
   const primaryPlatform = platformMatches.sort((a,b) => b.count - a.count)[0]?.key || 'tiktok';
 
+  // The hook's measured retention delta, when the learning loop has one. There
+  // is no "diffusion" or "distribution score" telemetry behind this — a fixed
+  // '+18.4%' used to be reported here as though it were measured, and the
+  // verdict asserted "~18% higher" for every creator regardless of their data.
+  const topHookScore = profile?.weightedHooks?.[0]?.performanceScore ?? 0;
+  const topHookSamples = profile?.weightedHooks?.[0]?.sampleSize ?? 0;
+
   dna.engagementDiffusionAnalysis = {
     metrics: {
       primaryPlatform: primaryPlatform.toUpperCase(),
-      hookDiffusionBonus: topHookStyle ? '+18.4%' : '0%'
+      // Real EMA retention delta for this hook style, or null when unmeasured.
+      hookRetentionDelta: topHookSamples > 0 ? `${topHookScore >= 0 ? '+' : ''}${(topHookScore * 100).toFixed(1)}%` : null,
+      hookSampleSize: topHookSamples,
     },
-    verdict: `Your "${topHookStyle}" hook strategy achieves the fastest algorithmic diffusion on ${primaryPlatform.toUpperCase()}, carrying a ~18% higher standard distribution score compared to standard video hooks.`
+    verdict: topHookSamples > 0
+      ? `Across ${topHookSamples} measured post${topHookSamples === 1 ? '' : 's'}, your "${topHookStyle}" hooks retain ${Math.abs(topHookScore * 100).toFixed(1)}% ${topHookScore >= 0 ? 'better' : 'worse'} than your own baseline. ${primaryPlatform.toUpperCase()} is where you publish most.`
+      : `"${topHookStyle}" is the hook style you reach for most often on ${primaryPlatform.toUpperCase()}. Publish a few more and Click can measure how it actually retains.`
   };
 
-  // 3. Actionable Neuro-Marketing recommendations based on DNA
-  const hookVibe = profile?.weightedHooks?.[0]?.key || 'enemy-frame';
-  const pacingVibe = profile?.weightedPacing?.[0]?.key || 'dynamic-kinetic';
-  const ctaVibe = profile?.weightedCtaCategories?.[0]?.key || 'save';
+  // 3. Recommendations derived from the creator's own most-used choices.
+  // These are suggestions built from real preference data — they no longer
+  // quote invented statistics ("15% deeper", "12% longer") as if measured.
+  const hookVibe = profile?.weightedHooks?.[0]?.key || null;
+  const pacingVibe = profile?.weightedPacing?.[0]?.key || null;
+  const ctaVibe = profile?.weightedCtaCategories?.[0]?.key || null;
 
   dna.neuroMarketingRecommendations = [
-    `PSYCHOLOGICAL HOOK: Structure upcoming scripts around the "${hookVibe}" pattern break. Viewers settle 15% deeper into the retention tunnel when you lead with immediate polarizing friction.`,
-    `TEMPORAL PACING: Maintain a "${pacingVibe}" pacing layout. Your dynamic cut sequences sustain attention 12% longer than static timelines.`,
-    `DECISION CONVERSION: End short clips with a "${ctaVibe}" call-to-action. Decision neuro-metrics indicate soft CTAs outperform standard sales CTA directives on social algorithms.`
+    hookVibe
+      ? `HOOK: You open with "${hookVibe}" more than any other pattern. Lead with it while it's working, and A/B one alternative per batch so you find out when it stops.`
+      : 'HOOK: No dominant hook pattern yet — try a few distinct openings so Click can learn which one holds your audience.',
+    pacingVibe
+      ? `PACING: Your edits settle around a "${pacingVibe}" rhythm. Keep it consistent so your feed reads as one voice.`
+      : 'PACING: Not enough edits yet to detect your rhythm.',
+    ctaVibe
+      ? `CALL TO ACTION: "${ctaVibe}" is your most-used close. Match it to the goal of each clip rather than defaulting to it every time.`
+      : 'CALL TO ACTION: No dominant CTA yet — pick one per clip and Click will learn which converts for you.',
   ];
 
   // Confidence is a function of how much data we've actually seen.
