@@ -45,7 +45,8 @@ fabricating values to fill them in would be a regression.
 | Brand share of voice | Third-party mention ingestion + competitor volume (needs a social-listening vendor) | Its own published posts and hashtag counts, exactly |
 | Competitor benchmarking | Any competitor data source; platform APIs don't expose rivals' private metrics | A real self-comparison against the account's own preceding period; industry figures labelled `source: 'static_reference'` |
 | Template analytics | Nothing writes `Content.metadata.templateId` — the only AITemplate generation path lives behind the unmounted `ai-content` / `ai-enhanced` routes | Honest zeros, and correct numbers the moment tagged content exists |
-| Music licensing / AI music providers | Epidemic Sound / Artlist / Mubert / Soundraw credentials, configured per-workspace at runtime | Empty results, not errors |
+| Music licensing / AI music providers | Epidemic Sound / Artlist / Mubert / Soundraw credentials, set per-workspace through the admin endpoints | Empty results and honest 503s, not errors |
+| Refunds, without `WHOP_API_KEY` | Provider credentials | The refund is recorded as `failed` with a reason for an operator — never reported to the customer as processed |
 
 Closing any of these is a **commercial** decision (buy a data source), not a
 coding task.
@@ -54,21 +55,27 @@ coding task.
 
 ## 🟡 Deferred — with reason
 
-### Route clusters built but not mounted
+### Two 0-byte route files
 
-`music-licensing*` (10 files) and `ai-music-*` (6 files) are complete, auth-gated
-routers that are not mounted. Mounting them is mechanical but not free: both
-clusters define a colliding `GET /providers` in their admin vs. user-facing file,
-`music-licensing-favorites` and `music-catalog-playlists` both define
-`/playlists*`, and the AI-music generation/batch endpoints call paid third-party
-APIs without the `costGuard` that every other paid route in this codebase pairs
-with `aiLimiter`. `music-licensing.js` and `automation-analytics.js` are 0-byte
-files that would throw at boot if mounted (the `featureRoutes` registry now
-fails with a message naming the file instead of a bare TypeError).
+`music-licensing.js` and `automation-analytics.js` are committed as empty files.
+`require()` on one yields `{}`, and `app.use(path, {})` throws at boot — the
+`featureRoutes` registry now fails with a message naming the file rather than a
+bare TypeError. Neither has any content to mount; the music-licensing *feature*
+lives in the ten `music-licensing-*.js` files, which are mounted.
 
-**Why deferred**: these are unshipped *features*, not regressions — nothing in
-the product links to them, so no user is hitting a 404. They need a prefix map,
-`costGuard`, and route tests before they're safe to expose.
+### Music clusters are mounted but inert until configured
+
+The `music-licensing*` (10) and `ai-music-*` (6) clusters are now mounted — 71
+endpoints, with the `GET /providers` and `/playlists*` collisions separated by
+sub-prefixes and `costGuard` added to the seven paid generation endpoints. They
+return empty results and honest 503s until an admin configures a provider
+(Epidemic Sound / Artlist / Mubert / Soundraw), because credentials live in Mongo
+(`MusicProviderConfig` / `AIMusicProviderConfig`) and are set through the admin
+endpoints rather than env vars.
+
+**What's deferred**: no client surface links to these endpoints yet, and no
+provider adapter beyond the DB-config pattern has been written against a specific
+vendor SDK.
 
 ### Deliberately unmounted duplicates — do not "fix" by mounting
 
@@ -89,20 +96,32 @@ which fails if a route file is neither mounted nor listed.
 
 `googleapis` is installed and `googleOAuthService` is real, but its
 `DEFAULT_SCOPE` carries no calendar scope. Adding one forces every already-
-connected user to re-consent, so it needs to be run as its own migration rather
-than slipped into an unrelated change. ICS *export* works today.
+connected user to re-consent, so it needs to run as its own migration rather
+than being slipped into an unrelated change.
 
-### Unit suite flakes under parallel load
+ICS/JSON **import and export both work today** — import parses the same ICS the
+exporter writes, and creates posts as `pending_approval` so a calendar file can
+never silently queue posts to a real social account.
 
-`npm run test:unit` runs jest in parallel and, on a loaded machine, intermittently
-fails a different suite each run (timeouts around the 30s mark, and suites that
-write fixtures into the shared real `uploads/` directory). It is green serially
-(`--runInBand`, 234/234) and green on an unloaded machine. The integration job
-already uses `--runInBand` for exactly this reason.
+### Unit suite flakes under machine load
 
-**Why deferred**: the fix is to give the file-touching suites their own temp
-directories, which means editing many test files with no behavior change. Worth
-doing before it starts costing CI reruns.
+`npm run test:unit` intermittently fails **a different suite on each run** on a
+loaded machine — observed failures were `socket hang up` on suites that boot the
+app via supertest, a ~30s timeout, and suites that write fixtures into the
+shared real `uploads/` directory. Every one of them passes when re-run in
+isolation, and full green runs are common (238/238 and 239/239 were both
+observed on the same commit).
+
+`--runInBand` reduces it but does **not** eliminate it: a serial run also
+produced two `socket hang up` failures. So this is resource contention on the
+host, not purely jest parallelism. CI has been green throughout.
+
+**Why deferred**: the likely fixes — giving the file-touching suites their own
+temp directories, and reusing one app instance instead of booting per suite —
+mean editing many test files for no behavior change. Worth doing before it
+starts costing CI reruns. Until then, re-run a failing suite in isolation before
+believing it: an assertion failure is real, a `socket hang up` almost certainly
+is not.
 
 ### Coverage is a ratchet, not a target
 
