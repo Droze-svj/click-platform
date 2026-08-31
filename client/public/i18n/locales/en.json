@@ -440,7 +440,10 @@
     "seoScorecard": "SEO Scorecard",
     "showLess": "Show less",
     "trendRepurpose": "Trend Repurpose",
-    "workspaces": "Workspaces"
+    "workspaces": "Workspaces",
+    "contentOps": "Content Ops",
+    "toolbox": "Toolbox",
+    "neural": "Trend Intelligence"
   },
   "workflow": {
     "niche": "Niche",

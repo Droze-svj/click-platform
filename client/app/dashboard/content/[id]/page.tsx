@@ -23,6 +23,7 @@ import { m, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ContentSkeleton } from '../../../../components/LoadingSkeleton'
 import { PageShell } from '../../../../components/ui'
+import ContentBenchmarking from '../../../../components/ContentBenchmarking'
 
 // Lazy load heavy components
 const VersionHistory = lazy(() => import('../../../../components/VersionHistory'))
@@ -524,6 +525,14 @@ export default function ContentDetailPage() {
         <Suspense fallback={<div className="fixed bottom-10 right-10 w-24 h-24 rounded-full bg-white/[0.03] animate-pulse" />}>
            <LiveCollaboration contentId={content._id} onContentChange={() => {}} />
         </Suspense>
+
+        {/* Benchmarks this piece against the account's own history and predicts
+            its trajectory (GET /api/benchmarking/content/:id, /compare,
+            /predict). Live endpoints; the component was imported by nothing, so
+            none of it was reachable. */}
+        <ErrorBoundary>
+          <ContentBenchmarking contentId={String(content._id)} />
+        </ErrorBoundary>
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');

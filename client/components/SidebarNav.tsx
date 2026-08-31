@@ -74,6 +74,9 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/scripts',     label: t('nav.scripts') || 'Scripts',        icon: FileText,        badge: null },
       { path: '/dashboard/tools',       label: t('nav.aiTools') || 'AI Tools',       icon: Wand2,           badge: 'New' },
       { path: '/dashboard/tools/hook-ab', label: t('nav.hookAb') || 'Hook A/B Lab',  icon: SplitSquareHorizontal, badge: 'AI' },
+      // GET /api/toolbox + POST /api/toolbox/execute — live endpoints whose only
+      // client was never imported.
+      { path: '/dashboard/toolbox',     label: t('nav.toolbox') || 'Toolbox',        icon: Wand2,           badge: 'New' },
       { path: '/dashboard/clips/auto',  label: t('nav.autoClips') || 'Auto Clips',   icon: Scissors,        badge: 'AI' },
     ],
   },
@@ -110,11 +113,18 @@ const getZones = (t: (k: string) => string): Zone[] => [
       // Was reachable only by typing the URL — the page that shows a creator
       // what Click has actually learned about them.
       { path: '/dashboard/creator-dna',          label: t('nav.creatorDna') || 'Creator DNA', icon: Fingerprint, badge: 'New', primary: true },
+      // Trend intelligence + success prediction (/api/video/neural/*), built and
+      // unreachable until 2026-08.
+      { path: '/dashboard/neural',               label: t('nav.neural') || 'Trend Intelligence', icon: Brain, badge: 'AI' },
       { path: '/dashboard/click-learning',       label: t('nav.clickLearning') || 'What Click Learned', icon: Brain, badge: null },
 
       { path: '/dashboard/analytics/creator',    label: t('nav.creatorStats') || 'Creator Stats', icon: Flame, badge: 'AI' },
       { path: '/dashboard/analytics/engagement', label: t('nav.engagement') || 'Engagement',  icon: LineChart, badge: null },
       { path: '/dashboard/insights',             label: t('nav.aiInsights') || 'AI Insights', icon: Brain,     badge: null },
+      // Built (28KB, ten /api/content-operations endpoints) and imported by nothing
+      // until 2026-08 — benchmarks, competitor compare, content gaps, portfolio
+      // health, next-week planning.
+      { path: '/dashboard/content/operations',   label: t('nav.contentOps') || 'Content Ops', icon: Gauge,     badge: 'New' },
       { path: '/dashboard/trends/repurpose',     label: t('nav.trendRepurpose') || 'Trend Repurpose', icon: Recycle, badge: 'AI' },
       { path: '/dashboard/growth/seo',           label: t('nav.seoScorecard') || 'SEO Scorecard', icon: Award, badge: 'New' },
       { path: '/dashboard/growth/keywords',      label: t('nav.keywords') || 'Keywords',      icon: Target,    badge: 'New' },

@@ -12,6 +12,8 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import IntelligenceEngine from '../../../components/IntelligenceEngine'
+import RevenueOracle from '../../../components/RevenueOracle'
 import { StatsCardSkeleton, ContentSkeleton } from '../../../components/LoadingSkeleton'
 import { Panel, Button, IconButton, StatCard, SectionHeader, Badge, EmptyState,
   PageShell,
@@ -346,6 +348,19 @@ export default function CognitiveForecasterPage() {
               </button>
             )
           })}
+        </section>
+
+        {/* Both were built against live endpoints and imported by nothing:
+            IntelligenceEngine reads GET /api/analytics/overview, RevenueOracle
+            reads GET /api/sovereign/insights. Neither duplicates this page's own
+            data. Bounded separately so one failing cannot blank the other. */}
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <ErrorBoundary>
+            <IntelligenceEngine />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <RevenueOracle />
+          </ErrorBoundary>
         </section>
       </PageShell>
     </ErrorBoundary>
