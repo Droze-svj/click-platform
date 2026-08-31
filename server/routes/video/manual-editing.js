@@ -1696,18 +1696,6 @@ router.get('/proxy/check', auth, asyncHandler(async (req, res) => {
 
 // ==================== LEARNING & TUTORIALS ====================
 
-router.get('/tutorials/:feature', auth, asyncHandler(async (req, res) => {
-  const { feature } = req.params;
-  const userId = req.user?.id || req.user?._id;
-
-  try {
-    const tutorials = await tutorialsService.getTutorials(feature, userId);
-    sendSuccess(res, 'Tutorials retrieved', 200, { tutorials });
-  } catch (error) {
-    logger.error('Get tutorials error', { error: error.message });
-    sendError(res, error.message, error.statusCode || 500);
-  }
-}));
 
 router.get('/tutorials/:feature/tooltips', auth, asyncHandler(async (req, res) => {
   const { feature } = req.params;
@@ -1742,6 +1730,19 @@ router.get('/tutorials/progress', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Progress retrieved', 200, progress);
   } catch (error) {
     logger.error('Get progress error', { error: error.message });
+    sendError(res, error.message, error.statusCode || 500);
+  }
+}));
+
+router.get('/tutorials/:feature', auth, asyncHandler(async (req, res) => {
+  const { feature } = req.params;
+  const userId = req.user?.id || req.user?._id;
+
+  try {
+    const tutorials = await tutorialsService.getTutorials(feature, userId);
+    sendSuccess(res, 'Tutorials retrieved', 200, { tutorials });
+  } catch (error) {
+    logger.error('Get tutorials error', { error: error.message });
     sendError(res, error.message, error.statusCode || 500);
   }
 }));

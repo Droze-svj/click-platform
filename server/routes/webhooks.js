@@ -246,24 +246,6 @@ router.post('/:id/replay', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Webhook replay completed', 200, result);
 }));
 
-/**
- * GET /api/webhooks/:id/health
- * Get webhook health status
- */
-router.get('/:id/health', auth, asyncHandler(async (req, res) => {
-  const webhook = await Webhook.findOne({
-    _id: req.params.id,
-    userId: req.user._id
-  });
-
-  if (!webhook) {
-    return sendError(res, 'Webhook not found', 404);
-  }
-
-  const { getWebhookHealth } = require('../services/webhookService');
-  const health = await getWebhookHealth(req.params.id);
-  sendSuccess(res, 'Webhook health retrieved', 200, health);
-}));
 
 /**
  * PUT /api/webhooks/:id/settings
@@ -343,6 +325,25 @@ router.get('/supabase/health', asyncHandler(async (req, res) => {
   }
   
   res.status(200).json(health);
+}));
+
+/**
+ * GET /api/webhooks/:id/health
+ * Get webhook health status
+ */
+router.get('/:id/health', auth, asyncHandler(async (req, res) => {
+  const webhook = await Webhook.findOne({
+    _id: req.params.id,
+    userId: req.user._id
+  });
+
+  if (!webhook) {
+    return sendError(res, 'Webhook not found', 404);
+  }
+
+  const { getWebhookHealth } = require('../services/webhookService');
+  const health = await getWebhookHealth(req.params.id);
+  sendSuccess(res, 'Webhook health retrieved', 200, health);
 }));
 
 /**

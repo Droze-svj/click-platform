@@ -15,6 +15,7 @@ const { generateVariants, improveSection, rewriteForTone, generateHookVariations
 const aiAgentWritingService = require('../services/aiAgentWritingService');
 const AITemplate = require('../models/AITemplate');
 const Script = require('../models/Script');
+const { objectIdOrSkip } = require('../middleware/validateObjectId');
 const router = express.Router();
 
 // AI generation is the expensive cost-attack vector. Apply aiLimiter to all
@@ -263,7 +264,11 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
  * GET /api/ai/templates/:templateId
  * Get specific template
  */
-router.get('/templates/:templateId', auth, asyncHandler(async (req, res) => {
+// ai/index.js mounts ai-content BEFORE ai-enhanced on the same '/' prefix, so
+// this route was matching ai-enhanced's static GET /templates/suggestions with
+// templateId="suggestions" — findById then failed and the caller got a 404 from
+// the wrong handler. Decline a non-ObjectId so the request reaches ai-enhanced.
+router.get('/templates/:templateId', objectIdOrSkip('templateId'), auth, asyncHandler(async (req, res) => {
   const { templateId } = req.params;
   const template = await AITemplate.findById(templateId).lean().catch(() => null);
 

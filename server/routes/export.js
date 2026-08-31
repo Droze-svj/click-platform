@@ -84,17 +84,6 @@ router.post('/', auth, addTierContext, checkExportQuota, asyncHandler(async (req
   }
 }));
 
-/**
- * GET /api/export/:jobId
- * Get export job status
- */
-router.get('/:jobId', auth, asyncHandler(async (req, res) => {
-  const { jobId } = req.params;
-  const userId = req.user._id;
-
-  const status = await getExportJobStatus(jobId, userId);
-  sendSuccess(res, 'Export status retrieved', 200, status);
-}));
 
 /**
  * POST /api/export/:jobId/retry
@@ -201,6 +190,18 @@ router.get('/preview', auth, asyncHandler(async (req, res) => {
   }, parseInt(limit, 10));
 
   sendSuccess(res, 'Preview generated', 200, preview);
+}));
+
+/**
+ * GET /api/export/:jobId
+ * Get export job status
+ */
+router.get('/:jobId', auth, asyncHandler(async (req, res) => {
+  const { jobId } = req.params;
+  const userId = req.user._id;
+
+  const status = await getExportJobStatus(jobId, userId);
+  sendSuccess(res, 'Export status retrieved', 200, status);
 }));
 
 module.exports = router;

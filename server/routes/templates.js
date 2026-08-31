@@ -212,36 +212,6 @@ router.post('/:templateId/use', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Template used', 200, template);
 }));
 
-/**
- * @swagger
- * /api/templates/{templateId}:
- *   get:
- *     summary: Get template details
- *     tags: [Templates]
- *     security:
- *       - bearerAuth: []
- */
-router.get('/:templateId', auth, asyncHandler(async (req, res) => {
-  // Check if MongoDB is connected before attempting queries
-  const mongoose = require('mongoose');
-  if (mongoose.connection.readyState !== 1) {
-    return sendError(res, 'Database connection unavailable', 503);
-  }
-
-  const template = await ContentTemplate.findById(req.params.templateId)
-    .maxTimeMS(8000);
-
-  if (!template) {
-    return sendError(res, 'Template not found', 404);
-  }
-
-  // Check access
-  if (!template.isPublic && !template.isSystemTemplate && template.createdBy.toString() !== req.user._id.toString()) {
-    return sendError(res, 'Template not accessible', 403);
-  }
-
-  sendSuccess(res, 'Template fetched', 200, template);
-}));
 
 /**
  * @swagger
@@ -402,6 +372,37 @@ router.get('/marketplace', auth, asyncHandler(async (req, res) => {
     logger.error('Error fetching marketplace templates', { error: error.message, stack: error.stack });
     sendSuccess(res, 'Marketplace templates fetched', 200, []);
   }
+}));
+
+/**
+ * @swagger
+ * /api/templates/{templateId}:
+ *   get:
+ *     summary: Get template details
+ *     tags: [Templates]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:templateId', auth, asyncHandler(async (req, res) => {
+  // Check if MongoDB is connected before attempting queries
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    return sendError(res, 'Database connection unavailable', 503);
+  }
+
+  const template = await ContentTemplate.findById(req.params.templateId)
+    .maxTimeMS(8000);
+
+  if (!template) {
+    return sendError(res, 'Template not found', 404);
+  }
+
+  // Check access
+  if (!template.isPublic && !template.isSystemTemplate && template.createdBy.toString() !== req.user._id.toString()) {
+    return sendError(res, 'Template not accessible', 403);
+  }
+
+  sendSuccess(res, 'Template fetched', 200, template);
 }));
 
 module.exports = router;

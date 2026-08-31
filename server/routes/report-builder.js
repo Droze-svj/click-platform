@@ -11,6 +11,7 @@ const { generateMultiClientRollup, getRollup } = require('../services/multiClien
 const { generateReportSummary, generateRollupSummary } = require('../services/aiReportSummaryService');
 const GeneratedReport = require('../models/GeneratedReport');
 const ReportTemplate = require('../models/ReportTemplate');
+const { objectIdOrSkip } = require('../middleware/validateObjectId');
 const router = express.Router();
 
 /**
@@ -118,7 +119,10 @@ router.post('/generate', auth, asyncHandler(async (req, res) => {
  * GET /api/reports/:reportId
  * Get generated report
  */
-router.get('/:reportId', auth, asyncHandler(async (req, res) => {
+// report-builder is mounted on /api/reports BEFORE report-enhanced, so this
+// route was swallowing report-enhanced's static GET /scheduled with
+// reportId="scheduled". Decline a non-ObjectId so it reaches the real handler.
+router.get('/:reportId', objectIdOrSkip('reportId'), auth, asyncHandler(async (req, res) => {
   const { reportId } = req.params;
   const report = await GeneratedReport.findById(reportId)
     .populate('templateId')

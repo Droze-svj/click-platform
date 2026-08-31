@@ -13,31 +13,6 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
-/**
- * @swagger
- * /api/productive/repurposing/:contentId:
- *   post:
- *     summary: Repurpose content for platform
- *     tags: [Productive]
- *     security:
- *       - bearerAuth: []
- */
-router.post('/:contentId', auth, asyncHandler(async (req, res) => {
-  const { contentId } = req.params;
-  const { targetPlatform } = req.body;
-
-  if (!targetPlatform) {
-    return sendError(res, 'Target platform is required', 400);
-  }
-
-  try {
-    const repurposed = await repurposeContent(contentId, req.user._id, targetPlatform);
-    sendSuccess(res, 'Content repurposed', 200, repurposed);
-  } catch (error) {
-    logger.error('Repurpose content error', { error: error.message, contentId });
-    sendError(res, error.message, 500);
-  }
-}));
 
 /**
  * @swagger
@@ -192,6 +167,32 @@ router.post('/seo', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Content optimized for SEO', 200, optimized);
   } catch (error) {
     logger.error('Optimize for SEO error', { error: error.message });
+    sendError(res, error.message, 500);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/productive/repurposing/:contentId:
+ *   post:
+ *     summary: Repurpose content for platform
+ *     tags: [Productive]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:contentId', auth, asyncHandler(async (req, res) => {
+  const { contentId } = req.params;
+  const { targetPlatform } = req.body;
+
+  if (!targetPlatform) {
+    return sendError(res, 'Target platform is required', 400);
+  }
+
+  try {
+    const repurposed = await repurposeContent(contentId, req.user._id, targetPlatform);
+    sendSuccess(res, 'Content repurposed', 200, repurposed);
+  } catch (error) {
+    logger.error('Repurpose content error', { error: error.message, contentId });
     sendError(res, error.message, 500);
   }
 }));

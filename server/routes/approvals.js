@@ -18,6 +18,17 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const multiStepWorkflowService = require('../services/multiStepWorkflowService');
+// FIVE routers share the /api/approvals mount (this one, approval-workflow,
+// workflow-enhanced, approval-kanban, approval-enhanced — see server/index.js),
+// and this one is mounted first. Its `/:approvalId` routes therefore matched
+// STATIC paths belonging to the later routers: POST /bulk/{approve,reject,
+// request-changes}, GET /dashboard, GET /delegations, GET /sla-alerts all landed
+// here with approvalId="bulk"/"dashboard"/… and never reached their real
+// handlers. objectIdOrSkip declines a segment that is not an ObjectId so the
+// request continues down the chain. The "declare static routes first" comment
+// below only ever protected ordering WITHIN this file; it could not see across
+// routers.
+const { objectIdOrSkip } = require('../middleware/validateObjectId');
 const router = express.Router();
 
 /**
@@ -118,7 +129,7 @@ router.post('/start', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/approve
  * Approve content
  */
-router.post('/:approvalId/approve', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/approve', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { comment } = req.body;
 
@@ -131,7 +142,7 @@ router.post('/:approvalId/approve', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/accept-v2
  * Accept AI-proposed revision and approve current stage
  */
-router.post('/:approvalId/accept-v2', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/accept-v2', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { comment } = req.body;
 
@@ -144,7 +155,7 @@ router.post('/:approvalId/accept-v2', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/reject
  * Reject content
  */
-router.post('/:approvalId/reject', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/reject', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { rejectionReason, comment } = req.body;
 
@@ -160,7 +171,7 @@ router.post('/:approvalId/reject', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/request-changes
  * Request changes
  */
-router.post('/:approvalId/request-changes', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/request-changes', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { requestedChanges, comment } = req.body;
 
@@ -176,7 +187,7 @@ router.post('/:approvalId/request-changes', auth, asyncHandler(async (req, res) 
  * POST /api/approvals/:approvalId/resubmit
  * Resubmit content after changes
  */
-router.post('/:approvalId/resubmit', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/resubmit', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
 
   const approval = await resubmitContent(approvalId, req.user._id);
@@ -197,7 +208,7 @@ router.get('/my-approvals', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/cancel
  * Cancel approval process
  */
-router.post('/:approvalId/cancel', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/cancel', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const approval = await cancelApproval(approvalId, req.user._id);
   sendSuccess(res, 'Approval cancelled', 200, approval);
@@ -207,7 +218,7 @@ router.post('/:approvalId/cancel', auth, asyncHandler(async (req, res) => {
  * GET /api/approvals/:approvalId
  * Get approval details
  */
-router.get('/:approvalId', auth, asyncHandler(async (req, res) => {
+router.get('/:approvalId', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const approval = await getApprovalDetails(approvalId, req.user._id);
   sendSuccess(res, 'Approval details retrieved', 200, approval);
