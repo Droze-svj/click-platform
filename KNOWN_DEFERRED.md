@@ -51,6 +51,20 @@ fabricating values to fill them in would be a regression.
 Closing any of these is a **commercial** decision (buy a data source), not a
 coding task.
 
+### Made honest in 2026-08 — these used to report success
+
+Three surfaces returned `success: true` for work they had not done. They now
+fail with `501` and a message naming the alternative. This is a **deliberate**
+state: the previous behaviour was worse than an error, because it was trusted.
+
+| Surface | What it claimed | What actually happened | Now |
+|---|---|---|---|
+| `POST /api/reports/schedule` | Recurring report scheduled, recipients emailed | Job registration commented out; report generated once and discarded; `sendEmail` commented out | 501, pointing at `POST /api/reports/generate`, which works |
+| `POST /api/disaster-recovery/backup` and `/restore` | Backup `completed` with a size; restore succeeded | `mongodump`, `mongorestore` and the file copies were all comments — the backup directory was empty | 501, pointing at `POST /api/backup/create` (a real per-user export) |
+| `POST /api/video/manual-editing/marketplace/:id/download` for a premium template | Download allowed | The payment check was the comment `// For now, allow download`, so paid templates were free to everyone | 402 — there is no purchase flow to check against, and giving away content the platform priced misleads the seller |
+
+If any of these is implemented for real, delete its row.
+
 ---
 
 ## 🟡 Deferred — with reason
