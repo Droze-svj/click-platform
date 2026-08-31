@@ -199,44 +199,51 @@ autonomous-mode kill switch.
 
 ---
 
-## 🔵 Triaged — 250 unreachable client files (~2.2 MB)
+## 🔵 Unreachable client files — 211 left, down from 266
 
-Building the import graph from every Next.js entry point (`app/**/{page,layout,
-error,…}`, tests, `middleware.ts`, the Sentry configs and the two
-`new Worker(new URL(…))` modules) leaves 250 of ~795 client source files with no
-path from any entry point. They are compiled, linted, and shipped to nobody.
+Building the import graph from every Next.js entry point leaves 211 client
+source files with no path from any entry point (was 266 at the start of the
+2026-08 pass).
 
-**Already removed** (2026-08): the 22 files that shadowed a live file of the
-same name — the actively harmful subset, since the wrong copy is easy to edit by
-mistake and two broken API paths were found inside one — plus 16 files of
-development instrumentation (`ClickDebugPanel`, `DevDebugBanner`, the four
-`*Probe` components, `networkDebugger`, `analytics-mock`, and `app/_app.tsx`, a
-Pages-Router artifact that cannot load in an App Router app). All were verified
-to have no inbound imports, and git keeps the history.
+**Closed since:** the 22 shadow duplicates, 16 files of dead development
+instrumentation, and — the big one — **36 of the 47 components that were fully
+built, called live endpoints, and were imported by nothing**. Wiring those moved
+39 files onto the reachable graph.
 
-**What is left, split by evidence rather than guesswork:**
+Where they went: new routes `/dashboard/ops` (eleven operational HUDs as tabs),
+`/dashboard/content/operations`, `/dashboard/toolbox`, `/dashboard/neural`,
+`/dashboard/suggestions`, `/dashboard/onboarding/wizard`; panels added to
+`/dashboard/{overlord,governance,insights,library,templates,workflows,`
+`achievements,billing,scheduler,posts/create,content/[id],onboarding}`; and two
+new editor categories (AI Assist, Monetize).
 
-| Group | Count | What it is |
-|---|---|---|
-| Components calling ≥1 endpoint that EXISTS | 46 | Complete features that are simply not mounted anywhere. `AIContentOperationsDashboard` uses 10 live endpoints, `OverlordDashboard` 9, `NeuralWorkspaceHub` 5, `OnboardingWizard` 2. Deleting these throws away working product. |
-| Components making no API calls at all | 147 | Presentational fragments, alternate layouts, small primitives (`Skeleton`, `SuccessAlert`, `ResponsiveGrid`). Some duplicate a live component in spirit; none is provably rot. |
-| `lib/` `utils/` `hooks/` | 39 | Helpers with no current caller. |
-| Small stubs | 18 | Real but tiny (`ClientLayout`, `Providers`, `LazyLoad`) — several are superseded by the live provider tree. |
+**The 11 that were NOT wired, and why.** Each duplicates a surface that already
+ships. Mounting them would give the product two competing UIs for one job, which
+is worse than leaving them unreachable:
 
-**Why the first group is not deleted.** Those 46 are the state
-`NotificationBell` and `PerformanceMonitor` were in before they were wired up:
-finished work waiting on a mount point. Mounting them is a **product** decision —
-several would duplicate a live surface (`DashboardOverview` against the real
-dashboard, `ContentSuggestions` against the live `SmartSuggestions`) — and is not
-something to decide from the import graph alone.
+| Component | Superseded by |
+|---|---|
+| `NeuralWorkspaceHub` | `/dashboard/workspaces` — same `/api/enterprise/workspaces` |
+| `Phase10Dashboard` | `Click12Dashboard` on `/dashboard/overlord` — 3 of its 4 endpoints |
+| `DashboardOverview` | the dashboard home itself |
+| `SmartSuggestions`, `ContentSuggestions` | `EnhancedContentSuggestions` on `/dashboard/suggestions` (richest family; the only one with viral prediction) |
+| `ProfileHUD` | `/dashboard/settings/profile`, which also handles the avatar |
+| `CollaborativeComments` | `/dashboard/approvals/collaborate` has its own thread. It also needs a `teamId` no page can supply, and returns empty without one |
+| `TeamPresence`, `ProjectBrowser` | the live teams / projects pages — no endpoint of their own |
+| `SocialVaultView` | `DistributionHubView` in the same editor — same `/api/oauth/accounts` |
+| `SocialPublishingView` | the Export → Scheduler bridge. It also needs `/api/social/publish`, and building a second publish path would reverse the deliberate consolidation onto one scheduling model |
 
-**Cost of leaving it**: build time, and a real audit tax — a broken API path or
-a dead socket listener inside an unreachable component reads exactly like a live
-bug until reachability is checked. Every audit in this pass had to filter for it.
+Deleting these is a reasonable follow-up; it is not a bug that they exist.
 
-**To regenerate**: build the import graph from the entry points above and report
-files with no inbound path. A "who imports X" grep gets this wrong, because a
-file imported only by another orphan is still an orphan.
+**Still unreachable and NOT superseded**: `AIContentAnalysis` and
+`AdaptiveCritiquePanel` call endpoints that do not exist
+(`/api/ai/analyze-video`, `/api/ai/adaptive/feedback`). Wiring either means
+building its endpoint first — they are listed in the accept-list of
+`tests/server/clientApiContract.test.js` so that mounting one surfaces the
+missing route immediately.
+
+The remaining ~200 files make no API calls at all: presentational fragments,
+alternate layouts and small primitives. None is provably rot.
 
 ---
 
