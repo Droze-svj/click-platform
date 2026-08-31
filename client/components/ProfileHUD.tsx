@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import { User, Edit3, Check, X, Shield, Sparkles, Fingerprint } from 'lucide-react'
-import { apiPost } from '../lib/api'
+import { apiPut } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -14,15 +14,22 @@ const ProfileHUD = () => {
   const [name, setName] = useState(user?.name || '')
   const [niche, setNiche] = useState(user?.niche || '')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSave = async () => {
     setSaving(true)
+    setError(null)
     try {
-      await apiPost('/user/profile', { name, niche })
+      // PUT /api/auth/profile — it takes exactly { name, niche } (plus optional
+      // bio/website/…). This used to POST /api/user/profile, which does not
+      // exist: every save 404'd, the panel stayed open with no message, and the
+      // only trace was a console.error. Hence the visible error state below.
+      await apiPut('/auth/profile', { name, niche })
       await refresh()
       setIsEditing(false)
     } catch (err) {
       console.error('Failed to update profile', err)
+      setError(t('profileHud.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -85,6 +92,12 @@ const ProfileHUD = () => {
                   placeholder={t('profileHud.nichePlaceholder')}
                 />
               </div>
+
+              {error ? (
+                <p role="alert" className="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-1">
+                  {error}
+                </p>
+              ) : null}
 
               <div className="flex gap-3 pt-2">
                 <button

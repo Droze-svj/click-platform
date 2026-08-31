@@ -50,8 +50,8 @@ export const CulturalArbitrageHUD: React.FC = () => {
         setLoading(true)
         try {
             const [triggersData, candidatesData] = await Promise.all([
-                apiGet('/sovereign/arbitrage-triggers'),
-                apiGet('/sovereign/resurrection-candidates')
+                apiGet('/click/arbitrage-triggers'),
+                apiGet('/click/resurrection-candidates')
             ])
             setTriggers(triggersData)
             setCandidates(candidatesData)
@@ -65,7 +65,7 @@ export const CulturalArbitrageHUD: React.FC = () => {
     const triggerResurrection = async (candidate: ResurrectionCandidate) => {
         setResurrecting(candidate.contentId)
         try {
-            await apiPost('/sovereign/trigger-resurrection', { 
+            await apiPost('/click/trigger-resurrection', { 
                 originalPostId: candidate.originalPostId,
                 contentId: candidate.contentId
             })

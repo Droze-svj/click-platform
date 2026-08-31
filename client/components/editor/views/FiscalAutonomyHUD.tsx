@@ -40,7 +40,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
     const fetchVelocity = async () => {
         setLoading(true)
         try {
-            const data = await apiGet('/sovereign/fiscal-velocity')
+            const data = await apiGet('/click/fiscal-velocity')
             setVelocity(data)
         } catch (err) {
             console.error('Fiscal sync failed')

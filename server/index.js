@@ -2373,19 +2373,30 @@ app.use('/api/phase8', require('./routes/phase8'));
 // Phase 9-18 routers. phase10_12 / phase13_15 / phase16_18 each cover several
 // phases via flat internal paths (e.g. /fleet, /arbitrage, /s2s), so they are
 // mounted at each phase prefix they serve so the frontend's /phaseN/* calls resolve.
+//
+// The span prefix ('/api/phase10_12') is mounted too, and is NOT decoration: the
+// client addresses these routers by their file name — OverlordDashboard,
+// FleetControlHUD, ArbitrageSteererView, RemediationHUD and ExpertDNAView issue
+// 13 calls to /api/phase10_12/* and /api/phase16_18/*. Every one of them 404'd
+// against the single-phase prefixes above, so the Overlord dashboard, the fleet
+// HUD, the arbitrage steerer, the remediation HUD and Expert DNA all rendered
+// their error/empty state and nothing else.
 app.use('/api/phase9', require('./routes/phase9'));
 const phase10_12 = require('./routes/phase10_12');
 app.use('/api/phase10', phase10_12);
 app.use('/api/phase11', phase10_12);
 app.use('/api/phase12', phase10_12);
+app.use('/api/phase10_12', phase10_12);
 const phase13_15 = require('./routes/phase13_15');
 app.use('/api/phase13', phase13_15);
 app.use('/api/phase14', phase13_15);
 app.use('/api/phase15', phase13_15);
+app.use('/api/phase13_15', phase13_15);
 const phase16_18 = require('./routes/phase16_18');
 app.use('/api/phase16', phase16_18);
 app.use('/api/phase17', phase16_18);
 app.use('/api/phase18', phase16_18);
+app.use('/api/phase16_18', phase16_18);
 app.use('/api/monetization', require('./routes/monetization'));
 app.use('/api/click', require('./routes/click'));
 app.use('/api/vector-memory', require('./routes/vector-memory'));

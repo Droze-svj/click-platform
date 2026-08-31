@@ -37,11 +37,14 @@ function walk(dir) {
 const CALL_RE = /\bapi(?:Get|Post|Put|Delete|Patch)\s*(?:<[^>]*>)?\s*\(\s*([`'"])((?:\\.|(?!\1).)*)\1/g;
 
 const files = walk(CLIENT_DIR).filter((f) => {
-  // skip the helper's own JSDoc examples, iCloud/Finder dup artifacts ("x 2.ts"),
-  // legacy *.old.* files, and the dead client/views/ duplicate tree.
+  // skip the helper's own JSDoc examples, iCloud/Finder dup artifacts ("x 2.ts")
+  // and legacy *.old.* files.
+  //
+  // (There used to be a third skip here for client/views/video-editor/ — a dead
+  // duplicate of components/editor/views. That tree has since been deleted, so
+  // the exception is gone rather than kept as a permanent carve-out.)
   if (/[/\\]lib[/\\]api\.ts$/.test(f)) return false;
   if (/\s\d+\.(ts|tsx)$/.test(f) || /\.old\.(ts|tsx)$/.test(f)) return false;
-  if (/[/\\]views[/\\]video-editor[/\\]/.test(f)) return false; // unused duplicate of components/editor/views
   return true;
 });
 

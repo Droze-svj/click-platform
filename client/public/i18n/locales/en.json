@@ -6662,7 +6662,8 @@
     "nichePlaceholder": "e.g. Finance, Gaming, Tech",
     "synchronize": "Synchronize",
     "cancelProfileEdit": "Cancel profile edit",
-    "identitySynchronizationActive": "Identity Synchronization Active"
+    "identitySynchronizationActive": "Identity Synchronization Active",
+    "saveFailed": "Couldn't save. Try again."
   },
   "projectBrowser": {
     "projectDashboard": "Project Dashboard",
