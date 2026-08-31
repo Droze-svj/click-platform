@@ -2084,7 +2084,12 @@ router.post('/analyze-pacing', auth, async (req, res) => {
  */
 router.post('/editor/save', auth, async (req, res) => {
   try {
-    const { videoId, editorState } = req.body;
+    // `name` and `folderId` come from useVideoEditorAutosave on every save. They
+    // used to be read by nobody: only editorState was written, so renaming a
+    // project updated the copy inside editorState (which the editor reads back)
+    // while Content.title — what the library, search and every list render —
+    // kept the old name, and filing a project into a folder did nothing at all.
+    const { videoId, editorState, name, folderId } = req.body;
     const userId = req.user?._id || req.user?.id;
     const isDev = isDevUser(req.user);
 
@@ -2137,6 +2142,10 @@ router.post('/editor/save', auth, async (req, res) => {
     // a save and the row would silently stay stale.
     content.editorState = editorState;
     content.markModified('editorState');
+    // Only when supplied: autosave omits them for an untitled/unfiled project,
+    // and an absent field must not blank an existing title or folder.
+    if (typeof name === 'string' && name.trim()) content.title = name.trim();
+    if (folderId !== undefined) content.folderId = folderId || null;
     content.updatedAt = new Date();
     await content.save();
 
