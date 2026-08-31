@@ -80,7 +80,8 @@ router.get('/stats', auth, requireAdmin, asyncHandler(async (req, res) => {
  *     summary: Generate trace ID
  *     tags: [Monitoring]
  */
-router.get('/generate-id', asyncHandler(async (req, res) => {
+// Admin-gated like every other route in this file.
+router.get('/generate-id', auth, requireAdmin, asyncHandler(async (req, res) => {
   try {
     const traceId = generateTraceId();
     sendSuccess(res, 'Trace ID generated', 200, { traceId });

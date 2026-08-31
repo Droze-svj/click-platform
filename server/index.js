@@ -2515,7 +2515,11 @@ app.get('/api/monitoring/alerts', (req, res) => {
   res.json({ alerts, timestamp: new Date().toISOString() })
 })
 
-app.post('/api/monitoring/test-alert', async (req, res) => {
+// Admin-gated: this fires a REAL alert through whatever channel alerting is
+// configured with (email / Slack / webhook). Unauthenticated, anyone could spam
+// the operators' alert channel on demand. The sibling routes in
+// routes/monitoring.js are auth+requireAdmin; this app-level one was not.
+app.post('/api/monitoring/test-alert', require('./middleware/auth'), require('./middleware/requireAdmin').requireAdmin, async (req, res) => {
   if (global.alertingSystem) {
     await global.alertingSystem.test()
     res.json({ message: 'Test alert sent' })
