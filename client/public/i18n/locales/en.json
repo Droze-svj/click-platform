@@ -1,19 +1,19 @@
 {
   "captionSetup": {
-    "stepBadge": "Step \u00b7 Captions",
+    "stepBadge": "Step · Captions",
     "title": "Set up your captions",
-    "subtitle": "Pick a look \u2014 your auto-captions open in the editor already styled, synced word-for-word to speech.",
+    "subtitle": "Pick a look — your auto-captions open in the editor already styled, synced word-for-word to speech.",
     "platformsLabel": "Where do you post?",
     "styleLabel": "Caption style",
     "sampleWord": "Caption",
     "snapTitle": "Snap captions to speech",
-    "snapDesc": "Lock every caption to the exact spoken word \u2014 auto-fixes drift.",
+    "snapDesc": "Lock every caption to the exact spoken word — auto-fixes drift.",
     "snapAria": "Toggle snap captions to speech",
-    "saving": "Saving\u2026",
+    "saving": "Saving…",
     "save": "Save & continue",
     "skip": "Skip for now",
-    "generating": "Generating captions\u2026",
-    "ready": "Captions ready \u2014 snapped to speech"
+    "generating": "Generating captions…",
+    "ready": "Captions ready — snapped to speech"
   },
   "calendarPage": {
     "title": "Content Calendar",
@@ -32,7 +32,15 @@
     "rescheduleFailed": "Failed to reschedule post",
     "deleteConfirm": "Are you sure you want to delete this scheduled post?",
     "postDeleted": "Post deleted",
-    "deleteFailed": "Failed to delete post"
+    "deleteFailed": "Failed to delete post",
+    "dayUnavailable": "Day view is under optimization.",
+    "deletePost": "Delete Post",
+    "editInScheduler": "Edit in Scheduler",
+    "noContent": "No text content provided.",
+    "returnToMonth": "Return to Month View",
+    "thisWeek": "This Week",
+    "today": "Today",
+    "weekUnavailable": "Week view is under optimization."
   },
   "billingPage": {
     "loading": "Loading",
@@ -366,7 +374,9 @@
     "yes": "Yes",
     "no": "No",
     "redirecting": "Taking you to sign in…",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "refresh": "Refresh",
+    "viewAll": "View all"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -408,7 +418,29 @@
     "settings": "Settings",
     "templates": "Templates",
     "infrastructure": "Infrastructure",
-    "clickTagline": "AI-Powered Content"
+    "clickTagline": "AI-Powered Content",
+    "approvalThreads": "Approval Threads",
+    "autoClips": "Auto Clips",
+    "autopilot": "Autopilot",
+    "billing": "Billing",
+    "capacity": "Capacity",
+    "channelAudit": "Channel Audit",
+    "clickLearning": "What Click Learned",
+    "clips": "Clips",
+    "creatorDna": "Creator DNA",
+    "creatorStats": "Creator Stats",
+    "creatorTools": "Creator Tools",
+    "engagement": "Engagement",
+    "hookAb": "Hook A/B Lab",
+    "integrations": "Integrations",
+    "keywords": "Keywords",
+    "more": "More",
+    "outliers": "Outliers",
+    "publish": "Publish",
+    "seoScorecard": "SEO Scorecard",
+    "showLess": "Show less",
+    "trendRepurpose": "Trend Repurpose",
+    "workspaces": "Workspaces"
   },
   "workflow": {
     "niche": "Niche",
@@ -505,7 +537,11 @@
       "contentGenerated": "Content Generated",
       "contentCreated": "Content Created",
       "quotesCreated": "Quotes Made",
-      "postsScheduled": "Posts Scheduled"
+      "postsScheduled": "Posts Scheduled",
+      "connected": "Connected",
+      "engagement": "Engagement",
+      "published": "Published",
+      "reach": "Reach"
     },
     "clickToView": "Click to view details →",
     "nav": {
@@ -539,6 +575,47 @@
         "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
         "badge": "SECURE"
       }
+    },
+    "connect": {
+      "connect": "Connect",
+      "cta": "Connect accounts",
+      "linked": "Linked",
+      "title": "Accounts"
+    },
+    "greeting": {
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "morning": "Good morning",
+      "night": "Good night"
+    },
+    "hero": {
+      "subtitle": "Forge a clip, write a script, or schedule your next post — Click is ready when you are."
+    },
+    "insight": {
+      "cta": {
+        "forge": "Open Forge",
+        "start": "Start a clip"
+      },
+      "empty": "Publish your first few clips and Click will surface your learned style here — top hooks, presets, and best publish hours.",
+      "peak": "Audience peak",
+      "style": "Your style",
+      "title": "AI insight"
+    },
+    "quickActions": {
+      "subtitle": "Jump straight into a workflow",
+      "title": "Quick actions"
+    },
+    "recent": {
+      "empty": {
+        "desc": "Forge your first clip and it will show up here.",
+        "title": "No content yet"
+      },
+      "title": "Recent content",
+      "untitled": "Untitled"
+    },
+    "refresh": {
+      "subtitle": "Pull the latest metrics",
+      "title": "Up to date"
     }
   },
   "auth": {
@@ -555,7 +632,8 @@
     "loginTitle": "Welcome to Click",
     "loginSubtitle": "Sign in to your account to access AI‑powered content creation.",
     "registerTitle": "Create your account",
-    "registerSubtitle": "Get started with AI-powered content creation."
+    "registerSubtitle": "Get started with AI-powered content creation.",
+    "signIn": "Sign in"
   },
   "settings": {
     "title": "Settings",
@@ -2539,7 +2617,9 @@
       "Kinetic_Flux": "Kinetic_Flux"
     },
     "likesShares": "{{likes}} L / {{shares}} S",
-    "phantoms": "{{count}} PHANTOMS"
+    "phantoms": "{{count}} PHANTOMS",
+    "errorTitle": "Couldn't load performance",
+    "retry": "Try again"
   },
   "analyticsInsightPage": {
     "loaderMessage": "Synthesizing Strategic Blueprint...",
@@ -5837,7 +5917,10 @@
       "applyAll": "Apply all",
       "dismiss": "Dismiss",
       "nothingToApply": "Nothing left to apply in this direction",
-      "undoLast": "Undo last"
+      "undoLast": "Undo last",
+      "gradeUnknown": "That colour grade isn't one Click knows — skipped",
+      "pacingApplied": "Pacing applied",
+      "pacingUnknown": "That pacing style isn't one Click knows — skipped"
     },
     "composingViralRecipe": "Composing your viral edit recipe in {{language}}…",
     "noSuggestionsReturned": "No suggestions returned — your video may already be tight",
@@ -7604,7 +7687,12 @@
     "translateTo": "Translate to:",
     "translateLanguageLabel": "Translate captions to language",
     "translating": "Translating...",
-    "translate": "Translate"
+    "translate": "Translate",
+    "snapToSpeech": "Snap to speech",
+    "snapToSpeechHint": "Locks every caption to the exact spoken word.",
+    "noWordTimings": "Word-level timing unavailable — regenerate captions to enable Snap to Speech.",
+    "realignedCount": "Snapped {count} captions to speech",
+    "alreadyAligned": "Captions already aligned to speech"
   },
   "videoComparison": {
     "title": "Video Comparison",
@@ -7749,5 +7837,42 @@
     "failureCount": "{{count}} failed",
     "testWebhook": "Test Webhook",
     "delete": "Delete"
+  },
+  "colorGrading": {
+    "rankedByPerformance": "Grades are ranked by how they performed for you",
+    "learningOrder": "Ranked by your results",
+    "yourTopPick": "Your top pick"
+  },
+  "neuralTraining": {
+    "title": "What Click has learned",
+    "subtitle": "Every choice you make teaches Click your style. Here is what it has picked up so far.",
+    "refresh": "Refresh",
+    "done": "Done",
+    "never": "Never",
+    "learningProgress": "Learning progress",
+    "learnedFacets": "Style traits learned",
+    "lastIngested": "Last updated",
+    "totalPicks": "Choices recorded",
+    "samples": "samples",
+    "topPerformers": "Your best performers",
+    "noPerformersYet": "No performance data yet — publish a few posts and this fills in.",
+    "coldStartTitle": "Click is still learning you",
+    "coldStartBody": "Make a few edits and publish some clips. Click learns from what you choose and what performs.",
+    "importUnavailableTitle": "Import unavailable",
+    "importUnavailableBody": "Connect an account first — Click learns from posts it can actually read."
+  },
+  "styleVault": {
+    "title": "Style Vault",
+    "subtitle": "The style Click has learned from your choices and your results.",
+    "never": "Never",
+    "totalPicks": "Choices recorded",
+    "learnedFacets": "Style traits learned",
+    "lastIngested": "Last updated",
+    "uses": "used {{count}}×",
+    "topPerformersTitle": "Your best performers",
+    "topPerformersEmpty": "No performance data yet — publish a few posts and this fills in.",
+    "emptyTitle": "Nothing learned yet",
+    "emptyBody": "Click builds your Style Vault from the edits you keep and the posts that perform. Make a few clips to get started.",
+    "startTraining": "Start training Click"
   }
 }
