@@ -96,6 +96,21 @@ const logger = winston.createLogger({
       maxFiles: 5
     })
   ],
+  // Winston must LOG a crash, never decide one.
+  //
+  // Registering exceptionHandlers/rejectionHandlers turns on winston's default
+  // `exitOnError: true`, which calls process.exit() after writing the entry —
+  // silently overriding server/index.js, which owns that decision and states the
+  // opposite: exit on an uncaught exception ONLY in production, and never on an
+  // unhandled rejection ("server will continue").
+  //
+  // The result was that ANY unhandled promise rejection killed the server, in
+  // every environment. Observed live: a transient
+  // "ERR Your database has been temporarily rate-limited" from the Redis client
+  // took the whole process down a second after it had logged
+  // "🚀 Server running on port …". A cache blip should degrade the cache, not
+  // end the process.
+  exitOnError: false,
   // Handle exceptions and rejections
   exceptionHandlers: [
     new winston.transports.File({
