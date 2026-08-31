@@ -169,6 +169,45 @@ const panelRef = useDialogBehavior(isOpen, close)
 that, the claim is false — which is what it was across every hand-rolled overlay
 until this was added.
 
+## Talking to the API
+
+Three rules, each of which has already cost real bugs.
+
+**1. Never prefix a path with `/api`.** `apiGet`/`apiPost`/… are configured with
+`baseURL: '/api'`, so `apiGet('/autopilot')` — not `apiGet('/api/autopilot')`.
+Native `fetch` DOES need the prefix. Guarded by
+`tests/server/clientApiPrefix.test.js`.
+
+**2. The path must exist.** Guarded by `tests/server/clientApiContract.test.js`,
+which boots the server and resolves every literal path against the real router
+stack. It exists because 30 client calls pointed at nothing; because almost every
+call site ends in `.catch(() => {})`, they 404'd in total silence.
+
+**3. Know which envelope you are reading.** The server has two conventions:
+
+```js
+sendSuccess(res, 'Plan ready', 200, { directions })  // → { success, message, data: { directions } }
+res.json({ success: true, directions })              // → { success, directions }
+```
+
+The client helpers return the raw body, so the first must be read as
+`res.data.directions` and the second as `res.directions`. Getting it wrong fails
+in the worst possible way: `res.success` is `true` either way — it is on the
+envelope — while the payload field is `undefined`, so the usual
+`if (res.success && res.thing)` guard silently does nothing. Five features were
+in that state, including the AI Director, which rendered "no directions" for
+every video ever generated.
+
+If you are not certain which the route uses, read `(res?.data ?? res)` — the
+idiom already used across the editor — and type the response to match what the
+server sends rather than what is convenient.
+
+**And: a 202 is not a result.** The `/video/advanced/*` operations return
+`{ videoId, operation }` immediately and run in the background. The payload
+appears on `GET /video/progress/:videoId?operation=…` once `status` is
+`completed`. `awaitVideoJob()` in `components/editor/views/AutomateView.tsx` is
+the reference implementation.
+
 ## Verifying UI work
 
 ```
