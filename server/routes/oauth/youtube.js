@@ -157,7 +157,16 @@ router.post('/upload', auth, oauthPostLimiter, asyncHandler(async (req, res) => 
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const video = await youtubeService.uploadVideoToYouTube(userId, videoFile, title, description || '', options || {});
+  // uploadVideoToYouTube(userId, videoPath, metadata) — the title/description/
+  // options were being passed as three positional arguments, so `metadata`
+  // received the title STRING. metadata.title was then undefined and every
+  // upload went out as "Untitled Sovereign Video" with the default description
+  // and tags, silently discarding what the caller asked for.
+  const video = await youtubeService.uploadVideoToYouTube(userId, videoFile, {
+    title,
+    description: description || '',
+    ...(options || {}),
+  });
 
   sendSuccess(res, 'YouTube video uploaded successfully', 200, { video });
 }));
@@ -173,7 +182,18 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const post = await youtubeService.postToYouTube(userId, videoUrl, title, description || '', options || {});
+  // postToYouTube(userId, postData) destructures { title, description, videoPath,
+  // mediaUrl } out of its SECOND argument. It was being handed the videoUrl
+  // string, so every field destructured to undefined, the "do we have a video?"
+  // branch was never taken, and the call fell through to the explicit
+  // "text-only posts are not yet supported" throw — this endpoint could not
+  // succeed for any input.
+  const post = await youtubeService.postToYouTube(userId, {
+    title,
+    description: description || '',
+    mediaUrl: videoUrl,
+    ...(options || {}),
+  });
 
   sendSuccess(res, 'YouTube post published successfully', 200, { post });
 }));

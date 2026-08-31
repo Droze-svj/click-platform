@@ -71,10 +71,16 @@ async function loadPlugin(pluginPath) {
 /**
  * Register plugin
  * @param {Object} plugin - Plugin object
- * @param {Object} manifest - Plugin manifest
+ * @param {Object} [manifest] - Plugin manifest. Defaults to the plugin itself:
+ *   POST /plugins/register only ever receives a single `plugin` object and
+ *   called this with one argument, so the manifest was being stored as
+ *   `undefined` and getAllPlugins reported `manifest: undefined` for everything
+ *   registered through the API. The two carry the same required fields
+ *   (name/version/description/author — see validateManifest), so the plugin IS
+ *   a valid manifest for itself.
  * @returns {string} Plugin ID
  */
-function registerPlugin(plugin, manifest) {
+function registerPlugin(plugin, manifest = plugin) {
   try {
     const pluginId = `${plugin.name}@${plugin.version}`;
 
@@ -107,14 +113,28 @@ function getPlugin(pluginId) {
  * Get all plugins
  * @returns {Array} All plugins
  */
-function getAllPlugins() {
-  return Array.from(plugins.entries()).map(([id, plugin]) => ({
-    id,
-    name: plugin.name,
-    version: plugin.version,
-    description: plugin.description,
-    manifest: pluginManifests.get(id),
-  }));
+/**
+ * List registered plugins, optionally narrowed to one category.
+ *
+ * `category` used to be absent from this signature entirely while
+ * GET /plugins?category=… passed one — JavaScript discards the extra argument,
+ * so the filter was accepted by the API and then silently ignored, and every
+ * request got the full list back. Categories come from getPluginCategories().
+ *
+ * @param {string|null} [category] - category id to filter by; null/omitted = all
+ */
+function getAllPlugins(category = null) {
+  const wanted = category ? String(category).trim().toLowerCase() : null;
+  return Array.from(plugins.entries())
+    .filter(([, plugin]) => !wanted || String(plugin.category || '').toLowerCase() === wanted)
+    .map(([id, plugin]) => ({
+      id,
+      name: plugin.name,
+      version: plugin.version,
+      description: plugin.description,
+      category: plugin.category || null,
+      manifest: pluginManifests.get(id),
+    }));
 }
 
 /**
