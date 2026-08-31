@@ -152,6 +152,59 @@ sole active ORM. Removing the dependency is cleanup, not a fix.
 
 ---
 
+## 🔵 Measured, not acted on — 266 unreachable client files (~2.3 MB)
+
+Found while auditing client→server API paths in 2026-08. Building the import
+graph from every Next.js entry point (`app/**/{page,layout,error,…}`, tests,
+`middleware.ts`, the Sentry configs, and the two `new Worker(new URL(…))`
+modules) leaves **266 of 810 client source files with no path from any entry
+point**. They are compiled by `tsc`, linted, and shipped to nobody.
+
+| Area | Files | Size |
+|---|---|---|
+| `components/` | 182 | 1.7 MB |
+| `components/editor/` | 38 | 443 KB |
+| `hooks/` | 19 | 44 KB |
+| `lib/` | 13 | 31 KB |
+| `utils/` | 10 | 86 KB |
+| `app/`, `config/`, `i18n/` | 4 | 11 KB |
+
+**Why this is listed rather than deleted.** These are not all rot. They fall
+into at least three groups that need different decisions:
+
+1. *Built but never wired* — `OnboardingWizard`, `CreatorDNA`,
+   `AchievementSystem`, `HelpCenter`, `SmartSuggestions`, `MobileNavbar` and
+   others are complete features waiting on a mount point. `NotificationBell` and
+   `PerformanceMonitor` were in exactly this state and were wired up rather than
+   deleted. Deleting these throws the work away; wiring them up is a product
+   call, not a cleanup.
+2. *Superseded* — an older implementation left behind when a newer one landed
+   elsewhere.
+3. *Genuinely dead* — experiments and probes (`InteractionProbe`,
+   `NavigationProbe`, `StorageProbe`, `TokenStorageProbeFixed`).
+
+Telling them apart needs a per-file judgement, and a 266-file deletion is not
+something to do on inference.
+
+**What WAS acted on**: the 22 files that shadowed a live file of the same name,
+which is the actively harmful subset — the wrong copy is easy to edit by
+mistake, and two of the broken API paths found in the same audit lived in one.
+The entire `client/views/video-editor/` tree (12 stale copies of
+`components/editor/views/`) went with it. See commit "fix: client calls that
+pointed at endpoints the server never mounted".
+
+**Cost of leaving it**: build time and repo noise, plus a real audit tax — a
+broken API path or a dead socket listener in an unreachable component looks
+exactly like a live bug until you check reachability. Both audits in this pass
+had to filter for it.
+
+**To regenerate the list**: build the import graph from the entry points above
+and report files with no inbound path. The reachability question is the whole
+job; a plain "who imports X" grep gets it wrong, because a file imported only by
+another orphan is still an orphan.
+
+---
+
 ## How to interpret this list
 
 Ship today and paying customers will not see fake metrics, broken auth, blank
