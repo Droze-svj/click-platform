@@ -20,10 +20,13 @@ async function createABTest(userId, testData) {
     // Create content for both variants
     const contentA = new Content({
       userId,
+      // `body`/`platform`/'draft' are not Content paths or values — text goes in
+      // content.text, the platform list in platforms[], and 'draft' is absent from
+      // the status enum (uploading|processing|completed|failed), so save() threw.
       title: variantA.title,
-      body: variantA.body,
-      platform,
-      status: 'draft',
+      content: { text: variantA.body },
+      platforms: [platform],
+      status: 'completed',
       abTest: {
         testId: null,
         variant: 'A',
@@ -33,9 +36,9 @@ async function createABTest(userId, testData) {
     const contentB = new Content({
       userId,
       title: variantB.title,
-      body: variantB.body,
-      platform,
-      status: 'draft',
+      content: { text: variantB.body },
+      platforms: [platform],
+      status: 'completed',
       abTest: {
         testId: null,
         variant: 'B',

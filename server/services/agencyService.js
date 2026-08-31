@@ -391,12 +391,12 @@ async function bulkImportContent(agencyWorkspaceId, clientId, importData) {
           title: item.title || item.text?.substring(0, 100) || 'Imported Content',
           content: {
             text: item.text || item.content,
-            images: item.images || [],
-            videos: item.videos || []
+            // hashtags belong to the content sub-document; there is no
+            // top-level Content.hashtags path, so this was being dropped.
+            hashtags: item.hashtags || [],
           },
           type: item.type || 'post',
           platforms: item.platforms || platforms || ['twitter', 'linkedin'],
-          hashtags: item.hashtags || [],
           metadata: {
             imported: true,
             importDate: new Date(),

@@ -32,7 +32,8 @@ async function scheduleWithOptimalTiming(userId, contentId, platform, options = 
       },
       scheduledTime: new Date(scheduledTime),
       status: 'scheduled',
-      optimalTime: true
+      // `optimalTime` is not a ScheduledPost path; provenance goes in metadata.
+      metadata: { optimalTime: true },
     });
 
     await scheduledPost.save();

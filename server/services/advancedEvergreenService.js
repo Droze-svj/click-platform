@@ -204,7 +204,12 @@ async function buildRecyclingCalendar(userId, evergreenContent, options = {}) {
 
       while (currentDate <= calendar.endDate && platformContent.length > 0) {
         const content = platformContent[contentIndex % platformContent.length];
-        const platformData = content.platforms.find(p => p.platform === platform);
+        // Defensive: content.platforms is optional, and a Content built by a
+        // path that never set it would otherwise TypeError here rather than
+        // simply contributing no calendar entries.
+        const platformData = Array.isArray(content.platforms)
+          ? content.platforms.find(p => p.platform === platform)
+          : null;
 
         if (platformData) {
           calendar.platforms[platform].schedule.push({
@@ -255,7 +260,10 @@ async function createRecyclingPlansFromCalendar(userId, calendar) {
             originalContentId: scheduleItem.contentId,
             platform,
             recycleType: 'scheduled',
-            schedule: {
+            // The model's field is `repostSchedule`, not `schedule` — under the
+            // old name Mongoose dropped it, so the recycle row carried no
+            // next-repost date at all.
+            repostSchedule: {
               nextRepost: scheduleItem.date,
               frequency: 'monthly',
               maxReposts: 12

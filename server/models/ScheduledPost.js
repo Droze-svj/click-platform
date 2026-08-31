@@ -94,6 +94,18 @@ const scheduledPostSchema = new mongoose.Schema({
     enum: ['scheduled', 'pending', 'pending_approval', 'publishing', 'posted', 'failed', 'failed_retryable', 'failed_permanent', 'cancelled'],
     default: 'scheduled'
   },
+  // Free-form provenance / bookkeeping written by the services that create
+  // posts: which bulk run or agent produced this row, whether the slot came from
+  // the optimal-time model, and so on. Declared because six callers were already
+  // passing exactly this and Mongoose was dropping it — sub-schemas are strict,
+  // so an undeclared path disappears on save without an error. The posts
+  // themselves scheduled fine; only the "where did this come from" trail was
+  // being lost, which is precisely what you want when auditing an autonomous
+  // publish after the fact.
+  metadata: {
+    type: mongoose.Schema.Types.Mixed,
+    default: undefined,
+  },
   // Groups all posts created by one autopilot plan, so the human-approve /
   // cancel actions can act on the whole plan at once.
   autopilotPlanId: {

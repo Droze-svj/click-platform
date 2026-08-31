@@ -436,7 +436,8 @@ async function executeStep(stepId, job, isRetry = false) {
               content: { text: postText, hashtags },
               scheduledTime: slot,
               status: 'scheduled',
-              source: 'agent',
+              // `source` is not a path; the agent trail belongs in metadata.
+              metadata: { source: 'agent' },
             }).catch((e) => { logger.warn('Agent publish: ScheduledPost create failed', { error: e.message }); return null; });
             scheduledPostId = doc?._id?.toString?.() || null;
           } catch { /* model not present in some envs — pipeline still completes */ }

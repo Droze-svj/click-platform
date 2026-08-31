@@ -773,7 +773,7 @@ async function publishAllNetworks(userId, contentId, options = {}) {
               },
               scheduledTime: optimalTime?.nextBestTime || new Date(),
               status: 'scheduled',
-              optimized: !!optimalTime
+              metadata: { optimized: !!optimalTime },
             });
             await scheduledPost.save();
             results.scheduled.push({ platform, postId: scheduledPost._id, time: scheduledPost.scheduledTime });
@@ -1146,8 +1146,7 @@ async function scheduleWithOptimalTimes(userId, contentId, platforms = SUPPORTED
           },
           scheduledTime: optimalTime?.nextBestTime || new Date(),
           status: 'scheduled',
-          optimized: true,
-          optimizationData: optimalTime
+          metadata: { optimized: true, optimizationData: optimalTime },
         });
 
         await scheduledPost.save();
