@@ -6,6 +6,7 @@ import axios from 'axios'
 import LoadingSpinner from '../../../../components/LoadingSpinner'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 import VideoCaptionEditor from '../../../../components/VideoCaptionEditor'
+import { RemediationHUD } from '../../../../components/editor/views/RemediationHUD'
 import { extractApiData, extractApiError } from '../../../../utils/apiResponse'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
@@ -541,6 +542,13 @@ export default function ContentDetailPage() {
             video editor. */}
         <ErrorBoundary>
           <VideoCaptionEditor contentId={String(content._id)} />
+        </ErrorBoundary>
+
+        {/* Automated remediation for this piece (POST
+            /api/phase16_18/remediation/process). It requires a contentId, which
+            is why it belongs here rather than on the account-level ops page. */}
+        <ErrorBoundary>
+          <RemediationHUD contentId={String(content._id)} />
         </ErrorBoundary>
 
         <style jsx global>{`

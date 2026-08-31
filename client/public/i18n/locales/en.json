@@ -444,7 +444,8 @@
     "contentOps": "Content Ops",
     "toolbox": "Toolbox",
     "neural": "Trend Intelligence",
-    "suggestions": "Suggestions"
+    "suggestions": "Suggestions",
+    "ops": "Autonomous Ops"
   },
   "workflow": {
     "niche": "Niche",
@@ -7882,5 +7883,19 @@
     "emptyTitle": "Nothing learned yet",
     "emptyBody": "Click builds your Style Vault from the edits you keep and the posts that perform. Make a few clips to get started.",
     "startTraining": "Start training Click"
+  },
+  "opsPage": {
+    "title": "Autonomous Operations",
+    "description": "Live operational readouts from the autonomous stack — fleet, network, arbitrage, compliance and forecasting.",
+    "fleet": "Fleet",
+    "network": "Network",
+    "arbitrage": "Arbitrage",
+    "culture": "Culture",
+    "fiscal": "Fiscal",
+    "forecast": "Forecast",
+    "consensus": "Consensus",
+    "compliance": "Compliance",
+    "expertDna": "Expert DNA",
+    "oracle": "Oracle Sandbox"
   }
 }

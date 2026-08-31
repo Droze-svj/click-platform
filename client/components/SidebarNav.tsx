@@ -151,6 +151,9 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/jobs',         label: t('nav.jobs') || 'Jobs',           icon: Workflow,     badge: null },
       { path: '/dashboard/membership',   label: t('nav.membership') || 'Membership', icon: Gem,        badge: null },
       // Experimental surfaces, gathered here instead of scattered or unreachable.
+      // Ten built-but-unreachable operational HUDs, gathered onto one page
+      // rather than ten more categories in an editor that was deliberately trimmed.
+      { path: '/dashboard/ops',          label: t('nav.ops') || 'Autonomous Ops',  icon: Boxes,        badge: 'New' },
       { path: '/dashboard/labs',         label: t('nav.labs') || 'Labs',           icon: FlaskConical, badge: 'Early' },
     ],
   },
