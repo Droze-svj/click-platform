@@ -189,56 +189,44 @@ autonomous-mode kill switch.
 
 ---
 
-## 🔵 Measured, not acted on — 266 unreachable client files (~2.3 MB)
+## 🔵 Triaged — 250 unreachable client files (~2.2 MB)
 
-Found while auditing client→server API paths in 2026-08. Building the import
-graph from every Next.js entry point (`app/**/{page,layout,error,…}`, tests,
-`middleware.ts`, the Sentry configs, and the two `new Worker(new URL(…))`
-modules) leaves **266 of 810 client source files with no path from any entry
-point**. They are compiled by `tsc`, linted, and shipped to nobody.
+Building the import graph from every Next.js entry point (`app/**/{page,layout,
+error,…}`, tests, `middleware.ts`, the Sentry configs and the two
+`new Worker(new URL(…))` modules) leaves 250 of ~795 client source files with no
+path from any entry point. They are compiled, linted, and shipped to nobody.
 
-| Area | Files | Size |
+**Already removed** (2026-08): the 22 files that shadowed a live file of the
+same name — the actively harmful subset, since the wrong copy is easy to edit by
+mistake and two broken API paths were found inside one — plus 16 files of
+development instrumentation (`ClickDebugPanel`, `DevDebugBanner`, the four
+`*Probe` components, `networkDebugger`, `analytics-mock`, and `app/_app.tsx`, a
+Pages-Router artifact that cannot load in an App Router app). All were verified
+to have no inbound imports, and git keeps the history.
+
+**What is left, split by evidence rather than guesswork:**
+
+| Group | Count | What it is |
 |---|---|---|
-| `components/` | 182 | 1.7 MB |
-| `components/editor/` | 38 | 443 KB |
-| `hooks/` | 19 | 44 KB |
-| `lib/` | 13 | 31 KB |
-| `utils/` | 10 | 86 KB |
-| `app/`, `config/`, `i18n/` | 4 | 11 KB |
+| Components calling ≥1 endpoint that EXISTS | 46 | Complete features that are simply not mounted anywhere. `AIContentOperationsDashboard` uses 10 live endpoints, `OverlordDashboard` 9, `NeuralWorkspaceHub` 5, `OnboardingWizard` 2. Deleting these throws away working product. |
+| Components making no API calls at all | 147 | Presentational fragments, alternate layouts, small primitives (`Skeleton`, `SuccessAlert`, `ResponsiveGrid`). Some duplicate a live component in spirit; none is provably rot. |
+| `lib/` `utils/` `hooks/` | 39 | Helpers with no current caller. |
+| Small stubs | 18 | Real but tiny (`ClientLayout`, `Providers`, `LazyLoad`) — several are superseded by the live provider tree. |
 
-**Why this is listed rather than deleted.** These are not all rot. They fall
-into at least three groups that need different decisions:
+**Why the first group is not deleted.** Those 46 are the state
+`NotificationBell` and `PerformanceMonitor` were in before they were wired up:
+finished work waiting on a mount point. Mounting them is a **product** decision —
+several would duplicate a live surface (`DashboardOverview` against the real
+dashboard, `ContentSuggestions` against the live `SmartSuggestions`) — and is not
+something to decide from the import graph alone.
 
-1. *Built but never wired* — `OnboardingWizard`, `CreatorDNA`,
-   `AchievementSystem`, `HelpCenter`, `SmartSuggestions`, `MobileNavbar` and
-   others are complete features waiting on a mount point. `NotificationBell` and
-   `PerformanceMonitor` were in exactly this state and were wired up rather than
-   deleted. Deleting these throws the work away; wiring them up is a product
-   call, not a cleanup.
-2. *Superseded* — an older implementation left behind when a newer one landed
-   elsewhere.
-3. *Genuinely dead* — experiments and probes (`InteractionProbe`,
-   `NavigationProbe`, `StorageProbe`, `TokenStorageProbeFixed`).
+**Cost of leaving it**: build time, and a real audit tax — a broken API path or
+a dead socket listener inside an unreachable component reads exactly like a live
+bug until reachability is checked. Every audit in this pass had to filter for it.
 
-Telling them apart needs a per-file judgement, and a 266-file deletion is not
-something to do on inference.
-
-**What WAS acted on**: the 22 files that shadowed a live file of the same name,
-which is the actively harmful subset — the wrong copy is easy to edit by
-mistake, and two of the broken API paths found in the same audit lived in one.
-The entire `client/views/video-editor/` tree (12 stale copies of
-`components/editor/views/`) went with it. See commit "fix: client calls that
-pointed at endpoints the server never mounted".
-
-**Cost of leaving it**: build time and repo noise, plus a real audit tax — a
-broken API path or a dead socket listener in an unreachable component looks
-exactly like a live bug until you check reachability. Both audits in this pass
-had to filter for it.
-
-**To regenerate the list**: build the import graph from the entry points above
-and report files with no inbound path. The reachability question is the whole
-job; a plain "who imports X" grep gets it wrong, because a file imported only by
-another orphan is still an orphan.
+**To regenerate**: build the import graph from the entry points above and report
+files with no inbound path. A "who imports X" grep gets this wrong, because a
+file imported only by another orphan is still an orphan.
 
 ---
 
