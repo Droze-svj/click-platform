@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import AdvancedSchedulingHub from '../../../components/scheduler/AdvancedSchedulingHub'
 import { useAuth } from '../../../hooks/useAuth'
 import { useUserSocket } from '../../../hooks/useUserSocket'
 import { useToast } from '../../../contexts/ToastContext'
@@ -591,6 +592,13 @@ export default function SchedulerPage() {
             )}
           </section>
         </main>
+
+        {/* Queue analytics, recurring templates and bulk reschedule. The component
+            was built and unreachable, and the three endpoints it calls
+            (/api/scheduler/analytics, /templates, /bulk-reschedule) did not exist —
+            they were added alongside this. */}
+        <ErrorBoundary><AdvancedSchedulingHub /></ErrorBoundary>
+
       </PageShell>
     </ErrorBoundary>
   )

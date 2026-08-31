@@ -53,9 +53,6 @@ const ACCEPTED_UNRESOLVED = new Map([
   ['/api/ai/analyze-video', 'components/AIContentAnalysis.tsx — orphaned, 0 importers'],
   ['/api/social/generate-metadata', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
   ['/api/social/publish', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
-  ['/api/scheduler/analytics', 'components/scheduler/AdvancedSchedulingHub.tsx — orphaned, 0 importers'],
-  ['/api/scheduler/bulk-reschedule', 'components/scheduler/AdvancedSchedulingHub.tsx — orphaned, 0 importers'],
-  ['/api/scheduler/templates', 'components/scheduler/AdvancedSchedulingHub.tsx — orphaned, 0 importers'],
 ]);
 
 function walk(dir) {
