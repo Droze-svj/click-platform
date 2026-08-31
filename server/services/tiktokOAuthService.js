@@ -4,6 +4,7 @@
 const OAuthService = require('./oauthService');
 const OAuthStorage = require('../utils/oauthStorage');
 const logger = require('../utils/logger');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const crypto = require('crypto');
 
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
@@ -11,16 +12,18 @@ const API_BASE = 'https://open.tiktokapis.com/v2';
 const DEFAULT_SCOPE = 'user.info.basic,video.upload,video.publish';
 const LOG_CONTEXT = { service: 'tiktok-oauth' };
 
-function defaultRedirectUri() {
-  return process.env.TIKTOK_REDIRECT_URI ||
-    `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/tiktok/callback`;
+// Delegates to the shared resolver so the authorize step and the token
+// exchange can never derive different values. Called per-use rather than
+// cached at construction: the env is read at boot, but a resolver that
+// depends on the request cannot be memoised into a constructor.
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('tiktok', req);
 }
 
 class TikTokOAuthService {
   constructor() {
     this.clientKey = process.env.TIKTOK_CLIENT_KEY;
     this.clientSecret = process.env.TIKTOK_CLIENT_SECRET;
-    this.redirectUri = defaultRedirectUri();
     this.isConfiguredFlag = !!(this.clientKey && this.clientSecret);
     if (this.isConfiguredFlag) {
       logger.info('TikTok OAuth client initialized', LOG_CONTEXT);
@@ -30,6 +33,14 @@ class TikTokOAuthService {
     
     // Bind methods to ensure they work when destructured in routes
     this.isConfigured = this.isConfigured.bind(this);
+  }
+
+  // Lazy, not snapshotted in the constructor: this module is required at boot,
+  // and a value captured then would ignore any later env change (and would be
+  // wrong for every test that sets one). It is only a fallback now — callers
+  // pass the resolved callback URL explicitly.
+  get redirectUri() {
+    return defaultRedirectUri();
   }
 
   isConfigured() {
@@ -90,7 +101,11 @@ class TikTokOAuthService {
     return { url, state: oauthState };
   }
 
-  async exchangeCodeForToken(code) {
+  // callbackUrl MUST be the same value the authorize step sent. The caller
+  // (the callback route) resolves it from the live request and passes it in;
+  // without it this fell back to a default that did not match, and every
+  // exchange was rejected with redirect_uri_mismatch.
+  async exchangeCodeForToken(code, callbackUrl) {
     if (!this.isConfigured()) throw new Error('TikTok OAuth not configured');
     const response = await fetch(TOKEN_URL, {
       method: 'POST',
@@ -100,7 +115,7 @@ class TikTokOAuthService {
         client_secret: this.clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: this.redirectUri,
+        redirect_uri: callbackUrl || this.redirectUri,
       }),
     });
 

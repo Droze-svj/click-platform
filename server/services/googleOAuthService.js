@@ -4,6 +4,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const { safeJsonParse } = require('../utils/safeJson');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -57,9 +58,12 @@ function isConfigured() {
   return !!(getGoogleClientId() && getGoogleClientSecret());
 }
 
-function defaultRedirectUri() {
-  return getGoogleCallbackUrl()
-    || `${process.env.FRONTEND_URL || process.env.API_URL || 'http://localhost:5001'}/api/oauth/google/callback`;
+// Delegates to the shared resolver so the authorize step and the token exchange
+// cannot derive different values. Note the old fallback reached for FRONTEND_URL
+// first — the callback route lives on the API, not the frontend, so that was one
+// of the ways the two steps came to disagree. See utils/oauthCallbackUrl.js.
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('google', req);
 }
 
 function getScope() {
@@ -158,7 +162,9 @@ async function getAuthorizationUrl(userId, stateOrCallbackUrl, maybeCallbackUrl)
   return { url: authUrl, state };
 }
 
-async function exchangeCodeForToken(userId, code, state) {
+// callbackUrl MUST be the value the authorize step used; the callback route
+// resolves it from the live request and passes it in.
+async function exchangeCodeForToken(userId, code, state, callbackUrl) {
   if (!isConfigured()) throw new Error('Google OAuth not configured');
   if (!userId || !code || !state) throw new Error('userId, code, and state are required');
 
@@ -179,7 +185,7 @@ async function exchangeCodeForToken(userId, code, state) {
 
   const clientId = getGoogleClientId();
   const clientSecret = getGoogleClientSecret();
-  const redirectUri = defaultRedirectUri();
+  const redirectUri = callbackUrl || defaultRedirectUri();
 
   // Google's token endpoint expects form-urlencoded params in the
   // request BODY, not the URL query string.

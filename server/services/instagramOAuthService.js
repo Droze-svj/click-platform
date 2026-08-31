@@ -4,6 +4,7 @@
 const mongoose = require('mongoose');
 const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const OAuthService = require('./oauthService');
 const OAuthStorage = require('../utils/oauthStorage');
 
@@ -16,16 +17,18 @@ const GRAPH_API_BASE = 'https://graph.instagram.com';
 const DEFAULT_SCOPE = 'user_profile,user_media';
 const LOG_CONTEXT = { service: 'instagram-oauth' };
 
-function defaultRedirectUri() {
-  return process.env.INSTAGRAM_REDIRECT_URI ||
-    `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/instagram/callback`;
+// Delegates to the shared resolver so the authorize step and the token
+// exchange can never derive different values. Called per-use rather than
+// cached at construction: the env is read at boot, but a resolver that
+// depends on the request cannot be memoised into a constructor.
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('instagram', req);
 }
 
 class InstagramOAuthService {
   constructor() {
     this.clientId = process.env.INSTAGRAM_CLIENT_ID;
     this.clientSecret = process.env.INSTAGRAM_CLIENT_SECRET;
-    this.redirectUri = defaultRedirectUri();
     this.supabase = null;
     this.isConfiguredFlag = !!(this.clientId && this.clientSecret);
     if (this.isConfiguredFlag) {
@@ -33,6 +36,14 @@ class InstagramOAuthService {
     } else {
       logger.warn('Instagram OAuth not configured. Set INSTAGRAM_CLIENT_ID and INSTAGRAM_CLIENT_SECRET', LOG_CONTEXT);
     }
+  }
+
+  // Lazy, not snapshotted in the constructor: this module is required at boot,
+  // and a value captured then would ignore any later env change (and would be
+  // wrong for every test that sets one). It is only a fallback now — callers
+  // pass the resolved callback URL explicitly.
+  get redirectUri() {
+    return defaultRedirectUri();
   }
 
   getSupabaseClient() {
@@ -89,7 +100,11 @@ class InstagramOAuthService {
     return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
   }
 
-  async exchangeCodeForToken(code) {
+  // callbackUrl MUST be the same value the authorize step sent. The caller
+  // (the callback route) resolves it from the live request and passes it in;
+  // without it this fell back to a default that did not match, and every
+  // exchange was rejected with redirect_uri_mismatch.
+  async exchangeCodeForToken(code, callbackUrl) {
     if (!this.isConfigured()) throw new Error('Instagram OAuth not configured');
     const response = await fetch(TOKEN_URL, {
       method: 'POST',
@@ -99,7 +114,7 @@ class InstagramOAuthService {
         client_secret: this.clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: this.redirectUri,
+        redirect_uri: callbackUrl || this.redirectUri,
       }),
     });
 

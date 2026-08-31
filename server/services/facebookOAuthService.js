@@ -5,6 +5,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const User = require('../models/User');
 const OAuthStorage = require('../utils/oauthStorage');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
@@ -47,9 +48,11 @@ function getScope() {
   return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
 }
 
-function defaultRedirectUri() {
-  return process.env.FACEBOOK_CALLBACK_URL ||
-    `${process.env.FRONTEND_URL || process.env.API_URL || 'http://localhost:5001'}/api/oauth/facebook/callback`;
+// Delegates to the shared resolver so the authorize step and the token exchange
+// can never derive different values (they previously used different env names
+// and different fallbacks — see utils/oauthCallbackUrl.js).
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('facebook', req);
 }
 
 
@@ -76,7 +79,10 @@ async function getAuthorizationUrl(userId, state, callbackUrl) {
   return `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
 }
 
-async function exchangeCodeForToken(userId, code, state) {
+// callbackUrl MUST be the value the authorize step used; the callback route
+// resolves it from the live request and passes it in. Falling back to the
+// default here is what made every exchange fail with redirect_uri_mismatch.
+async function exchangeCodeForToken(userId, code, state, callbackUrl) {
   if (!isConfigured()) throw new Error('Facebook OAuth not configured');
   if (!userId || !code || !state) throw new Error('userId, code, and state are required');
 
@@ -88,7 +94,7 @@ async function exchangeCodeForToken(userId, code, state) {
 
   const clientId = process.env.FACEBOOK_APP_ID;
   const clientSecret = process.env.FACEBOOK_APP_SECRET;
-  const redirectUri = defaultRedirectUri();
+  const redirectUri = callbackUrl || defaultRedirectUri();
 
   const shortLivedRes = await axios.get(`${GRAPH_API_BASE}/oauth/access_token`, {
     params: { client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, code },

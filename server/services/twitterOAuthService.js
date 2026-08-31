@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const axios = require('axios');
 const logger = require('../utils/logger');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const User = require('../models/User');
 const oauthService = require('./oauthService');
 const OAuthStorage = require('../utils/oauthStorage');
@@ -28,10 +29,11 @@ function getScope() {
   return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
 }
 
-function defaultRedirectUri() {
-  return process.env.TWITTER_CALLBACK_URL ||
-    process.env.TWITTER_REDIRECT_URI ||
-    `${process.env.API_URL || process.env.FRONTEND_URL || 'http://localhost:5001'}/api/oauth/twitter/callback`;
+// Delegates to the shared resolver so the authorize step and the token exchange
+// can never derive different values (they previously used different env names
+// and different fallbacks — see utils/oauthCallbackUrl.js).
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('twitter', req);
 }
 
 /**
@@ -107,7 +109,10 @@ async function getConnectedAccounts(userId) {
 /**
  * Exchange code for token
  */
-async function exchangeCodeForToken(userId, code, state) {
+// callbackUrl MUST be the value the authorize step used; the callback route
+// resolves it from the live request and passes it in. Falling back to the
+// default here is what made every exchange fail with redirect_uri_mismatch.
+async function exchangeCodeForToken(userId, code, state, callbackUrl) {
   // Resolve the PKCE verifier + state we saved during getAuthorizationUrl.
   let twitterData;
   if (isMongoUserId(userId)) {
@@ -126,7 +131,7 @@ async function exchangeCodeForToken(userId, code, state) {
     code,
     grant_type: 'authorization_code',
     client_id: process.env.TWITTER_CLIENT_ID,
-    redirect_uri: defaultRedirectUri(),
+    redirect_uri: callbackUrl || defaultRedirectUri(),
     code_verifier: twitterData.codeVerifier || 'challenge',
   }), {
     headers: {

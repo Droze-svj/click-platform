@@ -5,6 +5,7 @@ const auth = require('../../middleware/auth');
 // Singleton instance — destructuring would drop `this` and crash.
 const googleService = require('../../services/googleOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter } = require('../../middleware/oauthRateLimiter');
 const ssx = require('../../utils/oauthServerSideExchange');
@@ -20,8 +21,9 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
     return sendError(res, 'Google OAuth not configured', 503);
   }
 
-  const callbackUrl = process.env.GOOGLE_CALLBACK_URL ||
-    `${req.protocol}://${req.get('host')}/api/oauth/google/callback`;
+  // Resolved through the shared helper so the callback route's exchange can
+  // derive the identical value — OAuth rejects the exchange otherwise.
+  const callbackUrl = resolveOAuthCallbackUrl('google', req);
 
   const userId = req.userId || req.user?._id || req.user?.id;
   const { url, state } = await googleService.getAuthorizationUrl(userId, callbackUrl);
@@ -56,7 +58,7 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     if (ssx.serverSideExchangeEnabled()) {
       const u = ssx.unwrapCallbackState(state);
       if (!u) return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent('Invalid OAuth state')}`);
-      await googleService.exchangeCodeForToken(u.userId, code, u.innerState);
+      await googleService.exchangeCodeForToken(u.userId, code, u.innerState, resolveOAuthCallbackUrl('google', req));
       return res.redirect(`${frontendUrl}/dashboard/social?connected=google&success=true`);
     }
     res.redirect(`${frontendUrl}/dashboard/social?platform=google&code=${code}&state=${state}`);
@@ -78,7 +80,7 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const { userInfo } = await googleService.exchangeCodeForToken(userId, code, state);
+  const { userInfo } = await googleService.exchangeCodeForToken(userId, code, state, resolveOAuthCallbackUrl('google', req));
 
   sendSuccess(res, 'Google account connected successfully', 200, {
     connected: true,
