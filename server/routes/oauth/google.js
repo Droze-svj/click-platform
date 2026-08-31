@@ -6,6 +6,7 @@ const auth = require('../../middleware/auth');
 const googleService = require('../../services/googleOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
+const OAuthStorage = require('../../utils/oauthStorage');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter } = require('../../middleware/oauthRateLimiter');
 const ssx = require('../../utils/oauthServerSideExchange');
@@ -107,45 +108,25 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
  * Get Google connection status
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(503).json({
-      success: false,
-      error: 'Database not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.'
-    });
-  }
+  // Read through OAuthStorage, exactly like every other provider's /status.
+  //
+  // This route used to build its OWN Supabase client and 503 with "Database not
+  // configured" when SUPABASE_URL was unset. Supabase auth is off by default
+  // here (the boot log says "Using Mongoose fallback"), so Google was the only
+  // provider whose status endpoint failed on a stock install — the other six
+  // returned 200 in the same environment.
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const row = await OAuthStorage.loadTokens(userId, 'google');
+  const accounts = Array.isArray(row?.accounts) ? row.accounts : [];
+  const primary = accounts.find((a) => a.isPrimary) || accounts[0] || null;
 
-  try {
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-
-    const userId = req.userId || req.user?._id || req.user?.id;
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('social_links')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      return sendError(res, 'Database error', 500);
-    }
-
-    const oauthData = user?.social_links?.oauth || {};
-    const googleData = oauthData.google || {};
-    const connected = googleData.connected || false;
-    const connectedAt = googleData.connectedAt;
-
-    sendSuccess(res, 'Status retrieved', 200, {
-      connected,
-      connectedAt,
-      configured: googleService.isConfigured()
-    });
-  } catch (dbError) {
-    logger.error('Google OAuth status error', { error: dbError.message });
-    return sendError(res, 'Database error', 500);
-  }
+  sendSuccess(res, 'Status retrieved', 200, {
+    connected: accounts.length > 0 || !!row?.connected,
+    connectedAt: primary?.addedAt || row?.connectedAt || null,
+    username: primary?.platformUsername || row?.platformUsername || null,
+    accounts: accounts.length,
+    configured: googleService.isConfigured(),
+  });
 }));
 
 module.exports = router;

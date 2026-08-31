@@ -26,7 +26,53 @@ const SKIP_PREFIXES = [
 const PER_CALL_TIMEOUT_MS = 6000;
 const CONCURRENCY = 8;
 
+// Exceptions to SKIP_PREFIXES: GET endpoints that live under a skipped prefix
+// but are pure reads — no outbound HTTP, no signature check, no file streaming —
+// so there is no reason to leave them unverified.
+//
+// The prefixes above are coarse on purpose (whole families are excluded because
+// SOME member does something unsafe), and 64 GET endpoints were sitting behind
+// them untested. That is exactly where the 2026-08 audit found
+// GET /api/oauth/google/status 503ing on a stock install while every other
+// provider's returned 200, and where the four un-shadowed /api/export reads had
+// no coverage at all. Each entry here has been probed and is a plain DB read.
+const SWEEP_ANYWAY = new Set([
+  // Un-shadowed in 2026-08; all four were previously unreachable AND unswept.
+  '/api/export/templates', '/api/export/history', '/api/export/analytics',
+  '/api/export/preview', '/api/export/:jobId',
+  '/api/subscription/status',
+  '/api/social/accounts', '/api/social/optimal-times',
+  // Billing reads — usage counters and referral rows out of Mongo. The Whop
+  // calls live on the POST side, which this sweep never touches.
+  '/api/billing/add-ons', '/api/billing/history', '/api/billing/overage',
+  '/api/billing/promo-codes', '/api/billing/referral/code',
+  '/api/billing/referral/stats', '/api/billing/usage',
+  '/api/billing/usage/check', '/api/billing/usage/stats',
+  // OAuth STATUS/listing reads only. /authorize and /callback stay skipped:
+  // one persists in-flight state, the other needs a real provider code.
+  '/api/oauth/accounts', '/api/oauth/connections', '/api/oauth/status',
+  '/api/oauth/health/', '/api/oauth/:platform/status', '/api/oauth/:platform/accounts',
+  '/api/oauth/facebook/status', '/api/oauth/google/status',
+  '/api/oauth/linkedin/status', '/api/oauth/linkedin/health',
+  '/api/oauth/tiktok/status', '/api/oauth/twitter/status',
+  '/api/oauth/youtube/status', '/api/oauth/instagram/status',
+  '/api/oauth/instagram/accounts', '/api/oauth/facebook/pages',
+  // Webhook READS. The signature check that made this family unsafe is on POST.
+  '/api/webhooks/', '/api/webhooks/:id', '/api/webhooks/:id/health',
+  '/api/webhooks/:id/logs', '/api/webhooks/:id/stats',
+  '/api/webhooks/supabase/health', '/api/webhooks/:postId/clicks/analytics',
+  '/api/webhooks/:workspaceId/conversions/analytics',
+  '/api/webhooks/:workspaceId/conversions/funnel',
+  '/api/webhooks/:workspaceId/roas-roi/dashboard',
+  // Progress lookups — in-memory/DB reads, no upload performed.
+  '/api/upload/chunked/:uploadId/missing', '/api/upload/chunked/:uploadId/progress',
+  '/api/upload/progress/:uploadId',
+  // Render job STATUS. /download streams a file and stays skipped.
+  '/api/video/render/:jobId/status',
+]);
+
 function matchesSkip(p) {
+  if (SWEEP_ANYWAY.has(p)) return false;
   return SKIP_PREFIXES.some((pre) => p === pre || p.startsWith(pre + '/') || p.startsWith(pre + '?'));
 }
 
@@ -36,7 +82,8 @@ function fillParams(p, paramNames, fx) {
   let out = p;
   for (const name of paramNames) {
     let val;
-    if (/^(contentId|videoId|id)$/i.test(name)) val = String(fx.content._id);
+    if (/^platform$/i.test(name)) val = 'tiktok'; // a provider name, not an id
+    else if (/^(contentId|videoId|id)$/i.test(name)) val = String(fx.content._id);
     else if (/userId/i.test(name)) val = String(fx.user._id);
     else val = String(new mongoose.Types.ObjectId());
     out = out.replace(`:${name}`, val);
