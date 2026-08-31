@@ -1,147 +1,55 @@
 // Report Scheduler Service
 
-const { jobSchedulerService } = require('./jobSchedulerService');
-const { generatePDFReport, generateExcelReport, generateCustomReport } = require('./reportingService');
-const { sendEmail } = require('./emailService');
-const logger = require('../utils/logger');
-
 /**
- * Schedule report
+ * Schedule a recurring report.
+ *
+ * NOT AVAILABLE — and it now says so instead of pretending.
+ *
+ * What this function used to do: build a `scheduledJob` object, never register
+ * it anywhere (the jobSchedulerService call was commented out), generate the
+ * report ONCE, throw the result away, walk the recipient list with the
+ * `sendEmail` call also commented out, log "Scheduled report generated and
+ * sent", and return `{ success: true, jobId }`. Nothing was scheduled, nothing
+ * was delivered, and nothing was stored — but the caller was told a recurring
+ * report was set up and that recipients had been emailed.
+ *
+ * That is the same class of lie as a publish that reports success without
+ * posting, which this codebase deliberately does not do. Making it real needs a
+ * repeatable BullMQ job plus report-attachment email templates; until that
+ * exists, failing honestly is the correct behaviour.
+ *
+ * On-demand reports DO work: POST /api/reports/generate (report-builder).
  */
-async function scheduleReport(userId, reportConfig, schedule) {
-  try {
-    const {
-      type,
-      format = 'pdf',
-      period = 30,
-      recipients = [],
-      scheduleType = 'daily', // daily, weekly, monthly
-      scheduleTime = '09:00',
-      timezone = 'UTC',
-    } = schedule;
-
-    // Create scheduled job
-    // In production, use job scheduler
-    const jobId = `report-${userId}-${type}`;
-    
-    // For now, store schedule info (in production, use actual scheduler)
-    const scheduledJob = {
-      id: jobId,
-      userId,
-      type,
-      format,
-      scheduleType,
-      scheduleTime,
-      timezone,
-      recipients,
-      createdAt: new Date(),
-    };
-    
-    // In production, this would schedule the actual job
-    // await jobSchedulerService.scheduleRecurringJob(jobId, async () => {
-    try {
-      // Generate report
-      let report;
-      if (format === 'pdf') {
-        report = await generatePDFReport(userId, type, { period });
-      } else if (format === 'excel') {
-        report = await generateExcelReport(userId, type, { period });
-      } else {
-        report = await generateCustomReport(userId, { ...reportConfig, format, period });
-      }
-
-      // Send to recipients
-      const emailRecipients = recipients.length > 0 ? recipients : [userId];
-          
-      // Send emails (in production, attach report file)
-      for (const recipientId of emailRecipients) {
-        // Get recipient email (could be user ID or email)
-        const recipientEmail = typeof recipientId === 'string' && recipientId.includes('@')
-          ? recipientId
-          : await getRecipientEmail(recipientId);
-
-        // In production, send email with report attachment
-        // await sendEmail(recipientEmail, `Scheduled Report: ${type}`, 'report', {...});
-      }
-
-      logger.info('Scheduled report generated and sent', {
-        userId,
-        type,
-        format,
-        recipients: emailRecipients.length,
-      });
-    } catch (error) {
-      logger.error('Scheduled report error', {
-        error: error.message,
-        userId,
-        type,
-      });
-    }
-
-    return { success: true, jobId };
-  } catch (error) {
-    logger.error('Schedule report error', { error: error.message, userId });
-    throw error;
-  }
+async function scheduleReport() {
+  const err = new Error(
+    'Scheduled reports are not implemented yet — nothing would be delivered. ' +
+    'Generate a report on demand with POST /api/reports/generate.'
+  );
+  err.statusCode = 501;
+  throw err;
 }
 
-/**
- * Get cron schedule
- */
-function getCronSchedule(scheduleType, scheduleTime) {
-  const [hour, minute] = scheduleTime.split(':').map(Number);
-
-  switch (scheduleType) {
-  case 'daily':
-    return `${minute} ${hour} * * *`; // Daily at specified time
-  case 'weekly':
-    return `${minute} ${hour} * * 1`; // Every Monday
-  case 'monthly':
-    return `${minute} ${hour} 1 * *`; // First day of month
-  default:
-    return `${minute} ${hour} * * *`;
-  }
-}
-
-/**
- * Get recipient email
- */
-async function getRecipientEmail(recipientId) {
-  try {
-    const User = require('../models/User');
-    const user = await User.findById(recipientId).select('email').lean();
-    return user?.email || recipientId;
-  } catch (error) {
-    return recipientId; // Assume it's already an email
-  }
-}
+// getCronSchedule() and getRecipientEmail() lived here. They were the only
+// remaining pieces of the unimplemented scheduling path — a cron-expression
+// builder for a cron nobody registers, and an email lookup for a mail that was
+// never sent. Removed with the rest of it; whoever implements scheduling for
+// real will want them shaped around the job runner they choose, not these.
 
 /**
  * Cancel scheduled report
  */
-async function cancelScheduledReport(userId, reportType) {
-  try {
-    const jobId = `report-${userId}-${reportType}`;
-    // Note: jobSchedulerService would need a cancelJob method
-    // For now, we'll log the cancellation request
-    logger.info('Scheduled report cancellation requested', { userId, reportType, jobId });
-    return { success: true, jobId };
-  } catch (error) {
-    logger.error('Cancel scheduled report error', {
-      error: error.message,
-      userId,
-      reportType,
-    });
-    throw error;
-  }
+async function cancelScheduledReport() {
+  // There is nothing to cancel: scheduleReport never registered a job. Returning
+  // { success: true } made "cancel" look like it had undone something.
+  const err = new Error('Scheduled reports are not implemented yet — there is nothing to cancel.');
+  err.statusCode = 501;
+  throw err;
 }
 
-/**
- * Get scheduled reports
- */
-async function getScheduledReports(userId) {
-  // In production, store in/read from the database (jobScheduler.getUserJobs).
-  // Placeholder for now.
+async function getScheduledReports() {
+  // Honest and correct as-is: no report has ever been scheduled, so the list is
+  // empty. Kept returning [] rather than 501 so a client that polls this can
+  // render an empty state instead of an error.
   return [];
 }
 

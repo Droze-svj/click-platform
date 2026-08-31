@@ -152,6 +152,29 @@ sole active ORM. Removing the dependency is cleanup, not a fix.
 
 ---
 
+## 🟢 Cron services that exist but are deliberately not started
+
+Nineteen files call `cron.schedule`. Sixteen are registered at boot in
+`server/index.js`. The remaining three are **not** oversights:
+
+| Service | Why it stays off |
+|---|---|
+| `jobSchedulerService` | Superseded. Its alert/curation/goal automation was rebuilt as `alertSweepCronService`, which IS registered — see the comment at its registration. |
+| `exportEnhancementService` | Its `scheduleExportJob()` is an explicit, self-documented placeholder ("would integrate with cron/scheduler"). Honest, not broken. |
+| `automatedSurveyService` | Monthly NPS surveys plus follow-up reminders. The feature has **no client surface at all** — "survey" appears in exactly one route file and nowhere in `client/`. Starting a cron that generates and chases surveys for a feature with no UI would be building a feature, not fixing a bug. |
+
+`audienceGrowthCronService` used to be a fourth. It is now started — the daily
+sync had never run, so follower/subscriber trends only moved when a user
+happened to hit the manual sync endpoint, and the growth charts were flat by
+construction rather than by fact. It was rewritten first: the original loaded
+every active `SocialConnection` in one query, deduped in JS and synced every
+user serially with no cap and no lock, so every replica would have run the whole
+fan-out at once. It now matches `performanceLearningCron` — cursor pagination,
+`AUDIENCE_GROWTH_MAX_USERS_PER_TICK`, the shared `cronLock`, and the
+autonomous-mode kill switch.
+
+---
+
 ## 🔵 Measured, not acted on — 266 unreachable client files (~2.3 MB)
 
 Found while auditing client→server API paths in 2026-08. Building the import

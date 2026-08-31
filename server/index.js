@@ -476,6 +476,16 @@ setImmediate(() => {
         const { startDigestCron } = require('./services/weeklyDigestService');
         startDigestCron();
 
+        // Daily audience-growth sync (03:00). The service existed and exported a
+        // start function, but nothing ever called it — so follower/subscriber
+        // trends only moved when a user happened to hit the manual
+        // POST /api/audience-growth/sync-all, and the growth charts were flat by
+        // construction rather than by fact. Cursor-paginated, capped per tick and
+        // cronLock-guarded (the original loaded every active connection at once
+        // and ran on every replica simultaneously).
+        const { startAudienceGrowthCron } = require('./services/audienceGrowthCronService');
+        startAudienceGrowthCron();
+
         // Trends ingest schedule — pulls REAL web-grounded trends (Claude web
         // search via liveTrendService) per platform into TrendSnapshot on a
         // repeatable BullMQ job. Previously defined but never registered.

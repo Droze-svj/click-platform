@@ -20,8 +20,12 @@
 //     discarded, so GET /plugins?category=… accepted a filter and ignored it.
 //
 // Deliberately conservative: it only inspects calls made through an alias bound
-// by a `require('.../services/x')` at the top of a route file, and only compares
-// counts. That is enough to catch the class without guessing at types.
+// by a `require('.../services/x')`, and only compares counts. That is enough to
+// catch the class without guessing at types.
+//
+// Scanned: routes/, services/, workers/, jobs/ and middleware/ — a worker or a
+// cron calling a service wrongly fails in exactly the same silent way as a
+// route does, and has no user watching it fail.
 
 const fs = require('fs');
 const path = require('path');
@@ -128,12 +132,19 @@ function readArgs(src, openIdx) {
   return depth === 0 ? splitTopLevel(buf) : null;
 }
 
-describe('routes call service methods with a valid number of arguments', () => {
-  test('no route passes too many or too few arguments', () => {
+const SCANNED = ['routes', 'services', 'workers', 'jobs', 'middleware'];
+
+describe('service methods are called with a valid number of arguments', () => {
+  test('no caller passes too many or too few arguments', () => {
     const services = indexServices();
     const offenders = [];
 
-    for (const file of walk(path.join(SERVER, 'routes'))) {
+    const files = SCANNED
+      .map((d) => path.join(SERVER, d))
+      .filter((d) => fs.existsSync(d))
+      .flatMap((d) => walk(d));
+
+    for (const file of files) {
       const src = stripComments(fs.readFileSync(file, 'utf8'));
 
       const aliases = {};
@@ -145,6 +156,9 @@ describe('routes call service methods with a valid number of arguments', () => {
       for (const [alias, service] of Object.entries(aliases)) {
         const methods = services[service];
         if (!methods) continue;
+        // A module requiring itself (re-export shims) would compare a definition
+        // against its own forwarding call; not a finding.
+        if (path.basename(file, '.js') === service) continue;
 
         for (const m of src.matchAll(new RegExp(`\\b${alias}\\.(\\w+)\\s*\\(`, 'g'))) {
           const name = m[1];
