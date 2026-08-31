@@ -22,12 +22,13 @@
  *   Compliance       /api/click/compliance-audit
  *   Expert DNA       /api/phase16_18/dna/mine
  *   Oracle sandbox   /api/phase9/oracle-sandbox/deploy
+ *   Omnipresence     /api/phase9/swarm/pulse, /autonomic-cm/*, /phase10_12/intelligence/pulse
  */
 
 import { useState } from 'react'
 import {
   Server, Activity, TrendingUp, Globe2, DollarSign, LineChart,
-  Users, ShieldCheck, Fingerprint, FlaskConical, type LucideIcon,
+  Users, ShieldCheck, Fingerprint, FlaskConical, Radio, type LucideIcon,
 } from 'lucide-react'
 
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
@@ -45,6 +46,7 @@ import { SyndicateConsensusView } from '../../../components/editor/views/Syndica
 import { RegionalComplianceView } from '../../../components/editor/views/RegionalComplianceView'
 import { ExpertDNAView } from '../../../components/editor/views/ExpertDNAView'
 import { OracleSandboxHUD } from '../../../components/editor/OracleSandboxHUD'
+import OmnipresenceNetworkView from '../../../components/editor/views/OmnipresenceNetworkView'
 
 export default function AutonomousOpsPage() {
   const { t } = useTranslation()
@@ -63,6 +65,8 @@ export default function AutonomousOpsPage() {
     { id: 'compliance', label: t('opsPage.compliance'), icon: ShieldCheck, node: <RegionalComplianceView /> },
     { id: 'dna', label: t('opsPage.expertDna'), icon: Fingerprint, node: <ExpertDNAView /> },
     { id: 'oracle', label: t('opsPage.oracle'), icon: FlaskConical, node: <OracleSandboxHUD showToast={showToast} /> },
+    // videoId is optional here — the swarm/autonomic readouts are account-level.
+    { id: 'omnipresence', label: t('opsPage.omnipresence'), icon: Radio, node: <OmnipresenceNetworkView showToast={showToast} /> },
   ]
 
   return (

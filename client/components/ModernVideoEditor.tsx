@@ -53,6 +53,8 @@ import HealthDeltaOverlay from './editor/HealthDeltaOverlay'
 
 // Specialized Views
 import EliteAIView from './editor/views/EliteAIView'
+import AIAssistView from './editor/views/AIAssistView'
+import MonetizationHub from './editor/views/MonetizationHub'
 import CreativeAIView from './editor/views/CreativeAIView'
 // Lazy-loaded: pulls in recharts (~heavy). Only loads when the Growth tab is
 // opened, keeping it out of the editor's initial chunk. (AdvancedTimelineView
@@ -2121,6 +2123,27 @@ const ModernVideoEditor: React.FC<{
         }))
         setTimelineSegments((prev: TimelineSegment[]) => [...prev, ...brollSegments])
       }} />
+      // Built, live (POST /api/video/manual-editing/ai-assist/smart-cuts) and
+      // imported by nothing until 2026-08. Distinct from EliteAIView/AutomateView,
+      // which do not touch the smart-cuts endpoint.
+      case 'ai-assist': return <AIAssistView
+        videoId={videoId || ''}
+        transcript={transcript?.fullText}
+        aiSuggestions={aiSuggestions}
+        setAiSuggestions={setAiSuggestions}
+        setActiveCategory={setActiveCategory}
+        showToast={showToast}
+      />
+      // GET /api/monetization/products + POST /api/video/advanced/monetization-plan.
+      // DistributionHubView covers publishing, not monetisation.
+      case 'monetize': return <MonetizationHub
+        contentId={videoId || ''}
+        // The hub loads the real catalogue itself from GET /api/monetization/products;
+        // this is only the pre-fetch seed, so an empty list is the correct start.
+        initialProducts={[]}
+        transcript={transcript?.fullText}
+        onClose={() => setActiveCategory('edit')}
+      />
       case 'ai-edit': return <EliteAIView
         videoId={videoId || ''}
         isTranscribing={isTranscribing}
