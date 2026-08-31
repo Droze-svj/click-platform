@@ -42,7 +42,9 @@ module.exports = {
   },
   setupFiles: ['<rootDir>/tests/setup-env.js'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  testTimeout: 30000,
+  // No root-level testTimeout: with `projects`, jest ignores it AND warns
+  // "Unknown option testTimeout" on every single run. Each project sets its own
+  // (verified honoured — a deliberate 7s test passes under the unit project).
   // Handle ES modules in node_modules (for isomorphic-dompurify)
   transformIgnorePatterns: [
     'node_modules/(?!(isomorphic-dompurify|parse5)/)'

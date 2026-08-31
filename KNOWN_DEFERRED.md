@@ -119,23 +119,33 @@ never silently queue posts to a real social account.
 
 ### Unit suite flakes under machine load
 
-`npm run test:unit` intermittently fails **a different suite on each run** on a
-loaded machine — observed failures were `socket hang up` on suites that boot the
-app via supertest, a ~30s timeout, and suites that write fixtures into the
-shared real `uploads/` directory. Every one of them passes when re-run in
-isolation, and full green runs are common (238/238 and 239/239 were both
-observed on the same commit).
+Intermittently fails **a different suite on each run** on a loaded machine —
+observed as `socket hang up` on suites that boot the app via supertest, and ~30s
+timeouts. Every one passes when re-run in isolation.
 
-`--runInBand` reduces it but does **not** eliminate it: a serial run also
-produced two `socket hang up` failures. So this is resource contention on the
-host, not purely jest parallelism. CI has been green throughout.
+**Measured 2026-08-31**, trying to pin it down: three idle runs green, one run
+under six CPU-saturating processes green, one under eight green. One run *did*
+fail with 9 tests across several suites — during residual load, and it was not
+captured. So it is real, load-dependent, and rarer than this note used to imply.
 
-**Why deferred**: the likely fixes — giving the file-touching suites their own
-temp directories, and reusing one app instance instead of booting per suite —
-mean editing many test files for no behavior change. Worth doing before it
-starts costing CI reruns. Until then, re-run a failing suite in isolation before
-believing it: an assertion failure is real, a `socket hang up` almost certainly
-is not.
+Ruled out along the way:
+- **Not the jest timeout.** `testTimeout: 30000` is set per project and jest 29
+  warns `Unknown option "testTimeout"` while still honouring it — verified with a
+  deliberate 7-second test, which passes. (The root-level `testTimeout` WAS dead
+  with `projects` and has been removed; the warning comes from the project
+  configs and is cosmetic.)
+- **Not the app listening.** `server/index.js` gates its whole boot block —
+  listen, crons, shutdown hooks — on `JEST_WORKER_ID`.
+
+**Why still deferred**: the remaining candidates (per-suite app boot, and suites
+sharing the real `uploads/` directory) mean editing many test files, and without
+a captured failure there is nothing to confirm a fix against. One cause WAS
+found and fixed: `routeShadowing.test.js` created its user in `beforeAll` while
+other suites call an unscoped `User.deleteMany({})` in `afterEach`; it now
+upserts per test.
+
+Until reproduced: re-run a failing suite in isolation before believing it. An
+assertion failure is real; a `socket hang up` almost certainly is not.
 
 ### Coverage is a ratchet, not a target
 
