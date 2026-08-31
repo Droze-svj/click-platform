@@ -34,6 +34,60 @@ const SILENCE_THRESHOLDS = [
 
 type PipelineStep = 'idle' | 'silence' | 'transcribing' | 'scoring' | 'captioning' | 'distribution' | 'roi-forecasting' | 'sourcing' | 'monetization' | 'done' | 'error'
 
+/**
+ * Wait for one of the /video/advanced/* background operations to finish.
+ *
+ * Those routes answer 202 with only `{ videoId, operation }` and run the real
+ * work through runInBackground(); the payload — resultUrl, segmentsKept,
+ * silenceRemoved — only ever appears on
+ * GET /video/progress/:videoId?operation=… once status is 'completed'.
+ *
+ * This was previously read straight off the POST response, which contains none
+ * of those fields. Silence removal therefore looked like it had run instantly
+ * and returned nothing: the one-click pipeline quietly carried on with the
+ * uncut video, and the standalone panel rendered "0 segments kept, 0 silence
+ * removed" as a completed result.
+ *
+ * Returns the job's result object, or throws on failure/timeout.
+ */
+async function awaitVideoJob(
+  videoId: string,
+  operation: string,
+  onProgress?: (pct: number) => void,
+  timeoutMs = 5 * 60 * 1000
+): Promise<any> {
+  const startedAt = Date.now()
+  let everSeen = false
+  // Poll rather than subscribe: this view has no socket, and the progress route
+  // is ownership-checked so it is safe to hit repeatedly. Completed records are
+  // retained for 5 minutes server-side, so a finished job cannot be missed
+  // between polls.
+  while (Date.now() - startedAt < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 1500))
+    const res = await apiGet<any>(
+      `/video/progress/${encodeURIComponent(videoId)}?operation=${encodeURIComponent(operation)}`,
+      undefined,
+      false // never serve a cached snapshot of a job that is still moving
+    ).catch(() => null)
+
+    const p = res?.data ?? res
+    if (!p || typeof p.status !== 'string') {
+      // 404 while the job has not been registered yet is normal for a moment.
+      // Never seeing it at all means it was never started (or the id is wrong),
+      // and waiting out the full timeout would just look like a hang.
+      if (!everSeen && Date.now() - startedAt > 20_000) {
+        throw new Error(`${operation} did not start`)
+      }
+      continue
+    }
+    everSeen = true
+    if (typeof p.progress === 'number') onProgress?.(p.progress)
+    if (p.status === 'completed') return p.result ?? {}
+    if (p.status === 'failed') throw new Error(p.error || `${operation} failed`)
+  }
+  throw new Error(`${operation} timed out`)
+}
+
 const AutomateView: React.FC<AutomateViewProps> = ({
   voiceoverText,
   setVoiceoverText,
@@ -127,13 +181,15 @@ const AutomateView: React.FC<AutomateViewProps> = ({
 
     try {
       showToast('Step 1/8 — Removing silence…', 'info')
-      const silRes = await apiPost('/video/advanced/remove-silence', {
+      await apiPost('/video/advanced/remove-silence', {
         videoId, videoUrl, silenceThreshold, minSilenceDuration, padding: 0.08,
-      }) as any
-      if (silRes?.resultUrl) {
-        activeVideoUrl = silRes.resultUrl
-        silenceCleanedVideoUrl = silRes.resultUrl
-        silenceGapsRemoved = silRes?.silenceRemoved ?? 0
+      })
+      // 202 + background job — the cut video only exists once the job completes.
+      const silResult = await awaitVideoJob(videoId, 'remove-silence', setStepProgress)
+      if (silResult?.resultUrl) {
+        activeVideoUrl = silResult.resultUrl
+        silenceCleanedVideoUrl = silResult.resultUrl
+        silenceGapsRemoved = silResult.silenceRemoved ?? 0
       }
       setStepProgress(100)
 
@@ -153,7 +209,11 @@ const AutomateView: React.FC<AutomateViewProps> = ({
       const scoreRes = await apiPost('/video/hook-analysis', {
         videoId, videoUrl: activeVideoUrl, transcript: transcriptText || undefined,
       }) as any
-      const analysis = scoreRes?.analysis ?? scoreRes
+      // /video/hook-analysis answers with sendSuccess, which spreads the analysis
+      // itself into `data` — there is no `analysis` key at any level. Reading
+      // scoreRes.analysis therefore missed, fell back to the whole envelope, and
+      // hookScore came out 0 for every video in the one-click pipeline.
+      const analysis = (scoreRes?.data ?? scoreRes)
       const hookScore = analysis?.overallScore ?? analysis?.score ?? 0
       setStepProgress(100)
 
@@ -180,8 +240,12 @@ const AutomateView: React.FC<AutomateViewProps> = ({
       setStepProgress(0)
       showToast('Step 5/8 — Viral Distribution Hub…', 'info')
       const distRes = await apiPost('/video/thumbnails/ai-viral', { videoId, timelineData: { transcript: transcriptText } }) as any
-      const viralThumbnailUrl = distRes?.bestThumbnail
-      const distributionConfidence = distRes?.confidence
+      // Also sendSuccess-wrapped: bestThumbnail/confidence live under .data, so
+      // the unwrapped reads here were always undefined and the pipeline never
+      // picked up the thumbnail it had just paid to generate.
+      const distPayload = distRes?.data ?? distRes
+      const viralThumbnailUrl = distPayload?.bestThumbnail
+      const distributionConfidence = distPayload?.confidence
       setStepProgress(100)
 
       setPipelineStep('roi-forecasting')
@@ -264,14 +328,16 @@ const AutomateView: React.FC<AutomateViewProps> = ({
     setSilenceLoading(true)
     showToast('Removing silence…', 'info')
     try {
-      const res = await apiPost('/video/advanced/remove-silence', {
+      await apiPost('/video/advanced/remove-silence', {
         videoId, videoUrl, silenceThreshold, minSilenceDuration, padding: 0.08,
-      }) as any
-      setSilenceResult({
-        segmentsKept: res?.segmentsKept ?? 0,
-        silenceRemoved: res?.silenceRemoved ?? 0,
-        resultUrl: res?.resultUrl,
       })
+      const result = await awaitVideoJob(videoId, 'remove-silence')
+      setSilenceResult({
+        segmentsKept: result?.segmentsKept ?? 0,
+        silenceRemoved: result?.silenceRemoved ?? 0,
+        resultUrl: result?.resultUrl,
+      })
+      showToast('Silence removed', 'success')
     } catch (err) {
       showToast(handleApiError(err), 'error')
     } finally {

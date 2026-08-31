@@ -75,10 +75,23 @@ interface DirectorDirection {
   steps: DirectorStep[]
 }
 
+/**
+ * Two shapes come back from POST /ai/director/plan and both have to be handled:
+ *
+ *   success  → sendSuccess(), i.e. { success, message, data: { directions, meta } }
+ *   failure  → res.status(200).json({ success: false, error }) — deliberately a
+ *              200 so a needs-config / no-transcript state reads as an honest
+ *              message rather than a thrown error.
+ *
+ * The success payload is NESTED. This type used to declare `directions` at the
+ * top level, which is not what the server sends — so `res.directions` was always
+ * undefined, the guard below always fell through, and the AI Director showed
+ * "no directions" for every video no matter what the model returned. Typed
+ * accurately now, so the compiler holds the line.
+ */
 interface PlanResponse {
   success: boolean
-  directions?: DirectorDirection[]
-  meta?: any
+  data?: { directions?: DirectorDirection[]; meta?: any }
   error?: string
 }
 
@@ -349,9 +362,10 @@ const AIDirectorView: React.FC<AIDirectorViewProps> = ({
         constraints,
       })
       setHasGenerated(true)
-      if (res?.success && Array.isArray(res.directions) && res.directions.length > 0) {
-        setDirections(res.directions)
-        setSelectedDir(res.directions[0].id)
+      const directions = res?.data?.directions
+      if (res?.success && Array.isArray(directions) && directions.length > 0) {
+        setDirections(directions)
+        setSelectedDir(directions[0].id)
       } else {
         // Show backend error verbatim — honest needs-config / no-transcript state.
         setError(res?.error || t('modernVideoEditor.aiDirector.noDirections'))

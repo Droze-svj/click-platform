@@ -244,13 +244,21 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       setIsExtractingQuotes(true)
       showToast(`Extracting quotes with ${aiProfile.label}…`, 'info')
       const fullText = editingWords.map(w => w.word).join(' ')
-      const data = await apiPost<{ success?: boolean; quotes?: any[] }>('/ai/extract-quotes', {
+      // The route is sendSuccess-wrapped and the service's own { success, quotes }
+      // object is the payload, so the quotes land at data.data.quotes. Reading
+      // data.quotes matched the OUTER envelope's shape — success was true, quotes
+      // was undefined — so the guard never passed and extraction silently
+      // produced nothing, every time.
+      const res = await apiPost<{ success?: boolean; data?: { quotes?: any[] } }>('/ai/extract-quotes', {
         transcript: fullText,
         persona: activePersona
       })
-      if (data?.success && data.quotes) {
-        setViralQuotes(data.quotes)
-        showToast(`✓ Extracted ${data.quotes.length} key quotes`, 'success')
+      const quotes = res?.data?.quotes
+      if (res?.success && Array.isArray(quotes) && quotes.length > 0) {
+        setViralQuotes(quotes)
+        showToast(`✓ Extracted ${quotes.length} key quotes`, 'success')
+      } else {
+        showToast('No quotes found in this transcript', 'info')
       }
     } catch (e) {
       showToast('Quote extraction failed', 'error')
