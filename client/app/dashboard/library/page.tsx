@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import AssetLibrary from '../../../components/AssetLibrary'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
@@ -498,6 +499,24 @@ export default function LibraryPage() {
             <Button variant="primary" className="flex-1" onClick={handleInitCapsule} disabled={!newFolderName.trim()}>{t('libraryPage.create')}</Button>
           </div>
         </Modal>
+
+        {/* Music library + upload (GET /api/music, POST /api/music/upload) —
+            live endpoints this page did not cover at all, and the component that
+            does was never imported. Selecting copies the asset URL, which is what
+            a browse surface can honestly offer; the editor is where an asset gets
+            placed on a timeline. */}
+        <ErrorBoundary>
+          <AssetLibrary
+            onSelectAsset={(asset) => {
+              const url = asset?.url
+              if (!url) return
+              navigator.clipboard?.writeText(url).then(
+                () => showToast(t('libraryPage.assetUrlCopied') || 'Asset URL copied', 'success'),
+                () => showToast(t('libraryPage.copyFailed') || 'Could not copy that URL', 'error'),
+              )
+            }}
+          />
+        </ErrorBoundary>
       </PageShell>
     </ErrorBoundary>
   )

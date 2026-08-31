@@ -8,6 +8,7 @@ import {
   Database, Video, FileText, Calendar, Clock, Download, FlaskConical,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import SubscriptionStatus from '../../../components/SubscriptionStatus'
 import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
 import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
@@ -395,6 +396,10 @@ export default function BillingPage() {
             )}
           </Panel>
         </div>
+        {/* Live plan + renewal state from GET /api/subscription/status — the only
+            client for that endpoint, and it was never imported. Billing is the
+            canonical plan surface (/dashboard/membership redirects here). */}
+        <ErrorBoundary><SubscriptionStatus /></ErrorBoundary>
       </PageShell>
     </ErrorBoundary>
   )

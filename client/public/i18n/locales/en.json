@@ -1218,7 +1218,9 @@
     "closeCreateFolderModal": "Close create folder modal",
     "folderNamePlaceholder": "Folder name",
     "folderName": "Folder name",
-    "create": "Create"
+    "create": "Create",
+    "assetUrlCopied": "Asset URL copied",
+    "copyFailed": "Could not copy that URL"
   },
   "membershipPage": {
     "toastAccessDataOffline": "Could not sync: access data offline",
@@ -1397,7 +1399,9 @@
     "instanceActivated": "Instance activated",
     "fullyWiredIn": "You're fully wired in.",
     "fullCapacity": "Click is now operating at full capacity for your account.",
-    "enterDashboard": "Enter dashboard"
+    "enterDashboard": "Enter dashboard",
+    "guidedSetupTitle": "Guided setup",
+    "guidedSetupBody": "Walk through a few questions so Click matches your style from the first clip."
   },
   "projectsPage": {
     "loading": "Loading",

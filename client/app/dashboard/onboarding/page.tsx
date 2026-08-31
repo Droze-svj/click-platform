@@ -322,6 +322,20 @@ export default function OnboardingPage() {
         </div>
 
         {/* Completion banner */}
+        {/* The guided personalization flow. It writes /api/me/ai-preferences and
+            /api/user/settings, and had no route at all until 2026-08 — the
+            component existed and nothing imported it. Offered alongside the
+            checklist rather than inside it. */}
+        <Link href="/dashboard/onboarding/wizard" className="mt-6 block">
+          <Panel variant="bento" className="ds-anim-rise p-6 flex items-center justify-between gap-4 hover:border-primary/40 transition-colors">
+            <div>
+              <h2 className="ds-text-h3 text-theme-primary">{t('onboardingPage.guidedSetupTitle')}</h2>
+              <p className="ds-text-caption mt-1">{t('onboardingPage.guidedSetupBody')}</p>
+            </div>
+            <ArrowRight size={18} className="text-theme-muted shrink-0" aria-hidden />
+          </Panel>
+        </Link>
+
         {isComplete && (
           <Panel variant="bento" className="ds-anim-rise mt-6 p-8 border-emerald-500/30 text-center flex flex-col items-center gap-4">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">

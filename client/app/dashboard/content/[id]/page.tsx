@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
 import LoadingSpinner from '../../../../components/LoadingSpinner'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import VideoCaptionEditor from '../../../../components/VideoCaptionEditor'
 import { extractApiData, extractApiError } from '../../../../utils/apiResponse'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
@@ -532,6 +533,14 @@ export default function ContentDetailPage() {
             none of it was reachable. */}
         <ErrorBoundary>
           <ContentBenchmarking contentId={String(content._id)} />
+        </ErrorBoundary>
+
+        {/* Generate, edit, translate and export captions for this piece
+            (/api/video/captions, /captions/generate). Live endpoints; the
+            component had no importer, so the only caption UI was inside the
+            video editor. */}
+        <ErrorBoundary>
+          <VideoCaptionEditor contentId={String(content._id)} />
         </ErrorBoundary>
 
         <style jsx global>{`

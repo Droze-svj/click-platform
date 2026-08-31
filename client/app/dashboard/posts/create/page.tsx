@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import PerformancePredictor from '../../../../components/PerformancePredictor'
 import { useRouter } from 'next/navigation'
 import { apiPost } from '../../../../lib/api'
 import { useAuth } from '../../../../hooks/useAuth'
@@ -370,6 +372,22 @@ export default function CreatePostPage() {
           </FormField>
         </Panel>
       </form>
+
+      {/* Predicts reach/engagement for what is being composed, before it is
+          published (POST /api/ai/predict-performance). Live endpoint, and its
+          only client had never been imported. This is the pre-publish surface —
+          the same panel on a published post's diagnostics page would be
+          predicting something that has already happened. */}
+      <ErrorBoundary>
+        <PerformancePredictor
+          content={{
+            text: formData.content,
+            type: 'post',
+            platform: formData.platforms[0],
+            tags: formData.tags,
+          }}
+        />
+      </ErrorBoundary>
     </PageShell>
   )
 }

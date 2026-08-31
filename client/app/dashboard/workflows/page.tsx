@@ -11,6 +11,7 @@ import {
 import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api'
 import { extractApiData } from '../../../utils/apiResponse'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import EnhancedWorkflowBuilder from '../../../components/EnhancedWorkflowBuilder'
 import NextStepsPanel from '../../../components/NextStepsPanel'
 import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
 import { useAuth } from '../../../hooks/useAuth'
@@ -433,6 +434,11 @@ export default function WorkflowsPage() {
             (plus /api/workflows and /api/onboarding). Live endpoints, no
             importer — the suggestions endpoint had no client at all. */}
         <ErrorBoundary><NextStepsPanel /></ErrorBoundary>
+
+        {/* Visual builder over /api/workflows/enhanced and
+            /enhanced/suggestions. This page can create a workflow through a
+            modal form; neither enhanced endpoint had any client at all. */}
+        <ErrorBoundary><EnhancedWorkflowBuilder /></ErrorBoundary>
       </PageShell>
     </ErrorBoundary>
   )
