@@ -443,7 +443,8 @@
     "workspaces": "Workspaces",
     "contentOps": "Content Ops",
     "toolbox": "Toolbox",
-    "neural": "Trend Intelligence"
+    "neural": "Trend Intelligence",
+    "suggestions": "Suggestions"
   },
   "workflow": {
     "niche": "Niche",

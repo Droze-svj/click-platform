@@ -9,6 +9,8 @@ import {
   TrendingUp, History, RefreshCw,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import DailyChallenges from '../../../components/DailyChallenges'
+import ActivityFeed from '../../../components/ActivityFeed'
 import ToastContainer from '../../../components/ToastContainer'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '../../../hooks/useTranslation'
@@ -213,6 +215,14 @@ export default function AscensionLedgerPage() {
               )
             })}
           </div>
+        </section>
+
+        {/* Both read live engagement endpoints (/api/engagement/challenges and
+            /api/engagement/activities) and were imported by nothing. This is the
+            engagement surface, so they belong beside the achievement grid. */}
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <ErrorBoundary><DailyChallenges /></ErrorBoundary>
+          <ErrorBoundary><ActivityFeed /></ErrorBoundary>
         </section>
       </PageShell>
     </ErrorBoundary>

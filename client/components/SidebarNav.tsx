@@ -117,6 +117,9 @@ const getZones = (t: (k: string) => string): Zone[] => [
       // unreachable until 2026-08.
       { path: '/dashboard/neural',               label: t('nav.neural') || 'Trend Intelligence', icon: Brain, badge: 'AI' },
       { path: '/dashboard/click-learning',       label: t('nav.clickLearning') || 'What Click Learned', icon: Brain, badge: null },
+      // /api/suggestions/enhanced/* — four live endpoints whose only client was
+      // never imported. SmartSuggestions already linked here before the route existed.
+      { path: '/dashboard/suggestions',          label: t('nav.suggestions') || 'Suggestions', icon: Sparkles, badge: 'AI' },
 
       { path: '/dashboard/analytics/creator',    label: t('nav.creatorStats') || 'Creator Stats', icon: Flame, badge: 'AI' },
       { path: '/dashboard/analytics/engagement', label: t('nav.engagement') || 'Engagement',  icon: LineChart, badge: null },

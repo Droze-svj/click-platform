@@ -19,6 +19,8 @@ import { ErrorBoundary } from '../../components/ErrorBoundary'
 import ToastContainer from '../../components/ToastContainer'
 import SubscriptionBanner from '../../components/SubscriptionBanner'
 import WhatToMakeNext from '../../components/WhatToMakeNext'
+import GetStartedStrip from '../../components/GetStartedStrip'
+import AILearningIndicator from '../../components/AILearningIndicator'
 import {
   Panel,
   StatCard,
@@ -509,6 +511,16 @@ export default function DashboardHome() {
 
           {/* ── What to make next (real /me/next-best, grounded in proven data) ── */}
           <WhatToMakeNext />
+
+          {/* Onboarding progress (GET /api/onboarding) and the style-learning
+              signal (GET /api/style-profile/insights). Both were built against
+              live endpoints and imported by nothing. Kept to two small widgets —
+              this page was deliberately calmed down, so the rest of the
+              unreachable dashboard components went to the surfaces they belong
+              to (engagement → /achievements, templates → /templates,
+              workflow suggestions → /workflows) rather than piling up here. */}
+          <ErrorBoundary><GetStartedStrip /></ErrorBoundary>
+          <ErrorBoundary><AILearningIndicator /></ErrorBoundary>
 
           {/* ── Recent content (real recent_posts) (2x1) ───────────────── */}
           <Panel variant="bento" className="ds-bento-2x1 ds-anim-rise p-6">

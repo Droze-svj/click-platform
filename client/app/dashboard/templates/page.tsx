@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import QuickTemplateAccess from '../../../components/QuickTemplateAccess'
 import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
 import TemplateMarketplace from '../../../components/TemplateMarketplace'
@@ -255,6 +256,10 @@ export default function TemplatesPage() {
             </div>
           </div>
         )}
+
+        {/* Reads GET /api/templates for a one-click "start from a template" rail.
+            Live endpoint, never imported. */}
+        <ErrorBoundary><QuickTemplateAccess /></ErrorBoundary>
       </PageShell>
     </ErrorBoundary>
   )

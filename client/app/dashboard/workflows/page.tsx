@@ -11,6 +11,7 @@ import {
 import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api'
 import { extractApiData } from '../../../utils/apiResponse'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import NextStepsPanel from '../../../components/NextStepsPanel'
 import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
@@ -427,6 +428,11 @@ export default function WorkflowsPage() {
             </footer>
           </div>
         </Modal>
+
+        {/* Suggests the next workflow to build from /api/workflows/suggestions
+            (plus /api/workflows and /api/onboarding). Live endpoints, no
+            importer — the suggestions endpoint had no client at all. */}
+        <ErrorBoundary><NextStepsPanel /></ErrorBoundary>
       </PageShell>
     </ErrorBoundary>
   )
