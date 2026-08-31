@@ -23,7 +23,37 @@ const request = require('supertest');
 const app = require('../../server/index');
 const User = require('../../server/models/User');
 const jwt = require('jsonwebtoken');
-const { walkRoutes } = require('../smoke/walkRoutes');
+const { walkRoutes, decodeMountPath } = require('../smoke/walkRoutes');
+
+// Same walk as walkRoutes, WITHOUT its de-duplication, so a method+path
+// registered twice appears twice. walkRoutes keeps only the first (it answers
+// "what can be reached"); this needs "what was registered", because the second
+// registration of a path is code that can never run.
+function walkRegistrations(expressApp) {
+  const out = [];
+  function visit(stack, prefix) {
+    for (const layer of stack) {
+      if (layer.route) {
+        const paths = Array.isArray(layer.route.path) ? layer.route.path : [layer.route.path];
+        for (const p of paths) {
+          const full = `${prefix}${p}`.replace(/\/{2,}/g, '/') || '/';
+          for (const m of Object.keys(layer.route.methods || {}).filter((x) => x !== '_all')) {
+            out.push({
+              key: `${m.toUpperCase()} ${full}`,
+              // The terminal handler identifies the implementation: the same
+              // router mounted at two prefixes yields the same function object.
+              handler: (layer.route.stack || []).map((s) => s.handle).pop(),
+            });
+          }
+        }
+      } else if (layer.name === 'router' && layer.handle && Array.isArray(layer.handle.stack)) {
+        visit(layer.handle.stack, `${prefix}${decodeMountPath(layer)}`);
+      }
+    }
+  }
+  visit((expressApp._router || expressApp.router).stack, '');
+  return out;
+}
 
 // Static paths that ARE shadowed by registration order but are reachable anyway,
 // because the shadowing `/:param` route carries objectIdOrSkip. Test 2 proves it.
@@ -96,18 +126,22 @@ describe('guarded static routes reach their own handler', () => {
   let user;
   let token;
 
-  beforeAll(async () => {
-    user = await User.create({
-      email: 'route-shadowing@example.com',
-      password: 'password123',
-      name: 'Shadow',
-      emailVerified: true,
-    });
+  // beforeEach, not beforeAll, and an upsert rather than a create: several route
+  // suites in this project call an UNSCOPED User.deleteMany({}) in their own
+  // afterEach (tests/setup.js says so), so a user made once at file start can
+  // vanish underneath these tests. Re-asserting it per test costs nothing and
+  // removes a source of cross-suite flakiness.
+  beforeEach(async () => {
+    user = await User.findOneAndUpdate(
+      { email: 'route-shadowing@example.com' },
+      { $setOnInsert: { password: 'password123', name: 'Shadow', emailVerified: true } },
+      { new: true, upsert: true }
+    );
     token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'test-secret', { expiresIn: '1h' });
   });
 
   afterAll(async () => {
-    await User.deleteMany({ _id: user._id });
+    await User.deleteMany({ email: 'route-shadowing@example.com' });
   });
 
   //          method  path                              a phrase ONLY this handler emits
@@ -130,5 +164,75 @@ describe('guarded static routes reach their own handler', () => {
       .send({});
     expect(res.status).not.toBe(404);
     expect(JSON.stringify(res.body)).toMatch(signature);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The sibling bug class: the same method+path registered twice with DIFFERENT
+// implementations. Only the first ever runs, so the second is unreachable code
+// that still looks live in the editor — edit it and nothing changes.
+//
+// Registering the same ROUTER at several prefixes is fine and common here (many
+// routers are mounted on three or four), so the check compares the terminal
+// handler function: identical function object = one implementation, no finding.
+
+// Duplicates that are accepted, each checked by hand. Every entry states why the
+// first registration winning is correct, or why the shadowed one is not lost.
+const ACCEPTED_DUPLICATES = new Map([
+  ['GET /api/approvals/', 'approvals.js and approval-workflow.js both list approvals; the live one is the fuller listing'],
+  ['POST /api/approvals/:approvalId/approve', 'both delegate to multiStepWorkflowService.advanceToNextStage — same behaviour'],
+  ['POST /api/approvals/:approvalId/reject', 'as above'],
+  ['POST /api/approvals/:approvalId/request-changes', 'as above'],
+  ['POST /api/approvals/:approvalId/delegate', 'live path (workflow-enhanced → approvalDelegationService) rejects a caller not assigned to the stage, which is the tighter check; the shadowed one relies on requireApprovalAccess'],
+  ['GET /api/monitoring/metrics', 'the LIVE one is auth+requireAdmin; the shadowed one has no auth at all — the strict one wins, which is the safe direction'],
+  ['GET /api/monitoring/alerts', 'as above'],
+  ['POST /api/workspaces/sync-all', 'two unrelated features collide only on the shared /api/workspaces prefix: audience-growth sync (live, user-scoped) and an admin-gated competitor sync. Both are reachable on their own prefixes, /api/audience-growth/sync-all and /api/competitors/sync-all'],
+  ['GET /api/clients/:clientWorkspaceId/health-alerts', 'live is requireWorkspaceAccess(\'canView\'); the shadowed one uses the looser default — the strict one wins'],
+  ['GET /api/subscription/status', 'duplicate listing implementations, same middleware chain'],
+  ['GET /api/analytics/creator/stats', 'duplicate listing implementations, same middleware chain'],
+  ['GET /api/analytics/performance/global', 'three registrations, same middleware chain'],
+  ['GET /api/agency/dashboard', 'duplicate dashboard implementations, same middleware chain'],
+  ['PUT /api/posts/:postId/comments/:commentId/resolve', 'duplicate implementations, same middleware chain'],
+  ['POST /api/pro-mode/automation', 'duplicate implementations, same middleware chain'],
+]);
+
+describe('duplicate route registrations', () => {
+  let byKey;
+
+  beforeAll(() => {
+    byKey = new Map();
+    for (const { key, handler } of walkRegistrations(app)) {
+      if (!byKey.has(key)) byKey.set(key, []);
+      byKey.get(key).push(handler);
+    }
+  });
+
+  test('no method+path has two DIFFERENT implementations', () => {
+    const offenders = [];
+    for (const [key, handlers] of byKey) {
+      if (handlers.length < 2) continue;
+      if (handlers.every((h) => h === handlers[0])) continue; // one router, several mounts
+      if (ACCEPTED_DUPLICATES.has(key)) continue;
+      offenders.push(`${key} (${handlers.length} registrations)`);
+    }
+    // If this fails: only the FIRST registration runs. Either delete the dead
+    // one, move it to a path of its own, or — if the collision is deliberate —
+    // add it to ACCEPTED_DUPLICATES with the reason the winner is the right one.
+    //
+    // This check found GET /api/upload/progress/:uploadId, where an
+    // unauthenticated stub was shadowing an authenticate + ownsUpload handler,
+    // and the second POST /api/auth/resend-verification, half of a parallel
+    // email-verification system built on a table no migration creates.
+    expect(offenders).toEqual([]);
+  });
+
+  test('the accept-list has no stale entries', () => {
+    const stale = [...ACCEPTED_DUPLICATES.keys()].filter((key) => {
+      const handlers = byKey.get(key) || [];
+      return handlers.length < 2 || handlers.every((h) => h === handlers[0]);
+    });
+    // A duplicate that resolved itself should drop off the list, not linger and
+    // quietly widen what test 1 tolerates.
+    expect(stale).toEqual([]);
   });
 });

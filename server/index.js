@@ -1941,7 +1941,18 @@ app.use('/api/analytics', require('./routes/analytics'));
 
 app.use('/api/niche', require('./routes/niche'));
 app.use('/api/intelligence', require('./routes/intelligence'));
-app.use('/api/upload', require('./routes/upload'));
+// routes/upload.js used to be mounted here, ahead of routes/upload/progress.
+// Its only route was GET /progress/:uploadId with NO auth, reading an in-memory
+// Map that nothing ever writes (setUploadProgress has zero call sites), so it
+// answered every caller — signed in or not — with a fabricated
+// { progress: 0, status: 'pending' } for any id at all.
+//
+// Worse, it won: only the FIRST registration of a method+path runs, so it
+// shadowed routes/upload/progress's GET /:uploadId, which is behind
+// `authenticate` AND an ownsUpload() check written specifically to stop one user
+// reading another's upload. That guard could never execute. Nothing leaked only
+// because the Map was permanently empty — wiring the service up would have
+// turned it into an unauthenticated read of other people's uploads.
 app.use('/api/upload/progress', require('./routes/upload/progress'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/api/marketing-knowledge', require('./routes/marketingKnowledge'));
