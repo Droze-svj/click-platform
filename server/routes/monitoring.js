@@ -68,7 +68,11 @@ router.get('/alerts', auth, requireAdmin, asyncHandler(async (req, res) => {
  *     summary: Export Prometheus metrics
  *     tags: [Monitoring]
  */
-router.get('/prometheus', asyncHandler(async (req, res) => {
+// Admin-gated, like /metrics and /alerts in this file. It was the only
+// unauthenticated route here, and Prometheus text exposes request volumes and
+// per-route latency to anyone who asks. Nothing scrapes it today (render.yaml
+// configures no scraper); a scraper should authenticate like any other client.
+router.get('/prometheus', auth, requireAdmin, asyncHandler(async (req, res) => {
   try {
     const metrics = exportPrometheusMetrics();
     res.setHeader('Content-Type', 'text/plain');

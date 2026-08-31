@@ -2422,35 +2422,23 @@ app.use('/api/monetization', require('./routes/monetization'));
 app.use('/api/click', require('./routes/click'));
 app.use('/api/vector-memory', require('./routes/vector-memory'));
 
-app.get('/api/dev/db-cleanup', async (req, res) => {
-  try {
-    const mongoose = require('mongoose');
-    const adminDb = mongoose.connection.db.admin();
-    const dbs = await adminDb.listDatabases();
-    let droppedMsg = [];
-    for (const dbInfo of dbs.databases) {
-      if (dbInfo.name !== 'click_v3' && dbInfo.name !== 'admin' && dbInfo.name !== 'local') {
-        const tempDb = mongoose.connection.client.db(dbInfo.name);
-        await tempDb.dropDatabase();
-        droppedMsg.push(`Dropped DB: ${dbInfo.name}`);
-      }
-    }
-    
-    // Also drop some specific junk collections in click_v3 if any
-    const db = mongoose.connection.db;
-    const collections = await db.listCollections().toArray();
-    let droppedCols = 0;
-    const junkCols = collections.filter(c => c.name.includes('test') || c.name.includes('old') || c.name.includes('bak'));
-    for (const coll of junkCols.slice(0, 10)) {
-      await db.collection(coll.name).drop();
-      droppedCols++;
-    }
-
-    res.json({ success: true, message: `Dropped ${droppedCols} junk collections. ${droppedMsg.join(', ')}` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// REMOVED: GET /api/dev/db-cleanup.
+//
+// It was mounted unconditionally, behind no authentication, as a GET — and it
+// called dropDatabase() on EVERY database on the connected cluster except
+// click_v3/admin/local, then dropped up to ten collections in click_v3 whose
+// name contained "test", "old" or "bak".
+//
+// Unauthenticated plus GET is the dangerous combination: no credential, no CSRF
+// token and no request body are needed, so a crawler following a link, a
+// prefetch, or an <img src> on any page is enough to fire it. On a shared Atlas
+// cluster it destroys neighbouring databases; in click_v3 it drops anything a
+// migration happened to name `..._old` or `..._bak`.
+//
+// Deleted rather than gated. Dropping databases is not something an HTTP
+// surface should be able to do at all, and this repo already has the right home
+// for it: scripts/, where utils/dbSafety.assertSafeScriptDbUri() refuses to run
+// against a remote/production URI unless explicitly overridden.
 
 // Health check (no rate limiting)
 app.use('/api/health', require('./routes/health'));

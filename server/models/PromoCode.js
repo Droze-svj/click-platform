@@ -52,6 +52,21 @@ const promoCodeSchema = new mongoose.Schema({
     default: Date.now
   },
   validUntil: Date,
+
+  // Is this code advertised publicly, or issued to one person?
+  //
+  // Default false, deliberately. GET /api/billing/promo-codes is unauthenticated
+  // and used to return EVERY active code with uses remaining — including the
+  // per-user rewards referralService mints (REF-REWARD-…/REF-NEW-…, maxUses: 1).
+  // Anyone could read the list and burn a referrer's reward before they used it.
+  // There was no way to tell a broadcast promo from a targeted one, because
+  // nothing on the model recorded the difference. Now nothing is public unless
+  // it says so.
+  isPublic: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
   isActive: {
     type: Boolean,
     default: true

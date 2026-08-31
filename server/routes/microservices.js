@@ -22,7 +22,8 @@ const router = express.Router();
  *     summary: Health check all services
  *     tags: [Microservices]
  */
-router.get('/health', asyncHandler(async (req, res) => {
+// Admin-gated for the same reason as /status below.
+router.get('/health', auth, requireAdmin, asyncHandler(async (req, res) => {
   try {
     const health = await healthCheckServices();
     sendSuccess(res, 'Services health checked', 200, health);
@@ -39,7 +40,10 @@ router.get('/health', asyncHandler(async (req, res) => {
  *     summary: Get all services status
  *     tags: [Microservices]
  */
-router.get('/status', asyncHandler(async (req, res) => {
+// Admin-gated: getServiceStatus returns each service's URL, so this published
+// the internal topology (ANALYTICS_SERVICE_URL, CONTENT_SERVICE_URL, …) to any
+// unauthenticated caller. The writes in this file were already admin-only.
+router.get('/status', auth, requireAdmin, asyncHandler(async (req, res) => {
   try {
     const status = getAllServicesStatus();
     sendSuccess(res, 'Services status fetched', 200, status);
@@ -81,7 +85,7 @@ router.post('/register', auth, requireAdmin, asyncHandler(async (req, res) => {
  *     summary: Get service status
  *     tags: [Microservices]
  */
-router.get('/:serviceName/status', asyncHandler(async (req, res) => {
+router.get('/:serviceName/status', auth, requireAdmin, asyncHandler(async (req, res) => {
   const { serviceName } = req.params;
 
   try {

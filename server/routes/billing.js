@@ -210,11 +210,20 @@ router.get('/add-ons', auth, asyncHandler(async (req, res) => {
 
 /**
  * GET /api/billing/promo-codes
- * Get active promo codes (public)
+ * Publicly advertised promo codes only.
+ *
+ * This is unauthenticated, and it used to return every ACTIVE code with uses
+ * remaining. referralService mints one-use, per-user rewards
+ * (REF-REWARD-<id> / REF-NEW-<id>, maxUses: 1, active for 30-90 days) — so each
+ * of those appeared here the moment it was created, and the first stranger to
+ * read the list could redeem someone else's reward. It now returns only codes
+ * explicitly flagged isPublic, which defaults to false: a code has to be marked
+ * as broadcast to be listed.
  */
 router.get('/promo-codes', asyncHandler(async (req, res) => {
   const now = new Date();
   const promoCodes = await PromoCode.find({
+    isPublic: true,
     isActive: true,
     validFrom: { $lte: now },
     $and: [

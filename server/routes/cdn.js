@@ -21,7 +21,9 @@ const router = express.Router();
  *     summary: Get CDN status
  *     tags: [CDN]
  */
-router.get('/status', asyncHandler(async (req, res) => {
+// Operator information (provider + configured domain); the writes in this file
+// were already admin-only and no client reads this.
+router.get('/status', auth, requireAdmin, asyncHandler(async (req, res) => {
   try {
     const status = getCDNStatus();
     sendSuccess(res, 'CDN status fetched', 200, status);
