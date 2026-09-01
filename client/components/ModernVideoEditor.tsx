@@ -54,6 +54,7 @@ import HealthDeltaOverlay from './editor/HealthDeltaOverlay'
 // Specialized Views
 import EliteAIView from './editor/views/EliteAIView'
 import AIAssistView from './editor/views/AIAssistView'
+import AdaptiveCritiquePanel from './editor/AdaptiveCritiquePanel'
 import MonetizationHub from './editor/views/MonetizationHub'
 import CreativeAIView from './editor/views/CreativeAIView'
 // Lazy-loaded: pulls in recharts (~heavy). Only loads when the Growth tab is
@@ -2126,14 +2127,30 @@ const ModernVideoEditor: React.FC<{
       // Built, live (POST /api/video/manual-editing/ai-assist/smart-cuts) and
       // imported by nothing until 2026-08. Distinct from EliteAIView/AutomateView,
       // which do not touch the smart-cuts endpoint.
-      case 'ai-assist': return <AIAssistView
-        videoId={videoId || ''}
-        transcript={transcript?.fullText}
-        aiSuggestions={aiSuggestions}
-        setAiSuggestions={setAiSuggestions}
-        setActiveCategory={setActiveCategory}
-        showToast={showToast}
-      />
+      case 'ai-assist': return <>
+        <AIAssistView
+          videoId={videoId || ''}
+          transcript={transcript?.fullText}
+          aiSuggestions={aiSuggestions}
+          setAiSuggestions={setAiSuggestions}
+          setActiveCategory={setActiveCategory}
+          showToast={showToast}
+        />
+        {/* Rate each suggestion so the model learns this creator's taste. Posts
+            to the universal /api/ai/feedback, which upweights the trait on a
+            thumbs-up and records the reason on a thumbs-down. AIAssistView
+            reviews suggestions but captures no feedback at all, so the learning
+            loop was open on this surface. */}
+        <AdaptiveCritiquePanel
+          videoId={videoId || ''}
+          suggestions={aiSuggestions}
+          onOverride={(type, choice) => {
+            setAiSuggestions((prev: any[]) =>
+              prev.map((s) => (s.type === type ? { ...s, value: choice } : s)))
+          }}
+          showToast={showToast}
+        />
+      </>
       // GET /api/monetization/products + POST /api/video/advanced/monetization-plan.
       // DistributionHubView covers publishing, not monetisation.
       case 'monetize': return <MonetizationHub

@@ -49,8 +49,6 @@ const ACCEPTED_UNRESOLVED = new Map([
   // ── Live in components with zero importers (confirmed by import-graph
   //    reachability from app/ entry points). Not user-reachable, so not a bug;
   //    listed so that WIRING one of these up surfaces the broken path first.
-  ['/api/ai/adaptive/feedback', 'components/editor/AdaptiveCritiquePanel.tsx — orphaned, 0 importers'],
-  ['/api/ai/analyze-video', 'components/AIContentAnalysis.tsx — orphaned, 0 importers'],
   ['/api/social/generate-metadata', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
   ['/api/social/publish', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
 ]);

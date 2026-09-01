@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { apiPost, apiGet, handleApiError } from '../../../lib/api'
+// Shared with AIContentAnalysis — both wait on the same background-job contract.
+import { awaitVideoJob } from '../../../lib/videoJobs'
 import { Panel, Button, Badge, SectionHeader, StatCard, Textarea, Slider } from '../../ui'
 import { cn } from '../../../lib/utils'
 
@@ -34,59 +36,6 @@ const SILENCE_THRESHOLDS = [
 
 type PipelineStep = 'idle' | 'silence' | 'transcribing' | 'scoring' | 'captioning' | 'distribution' | 'roi-forecasting' | 'sourcing' | 'monetization' | 'done' | 'error'
 
-/**
- * Wait for one of the /video/advanced/* background operations to finish.
- *
- * Those routes answer 202 with only `{ videoId, operation }` and run the real
- * work through runInBackground(); the payload — resultUrl, segmentsKept,
- * silenceRemoved — only ever appears on
- * GET /video/progress/:videoId?operation=… once status is 'completed'.
- *
- * This was previously read straight off the POST response, which contains none
- * of those fields. Silence removal therefore looked like it had run instantly
- * and returned nothing: the one-click pipeline quietly carried on with the
- * uncut video, and the standalone panel rendered "0 segments kept, 0 silence
- * removed" as a completed result.
- *
- * Returns the job's result object, or throws on failure/timeout.
- */
-async function awaitVideoJob(
-  videoId: string,
-  operation: string,
-  onProgress?: (pct: number) => void,
-  timeoutMs = 5 * 60 * 1000
-): Promise<any> {
-  const startedAt = Date.now()
-  let everSeen = false
-  // Poll rather than subscribe: this view has no socket, and the progress route
-  // is ownership-checked so it is safe to hit repeatedly. Completed records are
-  // retained for 5 minutes server-side, so a finished job cannot be missed
-  // between polls.
-  while (Date.now() - startedAt < timeoutMs) {
-    await new Promise((r) => setTimeout(r, 1500))
-    const res = await apiGet<any>(
-      `/video/progress/${encodeURIComponent(videoId)}?operation=${encodeURIComponent(operation)}`,
-      undefined,
-      false // never serve a cached snapshot of a job that is still moving
-    ).catch(() => null)
-
-    const p = res?.data ?? res
-    if (!p || typeof p.status !== 'string') {
-      // 404 while the job has not been registered yet is normal for a moment.
-      // Never seeing it at all means it was never started (or the id is wrong),
-      // and waiting out the full timeout would just look like a hang.
-      if (!everSeen && Date.now() - startedAt > 20_000) {
-        throw new Error(`${operation} did not start`)
-      }
-      continue
-    }
-    everSeen = true
-    if (typeof p.progress === 'number') onProgress?.(p.progress)
-    if (p.status === 'completed') return p.result ?? {}
-    if (p.status === 'failed') throw new Error(p.error || `${operation} failed`)
-  }
-  throw new Error(`${operation} timed out`)
-}
 
 const AutomateView: React.FC<AutomateViewProps> = ({
   voiceoverText,

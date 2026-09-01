@@ -7,6 +7,7 @@ import LoadingSpinner from '../../../../components/LoadingSpinner'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 import VideoCaptionEditor from '../../../../components/VideoCaptionEditor'
 import { RemediationHUD } from '../../../../components/editor/views/RemediationHUD'
+import AIContentAnalysis from '../../../../components/AIContentAnalysis'
 import { extractApiData, extractApiError } from '../../../../utils/apiResponse'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
@@ -44,6 +45,9 @@ interface Content {
   transcript: string; body?: string; generatedContent: any; tags: string[];
   category: string; isFavorite: boolean;
   folderId?: { _id: string; name: string; color: string; };
+  // The API returns the whole document; the page simply had not declared this.
+  // AIContentAnalysis needs the source file to analyse.
+  originalFile?: { url?: string };
   createdAt: string; updatedAt: string;
 }
 
@@ -550,6 +554,21 @@ export default function ContentDetailPage() {
         <ErrorBoundary>
           <RemediationHUD contentId={String(content._id)} />
         </ErrorBoundary>
+
+        {/* Five-part quality report — engagement, pacing, highlights, content and
+            technical — from POST /video/advanced/analyze. The service behind it
+            (aiVideoAnalysisService) runs exactly these analyses and was reachable
+            from nowhere. Rendered only when this item has a source file: the
+            analysis reads the video itself, so without a URL there is nothing to
+            analyse and an always-failing panel would be worse than none. */}
+        {content.originalFile?.url ? (
+          <ErrorBoundary>
+            <AIContentAnalysis
+              videoUrl={content.originalFile.url}
+              videoId={String(content._id)}
+            />
+          </ErrorBoundary>
+        ) : null}
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');

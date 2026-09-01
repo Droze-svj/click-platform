@@ -3030,7 +3030,8 @@
     "engagementPeaks": "Engagement Peaks",
     "peakAt": "Peak at {{time}}",
     "reAnalyzing": "Re-analyzing...",
-    "reAnalyzeVideo": "Re-analyze Video"
+    "reAnalyzeVideo": "Re-analyze Video",
+    "videoIdRequired": "Save this video first — analysis is tracked against the saved item."
   },
   "aiContentOperationsDashboard": {
     "thoughtNeuralLatency": "Neural latency optimized. Signal clear.",

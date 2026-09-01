@@ -46,12 +46,18 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
     setLearningFeedback(prev => ({ ...prev, [suggestionId]: action }))
     
     try {
-      await apiPost('/ai/adaptive/feedback', {
-        videoId,
-        type,
-        suggestionId,
-        action,
-        original
+      // POST /ai/adaptive/feedback does not exist. /api/ai/feedback does, and is
+      // explicitly the ONE endpoint for every AI surface — it upweights the trait
+      // on positive feedback and records the reason on negative, which is exactly
+      // this panel's job. A second feedback path would split the learning loop
+      // the universal endpoint was built to close.
+      await apiPost('/ai/feedback', {
+        surface: 'adaptive-critique',
+        itemType: type,
+        action: action === 'positive' ? 'thumbs_up' : 'thumbs_down',
+        contentId: videoId,
+        value: suggestionId,
+        reason: action === 'negative' ? original?.reason || original?.action : undefined,
       })
       
       showToast(
