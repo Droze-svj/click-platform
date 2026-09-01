@@ -11,6 +11,7 @@ import {
 import AdvancedRecyclingAnalytics from './AdvancedRecyclingAnalytics'
 import axios from 'axios'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-1000'
@@ -81,6 +82,7 @@ export default function EntropyReversalNode() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'suggestions' | 'plans' | 'stats'>('suggestions')
   const [selectedContent, setSelectedContent] = useState<RecyclableContent | null>(null)
+  const panelRef = useDialogBehavior(!!selectedContent, () => setSelectedContent(null))
 
   const loadData = useCallback(async () => {
     setLoading(true)

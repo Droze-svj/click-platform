@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { apiGet, apiPost } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
+import { useDialogBehavior } from '../ui/modal'
 
 interface ScheduledPost {
   _id: string;
@@ -49,6 +50,7 @@ export default function AdvancedSchedulingHub() {
   const [conflicts, setConflicts] = useState<any[]>([])
   const [templates, setTemplates] = useState<any[]>([])
   const [showBulkModal, setShowBulkModal] = useState(false)
+  const panelRef = useDialogBehavior(showBulkModal, () => setShowBulkModal(false))
   const [activeTab, setActiveTab] = useState<'timeline' | 'templates' | 'recursion' | 'sync'>('timeline')
   const [analytics, setAnalytics] = useState<any>(null)
   const { user } = useAuth()
@@ -380,8 +382,9 @@ export default function AdvancedSchedulingHub() {
       {/* Bulk Ops Modal */}
       <AnimatePresence>
         {showBulkModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/80 backdrop-blur-sm">
-             <m.div 
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/80 backdrop-blur-sm" role="dialog" aria-modal="true">
+             <m.div
+               ref={panelRef}
                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.9, y: 20 }}

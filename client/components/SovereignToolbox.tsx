@@ -32,6 +32,7 @@ import {
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-3xl transition-all duration-700'
 
@@ -62,6 +63,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
   const [loading, setLoading] = useState(true)
   const [executingToolId, setExecutingToolId] = useState<string | null>(null)
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null)
+  const panelRef = useDialogBehavior(!!selectedToolId, () => setSelectedToolId(null))
 
   const fetchTools = useCallback(async () => {
     try {
@@ -263,8 +265,11 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
             exit={{ opacity: 0 }}
             onClick={() => setSelectedToolId(null)}
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/95 backdrop-blur-3xl"
+            role="dialog"
+            aria-modal="true"
           >
             <m.div
+              ref={panelRef}
               initial={{ scale: 0.9, opacity: 0, y: 50 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 50 }}

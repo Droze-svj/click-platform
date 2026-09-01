@@ -5,10 +5,12 @@ import { m, AnimatePresence } from 'framer-motion'
 import AdvancedSearch from './AdvancedSearch'
 import { X } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 export default function GlobalSearchOverlay() {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
+  const panelRef = useDialogBehavior(isOpen, () => setIsOpen(false))
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Cmd+K or Ctrl+K
@@ -36,8 +38,11 @@ export default function GlobalSearchOverlay() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
+          role="dialog"
+          aria-modal="true"
         >
           <m.div
+            ref={panelRef}
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}

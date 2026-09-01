@@ -42,6 +42,7 @@ import {
 import { useToast } from '../contexts/ToastContext'
 import { apiGet, apiPost, apiDelete } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface Asset {
   _id?: string
@@ -112,6 +113,7 @@ export default function AssetLibrary({
   const [playingAsset, setPlayingAsset] = useState<string | null>(null)
   const [uploadType, setUploadType] = useState<'music' | 'image' | 'broll' | null>(null)
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
+  const panelRef = useDialogBehavior(!!previewAsset, () => setPreviewAsset(null))
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [recentAssets, setRecentAssets] = useState<Asset[]>([])
   const [trimStart, setTrimStart] = useState(0)
@@ -648,8 +650,11 @@ export default function AssetLibrary({
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center p-8 backdrop-blur-xl"
             onClick={() => setPreviewAsset(null)}
+            role="dialog"
+            aria-modal="true"
           >
             <m.div
+              ref={panelRef}
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               className={`max-w-5xl w-full rounded-[4rem] overflow-hidden ${glassStyle} border-white/5 relative`}

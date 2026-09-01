@@ -14,6 +14,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation'
 import { apiPut } from '@/lib/api'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
+import { useDialogBehavior } from './ui/modal'
 
 interface OnboardingWizardProps {
   onComplete: () => void
@@ -84,6 +85,9 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const [currentStep, setCurrentStep] = useState(-2)
   const [completed, setCompleted] = useState<Set<string>>(new Set())
   const [showConfetti, setShowConfetti] = useState(false)
+  // No close callback: onboarding has no dismiss, so Escape must not skip
+  // it. The hook is still worth having for the trap and the scroll lock.
+  const panelRef = useDialogBehavior(true, () => {})
 
   // Quiz state
   const [nicheType, setNicheType] = useState<string | null>(null)
@@ -182,8 +186,9 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const quizCanAdvance = (quizStep === 0 && !!nicheType) || (quizStep === 1 && !!platformTarget) || (quizStep === 2 && !!creatorGoal) || quizStep === 3
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md" role="dialog" aria-modal="true">
       <m.div
+        ref={panelRef}
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}

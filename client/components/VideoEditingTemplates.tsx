@@ -40,6 +40,7 @@ import {
 import { useToast } from '../contexts/ToastContext'
 import { logTemplateError } from '../utils/errorHandler'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface VideoTemplate {
   id: string
@@ -782,6 +783,7 @@ export default function VideoEditingTemplates({
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [showTemplateDetails, setShowTemplateDetails] = useState<string | null>(null)
+  const panelRef = useDialogBehavior(!!showTemplateDetails, () => setShowTemplateDetails(null))
   const [showCustomTemplates, setShowCustomTemplates] = useState(false)
   const { showToast } = useToast()
 
@@ -1061,8 +1063,8 @@ export default function VideoEditingTemplates({
 
       {/* Template Details Modal */}
       {showTemplateDetails && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" ref={panelRef}>
             {(() => {
               const template = allTemplates.find(tpl => tpl.id === showTemplateDetails)
               if (!template) return null

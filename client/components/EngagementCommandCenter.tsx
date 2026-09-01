@@ -13,6 +13,7 @@ import { apiGet } from '../lib/api'
 import ToastContainer from '../components/ToastContainer'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const glass = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
 
@@ -97,6 +98,7 @@ export default function ResonanceCommandMatrix() {
   const [data, setData] = useState<CommandCenterData | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedPost, setSelectedPost] = useState<PostHealth | null>(null)
+  const panelRef = useDialogBehavior(!!selectedPost, () => setSelectedPost(null))
 
   const fetchResonanceData = useCallback(async () => {
     setLoading(true)
@@ -300,8 +302,10 @@ export default function ResonanceCommandMatrix() {
             <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xl flex items-center justify-center p-8"
               onClick={() => setSelectedPost(null)}
+              role="dialog"
+              aria-modal="true"
             >
-              <m.div initial={{ scale: 0.9, y: 100, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 100, opacity: 0 }} transition={{ type: "spring", damping: 25 }}
+              <m.div ref={panelRef} initial={{ scale: 0.9, y: 100, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 100, opacity: 0 }} transition={{ type: "spring", damping: 25 }}
                 className={`${glass} w-full max-w-4xl rounded-[6rem] p-24 space-y-16 border-white/10 shadow-[0_100px_200px_rgba(0,0,0,0.8)] relative overflow-hidden`}
                 onClick={e => e.stopPropagation()}
               >

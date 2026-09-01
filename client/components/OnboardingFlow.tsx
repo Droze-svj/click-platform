@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const glassStyle = "backdrop-blur-2xl bg-black/40 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
 
@@ -51,6 +52,8 @@ const stepVariants = {
 }
 
 export default function OnboardingFlow() {
+  // No close callback: onboarding has no dismiss, so Escape must not skip it.
+  const panelRef = useDialogBehavior(true, () => {})
   const { t } = useTranslation()
   const pathname = usePathname()
   const [isVisible, setIsVisible] = useState(false)
@@ -123,7 +126,7 @@ export default function OnboardingFlow() {
   if (isPublicPage || !isVisible) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12 overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12 overflow-hidden" role="dialog" aria-modal="true">
       <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -132,6 +135,7 @@ export default function OnboardingFlow() {
       />
 
       <m.div
+        ref={panelRef}
         initial={{ scale: 0.9, opacity: 0, y: 30 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         className={`relative w-full max-w-2xl rounded-[3rem] overflow-hidden ${glassStyle}`}

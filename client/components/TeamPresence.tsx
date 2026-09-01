@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface TeamMember {
   userId: { _id: string; name: string; email: string }
@@ -25,6 +26,7 @@ export default function TeamPresence() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const panelRef = useDialogBehavior(showInviteModal, () => setShowInviteModal(false))
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
 
@@ -153,8 +155,11 @@ export default function TeamPresence() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            role="dialog"
+            aria-modal="true"
           >
             <m.div
+              ref={panelRef}
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
