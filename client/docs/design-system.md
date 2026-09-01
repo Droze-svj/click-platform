@@ -86,15 +86,32 @@ but is neither mounted nor listed as intentionally dead.
 
 ## Where it still isn't consistent
 
-**77 of 104 pages** use a shared frame — 62 `PageShell`, 5 `AuthShell`,
-10 `LegalPage`. The remaining 27:
+**Every page uses a shared frame.** `PageShell`, `AuthShell` or `LegalPage`, with
+nine exemptions, each listed with its reason in
+`__tests__/pageFrameCoverage.test.ts`: the marketing landing page, a route that
+is nothing but a `redirect()`, and seven dev/test pages that `middleware.ts`
+404s in production. That test also cross-checks the second group against
+`BLOCKED_IN_PROD`, because the exemption is only honest if the block is real —
+`/simple-register` sat outside it for a long time, printing the API URL and
+"Check console (F12)" to anyone who found the URL.
 
-| Kind | Count | Why |
-|---|---|---|
-| dashboard | 15 | Genuinely different layouts — the video editor and clips canvas own their bounds, `forge`/`marketing-ai` lead with a custom hero, `phase8`/`phase9`/`overlord` are experimental, and several are centred loading/empty states rather than framed pages. |
-| public/marketing | 1 | The landing page has its own design language. |
-| auth | 3 | `register` and two invite/portal flows with bespoke layouts. |
-| test/debug | 8 | `middleware.ts` 404s these in production. Not worth styling. |
+Two things the last framing pass is worth remembering for:
+
+- **Don't narrow a page to fit a width token.** `register` shipped at
+  `max-w-2xl`; the shell topped out at `max-w-lg`, so an `xl` was added rather
+  than the page shrunk. Where a design genuinely wants a width no token has (a
+  comment thread, a three-column facet grid), pass the `max-w-*` in `className` —
+  `cn` uses `twMerge`, so it wins over the token cleanly.
+- **`space-y-*` on a wrapper you are replacing is not lost, but check.**
+  `PageShell` wraps children in `ds-density-stack`, which is `space-y-6`
+  (`space-y-8` at `lg`) made density-aware — so dropping the utility is the
+  point. Dropping it for a `flush` shell is not: `flush` renders children
+  directly and supplies no rhythm at all.
+
+A server component (one exporting `metadata`, e.g. `phase8`/`phase9`) must
+import `PageShell` from `components/ui/page`, **not** the `components/ui` barrel.
+The barrel pulls in client primitives that use React context, and the build then
+fails page-data collection with `createContext is not a function`.
 
 ### What the raw debt counts actually mean
 
@@ -155,19 +172,41 @@ If a file already binds `m` to something else, import as
 ## Dialogs
 
 `Modal` and `Sheet` own Escape, a focus trap, focus restore and background
-scroll lock. Overlays that are already built as bespoke JSX can adopt the same
-behaviour without being rewritten:
+scroll lock. Overlays already built as bespoke JSX adopt the same behaviour
+without being rewritten — and every one outside the editor now has:
 
 ```tsx
-const panelRef = useDialogBehavior(isOpen, close)
-<div className="fixed inset-0 …">
-  <div ref={panelRef} role="dialog" aria-modal="true"> … </div>
+const panelRef = useDialogBehavior(isOpen, () => setOpen(false))
+<div className="fixed inset-0 …" role="dialog" aria-modal="true">
+  <div ref={panelRef}> … </div>
 </div>
 ```
 
 `aria-modal="true"` claims the rest of the page is inert. If nothing enforces
-that, the claim is false — which is what it was across every hand-rolled overlay
-until this was added.
+that, the claim is false — a keyboard user Tabs straight out into the page
+behind while the screen reader insists they cannot.
+
+Four things the sweep across ~40 overlays taught:
+
+- **Put the ref on whatever contains every control the dialog owns**, which is
+  not always the visually obvious panel. `ClipLightbox`'s prev/next buttons are
+  siblings of its panel, so trapping to the panel would have made them
+  unreachable by Tab.
+- **Pass an inline arrow freely.** The hook holds `onClose` in a ref and depends
+  on `open` alone. It did not always: with `onClose` in the deps, the effect
+  re-ran on every render and snapped focus back to the first control after every
+  keystroke. Guarded by a test that types into a field in an open `Modal`.
+- **Call it above every early return.** A hook after `if (!isOpen) return null`
+  is called conditionally. `tsc` accepts that happily; the `rules-of-hooks`
+  eslint error in `next build` is what catches it.
+- **A dismissless dialog still wants the hook** — pass a no-op close, so
+  onboarding gets the trap and the scroll lock without Escape skipping it.
+
+`__tests__/dialogBehaviorCoverage.test.ts` finds overlays by markup rather than
+by a list, so a newly hand-rolled dialog fails on the day it is written. Six
+overlays are deliberately not dialogs (a full-screen editor mode, a drag-drop
+target, a scan indicator, a drawer backdrop, the tour spotlight, the PWA
+prompt); each is listed there with why.
 
 ## Talking to the API
 
