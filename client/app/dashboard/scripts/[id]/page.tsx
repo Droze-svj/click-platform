@@ -14,6 +14,7 @@ import { API_URL } from '../../../../lib/api'
 import { useDraftAutosave } from '../../../../hooks/useDraftAutosave'
 import ClickAutosaveBadge from '../../../../components/click/ClickAutosaveBadge'
 import { useTranslation } from '@/hooks/useTranslation'
+import { PageShell } from '../../../../components/ui'
 
 interface Script {
   _id: string
@@ -157,33 +158,37 @@ export default function ScriptDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] gap-8">
+      <PageShell width="full" flush className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] gap-8" aria-busy="true">
         <div className="relative">
            <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
            <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
         </div>
         <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">{t('scriptDetailPage.loading')}</p>
-      </div>
+      </PageShell>
     )
   }
 
   if (!script) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] p-12 text-center">
+      <PageShell width="full" flush className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] p-12 text-center">
         <div className="w-48 h-48 rounded-[3rem] bg-white/[0.02] border-2 border-white/5 flex items-center justify-center mb-10 shadow-3xl">
            <X size={80} className="text-rose-500/40" />
         </div>
         <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6">{t('scriptDetailPage.notFoundTitle')}</h2>
         <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">{t('scriptDetailPage.notFoundDescription')}</p>
         <button onClick={() => router.push('/dashboard/scripts')} className="px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all italic">{t('scriptDetailPage.backToScripts')}</button>
-      </div>
+      </PageShell>
     )
   }
 
   const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-300'
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
+    // Canvas surface: full + flush — the inner max-w-[1400px] column below is
+    // this page's own and is untouched. text-white is dropped from the root so
+    // the shell's text-theme-primary applies; hardcoded white made every
+    // heading here invisible in light theme.
+    <PageShell width="full" flush className="min-h-screen bg-[var(--page-bg)] selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
       <ToastContainer />
       <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
          <Layout size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -387,7 +392,7 @@ export default function ScriptDetailPage() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 20px; border: 2px solid rgba(0,0,0,0.5); }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.6); }
       `}</style>
-    </div>
+    </PageShell>
   )
 }
 

@@ -16,10 +16,11 @@
 import OverlordDashboard from '../../../components/OverlordDashboard'
 import Click12Dashboard from '../../../components/Click12Dashboard'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { PageShell } from '../../../components/ui'
 
 export default function OverlordPage() {
   return (
-    <div className="min-h-screen bg-transparent">
+    <PageShell width="full" flush className="min-h-screen bg-transparent">
       {/* Independently bounded: one dashboard failing to render must not take
           the other down with it — they read entirely separate endpoints. */}
       <ErrorBoundary>
@@ -28,6 +29,6 @@ export default function OverlordPage() {
       <ErrorBoundary>
         <Click12Dashboard />
       </ErrorBoundary>
-    </div>
+    </PageShell>
   )
 }

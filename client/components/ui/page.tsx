@@ -215,12 +215,18 @@ Toolbar.displayName = "Toolbar"
 
 /* ── AuthShell ─────────────────────────────────────────────────────────── */
 
-export type AuthWidth = "sm" | "md" | "lg"
+export type AuthWidth = "sm" | "md" | "lg" | "xl"
 
 const AUTH_WIDTHS: Record<AuthWidth, string> = {
   sm: "max-w-sm",
   md: "max-w-md",
   lg: "max-w-lg",
+  // Register only. It is a two-step form with a platform picker and a plan
+  // teaser, and it shipped at max-w-2xl; the other six auth pages are a single
+  // credential card. Added so moving register onto this shell frames it without
+  // narrowing it — silently narrowing pages is a regression this migration has
+  // already caused once.
+  xl: "max-w-2xl",
 }
 
 export interface AuthShellProps extends React.HTMLAttributes<HTMLElement> {

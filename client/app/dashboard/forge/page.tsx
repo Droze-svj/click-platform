@@ -14,6 +14,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 import { Button } from '../../../components/ui/button'
 import { EmptyState } from '../../../components/ui/empty-state'
+import { PageShell } from '../../../components/ui'
 
 interface ManifestHistory {
   _id: string;
@@ -60,7 +61,11 @@ export default function OneClickForgePage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1600px] mx-auto space-y-8">
+      {/* Frame only — the hero below is deliberately kept, the same call made
+          for the dashboard home. space-y-8 is dropped because the shell's
+          ds-density-stack supplies the same rhythm and scales it with the
+          user's Appearance → Density setting. */}
+      <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
         <ToastContainer />
 
         <header className="flex items-center gap-4">
@@ -177,7 +182,7 @@ export default function OneClickForgePage() {
             </div>
           </aside>
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

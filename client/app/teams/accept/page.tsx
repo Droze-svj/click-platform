@@ -6,6 +6,7 @@ import { apiPost } from '../../../lib/api'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { useToast } from '../../../contexts/ToastContext'
 import { useAuth } from '../../../hooks/useAuth'
+import { AuthShell } from '../../../components/ui'
 
 export default function AcceptInvitationPage() {
   const router = useRouter()
@@ -60,13 +61,15 @@ export default function AcceptInvitationPage() {
   }, [token, user, authLoading, router, showToast])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <div className="max-w-md w-full text-center">
+    // Was bg-gray-50/dark:bg-gray-900 hardcoded, so it ignored the theme tokens
+    // every other signed-out page uses; AuthShell supplies ds-bg-mesh.
+    <AuthShell contentClassName="text-center">
+      <div>
         <LoadingSpinner size="lg" text="Processing your invitation..." />
         <p className="mt-4 text-gray-600 dark:text-gray-400">
           We're adding you to the team. This will only take a moment.
         </p>
       </div>
-    </div>
+    </AuthShell>
   )
 }

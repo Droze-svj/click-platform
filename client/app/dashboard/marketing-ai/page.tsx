@@ -13,6 +13,7 @@ import { cn } from '../../../lib/utils'
 import { Button } from '../../../components/ui/button'
 import { FormField, Input, Textarea } from '../../../components/ui/form-field'
 import { EmptyState } from '../../../components/ui/empty-state'
+import { PageShell } from '../../../components/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api')
@@ -86,7 +87,8 @@ export default function MarketingOraclePage() {
   ]
 
   return (
-    <div className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1500px] mx-auto space-y-8">
+    // Frame only; the hero header below is kept as-is.
+    <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
       {/* ── Header ── */}
       <header className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
         <div>
@@ -178,7 +180,7 @@ export default function MarketingOraclePage() {
           <OptimizerPanel niche={niche} platform={platform} load={load} data={data} loading={loading} error={error} />
         )}
       </div>
-    </div>
+    </PageShell>
   )
 }
 

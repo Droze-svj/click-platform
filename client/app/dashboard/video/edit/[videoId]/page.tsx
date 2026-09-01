@@ -12,6 +12,7 @@ import { getAssetUrl, getMediaUrl } from '../../../../../utils/url'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
 import { useTheme } from '../../../../../components/ThemeProvider'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
+import { PageShell } from '../../../../../components/ui'
 
 interface PageProps {
   params: {
@@ -475,9 +476,9 @@ export default function VideoEditPage({ params }: PageProps) {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen">
+    <PageShell width="full" flush className="flex items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen" aria-busy="true">
       <ClickLoadingState intent="loading.analyzing" />
-    </div>
+    </PageShell>
   )
 
   // Mobile gate — this editor is built around a full timeline, drag-targets,
@@ -511,7 +512,10 @@ export default function VideoEditPage({ params }: PageProps) {
 
   if (editMode === 'ai-auto') {
     return (
-      <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-32 transition-colors duration-500">
+      // Canvas surface: full + flush, so the shell supplies the frame and
+      // imposes no column or padding of its own. The inner max-w-[1600px]
+      // column below is the editor's own and is left exactly as it was.
+      <PageShell width="full" flush className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-32 transition-colors duration-500">
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
           
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-surface-200 dark:border-surface-800 pb-8">
@@ -1052,7 +1056,7 @@ export default function VideoEditPage({ params }: PageProps) {
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </PageShell>
     )
   }
 

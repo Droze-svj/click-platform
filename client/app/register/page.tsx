@@ -10,6 +10,7 @@ import { ACCENT_PALETTES, resolveAccentKey } from '@/lib/swarmTheme'
 import { useTranslation } from '../../hooks/useTranslation'
 import LanguagePicker from '../../components/LanguagePicker'
 import FormField from '../../components/FormField'
+import { AuthShell } from '../../components/ui'
 import { cn } from '@/lib/utils'
 import {
   ArrowLeft, ArrowRight, Check, ChevronRight, RefreshCw, Target, Lock, ShieldCheck,
@@ -243,19 +244,16 @@ export default function Register() {
     }
   }
 
-  const motionProps = prefersReducedMotion.current
-    ? {}
-    : { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } }
-
   return (
-    <div className="ds-bg-mesh min-h-screen flex items-center justify-center px-4 py-16 text-theme-primary">
-      <div className="absolute top-6 right-6 z-50">
-        <LanguagePicker />
-      </div>
-
-      <div className="relative z-10 w-full max-w-2xl">
-        <m.div {...motionProps}>
-          <div className="ds-surface-elevated p-7 sm:p-10">
+    // width="xl" keeps the max-w-2xl this page shipped at — the other six auth
+    // pages are a single credential card, this one is a two-step form.
+    // py-16 overrides the shell's py-12, also as shipped.
+    <AuthShell width="xl" corner={<LanguagePicker />} className="py-16 text-theme-primary" contentClassName="relative z-10">
+      {/* The outer rise was a hand-rolled framer wrapper duplicating what
+          AuthShell's ds-anim-rise now does for every auth page (and which both
+          the OS query and Settings → Reduced motion neutralise). The inner
+          step transitions below are NOT part of that and stay on framer. */}
+      <div className="ds-surface-elevated p-7 sm:p-10">
             {/* ── Header ─────────────────────────────────────────────── */}
             <div className="flex flex-col items-center text-center mb-8">
               <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 border border-[var(--border-subtle)] mb-4">
@@ -551,9 +549,7 @@ export default function Register() {
                 </Link>
               </p>
             </div>
-          </div>
-        </m.div>
       </div>
-    </div>
+    </AuthShell>
   )
 }
