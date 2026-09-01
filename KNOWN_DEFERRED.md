@@ -199,50 +199,55 @@ autonomous-mode kill switch.
 
 ---
 
-## 🔵 Unreachable client files — 211 left, down from 266
+## 🔵 Unreachable client files — 209 left, down from 266
 
-Building the import graph from every Next.js entry point leaves 211 client
-source files with no path from any entry point (was 266 at the start of the
-2026-08 pass).
+Building the import graph from every Next.js entry point leaves 209 of 781
+client source files with no path from any entry point.
 
-**Closed since:** the 22 shadow duplicates, 16 files of dead development
-instrumentation, and — the big one — **36 of the 47 components that were fully
-built, called live endpoints, and were imported by nothing**. Wiring those moved
-39 files onto the reachable graph.
+**Closed in the 2026-08/09 pass:** 22 shadow duplicates, 16 files of dead
+development instrumentation, and **38 components that were fully built, called
+live endpoints, and were imported by nothing**.
 
-Where they went: new routes `/dashboard/ops` (eleven operational HUDs as tabs),
-`/dashboard/content/operations`, `/dashboard/toolbox`, `/dashboard/neural`,
-`/dashboard/suggestions`, `/dashboard/onboarding/wizard`; panels added to
-`/dashboard/{overlord,governance,insights,library,templates,workflows,`
-`achievements,billing,scheduler,posts/create,content/[id],onboarding}`; and two
-new editor categories (AI Assist, Monetize).
+Where the 38 went: new routes `/dashboard/ops` (eleven operational HUDs as
+tabs), `/dashboard/content/operations`, `/dashboard/toolbox`,
+`/dashboard/neural`, `/dashboard/suggestions`, `/dashboard/onboarding/wizard`;
+panels added to a dozen existing pages; two new editor categories (AI Assist,
+Monetize). The six new routes have render smoke tests — see
+`client/__tests__/newRoutesRender.test.tsx`, which asserts the ErrorBoundary
+fallback is absent rather than merely that render did not throw.
 
-**The 11 that were NOT wired, and why.** Each duplicates a surface that already
-ships. Mounting them would give the product two competing UIs for one job, which
-is worse than leaving them unreachable:
+Two of those 38 needed their endpoint resolved first, and neither needed a new
+one built:
+- `AIContentAnalysis` asked for `/ai/analyze-video`, which never existed;
+  `aiVideoAnalysisService` already runs exactly its five analyses behind
+  `POST /video/advanced/analyze`. Repointed, and it awaits the job rather than
+  reading the 202.
+- `AdaptiveCritiquePanel` asked for `/ai/adaptive/feedback`; `/api/ai/feedback`
+  is explicitly the universal endpoint for every AI surface. Repointed.
+
+`AdvancedSchedulingHub` was the one case that genuinely needed backend work:
+`/api/scheduler/{analytics,templates,bulk-reschedule}` were built for it.
+
+**The 11 NOT wired.** Each duplicates a surface that already ships; mounting
+them would give the product two competing UIs for one job:
 
 | Component | Superseded by |
 |---|---|
 | `NeuralWorkspaceHub` | `/dashboard/workspaces` — same `/api/enterprise/workspaces` |
 | `Phase10Dashboard` | `Click12Dashboard` on `/dashboard/overlord` — 3 of its 4 endpoints |
 | `DashboardOverview` | the dashboard home itself |
-| `SmartSuggestions`, `ContentSuggestions` | `EnhancedContentSuggestions` on `/dashboard/suggestions` (richest family; the only one with viral prediction) |
+| `SmartSuggestions`, `ContentSuggestions` | `EnhancedContentSuggestions` on `/dashboard/suggestions` — the richest family, and the only one with viral prediction |
 | `ProfileHUD` | `/dashboard/settings/profile`, which also handles the avatar |
 | `CollaborativeComments` | `/dashboard/approvals/collaborate` has its own thread. It also needs a `teamId` no page can supply, and returns empty without one |
 | `TeamPresence`, `ProjectBrowser` | the live teams / projects pages — no endpoint of their own |
 | `SocialVaultView` | `DistributionHubView` in the same editor — same `/api/oauth/accounts` |
-| `SocialPublishingView` | the Export → Scheduler bridge. It also needs `/api/social/publish`, and building a second publish path would reverse the deliberate consolidation onto one scheduling model |
+| `SocialPublishingView` | the Export → Scheduler bridge. Also needs `/api/social/publish`; a second publish path would reverse the deliberate consolidation onto one scheduling model |
 
-Deleting these is a reasonable follow-up; it is not a bug that they exist.
+Deleting these is a reasonable follow-up. It is not a bug that they exist, and
+each is a complete implementation someone may want to harvest — so the decision
+is recorded here rather than taken unilaterally.
 
-**Still unreachable and NOT superseded**: `AIContentAnalysis` and
-`AdaptiveCritiquePanel` call endpoints that do not exist
-(`/api/ai/analyze-video`, `/api/ai/adaptive/feedback`). Wiring either means
-building its endpoint first — they are listed in the accept-list of
-`tests/server/clientApiContract.test.js` so that mounting one surfaces the
-missing route immediately.
-
-The remaining ~200 files make no API calls at all: presentational fragments,
+The remaining ~198 files make no API calls at all: presentational fragments,
 alternate layouts and small primitives. None is provably rot.
 
 ---
