@@ -6,6 +6,7 @@ import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
 import { History, RotateCcw, Eye } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface Version {
   _id: string
@@ -31,6 +32,9 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
   const [versions, setVersions] = useState<Version[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null)
+  // Above the `if (loading) return` below — a hook after an early return is
+  // called conditionally and changes hook order between renders.
+  const panelRef = useDialogBehavior(!!selectedVersion, () => setSelectedVersion(null))
 
   const loadVersions = useCallback(async () => {
     try {
@@ -140,8 +144,8 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
       )}
 
       {selectedVersion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6" ref={panelRef}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">
                 {t('versionHistory.version', { number: selectedVersion.versionNumber })}

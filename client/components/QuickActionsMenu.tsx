@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Video, FileText, Calendar, Settings, Search, Zap } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 export default function QuickActionsMenu() {
   const { t } = useTranslation()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,12 +82,16 @@ export default function QuickActionsMenu() {
     }
   ]
 
+  const panelRef = useDialogBehavior(isOpen, () => setIsOpen(false))
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
       <div
-        ref={menuRef}
+        // Two refs on one element: menuRef drives the existing click-outside
+        // close, panelRef is what the focus trap watches.
+        ref={(el) => { menuRef.current = el; panelRef.current = el }}
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full p-4"
       >
         <div className="mb-4">
