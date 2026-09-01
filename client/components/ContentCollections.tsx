@@ -5,6 +5,7 @@ import { FolderPlus, Folder, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-re
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface Collection {
   _id: string
@@ -25,6 +26,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const panelRef = useDialogBehavior(showCreateModal, () => setShowCreateModal(false))
   const [newCollectionName, setNewCollectionName] = useState('')
   const [newCollectionDesc, setNewCollectionDesc] = useState('')
   const router = useRouter()
@@ -204,8 +206,8 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
 
       {/* Create Collection Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6" ref={panelRef}>
             <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
               {t('contentCollections.createCollection')}
             </h3>

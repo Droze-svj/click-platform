@@ -44,6 +44,21 @@ interface BaseOverlayProps {
 export function useDialogBehavior(open: boolean, onClose: () => void) {
   const panelRef = React.useRef<HTMLDivElement | null>(null)
 
+  // onClose is held in a ref, and the effect below depends on `open` alone.
+  //
+  // This is not a micro-optimisation. Most callers pass an inline arrow
+  // (`() => setShowModal(false)`), so onClose has a new identity every render.
+  // With it in the dep list the whole effect tears down and re-runs on each
+  // render, which re-runs the "move focus into the dialog" step — so focus
+  // snaps back to the first control after every keystroke and the dialog is
+  // impossible to type into. Keeping the latest callback in a ref lets callers
+  // stay careless about identity, which is the only way ~40 hand-rolled
+  // overlays can adopt this without each one needing a useCallback.
+  const onCloseRef = React.useRef(onClose)
+  React.useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
   React.useEffect(() => {
     if (!open) return
 
@@ -90,7 +105,7 @@ export function useDialogBehavior(open: boolean, onClose: () => void) {
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (e.key !== "Tab") return
@@ -132,7 +147,7 @@ export function useDialogBehavior(open: boolean, onClose: () => void) {
         previouslyFocused.focus()
       }
     }
-  }, [open, onClose])
+  }, [open])
 
   return panelRef
 }

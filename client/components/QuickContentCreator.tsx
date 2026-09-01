@@ -5,6 +5,7 @@ import { Sparkles, Zap, FileText, Video, Mic, Copy, TrendingUp, ShieldCheck, Ref
 import axios from 'axios'
 import { m, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -28,6 +29,7 @@ interface QuickTemplate {
 export default function QuickContentCreator({ onContentCreated }: QuickContentCreatorProps) {
   const { t } = useTranslation()
   const [showModal, setShowModal] = useState(false)
+  const panelRef = useDialogBehavior(showModal, () => setShowModal(false))
   const [loading, setLoading] = useState(false)
   const [quickText, setQuickText] = useState('')
   const [marketHealth, setMarketHealth] = useState<{ velocity: number; trending: string[] } | null>(null)
@@ -190,8 +192,8 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
 
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <m.div 
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+            <m.div ref={panelRef}
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}

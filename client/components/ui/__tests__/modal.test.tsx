@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { useState } from 'react'
 import { Modal, Sheet } from '../modal'
@@ -136,6 +137,40 @@ describe('Modal — background scroll lock', () => {
     )
     // Restores the PREVIOUS value, not a hardcoded default.
     expect(document.body.style.overflow).toBe('auto')
+  })
+
+  it('does not steal focus back when the parent re-renders with a new onClose', () => {
+    // The hazard this guards: nearly every hand-rolled overlay adopting
+    // useDialogBehavior passes an inline arrow, so onClose has a fresh identity
+    // on every render. If the effect depended on it, each keystroke would tear
+    // the effect down, re-run it, and snap focus back to the first control —
+    // making the dialog impossible to type into. This is the single behaviour
+    // that lets ~40 overlays adopt the hook without each needing a useCallback.
+    function Harness() {
+      const [text, setText] = React.useState('')
+      return (
+        <Modal open onClose={() => {}} title="Typing">
+          <button type="button">first</button>
+          <input
+            aria-label="field"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </Modal>
+      )
+    }
+
+    render(<Harness />)
+    const field = screen.getByLabelText('field')
+    field.focus()
+    expect(document.activeElement).toBe(field)
+
+    fireEvent.change(field, { target: { value: 'a' } })
+    fireEvent.change(field, { target: { value: 'ab' } })
+
+    // Focus stayed put across two state-driven re-renders.
+    expect(document.activeElement).toBe(field)
+    expect((field as HTMLInputElement).value).toBe('ab')
   })
 })
 

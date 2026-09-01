@@ -7,6 +7,7 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
 import LoadingSpinner from './LoadingSpinner'
+import { useDialogBehavior } from './ui/modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -49,6 +50,7 @@ export default function TemplateMarketplace() {
   })
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [showRatingModal, setShowRatingModal] = useState(false)
+  const panelRef = useDialogBehavior(showRatingModal && !!selectedTemplate, () => setShowRatingModal(false))
   const [rating, setRating] = useState(5)
   const [review, setReview] = useState('')
 
@@ -254,8 +256,8 @@ export default function TemplateMarketplace() {
 
         {/* Rating Modal */}
         {showRatingModal && selectedTemplate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6" ref={panelRef}>
               <h2 className="text-2xl font-bold mb-4">{t('templateMarketplace.rateTemplate')}</h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">{selectedTemplate.name}</p>
 

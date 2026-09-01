@@ -21,6 +21,7 @@ import {
 import { useToast } from '../contexts/ToastContext'
 import { apiPost } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface Platform {
   id: string
@@ -120,6 +121,8 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
     setShowSalvageAlert(false)
   }
 
+  const panelRef = useDialogBehavior(isOpen, () => setIsOpen(false))
+
   if (!isOpen) {
     return (
       <button
@@ -134,8 +137,8 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-      <m.div 
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4" role="dialog" aria-modal="true">
+      <m.div ref={panelRef}
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className={`${glassStyle} rounded-[3rem] max-w-2xl w-full p-10 overflow-hidden relative`}
