@@ -45,6 +45,34 @@ const EXCLUDED = new Map<string, string>([
 
 const SHELLS = /\b(PageShell|AuthShell|LegalPage)\b/
 
+// A route can be a thin alias for another page — `/dmca` re-exports
+// `/legal/dmca`, `/refund-policy` re-exports `/refund`. Those files contain no
+// JSX at all, so matching SHELLS against their own text would report every
+// alias as unframed. Follow the re-export to the page that actually renders and
+// test THAT, which keeps the check honest: an alias pointing at an unframed
+// page still fails.
+const REEXPORT = /^\s*export\s*\{[^}]*\bdefault\b[^}]*\}\s*from\s*['"]([^'"]+)['"];?\s*$/
+
+function resolveSource(rel: string, seen: Set<string> = new Set()): string {
+  const file = path.join(APP_DIR, rel)
+  if (seen.has(file)) return '' // cyclic alias: nothing renders, so report it
+  seen.add(file)
+
+  const text = fs.readFileSync(file, 'utf8')
+  const lines = text.split('\n').filter((l) => l.trim() && !l.trim().startsWith('//'))
+  if (lines.length !== 1) return text // not a pure alias — judge it on its own text
+
+  const m = lines[0].match(REEXPORT)
+  if (!m) return text
+
+  const targetDir = path.dirname(file)
+  for (const ext of ['.tsx', '.ts', '/page.tsx', '/index.tsx']) {
+    const target = path.resolve(targetDir, m[1] + ext)
+    if (fs.existsSync(target)) return resolveSource(path.relative(APP_DIR, target), seen)
+  }
+  return text // unresolvable target — judge the alias on its own text
+}
+
 function pages(dir: string, acc: string[] = []): string[] {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name)
@@ -65,7 +93,7 @@ describe('page frame coverage', () => {
   it('every page renders through a shell primitive', () => {
     const unframed = all
       .filter((rel) => !EXCLUDED.has(rel))
-      .filter((rel) => !SHELLS.test(fs.readFileSync(path.join(APP_DIR, rel), 'utf8')))
+      .filter((rel) => !SHELLS.test(resolveSource(rel)))
 
     expect(unframed.sort()).toEqual([])
   })

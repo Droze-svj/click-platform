@@ -60,6 +60,8 @@ ffmpeg-*.log
 scratch/
 # Persistent local test DB (dev:test:server INMEMORY_DB_PATH) — never commit
 .local-test-db/
+# quarantined copies of a corrupt local test DB (see server/config/database.js)
+.local-test-db.corrupt-*/
 output.mp4
 debug-startup.js
 error-catch-startup.js

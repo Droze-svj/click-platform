@@ -40,9 +40,20 @@ const mongoose = require('mongoose');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 
+// Skipped because a body-less probe would do something real or unbounded:
+// outbound posting/publishing, a live upload, an actual ffmpeg render, or an
+// SSE stream that never closes.
+//
+// /api/billing, /api/subscription and /api/export were skipped here too, which
+// left the entire paid-plan surface unswept — that is how the SupportTicket
+// ticketNumber defect (every billing-support ticket creation failing) survived.
+// They are safe to sweep: the probes carry an empty body, the DB is a throwaway
+// in-memory instance, and the one outbound call in the family
+// (POST /api/subscription/verify -> Whop) returns 400 on the missing id long
+// before axios is reached. Keep them swept.
 const SKIP_PREFIXES = [
-  '/api/webhooks', '/api/oauth', '/api/billing', '/api/subscription',
-  '/api/social', '/api/upload', '/api/video/render', '/api/export',
+  '/api/webhooks', '/api/oauth',
+  '/api/social', '/api/upload', '/api/video/render',
   '/api/health/trigger-sentry', '/api/health/test-sentry', '/api/events/stream',
   '/api/scheduler', '/api/autopilot', '/api/calendar-autofill',
   '/api/repurpose-studio', '/api/content-series', '/api/integrations',
