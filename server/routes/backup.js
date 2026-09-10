@@ -166,6 +166,18 @@ router.delete('/:filename', auth, asyncHandler(async (req, res) => {
     await deleteBackup(userId, filename);
     sendSuccess(res, 'Backup deleted successfully', 200);
   } catch (error) {
+    // deleteBackup rejects a filename that escapes the backup directory or does
+    // not belong to this user ('Invalid backup file'), and a name that resolves
+    // to nothing ('Backup file not found'). Both are the caller's problem, not a
+    // server fault — this handler used to return 500 for every one of them,
+    // while the sibling POST /verify/:filename returns 400 for the identical
+    // ownership check.
+    if (error.message === 'Invalid backup file') {
+      return sendError(res, 'Invalid backup file', 400);
+    }
+    if (error.message === 'Backup file not found') {
+      return sendError(res, 'Backup file not found', 404);
+    }
     logger.error('Delete backup error', { error: error.message, userId, filename });
     sendError(res, error.message, 500);
   }

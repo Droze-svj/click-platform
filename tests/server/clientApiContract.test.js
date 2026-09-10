@@ -51,6 +51,13 @@ const ACCEPTED_UNRESOLVED = new Map([
   //    listed so that WIRING one of these up surfaces the broken path first.
   ['/api/social/generate-metadata', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
   ['/api/social/publish', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
+
+  // ── Variable platform segment with no generic route: the server-side code
+  //    exchange is mounted per platform (POST /api/oauth/{linkedin,google,
+  //    facebook,tiktok,youtube}/complete), so `/oauth/${platform}/complete`
+  //    normalises to :x and cannot be resolved statically. Those five are the
+  //    only platforms that support it.
+  ['/api/oauth/:x/complete', 'per-platform routes: linkedin|google|facebook|tiktok|youtube each mount POST /complete'],
 ]);
 
 function walk(dir) {
@@ -69,7 +76,8 @@ function walk(dir) {
   return out;
 }
 
-const CALL_RE = /\bapi(?:Get|Post|Put|Delete|Patch)\s*(?:<[^>]*>)?\s*\(\s*([`'"])((?:\\.|(?!\1).)*)\1/g;
+const CALL_RE = /\bapi(Get|Post|Put|Delete|Patch)\s*(?:<[^>]*>)?\s*\(\s*([`'"])((?:\\.|(?!\2).)*)\2/g;
+const VERB = { Get: 'GET', Post: 'POST', Put: 'PUT', Delete: 'DELETE', Patch: 'PATCH' };
 
 // Collapse a path to the shape the router matches on: drop the query string and
 // replace every dynamic segment (a `${…}` hole or an Express `:param`) with :x.
@@ -89,12 +97,15 @@ function normalize(p) {
 
 describe('every client API call resolves to a mounted server route', () => {
   let mounted;
+  let mountedWithVerb;
 
   beforeAll(() => {
     // Booting the app registers the routers; walkRoutes then reports what is
     // genuinely reachable, including nested sub-routers.
     const app = require('../../server/index');
-    mounted = new Set(walkRoutes(app).map((r) => normalize(r.path)));
+    const routes = walkRoutes(app);
+    mounted = new Set(routes.map((r) => normalize(r.path)));
+    mountedWithVerb = new Set(routes.map((r) => `${r.method} ${normalize(r.path)}`));
   });
 
   test('the app exposes a route table to compare against', () => {
@@ -111,7 +122,7 @@ describe('every client API call resolves to a mounted server route', () => {
       let m;
       CALL_RE.lastIndex = 0;
       while ((m = CALL_RE.exec(src))) {
-        const raw = m[2];
+        const raw = m[3];
         if (!raw.startsWith('/')) continue; // relative/dynamic — nothing to check
         const full = normalize('/api' + raw);
         if (mounted.has(full)) continue;
@@ -126,6 +137,40 @@ describe('every client API call resolves to a mounted server route', () => {
     // client path, mount the route, or add it to ACCEPTED_UNRESOLVED with a
     // reason if it is an artifact of string concatenation.
     expect(Object.fromEntries(unresolved)).toEqual({});
+  });
+
+  // A path that exists but is served under a different VERB 404s exactly like a
+  // path that does not exist, and the test above cannot see it: POST
+  // /api/niche/personalize matched the mounted PUT route by path, so the
+  // onboarding call that silently never saved the user's platform focus passed
+  // this file for months. Same for POST /api/oauth/:x/callback, whose callback
+  // routes are GET (the provider redirects a browser to them).
+  test('no api* call uses a verb the route does not serve', () => {
+    const wrongVerb = new Map();
+
+    for (const file of walk(CLIENT_DIR)) {
+      const src = fs.readFileSync(file, 'utf8');
+      let m;
+      CALL_RE.lastIndex = 0;
+      while ((m = CALL_RE.exec(src))) {
+        const raw = m[3];
+        if (!raw.startsWith('/')) continue;
+        const full = normalize('/api' + raw);
+        // Only meaningful for paths that resolve; unresolved ones are the other
+        // test's business, and accepted ones cannot be checked statically.
+        if (!mounted.has(full) || ACCEPTED_UNRESOLVED.has(full)) continue;
+        const method = VERB[m[1]];
+        if (mountedWithVerb.has(`${method} ${full}`)) continue;
+        const line = src.slice(0, m.index).split('\n').length;
+        const key = `${method} ${full}`;
+        if (!wrongVerb.has(key)) wrongVerb.set(key, []);
+        wrongVerb.get(key).push(`${path.relative(CLIENT_DIR, file)}:${line}`);
+      }
+    }
+
+    // If this fails: the path is right but the method is not. Match the verb the
+    // route is mounted with (or mount the verb the client needs).
+    expect(Object.fromEntries(wrongVerb)).toEqual({});
   });
 
   test('the accept-list has no stale entries', () => {

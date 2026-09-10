@@ -18,7 +18,7 @@ import { PLATFORM_OPTIONS } from '../../lib/nicheCatalog'
 import { CAPTION_TEXT_STYLES, type CaptionTextStyle } from '../../types/editor'
 import { resolveCaptionTextStyle } from '../../utils/captionStyler'
 import { saveEditorContentPreferences } from '../../utils/editorUtils'
-import { apiPost } from '../../lib/api'
+import { apiPut } from '../../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 
 // Matches ResizableTimeline's persisted Snap-to-Speech key so this toggle sets
@@ -57,7 +57,10 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
     } catch { /* ignore */ }
     // Best-effort: save platform focus to the profile (no-op if unauthenticated).
     try {
-      if (platforms.length) await apiPost('/niche/personalize', { platformFocus: platforms })
+      // PUT, not POST — /api/niche/personalize is a PUT. As a POST this 404'd,
+      // and because the call is deliberately best-effort the failure was
+      // swallowed, so the chosen platform focus was never saved.
+      if (platforms.length) await apiPut('/niche/personalize', { platformFocus: platforms })
     } catch { /* non-blocking */ }
     setSaving(false)
     if (onComplete) onComplete()

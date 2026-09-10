@@ -8,6 +8,7 @@ const webpush = require('web-push')
 const auth = require('../middleware/auth')
 const { requireAdmin } = require('../middleware/admin')
 const { assertPublicUrl } = require('../utils/urlGuard')
+const logger = require('../utils/logger')
 const router = express.Router()
 
 // VAPID keys for push notifications (generate these for production)
@@ -311,7 +312,23 @@ router.post('/test', auth, async (req, res) => {
     })
 
   } catch (error) {
-    
+    // Having no registered device is the caller's state, not a server fault, and
+    // an unconfigured VAPID keypair is a deployment gap — neither is a 500. This
+    // used to return 500 for every case AND swallow the reason, so the client
+    // was told "Failed to send test notification" with nothing to act on.
+    if (error.message === 'User not subscribed to push notifications') {
+      return res.status(409).json({
+        error: 'No push subscription registered for this account. Enable notifications in your browser first.',
+        code: 'NOT_SUBSCRIBED',
+      })
+    }
+    if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
+      return res.status(503).json({
+        error: 'Push notifications are not configured on this server (VAPID keys missing).',
+        code: 'PUSH_NOT_CONFIGURED',
+      })
+    }
+    logger.error('Test push notification failed', { error: error.message })
     res.status(500).json({ error: 'Failed to send test notification' })
   }
 })

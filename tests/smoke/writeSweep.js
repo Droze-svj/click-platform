@@ -52,14 +52,22 @@ const jwt = require('jsonwebtoken');
 // (POST /api/subscription/verify -> Whop) returns 400 on the missing id long
 // before axios is reached. Keep them swept.
 const SKIP_PREFIXES = [
-  '/api/webhooks', '/api/oauth',
-  '/api/social', '/api/upload', '/api/video/render',
-  '/api/health/trigger-sentry', '/api/health/test-sentry', '/api/events/stream',
-  '/api/scheduler', '/api/autopilot', '/api/calendar-autofill',
-  '/api/repurpose-studio', '/api/content-series', '/api/integrations',
-  '/api/backup', '/api/video/advanced',
+  // Genuinely does something real or unbounded even from a body-less probe:
+  // outbound platform calls, a live upload handshake, or an actual ffmpeg run.
+  '/api/oauth', '/api/social',            // outbound to the platforms
+  '/api/upload',                          // tus/chunked handshakes
+  '/api/video/render', '/api/video/advanced', // spawn ffmpeg
+  '/api/backup/restore',                  // overwrites data
+  '/api/health/trigger-sentry', '/api/health/test-sentry',
+  '/api/events/stream',                   // SSE, never closes
 ];
-const SKIP_SUFFIX = /\/(publish|post|push|send|broadcast|dispatch)(\/|$)/i;
+// NOTE: there is deliberately no publish/post/send suffix skip. It used to exist
+// and it hid a real 500 — POST /api/posts/:id/publish threw with Supabase off,
+// because it was the one handler in posts.js missing the store-not-configured
+// guard its siblings all have. DRY_RUN_PUBLISH=true (set above) neutralises the
+// publish paths, and with no platform tokens they fail closed anyway, so
+// sweeping them is safe and demonstrably worth it.
+const SKIP_SUFFIX = /^$/;
 // Cross-user by design (verified): public help article vote + moderation flag.
 const IDOR_ALLOWLIST = new Set([
   'POST /api/help/articles/:id/helpful',
