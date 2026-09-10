@@ -10,7 +10,7 @@ export default function ContactPage() {
 
         <div className="grid sm:grid-cols-3 gap-4">
           <a
-            href="mailto:hello@click.example"
+            href="mailto:hello@clickapp.io"
             className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-indigo-500/30 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center mb-5 text-indigo-300 group-hover:scale-110 transition-transform">
@@ -20,11 +20,11 @@ export default function ContactPage() {
             <p className="text-sm text-surface-600 dark:text-surface-400 font-medium">
               Questions about the product, integrations, or partnerships.
             </p>
-            <p className="mt-4 text-sm text-indigo-300 font-bold">hello@click.example</p>
+            <p className="mt-4 text-sm text-indigo-300 font-bold">hello@clickapp.io</p>
           </a>
 
           <a
-            href="mailto:support@click.example"
+            href="mailto:support@clickapp.io"
             className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/30 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-5 text-emerald-300 group-hover:scale-110 transition-transform">
@@ -34,11 +34,11 @@ export default function ContactPage() {
             <p className="text-sm text-surface-600 dark:text-surface-400 font-medium">
               Account, billing, or something’s broken — we’re on it.
             </p>
-            <p className="mt-4 text-sm text-emerald-300 font-bold">support@click.example</p>
+            <p className="mt-4 text-sm text-emerald-300 font-bold">support@clickapp.io</p>
           </a>
 
           <a
-            href="mailto:sales@click.example?subject=Agency%20Plan%20Inquiry"
+            href="mailto:sales@clickapp.io?subject=Agency%20Plan%20Inquiry"
             className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-amber-500/30 hover:-translate-y-1 transition-all duration-300"
           >
             <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mb-5 text-amber-300 group-hover:scale-110 transition-transform">
@@ -48,7 +48,7 @@ export default function ContactPage() {
             <p className="text-sm text-surface-600 dark:text-surface-400 font-medium">
               Volume pricing, white-label, custom AI playbooks — let’s talk.
             </p>
-            <p className="mt-4 text-sm text-amber-300 font-bold">sales@click.example</p>
+            <p className="mt-4 text-sm text-amber-300 font-bold">sales@clickapp.io</p>
           </a>
         </div>
     </LegalPage>

@@ -80,7 +80,7 @@ function enhancedErrorHandler(err, req, res, next) {
 
   // Handle duplicate key errors
   if (err.code === 11000) {
-    const field = Object.keys(err.keyPattern || {})[0];
+    const field = Object.keys(err.keyPattern || {})[0] || 'Resource';
     const conflictError = new ConflictError(`${field} already exists`);
     return handleError(conflictError, req, res);
   }

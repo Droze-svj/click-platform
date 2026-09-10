@@ -27,25 +27,35 @@ def check_deep_learning_avatar():
 
 def run_sadtalker(script_path, avatar, audio, output):
     print("🚀 SadTalker detected. Running high-fidelity talking-head synthesis...")
-    cmd = [
-        sys.executable,
-        script_path,
-        "--driven_audio", audio,
-        "--source_image", avatar,
-        "--result_dir", os.path.dirname(output),
-        "--enhancer", "gfpgan"
-    ]
-    print(f"Executing: {' '.join(cmd)}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode == 0:
-        # Move output file to expected output path
-        generated_files = [f for f in os.listdir(os.path.dirname(output)) if f.endswith(".mp4")]
-        if generated_files:
-            shutil.move(os.path.join(os.path.dirname(output), generated_files[0]), output)
-            print("✅ SadTalker talking head generated successfully.")
-            return True
-    print(f"❌ SadTalker failed: {result.stderr}")
-    return False
+    import tempfile
+    temp_result_dir = tempfile.mkdtemp(prefix="sadtalker_", dir=os.path.dirname(output))
+    try:
+        cmd = [
+            sys.executable,
+            script_path,
+            "--driven_audio", audio,
+            "--source_image", avatar,
+            "--result_dir", temp_result_dir,
+            "--enhancer", "gfpgan"
+        ]
+        print(f"Executing: {' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            generated_files = []
+            for root, _, files in os.walk(temp_result_dir):
+                for f in files:
+                    if f.endswith(".mp4"):
+                        generated_files.append(os.path.join(root, f))
+            if generated_files:
+                generated_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+                shutil.move(generated_files[0], output)
+                print("✅ SadTalker talking head generated successfully.")
+                return True
+        print(f"❌ SadTalker failed: {result.stderr}")
+        return False
+    finally:
+        if os.path.exists(temp_result_dir):
+            shutil.rmtree(temp_result_dir, ignore_errors=True)
 
 def run_ffmpeg_fallback(avatar, audio, output):
     print("⚠️ Deep learning avatar models not found. Running still-image audio-overlay fallback...")

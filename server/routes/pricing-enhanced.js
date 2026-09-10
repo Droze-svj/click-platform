@@ -15,6 +15,7 @@ const { getWinBackOffer, pauseSubscription, resumeSubscription, applyWinBackOffe
 const { calculateCost, calculateROI, compareTiers, calculateAgencyCostPerClient } = require('../services/pricingCalculatorService');
 const { getUserBillingHistory, getBillingSummary, getInvoice, downloadInvoicePDF, requestInvoiceCorrection } = require('../services/billingHistoryService');
 const router = express.Router();
+const getUserId = (req) => req.user?._id || req.user?.id;
 
 /**
  * GET /api/pricing/tiers
@@ -75,7 +76,7 @@ router.get('/agency-plans/:slug', asyncHandler(async (req, res) => {
  * Get user usage summary
  */
 router.get('/usage', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const summary = await getUserUsageSummary(userId);
   sendSuccess(res, 'Usage summary retrieved', 200, summary);
 }));
@@ -85,7 +86,7 @@ router.get('/usage', auth, asyncHandler(async (req, res) => {
  * Check usage limits
  */
 router.post('/usage/check', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const { action } = req.body;
 
   if (!action) {
@@ -101,7 +102,7 @@ router.post('/usage/check', auth, asyncHandler(async (req, res) => {
  * Request cancellation (self-serve)
  */
 router.post('/cancel', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const cancellation = await requestCancellation(userId, req.body);
   sendSuccess(res, 'Cancellation requested', 200, cancellation);
 }));
@@ -111,7 +112,7 @@ router.post('/cancel', auth, asyncHandler(async (req, res) => {
  * Get cancellation status
  */
 router.get('/cancel/status', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const status = await getCancellationStatus(userId);
   sendSuccess(res, 'Cancellation status retrieved', 200, { status });
 }));
@@ -121,7 +122,7 @@ router.get('/cancel/status', auth, asyncHandler(async (req, res) => {
  * Create billing support ticket
  */
 router.post('/support/billing', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const ticket = await createBillingTicket(userId, req.body);
   sendSuccess(res, 'Billing ticket created', 201, ticket);
 }));
@@ -131,7 +132,7 @@ router.post('/support/billing', auth, asyncHandler(async (req, res) => {
  * Get user tickets
  */
 router.get('/support/tickets', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const tickets = await getUserTickets(userId, req.query);
   sendSuccess(res, 'Tickets retrieved', 200, { tickets });
 }));
@@ -149,7 +150,7 @@ router.get('/support/tickets/:ticketId', auth, asyncHandler(async (req, res) => 
   }
 
   // Verify ownership
-  if (ticket.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+  if (ticket.userId.toString() !== String(getUserId(req)) && req.user?.role !== 'admin') {
     return sendError(res, 'Unauthorized', 403);
   }
 
@@ -172,14 +173,14 @@ router.post('/support/tickets/:ticketId/respond', auth, asyncHandler(async (req,
   // handler's ownership check. Without this, any user could post into (and via the
   // service auto-resolve) another tenant's support ticket by guessing its id.
   const existing = await getTicket(ticketId);
-  if (!existing || (existing.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin')) {
+  if (!existing || (existing.userId.toString() !== String(getUserId(req)) && req.user?.role !== 'admin')) {
     return sendError(res, 'Ticket not found', 404);
   }
 
   const ticket = await respondToTicket(ticketId, {
     text,
     from: 'user',
-    userId: req.user._id,
+    userId: getUserId(req),
     attachments: attachments || []
   });
 
@@ -191,7 +192,7 @@ router.post('/support/tickets/:ticketId/respond', auth, asyncHandler(async (req,
  * Forecast usage
  */
 router.get('/usage/forecast', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const { period = 'month' } = req.query;
   const forecast = await forecastUsage(userId, period);
   sendSuccess(res, 'Usage forecast retrieved', 200, forecast);
@@ -202,7 +203,7 @@ router.get('/usage/forecast', auth, asyncHandler(async (req, res) => {
  * Get usage alerts
  */
 router.get('/usage/alerts', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const alerts = await getUsageAlerts(userId);
   sendSuccess(res, 'Usage alerts retrieved', 200, { alerts });
 }));
@@ -212,7 +213,7 @@ router.get('/usage/alerts', auth, asyncHandler(async (req, res) => {
  * Get win-back offer
  */
 router.get('/cancel/win-back', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const offer = await getWinBackOffer(userId);
   sendSuccess(res, 'Win-back offer retrieved', 200, { offer });
 }));
@@ -222,7 +223,7 @@ router.get('/cancel/win-back', auth, asyncHandler(async (req, res) => {
  * Pause subscription
  */
 router.post('/pause', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const result = await pauseSubscription(userId, req.body);
   sendSuccess(res, 'Subscription paused', 200, result);
 }));
@@ -232,7 +233,7 @@ router.post('/pause', auth, asyncHandler(async (req, res) => {
  * Resume subscription
  */
 router.post('/resume', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const result = await resumeSubscription(userId);
   sendSuccess(res, 'Subscription resumed', 200, result);
 }));
@@ -242,7 +243,7 @@ router.post('/resume', auth, asyncHandler(async (req, res) => {
  * Apply win-back offer
  */
 router.post('/win-back/apply', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const { offerType, offerData } = req.body;
   const result = await applyWinBackOffer(userId, offerType, offerData);
   sendSuccess(res, 'Win-back offer applied', 200, result);
@@ -301,7 +302,7 @@ router.post('/agency/cost-per-client', asyncHandler(async (req, res) => {
  * Get billing history
  */
 router.get('/billing/history', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const history = await getUserBillingHistory(userId, req.query);
   sendSuccess(res, 'Billing history retrieved', 200, { history });
 }));
@@ -311,7 +312,7 @@ router.get('/billing/history', auth, asyncHandler(async (req, res) => {
  * Get billing summary
  */
 router.get('/billing/summary', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const { period = 'year' } = req.query;
   const summary = await getBillingSummary(userId, period);
   sendSuccess(res, 'Billing summary retrieved', 200, summary);
@@ -323,7 +324,7 @@ router.get('/billing/summary', auth, asyncHandler(async (req, res) => {
  */
 router.get('/billing/invoices/:invoiceNumber', auth, asyncHandler(async (req, res) => {
   const { invoiceNumber } = req.params;
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const invoice = await getInvoice(invoiceNumber, userId);
   sendSuccess(res, 'Invoice retrieved', 200, invoice);
 }));
@@ -334,7 +335,7 @@ router.get('/billing/invoices/:invoiceNumber', auth, asyncHandler(async (req, re
  */
 router.get('/billing/invoices/:invoiceNumber/download', auth, asyncHandler(async (req, res) => {
   const { invoiceNumber } = req.params;
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const pdf = await downloadInvoicePDF(invoiceNumber, userId);
 
   // Stream the generated PDF as a real download. Sending it through sendSuccess
@@ -357,7 +358,7 @@ router.get('/billing/invoices/:invoiceNumber/download', auth, asyncHandler(async
  */
 router.post('/billing/invoices/:invoiceNumber/correct', auth, asyncHandler(async (req, res) => {
   const { invoiceNumber } = req.params;
-  const userId = req.user._id;
+  const userId = getUserId(req);
   const { reason } = req.body;
   if (!reason) {
     return sendError(res, 'Reason is required', 400);

@@ -59,6 +59,104 @@ function getProductMap() {
 }
 
 /**
+ * Resolves the planId ('creator', 'pro', 'agency') and period ('monthly', 'yearly')
+ * from a Whop webhook event, using all available signals:
+ *  1. Configured productMap (WHOP_PRODUCT_ID_*)
+ *  2. Direct plan ID if it is a canonical tier name
+ *  3. Metadata fields (metadata.planId, metadata.plan, metadata.tier, metadata.packageId)
+ *  4. Product / Plan titles or names (e.g. "Pro Yearly", "Creator Monthly", "Agency")
+ *  5. Price heuristic ($39/390, $119/1190, $349/3490)
+ *  6. Fallback to existing user subscription plan (for recurring renewals)
+ */
+function resolvePlanFromEvent(event, user = null) {
+  const d = event?.data || {};
+  const productMap = getProductMap();
+
+  const rawProductId =
+    d.product_id ||
+    d.plan_id ||
+    event?.product_id ||
+    event?.plan_id ||
+    null;
+
+  // 1. Direct match in configured product map
+  if (rawProductId && productMap[rawProductId]) {
+    return productMap[rawProductId];
+  }
+
+  const canonicalTiers = ['creator', 'pro', 'agency'];
+
+  // 2. Direct canonical tier ID
+  if (rawProductId && canonicalTiers.includes(String(rawProductId).toLowerCase())) {
+    const period = /year|annual/i.test(String(d.billing_period || d.period || '')) ? 'yearly' : 'monthly';
+    return { planId: String(rawProductId).toLowerCase(), period };
+  }
+
+  // 3. Metadata fields
+  const meta = d.metadata || event?.metadata || {};
+  const metaPlan = meta.planId || meta.plan || meta.tier || meta.packageId || meta.product;
+  if (metaPlan) {
+    const pStr = String(metaPlan).toLowerCase();
+    for (const t of canonicalTiers) {
+      if (pStr.includes(t)) {
+        const periodStr = String(meta.period || meta.billingCycle || d.billing_period || '').toLowerCase();
+        const period = /year|annual/.test(periodStr) ? 'yearly' : 'monthly';
+        return { planId: t, period };
+      }
+    }
+  }
+
+  // 4. Inspect name / title / description in product / plan objects or top-level
+  const textSignals = [
+    d.product_name,
+    d.plan_name,
+    d.name,
+    d.title,
+    d.product?.name,
+    d.plan?.name,
+    event?.product_name,
+    event?.plan_name,
+    d.description,
+  ].filter(Boolean).map(s => String(s).toLowerCase()).join(' ');
+
+  if (textSignals) {
+    let detectedPlan = null;
+    if (/\bagency\b/.test(textSignals)) detectedPlan = 'agency';
+    else if (/\bpro\b/.test(textSignals)) detectedPlan = 'pro';
+    else if (/\bcreator\b/.test(textSignals)) detectedPlan = 'creator';
+
+    if (detectedPlan) {
+      const period = /\b(yearly|annual|year)\b/.test(textSignals) ? 'yearly' : 'monthly';
+      return { planId: detectedPlan, period };
+    }
+  }
+
+  // 5. Price heuristic (standard Click pricing)
+  const amount = getEventAmount(event);
+  if (amount != null) {
+    if (amount >= 3400 || amount === 349) {
+      return { planId: 'agency', period: amount >= 3400 ? 'yearly' : 'monthly' };
+    }
+    if (amount >= 1100 || amount === 119) {
+      return { planId: 'pro', period: amount >= 1100 ? 'yearly' : 'monthly' };
+    }
+    if (amount >= 350 || amount === 39) {
+      return { planId: 'creator', period: amount >= 350 ? 'yearly' : 'monthly' };
+    }
+  }
+
+  // 6. Existing user subscription plan preservation (for renewals)
+  if (user?.subscription?.plan && canonicalTiers.includes(user.subscription.plan)) {
+    return {
+      planId: user.subscription.plan,
+      period: user.subscription.billingCycle || 'monthly',
+    };
+  }
+
+  return null;
+}
+
+/**
  * Resolve the user a Whop event applies to.
  * Tries (in order): explicit metadata.passthrough, top-level user_id,
  * then email match. Returns the user document or null.
@@ -260,8 +358,7 @@ async function processEvent(event, deps) {
     event?.plan_id ||
     null;
   const subId = event?.data?.id || event?.data?.subscription_id || event?.id || null;
-  const productMap = getProductMap();
-  const mapping = productId ? productMap[productId] : null;
+  const mapping = resolvePlanFromEvent(event, user);
 
   switch (eventType) {
   case 'payment.succeeded':
@@ -271,29 +368,66 @@ async function processEvent(event, deps) {
   case 'subscription.created':
   case 'subscription_created': {
     if (!mapping) {
-      logger.warn('[whop] payment event without recognised product_id', { productId, eventType, userId: user._id?.toString() });
-      // Still mark active so the user isn't locked out, but on Free.
+      logger.warn('[whop] payment event without recognised product_id or plan metadata', {
+        productId, eventType, userId: user._id?.toString(),
+      });
+      // Still mark active so the user isn't locked out.
       user.subscription = user.subscription || {};
       user.subscription.status = 'active';
+      const amount = getEventAmount(event);
+      if (!user.subscription.plan || user.subscription.plan === 'free') {
+        if (amount && amount > 0) {
+          user.subscription.plan = 'pro'; // Generous fallback for paying customers
+        }
+      }
       if (subId) user.subscription.whopSubscriptionId = subId;
+      if (event?.data?.user_id && !user.whopUserId) user.whopUserId = event.data.user_id;
       if (stampTime) user.subscription.lastEventAt = stampTime;
       await user.save();
-      return { ok: true, action: eventType, userId: user._id.toString(), plan: 'unknown' };
+
+      if (eventType === 'payment.succeeded' || eventType === 'payment_succeeded') {
+        await recordBillingHistory({
+          user,
+          event,
+          mapping: { planId: user.subscription.plan || 'pro', period: 'monthly' },
+          subId,
+          stampTime,
+        });
+      }
+
+      return { ok: true, action: eventType, userId: user._id.toString(), plan: user.subscription.plan || 'unknown' };
     }
+
     user.subscription = user.subscription || {};
     user.subscription.plan = mapping.planId;
+    user.subscription.billingCycle = mapping.period;
     user.subscription.status = 'active';
-    user.subscription.startDate = new Date();
+    user.subscription.startDate = user.subscription.startDate || new Date();
+
+    const periodEnd =
+      event?.data?.expires_at ||
+      event?.data?.current_period_end ||
+      event?.expires_at ||
+      event?.current_period_end ||
+      null;
+    if (periodEnd) {
+      user.subscription.endDate = new Date(periodEnd);
+    } else {
+      const calcEnd = new Date();
+      if (mapping.period === 'yearly') {
+        calcEnd.setFullYear(calcEnd.getFullYear() + 1);
+      } else {
+        calcEnd.setMonth(calcEnd.getMonth() + 1);
+      }
+      user.subscription.endDate = calcEnd;
+    }
+
     if (subId) user.subscription.whopSubscriptionId = subId;
     if (event?.data?.user_id && !user.whopUserId) user.whopUserId = event.data.user_id;
     if (stampTime) user.subscription.lastEventAt = stampTime;
     await user.save();
 
-    // Record the money. Nothing in this codebase wrote a BillingHistory document
-    // before, so the billing-history and invoice endpoints had no data at all —
-    // the subscription state was persisted but the amount paid never was.
-    // Only actual payment events carry an amount; membership/subscription
-    // lifecycle events do not, so they are not invoiced.
+    // Record the money.
     if (eventType === 'payment.succeeded' || eventType === 'payment_succeeded') {
       await recordBillingHistory({ user, event, mapping, subId, stampTime });
     }
@@ -309,11 +443,86 @@ async function processEvent(event, deps) {
   case 'payment_failed': {
     user.subscription = user.subscription || {};
     user.subscription.status = 'cancelled';
-    const periodEnd = event?.data?.expires_at || event?.data?.current_period_end;
-    if (periodEnd) user.subscription.endDate = new Date(periodEnd);
+    const periodEnd =
+      event?.data?.expires_at ||
+      event?.data?.current_period_end ||
+      event?.expires_at ||
+      event?.current_period_end ||
+      null;
+    if (periodEnd) {
+      user.subscription.endDate = new Date(periodEnd);
+    } else if (!user.subscription.endDate) {
+      user.subscription.endDate = new Date();
+    }
     if (stampTime) user.subscription.lastEventAt = stampTime;
     await user.save();
     return { ok: true, action: eventType, userId: user._id.toString(), plan: user.subscription.plan };
+  }
+
+  case 'payment.refunded':
+  case 'payment_refunded':
+  case 'dispute.created':
+  case 'dispute_created': {
+    user.subscription = user.subscription || {};
+    user.subscription.status = 'refunded';
+    user.subscription.plan = 'free';
+    user.subscription.endDate = new Date();
+    if (stampTime) user.subscription.lastEventAt = stampTime;
+    await user.save();
+
+    try {
+      const BillingHistory = require('../models/BillingHistory');
+      const amount = getEventAmount(event);
+      const currency = (
+        event?.data?.currency ||
+        event?.currency ||
+        'USD'
+      ).toUpperCase();
+      const date = stampTime || new Date();
+      const transactionId =
+        event?.data?.payment_id ||
+        event?.data?.id ||
+        event?.id ||
+        `REF-${Date.now()}`;
+
+      await BillingHistory.create({
+        userId: user._id,
+        invoice: {
+          date,
+          period: { start: date, end: date },
+          amount: {
+            subtotal: amount != null ? -Math.abs(amount) : 0,
+            tax: 0,
+            discount: 0,
+            total: amount != null ? -Math.abs(amount) : 0,
+            currency,
+          },
+          items: [{
+            description: `14-Day Refund Processed (${eventType})`,
+            quantity: 1,
+            unitPrice: amount != null ? -Math.abs(amount) : 0,
+            total: amount != null ? -Math.abs(amount) : 0,
+          }],
+        },
+        payment: {
+          method: 'other',
+          transactionId: String(transactionId),
+          status: 'refunded',
+          paidAt: date,
+          refundedAt: date,
+          refundAmount: amount != null ? Math.abs(amount) : 0,
+        },
+        subscription: {
+          billingCycle: user.subscription?.billingCycle || 'monthly',
+        },
+        status: 'refunded',
+      });
+      logger.info('[whop] refund event recorded in billing history', { userId: user._id?.toString(), transactionId, amount });
+    } catch (err) {
+      logger.error('[whop] failed to log refund in billing history', { error: err.message, userId: user._id?.toString() });
+    }
+
+    return { ok: true, action: eventType, userId: user._id.toString(), plan: 'free' };
   }
 
   default:
@@ -324,6 +533,7 @@ async function processEvent(event, deps) {
 module.exports = {
   verifySignature,
   getProductMap,
+  resolvePlanFromEvent,
   resolveUser,
   processEvent,
   getEventTime,

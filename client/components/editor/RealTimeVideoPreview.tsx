@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { Play, Pause, Eye, EyeOff, Circle, Activity, Crosshair, Fingerprint } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import './EditorComponents.css'
@@ -384,7 +384,7 @@ function timelineHasExportOnlyOps(segments: TimelineSegment[]): { reverse: numbe
 function blendFiltersAtTime(base: VideoFilter, effects: TimelineEffect[], t: number): VideoFilter {
   let out = { ...base };
   for (const e of effects) {
-    if (e.type !== 'filter' || !e.enabled || t < e.startTime || t > e.endTime) continue;
+    if (!e.enabled || t < e.startTime || t > e.endTime) continue;
     const dur = e.endTime - e.startTime
     const fadeIn = e.fadeIn ?? 0
     const fadeOut = e.fadeOut ?? 0
@@ -392,13 +392,32 @@ function blendFiltersAtTime(base: VideoFilter, effects: TimelineEffect[], t: num
     if (t < e.startTime + fadeIn && fadeIn > 0) factor *= (t - e.startTime) / fadeIn
     if (t > e.endTime - fadeOut && fadeOut > 0) factor *= (e.endTime - t) / fadeOut
     if (factor <= 0) continue
-    const p = e.params as Record<string, number>
+    const p = (e.params || {}) as Record<string, number>
+    const name = (e.name || '').toLowerCase()
+
     if (p.brightness != null) out.brightness = (out.brightness ?? 100) + (p.brightness - (out.brightness ?? 100)) * factor
     if (p.contrast != null) out.contrast = (out.contrast ?? 100) + (p.contrast - (out.contrast ?? 100)) * factor
     if (p.saturation != null) out.saturation = (out.saturation ?? 100) + (p.saturation - (out.saturation ?? 100)) * factor
     if (p.temperature != null) out.temperature = (out.temperature ?? 100) + (p.temperature - (out.temperature ?? 100)) * factor
     if (p.sepia != null) out.sepia = (out.sepia ?? 0) + (p.sepia - (out.sepia ?? 0)) * factor
     if (p.blur != null) out.blur = (out.blur ?? 0) + (p.blur - (out.blur ?? 0)) * factor
+    if (p.vignette != null) out.vignette = (out.vignette ?? 0) + (p.vignette - (out.vignette ?? 0)) * factor
+
+    // Named timeline effects parity with server compileTimelineEffects
+    if (/flash|strobe/.test(name)) {
+      out.brightness = (out.brightness ?? 100) + 35 * factor
+      out.saturation = (out.saturation ?? 100) + 30 * factor
+    } else if (/leak|burn|warm/.test(name)) {
+      out.temperature = (out.temperature ?? 100) + 25 * factor
+      out.brightness = (out.brightness ?? 100) + 12 * factor
+    } else if (/glow|bloom/.test(name)) {
+      out.brightness = (out.brightness ?? 100) + 15 * factor
+      out.contrast = (out.contrast ?? 100) + 20 * factor
+    } else if (/blur|defocus/.test(name)) {
+      out.blur = (out.blur ?? 0) + 25 * factor
+    } else if (/vignette/.test(name)) {
+      out.vignette = Math.max(out.vignette ?? 0, 45 * factor)
+    }
   }
   return out
 }
@@ -444,17 +463,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const [videoLoadState, setVideoLoadState] = useState<'idle' | 'loading' | 'ready'>('idle')
   const [reloadKey, setReloadKey] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  // Use the measured container if available; otherwise fall back to the live
-  // overlay layer's current rect (fix #3 init race) and only then to a constant.
-  // This keeps first-paint overlay positions correct before the ResizeObserver
-  // has fired, avoiding the position jump/flicker on load.
-  const containerW = (containerDimensions?.w
-    ?? (containerRef.current?.getBoundingClientRect().width || 0)) || 800
-  const containerH = (containerDimensions?.h
-    ?? (containerRef.current?.getBoundingClientRect().height || 0)) || 600
+  const outerWrapperRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const [wrapperSize, setWrapperSize] = useState<{ w: number; h: number }>({ w: 800, h: 450 })
+  const [splitDividerX, setSplitDividerX] = useState<number>(50)
+  const [isDraggingSplit, setIsDraggingSplit] = useState<boolean>(false)
+
   const useCompareMode = typeof compareMode === 'string'
   const isSplit = useCompareMode && compareMode === 'split'
-  const showAppliedFilters = useCompareMode ? (compareMode === 'after') : (typeof showBeforeAfter === 'boolean' ? showBeforeAfter : internalShowFilters)
+  const showAppliedFilters = useCompareMode ? (compareMode === 'after' || compareMode === 'split') : (typeof showBeforeAfter === 'boolean' ? showBeforeAfter : internalShowFilters)
 
   // V6 WebGPU Rendering Scaffold
   const webGpuCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -499,30 +516,44 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
   // Track container dimensions to map percentage coordinates to actual pixels
   useEffect(() => {
-    if (!containerRef.current) return
-    
-    // Set initial size immediately on mount to prevent coordinate jump
-    const rect = containerRef.current.getBoundingClientRect()
+    if (!outerWrapperRef.current) return
+    const rect = outerWrapperRef.current.getBoundingClientRect()
     if (rect.width > 0 && rect.height > 0) {
-      setContainerDimensions({
-        w: rect.width,
-        h: rect.height
-      })
+      setWrapperSize({ w: rect.width, h: rect.height })
     }
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
-        if (entry.target === containerRef.current) {
-          setContainerDimensions({
-            w: entry.contentRect.width,
-            h: entry.contentRect.height
-          })
+        if (entry.target === outerWrapperRef.current) {
+          const { width, height } = entry.contentRect
+          if (width > 0 && height > 0) {
+            setWrapperSize({ w: width, h: height })
+          }
         }
       }
     })
-    resizeObserver.observe(containerRef.current)
+    resizeObserver.observe(outerWrapperRef.current)
     return () => resizeObserver.disconnect()
   }, [])
+
+  // Dragging handler for Before/After split wipe divider
+  useEffect(() => {
+    if (!isDraggingSplit) return
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!stageRef.current) return
+      const rect = stageRef.current.getBoundingClientRect()
+      if (rect.width <= 0) return
+      const pct = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100))
+      setSplitDividerX(pct)
+    }
+    const handleMouseUp = () => setIsDraggingSplit(false)
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDraggingSplit])
 
   // Smart Guides State. snapLines drives the on-screen guide rendering; the ref
   // mirrors it synchronously so onDragStop reads the latest snap target without
@@ -846,19 +877,34 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
   // vfx parity: the server render BAKES film-grain / chromatic-aberration for the
   // grades that carry those tags (Vintage, Film Noir, Cyberpunk, Vaporwave). The
-  // preview previously dropped them, so those grades looked flatter here than in
-  // the export. Approximate them with blended overlays (see EditorComponents.css)
-  // so the grade previews truthfully. `filters.vfx` is the union applyGrade keeps.
+  // Active timeline effects at current playhead time
+  const activeTimelineEffects = useMemo(() => {
+    if (!timelineEffects || timelineEffects.length === 0) return []
+    return timelineEffects.filter((e: any) => e && e.enabled !== false && currentTime >= e.startTime && currentTime <= e.endTime)
+  }, [timelineEffects, currentTime])
+
   const activeVfx = showAppliedFilters && Array.isArray(filters.vfx) ? filters.vfx : []
-  const showFilmGrain = activeVfx.includes('film-grain')
-  const showChromaticAberration = activeVfx.includes('chromatic-aberration')
+  const showFilmGrain = showAppliedFilters && (
+    activeVfx.includes('film-grain') ||
+    activeTimelineEffects.some((e: any) => /grain|film/.test((e.name || '').toLowerCase()) || /grain|film/.test((e.type || '').toLowerCase()))
+  )
+  const showChromaticAberration = showAppliedFilters && (
+    activeVfx.includes('chromatic-aberration') ||
+    activeTimelineEffects.some((e: any) => /chromat|aberration|rgb/.test((e.name || '').toLowerCase()) || /chromat|aberration|rgb/.test((e.type || '').toLowerCase()))
+  )
+  const showVhsGlitch = showAppliedFilters && (
+    activeVfx.includes('vhs-glitch') ||
+    activeTimelineEffects.some((e: any) => /glitch|cyber|vhs/.test((e.name || '').toLowerCase()) || (e.type || '').toLowerCase() === 'glitch')
+  )
+  const showLightLeak = showAppliedFilters && (
+    activeTimelineEffects.some((e: any) => /leak|burn|warm/.test((e.name || '').toLowerCase()))
+  )
+  const showFlash = showAppliedFilters && (
+    activeTimelineEffects.some((e: any) => /flash|strobe/.test((e.name || '').toLowerCase()))
+  )
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.currentTarget
-    // Only the BASE source defines the timeline duration — a switched-in clip
-    // must not overwrite it with its own (usually shorter) length. Report once
-    // per distinct value so a base reload on every clip→base transition doesn't
-    // re-fire onDurationChange.
     if (
       activeSourceUrlRef.current == null &&
       isFinite(v.duration) &&
@@ -870,53 +916,100 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     if (v.videoWidth > 0 && v.videoHeight > 0) {
       setVideoDimensions({ w: v.videoWidth, h: v.videoHeight })
     }
-    // A source switch just finished loading. Re-derive the seek target + speed
-    // from the CURRENT timeline position — the async load may have taken
-    // 100-300ms during which the cursor advanced, so replaying the value captured
-    // at the switch instant would leave the clip behind. load() also reset
-    // playbackRate to 1, so re-apply the segment speed here.
     if (pendingSourceSeekRef.current != null) {
       const m = timelineToSource(timelineTimeRef.current, timelineSegmentsRef.current || [])
       try { v.currentTime = m.sourceTime } catch { /* clamp/seek may fail */ }
       applyPlaybackRate(v, m.speed)
       pendingSourceSeekRef.current = null
       if (isPlaying) v.play().catch(() => {})
-      // The new clip is loaded + seeked — drop the freeze-frame bridge the instant
-      // it presents its first painted frame, so the cut is seamless (no black).
       releaseBridgeOnNextFrame()
     }
   }
 
-  // Determine aspect ratio from layout
-  const currentLayout = TEMPLATE_LAYOUTS.find(l => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1] // Default to standard 16/9
-  // Size the stage as "the largest aspect-correct box inside the parent".
-  // ⚠ width/height:'auto' + aspect-ratio COLLAPSED the stage to ~0×0: every
-  // child is absolutely positioned, so the intrinsic content size is zero and
-  // aspect-ratio had nothing to resolve against — the preview rendered 4×2px
-  // (video invisible) for every non-'auto' layout, INCLUDING the default
-  // 'standard'. As a flex item, height:100% + aspect-ratio derives the width,
-  // and max-width transfers back through the ratio when the parent is narrow —
-  // the standard contained-aspect-box pattern, no JS measurement needed.
-  const aspectStyle = currentLayout.id === 'auto'
-    ? {}
-    : {
-        aspectRatio: currentLayout.aspect.replace('/', ' / '),
-        height: '100%',
-        width: 'auto',
-        maxWidth: '100%',
-        maxHeight: '100%'
-      };
+  // Live motion effects (kinetic zoom punch-in and camera shake) parity with server compileTimelineEffects
+  const baseAnimatedTransform = interpolateTransformAtTime(videoTransformKeyframes, currentTime, videoTransform as any);
+  let motionZoom = 1
+  let motionShakeX = 0
+  let motionShakeY = 0
+  if (showAppliedFilters) {
+    for (const e of activeTimelineEffects) {
+      const name = (e.name || '').toLowerCase()
+      const type = (e.type || '').toLowerCase()
+      const k = (e.intensity ?? 100) / 100
+      const p = (e.params || {}) as Record<string, number>
+      if (/zoom|punch|kinetic|snap/.test(name) || type === 'motion') {
+        const baseZoom = Number.isFinite(Number(p.zoom)) && Number(p.zoom) > 50 ? Math.max(1.05, Math.min(2.0, Number(p.zoom) / 100)) : 1.15
+        motionZoom *= (1 + (baseZoom - 1) * k)
+      }
+      if (/shake|jitter/.test(name)) {
+        const baseAmp = Number.isFinite(Number(p.intensity)) ? Math.max(1, Math.min(25, Number(p.intensity))) : 8
+        const amp = Math.max(1, Math.min(30, Math.round(baseAmp * k)))
+        const freq = Number.isFinite(Number(p.frequency)) ? Math.max(5, Math.min(60, Number(p.frequency))) : 25
+        const tRel = currentTime - e.startTime
+        motionShakeX += Math.sin(tRel * freq) * amp
+        motionShakeY += Math.cos(tRel * freq * 0.85) * (amp * 0.7)
+      }
+    }
+  }
 
-  const animatedTransform = interpolateTransformAtTime(videoTransformKeyframes, currentTime, videoTransform as any);
+  const animatedTransform = {
+    ...baseAnimatedTransform,
+    scale: (baseAnimatedTransform.scale ?? 1) * motionZoom,
+    positionX: (baseAnimatedTransform.positionX ?? 0) + motionShakeX,
+    positionY: (baseAnimatedTransform.positionY ?? 0) + motionShakeY,
+  }
+
+  // Determine aspect ratio from layout
+  const currentLayout = TEMPLATE_LAYOUTS.find(l => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1]
+  const targetAspect = useMemo(() => {
+    if (templateLayout === 'auto') {
+      if (videoDimensions && videoDimensions.w > 0 && videoDimensions.h > 0) {
+        return videoDimensions.w / videoDimensions.h
+      }
+      return 16 / 9
+    }
+    const current = TEMPLATE_LAYOUTS.find(l => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1]
+    const parts = current.aspect.split('/')
+    if (parts.length === 2) {
+      const num = parseFloat(parts[0])
+      const den = parseFloat(parts[1])
+      if (num > 0 && den > 0) return num / den
+    }
+    return 16 / 9
+  }, [templateLayout, videoDimensions])
+
+  // Precision stage sizing: fits parent container exactly according to aspect ratio
+  const paddingH = wrapperSize.w < 640 ? 16 : 32
+  const paddingV = wrapperSize.h < 480 ? 16 : 28
+  const maxAvailW = Math.max(120, wrapperSize.w - paddingH)
+  const maxAvailH = Math.max(120, wrapperSize.h - paddingV)
+
+  let stageW = maxAvailW
+  let stageH = stageW / targetAspect
+  if (stageH > maxAvailH) {
+    stageH = maxAvailH
+    stageW = stageH * targetAspect
+  }
+  stageW = Math.max(120, Math.round(stageW))
+  stageH = Math.max(120, Math.round(stageH))
+
+  // Container dimensions matched to stage box for 1:1 overlay & transform precision
+  const containerW = stageW
+  const containerH = stageH
+
+  const handleSplitMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingSplit(true)
+  }
 
   return (
     <>
-      <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-12 overflow-hidden">
+      <div ref={outerWrapperRef} className="absolute inset-0 flex items-center justify-center p-2 sm:p-4 overflow-hidden select-none">
       {/* Neural Chroma Key SVG Filter Engine */}
       {hasChroma && (
         <svg className="absolute w-0 h-0 pointer-events-none">
           <filter id="chroma-key-matrix" colorInterpolationFilters="sRGB">
-            {/* Dynamic extraction matrix targeting specified color range and utilizing tolerance logic (simplified visual dropping of primary RGB channels) */}
             <feColorMatrix
               type="matrix"
               values={`
@@ -935,8 +1028,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
       {/* Main Preview Container with Aspect Ratio Control */}
       <div
-        className="relative bg-black rounded-[2rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.8)] border border-white/5 group/preview w-full h-full max-w-full max-h-full flex items-center justify-center transition-all duration-500"
-        style={aspectStyle}
+        ref={stageRef}
+        className="relative bg-black rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.85)] border border-white/10 group/preview flex items-center justify-center transition-all duration-300 select-none"
+        style={{
+          width: `${stageW}px`,
+          height: `${stageH}px`,
+          maxWidth: '100%',
+          maxHeight: '100%',
+        }}
       >
         {/* Cinematic Underlay */}
         <div className="absolute inset-0 pointer-events-none video-cinematic-underlay" />
@@ -948,13 +1047,12 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         >
           <Rnd
             position={{
-              // Fix #2: guard NaN/undefined transform/dimension values.
-              x: (safeNum(animatedTransform.positionX, 0) / 100) * (videoDimensions?.w || 800),
-              y: (safeNum(animatedTransform.positionY, 0) / 100) * (videoDimensions?.h || 600)
+              x: (safeNum(animatedTransform.positionX, 0) / 100) * containerW,
+              y: (safeNum(animatedTransform.positionY, 0) / 100) * containerH
             }}
             onDragStop={(e, d) => {
-               const rawX = (d.x / (videoDimensions?.w || 800)) * 100
-               const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+               const rawX = (d.x / containerW) * 100
+               const rawY = (d.y / containerH) * 100
                onUpdateVideoTransform?.({ ...videoTransform, positionX: safeNum(rawX, 0), positionY: safeNum(rawY, 0) })
             }}
             disableDragging={!isTransformMode || isPlaying}
@@ -965,13 +1063,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                height: '100%',
             }}
           >
+            {/* Base Video Element: Unfiltered in split mode so left side shows raw video, otherwise filtered */}
             <video
               key={reloadKey}
               ref={videoRef}
               src={normalizedVideoUrl}
               className="w-full h-full object-contain pointer-events-none"
               style={{
-                '--v-filter': filterString,
+                '--v-filter': isSplit ? 'none' : filterString,
                 '--v-transform': `scale(${animatedTransform.scale ?? 1}) rotate(${animatedTransform.rotation ?? 0}deg)`,
                 '--v-clip': videoCrop ? `inset(${videoCrop.top || 0}% ${videoCrop.right || 0}% ${videoCrop.bottom || 0}% ${videoCrop.left || 0}%)` : 'none',
                 filter: 'var(--v-filter)',
@@ -985,16 +1084,33 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               autoPlay={isPlaying}
               muted={isMuted}
             />
-            {/* Freeze-frame bridge: the last frame of the outgoing clip, held over
-                the <video> while it reloads the next clip so a multi-clip cut
-                doesn't flash black. Same object-contain + grade/transform as the
-                video so the held frame is visually identical to the live one. */}
+
+            {/* Split Compare Mode: Synchronized Layer 2 filtered video clipped to split line */}
+            {isSplit && (
+              <video
+                ref={videoRefRight}
+                src={normalizedVideoUrl}
+                className="absolute inset-0 w-full h-full object-contain pointer-events-none z-10"
+                style={{
+                  '--v-filter': filterString,
+                  '--v-transform': `scale(${animatedTransform.scale ?? 1}) rotate(${animatedTransform.rotation ?? 0}deg)`,
+                  '--v-clip': `inset(${videoCrop?.top || 0}% ${videoCrop?.right || 0}% ${videoCrop?.bottom || 0}% ${splitDividerX}%)`,
+                  filter: 'var(--v-filter)',
+                  transform: 'var(--v-transform)',
+                  clipPath: 'var(--v-clip)'
+                } as any}
+                autoPlay={isPlaying}
+                muted={true}
+              />
+            )}
+
+            {/* Freeze-frame bridge: the last frame of the outgoing clip held over the reloading video */}
             <canvas
               ref={bridgeCanvasRef}
               aria-hidden="true"
               className="absolute inset-0 w-full h-full object-contain pointer-events-none"
               style={{
-                filter: 'var(--v-filter)',
+                filter: isSplit ? 'none' : 'var(--v-filter)',
                 transform: 'var(--v-transform)',
                 clipPath: 'var(--v-clip)',
                 '--v-filter': filterString,
@@ -1002,9 +1118,6 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 '--v-clip': videoCrop ? `inset(${videoCrop.top || 0}% ${videoCrop.right || 0}% ${videoCrop.bottom || 0}% ${videoCrop.left || 0}%)` : 'none',
                 opacity: bridgeActive ? 1 : 0,
                 zIndex: 15,
-                // Show INSTANTLY (no transition) so the freeze frame covers the
-                // reloading <video> before it can paint black; fade out over 60ms
-                // only on release, once the new clip has a real frame underneath.
                 transition: bridgeActive ? 'none' : 'opacity 60ms linear',
               } as any}
             />
@@ -1036,6 +1149,41 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               </div>
             )}
           </Rnd>
+
+          {/* Interactive Split Compare Divider & Badges */}
+          {isSplit && (
+            <div
+              className="absolute top-0 bottom-0 z-30 cursor-ew-resize select-none pointer-events-auto group/split"
+              style={{ left: `${splitDividerX}%`, transform: 'translateX(-50%)' }}
+              onMouseDown={handleSplitMouseDown}
+              title="Drag to compare Before / After"
+            >
+              <div className="w-0.5 h-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.95)]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/90 border border-white/80 shadow-lg flex items-center justify-center text-[9px] text-white font-black group-hover/split:scale-125 transition-transform">
+                ↔
+              </div>
+              <div className="absolute top-3 right-3 pointer-events-none px-2 py-0.5 rounded-full bg-black/85 border border-white/20 text-[8px] font-black uppercase tracking-widest text-slate-300 shadow-md">
+                Before
+              </div>
+              <div className="absolute top-3 left-3 pointer-events-none px-2 py-0.5 rounded-full bg-indigo-600/90 border border-indigo-400/40 text-[8px] font-black uppercase tracking-widest text-white shadow-md">
+                After
+              </div>
+            </div>
+          )}
+
+          {/* Compare status badge for single-view before/after */}
+          {useCompareMode && compareMode === 'before' && (
+            <div className="absolute top-3 left-3 z-30 pointer-events-none px-2.5 py-1 rounded-full bg-black/80 border border-amber-500/40 text-[8px] font-black uppercase tracking-widest text-amber-300 shadow-md flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Raw / Unfiltered
+            </div>
+          )}
+          {useCompareMode && compareMode === 'after' && (
+            <div className="absolute top-3 left-3 z-30 pointer-events-none px-2.5 py-1 rounded-full bg-indigo-600/80 border border-indigo-400/40 text-[8px] font-black uppercase tracking-widest text-white shadow-md flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+              Graded
+            </div>
+          )}
           <canvas ref={webGpuCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-0" />
           {/* AI Mixing Engine: Detect active dialogue for ducking */}
           {(() => {
@@ -1096,7 +1244,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             // absolute). Blends with animationIn/Out by multiplying opacities and
             // composing the keyframe transform on top of the enter/exit transform.
             const kfm = interpolateOverlayAtTime(text, currentTime)
-            const opacity = animOpacity * (kfm ? kfm.opacity : 1)
+            const baseOpacity = typeof (text as any).opacity === 'number' ? (text as any).opacity : 1
+            const opacity = animOpacity * (kfm ? kfm.opacity : 1) * baseOpacity
             if (opacity === 0) return null
             // Fix #2: guard NaN/undefined coords before percent→px conversion.
             const safeX = clampNum(kfm ? kfm.x : safeNum(text.x, 50), -50, 150)
@@ -1331,7 +1480,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             // Fix #1: live keyframes (parity: server buildImageOverlay — positionX/Y
             // % offsets, scale/rotation/opacity absolute).
             const kfm = interpolateOverlayAtTime(img, currentTime)
-            const opacity = animOpacity * (kfm ? kfm.opacity : 1)
+            const baseOpacity = typeof (img as any).opacity === 'number' ? (img as any).opacity : 1
+            const opacity = animOpacity * (kfm ? kfm.opacity : 1) * baseOpacity
             if (opacity === 0) return null
             // Fix #2: NaN/undefined coord guards.
             const safeX = clampNum(kfm ? kfm.x : safeNum(img.x, 50), -50, 150)
@@ -1710,12 +1860,21 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         {vignetteOpacity > 0 && (
           <div className="absolute inset-0 pointer-events-none video-vignette" style={{ '--vignette-opacity': vignetteOpacity } as any} />
         )}
-        {/* vfx overlays — preview parity for baked grain / chromatic aberration */}
+        {/* vfx overlays — preview parity for baked grain / chromatic aberration / glitch / light leak / flash */}
         {showChromaticAberration && (
           <div className="absolute inset-0 pointer-events-none video-chromatic-aberration" aria-hidden="true" />
         )}
         {showFilmGrain && (
           <div className="absolute inset-0 pointer-events-none video-film-grain" aria-hidden="true" />
+        )}
+        {showVhsGlitch && (
+          <div className="absolute inset-0 pointer-events-none video-vhs-glitch z-30" aria-hidden="true" />
+        )}
+        {showLightLeak && (
+          <div className="absolute inset-0 pointer-events-none video-light-leak z-30" aria-hidden="true" />
+        )}
+        {showFlash && (
+          <div className="absolute inset-0 pointer-events-none video-flash z-30" aria-hidden="true" />
         )}
       </div>
     </>

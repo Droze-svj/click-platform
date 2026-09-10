@@ -76,14 +76,28 @@ router.get('/status', auth, async (req, res) => {
     // NON-PRODUCTION + dev user id so production can never receive a free Pro.
     if (process.env.NODE_ENV !== 'production' && allowDevMode && userId &&
         (String(userId).startsWith('dev-') || String(userId) === 'dev-user-123')) {
-      return {
+      const devEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+      const devData = {
+        status: 'active',
+        tier: 'pro',
+        isExpired: false,
+        isExpiringSoon: false,
+        daysUntilExpiry: 365,
+        hasAccess: true,
+        endDate: devEnd.toISOString(),
+        package: { name: 'Pro', slug: 'pro' },
         subscription: {
           status: 'active',
           plan: 'pro',
           startDate: new Date(),
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          endDate: devEnd
         },
-        usage: req.user.usage || {}
+        usage: req.user?.usage || {}
+      };
+      return {
+        success: true,
+        ...devData,
+        data: devData,
       };
     }
 
@@ -91,10 +105,37 @@ router.get('/status', auth, async (req, res) => {
     // client doesn't have to re-derive it (and so trial⇒pro is honoured here).
     const entitlements = require('../config/entitlements');
     const tier = entitlements.resolveTier(req.user || {});
-    return {
-      subscription: req.user.subscription || { status: 'none', plan: 'free' },
+    const now = Date.now();
+    const endDate = req.user?.subscription?.endDate ? new Date(req.user.subscription.endDate) : null;
+    const isExpired = endDate ? (endDate.getTime() <= now) : false;
+    const daysUntilExpiry = endDate ? Math.max(0, Math.ceil((endDate.getTime() - now) / (1000 * 60 * 60 * 24))) : 0;
+    const isExpiringSoon = !isExpired && daysUntilExpiry > 0 && daysUntilExpiry <= 7;
+    const rawStatus = req.user?.subscription?.status;
+    const statusVal = rawStatus || (tier !== 'free' ? 'active' : 'inactive');
+    const hasAccess = tier !== 'free' || ['active', 'trial'].includes(statusVal);
+    const packageName = req.user?.membershipPackage?.name || (tier.charAt(0).toUpperCase() + tier.slice(1));
+    const packageSlug = req.user?.membershipPackage?.slug || tier;
+
+    const fullData = {
+      status: statusVal,
       tier,
-      usage: req.user.usage || {}
+      isExpired,
+      isExpiringSoon,
+      daysUntilExpiry,
+      hasAccess,
+      endDate: endDate ? endDate.toISOString() : null,
+      package: {
+        name: packageName,
+        slug: packageSlug,
+      },
+      subscription: req.user?.subscription || { status: 'none', plan: 'free' },
+      usage: req.user?.usage || {}
+    };
+
+    return {
+      success: true,
+      ...fullData,
+      data: fullData,
     };
   })();
 

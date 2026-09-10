@@ -75,3 +75,34 @@
 .video-cinematic-underlay {
   background-image: linear-gradient(to bottom right, rgba(99,102,241,0.05), transparent, rgba(217,70,239,0.05));
 }
+
+/* vfx: 'vhs-glitch' — subtle horizontal scanlines & cyber chromatic fringe */
+.video-vhs-glitch {
+  opacity: 0.38;
+  mix-blend-mode: screen;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.3) 0px,
+    rgba(0, 0, 0, 0.3) 1px,
+    transparent 1px,
+    transparent 2px
+  ), radial-gradient(circle at 50% 50%, rgba(0, 255, 200, 0.15), rgba(255, 0, 100, 0.15));
+  pointer-events: none;
+}
+
+/* vfx: 'light-leak' — warm organic vintage flare */
+.video-light-leak {
+  opacity: 0.42;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle at 12% 18%, rgba(255, 140, 0, 0.6) 0%, transparent 60%),
+              radial-gradient(circle at 88% 82%, rgba(255, 0, 128, 0.4) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* vfx: 'flash' — high energy impact strobe */
+.video-flash {
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  background-color: #ffffff;
+  pointer-events: none;
+}

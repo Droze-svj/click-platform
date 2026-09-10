@@ -235,6 +235,8 @@ export function buildCheckoutTarget(
   const params = new URLSearchParams();
   if (userId) params.set('passthrough', userId);
   if (user.email) params.set('email', user.email);
+  params.set('plan', plan.id);
+  params.set('billingCycle', period);
   const sep = baseUrl.includes('?') ? '&' : '?';
   return { kind: 'whop', href: `${baseUrl}${params.toString() ? sep + params.toString() : ''}` };
 }

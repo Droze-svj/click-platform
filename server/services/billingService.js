@@ -13,20 +13,21 @@ const logger = require('../utils/logger');
  */
 function calculateProratedAmount(currentPackage, newPackage, currentBillingCycle, newBillingCycle, daysRemaining, daysInPeriod) {
   try {
-    const currentPrice = currentBillingCycle === 'monthly' 
-      ? currentPackage.price.monthly 
-      : currentPackage.price.yearly / 12;
+    const currentPrice = currentPackage && currentPackage.price
+      ? (currentBillingCycle === 'monthly' ? (currentPackage.price.monthly || 0) : ((currentPackage.price.yearly || 0) / 12))
+      : 0;
     
-    const newPrice = newBillingCycle === 'monthly'
-      ? newPackage.price.monthly
-      : newPackage.price.yearly / 12;
+    const newPrice = newPackage && newPackage.price
+      ? (newBillingCycle === 'monthly' ? (newPackage.price.monthly || 0) : ((newPackage.price.yearly || 0) / 12))
+      : 0;
 
     // Calculate credit for unused portion of current subscription
-    const dailyRate = currentPrice / daysInPeriod;
+    const safeDaysInPeriod = daysInPeriod > 0 ? daysInPeriod : 30;
+    const dailyRate = currentPrice / safeDaysInPeriod;
     const credit = dailyRate * daysRemaining;
 
     // Calculate charge for new subscription
-    const newDailyRate = newPrice / daysInPeriod;
+    const newDailyRate = newPrice / safeDaysInPeriod;
     const charge = newDailyRate * daysRemaining;
 
     // Net amount (charge - credit)
@@ -37,7 +38,7 @@ function calculateProratedAmount(currentPackage, newPackage, currentBillingCycle
       credit: Math.round(credit * 100) / 100,
       charge: Math.round(charge * 100) / 100,
       daysRemaining,
-      daysInPeriod
+      daysInPeriod: safeDaysInPeriod
     };
   } catch (error) {
     logger.error('Error calculating prorated amount', { error: error.message });
@@ -146,23 +147,65 @@ async function processSubscriptionChange(userId, newPackageId, newBillingCycle, 
       throw new Error('User not found');
     }
 
-    const currentPackage = user.membershipPackage;
-    const newPackage = await MembershipPackage.findById(newPackageId);
-    if (!newPackage) {
-      throw new Error('Package not found');
+    const entitlements = require('../config/entitlements');
+    const mongooseLib = require('mongoose');
+
+    // Find or resolve target package (supports Mongo ObjectId, slug, or canonical tier)
+    let targetPackage = null;
+    if (mongooseLib.Types.ObjectId.isValid(String(newPackageId))) {
+      targetPackage = await MembershipPackage.findById(newPackageId);
+    }
+    if (!targetPackage) {
+      targetPackage = await MembershipPackage.findOne({ slug: String(newPackageId).toLowerCase() });
+    }
+    if (!targetPackage) {
+      const tierDef = entitlements.TIER_BY_ID[String(newPackageId).toLowerCase()];
+      if (tierDef) {
+        targetPackage = {
+          _id: new mongooseLib.Types.ObjectId(),
+          name: tierDef.name,
+          slug: tierDef.id,
+          price: {
+            monthly: tierDef.price.monthlyUsd,
+            yearly: tierDef.price.yearlyUsd,
+          }
+        };
+      } else {
+        throw new Error('Package not found');
+      }
+    }
+
+    // Find or resolve current package (supports unpopulated user or free tier)
+    let currentPackage = user.membershipPackage;
+    if (!currentPackage) {
+      const currentTier = entitlements.resolveTier(user);
+      currentPackage = await MembershipPackage.findOne({ slug: currentTier });
+      if (!currentPackage) {
+        const currentDef = entitlements.TIER_BY_ID[currentTier] || entitlements.TIER_BY_ID.free;
+        currentPackage = {
+          _id: new mongooseLib.Types.ObjectId(),
+          name: currentDef.name,
+          slug: currentDef.id,
+          price: {
+            monthly: currentDef.price.monthlyUsd,
+            yearly: currentDef.price.yearlyUsd,
+          }
+        };
+      }
     }
 
     // Calculate days remaining in current billing period
     const now = new Date();
-    const subscriptionEndDate = user.subscription.endDate || now;
+    const subscriptionEndDate = user.subscription?.endDate || now;
     const daysRemaining = Math.max(0, Math.ceil((subscriptionEndDate - now) / (1000 * 60 * 60 * 24)));
-    const daysInPeriod = user.subscription.plan === 'monthly' ? 30 : 365;
+    const currentCycle = user.subscription?.billingCycle || (user.subscription?.plan === 'yearly' ? 'yearly' : 'monthly');
+    const daysInPeriod = currentCycle === 'yearly' ? 365 : 30;
 
     // Calculate prorated amount
     const proration = calculateProratedAmount(
       currentPackage,
-      newPackage,
-      user.subscription.plan,
+      targetPackage,
+      currentCycle,
       newBillingCycle,
       daysRemaining,
       daysInPeriod
@@ -190,8 +233,8 @@ async function processSubscriptionChange(userId, newPackageId, newBillingCycle, 
 
     // Calculate base amount
     const baseAmount = newBillingCycle === 'monthly'
-      ? newPackage.price.monthly
-      : newPackage.price.yearly;
+      ? (targetPackage.price?.monthly || 0)
+      : (targetPackage.price?.yearly || 0);
 
     let totalAmount = baseAmount + addOnTotal + proration.proratedAmount;
 
@@ -214,12 +257,13 @@ async function processSubscriptionChange(userId, newPackageId, newBillingCycle, 
     }
 
     // Create subscription change record
+    const isUpgrade = (targetPackage.price?.monthly || 0) >= (currentPackage.price?.monthly || 0);
     const subscriptionChange = new SubscriptionChange({
       userId,
-      changeType: newPackage.price.monthly > currentPackage.price.monthly ? 'upgrade' : 'downgrade',
+      changeType: isUpgrade ? 'upgrade' : 'downgrade',
       fromPackage: currentPackage._id,
-      toPackage: newPackage._id,
-      fromBillingCycle: user.subscription.plan,
+      toPackage: targetPackage._id,
+      fromBillingCycle: currentCycle,
       toBillingCycle: newBillingCycle,
       proratedAmount: proration.proratedAmount,
       proratedCredit: proration.credit,

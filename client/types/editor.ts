@@ -471,6 +471,7 @@ export interface TextOverlay {
   fontFamily: string
   startTime: number
   endTime: number
+  opacity?: number
   style?: TextOverlayStyle
   shadowColor?: string
   /** Enter animation */

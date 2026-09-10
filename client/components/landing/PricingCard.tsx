@@ -109,7 +109,7 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
 
         {plan.cta.subLabel && (
           <a
-            href="mailto:sales@click.example?subject=Agency%20Plan%20Inquiry"
+            href="mailto:sales@clickapp.io?subject=Agency%20Plan%20Inquiry"
             className="mt-6 block text-center text-[9px] font-black uppercase tracking-[0.6em] text-surface-400 dark:text-slate-700 hover:text-primary-500 transition-all italic leading-none magnetic-hover"
           >
             {plan.cta.subLabel.toUpperCase()}

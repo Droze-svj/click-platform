@@ -52,7 +52,7 @@ router.get('/provenance/:contentId', async (req, res) => {
         // ── Extended Provenance Integrity Badges ──
         antiDeepfakeGrade: authScore >= 90 ? 'A+' : 'A',
         transparencyScore: authScore,
-        publicVerificationUrl: `https://verify.contentauthenticity.org/?url=https://click.example/verify/${contentId}`,
+        publicVerificationUrl: `https://verify.contentauthenticity.org/?url=${encodeURIComponent(`${process.env.APP_URL || 'https://clickapp.io'}/verify/${contentId}`)}`,
         aeoIndexed: !!doc?.aeo?.schemaMarkup,
       },
     });

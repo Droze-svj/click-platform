@@ -70,6 +70,7 @@ export function Footer() {
               <h4 className="text-[10px] font-black uppercase tracking-[0.4em] italic text-surface-900 dark:text-white mb-1">Legal</h4>
               <Link href="/terms" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Terms of Service</Link>
               <Link href="/privacy" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Privacy Policy</Link>
+              <Link href="/refund" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Refund &amp; Cancellation</Link>
               <Link href="/cookies" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Cookie Policy</Link>
               <Link href="/legal/dmca" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">DMCA</Link>
             </div>

@@ -35,8 +35,8 @@ export default function SecurityPage() {
             via Dependabot/Renovate; high-severity CVEs patched within 7 days, criticals within
             48 hours. Container images rebuilt weekly. Annual third-party penetration test;
             executive summary available under NDA at{' '}
-            <a href="mailto:trust@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
-              trust@click.example
+            <a href="mailto:trust@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
+              trust@clickapp.io
             </a>
             .
           </Section>
@@ -63,7 +63,7 @@ export default function SecurityPage() {
 
           <Section title="Resilience">
             Multi-region failover for the API; CDN edge for static assets. RPO 24h, RTO 4h
-            target. Status page at status.click.example.
+            target. Status page at status.clickapp.io.
           </Section>
 
           <Section title="Compliance roadmap">
@@ -78,8 +78,8 @@ export default function SecurityPage() {
 
           <Section title="Responsible disclosure">
             Found something? Email{' '}
-            <a href="mailto:security@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
-              security@click.example
+            <a href="mailto:security@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
+              security@clickapp.io
             </a>{' '}
             or use{' '}
             <a href="/.well-known/security.txt" className="text-indigo-400 hover:text-indigo-300 underline">

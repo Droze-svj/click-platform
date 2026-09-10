@@ -123,9 +123,12 @@ async function generateFreshAngles(userId, topic, niche) {
           format: ['reel', 'carousel', 'text', 'video', 'poll', 'series', 'challenge', 'collab', 'data-post', 'behind-scenes'][i],
           hook: `What if everything you knew about ${topic} was slightly wrong?`,
           lateralTrigger: p,
-          originalityScore: 70 + Math.floor(Math.random() * 20),
+          originalityScore: 75,
+          isTemplate: true
         })),
         topic, niche, source: 'lateral-thinking-library',
+        isSample: true,
+        message: 'Angles generated from lateral thinking playbook. Connect Google AI key for live AI lateral ideation.'
       };
     }
 

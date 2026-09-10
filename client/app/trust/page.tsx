@@ -47,11 +47,11 @@ export default function TrustPage() {
           <ul className="text-surface-700 dark:text-surface-300 leading-relaxed space-y-3 list-disc pl-6">
             <li><strong>No training on your private content</strong> — see Privacy §4.</li>
             <li><strong>AI outputs are marked</strong> — every AI-generated export carries a visible AI-disclosure marker and a C2PA cryptographic provenance manifest.</li>
-            <li><strong>30-day data export &amp; deletion SLA</strong> — self-serve from Settings, or via privacy@click.example.</li>
+            <li><strong>30-day data export &amp; deletion SLA</strong> — self-serve from Settings, or via privacy@clickapp.io.</li>
             <li><strong>Strong defaults</strong> — TLS in transit, AES-256 at rest, argon2/bcrypt password hashing, 2FA available, SSO on enterprise.</li>
             <li><strong>Annual third-party penetration test</strong>, quarterly internal scans, audit-logged admin actions retained 18 months.</li>
             <li><strong>Sub-processors disclosed and DPA-bound</strong> (table below). 30-day notice before adding new ones.</li>
-            <li><strong>Uptime target 99.9%</strong> for the editor and dashboard; status page at status.click.example.</li>
+            <li><strong>Uptime target 99.9%</strong> for the editor and dashboard; status page at status.clickapp.io.</li>
           </ul>
         </section>
 
@@ -85,8 +85,8 @@ export default function TrustPage() {
           </div>
           <p className="text-surface-500 text-xs mt-3">
             We notify customers 30 days before adding a new sub-processor. Subscribe to updates at{' '}
-            <a href="mailto:trust@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
-              trust@click.example
+            <a href="mailto:trust@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
+              trust@clickapp.io
             </a>
             .
           </p>
@@ -98,8 +98,8 @@ export default function TrustPage() {
             Data Processing Addendum (DPA), Standard Contractual Clauses (SCCs), security
             questionnaire (CAIQ), penetration-test executive summary, SOC 2 Type II (in
             progress), AI risk assessment (EU AI Act). Email{' '}
-            <a href="mailto:trust@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
-              trust@click.example
+            <a href="mailto:trust@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
+              trust@clickapp.io
             </a>
             .
           </p>
