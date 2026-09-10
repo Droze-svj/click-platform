@@ -60,6 +60,20 @@ const ACCEPTED_UNRESOLVED = new Map([
   ['/api/oauth/:x/complete', 'per-platform routes: linkedin|google|facebook|tiktok|youtube each mount POST /complete'],
 ]);
 
+// Components with ZERO importers that call endpoints which do not exist. Not a
+// bug while nothing renders them — but each is a break waiting to happen, so
+// they are listed rather than ignored, and a test below fails if one is wired
+// up while its endpoints are still missing.
+const UNREACHABLE_COMPONENTS = new Set([
+  'components/CreatorDNA.tsx',               // /api/intelligence/dna*, /api/intelligence/avatar
+  'components/SystemIntelligence.tsx',       // /api/admin/queues/stats
+  'components/TrendRadar.tsx',               // /api/intelligence/trend-alerts, /trending-formats
+  'components/BackupManager.tsx',            // /api/backup/:id (GET)
+  'components/ChunkedUpload.tsx',            // /api/upload/chunked/:id (GET)
+  'components/WorkflowWebhookManager.tsx',   // /api/workflows/webhooks/:id
+  'components/editor/views/SocialPublishingView.tsx', // /api/social/{generate-metadata,publish}
+]);
+
 function walk(dir) {
   let out = [];
   let entries;
@@ -171,6 +185,53 @@ describe('every client API call resolves to a mounted server route', () => {
     // If this fails: the path is right but the method is not. Match the verb the
     // route is mounted with (or mount the verb the client needs).
     expect(Object.fromEntries(wrongVerb)).toEqual({});
+  });
+
+  // ── Raw fetch() calls ──────────────────────────────────────────────────────
+  // The tests above only see the api* helpers. Roughly 100 call sites use
+  // fetch('/api/…') directly, and none of them were checked — which is how the
+  // entire /dashboard/compliance page shipped calling six moderation endpoints
+  // that did not exist, every one behind `if (res.ok)` / `catch { silent }`, so
+  // it rendered an empty rule list with no error at all.
+  test('no raw fetch("/api/…") points at an unmounted path', () => {
+    const unresolved = new Map();
+
+    for (const file of walk(CLIENT_DIR)) {
+      const rel = path.relative(CLIENT_DIR, file);
+      if (UNREACHABLE_COMPONENTS.has(rel)) continue;
+      const src = fs.readFileSync(file, 'utf8');
+      const lines = src.split('\n');
+      const re = /fetch\(\s*[`'"](\/api\/[^`'"]*)[`'"]/g;
+      let m;
+      while ((m = re.exec(src))) {
+        const line = src.slice(0, m.index).split('\n').length;
+        // JSDoc @example blocks are documentation, not call sites.
+        if (/^\s*\*/.test(lines[line - 1] || '')) continue;
+        const full = normalize(m[1]);
+        if (mounted.has(full)) continue;
+        if (ACCEPTED_UNRESOLVED.has(full)) continue;
+        if (!unresolved.has(full)) unresolved.set(full, []);
+        unresolved.get(full).push(`${rel}:${line}`);
+      }
+    }
+
+    expect(Object.fromEntries(unresolved)).toEqual({});
+  });
+
+  test('the unreachable-component exemptions really have no importers', () => {
+    // These components call endpoints that do not exist, which is harmless only
+    // while nothing renders them. If one gets wired up, delete it from the set
+    // and let the test above hold its calls to account.
+    const files = walk(CLIENT_DIR);
+    const imported = [];
+    for (const rel of UNREACHABLE_COMPONENTS) {
+      const name = path.basename(rel).replace(/\.tsx?$/, '');
+      const referenced = files.some((f) =>
+        path.relative(CLIENT_DIR, f) !== rel
+        && new RegExp(`\\b${name}\\b`).test(fs.readFileSync(f, 'utf8')));
+      if (referenced) imported.push(rel);
+    }
+    expect(imported).toEqual([]);
   });
 
   test('the accept-list has no stale entries', () => {
