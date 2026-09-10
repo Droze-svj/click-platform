@@ -2,7 +2,6 @@
 
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
-const { trackApiCall } = require('./performanceMonitoringService');
 
 // Track slow queries
 const slowQueries = [];

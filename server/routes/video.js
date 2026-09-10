@@ -1465,16 +1465,26 @@ router.post('/analyze', auth, async (req, res) => {
       type: 'video'
     }).catch(() => null); // Ignore database errors
 
-    // Use AI service to analyze the video content
-    let analysisResult;
-
-    try {
-      const { analyzeVideoContent } = require('../services/aiService');
-      analysisResult = await analyzeVideoContent({ videoId, url, duration });
-    } catch (aiError) {
-      
-      analysisResult = null;
-    }
+    // No AI analysis runs here, deliberately. This block used to call
+    // `analyzeVideoContent` destructured from ../services/aiService, which does
+    // NOT export it — so the call threw TypeError on every request and the
+    // catch below silently swallowed it. The endpoint has therefore always
+    // returned the heuristic result assembled below; the "AI" branch was dead
+    // from the start and merely made the code look like it tried.
+    //
+    // It is not simply repointed at aiVideoAnalysisService (which does export
+    // analyzeVideoContent) because that function is wrong for this endpoint in
+    // three ways: it takes (videoPath, options) rather than an object, it
+    // returns {technical, highlights, pacing, engagement, content, suggestions}
+    // rather than the {contentType, mood, suggestedEdits} shape this response is
+    // built from, and it runs five gpt-4o sub-analyses that must not block a
+    // request. Its own sub-analyzer, analyzeContent(), also returns hardcoded
+    // themes/mood — wiring that in would reintroduce exactly the fabricated
+    // labels this handler removed on purpose (see the note below).
+    //
+    // The real, correctly-shaped analysis is POST /api/video/advanced/ai-analyze,
+    // which runs it in the background against a progress-tracked job.
+    const analysisResult = null;
 
     // Fallback analysis if AI fails or not configured. Previously this
     // RANDOMLY picked a contentType and mood from a list (e.g. labelled
