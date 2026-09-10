@@ -530,11 +530,16 @@ async function optimizeRecyclingCalendar(userId, calendar) {
       const { predictOptimalTime } = require('./smartScheduleOptimizationService');
       for (const item of schedule) {
         try {
-          const optimal = await predictOptimalTime(userId, platform, 'UTC');
-          if (optimal.optimalTime) {
+          // (userId, contentId, platform, options) -> { bestTime: { scheduledTime } }.
+          // Previously called as (userId, platform, 'UTC') and read
+          // `optimal.optimalTime`, which the service does not return — so this
+          // whole loop was a no-op that still ran the prediction every item.
+          const optimal = await predictOptimalTime(userId, item.contentId, platform, { dateRange: 7 });
+          const best = optimal.bestTime?.scheduledTime;
+          if (best) {
             const optimalDate = new Date(item.date);
-            optimalDate.setHours(optimal.optimalTime.getHours());
-            optimalDate.setMinutes(optimal.optimalTime.getMinutes());
+            optimalDate.setHours(best.getHours());
+            optimalDate.setMinutes(best.getMinutes());
             item.optimizedTime = optimalDate;
             item.originalTime = item.date;
             item.date = optimalDate;

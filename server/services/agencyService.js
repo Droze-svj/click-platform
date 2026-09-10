@@ -316,10 +316,17 @@ async function scheduleForClient(userId, clientId, content, platforms, scheduleT
     } else if (scheduleType === 'custom' && customDates.length > 0) {
       scheduledTime = customDates.shift() || new Date();
     } else {
-      // Use optimal time prediction
+      // Use optimal time prediction.
+      // Signature is (userId, contentId, platform, options) and the result is
+      // { predictions, bestTime: { scheduledTime, score, ... } }. This used to
+      // call it as (userId, platform, timezone) — so `platform` received the
+      // timezone and the prediction fell back to generic default hours — and
+      // then read `optimal.optimalTime`, a key the service never returns, so
+      // the branch ALWAYS resolved to `new Date()` (publish now) after paying
+      // for the full prediction.
       const { predictOptimalTime } = require('./smartScheduleOptimizationService');
-      const optimal = await predictOptimalTime(userId, platform, timezone);
-      scheduledTime = optimal.optimalTime || new Date();
+      const optimal = await predictOptimalTime(userId, contentId, platform, { dateRange: 7 });
+      scheduledTime = optimal.bestTime?.scheduledTime || new Date();
     }
 
     const scheduledPost = new ScheduledPost({
