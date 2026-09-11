@@ -154,6 +154,23 @@ d('render fidelity', () => {
     expect(p.duration).toBeLessThan(2.8);
   }, 90000);
 
+  it('J-cut (audioLeadInSec) → routes to the amix segment renderer, valid A/V out', async () => {
+    // Two split segments where the 2nd clip's audio leads its video by 1s. The
+    // concat stitch can't overlap audio across the edge; needsStitch now flags
+    // the J-cut and stitchSegments delegates to the amix-based segment renderer.
+    const { outputPath } = await render({
+      exportOptions: { width: 640, height: 480, duration: 4 },
+      timelineSegments: [
+        { id: 'jc1', type: 'video', track: 0, startTime: 0, sourceStartTime: 0, sourceEndTime: 2, duration: 2 },
+        { id: 'jc2', type: 'video', track: 0, startTime: 2, sourceStartTime: 2, sourceEndTime: 4, duration: 2, audioLeadInSec: 1 },
+      ],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.hasAudio).toBe(true); // the J-cut audio survived export (was dropped before)
+    expect(p.duration).toBeGreaterThan(3); // ~4s combined timeline
+  }, 90000);
+
   it('speed ramp → duration reflects the average speed', async () => {
     const { outputPath } = await render({
       exportOptions: { width: 640, height: 480, duration: 4 },
