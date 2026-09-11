@@ -115,6 +115,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    # Both sweeps need a database. This job used to declare none, so
+    # tests/setup.js fell through to its documented fallback — MongoMemoryServer
+    # cannot download its binary on the runner, so it tried
+    # mongodb://localhost:27017 and got ECONNREFUSED. Every query then buffered
+    # until the 60s bufferTimeoutMS fired, which surfaced as a hook timeout and
+    # failed the job on runs where the sweep itself reported ZERO server errors.
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
 
@@ -138,6 +155,7 @@ jobs:
       env:
         NODE_ENV: test
         JWT_SECRET: test-secret-key
+        MONGODB_URI: mongodb://localhost:27017/click-test-sweeps
 
     # Walks every mounted POST/PUT/PATCH/DELETE as user A, then replays each
     # successful write on an owned resource as user B. Exit 1 on any 5xx, any
@@ -147,6 +165,7 @@ jobs:
       env:
         NODE_ENV: test
         JWT_SECRET: test-secret-key
+        MONGODB_URI: mongodb://localhost:27017/click-test-sweeps
 
     - name: Upload sweep reports
       if: always()

@@ -106,9 +106,23 @@ function fillParams(p, paramNames, fx, ownedId) {
 }
 
 async function main() {
-  const { MongoMemoryServer } = require('mongodb-memory-server');
-  const mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
+  // Prefer a provided LOCAL TEST database (CI gives this job a mongo service,
+  // where MongoMemoryServer cannot download its binary). Anything that is not
+  // plainly a local test DB is ignored rather than connected to — this script
+  // runs deleteMany-style writes, so it must never be pointed at real data.
+  // Mirrors the rule in tests/setup-env.js.
+  const provided = process.env.MONGODB_URI || '';
+  const isLocalTestUri = /(127\.0\.0\.1|localhost)/.test(provided) && /test/i.test(provided)
+    && !/mongodb\+srv:|\.mongodb\.net/i.test(provided);
+
+  let mongod = null;
+  if (isLocalTestUri) {
+    await mongoose.connect(provided);
+  } else {
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    mongod = await MongoMemoryServer.create();
+    await mongoose.connect(mongod.getUri());
+  }
 
   const app = require('../../server/index');
   const { walkRoutes } = require('./walkRoutes');
@@ -180,7 +194,7 @@ async function main() {
   if (idor.length) console.log('IDOR:\n' + idor.map((e) => `  ${e.method} ${e.path} → B ${e.idorStatus}`).join('\n'));
 
   await mongoose.disconnect().catch(() => {});
-  await mongod.stop().catch(() => {});
+  if (mongod) await mongod.stop().catch(() => {});
 
   const fail = serverErrors.length > 0 || idor.length > 0 || malformed.length > 0;
   process.exit(fail ? 1 : 0);
