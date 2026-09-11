@@ -86,19 +86,55 @@ describe('generateContentIdea', () => {
   });
 });
 
-describe('getFutureContentSuggestions skips ideas that were not produced', () => {
-  it('returns only real ideas, never a blank suggestion', async () => {
-    const aiService = require('../../server/services/aiService');
-    const spy = jest.spyOn(aiService, 'generateContentIdea')
-      .mockResolvedValueOnce({ title: 'Real', idea: 'A real idea', platforms: ['twitter'] })
-      .mockResolvedValueOnce(UNAVAILABLE(['linkedin']))
-      .mockResolvedValueOnce({ title: 'Also real', idea: 'Another', platforms: ['instagram'] });
+describe('getFutureContentSuggestions', () => {
+  // Suggestions used to cost one Gemini request each, carried a made-up
+  // confidence (85 minus 2 per position) and a hardcoded impact/priority.
+  const aiService = require('../../server/services/aiService');
+  const { getFutureContentSuggestions } = require('../../server/services/contentHealthService');
 
-    const { getFutureContentSuggestions } = require('../../server/services/contentHealthService');
-    const out = await getFutureContentSuggestions('user-1', [], 3);
+  afterEach(() => jest.restoreAllMocks());
 
-    expect(out.map((s) => s.idea)).toEqual(['A real idea', 'Another']);
-    for (const s of out) expect(s.title).toBeTruthy();
-    spy.mockRestore();
+  it('asks for every idea in ONE batch call, cycling the platforms from the gaps', async () => {
+    const spy = jest.spyOn(aiService, 'generateContentIdeaBatch').mockResolvedValue({ ideas: [], degraded: true });
+    const gaps = [
+      { category: 'platform', description: 'Not posting on tiktok', impact: 'medium', priority: 7 },
+      { category: 'platform', description: 'Not posting on LinkedIn', impact: 'high', priority: 8 },
+      { category: 'format', description: 'Missing video content', impact: 'high', priority: 9 },
+    ];
+
+    await getFutureContentSuggestions('user-1', gaps, 5);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(['tiktok', 'linkedin', 'tiktok', 'linkedin', 'tiktok']);
+  });
+
+  it('never asks for more than 10 ideas', async () => {
+    const spy = jest.spyOn(aiService, 'generateContentIdeaBatch').mockResolvedValue({ ideas: [], degraded: true });
+    await getFutureContentSuggestions('user-1', [], 1000);
+    expect(spy.mock.calls[0][0]).toHaveLength(10);
+  });
+
+  it('carries real gap signals onto suggestions and reports confidence as unknown', async () => {
+    jest.spyOn(aiService, 'generateContentIdeaBatch').mockResolvedValue({
+      degraded: false,
+      ideas: [
+        { platform: 'tiktok', title: 'Hook', idea: 'A tiktok idea' },
+        { platform: 'twitter', title: null, idea: 'An idea with no gap behind it' },
+      ],
+    });
+    const gaps = [{ category: 'platform', description: 'Not posting on tiktok', impact: 'medium', priority: 7 }];
+
+    const out = await getFutureContentSuggestions('user-1', gaps, 2);
+
+    expect(out[0]).toMatchObject({
+      platform: 'tiktok', idea: 'A tiktok idea', impact: 'medium', priority: 7,
+      confidence: null, basedOnGap: 'Not posting on tiktok',
+    });
+    expect(out[1]).toMatchObject({ platform: 'twitter', impact: null, priority: null, confidence: null, basedOnGap: null });
+  });
+
+  it('returns an empty list, not blank suggestions, when no idea was produced', async () => {
+    jest.spyOn(aiService, 'generateContentIdeaBatch').mockResolvedValue({ ideas: [], degraded: true });
+    expect(await getFutureContentSuggestions('user-1', [], 3)).toEqual([]);
   });
 });

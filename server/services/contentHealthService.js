@@ -591,30 +591,41 @@ async function performContentHealthCheck(userId, contentId = null) {
  */
 async function getFutureContentSuggestions(userId, gaps = [], count = 5) {
   try {
-    const { generateContentIdea } = require('./aiService');
-    const suggestions = [];
+    const { generateContentIdeaBatch } = require('./aiService');
 
-    // Use gaps to guide suggestions if provided, otherwise default platforms
-    const platformsFromGaps = Array.isArray(gaps) ? gaps.filter(g => g.category === 'platform').map(g => g.description.replace('Not posting on ', '')) : [];
-    const platforms = platformsFromGaps.length > 0 ? platformsFromGaps : ['twitter', 'linkedin', 'instagram'];
+    // Platform gaps say which platforms need content, and their impact/priority
+    // are real signals from the health check — carry them onto each suggestion.
+    const platformGaps = Array.isArray(gaps)
+      ? gaps.filter((g) => g && g.category === 'platform' && typeof g.description === 'string')
+      : [];
+    const gapByPlatform = new Map(
+      platformGaps.map((g) => [g.description.replace(/^Not posting on /i, '').trim().toLowerCase(), g])
+    );
+    const platforms = gapByPlatform.size > 0 ? [...gapByPlatform.keys()] : ['twitter', 'linkedin', 'instagram'];
 
-    for (let i = 0; i < count; i++) {
-      const platform = platforms[i % platforms.length];
-      const idea = await generateContentIdea([platform]);
-      // No idea was produced (AI unavailable, or a cut-off/unparseable response).
-      // Skip it: pushing it would show the user a blank suggestion — formerly a
-      // 'Content Idea' placeholder — with a confidence score attached.
-      if (!idea || idea.degraded || !idea.idea) continue;
-      suggestions.push({
+    // One model call for the whole list, capped at 10 ideas. This used to be one
+    // Gemini request per suggestion.
+    const wanted = Math.max(0, Math.min(Number.parseInt(count, 10) || 0, 10));
+    const slots = Array.from({ length: wanted }, (_, i) => platforms[i % platforms.length]);
+    const { ideas } = await generateContentIdeaBatch(slots);
+
+    const suggestions = ideas.map((idea, i) => {
+      const gap = gapByPlatform.get(idea.platform) || null;
+      return {
         id: `suggestion_${Date.now()}_${i}`,
         title: idea.title,
         idea: idea.idea,
-        platform,
-        confidence: 85 - (i * 2),
-        impact: 'high',
-        priority: i < 3 ? 'must-do' : 'recommended'
-      });
-    }
+        platform: idea.platform,
+        // Nothing measures confidence in a generated idea. This was a made-up
+        // 85, minus 2 per position; null says so.
+        confidence: null,
+        // From the gap that asked for this platform; null when the suggestion
+        // was not driven by a gap (the default platform set).
+        impact: gap ? gap.impact || null : null,
+        priority: gap && typeof gap.priority === 'number' ? gap.priority : null,
+        basedOnGap: gap ? gap.description : null
+      };
+    });
 
     return suggestions;
   } catch (error) {

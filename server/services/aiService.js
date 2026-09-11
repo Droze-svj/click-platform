@@ -789,6 +789,68 @@ Return a JSON object with: title, idea, platforms (array). Return only valid JSO
   }
 }
 
+// Generate several content ideas in ONE model call.
+//
+// getFutureContentSuggestions used to call generateContentIdea once per
+// suggestion: up to 10 sequential Gemini requests for a single page load, on a
+// key whose free tier allows 20 requests a day. One request for an array does
+// the same job.
+//
+// `slots` lists one platform per wanted idea (repeats allowed). Returns
+// { ideas: [{ platform, title, idea }], degraded }, where `ideas` holds only
+// complete, distinct items for platforms that were actually asked for.
+// A short batch is kept as-is; `degraded` is true only when nothing usable came back.
+async function generateContentIdeaBatch(slots) {
+  const wanted = Array.isArray(slots)
+    ? slots.filter((p) => typeof p === 'string' && p.trim()).map((p) => p.trim().toLowerCase())
+    : [];
+  if (wanted.length === 0) return { ideas: [], degraded: true };
+
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured; no content ideas generated');
+    return { ideas: [], degraded: true };
+  }
+
+  try {
+    const prompt = `Generate ${wanted.length} distinct, creative content ideas, one for each numbered platform below:
+${wanted.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+Return a JSON array of ${wanted.length} objects in the same order, each with: platform (exactly as named above), title, idea. Return only valid JSON.`;
+
+    // ~180 output tokens per idea plus array overhead; googleAI retries once at a
+    // doubled budget if the model still runs out.
+    const response = await geminiGenerate(prompt, { maxTokens: Math.min(4000, 200 + wanted.length * 180) });
+    const parsed = safeJsonParse(response, null);
+    const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.ideas) ? parsed.ideas : []);
+
+    const allowed = new Set(wanted);
+    const seen = new Set();
+    const ideas = [];
+    for (const item of items) {
+      if (!item || typeof item.idea !== 'string' || !item.idea.trim()) continue;
+      const platform = typeof item.platform === 'string' ? item.platform.trim().toLowerCase() : '';
+      if (!allowed.has(platform)) continue;
+      const key = item.idea.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      ideas.push({
+        platform,
+        title: typeof item.title === 'string' && item.title.trim() ? item.title.trim() : null,
+        idea: item.idea.trim()
+      });
+      if (ideas.length === wanted.length) break;
+    }
+
+    if (ideas.length === 0) {
+      logger.warn('Content idea batch produced no usable ideas', { requested: wanted.length, hadResponse: Boolean(response) });
+    }
+    return { ideas, degraded: ideas.length === 0 };
+  } catch (error) {
+    logger.error('Content idea batch generation error', { error: error.message });
+    return { ideas: [], degraded: true };
+  }
+}
+
 /**
  * Analyze content health with AI
  */
@@ -871,6 +933,7 @@ module.exports = {
   generateContentAdaptation: withAgentSpan('Content Adaptation Agent', generateContentAdaptation),
   generateAIInsight: withAgentSpan('Growth Insight Agent', generateAIInsight),
   generateContentIdea: withAgentSpan('Content Idea Agent', generateContentIdea),
+  generateContentIdeaBatch: withAgentSpan('Content Idea Batch Agent', generateContentIdeaBatch),
   analyzeContentWithAI: withAgentSpan('Content Health Agent', analyzeContentWithAI),
   getUniversalStrategicFramework: withAgentSpan('Strategic Framework Agent', getUniversalStrategicFramework),
   validateAndRefineOutput: withAgentSpan('Validation Agent', validateAndRefineOutput),

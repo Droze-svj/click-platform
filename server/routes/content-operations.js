@@ -5,6 +5,8 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
+const { clampInt } = require('../utils/pagination');
 const {
   performContentHealthCheck,
   getFutureContentSuggestions
@@ -49,14 +51,21 @@ router.get('/health', auth, asyncHandler(async (req, res) => {
  * GET /api/content-operations/health/suggestions
  * Get future content suggestions based on gaps
  */
-router.get('/health/suggestions', auth, asyncHandler(async (req, res) => {
-  const { count = 10 } = req.query;
+router.get('/health/suggestions', auth, aiLimiter, asyncHandler(async (req, res) => {
+  // Clamped. This was parseInt(req.query.count) with no ceiling, so ?count=1000
+  // asked for 1000 AI-generated ideas — one Gemini request each. Ideas now come
+  // from a single model call, and 10 is the most it is asked for.
+  const count = clampInt(req.query.count, 10, 10, 1);
 
   const healthCheck = await performContentHealthCheck(req.user._id);
-  const suggestions = await getFutureContentSuggestions(req.user._id, healthCheck.gaps, parseInt(count, 10));
+  const suggestions = await getFutureContentSuggestions(req.user._id, healthCheck.gaps, count);
 
-  sendSuccess(res, 'Content suggestions generated', 200, {
+  // With count >= 1, an empty list means the model produced nothing usable (AI
+  // unavailable or over quota). Say so, instead of implying there is nothing to post.
+  const degraded = suggestions.length === 0;
+  sendSuccess(res, degraded ? 'Content suggestions temporarily unavailable' : 'Content suggestions generated', 200, {
     suggestions,
+    degraded,
     basedOn: {
       gaps: healthCheck.gaps,
       healthScore: healthCheck.overallScore

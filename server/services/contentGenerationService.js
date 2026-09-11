@@ -3,7 +3,7 @@
 
 const Content = require('../models/Content');
 const User = require('../models/User');
-const { generateSocialContent, generateBlogSummary, generateViralIdeas, generateContentAdaptation, generateContentIdea } = require('./aiService');
+const { generateSocialContent, generateBlogSummary, generateViralIdeas, generateContentIdea } = require('./aiService');
 const { emitToUser } = require('./socketService');
 const logger = require('../utils/logger');
 
@@ -91,52 +91,56 @@ async function generateContentFromText(contentId, text, user, platforms = DEFAUL
  */
 async function generateContentFromLongForm(content, options = {}) {
   try {
-    const text = content?.content || content?.text || '';
+    // A Content document keeps its text under content.text; `content.content` is
+    // that sub-object, not a string. Reading it directly handed the model
+    // "[object Object]" to adapt — for cross-client templates and gap filling alike.
+    const text = String(
+      (typeof content?.content === 'string' ? content.content : content?.content?.text)
+      || content?.text || content?.transcript || ''
+    ).trim();
     const title = content?.title || 'Original Video';
     const platform = options?.platform || 'twitter';
     const niche = content?.niche || 'general';
+
+    if (!text) {
+      return { success: false, message: 'Source content has no text to adapt' };
+    }
 
     logger.info('Generating social content from long-form', {
       platform,
       contentId: content?._id || content?.id
     });
 
+    // A "generated" post that is just the source text again is not a result.
+    const isNewText = (candidate) => typeof candidate === 'string' && candidate.trim() && candidate.trim() !== text;
+
     // Call generateSocialContent from aiService
     const result = await generateSocialContent(text, niche, [platform]);
-    const post = result[platform];
-    if (post) {
+    const post = result?.[platform];
+    if (post && isNewText(post.text)) {
       return {
         success: true,
         posts: [{
-          platform: post.platform,
-          content: post.text,
+          platform: post.platform || platform,
+          content: post.text.trim(),
           hashtags: post.hashtags || [],
         }]
       };
     }
-    
-    // Fallback using generateContentAdaptation
-    const adaptationResult = await generateContentAdaptation({
-      text,
-      title,
-      platform,
-      rules: {
-        maxLength: platform === 'twitter' ? 280 : 1000,
-        hashtags: 3,
-        professional: true,
-        visual: false,
-        trending: true
-      },
-      examples: [],
-    });
 
-    if (adaptationResult && adaptationResult.content) {
+    // Fallback: the honest adapter. aiService.generateContentAdaptation returns the
+    // ORIGINAL text as its "adaptation" (with a made-up score) whenever the model
+    // fails, which made a copy of the source look like a new post.
+    // contentAdaptationService marks that case degraded instead.
+    const { adaptForPlatform } = require('./contentAdaptationService');
+    const adaptation = await adaptForPlatform(platform, text, title, options?.userId);
+    if (adaptation && adaptation.optimized && !adaptation.degraded && isNewText(adaptation.content)) {
       return {
         success: true,
         posts: [{
           platform,
-          content: adaptationResult.content,
-          hashtags: adaptationResult.hashtags || [],
+          content: adaptation.content.trim(),
+          hashtags: adaptation.hashtags || [],
         }]
       };
     }
@@ -149,7 +153,7 @@ async function generateContentFromLongForm(content, options = {}) {
 }
 
 /**
- * Generate content for gap-filling (e.g. platform, format, topic).
+ * Generate a content idea (title + description) for a gap context.
  * @param {Object} context - Gap context
  * @param {Object} options - Generation options
  * @returns {Promise<Object>} { success, content?, message? }
@@ -159,29 +163,27 @@ async function generateContent(context, options = {}) {
     const category = context?.category || 'general';
     const topic = context?.topic || 'viral trends';
     const niche = options?.niche || 'general';
-    
+
     logger.info('Generating gap-filling content outline', {
       category,
       topic,
       niche
     });
 
-    // Call generateContentIdea from aiService
-    const ideaResult = await generateContentIdea(niche, category);
-    
-    if (ideaResult && ideaResult.title) {
+    // generateContentIdea takes a platforms ARRAY. This passed (niche, category),
+    // so it threw inside, came back as filler reported as success, and then read
+    // hook/hashtags — fields that function has never returned.
+    const ideaResult = await generateContentIdea([options?.platform || 'twitter']);
+
+    if (ideaResult && !ideaResult.degraded && ideaResult.idea) {
       return {
         success: true,
         content: {
           title: ideaResult.title,
-          description: ideaResult.hook || ideaResult.description || 'Generated content recommendation',
+          description: ideaResult.idea,
           category,
           topic,
-          suggestedPosts: ideaResult.hashtags ? [{
-            platform: options?.platform || 'twitter',
-            text: `${ideaResult.title} - ${ideaResult.hook}`,
-            hashtags: ideaResult.hashtags
-          }] : []
+          suggestedPosts: []
         }
       };
     }

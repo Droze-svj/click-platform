@@ -54,6 +54,15 @@ router.get('/:agencyWorkspaceId/templates/recommendations', auth, requireWorkspa
   sendSuccess(res, 'Template recommendations retrieved', 200, { recommendations });
 }));
 
+// "Gaps filled" used to be sent even when nothing was created — every gap
+// skipped or failed — so the message contradicted the summary next to it.
+function gapFillMessage(summary = {}) {
+  const { total = 0, successful = 0, skipped = 0, failed = 0 } = summary;
+  if (total === 0) return 'No gaps matched the requested priority';
+  if (successful === 0) return `No gaps could be filled automatically (${skipped} skipped, ${failed} failed)`;
+  return `Filled ${successful} of ${total} gaps`;
+}
+
 /**
  * POST /api/clients/:clientWorkspaceId/gaps/fill
  * Fill content gaps
@@ -77,13 +86,13 @@ router.post('/:clientWorkspaceId/gaps/fill', auth, requireWorkspaceAccess('canCr
       ...options,
       userId: req.user._id
     });
-    sendSuccess(res, 'Gaps filled', 200, result);
+    sendSuccess(res, gapFillMessage(result.summary), 200, result);
   } else {
     const result = await fillContentGaps(clientWorkspaceId, gapData, {
       ...options,
       userId: req.user._id
     });
-    sendSuccess(res, 'Gaps filled', 200, result);
+    sendSuccess(res, gapFillMessage(result.summary), 200, result);
   }
 }));
 
