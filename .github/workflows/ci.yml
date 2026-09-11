@@ -91,7 +91,27 @@ jobs:
       # under --coverage. jest.config.js now uses the v8 provider, the script is
       # scoped to unit+integration, and coverageThreshold holds the real measured
       # numbers so coverage can't silently regress.
-      run: npm run test:coverage
+      #
+      # Retried ONCE, and ONLY on exit 133. The v8 provider collects coverage
+      # through an in-process inspector session with the Debugger domain enabled
+      # (collect-v8-coverage), and Node 20's V8 11.3 has an unfixed assertion in
+      # its scope iterator that can fire when that debugger pauses:
+      #   Check failed: needs_context && current_scope_ == closure_scope_ ...
+      # (nodejs/node#58460). It killed this step with SIGTRAP (exit 133) on one
+      # run and not on an otherwise identical one, and it is not a test result.
+      # Every real outcome still fails the step with no retry: a failing test or
+      # a missed coverageThreshold exits 1. The retry gets a fresh database so it
+      # does not inherit rows from the crashed partial run.
+      run: |
+        set +e
+        npm run test:coverage
+        code=$?
+        if [ "$code" -eq 133 ]; then
+          echo "::warning::Coverage run was killed by the known V8 inspector assertion (exit 133, SIGTRAP; nodejs/node#58460). Retrying once against a fresh database."
+          MONGODB_URI=mongodb://localhost:27017/click-test-coverage-retry npm run test:coverage
+          code=$?
+        fi
+        exit $code
       env:
         NODE_ENV: test
         # Its OWN database. This step re-runs the unit + integration suites a
