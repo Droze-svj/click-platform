@@ -19,6 +19,7 @@ import {
 import { CollaborationIcon } from './icons/VideoIcons'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface UserPresence {
   id: string
@@ -106,6 +107,7 @@ export default function CollaborativeEditing({
   })
 
   const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const panelRef = useDialogBehavior(showInviteDialog, () => setShowInviteDialog(false))
   const [showCommentsPanel, setShowCommentsPanel] = useState(false)
   const [newComment, setNewComment] = useState('')
   const [commentPosition, setCommentPosition] = useState<{ x: number, y: number, time: number } | null>(null)
@@ -457,8 +459,8 @@ export default function CollaborativeEditing({
 
       {/* Invite Dialog */}
       {showInviteDialog && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full" ref={panelRef}>
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('collaborativeEditing.inviteCollaboratorsTitle')}</h2>

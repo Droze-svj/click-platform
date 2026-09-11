@@ -10,8 +10,14 @@ describe('approval-workflow collaboration IDOR guards', () => {
     expect(src).toMatch(/verifyWorkspaceAccess\(req\.user\._id, approval\.workspaceId\)/);
   });
   it('comments/resolve/revisions routes use requireApprovalAccess', () => {
-    expect(src).toMatch(/'\/:approvalId\/comments',\s*auth,\s*requireApprovalAccess,/);
-    expect(src).toMatch(/'\/:approvalId\/comments\/:commentId\/resolve',\s*auth,\s*requireApprovalAccess,/);
-    expect(src).toMatch(/'\/:approvalId\/revisions',\s*auth,\s*requireApprovalAccess,/);
+    // `objectIdOrSkip('approvalId')` may sit ahead of `auth` on these routes —
+    // it declines non-ObjectId segments so static paths in the other routers
+    // mounted on /api/approvals stay reachable (see tests/server/routeShadowing).
+    // It is a matcher, not an authorization step, so what this test cares about
+    // is unchanged: requireApprovalAccess must still follow auth.
+    const guard = String.raw`(?:objectIdOrSkip\('approvalId'\),\s*)?`;
+    expect(src).toMatch(new RegExp(String.raw`'\/:approvalId\/comments',\s*${guard}auth,\s*requireApprovalAccess,`));
+    expect(src).toMatch(new RegExp(String.raw`'\/:approvalId\/comments\/:commentId\/resolve',\s*${guard}auth,\s*requireApprovalAccess,`));
+    expect(src).toMatch(new RegExp(String.raw`'\/:approvalId\/revisions',\s*${guard}auth,\s*requireApprovalAccess,`));
   });
 });

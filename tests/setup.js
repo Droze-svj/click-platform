@@ -216,9 +216,15 @@ jest.mock('redis', () => ({
 }));
 
 jest.mock('../server/services/emailService', () => ({
+  initEmailService: jest.fn(),
+  isEmailServiceAvailable: jest.fn(() => true),
   sendEmail: jest.fn(() => Promise.resolve({ success: true })),
   sendWelcomeEmail: jest.fn(() => Promise.resolve({ success: true })),
   sendPasswordResetEmail: jest.fn(() => Promise.resolve({ success: true })),
+  sendContentProcessingEmail: jest.fn(() => Promise.resolve({ success: true })),
+  sendSubscriptionExpirationEmail: jest.fn(() => Promise.resolve({ success: true })),
+  sendTeamInvitationEmail: jest.fn(() => Promise.resolve({ success: true })),
+  sendWeeklyDigestEmail: jest.fn(() => Promise.resolve({ success: true })),
 }));
 
 jest.mock('@prisma/client', () => {

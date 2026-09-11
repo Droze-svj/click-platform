@@ -23,6 +23,18 @@ beforeAll(async () => {
   db = mongoose.connection.db;
 });
 
+// Clear BEFORE as well as after. These tests assert a count over the WHOLE
+// collection (`totals.convertible === COLLECTIONS.length * 2`), so they only
+// hold on a clean slate — cleaning up afterwards is not enough if the database
+// already had rows when the suite started. It does: every jest worker shares one
+// database per worker id, and the CI `test` job runs the unit suites and then
+// re-runs them under --coverage (runInBand, so everything lands in the same
+// …-w1 database) against the rows the first pass left behind. That made
+// convertible come back 20 instead of 10 and failed only the coverage step.
+beforeEach(async () => {
+  for (const c of COLLECTIONS) { try { await db.collection(c).deleteMany({}); } catch (_) { /* noop */ } }
+});
+
 afterEach(async () => {
   for (const c of COLLECTIONS) { try { await db.collection(c).deleteMany({}); } catch (_) { /* noop */ } }
 });

@@ -471,6 +471,7 @@ export interface TextOverlay {
   fontFamily: string
   startTime: number
   endTime: number
+  opacity?: number
   style?: TextOverlayStyle
   shadowColor?: string
   /** Enter animation */
@@ -939,7 +940,7 @@ export interface EditorProject {
   styleDNASnapshot?: StyleDNA // Snapshot of the creator's DNA when this project was started
 }
 
-export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'repurpose' | 'generate' | 'personalize' | 'ai' | 'color' | 'audio' | 'music' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips' | 'predict' | 'distribution' | 'style-vault' | 'spatial' | 'agent' | 'dub' | 'thumbnails' | 'insights' | 'creative-tools' | 'stock-library' | 'creative-packs' | 'text-motion'
+export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'repurpose' | 'generate' | 'personalize' | 'ai' | 'color' | 'audio' | 'music' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips' | 'predict' | 'distribution' | 'style-vault' | 'spatial' | 'agent' | 'dub' | 'thumbnails' | 'insights' | 'creative-tools' | 'stock-library' | 'creative-packs' | 'text-motion' | 'ai-assist' | 'monetize'
 
 export interface StyleProfile {
   id: string

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   ShieldCheck,
   X,
@@ -39,7 +39,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
   const [selectedCurrency, setSelectedCurrency] = React.useState('USD')
   const currencies = ['USD', 'ETH', 'SOL', 'BTC']
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -100,7 +100,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
 
           <AnimatePresence mode="popLayout">
             {proposals.length > 0 ? proposals.map((proposal) => (
-              <motion.div
+              <m.div
                 key={proposal.id}
                 layout
                 initial={{ opacity: 0, x: -20 }}
@@ -160,7 +160,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )) : (
               <div className="h-64 flex flex-col items-center justify-center gap-4 text-slate-600 opacity-40 uppercase tracking-[0.2em] italic">
                 <ShieldCheck className="w-12 h-12" />
@@ -184,7 +184,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
                     <span className="text-2xl font-black text-white italic">1.0X</span>
                  </div>
                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                    <m.div initial={{ width: 0 }} animate={{ width: '100%' }} className="h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                  </div>
                  <p className="text-[9px] text-slate-500 leading-relaxed italic border-t border-white/5 pt-4">
                    Your authority is absolute. No autonomous decision can impact the fiscal bridge without operator sign-off.
@@ -203,7 +203,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
            </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

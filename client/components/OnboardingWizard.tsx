@@ -6,12 +6,15 @@
  */
 
 import React, { useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Upload, Download, ChevronRight, X, Check,
   Sparkles, Zap, ArrowRight, Brain, Target, Rocket
 } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { apiPut } from '@/lib/api'
+import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
+import { useDialogBehavior } from './ui/modal'
 
 interface OnboardingWizardProps {
   onComplete: () => void
@@ -82,32 +85,69 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const [currentStep, setCurrentStep] = useState(-2)
   const [completed, setCompleted] = useState<Set<string>>(new Set())
   const [showConfetti, setShowConfetti] = useState(false)
+  // No close callback: onboarding has no dismiss, so Escape must not skip
+  // it. The hook is still worth having for the trap and the scroll lock.
+  const panelRef = useDialogBehavior(true, () => {})
 
   // Quiz state
   const [nicheType, setNicheType] = useState<string | null>(null)
   const [platformTarget, setPlatformTarget] = useState<string | null>(null)
   const [creatorGoal, setCreatorGoal] = useState<string | null>(null)
   const [quizStep, setQuizStep] = useState(0)
+  // Step 4: make the workspace preferences discoverable at first run rather
+  // than leaving them buried in Settings → Appearance.
+  const [landing, setLanding] = useState<string>('')
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')
+  const { setDefaultLanding } = useWorkspacePrefs()
+
+  // The creator goal maps to a starting hook style. Kept as one table so the
+  // local defaults and the value we sync to the account can't drift apart.
+  const GOAL_DEFAULTS: Record<string, { hookStyle: string; flags: Record<string, string> }> = {
+    viral: { hookStyle: 'controversial-question', flags: { click_auto_apply_trending: 'true' } },
+    engagement: { hookStyle: 'open-loop', flags: { click_auto_add_cta: 'true' } },
+    monetize: { hookStyle: 'value-stat', flags: { click_show_rpm_insights: 'true' } },
+  }
 
   const saveNicheProfile = useCallback(() => {
     const profile = { nicheType, platformTarget, creatorGoal, configuredAt: Date.now() }
+    const mapping = creatorGoal ? GOAL_DEFAULTS[creatorGoal] : undefined
+
+    // Local cache first, so the very next screen already reflects the answers
+    // without waiting on a round-trip.
     try {
       localStorage.setItem(CLICK_NICHE_KEY, JSON.stringify(profile))
-      if (creatorGoal === 'viral') {
-        localStorage.setItem('click_default_hook_style', 'controversial-question')
-        localStorage.setItem('click_auto_apply_trending', 'true')
-      } else if (creatorGoal === 'engagement') {
-        localStorage.setItem('click_default_hook_style', 'open-loop')
-        localStorage.setItem('click_auto_add_cta', 'true')
-      } else if (creatorGoal === 'monetize') {
-        localStorage.setItem('click_default_hook_style', 'value-stat')
-        localStorage.setItem('click_show_rpm_insights', 'true')
+      if (mapping) {
+        localStorage.setItem('click_default_hook_style', mapping.hookStyle)
+        Object.entries(mapping.flags).forEach(([k, v]) => localStorage.setItem(k, v))
       }
     } catch {}
-  }, [nicheType, platformTarget, creatorGoal])
+
+    // Then persist to the ACCOUNT. These answers previously lived only in
+    // localStorage, so a creator who onboarded on a laptop got a completely
+    // un-personalized Click on their desktop — and the marketing brain, which
+    // reads these same fields server-side, never saw them at all.
+    // Workspace choices go to the account too (UserSettings.preferences), so
+    // the arrangement follows the creator to another device.
+    setDefaultLanding(landing)
+    try {
+      document.documentElement.setAttribute('data-density', density)
+    } catch {}
+    void apiPut('/user/settings', { appearance: { density } }).catch(() => {})
+
+    void apiPut('/me/ai-preferences', {
+      voice: mapping ? { hookStyle: mapping.hookStyle } : undefined,
+      defaults: {
+        niche: nicheType || undefined,
+        platformFocus: platformTarget ? [platformTarget] : undefined,
+        goals: creatorGoal ? [creatorGoal] : undefined,
+      },
+    }).catch(() => {
+      /* Best effort: the local cache above still personalizes this device. */
+    })
+  }, [nicheType, platformTarget, creatorGoal, landing, density, setDefaultLanding])
 
   const advanceQuiz = useCallback(() => {
-    if (quizStep < 2) {
+    if (quizStep < 3) {
       setQuizStep(q => q + 1)
     } else {
       saveNicheProfile()
@@ -142,11 +182,13 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const step = currentStep >= 0 ? STEPS[currentStep] : null
   const progress = currentStep < 0 ? 0 : ((currentStep + 1) / STEPS.length) * 100
   const selectedGoal = CREATOR_GOALS.find(g => g.id === creatorGoal)
-  const quizCanAdvance = (quizStep === 0 && !!nicheType) || (quizStep === 1 && !!platformTarget) || (quizStep === 2 && !!creatorGoal)
+  // Step 3 has sensible defaults selected, so it can always advance.
+  const quizCanAdvance = (quizStep === 0 && !!nicheType) || (quizStep === 1 && !!platformTarget) || (quizStep === 2 && !!creatorGoal) || quizStep === 3
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md">
-      <motion.div
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md" role="dialog" aria-modal="true">
+      <m.div
+        ref={panelRef}
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -160,7 +202,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
         <div className="bg-gradient-to-b from-slate-900 to-black border border-white/10 rounded-3xl overflow-hidden shadow-2xl shadow-black/60">
           <div className="h-0.5 bg-white/5">
-            <motion.div
+            <m.div
               className="h-full bg-gradient-to-r from-indigo-600 to-purple-500"
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.4 }}
@@ -171,7 +213,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
             {/* ── NICHE QUIZ ─────────────────────────────── */}
             {currentStep === -2 && (
-              <motion.div key={`quiz-${quizStep}`}
+              <m.div key={`quiz-${quizStep}`}
                 initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
                 className="p-8"
               >
@@ -181,7 +223,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   </div>
                   <div>
                     <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400">{t('onboardingWizard.aiCalibration')}</div>
-                    <div className="text-[10px] text-slate-500">{t('onboardingWizard.stepOfThree', { step: quizStep + 1 })}</div>
+                    <div className="text-[10px] text-slate-500">{`${quizStep + 1} / 4`}</div>
                   </div>
                   <div className="ml-auto flex gap-1.5">
                     {[0,1,2].map(i => (
@@ -225,6 +267,49 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   </>
                 )}
 
+                {quizStep === 3 && (
+                  <>
+                    <h3 className="text-xl font-black tracking-tight mb-1">Make it yours</h3>
+                    <p className="text-slate-500 text-xs mb-5">
+                      Both of these follow you to any device, and you can change them any time in Settings.
+                    </p>
+
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Open Click on</p>
+                    <div className="grid grid-cols-2 gap-2 mb-5">
+                      {[
+                        { id: '', label: 'Home', emoji: '🏠' },
+                        { id: '/dashboard/forge', label: 'AI Video Creator', emoji: '🎬' },
+                        { id: '/dashboard/clips/hub', label: 'Clips', emoji: '✂️' },
+                        { id: '/dashboard/calendar', label: 'Calendar', emoji: '🗓️' },
+                      ].map(o => (
+                        <button type="button" key={o.id || 'home'} onClick={() => setLanding(o.id)}
+                          aria-pressed={landing === o.id}
+                          className={`p-3 rounded-2xl border text-left transition-all ${landing === o.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
+                        >
+                          <div className="text-xl mb-0.5">{o.emoji}</div>
+                          <div className="text-xs font-black text-white">{o.label}</div>
+                        </button>
+                      ))}
+                    </div>
+
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Spacing</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { id: 'comfortable', label: 'Comfortable', tip: 'Roomier, easier to scan' },
+                        { id: 'compact', label: 'Compact', tip: 'More on screen at once' },
+                      ] as const).map(o => (
+                        <button type="button" key={o.id} onClick={() => setDensity(o.id)}
+                          aria-pressed={density === o.id}
+                          className={`p-3 rounded-2xl border text-left transition-all ${density === o.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
+                        >
+                          <div className="text-xs font-black text-white">{o.label}</div>
+                          <div className="text-[9px] text-slate-500 mt-0.5">{o.tip}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 {quizStep === 2 && (
                   <>
                     <h3 className="text-xl font-black tracking-tight mb-1">{t('onboardingWizard.quizGoalHeading')}</h3>
@@ -241,13 +326,13 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                       ))}
                     </div>
                     {selectedGoal && (
-                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                      <m.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                         className="mt-4 p-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20"
                       >
                         <p className="text-[10px] text-indigo-300">
                           <span className="font-black">{t('onboardingWizard.aiModePrefix')}</span>{t(selectedGoal.tipKey)}
                         </p>
-                      </motion.div>
+                      </m.div>
                     )}
                   </>
                 )}
@@ -257,12 +342,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 >
                   {quizStep < 2 ? t('onboardingWizard.continue') : t('onboardingWizard.configureMyAi')} <ArrowRight className="w-4 h-4" />
                 </button>
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── WELCOME ────────────────────────────────── */}
             {currentStep === -1 && (
-              <motion.div key="welcome"
+              <m.div key="welcome"
                 initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="p-8"
               >
@@ -300,12 +385,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   {t('onboardingWizard.startCreating')} <ArrowRight className="w-4 h-4" />
                 </button>
                 <p className="text-center text-[9px] text-slate-600 mt-3">{t('onboardingWizard.takesNinetySeconds')}</p>
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── STEP SCREENS ───────────────────────────── */}
             {currentStep >= 0 && step && !showConfetti && (
-              <motion.div key={`step-${currentStep}`}
+              <m.div key={`step-${currentStep}`}
                 initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
                 className="p-8"
               >
@@ -349,12 +434,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 >
                   {t(step.skipKey)}
                 </button>
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── COMPLETION ─────────────────────────────── */}
             {showConfetti && (
-              <motion.div key="done"
+              <m.div key="done"
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                 className="p-8 text-center"
               >
@@ -365,12 +450,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   <span className="text-indigo-400 font-bold">{(() => { const g = CREATOR_GOALS.find(g => g.id === creatorGoal); return g ? t(g.labelKey) : t('onboardingWizard.fallbackSuccess') })()}</span>.
                   {' '}{t('onboardingWizard.makeFirstVideoViral')}
                 </p>
-              </motion.div>
+              </m.div>
             )}
 
           </AnimatePresence>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

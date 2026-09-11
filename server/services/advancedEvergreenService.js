@@ -204,7 +204,12 @@ async function buildRecyclingCalendar(userId, evergreenContent, options = {}) {
 
       while (currentDate <= calendar.endDate && platformContent.length > 0) {
         const content = platformContent[contentIndex % platformContent.length];
-        const platformData = content.platforms.find(p => p.platform === platform);
+        // Defensive: content.platforms is optional, and a Content built by a
+        // path that never set it would otherwise TypeError here rather than
+        // simply contributing no calendar entries.
+        const platformData = Array.isArray(content.platforms)
+          ? content.platforms.find(p => p.platform === platform)
+          : null;
 
         if (platformData) {
           calendar.platforms[platform].schedule.push({
@@ -255,7 +260,10 @@ async function createRecyclingPlansFromCalendar(userId, calendar) {
             originalContentId: scheduleItem.contentId,
             platform,
             recycleType: 'scheduled',
-            schedule: {
+            // The model's field is `repostSchedule`, not `schedule` — under the
+            // old name Mongoose dropped it, so the recycle row carried no
+            // next-repost date at all.
+            repostSchedule: {
               nextRepost: scheduleItem.date,
               frequency: 'monthly',
               maxReposts: 12
@@ -522,11 +530,16 @@ async function optimizeRecyclingCalendar(userId, calendar) {
       const { predictOptimalTime } = require('./smartScheduleOptimizationService');
       for (const item of schedule) {
         try {
-          const optimal = await predictOptimalTime(userId, platform, 'UTC');
-          if (optimal.optimalTime) {
+          // (userId, contentId, platform, options) -> { bestTime: { scheduledTime } }.
+          // Previously called as (userId, platform, 'UTC') and read
+          // `optimal.optimalTime`, which the service does not return — so this
+          // whole loop was a no-op that still ran the prediction every item.
+          const optimal = await predictOptimalTime(userId, item.contentId, platform, { dateRange: 7 });
+          const best = optimal.bestTime?.scheduledTime;
+          if (best) {
             const optimalDate = new Date(item.date);
-            optimalDate.setHours(optimal.optimalTime.getHours());
-            optimalDate.setMinutes(optimal.optimalTime.getMinutes());
+            optimalDate.setHours(best.getHours());
+            optimalDate.setMinutes(best.getMinutes());
             item.optimizedTime = optimalDate;
             item.originalTime = item.date;
             item.date = optimalDate;

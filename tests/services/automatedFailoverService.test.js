@@ -8,6 +8,8 @@ jest.mock('../../server/services/databaseShardingService', () => ({
   checkDatabaseHealth: jest.fn(),
 }));
 jest.mock('../../server/services/emailService', () => ({
+  initEmailService: jest.fn(),
+  isEmailServiceAvailable: jest.fn(() => true),
   sendEmail: jest.fn(),
 }));
 jest.mock('../../server/utils/logger', () => ({

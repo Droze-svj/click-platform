@@ -6,7 +6,7 @@
  */
 
 import { useTheme } from './ThemeProvider'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -41,7 +41,7 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
   return (
     <div className={`relative ${className}`}>
       {/* Toggle button */}
-      <motion.button
+      <m.button
         whileTap={{ scale: 0.88 }}
         whileHover={{ scale: 1.05 }}
         onClick={() => { if (showSystem) setShowMenu(m => !m); else toggle() }}
@@ -54,14 +54,14 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
         }`}
       >
         {/* Glow ring on active */}
-        <motion.span
+        <m.span
           animate={{ opacity: isDark ? 0.5 : 0 }}
           className="absolute inset-0 rounded-2xl bg-indigo-500/20 pointer-events-none"
         />
 
         {/* Icon swap */}
         <AnimatePresence mode="wait">
-          <motion.span
+          <m.span
             key={resolvedTheme}
             initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
             animate={{ rotate: 0,   opacity: 1, scale: 1 }}
@@ -73,9 +73,9 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
               ? <Moon size={s.icon} className="text-indigo-300" />
               : <Sun  size={s.icon} className="text-amber-500"  />
             }
-          </motion.span>
+          </m.span>
         </AnimatePresence>
-      </motion.button>
+      </m.button>
 
       {showLabel && (
         <span className={`text-[9px] font-black uppercase tracking-widest mt-1 block text-center ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
@@ -86,7 +86,7 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
       {/* System/Light/Dark selector menu */}
       <AnimatePresence>
         {showMenu && showSystem && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -6, scale: 0.96 }}
             animate={{ opacity: 1, y: 0,  scale: 1 }}
             exit={{   opacity: 0, y: -6,  scale: 0.96 }}
@@ -111,7 +111,7 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
                 {theme === m.id && <span className={`ml-auto w-1 h-1 rounded-full ${isDark ? 'bg-indigo-400' : 'bg-indigo-600'}`} />}
               </button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

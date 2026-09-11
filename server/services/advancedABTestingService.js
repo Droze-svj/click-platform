@@ -25,9 +25,11 @@ async function createMultiVariantTest(userId, testData) {
       const content = new Content({
         userId,
         title: variant.title,
-        body: variant.body,
-        platform,
-        status: 'draft',
+        // See abTestingService: body/platform are not Content paths and 'draft'
+        // is not in the status enum, so every variant save threw.
+        content: { text: variant.body },
+        platforms: [platform],
+        status: 'completed',
         abTest: {
           testId: null,
           variant: String.fromCharCode(65 + index), // A, B, C, etc.

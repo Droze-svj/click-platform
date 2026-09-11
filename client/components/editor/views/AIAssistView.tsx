@@ -22,7 +22,7 @@ import {
   Undo2,
   CheckCheck,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { EditorCategory, AIDirectorSuggestion } from '../../../types/editor'
 
 import { useState } from 'react'
@@ -138,7 +138,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
   const appliedCount = directorSuggestions.length - pendingSuggestions.length
 
   return (
-    <motion.div
+    <m.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -146,7 +146,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
     >
       {/* Director Suggestions — apply AI decisions to the timeline in one click */}
       {directorSuggestions.length > 0 && (
-        <motion.div
+        <m.div
           variants={itemVariants}
           className={`${glassStyle} rounded-3xl p-6 md:p-8 relative overflow-hidden`}
         >
@@ -241,11 +241,11 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
               )
             })}
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Primary Intelligence Section */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className={`${glassStyle} rounded-[3rem] p-12 relative overflow-hidden group shadow-3xl`}
       >
@@ -272,7 +272,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
           {CREATIVITY_TIPS.map((tip, idx) => {
             const Icon = tip.icon
             return (
-              <motion.button
+              <m.button
                 key={tip.title}
                 type="button"
                 whileHover={{ scale: 1.02, x: 4 }}
@@ -288,14 +288,14 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                   <p className="text-sm text-slate-500 font-medium italic group-hover:text-slate-300 transition-colors leading-relaxed">{tip.desc}</p>
                 </div>
                 <ChevronRight className="w-6 h-6 text-slate-800 group-hover:text-emerald-400 transition-colors shrink-0" />
-              </motion.button>
+              </m.button>
             )
           })}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Primary Gateway Section */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className="p-10 bg-fuchsia-600/5 rounded-[3rem] border border-fuchsia-500/10 relative overflow-hidden group shadow-3xl"
       >
@@ -314,7 +314,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
             </p>
           </div>
 
-          <motion.button
+          <m.button
             type="button"
             whileHover={{ scale: 1.05, y: -4 }}
             whileTap={{ scale: 0.95 }}
@@ -323,12 +323,12 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
           >
             <Sparkles className="w-6 h-6" />
             OPEN ELITE AI CORE
-          </motion.button>
+          </m.button>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Smart Cuts Module */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className={`${glassStyle} rounded-[3rem] p-12 relative overflow-hidden group shadow-3xl flex flex-col items-center justify-center text-center`}
       >
@@ -349,7 +349,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
               Autonomously scan the timeline for dead air, repetitive phrases, and awkward pauses. We will mark the timeline with AI nodes for one-click removal.
             </p>
 
-            <motion.button
+            <m.button
               disabled={isFindingCuts || !videoId}
               onClick={handleFindSmartCuts}
               whileHover={{ scale: 1.05, y: -4 }}
@@ -367,12 +367,12 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                   Find Smart Cuts
                 </>
               )}
-            </motion.button>
+            </m.button>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Status HUD */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between px-10 opacity-20 invisible md:visible">
+      <m.div variants={itemVariants} className="flex items-center justify-between px-10 opacity-20 invisible md:visible">
         <div className="flex items-center gap-4">
           <Radio className="w-4 h-4 text-slate-500" />
           <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">Uplink Stable</span>
@@ -381,8 +381,8 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
           <Layers className="w-4 h-4 text-slate-500" />
           <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">Cognitive Node: 0x82A</span>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   )
 }
 

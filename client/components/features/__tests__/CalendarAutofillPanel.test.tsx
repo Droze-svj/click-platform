@@ -43,6 +43,18 @@ describe('CalendarAutofillPanel', () => {
     expect(mApprove).toHaveBeenCalledWith('cal_x')
   })
 
+  it('says ideas are unavailable — with nothing to approve — when the server returns a degraded empty plan', async () => {
+    mAutofill.mockResolvedValue({ planId: null, count: 0, posts: [], degraded: true })
+
+    render(<CalendarAutofillPanel />)
+    fireEvent.click(screen.getByTestId('autofill-generate'))
+
+    await waitFor(() => expect(screen.getByTestId('autofill-unavailable')).toBeInTheDocument())
+    expect(screen.queryByTestId('autofill-result')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('autofill-approve')).not.toBeInTheDocument()
+    expect(mApprove).not.toHaveBeenCalled()
+  })
+
   it('surfaces a generation error', async () => {
     mAutofill.mockRejectedValue(new Error('over budget'))
     render(<CalendarAutofillPanel />)

@@ -281,7 +281,7 @@ describe('Server Startup Tests', () => {
         await runServerWithEnv({
           PORT: testPort,
           NODE_ENV: 'development'
-        }, 15000);
+        }, TEST_TIMEOUT);
       } catch (error) {
         rejected = true;
         expect(error.message).toContain('exited with code 1');

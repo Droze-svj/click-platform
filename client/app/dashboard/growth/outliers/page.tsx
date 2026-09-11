@@ -16,6 +16,7 @@ import {
   EmptyState,
   SectionHeader,
   Button,
+  PageShell,
 } from '../../../../components/ui'
 
 // ── Live response shape from GET /api/seo/outliers ──
@@ -363,7 +364,7 @@ export default function OutliersPage() {
     !!report && (report.available === false || report.reason === 'insufficient_data')
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       <SectionHeader
@@ -496,6 +497,6 @@ export default function OutliersPage() {
           </Panel>
         </>
       )}
-    </div>
+    </PageShell>
   )
 }

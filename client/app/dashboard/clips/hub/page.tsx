@@ -11,7 +11,9 @@ import ClipLightbox from '../../../../components/clips/ClipLightbox'
 import { confirmDialog } from '../../../../components/ui/ConfirmDialog'
 import ToastContainer from '../../../../components/ToastContainer'
 import { useTranslation } from '@/hooks/useTranslation'
-import { Button, Panel, SectionHeader, Badge, Input } from '../../../../components/ui'
+import { Button, Panel, SectionHeader, Badge, Input,
+  PageShell,
+} from '../../../../components/ui'
 
 type SortKey = 'viralScore' | 'rating' | 'newest' | 'duration'
 type ClipWithSource = Clip & {
@@ -149,7 +151,7 @@ export default function ClipHubPage() {
   }, {})
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-32 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       <SectionHeader
@@ -315,6 +317,6 @@ export default function ClipHubPage() {
           }
         />
       )}
-    </div>
+    </PageShell>
   )
 }

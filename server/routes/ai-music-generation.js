@@ -4,6 +4,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { aiLimiter } = require('../middleware/enhancedRateLimiter');
+const { costGuard } = require('../middleware/costGuard');
 const { sendSuccess, sendError } = require('../utils/response');
 const { clampInt } = require('../utils/pagination');
 const logger = require('../utils/logger');
@@ -74,7 +75,7 @@ router.get('/providers/:provider/styles', auth, asyncHandler(async (req, res) =>
  * @desc Generate AI music track
  * @access Private
  */
-router.post('/generate', auth, asyncHandler(async (req, res) => {
+router.post('/generate', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => {
   const {
     provider,
     mood,

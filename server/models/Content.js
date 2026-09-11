@@ -73,6 +73,30 @@ const contentSchema = new mongoose.Schema({
   title: String,
   description: String,
   transcript: String,
+  // The post body, mirroring ScheduledPost's `content` sub-document so the two
+  // speak the same vocabulary.
+  //
+  // Declared because the application already both WRITES and READS it and the
+  // schema did not have it. Eight call sites (agency bulk-clone, content-ops
+  // create, agency clone-to-client, playbooks, A/B variants, asset templates)
+  // build a Content with `content: { text }` or `body`, and Mongoose dropped it
+  // on save — strict sub-schemas discard undeclared paths silently. Meanwhile
+  // seven live routes read `content.content.text` (first-comment,
+  // carousel-composer, caption-angles, repurpose-studio, hook-generator,
+  // caption-critique, hashtag-strategist), each falling back to `description`.
+  // So the read path existed, the write path existed, and nothing connected
+  // them: every one of those routes always took the fallback.
+  content: {
+    text: String,
+    mediaUrl: String,
+    hashtags: [String],
+    mentions: [String],
+  },
+  // Platforms this content is intended for. Written by the agency clone/bulk
+  // flows and READ by advancedEvergreenService, which does
+  // `content.platforms.find(...)` — on a path the schema did not declare, that
+  // is a TypeError on undefined rather than an empty result.
+  platforms: [mongoose.Schema.Types.Mixed],
   // ISO language code the video was transcribed in (set from req.language
   // at upload). Downstream AI services read this so a Spanish video gets
   // Spanish captions / hooks / repurpose copy automatically — instead of
@@ -84,6 +108,10 @@ const contentSchema = new mongoose.Schema({
     enum: ['uploading', 'processing', 'completed', 'failed'],
     default: 'uploading'
   },
+  // Why `status` is 'failed'. Content generation has always set this on failure,
+  // but the field was never declared, so the strict schema silently dropped it —
+  // every failed item was saved with no reason at all.
+  errorMessage: { type: String },
   // Top-level snapshot of the manual editor's saved state — videoFilters,
   // textOverlays, shapeOverlays, timelineSegments, captionStyle,
   // colorGradeSettings, etc. Written by `POST /api/video/editor/save`

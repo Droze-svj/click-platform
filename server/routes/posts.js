@@ -388,6 +388,16 @@ router.post('/:id/publish', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Same guard the sibling handlers use: with no Supabase configured (or a
+    // dev user, whose id is not a Supabase author_id) createSupabaseClient()
+    // returns null and `.from()` throws, which the outer catch turned into an
+    // opaque 500. The blog-post store simply holds nothing for this caller.
+    const isDevUser = require('../utils/devUser').isDevUser(req.user._id || req.user.id);
+    const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (isDevUser || !supabaseConfigured) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
+
     const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .update({
@@ -436,6 +446,16 @@ router.post('/:id/schedule', auth, asyncHandler(async (req, res) => {
     const scheduledDate = new Date(scheduled_at);
     if (scheduledDate <= new Date()) {
       return res.status(400).json({ success: false, error: 'Scheduled date must be in the future' });
+    }
+
+    // Same guard the sibling handlers use: with no Supabase configured (or a
+    // dev user, whose id is not a Supabase author_id) createSupabaseClient()
+    // returns null and `.from()` throws, which the outer catch turned into an
+    // opaque 500. The blog-post store simply holds nothing for this caller.
+    const isDevUser = require('../utils/devUser').isDevUser(req.user._id || req.user.id);
+    const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (isDevUser || !supabaseConfigured) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
     }
 
     const { data: post, error } = await createSupabaseClient()

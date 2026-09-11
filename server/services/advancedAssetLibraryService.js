@@ -7,8 +7,31 @@ const AssetCollection = require('../models/AssetCollection');
 const AssetShare = require('../models/AssetShare');
 const AssetRelationship = require('../models/AssetRelationship');
 const ScheduledPost = require('../models/ScheduledPost');
+const path = require('path');
 const logger = require('../utils/logger');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { toAbsolutePath } = require('../utils/pathUtils');
+
+// Content types that optimizeAsset will actually run image compression on.
+const IMAGE_TYPES = new Set(['image', 'photo', 'graphic', 'thumbnail']);
+
+/**
+ * Path for a file derived from an original (optimized copy, thumbnail, ...),
+ * written next to the source so it stays inside uploads/ and is reachable by
+ * the same signed-media route that serves the original.
+ */
+function derivedAssetPath(inputPath, suffix, ext) {
+  const dir = path.dirname(inputPath);
+  const base = path.basename(inputPath, path.extname(inputPath));
+  return path.join(dir, `${base}-${suffix}${ext}`);
+}
+
+/** Absolute uploads path → the "/uploads/..." URL clients request. */
+function toPublicUrl(absolutePath) {
+  const uploadsBase = path.resolve(process.cwd(), 'uploads');
+  const rel = path.relative(uploadsBase, absolutePath);
+  return `/uploads/${rel.split(path.sep).join('/')}`;
+}
 
 /**
  * Create asset version
@@ -435,14 +458,57 @@ async function optimizeAsset(userId, contentId, optimizationOptions = {}) {
       }
     }
 
-    // Image compression (future)
-    if (compressImages && content.type === 'video' && content.originalFile) {
-      optimizations.recommendations.push('Image compression not yet implemented. Consider using external tools.');
+    // Image compression — sharp, via the same helper the upload path uses.
+    // (The old condition also gated on type === 'video', which is why it never
+    // could have compressed an image even once it was implemented.)
+    if (compressImages && content.originalFile?.url && IMAGE_TYPES.has(content.type)) {
+      const inputPath = toAbsolutePath(content.originalFile.url);
+      if (!inputPath) {
+        optimizations.recommendations.push('Could not locate the original image file to compress.');
+      } else {
+        try {
+          const { optimizeImage } = require('../utils/imageOptimizer');
+          const outputPath = derivedAssetPath(inputPath, 'optimized', '.jpg');
+          const result = await optimizeImage(inputPath, outputPath, { quality: 85, format: 'jpeg' });
+          optimizations.metadata.compression = {
+            originalSize: result.originalSize,
+            optimizedSize: result.optimizedSize,
+            savingsPercent: result.savings,
+            url: toPublicUrl(result.path),
+          };
+          optimizations.applied.push('image_compression');
+          if (result.savings < 5) {
+            optimizations.recommendations.push('This image is already well compressed — little to gain.');
+          }
+        } catch (error) {
+          // Optimization is advisory; a failure must not fail the whole call.
+          logger.warn('Image compression failed during asset optimization', {
+            contentId, error: error.message,
+          });
+          optimizations.recommendations.push('Image compression could not be completed for this file.');
+        }
+      }
     }
 
-    // Thumbnail generation (future)
-    if (generateThumbnails && content.type === 'video') {
-      optimizations.recommendations.push('Thumbnail generation not yet implemented. Consider using video processing service.');
+    // Thumbnail generation — ffmpeg screenshot + sharp resize, via thumbnailService.
+    if (generateThumbnails && content.type === 'video' && content.originalFile?.url) {
+      const inputPath = toAbsolutePath(content.originalFile.url);
+      if (!inputPath) {
+        optimizations.recommendations.push('Could not locate the source video to generate a thumbnail.');
+      } else {
+        try {
+          const { generateThumbnail } = require('./thumbnailService');
+          const outputPath = derivedAssetPath(inputPath, 'thumb', '.jpg');
+          await generateThumbnail(inputPath, outputPath, { width: 1280, height: 720 });
+          optimizations.metadata.thumbnail = { url: toPublicUrl(outputPath) };
+          optimizations.applied.push('thumbnail_generation');
+        } catch (error) {
+          logger.warn('Thumbnail generation failed during asset optimization', {
+            contentId, error: error.message,
+          });
+          optimizations.recommendations.push('Thumbnail generation could not be completed for this file.');
+        }
+      }
     }
 
     logger.info('Asset optimized', { userId, contentId, optimizations: optimizations.applied.length });

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Smartphone, 
   Monitor, 
@@ -134,7 +134,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
             const currentProgress = progress[profile.id] || 0
 
             return (
-              <motion.button
+              <m.button
                 key={profile.id}
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
@@ -174,7 +174,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
                           <span className="text-indigo-400">{Math.round(currentProgress)}%</span>
                        </div>
                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                          <motion.div 
+                          <m.div 
                             initial={{ width: 0 }}
                             animate={{ width: `${currentProgress}%` }}
                             className="h-full bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]" 
@@ -183,7 +183,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
                     </div>
                   )}
                 </div>
-              </motion.button>
+              </m.button>
             )
           })}
         </div>
@@ -202,7 +202,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
           </div>
 
           <div className="relative z-10 flex items-center gap-4">
-             <motion.button
+             <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               disabled={isExporting || selectedFormats.length === 0}
@@ -224,14 +224,14 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
                   Initialize Batch Dispatch
                 </>
               )}
-            </motion.button>
+            </m.button>
           </div>
         </div>
 
         {/* Success States / Vault Integration Placeholder */}
         <AnimatePresence>
           {exportResults.length > 0 && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
@@ -245,7 +245,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
                   View Vault <History className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

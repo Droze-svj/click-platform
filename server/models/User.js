@@ -112,8 +112,18 @@ const userSchema = new mongoose.Schema({
       platformUsername: String,
       avatar: String,
       expiresAt: Date,
+      // accounts[]/activeAccountId/states are declared on EVERY platform, not
+      // just twitter. Mongoose sub-schemas are strict: an undeclared path is
+      // dropped on save without error, so OAuthStorage.saveTokens() writing
+      // accounts[] was silently discarded for linkedin/facebook/youtube/tiktok/
+      // instagram — connecting a SECOND account of those platforms appeared to
+      // succeed and then wasn't there, while the single-account path kept
+      // working because accessToken/refreshToken are declared. `states` was
+      // dropped the same way, which made OAuthStorage.putState/consumeState a
+      // no-op on the Mongo backend (the default).
       accounts: [mongoose.Schema.Types.Mixed],
       activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     },
     linkedin: {
       accessToken: String,
@@ -125,6 +135,18 @@ const userSchema = new mongoose.Schema({
       platformUsername: String,
       avatar: String,
       state: String, // Temporary, for OAuth flow
+      // accounts[]/activeAccountId/states are declared on EVERY platform, not
+      // just twitter. Mongoose sub-schemas are strict: an undeclared path is
+      // dropped on save without error, so OAuthStorage.saveTokens() writing
+      // accounts[] was silently discarded for linkedin/facebook/youtube/tiktok/
+      // instagram — connecting a SECOND account of those platforms appeared to
+      // succeed and then wasn't there, while the single-account path kept
+      // working because accessToken/refreshToken are declared. `states` was
+      // dropped the same way, which made OAuthStorage.putState/consumeState a
+      // no-op on the Mongo backend (the default).
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     },
     facebook: {
       accessToken: String,
@@ -136,6 +158,18 @@ const userSchema = new mongoose.Schema({
       platformUsername: String,
       pages: [mongoose.Schema.Types.Mixed],
       state: String, // Temporary, for OAuth flow
+      // accounts[]/activeAccountId/states are declared on EVERY platform, not
+      // just twitter. Mongoose sub-schemas are strict: an undeclared path is
+      // dropped on save without error, so OAuthStorage.saveTokens() writing
+      // accounts[] was silently discarded for linkedin/facebook/youtube/tiktok/
+      // instagram — connecting a SECOND account of those platforms appeared to
+      // succeed and then wasn't there, while the single-account path kept
+      // working because accessToken/refreshToken are declared. `states` was
+      // dropped the same way, which made OAuthStorage.putState/consumeState a
+      // no-op on the Mongo backend (the default).
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     },
     youtube: {
       accessToken: String,
@@ -148,6 +182,18 @@ const userSchema = new mongoose.Schema({
       avatar: String,
       channelId: String,
       state: String, // Temporary, for OAuth flow
+      // accounts[]/activeAccountId/states are declared on EVERY platform, not
+      // just twitter. Mongoose sub-schemas are strict: an undeclared path is
+      // dropped on save without error, so OAuthStorage.saveTokens() writing
+      // accounts[] was silently discarded for linkedin/facebook/youtube/tiktok/
+      // instagram — connecting a SECOND account of those platforms appeared to
+      // succeed and then wasn't there, while the single-account path kept
+      // working because accessToken/refreshToken are declared. `states` was
+      // dropped the same way, which made OAuthStorage.putState/consumeState a
+      // no-op on the Mongo backend (the default).
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     },
     tiktok: {
       accessToken: String,
@@ -159,6 +205,18 @@ const userSchema = new mongoose.Schema({
       platformUsername: String,
       avatar: String,
       state: String, // Temporary, for OAuth flow
+      // accounts[]/activeAccountId/states are declared on EVERY platform, not
+      // just twitter. Mongoose sub-schemas are strict: an undeclared path is
+      // dropped on save without error, so OAuthStorage.saveTokens() writing
+      // accounts[] was silently discarded for linkedin/facebook/youtube/tiktok/
+      // instagram — connecting a SECOND account of those platforms appeared to
+      // succeed and then wasn't there, while the single-account path kept
+      // working because accessToken/refreshToken are declared. `states` was
+      // dropped the same way, which made OAuthStorage.putState/consumeState a
+      // no-op on the Mongo backend (the default).
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     },
     instagram: {
       accessToken: String,
@@ -170,6 +228,18 @@ const userSchema = new mongoose.Schema({
       platformUsername: String,
       avatar: String,
       state: String, // Temporary, for OAuth flow
+      // accounts[]/activeAccountId/states are declared on EVERY platform, not
+      // just twitter. Mongoose sub-schemas are strict: an undeclared path is
+      // dropped on save without error, so OAuthStorage.saveTokens() writing
+      // accounts[] was silently discarded for linkedin/facebook/youtube/tiktok/
+      // instagram — connecting a SECOND account of those platforms appeared to
+      // succeed and then wasn't there, while the single-account path kept
+      // working because accessToken/refreshToken are declared. `states` was
+      // dropped the same way, which made OAuthStorage.putState/consumeState a
+      // no-op on the Mongo backend (the default).
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     }
   },
   emailVerified: {

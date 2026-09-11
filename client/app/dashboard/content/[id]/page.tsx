@@ -5,6 +5,9 @@ import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
 import LoadingSpinner from '../../../../components/LoadingSpinner'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import VideoCaptionEditor from '../../../../components/VideoCaptionEditor'
+import { RemediationHUD } from '../../../../components/editor/views/RemediationHUD'
+import AIContentAnalysis from '../../../../components/AIContentAnalysis'
 import { extractApiData, extractApiError } from '../../../../utils/apiResponse'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
@@ -19,9 +22,11 @@ import {
   Box, Fingerprint, History, MessageSquare, BarChart3, Languages, Star,
   Settings, Trash2, Edit3, ExternalLink, Heart, Award, Info, Search
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ContentSkeleton } from '../../../../components/LoadingSkeleton'
+import { PageShell } from '../../../../components/ui'
+import ContentBenchmarking from '../../../../components/ContentBenchmarking'
 
 // Lazy load heavy components
 const VersionHistory = lazy(() => import('../../../../components/VersionHistory'))
@@ -40,6 +45,9 @@ interface Content {
   transcript: string; body?: string; generatedContent: any; tags: string[];
   category: string; isFavorite: boolean;
   folderId?: { _id: string; name: string; color: string; };
+  // The API returns the whole document; the page simply had not declared this.
+  // AIContentAnalysis needs the source file to analyse.
+  originalFile?: { url?: string };
   createdAt: string; updatedAt: string;
 }
 
@@ -176,9 +184,9 @@ export default function ContentDetailPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-[var(--page-bg)] px-4 sm:px-6 lg:px-12 pt-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label="Loading">
+    <PageShell width="wide" className="min-h-screen bg-[var(--page-bg)]" aria-busy="true" aria-label="Loading">
       <ContentSkeleton />
-    </div>
+    </PageShell>
   )
 
   if (!content) return (
@@ -193,7 +201,10 @@ export default function ContentDetailPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24">
+      {/* flush: this page is deliberately airy (space-y-24, pb-48) and owns its
+          own rhythm, so it takes the shell's width and centring but not the
+          density stack's much tighter gap. */}
+      <PageShell width="wide" flush className="min-h-screen relative z-10 px-10 pt-16 pb-48 space-y-24">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -252,7 +263,7 @@ export default function ContentDetailPage() {
                className={`flex items-center gap-6 px-10 py-6 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${activeTab === t.id ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)]' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20'}`}>
                <t.icon size={28} className={activeTab === t.id ? 'text-black' : 'text-slate-500 group-hover:text-white transition-colors'} />
                <span className="text-[14px] font-black uppercase tracking-[0.2em] italic">{t.label}</span>
-               {activeTab === t.id && <motion.div layoutId="tab-glow" className="absolute inset-0 bg-white/10" />}
+               {activeTab === t.id && <m.div layoutId="tab-glow" className="absolute inset-0 bg-white/10" />}
              </button>
            ))}
         </nav>
@@ -261,7 +272,7 @@ export default function ContentDetailPage() {
         <div className="relative z-10 min-h-[1000px]">
            <AnimatePresence mode="wait">
              {activeTab === 'overview' && (
-               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="grid grid-cols-1 lg:grid-cols-3 gap-20">
+               <m.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="grid grid-cols-1 lg:grid-cols-3 gap-20">
                   <div className="lg:col-span-2 space-y-16">
                      {content.description && (
                         <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
@@ -402,35 +413,35 @@ export default function ContentDetailPage() {
                         </div>
                      </div>
                   </aside>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'versions' && (
-               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
+               <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
                      <VersionHistory contentId={content._id} onRestore={loadContent} />
                   </Suspense>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'comments' && (
-               <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
+               <m.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
                      <CommentsSection entityType="content" entityId={content._id} teamId={undefined} />
                   </Suspense>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'performance' && (
-               <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
+               <m.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
                      <ContentPerformanceAnalytics contentId={content._id} />
                   </Suspense>
-               </motion.div>
+               </m.div>
              )}
 
              {activeTab === 'translations' && (
-               <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="space-y-16">
+               <m.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="space-y-16">
                   <div className={`${glassStyle} rounded-[6rem] p-20 space-y-16 bg-black/40 border-purple-500/10`}>
                      <div className="flex items-center justify-between border-b border-white/5 pb-12">
                         <div className="flex items-center gap-10">
@@ -479,7 +490,7 @@ export default function ContentDetailPage() {
                            ? { ...translatedContent, _lang: viewingLang }
                            : { title: content.title, description: content.description, body: content.body || content.transcript, transcript: content.transcript, tags: content.tags || [], _lang: null }
                         return (
-                           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/60 shadow-[0_80px_200px_rgba(0,0,0,0.8)] border-purple-500/10 group`}>
+                           <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/60 shadow-[0_80px_200px_rgba(0,0,0,0.8)] border-purple-500/10 group`}>
                               <div className="flex items-center gap-6 mb-12 border-l-8 border-purple-500 pl-8">
                                  <div>
                                     <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 group-hover:text-purple-400 transition-colors duration-300">{display.title || 'NULL_TITLE'}</h3>
@@ -507,11 +518,11 @@ export default function ContentDetailPage() {
                                     </div>
                                  )}
                               </div>
-                           </motion.div>
+                           </m.div>
                         )
                      })()}
                   </div>
-               </motion.div>
+               </m.div>
              )}
            </AnimatePresence>
         </div>
@@ -521,6 +532,44 @@ export default function ContentDetailPage() {
            <LiveCollaboration contentId={content._id} onContentChange={() => {}} />
         </Suspense>
 
+        {/* Benchmarks this piece against the account's own history and predicts
+            its trajectory (GET /api/benchmarking/content/:id, /compare,
+            /predict). Live endpoints; the component was imported by nothing, so
+            none of it was reachable. */}
+        <ErrorBoundary>
+          <ContentBenchmarking contentId={String(content._id)} />
+        </ErrorBoundary>
+
+        {/* Generate, edit, translate and export captions for this piece
+            (/api/video/captions, /captions/generate). Live endpoints; the
+            component had no importer, so the only caption UI was inside the
+            video editor. */}
+        <ErrorBoundary>
+          <VideoCaptionEditor contentId={String(content._id)} />
+        </ErrorBoundary>
+
+        {/* Automated remediation for this piece (POST
+            /api/phase16_18/remediation/process). It requires a contentId, which
+            is why it belongs here rather than on the account-level ops page. */}
+        <ErrorBoundary>
+          <RemediationHUD contentId={String(content._id)} />
+        </ErrorBoundary>
+
+        {/* Five-part quality report — engagement, pacing, highlights, content and
+            technical — from POST /video/advanced/analyze. The service behind it
+            (aiVideoAnalysisService) runs exactly these analyses and was reachable
+            from nowhere. Rendered only when this item has a source file: the
+            analysis reads the video itself, so without a URL there is nothing to
+            analyse and an always-failing panel would be worse than none. */}
+        {content.originalFile?.url ? (
+          <ErrorBoundary>
+            <AIContentAnalysis
+              videoUrl={content.originalFile.url}
+              videoId={String(content._id)}
+            />
+          </ErrorBoundary>
+        ) : null}
+
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
           html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
@@ -529,7 +578,7 @@ export default function ContentDetailPage() {
           .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
           .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
         `}</style>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

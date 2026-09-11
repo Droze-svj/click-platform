@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { AlertTriangle, X, CheckCircle, Info, AlertCircle } from 'lucide-react'
-import { trapFocus } from './AccessibilityEnhancements'
+import { useDialogBehavior } from './ui/modal'
 import { useTranslation } from '@/hooks/useTranslation'
 
 interface ConfirmationDialogProps {
@@ -29,37 +29,28 @@ export default function ConfirmationDialog({
   isLoading = false
 }: ConfirmationDialogProps) {
   const { t } = useTranslation()
-  const dialogRef = useRef<HTMLDivElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
 
+  // Escape, focus trap, scroll lock and focus restore, all from the one shared
+  // hook. This used to call a second, weaker trapFocus() helper that bound its
+  // keydown listener to the dialog element — so once focus was outside the
+  // dialog the handler never ran and nothing could pull it back — and that
+  // snapshotted the focusable list once at open. That helper had no other
+  // callers and is now deleted.
+  //
+  // The !isLoading guard is deliberate and preserved: Escape must not dismiss
+  // the dialog while the confirmed action is still running. isLoading is read
+  // at call time, so it is always current.
+  const dialogRef = useDialogBehavior(isOpen, () => {
+    if (!isLoading) onClose()
+  })
+
   useEffect(() => {
-    if (isOpen && dialogRef.current) {
-      // Trap focus
-      const cleanup = trapFocus(dialogRef.current)
-      
-      // Focus cancel button
-      cancelButtonRef.current?.focus()
-
-      // Prevent body scroll
-      document.body.style.overflow = 'hidden'
-
-      return () => {
-        cleanup()
-        document.body.style.overflow = ''
-      }
-    }
+    if (!isOpen) return
+    // Focus the cancel button rather than the hook's generic first control:
+    // for a destructive confirm the safe option should be the one under Enter.
+    cancelButtonRef.current?.focus()
   }, [isOpen])
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen && !isLoading) {
-        onClose()
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, onClose, isLoading])
 
   if (!isOpen) return null
 

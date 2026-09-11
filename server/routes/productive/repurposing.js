@@ -13,31 +13,6 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
-/**
- * @swagger
- * /api/productive/repurposing/:contentId:
- *   post:
- *     summary: Repurpose content for platform
- *     tags: [Productive]
- *     security:
- *       - bearerAuth: []
- */
-router.post('/:contentId', auth, asyncHandler(async (req, res) => {
-  const { contentId } = req.params;
-  const { targetPlatform } = req.body;
-
-  if (!targetPlatform) {
-    return sendError(res, 'Target platform is required', 400);
-  }
-
-  try {
-    const repurposed = await repurposeContent(contentId, req.user._id, targetPlatform);
-    sendSuccess(res, 'Content repurposed', 200, repurposed);
-  } catch (error) {
-    logger.error('Repurpose content error', { error: error.message, contentId });
-    sendError(res, error.message, 500);
-  }
-}));
 
 /**
  * @swagger
@@ -61,7 +36,7 @@ router.post('/:contentId/batch', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Content batch repurposed', 200, results);
   } catch (error) {
     logger.error('Batch repurpose content error', { error: error.message, contentId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -83,7 +58,7 @@ router.post('/:contentId/variations', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Content variations created', 200, variations);
   } catch (error) {
     logger.error('Create content variations error', { error: error.message, contentId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -104,7 +79,7 @@ router.get('/:contentId/key-points', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Key points extracted', 200, keyPoints);
   } catch (error) {
     logger.error('Extract key points error', { error: error.message, contentId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -141,7 +116,7 @@ router.post('/auto-format', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Content auto-formatted', 200, formatted);
   } catch (error) {
     logger.error('Auto-format content error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -167,7 +142,7 @@ router.post('/:contentId/visual', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Visual content adapted', 200, adapted);
   } catch (error) {
     logger.error('Adapt visual content error', { error: error.message, contentId });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -192,7 +167,33 @@ router.post('/seo', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Content optimized for SEO', 200, optimized);
   } catch (error) {
     logger.error('Optimize for SEO error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/productive/repurposing/:contentId:
+ *   post:
+ *     summary: Repurpose content for platform
+ *     tags: [Productive]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:contentId', auth, asyncHandler(async (req, res) => {
+  const { contentId } = req.params;
+  const { targetPlatform } = req.body;
+
+  if (!targetPlatform) {
+    return sendError(res, 'Target platform is required', 400);
+  }
+
+  try {
+    const repurposed = await repurposeContent(contentId, req.user._id, targetPlatform);
+    sendSuccess(res, 'Content repurposed', 200, repurposed);
+  } catch (error) {
+    logger.error('Repurpose content error', { error: error.message, contentId });
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 

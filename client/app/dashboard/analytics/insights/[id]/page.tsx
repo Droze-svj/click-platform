@@ -13,6 +13,7 @@ import SpectralLoader from '../../../../../components/SpectralLoader'
 import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel, StatCard, SectionHeader, EmptyState, Button, IconButton,
+  PageShell,
 } from '@/components/ui'
 
 interface InsightMatrix {
@@ -59,7 +60,7 @@ export default function StrategicSynthesisHub() {
   if (loading) return <SpectralLoader message={t('analyticsInsightPage.loaderMessage')} subMessage={t('analyticsInsightPage.loaderSubMessage')} />
 
   if (error) return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
       <EmptyState
         icon={AlertCircle}
         title={t('analyticsInsightPage.linkError')}
@@ -71,7 +72,7 @@ export default function StrategicSynthesisHub() {
           </Button>
         }
       />
-    </div>
+    </PageShell>
   )
 
   return (

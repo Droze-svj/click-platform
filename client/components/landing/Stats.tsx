@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Users, Layers, TrendingUp, ShieldCheck } from 'lucide-react';
 import { apiGet } from '../../lib/api';
 
@@ -76,7 +76,7 @@ export function Stats() {
           {STATS.map((s, i) => {
             const { Icon } = s;
             return (
-              <motion.div
+              <m.div
                 key={s.label}
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -89,7 +89,7 @@ export function Stats() {
                 </div>
                 <div className="text-4xl md:text-5xl font-black tracking-tighter mb-3 tabular-nums">{s.value}</div>
                 <div className="text-xs font-bold uppercase tracking-widest text-slate-500">{s.label}</div>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>

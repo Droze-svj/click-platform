@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface WorkflowStep {
   id: string
@@ -173,6 +174,10 @@ export default function FlowOptimizer({
 
   const [showSuggestion, setShowSuggestion] = useState<WorkflowStep | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const onboardingRef = useDialogBehavior(showOnboarding, () => setShowOnboarding(false))
+  // The completion overlay is gated on derived state with no dismiss flag,
+  // so Escape has nothing to set — it still gets the trap and scroll lock.
+  const completionRef = useDialogBehavior(true, () => {})
   const { showToast } = useToast()
   const { t } = useTranslation()
 
@@ -390,8 +395,8 @@ export default function FlowOptimizer({
 
       {/* Onboarding Modal */}
       {showOnboarding && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden" ref={onboardingRef}>
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -546,8 +551,8 @@ export default function FlowOptimizer({
 
       {/* Workflow Completion Celebration */}
       {userFlow.completedSteps.length === userFlow.suggestedWorkflow.length && userFlow.completedSteps.length > 0 && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full text-center p-8">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full text-center p-8" ref={completionRef}>
             <div className="mb-6">
               <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-white" />

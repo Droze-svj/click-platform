@@ -27,6 +27,7 @@ import { createPortal } from 'react-dom'
 import { Calendar, Clock, Send, X, Sparkles, CheckCircle2, Info, Loader2 } from 'lucide-react'
 import type { Clip } from './ClipCard'
 import { apiPost } from '../../lib/api'
+import { useDialogBehavior } from '../ui/modal'
 
 interface Props {
   open: boolean
@@ -193,6 +194,8 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
       setBusy(false)
     }
   }
+
+  const panelRef = useDialogBehavior(open, onClose)
 
   if (!open || typeof document === 'undefined') return null
 

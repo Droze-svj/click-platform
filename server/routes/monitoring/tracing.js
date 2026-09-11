@@ -15,29 +15,6 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
-/**
- * @swagger
- * /api/monitoring/tracing/:traceId:
- *   get:
- *     summary: Get trace
- *     tags: [Monitoring]
- *     security:
- *       - bearerAuth: []
- */
-router.get('/:traceId', auth, requireAdmin, asyncHandler(async (req, res) => {
-  const { traceId } = req.params;
-
-  try {
-    const trace = getTrace(traceId);
-    if (!trace) {
-      return sendError(res, 'Trace not found', 404);
-    }
-    sendSuccess(res, 'Trace fetched', 200, trace);
-  } catch (error) {
-    logger.error('Get trace error', { error: error.message, traceId });
-    sendError(res, error.message, 500);
-  }
-}));
 
 /**
  * @swagger
@@ -103,12 +80,37 @@ router.get('/stats', auth, requireAdmin, asyncHandler(async (req, res) => {
  *     summary: Generate trace ID
  *     tags: [Monitoring]
  */
-router.get('/generate-id', asyncHandler(async (req, res) => {
+// Admin-gated like every other route in this file.
+router.get('/generate-id', auth, requireAdmin, asyncHandler(async (req, res) => {
   try {
     const traceId = generateTraceId();
     sendSuccess(res, 'Trace ID generated', 200, { traceId });
   } catch (error) {
     logger.error('Generate trace ID error', { error: error.message });
+    sendError(res, error.message, 500);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/monitoring/tracing/:traceId:
+ *   get:
+ *     summary: Get trace
+ *     tags: [Monitoring]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:traceId', auth, requireAdmin, asyncHandler(async (req, res) => {
+  const { traceId } = req.params;
+
+  try {
+    const trace = getTrace(traceId);
+    if (!trace) {
+      return sendError(res, 'Trace not found', 404);
+    }
+    sendSuccess(res, 'Trace fetched', 200, trace);
+  } catch (error) {
+    logger.error('Get trace error', { error: error.message, traceId });
     sendError(res, error.message, 500);
   }
 }));

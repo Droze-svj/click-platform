@@ -12,6 +12,8 @@ import { ThemeProvider } from '../components/ThemeProvider';
 import ToastContainer from '../components/ToastContainer';
 import { CookieConsent } from '../components/CookieConsent';
 import LocaleSync from '../components/LocaleSync';
+import PerformanceMonitor from '../components/PerformanceMonitor';
+import MotionProvider from '../components/MotionProvider';
 
 // Body default
 const inter = Inter({
@@ -108,6 +110,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} bg-noise-grain`}>
+        <MotionProvider>
         <ThemeProvider>
           <PreferencesProvider>
             <TranslationProvider>
@@ -124,11 +127,17 @@ export default function RootLayout({
                       loader to subscribe to. GDPR/ePrivacy-aware: no
                       cookie wall, no pre-ticked options. */}
                   <CookieConsent />
+                  {/* Core Web Vitals + runtime health. Built long ago but never
+                      mounted, so the app had no performance telemetry at all.
+                      Renders nothing and stays inert outside production unless
+                      NEXT_PUBLIC_ANALYTICS_ENDPOINT is set. */}
+                  <PerformanceMonitor />
                 </WorkflowProvider>
               </ToastProvider>
             </TranslationProvider>
           </PreferencesProvider>
         </ThemeProvider>
+        </MotionProvider>
       </body>
     </html>
   );

@@ -18,7 +18,7 @@ import {
   Repeat,
   Compass
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface FiscalVelocity {
@@ -40,7 +40,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
     const fetchVelocity = async () => {
         setLoading(true)
         try {
-            const data = await apiGet('/sovereign/fiscal-velocity')
+            const data = await apiGet('/click/fiscal-velocity')
             setVelocity(data)
         } catch (err) {
             console.error('Fiscal sync failed')
@@ -93,7 +93,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                     { label: 'Earnings Per Click', value: `$${velocity?.epc.toFixed(2)}`, sub: 'Link Performance', icon: TrendingUp, color: 'text-blue-400' },
                     { label: 'Pulse Revenue (24h)', value: `$${velocity?.pulseRevenue.toFixed(0)}`, sub: 'Collective Yield', icon: DollarSign, color: 'text-white' }
                 ].map((stat, i) => (
-                    <motion.div 
+                    <m.div 
                         key={stat.label}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -106,7 +106,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</span>
                         <h5 className="text-3xl font-black text-white italic mt-3 tracking-tighter">{stat.value}</h5>
                         <p className={`text-[9px] font-black uppercase mt-2 ${stat.color} tracking-[0.2em]`}>{stat.sub}</p>
-                    </motion.div>
+                    </m.div>
                 ))}
             </div>
 
@@ -192,7 +192,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                                             <span className="text-[11px] font-black text-white italic uppercase">{d.rev} Target</span>
                                         </div>
                                         <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div 
+                                            <m.div 
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${d.val}%` }}
                                                 className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.5)]"

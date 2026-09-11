@@ -13,10 +13,22 @@ const EXPECTED = [
 ];
 
 describe('featureRoutes registry', () => {
-  test('registers every expected feature path exactly once', () => {
+  test('registers every expected feature, and no (path, module) pair twice', () => {
     const paths = mountFeatureRoutes.FEATURE_ROUTES.map(([p]) => p);
     for (const p of EXPECTED) expect(paths).toContain(p);
-    expect(new Set(paths).size).toBe(paths.length); // no dupes
+
+    // Several routers DO intentionally share a base path — the music-licensing
+    // and ai-music clusters each split across multiple files, exactly as
+    // server/index.js already stacks two routers on /api/music. So the invariant
+    // is that no (basePath, module) PAIR repeats, not that each path is unique;
+    // mounting the same module twice would run its middleware twice.
+    const pairs = mountFeatureRoutes.FEATURE_ROUTES.map(([p, m]) => `${p} -> ${m}`);
+    expect(new Set(pairs).size).toBe(pairs.length);
+
+    // A module must not be mounted under two different bases either — that
+    // would silently double every one of its endpoints.
+    const modules = mountFeatureRoutes.FEATURE_ROUTES.map(([, m]) => m);
+    expect(new Set(modules).size).toBe(modules.length);
   });
 
   test('every referenced route module loads as an Express router', () => {

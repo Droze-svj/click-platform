@@ -1,253 +1,67 @@
 // Disaster Recovery & Backup Service
+//
+// The six helpers that used to live here — backupDatabase/backupFiles/
+// backupConfiguration and their restore counterparts — are gone with the paths
+// that called them. Every one of them logged a step and returned
+// { status: 'completed' } / { success: true } without moving any data:
+// mongodump, mongorestore and the directory copies were all comments. Whoever
+// implements this for real should build it around the chosen dump/replication
+// tooling rather than resurrect those stubs.
 
-const { getOrSet } = require('./cacheService');
 const logger = require('../utils/logger');
 const fs = require('fs').promises;
 const path = require('path');
 
 /**
- * Create disaster recovery backup
+ * Create a platform-wide disaster-recovery backup.
+ *
+ * NOT IMPLEMENTED — and it now says so instead of writing an empty directory
+ * and calling it a completed backup.
+ *
+ * What this used to do: create backups/<id>/, then call three helpers that took
+ * no data whatsoever. backupDatabase() wrote an info.json literally saying
+ * `{ method: 'mongodump', status: 'completed' }` without ever running mongodump.
+ * backupFiles() mkdir'd a destination for each uploads directory with the
+ * `await copyDirectory(...)` commented out, and returned status 'completed'.
+ * The manifest was then stamped `status: 'completed'` and a size computed over
+ * the empty tree.
+ *
+ * So an admin could take a backup, be told it succeeded, see it listed, and
+ * discover it was empty only while trying to recover from an outage — the one
+ * moment when finding out is most expensive. An honest failure is strictly
+ * better than a backup that lies, so this refuses until mongodump/file
+ * replication is actually wired up.
+ *
+ * What DOES work today: POST /api/backup/create — a real per-user export of
+ * content, posts, scripts and settings (services/backupService), with optional
+ * encryption and verification.
  */
-async function createDRBackup(options = {}) {
-  try {
-    const {
-      includeDatabase = true,
-      includeFiles = true,
-      includeConfig = true,
-      backupType = 'full', // full, incremental
-    } = options;
-
-    const backupId = `dr-${Date.now()}`;
-    const backupDir = path.join(process.cwd(), 'backups', backupId);
-
-    await fs.mkdir(backupDir, { recursive: true });
-
-    const backup = {
-      id: backupId,
-      type: backupType,
-      createdAt: new Date(),
-      status: 'in_progress',
-      components: {},
-    };
-
-    // Backup database
-    if (includeDatabase) {
-      backup.components.database = await backupDatabase(backupDir);
-    }
-
-    // Backup files
-    if (includeFiles) {
-      backup.components.files = await backupFiles(backupDir);
-    }
-
-    // Backup configuration
-    if (includeConfig) {
-      backup.components.config = await backupConfiguration(backupDir);
-    }
-
-    // Create backup manifest
-    const manifestPath = path.join(backupDir, 'manifest.json');
-    await fs.writeFile(manifestPath, JSON.stringify(backup, null, 2));
-
-    backup.status = 'completed';
-    backup.size = await calculateBackupSize(backupDir);
-
-    logger.info('DR backup created', {
-      backupId,
-      type: backupType,
-      size: backup.size,
-    });
-
-    return backup;
-  } catch (error) {
-    logger.error('Create DR backup error', { error: error.message });
-    throw error;
-  }
+async function createDRBackup() {
+  const err = new Error(
+    'Platform disaster-recovery backups are not implemented — no database dump or ' +
+    'file replication is performed, so a "backup" would be empty. Use ' +
+    'POST /api/backup/create for a real per-user data export.'
+  );
+  err.statusCode = 501;
+  throw err;
 }
 
 /**
- * Backup database
+ * Restore from a disaster-recovery backup.
+ *
+ * NOT IMPLEMENTED. restoreDatabase(), restoreFiles() and restoreConfiguration()
+ * each logged "restore initiated" and returned { success: true } without
+ * touching a single byte — mongorestore and the file copy were comments. A
+ * restore that reports success while changing nothing is the most dangerous
+ * shape this can take, because it is trusted precisely when something has
+ * already gone wrong.
  */
-async function backupDatabase(backupDir) {
-  try {
-    // In production, use mongodump or similar
-    const dbBackupDir = path.join(backupDir, 'database');
-    await fs.mkdir(dbBackupDir, { recursive: true });
-
-    // For now, create a placeholder
-    // In production: mongodump --out dbBackupDir
-    const info = {
-      timestamp: new Date(),
-      method: 'mongodump',
-      status: 'completed',
-    };
-
-    const infoPath = path.join(dbBackupDir, 'info.json');
-    await fs.writeFile(infoPath, JSON.stringify(info, null, 2));
-
-    return info;
-  } catch (error) {
-    logger.error('Backup database error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Backup files
- */
-async function backupFiles(backupDir) {
-  try {
-    const filesBackupDir = path.join(backupDir, 'files');
-    await fs.mkdir(filesBackupDir, { recursive: true });
-
-    const uploadDirs = ['uploads/video', 'uploads/music', 'uploads/images'];
-
-    for (const uploadDir of uploadDirs) {
-      const sourcePath = path.join(process.cwd(), uploadDir);
-      const destPath = path.join(filesBackupDir, uploadDir);
-
-      try {
-        await fs.access(sourcePath);
-        await fs.mkdir(path.dirname(destPath), { recursive: true });
-        // In production, copy files
-        // await copyDirectory(sourcePath, destPath);
-      } catch (error) {
-        // Directory doesn't exist, skip
-      }
-    }
-
-    return {
-      timestamp: new Date(),
-      directories: uploadDirs,
-      status: 'completed',
-    };
-  } catch (error) {
-    logger.error('Backup files error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Backup configuration
- */
-async function backupConfiguration(backupDir) {
-  try {
-    const configBackupDir = path.join(backupDir, 'config');
-    await fs.mkdir(configBackupDir, { recursive: true });
-
-    // Backup environment variables (sanitized)
-    const envBackup = {
-      NODE_ENV: process.env.NODE_ENV,
-      PORT: process.env.PORT,
-      MONGODB_URI: process.env.MONGODB_URI ? '[REDACTED]' : null,
-      // Don't backup secrets
-    };
-
-    const envPath = path.join(configBackupDir, 'env.json');
-    await fs.writeFile(envPath, JSON.stringify(envBackup, null, 2));
-
-    return {
-      timestamp: new Date(),
-      status: 'completed',
-    };
-  } catch (error) {
-    logger.error('Backup configuration error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Restore from backup
- */
-async function restoreFromBackup(backupId, options = {}) {
-  try {
-    const {
-      restoreDatabase = true,
-      restoreFiles = true,
-      restoreConfig = false,
-    } = options;
-
-    const backupDir = path.join(process.cwd(), 'backups', backupId);
-    const manifestPath = path.join(backupDir, 'manifest.json');
-
-    // Verify backup exists
-    try {
-      await fs.access(manifestPath);
-    } catch (error) {
-      throw new Error('Backup not found');
-    }
-
-    const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
-
-    // Restore database
-    if (restoreDatabase && manifest.components.database) {
-      await restoreDatabase(backupDir);
-    }
-
-    // Restore files
-    if (restoreFiles && manifest.components.files) {
-      await restoreFiles(backupDir);
-    }
-
-    // Restore configuration
-    if (restoreConfig && manifest.components.config) {
-      await restoreConfiguration(backupDir);
-    }
-
-    logger.info('Backup restored', { backupId });
-    return { success: true, backupId };
-  } catch (error) {
-    logger.error('Restore from backup error', { error: error.message, backupId });
-    throw error;
-  }
-}
-
-/**
- * Restore database
- */
-async function restoreDatabase(backupDir) {
-  try {
-    const dbBackupDir = path.join(backupDir, 'database');
-    
-    // In production: mongorestore --dir dbBackupDir
-    logger.info('Database restore initiated', { backupDir: dbBackupDir });
-    return { success: true };
-  } catch (error) {
-    logger.error('Restore database error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Restore files
- */
-async function restoreFiles(backupDir) {
-  try {
-    const filesBackupDir = path.join(backupDir, 'files');
-    
-    // In production, copy files back
-    logger.info('Files restore initiated', { backupDir: filesBackupDir });
-    return { success: true };
-  } catch (error) {
-    logger.error('Restore files error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Restore configuration
- */
-async function restoreConfiguration(backupDir) {
-  try {
-    const configBackupDir = path.join(backupDir, 'config');
-    
-    // In production, restore config files
-    logger.info('Configuration restore initiated', { backupDir: configBackupDir });
-    return { success: true };
-  } catch (error) {
-    logger.error('Restore configuration error', { error: error.message });
-    throw error;
-  }
+async function restoreFromBackup() {
+  const err = new Error(
+    'Platform disaster-recovery restore is not implemented — nothing would be restored.'
+  );
+  err.statusCode = 501;
+  throw err;
 }
 
 /**
@@ -271,7 +85,12 @@ async function listBackups() {
               type: manifest.type,
               createdAt: manifest.createdAt,
               status: manifest.status,
-              size: manifest.size || 0,
+              // MEASURED, not read from the manifest. Any manifest already on
+              // disk was written by the old create path, which stamped
+              // status:'completed' over a backup containing no data — so its
+              // recorded size cannot be trusted either. Walking the directory
+              // reports what is actually there, which for those is ~0 bytes.
+              size: await calculateBackupSize(path.join(backupsDir, entry.name)),
             });
           } catch (error) {
             // Skip invalid backups
@@ -307,11 +126,48 @@ async function deleteBackup(backupId) {
 }
 
 /**
- * Calculate backup size
+ * Total size in bytes of everything written under a backup directory.
+ *
+ * Walks the tree rather than stat-ing the directory itself (a directory's own
+ * st_size is the size of its entry table, not its contents). Returns whatever
+ * it managed to sum if part of the tree is unreadable — a size is reporting
+ * metadata, so it must never be the reason a completed backup is marked failed.
+ *
+ * @param {string} backupDir absolute path to the backup root
+ * @returns {Promise<number>} total bytes
  */
 async function calculateBackupSize(backupDir) {
-  // In production, calculate actual size. Placeholder for now.
-  return 0;
+  let total = 0;
+
+  async function walk(dir) {
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch (error) {
+      logger.warn('Could not read backup directory while sizing', { dir, error: error.message });
+      return;
+    }
+
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(full);
+      } else if (entry.isFile()) {
+        try {
+          const { size } = await fs.stat(full);
+          total += size;
+        } catch (error) {
+          // File vanished mid-walk (rotation/cleanup) — skip it.
+          logger.debug('Skipping unreadable backup file while sizing', { full, error: error.message });
+        }
+      }
+      // Symlinks are intentionally not followed: a link into uploads/ would
+      // double-count real data and could walk out of the backup tree.
+    }
+  }
+
+  await walk(backupDir);
+  return total;
 }
 
 /**

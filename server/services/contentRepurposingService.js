@@ -7,7 +7,44 @@
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const { aiCallJson } = require('../utils/aiRouter');
 const { buildSystemPrompt } = require('./marketingKnowledge');
+const { personalizePrompt } = require('../utils/applyPersona');
 const logger = require('../utils/logger');
+
+// The text to work from. Content has no `body` path, so the prompts that read
+// content.body asked the model to repurpose, vary or summarise "undefined" — it
+// invented the material. The text lives in content.text (posts), transcript
+// (video/audio) or description.
+function contentText(content) {
+  return [content?.content?.text, content?.transcript, content?.description]
+    .find((t) => typeof t === 'string' && t.trim()) || '';
+}
+
+function statusError(message, statusCode) {
+  const err = new Error(message);
+  err.statusCode = statusCode;
+  return err;
+}
+const notFoundError = () => statusError('Content not found', 404);
+const noTextError = () => statusError('This content has no text to work from yet', 400);
+const unavailableError = (what) => statusError(`${what} are unavailable right now`, 503);
+
+// Parse a model reply as JSON, or the first matching JSON block inside it. A
+// missing, empty or malformed reply is null — never a thrown SyntaxError or a
+// TypeError on null.match().
+function parseJsonReply(text, blockPattern) {
+  if (typeof text !== 'string' || !text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    const match = text.match(blockPattern);
+    if (!match) return null;
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      return null;
+    }
+  }
+}
 
 /**
  * Repurpose content for platform
@@ -18,7 +55,11 @@ async function repurposeContent(contentId, userId, targetPlatform) {
     const content = await Content.findOne({ _id: contentId, userId }).lean();
 
     if (!content) {
-      throw new Error('Content not found');
+      throw notFoundError();
+    }
+    const body = contentText(content);
+    if (!body) {
+      throw noTextError();
     }
 
     const platformGuidelines = {
@@ -72,8 +113,8 @@ async function repurposeContent(contentId, userId, targetPlatform) {
       `Format cue: ${guidelines.format}`,
       ``,
       `Original:`,
-      `Title: ${content.title}`,
-      `Body: ${content.body}`,
+      `Title: ${content.title || ''}`,
+      `Body: ${body}`,
       ``,
       `Return JSON with this exact shape:`,
       `{`,
@@ -92,7 +133,7 @@ async function repurposeContent(contentId, userId, targetPlatform) {
       temperature: 0.75,
     });
     if (!result || !Array.isArray(result.variants) || result.variants.length === 0) {
-      throw new Error('All AI providers failed and no fallback configured for repurpose');
+      throw unavailableError('Repurposed versions');
     }
 
     logger.info('Content repurposed (variants)', {
@@ -150,14 +191,20 @@ async function createContentVariations(contentId, userId, count = 3) {
     const content = await Content.findOne({ _id: contentId, userId }).lean();
 
     if (!content) {
-      throw new Error('Content not found');
+      throw notFoundError();
     }
+    const body = contentText(content);
+    if (!body) {
+      throw noTextError();
+    }
+    // A single call, but the count is written into the prompt — keep it bounded.
+    const variationCount = Math.min(5, Math.max(1, parseInt(count, 10) || 3));
 
-    const prompt = `Create ${count} different variations of this content, each with a unique angle:
+    const prompt = `Create ${variationCount} different variations of this content, each with a unique angle:
 
 Original:
-Title: ${content.title}
-Body: ${content.body}
+Title: ${content.title || ''}
+Body: ${body}
 
 For each variation, provide:
 1. New title
@@ -168,22 +215,21 @@ For each variation, provide:
 Format as JSON array with fields: title, body, differences (array), useCase`;
 
     if (!geminiConfigured) {
-      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
+      throw unavailableError('Content variations');
     }
 
     const fullPrompt = `You are a creative content strategist. Create unique variations that explore different angles.\n\n${prompt}`;
-    const variationsText = await geminiGenerate(fullPrompt, { temperature: 0.9, maxTokens: 2000 });
+    const variationsText = await geminiGenerate(
+      await personalizePrompt(fullPrompt, { userId, stage: 'variations' }),
+      { temperature: 0.9, maxTokens: 2000 }
+    );
 
-    let variations;
-    try {
-      variations = JSON.parse(variationsText);
-    } catch (error) {
-      const jsonMatch = variationsText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        variations = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse variations');
-      }
+    let variations = parseJsonReply(variationsText, /\[[\s\S]*\]/);
+    if (variations && !Array.isArray(variations) && Array.isArray(variations.variations)) {
+      variations = variations.variations;
+    }
+    if (!Array.isArray(variations) || variations.length === 0) {
+      throw unavailableError('Content variations');
     }
 
     logger.info('Content variations created', { contentId, userId, count: variations.length });
@@ -203,13 +249,17 @@ async function extractKeyPoints(contentId, userId) {
     const content = await Content.findOne({ _id: contentId, userId }).lean();
 
     if (!content) {
-      throw new Error('Content not found');
+      throw notFoundError();
+    }
+    const body = contentText(content);
+    if (!body) {
+      throw noTextError();
     }
 
     const prompt = `Extract key points and insights from this content:
 
-${content.title}
-${content.body}
+${content.title || ''}
+${body}
 
 Provide:
 1. Main message (1-2 sentences)
@@ -221,22 +271,17 @@ Provide:
 Format as JSON object with fields: mainMessage, keyPoints (array), takeaways (array), supportingData (array), ctas (array)`;
 
     if (!geminiConfigured) {
-      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
+      throw unavailableError('Key points');
     }
 
+    // An extraction from the creator's own text — no persona, which would
+    // colour what gets pulled out.
     const fullPrompt = `You are a content analyst. Extract key insights and actionable points.\n\n${prompt}`;
     const extractedText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1000 });
 
-    let extracted;
-    try {
-      extracted = JSON.parse(extractedText);
-    } catch (error) {
-      const jsonMatch = extractedText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        extracted = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse extracted points');
-      }
+    const extracted = parseJsonReply(extractedText, /\{[\s\S]*\}/);
+    if (!extracted || typeof extracted !== 'object' || Array.isArray(extracted)) {
+      throw unavailableError('Key points');
     }
 
     return extracted;

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Music, Hash, Sparkles, Search, Zap,
   ChevronDown, BarChart3,
@@ -19,6 +19,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 type TrendCategory = 'hooks' | 'sounds' | 'formats' | 'hashtags'
@@ -138,7 +139,7 @@ export default function TrendsPage() {
 
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       {/* ── Header (global DashboardHeader provides the breadcrumb) ── */}
@@ -265,7 +266,7 @@ export default function TrendsPage() {
               const cfg = CATEGORY_CFG[item.category]
               const CatIcon = cfg.icon
               return (
-                <motion.div
+                <m.div
                   key={item.id}
                   layout
                   initial={reduceMotion ? false : { opacity: 0, y: 16 }}
@@ -300,7 +301,7 @@ export default function TrendsPage() {
                       </IconButton>
                     </div>
                   </Panel>
-                </motion.div>
+                </m.div>
               )
             })}
           </AnimatePresence>
@@ -316,6 +317,6 @@ export default function TrendsPage() {
           className="ds-surface-card"
         />
       )}
-    </div>
+    </PageShell>
   )
 }

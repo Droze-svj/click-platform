@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
+import { PageShell } from '@/components/ui'
 
 interface ApprovalView {
   approval: {
@@ -112,27 +113,33 @@ export default function SimplePortalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      // Framed, but deliberately NOT re-tokenised. This whole page is
+      // hardcoded light (bg-gray-50, bg-white cards, text-gray-900) with no
+      // dark variants, so the shell's text-theme-primary would put light text
+      // on a light card in dark theme. text-gray-900 is pinned here to keep it
+      // pixel-identical; the token migration is Wave 7e, and it has to convert
+      // the cards and copy in the same pass or not at all.
+      <PageShell width="full" flush className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-900" aria-busy="true">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading approval...</p>
         </div>
-      </div>
+      </PageShell>
     )
   }
 
   if (!view) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <PageShell width="full" flush className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-900">
         <div className="text-center">
           <p className="text-red-600">Failed to load approval</p>
         </div>
-      </div>
+      </PageShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <PageShell width="full" flush className="min-h-screen bg-gray-50 text-gray-900 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -258,7 +265,7 @@ export default function SimplePortalPage() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }
 

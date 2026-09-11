@@ -370,17 +370,30 @@ router.post('/:contentId/duplicate', auth, validateObjectId('contentId'), asyncH
     return sendError(res, 'Content not found', 404);
   }
 
-  // Create duplicate
+  // Create duplicate.
+  //
+  // This used to set `status: 'draft'` — not a value in the Content status enum
+  // (uploading|processing|completed|failed) — so save() rejected and EVERY
+  // duplicate attempt failed with a 400 validation error. It also copied `text`
+  // and `folder`, neither of which is a Content path (the folder field is
+  // `folderId`); Mongoose drops undeclared paths silently, so those were lost
+  // even once the status was accepted.
+  //
+  // A copy starts life in the same state as its source: a completed video is
+  // still completed, and one that failed to process should not be resurrected
+  // as though it were fine.
   const duplicate = new Content({
     userId: req.user._id,
     title: `${content.title} (Copy)`,
     description: content.description,
     type: content.type,
-    text: content.text,
-    status: 'draft',
+    transcript: content.transcript,
+    status: content.status,
     tags: content.tags,
     category: content.category,
-    folder: content.folder,
+    folderId: content.folderId,
+    language: content.language,
+    originalFile: content.originalFile,
     generatedContent: content.generatedContent,
     metadata: content.metadata,
   });

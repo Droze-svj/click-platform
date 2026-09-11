@@ -149,8 +149,26 @@ async function calculateBrandAwareness(workspaceId, platform, period) {
 /**
  * Calculate share of voice
  */
+/**
+ * Share of voice — the share of conversation in a category that belongs to this
+ * brand versus its competitors.
+ *
+ * WHAT IS REAL HERE: the brand's own published output (posts and the branded
+ * hashtags it used), which we count exactly.
+ *
+ * WHAT IS NOT AVAILABLE: third-party mentions and competitor volume. Click has
+ * no social-listening ingestion — no model stores mentions, and
+ * competitorMonitoringService.fetchCompetitorMetrics() is itself a placeholder
+ * returning zeros. Share of voice is by definition a ratio against competitors,
+ * so without that denominator the percentage cannot be computed at all.
+ *
+ * This used to return `total: 15` and `growth: 5` — fixed numbers presented as
+ * measurements — and `brandedMentions = posts.length * 2`, which is not a
+ * mention count but a doubling of the post count. Those are now `null` with an
+ * explicit `available: false`, so the UI can say "connect a listening provider"
+ * instead of charting an invented percentage.
+ */
 async function calculateShareOfVoice(workspaceId, platform, startDate, endDate) {
-  // Simplified calculation - would need competitor data in production
   const posts = await ScheduledPost.find({
     workspaceId,
     platform,
@@ -158,20 +176,27 @@ async function calculateShareOfVoice(workspaceId, platform, startDate, endDate) 
     postedAt: { $gte: startDate, $lte: endDate }
   }).lean();
 
+  // Real: hashtags this brand actually published in the window.
   const hashtagMentions = posts.reduce((sum, post) => {
     return sum + (post.content?.hashtags?.length || 0);
   }, 0);
 
-  // Estimate branded mentions (would need actual mention tracking)
-  const brandedMentions = posts.length * 2; // Placeholder
-
   return {
-    total: 15, // Placeholder percentage
-    growth: 5, // Placeholder
-    mentions: brandedMentions,
+    // Requires competitor volume — see above.
+    total: null,
+    growth: null,
+    // Requires third-party mention ingestion.
+    mentions: null,
+    brandedMentions: null,
+    // Measured.
+    postsPublished: posts.length,
     hashtagMentions,
-    brandedMentions,
-    competitorComparison: [] // Would be populated with competitor data
+    competitorComparison: [],
+    available: false,
+    unavailableReason:
+      'Share of voice needs third-party mention and competitor data. Click has no social-listening ' +
+      'integration configured, so only this brand\'s own published output is counted here.',
+    measured: ['postsPublished', 'hashtagMentions'],
   };
 }
 
@@ -276,7 +301,10 @@ async function getBrandAwarenessTrends(workspaceId, platform, filters = {}) {
 
 module.exports = {
   calculateBrandAwareness,
-  getBrandAwarenessTrends
+  getBrandAwarenessTrends,
+  // Exported for testing: pins that share of voice reports unavailable rather
+  // than the fixed total:15 / growth:5 it used to invent.
+  calculateShareOfVoice
 };
 
 

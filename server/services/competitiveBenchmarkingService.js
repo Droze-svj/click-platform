@@ -18,8 +18,12 @@ async function getCompetitiveBenchmarks(userId, platform, timeframe = '30days') 
     // Calculate user's percentile
     const percentile = calculatePercentile(userPosts.avgEngagement, industryBenchmarks);
 
-    // Get competitor analysis (would typically come from competitor tracking)
-    const competitorData = await getCompetitorData(userId, platform);
+    // Competitor data is not available (see getCompetitorData). The real
+    // comparison Click can make is against the account's own previous period.
+    const [competitorData, previousPeriod] = await Promise.all([
+      getCompetitorData(userId, platform),
+      getPreviousPeriodPerformance(userId, platform, timeframe),
+    ]);
 
     const benchmark = {
       user: {
@@ -28,11 +32,24 @@ async function getCompetitiveBenchmarks(userId, platform, timeframe = '30days') 
         postCount: userPosts.postCount,
         engagementRate: userPosts.engagementRate
       },
+      // Self-comparison: measured, and the basis for "am I improving?".
+      previousPeriod,
+      selfComparison: previousPeriod.hasData ? {
+        engagementChange: userPosts.avgEngagement - previousPeriod.avgEngagement,
+        reachChange: userPosts.avgReach - previousPeriod.avgReach,
+        postCountChange: userPosts.postCount - previousPeriod.postCount,
+        direction: userPosts.avgEngagement > previousPeriod.avgEngagement ? 'up'
+          : userPosts.avgEngagement < previousPeriod.avgEngagement ? 'down' : 'flat',
+      } : null,
       industry: {
         median: industryBenchmarks.median,
         top25: industryBenchmarks.top25,
         top10: industryBenchmarks.top10,
-        percentile: percentile
+        percentile: percentile,
+        // These are static per-platform reference figures compiled into the
+        // service, NOT measured from this account's peers. Labelled so the UI
+        // can present them as a rule-of-thumb rather than a live measurement.
+        source: 'static_reference',
       },
       competitors: competitorData,
       gap: {
@@ -140,17 +157,67 @@ function calculatePercentile(value, benchmarks) {
 }
 
 /**
- * Get competitor data (mock - would come from competitor tracking)
+ * Competitor performance.
+ *
+ * NOT AVAILABLE, and honestly reported as such. This returned fixed numbers
+ * (avgEngagement 250, avgReach 5000, "daily", ...) presented to the user as
+ * their competitors' actual performance. Nothing in Click ingests competitor
+ * data: there is no scraping service, the platform APIs do not expose other
+ * accounts' private metrics, and competitorMonitoringService.fetchCompetitorMetrics()
+ * is itself a placeholder returning zeros. Acquiring it needs a social-listening
+ * vendor, which is a commercial decision rather than a code change.
+ *
+ * The caller substitutes a self-comparison (this period vs the previous one),
+ * which is real data and answers the question the user actually has: "am I
+ * improving?"
  */
 async function getCompetitorData(userId, platform) {
-  // In real implementation, this would fetch competitor data
-  // For now, return mock data
   return {
-    avgEngagement: 250,
-    avgReach: 5000,
-    postFrequency: 'daily',
-    topPerformingTypes: ['video', 'article'],
-    bestPostingTimes: ['09:00', '17:00']
+    available: false,
+    reason:
+      'Competitor benchmarking needs a social-listening data source. No competitor ingestion is ' +
+      'configured, so no competitor figures are reported.',
+    avgEngagement: null,
+    avgReach: null,
+    postFrequency: null,
+    topPerformingTypes: [],
+    bestPostingTimes: [],
+  };
+}
+
+/**
+ * The same account's performance in the PRECEDING window of equal length.
+ *
+ * This is the honest benchmark Click can actually compute — the user against
+ * their own recent history.
+ */
+async function getPreviousPeriodPerformance(userId, platform, timeframe) {
+  const days = timeframe === '7days' ? 7 : timeframe === '30days' ? 30 : 90;
+  const end = new Date();
+  end.setDate(end.getDate() - days);
+  const start = new Date();
+  start.setDate(start.getDate() - days * 2);
+
+  const posts = await ScheduledPost.find({
+    userId,
+    platform,
+    status: 'posted',
+    postedAt: { $gte: start, $lt: end },
+  }).lean();
+
+  if (posts.length === 0) {
+    return { avgEngagement: 0, avgReach: 0, postCount: 0, engagementRate: 0, hasData: false };
+  }
+
+  const totalEngagement = posts.reduce((sum, p) => sum + (p.analytics?.engagement || 0), 0);
+  const totalReach = posts.reduce((sum, p) => sum + (p.analytics?.reach || p.analytics?.impressions || 0), 0);
+
+  return {
+    avgEngagement: Math.round(totalEngagement / posts.length),
+    avgReach: Math.round(totalReach / posts.length),
+    postCount: posts.length,
+    engagementRate: totalReach > 0 ? (totalEngagement / totalReach) * 100 : 0,
+    hasData: true,
   };
 }
 
@@ -261,10 +328,14 @@ async function getNextWeekRecommendations(userId, platform) {
     // Generate posting schedule
     recommendations.postingSchedule = generateOptimalSchedule(platform, recommendations.weeklyPlan);
 
-    // Optimization tips
+    // Optimization tips. The competitor-derived tips are only included when
+    // competitor data actually exists — otherwise they rendered as
+    // "Post at optimal times: " with nothing after the colon.
     recommendations.optimizationTips = [
-      `Post at optimal times: ${benchmark.competitors.bestPostingTimes.join(', ')}`,
-      `Focus on ${benchmark.competitors.topPerformingTypes.join(' and ')} content`,
+      ...(benchmark.competitors?.bestPostingTimes?.length
+        ? [`Post at optimal times: ${benchmark.competitors.bestPostingTimes.join(', ')}`] : []),
+      ...(benchmark.competitors?.topPerformingTypes?.length
+        ? [`Focus on ${benchmark.competitors.topPerformingTypes.join(' and ')} content`] : []),
       `Aim for ${Math.round(benchmark.industry.top25)}+ engagement per post`,
       `Post ${recommendations.weeklyPlan.length} times this week`
     ];

@@ -1,8 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * Production Environment Validation
- * Validates all required environment variables are set
+ * Production Environment Validation (partial).
+ *
+ * ⚠️  NOT THE CANONICAL PRODUCTION CHECK. Four env validators exist here and
+ * they do not agree. The one that gates a deploy is
+ * scripts/verify-production-env.js — what `npm run preflight` runs. It checks
+ * FORMAT as well as presence (secret length, URI scheme, placeholder values)
+ * and covers Supabase / OAuth / Redis, which this script does not.
+ *
+ * A pass here does NOT mean the environment is production-ready; run
+ * `npm run preflight` for that.
  */
 
 const fs = require('fs');

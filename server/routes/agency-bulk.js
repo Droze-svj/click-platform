@@ -250,6 +250,36 @@ router.post('/:agencyWorkspaceId/bulk/customize-and-schedule', auth, requireWork
 
   const results = [];
 
+  // Optional smart timing for posts with no explicit date. Opt-in via
+  // scheduleOptions.optimizeTiming so existing callers keep the previous
+  // "schedule for now" default rather than silently having their posts moved
+  // days out.
+  //
+  // predictOptimalTime ignores its contentId argument and derives everything
+  // from (userId, platform), so within one bulk run the answer only varies by
+  // the client workspace's OWNER and the platform. Cache on that pair: several
+  // client workspaces commonly share an owner, and without this the
+  // audience/performance queries would re-run for every client×platform.
+  const optimalTimeCache = new Map();
+  async function resolveOptimalTime(userId, platform) {
+    const key = `${userId}:${platform}`;
+    if (!optimalTimeCache.has(key)) {
+      let when = null;
+      try {
+        const { predictOptimalTime } = require('../services/smartScheduleOptimizationService');
+        const prediction = await predictOptimalTime(userId, contentId, platform, { dateRange: 7 });
+        when = prediction.bestTime?.scheduledTime || null;
+      } catch (error) {
+        // Timing is an optimisation, never a reason to fail the bulk operation.
+        logger.warn('Optimal-time prediction failed; scheduling immediately', {
+          platform, agencyWorkspaceId, error: error.message,
+        });
+      }
+      optimalTimeCache.set(key, when);
+    }
+    return optimalTimeCache.get(key);
+  }
+
   for (const clientWorkspaceId of clientWorkspaceIds) {
     try {
       // Get client-specific customization
@@ -303,11 +333,11 @@ router.post('/:agencyWorkspaceId/bulk/customize-and-schedule', auth, requireWork
       let scheduledPosts = [];
       if (scheduleOptions.enabled) {
         const ScheduledPost = require('../models/ScheduledPost');
-        const { getOptimalPostingTimes } = require('../services/smartScheduleOptimizationService');
 
         for (const platform of customizedContent.platforms) {
           const scheduledTime = scheduleOptions.customDates?.[clientWorkspaceId]?.[platform] ||
             scheduleOptions.scheduledTime ||
+            (scheduleOptions.optimizeTiming ? await resolveOptimalTime(ownerId, platform) : null) ||
             new Date();
 
           const scheduledPost = new ScheduledPost({

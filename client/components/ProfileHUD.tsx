@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { User, Edit3, Check, X, Shield, Sparkles, Fingerprint } from 'lucide-react'
-import { apiPost } from '../lib/api'
+import { apiPut } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -14,15 +14,22 @@ const ProfileHUD = () => {
   const [name, setName] = useState(user?.name || '')
   const [niche, setNiche] = useState(user?.niche || '')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSave = async () => {
     setSaving(true)
+    setError(null)
     try {
-      await apiPost('/user/profile', { name, niche })
+      // PUT /api/auth/profile — it takes exactly { name, niche } (plus optional
+      // bio/website/…). This used to POST /api/user/profile, which does not
+      // exist: every save 404'd, the panel stayed open with no message, and the
+      // only trace was a console.error. Hence the visible error state below.
+      await apiPut('/auth/profile', { name, niche })
       await refresh()
       setIsEditing(false)
     } catch (err) {
       console.error('Failed to update profile', err)
+      setError(t('profileHud.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -32,7 +39,7 @@ const ProfileHUD = () => {
     <div className="relative">
       <AnimatePresence>
         {!isEditing ? (
-          <motion.button
+          <m.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -49,9 +56,9 @@ const ProfileHUD = () => {
                 <Edit3 size={10} className="text-[var(--text-dim)] opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
               </div>
             </div>
-          </motion.button>
+          </m.button>
         ) : (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -86,6 +93,12 @@ const ProfileHUD = () => {
                 />
               </div>
 
+              {error ? (
+                <p role="alert" className="text-[10px] font-bold text-red-400 uppercase tracking-widest ml-1">
+                  {error}
+                </p>
+              ) : null}
+
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleSave}
@@ -112,7 +125,7 @@ const ProfileHUD = () => {
                <Fingerprint size={12} className="text-white/20" />
                <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] text-center">{t('profileHud.identitySynchronizationActive')}</span>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

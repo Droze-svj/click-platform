@@ -14,6 +14,7 @@ import { cn } from '../lib/utils'
 import DarkModeToggle from './DarkModeToggle'
 import NotificationBell from './NotificationBell'
 import AdvancedSearch from './AdvancedSearch'
+import { useDialogBehavior } from './ui/modal'
 
 export default function MobileNavbar() {
   const router = useRouter()
@@ -21,6 +22,7 @@ export default function MobileNavbar() {
   const { user, logout } = useAuth()
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
+  const panelRef = useDialogBehavior(isOpen, () => setIsOpen(false))
 
   if (pathname === '/login' || pathname === '/register' || pathname === '/') {
     return null
@@ -98,7 +100,7 @@ export default function MobileNavbar() {
               setIsOpen(false)
             }}
           />
-          <div className="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-gray-800 z-50 overflow-y-auto shadow-xl">
+          <div ref={panelRef} role="dialog" aria-modal="true" className="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-gray-800 z-50 overflow-y-auto shadow-xl">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">{t('common.menu')}</h2>

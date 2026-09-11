@@ -18,7 +18,7 @@ import {
   Instagram,
   Smartphone
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 import { apiGet, apiPost } from '../../../lib/api'
 import { Panel, Button, Badge, SectionHeader, FormField, Input, Textarea } from '../../ui'
@@ -306,7 +306,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
 
       <AnimatePresence mode="wait">
         {activeTab === 'matrix' && (
-          <motion.div
+          <m.div
             key="matrix"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -430,11 +430,11 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                 </Button>
               </div>
             </Panel>
-          </motion.div>
+          </m.div>
         )}
 
         {activeTab === 'schedule' && (
-          <motion.div
+          <m.div
             key="schedule"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -502,11 +502,11 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                 </FormField>
               </div>
             </Panel>
-          </motion.div>
+          </m.div>
         )}
 
         {activeTab === 'platforms' && (
-          <motion.div
+          <m.div
             key="platforms"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -605,7 +605,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                 ))}
               </div>
             </Panel>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
       <SwarmConsensusHUD

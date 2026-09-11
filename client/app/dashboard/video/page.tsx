@@ -17,7 +17,7 @@ import {
   Database, ShieldCheck, Zap
 } from 'lucide-react'
 import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../components/ToastContainer'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { getAssetUrl, getMediaUrl } from '../../../utils/url'
@@ -29,6 +29,7 @@ import {
   Button,
   IconButton,
   Input,
+  PageShell,
 } from '../../../components/ui'
 
 interface VideoItem {
@@ -260,7 +261,7 @@ export default function VideoStudioPage() {
   })
 
   if (loading) return (
-    <div className="ds-bg-mesh-soft flex flex-col items-center justify-center py-48 min-h-screen">
+    <div role="status" aria-live="polite" className="ds-bg-mesh-soft flex flex-col items-center justify-center py-48 min-h-screen">
        <Loader2 size={48} className="text-indigo-500 animate-spin mb-6" />
        <p className="ds-text-label text-theme-muted">{tr('studio.syncingStudio', 'Syncing Neural Studio...')}</p>
     </div>
@@ -268,12 +269,12 @@ export default function VideoStudioPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto space-y-8 text-theme-primary overflow-x-hidden">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <AnimatePresence>
           {(pageDragOver || pageDropProgress !== null) && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-[9999] bg-background/90 backdrop-blur-xl flex items-center justify-center border-4 border-dashed border-indigo-500/50"
             >
@@ -291,7 +292,7 @@ export default function VideoStudioPage() {
                   </div>
                 )}
               </Panel>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -418,7 +419,7 @@ export default function VideoStudioPage() {
               </span>
            </div>
         </Panel>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

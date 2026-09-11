@@ -99,9 +99,12 @@ jobs:
   deploy:
     needs: [test, build]
     runs-on: ubuntu-latest
+    # No `environment.url`: it used `secrets.PRODUCTION_DOMAIN`, and the secrets
+    # context is not allowed there. That made the whole file invalid, so GitHub
+    # recorded a failed zero-job "run" of this workflow on every push. The steps
+    # below still read the secret where it is allowed.
     environment:
       name: ${{ github.event.inputs.environment || 'production' }}
-      url: https://${{ secrets.PRODUCTION_DOMAIN }}
     env:
       # Job-level so the notify step's `if: env.SLACK_WEBHOOK_URL != ''` guard works.
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

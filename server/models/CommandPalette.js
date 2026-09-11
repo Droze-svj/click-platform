@@ -51,7 +51,11 @@ commandPaletteSchema.pre('save', function(next) {
   next();
 });
 
-commandPaletteSchema.index({ userId: 1 }); // owner-scoped reads — avoid a collection scan
+// No explicit index({ userId: 1 }) here: `unique: true` on the userId path above
+// already builds exactly that index, as the note further up says. Declaring it a
+// second time made Mongoose warn "Duplicate schema index on {userId: 1}" on every
+// boot and asked MongoDB to maintain a second B-tree over the same key — write
+// cost and storage for a lookup the unique index already serves.
 
 module.exports = mongoose.model('CommandPalette', commandPaletteSchema);
 

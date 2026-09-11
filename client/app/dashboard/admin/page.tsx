@@ -25,6 +25,7 @@ import { StatCard } from '@/components/ui/stat-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SectionHeader } from '@/components/ui/section-header'
 import { cn } from '@/lib/utils'
+import { PageShell } from '../../../components/ui'
 
 interface AdminOverview {
   users: { total: number; verified: number; unverified: number }
@@ -127,7 +128,7 @@ export default function AdminDashboardPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto text-theme-primary space-y-8">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
         <ToastContainer />
 
         <SectionHeader
@@ -275,13 +276,18 @@ export default function AdminDashboardPage() {
 
             <div className="space-y-2">
               <p className="ds-text-label text-theme-muted px-1">{t('adminPage.quickOversightCommands')}</p>
-              <CommandButton icon={Users} label={t('adminPage.cmdManageOperatives')} desc={t('adminPage.cmdManageOperativesDesc')} onClick={() => router.push('/dashboard/admin/users')} />
-              <CommandButton icon={FileText} label={t('adminPage.cmdModeratePayloads')} desc={t('adminPage.cmdModeratePayloadsDesc')} onClick={() => router.push('/dashboard/admin/posts')} />
-              <CommandButton icon={BarChart3} label={t('adminPage.cmdGlobalAnalytics')} desc={t('adminPage.cmdGlobalAnalyticsDesc')} onClick={() => router.push('/dashboard/admin/analytics')} />
+              {/* These pointed at /dashboard/admin/users, /posts and /analytics,
+                  none of which exist — every one 404'd. The user and post totals
+                  they promised to manage are already on the stat cards above, so
+                  the two without a destination are gone; analytics goes to the
+                  real analytics page, and the dead-letter queue (a real admin
+                  surface with no inbound link anywhere) takes the third slot. */}
+              <CommandButton icon={BarChart3} label={t('adminPage.cmdGlobalAnalytics')} desc={t('adminPage.cmdGlobalAnalyticsDesc')} onClick={() => router.push('/dashboard/analytics')} />
+              <CommandButton icon={FileText} label="Failed jobs" desc="Retry or clear jobs that exhausted their retries" onClick={() => router.push('/dashboard/admin/dead-letter')} />
             </div>
           </div>
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

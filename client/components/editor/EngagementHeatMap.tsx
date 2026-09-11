@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Activity, Flame, TrendingUp } from 'lucide-react'
 
 interface EngagementHeatMapProps {
@@ -82,7 +82,7 @@ const EngagementHeatMap: React.FC<EngagementHeatMapProps> = ({
 
       <div className="h-20 w-full flex items-end gap-[2px] relative group/map">
         {/* Playhead Indicator */}
-        <motion.div
+        <m.div
           className="absolute top-0 bottom-0 w-[2px] bg-white z-20 shadow-[0_0_15px_rgba(255,255,255,0.8)]"
           style={{ '--progress-left': `${progress}%`, left: 'var(--progress-left)' } as any}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}

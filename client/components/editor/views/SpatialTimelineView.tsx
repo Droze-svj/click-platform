@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Layers, Box, Eye, Sliders, Download, Info,
   Cpu, Sparkles, Move3D, ZoomIn, ZoomOut, RotateCcw
@@ -60,7 +60,7 @@ function SpatialViewport({ layers }: { layers: SpatialLayer[] }) {
         const zScale = 1 + layer.depth * 0.025
         const zBlur = layer.depth < -4 ? Math.abs(layer.depth + 4) * 0.4 : 0
         return (
-          <motion.div
+          <m.div
             key={layer.id}
             className="absolute flex items-center justify-center"
             style={{
@@ -80,7 +80,7 @@ function SpatialViewport({ layers }: { layers: SpatialLayer[] }) {
             >
               {layer.name}
             </div>
-          </motion.div>
+          </m.div>
         )
       })}
 
@@ -131,7 +131,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-8 max-w-[1400px] mx-auto pb-20 px-4 py-8"
@@ -152,7 +152,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
         </div>
 
         <div className="flex items-center gap-3">
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAnalyzeSpatial}
@@ -163,15 +163,15 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
               ? <><Cpu className="w-4 h-4 animate-spin" /> Analyzing…</>
               : <><Sparkles className="w-4 h-4" /> AI Depth Analysis</>
             }
-          </motion.button>
-          <motion.button
+          </m.button>
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={addLayer}
             className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-white/10 transition-all"
           >
             <Layers className="w-4 h-4" /> Add Layer
-          </motion.button>
+          </m.button>
         </div>
       </div>
 
@@ -203,7 +203,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
             </div>
 
             {[...layers].sort((a, b) => b.depth - a.depth).map(layer => (
-              <motion.div
+              <m.div
                 key={layer.id}
                 layout
                 onClick={() => setSelectedLayerId(layer.id)}
@@ -226,7 +226,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
                 }`}>
                   Z: {layer.depth > 0 ? '+' : ''}{layer.depth}
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -236,7 +236,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
           {/* Layer Properties */}
           <AnimatePresence mode="wait">
             {selectedLayer && (
-              <motion.div
+              <m.div
                 key={selectedLayer.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -327,7 +327,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
                     Layers with <strong className="text-white">Z &gt; +5</strong> appear floating close to the viewer in Vision Pro. Layers at <strong className="text-white">Z &lt; −5</strong> recede into the depth of the scene.
                   </p>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
@@ -339,7 +339,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
             </div>
 
             {EXPORT_FORMATS.map(fmt => (
-              <motion.div
+              <m.div
                 key={fmt.id}
                 whileHover={{ x: 4 }}
                 onClick={() => setSelectedFormat(fmt.id)}
@@ -357,21 +357,21 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
                 <span className={`px-2 py-0.5 rounded-full text-[8px] font-black bg-gradient-to-r ${fmt.color} text-white`}>
                   {fmt.badge}
                 </span>
-              </motion.div>
+              </m.div>
             ))}
 
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => showToast(`Spatial export queued as ${EXPORT_FORMATS.find(f => f.id === selectedFormat)?.label}`, 'success')}
               className="w-full py-4 mt-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
             >
               <Download className="w-4 h-4" /> Export Spatial Video
-            </motion.button>
+            </m.button>
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

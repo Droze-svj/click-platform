@@ -40,15 +40,34 @@ const mongoose = require('mongoose');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 
+// Skipped because a body-less probe would do something real or unbounded:
+// outbound posting/publishing, a live upload, an actual ffmpeg render, or an
+// SSE stream that never closes.
+//
+// /api/billing, /api/subscription and /api/export were skipped here too, which
+// left the entire paid-plan surface unswept — that is how the SupportTicket
+// ticketNumber defect (every billing-support ticket creation failing) survived.
+// They are safe to sweep: the probes carry an empty body, the DB is a throwaway
+// in-memory instance, and the one outbound call in the family
+// (POST /api/subscription/verify -> Whop) returns 400 on the missing id long
+// before axios is reached. Keep them swept.
 const SKIP_PREFIXES = [
-  '/api/webhooks', '/api/oauth', '/api/billing', '/api/subscription',
-  '/api/social', '/api/upload', '/api/video/render', '/api/export',
-  '/api/health/trigger-sentry', '/api/health/test-sentry', '/api/events/stream',
-  '/api/scheduler', '/api/autopilot', '/api/calendar-autofill',
-  '/api/repurpose-studio', '/api/content-series', '/api/integrations',
-  '/api/backup', '/api/video/advanced',
+  // Genuinely does something real or unbounded even from a body-less probe:
+  // outbound platform calls, a live upload handshake, or an actual ffmpeg run.
+  '/api/oauth', '/api/social',            // outbound to the platforms
+  '/api/upload',                          // tus/chunked handshakes
+  '/api/video/render', '/api/video/advanced', // spawn ffmpeg
+  '/api/backup/restore',                  // overwrites data
+  '/api/health/trigger-sentry', '/api/health/test-sentry',
+  '/api/events/stream',                   // SSE, never closes
 ];
-const SKIP_SUFFIX = /\/(publish|post|push|send|broadcast|dispatch)(\/|$)/i;
+// NOTE: there is deliberately no publish/post/send suffix skip. It used to exist
+// and it hid a real 500 — POST /api/posts/:id/publish threw with Supabase off,
+// because it was the one handler in posts.js missing the store-not-configured
+// guard its siblings all have. DRY_RUN_PUBLISH=true (set above) neutralises the
+// publish paths, and with no platform tokens they fail closed anyway, so
+// sweeping them is safe and demonstrably worth it.
+const SKIP_SUFFIX = /^$/;
 // Cross-user by design (verified): public help article vote + moderation flag.
 const IDOR_ALLOWLIST = new Set([
   'POST /api/help/articles/:id/helpful',
@@ -87,9 +106,23 @@ function fillParams(p, paramNames, fx, ownedId) {
 }
 
 async function main() {
-  const { MongoMemoryServer } = require('mongodb-memory-server');
-  const mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
+  // Prefer a provided LOCAL TEST database (CI gives this job a mongo service,
+  // where MongoMemoryServer cannot download its binary). Anything that is not
+  // plainly a local test DB is ignored rather than connected to — this script
+  // runs deleteMany-style writes, so it must never be pointed at real data.
+  // Mirrors the rule in tests/setup-env.js.
+  const provided = process.env.MONGODB_URI || '';
+  const isLocalTestUri = /(127\.0\.0\.1|localhost)/.test(provided) && /test/i.test(provided)
+    && !/mongodb\+srv:|\.mongodb\.net/i.test(provided);
+
+  let mongod = null;
+  if (isLocalTestUri) {
+    await mongoose.connect(provided);
+  } else {
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    mongod = await MongoMemoryServer.create();
+    await mongoose.connect(mongod.getUri());
+  }
 
   const app = require('../../server/index');
   const { walkRoutes } = require('./walkRoutes');
@@ -161,7 +194,7 @@ async function main() {
   if (idor.length) console.log('IDOR:\n' + idor.map((e) => `  ${e.method} ${e.path} → B ${e.idorStatus}`).join('\n'));
 
   await mongoose.disconnect().catch(() => {});
-  await mongod.stop().catch(() => {});
+  if (mongod) await mongod.stop().catch(() => {});
 
   const fail = serverErrors.length > 0 || idor.length > 0 || malformed.length > 0;
   process.exit(fail ? 1 : 0);

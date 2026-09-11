@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { apiPost } from '../lib/api'
+import { awaitVideoJob } from '../lib/videoJobs'
 import { useTranslation } from '@/hooks/useTranslation'
 
 interface AnalysisResult {
@@ -81,21 +82,39 @@ export default function AIContentAnalysis({
       showToast(t('aiContentAnalysis.videoUrlRequired'), 'error')
       return
     }
+    // The server tracks this job under the videoId, so without one there is no
+    // key to read the result back on. Say so rather than starting work whose
+    // outcome can never be collected.
+    if (!videoId) {
+      showToast(t('aiContentAnalysis.videoIdRequired'), 'error')
+      return
+    }
 
     setIsAnalyzing(true)
     try {
-      const response = await apiPost('/ai/analyze-video', {
+      // POST /ai/analyze-video does not exist and never did — this component was
+      // unreachable, so the 404 never surfaced. The capability it wants IS built:
+      // aiVideoAnalysisService.analyzeVideoContent runs exactly these five
+      // analyses and is exposed at POST /video/advanced/analyze, which takes the
+      // same { videoId, videoUrl, analysisTypes } payload.
+      //
+      // That route is asynchronous — 202 with a jobId, result delivered through
+      // the progress tracker — so the response is awaited rather than read off
+      // the POST. Reading it directly is the bug awaitVideoJob exists to prevent.
+      await apiPost('/video/advanced/analyze', {
         videoUrl,
         videoId,
         analysisTypes: ['highlights', 'pacing', 'engagement', 'technical', 'content']
       })
 
-      if (response.success) {
-        setAnalysis(response.data)
-        onAnalysisComplete?.(response.data)
+      const result = await awaitVideoJob(videoId, 'ai-analyze')
+
+      if (result) {
+        setAnalysis(result)
+        onAnalysisComplete?.(result)
         showToast(t('aiContentAnalysis.analysisCompleted'), 'success')
       } else {
-        throw new Error(response.error || t('aiContentAnalysis.analysisFailed'))
+        throw new Error(t('aiContentAnalysis.analysisFailed'))
       }
     } catch (error: any) {
       console.error('AI analysis error:', error)

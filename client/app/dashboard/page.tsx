@@ -19,12 +19,15 @@ import { ErrorBoundary } from '../../components/ErrorBoundary'
 import ToastContainer from '../../components/ToastContainer'
 import SubscriptionBanner from '../../components/SubscriptionBanner'
 import WhatToMakeNext from '../../components/WhatToMakeNext'
+import GetStartedStrip from '../../components/GetStartedStrip'
+import AILearningIndicator from '../../components/AILearningIndicator'
 import {
   Panel,
   StatCard,
   SectionHeader,
   EmptyState,
   Button,
+  PageShell,
 } from '../../components/ui'
 
 type SwarmMode = 'viral' | 'trust' | 'coach' | 'authority'
@@ -287,9 +290,12 @@ export default function DashboardHome() {
       <SubscriptionBanner />
       <ToastContainer />
 
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden">
-        {/* The layout already renders DashboardHeader (page title + breadcrumb),
-            so we start straight into the greeting hero and bento content. */}
+      {/* No PageHeader here on purpose: the bento hero below already carries
+          the greeting, the user's name and the two primary CTAs, so a header
+          would repeat all three. PageShell still supplies the shared frame —
+          width, horizontal padding and density-aware rhythm — which is what
+          made this page's margins differ from every other route. */}
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
 
         {/* Post-signup welcome — additive, dismissible. Reflects the real niche
             the user chose at signup; falls back to honest generic copy when
@@ -505,6 +511,16 @@ export default function DashboardHome() {
 
           {/* ── What to make next (real /me/next-best, grounded in proven data) ── */}
           <WhatToMakeNext />
+
+          {/* Onboarding progress (GET /api/onboarding) and the style-learning
+              signal (GET /api/style-profile/insights). Both were built against
+              live endpoints and imported by nothing. Kept to two small widgets —
+              this page was deliberately calmed down, so the rest of the
+              unreachable dashboard components went to the surfaces they belong
+              to (engagement → /achievements, templates → /templates,
+              workflow suggestions → /workflows) rather than piling up here. */}
+          <ErrorBoundary><GetStartedStrip /></ErrorBoundary>
+          <ErrorBoundary><AILearningIndicator /></ErrorBoundary>
 
           {/* ── Recent content (real recent_posts) (2x1) ───────────────── */}
           <Panel variant="bento" className="ds-bento-2x1 ds-anim-rise p-6">
@@ -729,7 +745,7 @@ export default function DashboardHome() {
           </Panel>
 
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

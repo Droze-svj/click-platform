@@ -15,6 +15,7 @@ import {
   Textarea,
   EmptyState,
   SectionHeader,
+  PageShell,
 } from '../../../../components/ui'
 
 interface ApprovalComment {
@@ -179,7 +180,9 @@ function CollaborateInner() {
   )
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+    // max-w-4xl kept explicitly: this is a single comment thread, and a wider
+    // column makes the replies hard to scan. twMerge lets it win over the token.
+    <PageShell className="max-w-4xl">
       <SectionHeader
         as="h1"
         title="Approval Collaboration"
@@ -305,13 +308,13 @@ function CollaborateInner() {
       )}
 
       <ToastContainer />
-    </div>
+    </PageShell>
   )
 }
 
 export default function ApprovalCollaboratePage() {
   return (
-    <Suspense fallback={<div className="p-6 text-theme-muted">Loading…</div>}>
+    <Suspense fallback={<PageShell className="max-w-4xl text-theme-muted">Loading…</PageShell>}>
       <CollaborateInner />
     </Suspense>
   )

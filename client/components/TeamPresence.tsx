@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Users, UserPlus, Circle, Plus, X, Mail, TrendingUp } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface TeamMember {
   userId: { _id: string; name: string; email: string }
@@ -25,6 +26,7 @@ export default function TeamPresence() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const panelRef = useDialogBehavior(showInviteModal, () => setShowInviteModal(false))
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
 
@@ -98,7 +100,7 @@ export default function TeamPresence() {
       <div className="flex -space-x-3 overflow-hidden">
         <AnimatePresence>
           {activeMembers.slice(0, 5).map((member, i) => (
-            <motion.div
+            <m.div
               key={(member.userId as any)?._id || i}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -116,7 +118,7 @@ export default function TeamPresence() {
               {member.isOnline && (
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#020202] shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
               )}
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
         {activeMembers.length > 5 && (
@@ -126,7 +128,7 @@ export default function TeamPresence() {
         )}
       </div>
 
-      <motion.button
+      <m.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setShowInviteModal(true)}
@@ -134,7 +136,7 @@ export default function TeamPresence() {
       >
         <UserPlus className="w-4 h-4" />
         <span className="text-[10px] font-black uppercase tracking-[0.2em] italic">{t('teamPresence.invite')}</span>
-      </motion.button>
+      </m.button>
 
       {/* Collective Strategy Signal (Phase 10) */}
       <div className="hidden lg:flex px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 items-center gap-3 shadow-lg shadow-indigo-500/5">
@@ -148,13 +150,16 @@ export default function TeamPresence() {
       {/* Invite Modal */}
       <AnimatePresence>
         {showInviteModal && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            role="dialog"
+            aria-modal="true"
           >
-            <motion.div
+            <m.div
+              ref={panelRef}
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -202,8 +207,8 @@ export default function TeamPresence() {
                   {t('teamPresence.securePortalNote')}
                 </p>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

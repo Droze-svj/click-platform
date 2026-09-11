@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { X, Copy, Check } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface ShareModalProps {
   isOpen: boolean
@@ -16,6 +17,10 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title = 'Share' 
   const { showToast } = useToast()
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
+
+  // Focus trap + scroll lock + focus restore. Called before the early return
+  // below so the hook order never changes between open and closed.
+  const panelRef = useDialogBehavior(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -54,8 +59,8 @@ export default function ShareModal({ isOpen, onClose, shareUrl, title = 'Share' 
   ]
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6" ref={panelRef}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('shareModal.title')}</h2>
           <button

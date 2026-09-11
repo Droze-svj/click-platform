@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Music,
   Image as ImageIcon,
@@ -42,6 +42,7 @@ import {
 import { useToast } from '../contexts/ToastContext'
 import { apiGet, apiPost, apiDelete } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface Asset {
   _id?: string
@@ -112,6 +113,7 @@ export default function AssetLibrary({
   const [playingAsset, setPlayingAsset] = useState<string | null>(null)
   const [uploadType, setUploadType] = useState<'music' | 'image' | 'broll' | null>(null)
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
+  const panelRef = useDialogBehavior(!!previewAsset, () => setPreviewAsset(null))
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [recentAssets, setRecentAssets] = useState<Asset[]>([])
   const [trimStart, setTrimStart] = useState(0)
@@ -318,7 +320,7 @@ export default function AssetLibrary({
   return (
     <div className={`h-full flex flex-col bg-[#020202] text-slate-200 selection:bg-indigo-500/30 relative overflow-hidden`}>
       {/* Reactive Nebula */}
-      <motion.div
+      <m.div
         animate={{
           x: mousePos.x / 80,
           y: mousePos.y / 80,
@@ -327,7 +329,7 @@ export default function AssetLibrary({
       >
         <div className={`absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-${currentTheme.accent}/10 blur-[130px] rounded-full animate-pulse`} />
         <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-indigo-600/5 blur-[160px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-      </motion.div>
+      </m.div>
 
       {/* Header Panel */}
       <div className={`p-8 border-b border-white/5 relative z-10 ${glassStyle} border-none`}>
@@ -404,14 +406,14 @@ export default function AssetLibrary({
                   if (file) handleUpload(file, upload.type as any)
                 }}
               />
-              <motion.div
+              <m.div
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className={`flex items-center justify-center gap-4 px-6 py-4 rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all cursor-pointer relative overflow-hidden shadow-inner`}
               >
                 <upload.icon className={`w-5 h-5 text-slate-500 group-hover:text-white transition-colors`} />
                 <span className="text-[10px] font-black text-slate-500 group-hover:text-white uppercase tracking-[0.3em]">{upload.label}</span>
-              </motion.div>
+              </m.div>
             </label>
           ))}
         </div>
@@ -421,13 +423,13 @@ export default function AssetLibrary({
       <div className="flex-1 overflow-y-auto p-10 relative z-10 custom-scrollbar">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-96 space-y-8">
-            <motion.div
+            <m.div
               animate={{ rotate: 360 }}
               transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
               className="w-20 h-20 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center"
             >
               <Cpu className="w-10 h-10 text-indigo-400" />
-            </motion.div>
+            </m.div>
             <div className={`text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] animate-pulse`}>{t('assetLibrary.analyzingStrands')}</div>
           </div>
         ) : filteredAssets.length === 0 ? (
@@ -441,14 +443,14 @@ export default function AssetLibrary({
             </div>
           </div>
         ) : viewMode === 'grid' ? (
-          <motion.div
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8"
           >
             {filteredAssets.map(asset => (
-              <motion.div
+              <m.div
                 key={asset.id}
                 variants={itemVariants}
                 draggable
@@ -475,7 +477,7 @@ export default function AssetLibrary({
                       <div className="absolute bottom-0 inset-x-0 h-16 bg-white/10 backdrop-blur-md flex items-center px-4">
                         <div className="flex gap-1 items-end h-8">
                           {[...Array(12)].map((_, i) => (
-                            <motion.div
+                            <m.div
                               key={i}
                               animate={{ height: [4, 20, 4] }}
                               transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
@@ -500,24 +502,24 @@ export default function AssetLibrary({
 
                   {/* High-Fidelity Overlay */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-4 backdrop-blur-sm">
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1, rotate: -5 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => { e.stopPropagation(); handlePreview(asset); }}
                       className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 transition-all shadow-2xl"
                     >
                       <Maximize2 className="w-5 h-5 text-white" />
-                    </motion.button>
-                    <motion.button
+                    </m.button>
+                    <m.button
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(asset.id || ''); }}
                       className={`w-12 h-12 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 transition-all shadow-2xl ${favorites.has(asset.id || '') ? 'bg-amber-500/80 text-white border-amber-500' : 'bg-white/10 text-white'}`}
                     >
                       <Star className={`w-5 h-5 ${favorites.has(asset.id || '') ? 'fill-white' : ''}`} />
-                    </motion.button>
+                    </m.button>
                     {onAddToTimeline && (
-                      <motion.button
+                      <m.button
                         whileHover={{ scale: 1.1, y: -5 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => {
@@ -529,7 +531,7 @@ export default function AssetLibrary({
                         className={`w-12 h-12 bg-indigo-600 hover:bg-indigo-500 rounded-2xl flex items-center justify-center text-white border border-white/20 transition-all shadow-[0_0_30px_rgba(99,102,241,0.5)]`}
                       >
                         <Plus className="w-6 h-6" />
-                      </motion.button>
+                      </m.button>
                     )}
                   </div>
 
@@ -563,13 +565,13 @@ export default function AssetLibrary({
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
-          </motion.div>
+          </m.div>
         ) : (
           <div className="space-y-4">
             {filteredAssets.map(asset => (
-              <motion.div
+              <m.div
                 key={asset.id}
                 whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.05)' }}
                 className={`flex items-center gap-8 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 cursor-pointer transition-all group ${selectedAsset?.id === asset.id ? 'border-indigo-500/50 bg-indigo-500/5' : ''}`}
@@ -610,7 +612,7 @@ export default function AssetLibrary({
                     </button>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         )}
@@ -619,7 +621,7 @@ export default function AssetLibrary({
       {/* Intake Progress Overlay */}
       <AnimatePresence>
         {uploading && (
-          <motion.div
+          <m.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
@@ -635,21 +637,24 @@ export default function AssetLibrary({
                 <div className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">{t('assetLibrary.digitizingStrands')}</div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Preview Overlay (Simplified for brevity, maintained logic) */}
       <AnimatePresence>
         {previewAsset && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center p-8 backdrop-blur-xl"
             onClick={() => setPreviewAsset(null)}
+            role="dialog"
+            aria-modal="true"
           >
-            <motion.div
+            <m.div
+              ref={panelRef}
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               className={`max-w-5xl w-full rounded-[4rem] overflow-hidden ${glassStyle} border-white/5 relative`}
@@ -676,8 +681,8 @@ export default function AssetLibrary({
                   <button className="px-10 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest text-xs shadow-3xl shadow-indigo-600/30 border border-white/10">{t('assetLibrary.integrateIntoWorkspace')}</button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

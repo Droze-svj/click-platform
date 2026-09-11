@@ -265,14 +265,91 @@ function generateCSVReport(report) {
 }
 
 /**
- * Generate PDF report (placeholder - would use PDF library in production)
+ * Render a compliance report to a real PDF.
+ *
+ * A music-licensing compliance report is the artifact you hand to a rights
+ * holder or platform when a track's use is challenged, so "PDF generation not
+ * implemented" (what this returned) made the export button produce a JSON blob
+ * claiming to be a PDF.
+ *
+ * Uses pdfkit, already a dependency and used the same way in valueReportService
+ * and five other report services.
+ *
+ * @param {object} report the output of generateComplianceReport()
+ * @returns {Promise<{format:string, content:Buffer, contentType:string, filename:string}>}
  */
-function generatePDFReport(report) {
-  // In production, use a PDF library like pdfkit or puppeteer
+async function generatePDFReport(report) {
+  const PDFDocument = require('pdfkit');
+  const doc = new PDFDocument({ margin: 50 });
+  const chunks = [];
+  doc.on('data', (chunk) => chunks.push(chunk));
+
+  const period = report.period?.startDate || report.period?.endDate
+    ? `${report.period.startDate ? new Date(report.period.startDate).toLocaleDateString() : 'start'} — ` +
+      `${report.period.endDate ? new Date(report.period.endDate).toLocaleDateString() : 'now'}`
+    : 'All time';
+
+  doc.fontSize(20).text('Music Licensing Compliance Report', { align: 'center' });
+  doc.moveDown(0.3);
+  doc.fontSize(10).fillColor('#555')
+    .text(`Period: ${period}`, { align: 'center' })
+    .text(`Generated: ${new Date(report.generatedAt || Date.now()).toLocaleString()}`, { align: 'center' });
+  doc.fillColor('black').moveDown();
+
+  const summary = report.summary || {};
+  doc.fontSize(16).text('Summary', { underline: true });
+  doc.moveDown(0.5).fontSize(12);
+  doc.text(`Total tracked uses: ${summary.totalUsage ?? 0}`);
+  doc.text(`Requiring attribution: ${summary.attributionRequired ?? 0}`);
+  doc.text(`Registered with provider: ${summary.registered ?? 0}`);
+  doc.text(`Compliance issues: ${summary.complianceIssues ?? 0}`);
+  doc.moveDown(0.5);
+
+  // Breakdown tables — skipped entirely when empty rather than printing a
+  // heading with nothing under it.
+  for (const [heading, group] of [
+    ['By provider', summary.byProvider],
+    ['By license type', summary.byLicenseType],
+    ['By source', summary.bySource],
+  ]) {
+    const entries = Object.entries(group || {});
+    if (entries.length === 0) continue;
+    doc.fontSize(13).text(heading, { underline: true });
+    doc.fontSize(11);
+    for (const [key, count] of entries) doc.text(`  ${key}: ${count}`);
+    doc.moveDown(0.5);
+  }
+
+  const details = Array.isArray(report.details) ? report.details : [];
+  if (details.length > 0) {
+    doc.addPage();
+    doc.fontSize(16).text('Usage detail', { underline: true });
+    doc.moveDown(0.5).fontSize(10);
+
+    details.forEach((entry, index) => {
+      // Roughly 12 entries per page keeps rows from splitting across pages.
+      if (index > 0 && index % 12 === 0) doc.addPage();
+      const when = entry.renderTimestamp ? new Date(entry.renderTimestamp).toLocaleString() : 'unknown date';
+      doc.fontSize(11).text(`${entry.track?.title || 'Untitled'} — ${entry.track?.artist || 'Unknown artist'}`);
+      doc.fontSize(9).fillColor('#555')
+        .text(`  ${when} · render ${entry.renderId || 'n/a'} · ${entry.track?.provider || entry.track?.source || 'unknown source'}`)
+        .text(`  License: ${entry.license?.type || 'unspecified'}`);
+      doc.fillColor('black').moveDown(0.3);
+    });
+  }
+
+  doc.end();
+
+  const content = await new Promise((resolve, reject) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+  });
+
   return {
     format: 'pdf',
-    message: 'PDF generation not implemented',
-    report
+    content,
+    contentType: 'application/pdf',
+    filename: `compliance-report-${Date.now()}.pdf`,
   };
 }
 

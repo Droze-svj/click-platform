@@ -14,7 +14,9 @@ import {
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { CardSkeleton } from '../../../components/LoadingSkeleton';
 import ToastContainer from '../../../components/ToastContainer';
-import { Panel, Button, IconButton, SectionHeader } from '../../../components/ui';
+import { Panel, Button, IconButton, SectionHeader,
+  PageShell,
+} from '../../../components/ui';
 import { cn } from '../../../lib/utils';
 
 export default function CognitiveLogicMatrixPage() {
@@ -49,7 +51,7 @@ export default function CognitiveLogicMatrixPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1900px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -128,7 +130,7 @@ export default function CognitiveLogicMatrixPage() {
             )}
           </div>
         </ErrorBoundary>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   );
 }

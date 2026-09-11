@@ -19,6 +19,7 @@ import { FormField, Input } from '../../../components/ui/form-field'
 
 import { API_URL } from '../../../lib/api'
 import { StatsCardSkeleton, ListItemSkeleton } from '../../../components/LoadingSkeleton'
+import { PageShell } from '../../../components/ui'
 
 const sectors = [
   'health', 'finance', 'education', 'technology',
@@ -102,7 +103,7 @@ export default function SectorResonanceMatrixPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1500px] mx-auto space-y-8">
+      <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
         <ToastContainer />
 
         {/* Header */}
@@ -281,7 +282,7 @@ export default function SectorResonanceMatrixPage() {
             </button>
           ))}
         </section>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

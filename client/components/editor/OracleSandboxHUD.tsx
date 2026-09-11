@@ -12,7 +12,7 @@ import {
   BarChart3,
   Search
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiPost } from '../../lib/api'
 
 interface OracleVariant {
@@ -81,7 +81,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
 
         <AnimatePresence mode="wait">
             {sandbox ? (
-                <motion.div 
+                <m.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10"
@@ -104,7 +104,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                             </div>
 
                             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                <motion.div 
+                                <m.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${variant.velocity * 100}%` }}
                                     className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full"
@@ -122,9 +122,9 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                             </div>
                         </div>
                     ))}
-                </motion.div>
+                </m.div>
             ) : (
-                <motion.div 
+                <m.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="p-16 border border-dashed border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-6"
@@ -136,7 +136,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                         <p className="text-xs font-black text-white uppercase tracking-widest italic">Awaiting Concept Injection</p>
                         <p className="text-[10px] font-medium text-slate-600 italic">Deploy a micro-budget array to autonomously test hooks, pacing, and visual styles across the global network nodes.</p>
                     </div>
-                </motion.div>
+                </m.div>
             )}
         </AnimatePresence>
 

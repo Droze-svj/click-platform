@@ -33,23 +33,6 @@ router.post('/detect/:clientId', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Risk flags detected', 200, { flags });
 }));
 
-/**
- * GET /api/risk-flags/:clientId
- * Get risk flags for client
- */
-router.get('/:clientId', auth, asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const { clientId } = req.params;
-  const { status, severity, riskType } = req.query;
-  
-  const flags = await getRiskFlags(userId, clientId, {
-    status: status || null,
-    severity: severity || null,
-    riskType: riskType || null
-  });
-  
-  sendSuccess(res, 'Risk flags retrieved', 200, { flags });
-}));
 
 /**
  * GET /api/risk-flags
@@ -139,6 +122,24 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const dashboard = await getRiskDashboard(userId);
   sendSuccess(res, 'Risk dashboard retrieved', 200, dashboard);
+}));
+
+/**
+ * GET /api/risk-flags/:clientId
+ * Get risk flags for client
+ */
+router.get('/:clientId', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { clientId } = req.params;
+  const { status, severity, riskType } = req.query;
+  
+  const flags = await getRiskFlags(userId, clientId, {
+    status: status || null,
+    severity: severity || null,
+    riskType: riskType || null
+  });
+  
+  sendSuccess(res, 'Risk flags retrieved', 200, { flags });
 }));
 
 /**

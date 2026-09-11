@@ -67,6 +67,13 @@ async function predictOptimalTime(userId, contentId, platform, options = {}) {
         const scheduledTime = new Date(currentDate);
         scheduledTime.setHours(hour, minute, 0, 0);
 
+        // Day 0 is today, so its slots may already have passed (a 09:00 slot
+        // when it is 18:00). Nothing penalised past times, and day-0 midweek
+        // slots score highest, so bestTime could come back in the PAST — which
+        // for any caller that schedules on it means "publish immediately"
+        // rather than "publish at the best time".
+        if (scheduledTime <= startDate) continue;
+
         let score = 50; // Base score
 
         // Day of week factor
@@ -128,7 +135,9 @@ async function predictOptimalTime(userId, contentId, platform, options = {}) {
 
     return {
       predictions: predictions.slice(0, 10), // Top 10
-      bestTime: predictions[0],
+      // null (not undefined) when every slot in the window has already passed,
+      // so callers can test it without tripping over an absent key.
+      bestTime: predictions[0] || null,
       platform,
       dateRange,
       recommendations: generateTimeRecommendations(predictions[0], platform)
@@ -144,6 +153,11 @@ async function predictOptimalTime(userId, contentId, platform, options = {}) {
  */
 function generateTimeRecommendations(bestTime, platform) {
   const recommendations = [];
+
+  // No slot survived filtering (every candidate in the window is already past).
+  if (!bestTime) {
+    return ['No optimal slot left in this window — widen dateRange to look further ahead'];
+  }
 
   if (bestTime.score > 80) {
     recommendations.push('Excellent time slot - high engagement expected');

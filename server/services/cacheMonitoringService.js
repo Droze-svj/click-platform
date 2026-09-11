@@ -100,6 +100,7 @@ async function checkRedisConnection() {
  * Get cache size (if available)
  */
 async function getCacheSize() {
+  let client = null;
   try {
     // Try to get Redis info
     const redis = require('redis');
@@ -108,10 +109,16 @@ async function getCacheSize() {
     const isLocalhost = redisUrl?.includes('localhost') || redisUrl?.includes('127.0.0.1') || redisUrl?.includes('::1');
 
     if (redisUrl && !(isDev && isLocalhost)) {
-      const client = redis.createClient({ url: redisUrl });
+      client = redis.createClient({
+        url: redisUrl,
+        socket: { connectTimeout: 3000 }
+      });
+      client.on('error', (err) => {
+        logger.warn('cacheMonitoringService: Redis error', { error: err.message });
+      });
+
       await client.connect();
       const info = await client.info('memory');
-      await client.quit();
       
       // Parse Redis memory info
       const usedMemory = info.match(/used_memory:(\d+)/)?.[1];
@@ -127,6 +134,10 @@ async function getCacheSize() {
   } catch (error) {
     logger.error('Get cache size error', { error: error.message });
     return { error: error.message };
+  } finally {
+    if (client) {
+      try { await client.disconnect(); } catch (_) { /* ignore */ }
+    }
   }
 }
 

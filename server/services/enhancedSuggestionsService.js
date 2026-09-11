@@ -3,7 +3,6 @@
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
-const { generateAIResponse } = require('./aiService');
 
 /**
  * Get trending topics

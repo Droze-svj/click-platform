@@ -9,6 +9,8 @@ import {
   TrendingUp, History, RefreshCw,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import DailyChallenges from '../../../components/DailyChallenges'
+import ActivityFeed from '../../../components/ActivityFeed'
 import ToastContainer from '../../../components/ToastContainer'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '../../../hooks/useTranslation'
@@ -17,6 +19,7 @@ import { Button } from '../../../components/ui/button'
 import { StatCard } from '../../../components/ui/stat-card'
 
 import { API_URL } from '../../../lib/api'
+import { PageShell } from '../../../components/ui'
 
 interface Achievement {
   _id: string; achievementType: string; unlockedAt: string; metadata?: any;
@@ -102,7 +105,7 @@ export default function AscensionLedgerPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1500px] mx-auto space-y-8">
+      <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
         <ToastContainer />
 
         {/* Header */}
@@ -213,7 +216,15 @@ export default function AscensionLedgerPage() {
             })}
           </div>
         </section>
-      </div>
+
+        {/* Both read live engagement endpoints (/api/engagement/challenges and
+            /api/engagement/activities) and were imported by nothing. This is the
+            engagement surface, so they belong beside the achievement grid. */}
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <ErrorBoundary><DailyChallenges /></ErrorBoundary>
+          <ErrorBoundary><ActivityFeed /></ErrorBoundary>
+        </section>
+      </PageShell>
     </ErrorBoundary>
   )
 }

@@ -15,6 +15,22 @@ COPY client/package*.json ./
 COPY pnpm-lock.yaml ../pnpm-lock.yaml
 RUN npm install -g pnpm@9 && pnpm install --frozen-lockfile=false --prefer-frozen-lockfile
 COPY client/ ./
+# Next.js bakes NEXT_PUBLIC_* values into the bundle at BUILD time, and a Docker
+# build only sees variables declared as ARG. Without these the Whop checkout
+# links set in the Render dashboard never reached the frontend, so every paid
+# plan fell back to "no checkout". Render passes matching env vars as build args.
+ARG NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY
+ARG NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY
+ARG NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY
+ARG NEXT_PUBLIC_WHOP_URL_PRO_YEARLY
+ARG NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY
+ARG NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY
+ENV NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY=$NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY \
+    NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY=$NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY \
+    NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY=$NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY \
+    NEXT_PUBLIC_WHOP_URL_PRO_YEARLY=$NEXT_PUBLIC_WHOP_URL_PRO_YEARLY \
+    NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY=$NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY \
+    NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY=$NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY
 RUN pnpm run build
 
 # Stage 2: Production runtime

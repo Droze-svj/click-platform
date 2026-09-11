@@ -35,6 +35,7 @@ import ClickLoadingState from '@/components/click/ClickLoadingState'
 import ClickEmptyState from '@/components/click/ClickEmptyState'
 import { clickVoice } from '@/lib/clickVoice'
 import { Button } from '../../../components/ui/button'
+import { PageShell } from '../../../components/ui'
 
 interface Counter {
   key: string
@@ -126,9 +127,9 @@ export default function ClickLearningPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen ds-bg-mesh-soft flex items-center justify-center">
+      <PageShell width="full" flush className="min-h-screen ds-bg-mesh-soft flex items-center justify-center" aria-busy="true">
         <ClickLoadingState intent="loading.analyzing" />
-      </div>
+      </PageShell>
     )
   }
 
@@ -144,8 +145,7 @@ export default function ClickLearningPage() {
   // they start publishing.
   if (totalPicks === 0) {
     return (
-      <div className="min-h-screen ds-bg-mesh-soft text-theme-primary pb-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-12">
+      <PageShell className="min-h-screen ds-bg-mesh-soft max-w-5xl">
           <ClickEmptyState
             intent="empty.analytics"
             title={t('clickLearningPage.emptyTitle')}
@@ -156,8 +156,7 @@ export default function ClickLearningPage() {
               </Link>
             }
           />
-        </div>
-      </div>
+      </PageShell>
     )
   }
 
@@ -168,8 +167,11 @@ export default function ClickLearningPage() {
   )
 
   return (
-    <div className="min-h-screen ds-bg-mesh-soft text-theme-primary pb-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 space-y-8 ds-anim-fade-in">
+    // max-w-5xl explicitly rather than a width token: the facet grid below is
+    // three columns and reads as a wall at max-w-7xl. twMerge lets the override
+    // win over the token. The cold-start state above now matches it (it was
+    // max-w-4xl), so the page does not change width as data arrives.
+    <PageShell className="min-h-screen ds-bg-mesh-soft max-w-5xl ds-anim-fade-in">
         {/* Headline */}
         <div className="space-y-3">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
@@ -254,8 +256,7 @@ export default function ClickLearningPage() {
             </p>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   )
 }
 

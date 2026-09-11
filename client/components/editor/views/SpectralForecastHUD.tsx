@@ -15,7 +15,7 @@ import {
   DollarSign,
   PieChart
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../../lib/api'
 
 interface ForecastDay {
@@ -187,7 +187,7 @@ export const SpectralForecastHUD: React.FC = () => {
                         {data?.daily.map((day, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar">
                                 <div className="w-full relative">
-                                    <motion.div 
+                                    <m.div 
                                         initial={{ height: '0%' }}
                                         animate={{ 
                                             height: (() => {
@@ -207,7 +207,7 @@ export const SpectralForecastHUD: React.FC = () => {
                                                 ${day.revenue.toLocaleString()}
                                             </span>
                                         </div>
-                                    </motion.div>
+                                    </m.div>
                                     <div className="absolute bottom-0 w-full h-1 bg-white/5" />
                                 </div>
                                 <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter italic">
@@ -236,7 +236,7 @@ export const SpectralForecastHUD: React.FC = () => {
                                 <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Optimized</span>
                              </div>
                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div 
+                                <m.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: '82%' }}
                                     className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
@@ -250,7 +250,7 @@ export const SpectralForecastHUD: React.FC = () => {
                                 <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">High</span>
                              </div>
                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div 
+                                <m.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: '65%' }}
                                     className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
@@ -264,7 +264,7 @@ export const SpectralForecastHUD: React.FC = () => {
                                 <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Low</span>
                              </div>
                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div 
+                                <m.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: '12%' }}
                                     className="h-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]"

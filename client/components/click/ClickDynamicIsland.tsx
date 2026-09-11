@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useDragControls, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useDragControls, useReducedMotion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { 
   Sparkles, Brain, Flame, Send, X, Command,
@@ -32,7 +32,7 @@ function NeuralSoundWave({ color }: { color: string }) {
   return (
     <div className="flex items-center gap-1 h-5 px-2">
       {Array.from({ length: 5 }).map((_, i) => (
-        <motion.div
+        <m.div
           key={i}
           className={`w-1 rounded-full bg-gradient-to-t ${color}`}
           animate={reduce ? { height: 12 } : { height: [4, 20, 4] }}
@@ -220,7 +220,7 @@ export default function ClickDynamicIsland() {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none w-full max-w-[1200px] px-4 flex justify-center">
-      <motion.div
+      <m.div
         ref={containerRef}
         layout
         drag
@@ -247,7 +247,7 @@ export default function ClickDynamicIsland() {
         <AnimatePresence mode="wait">
           {!isExpanded ? (
             // COMPACT STATE
-            <motion.div
+            <m.div
               key="compact"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -269,10 +269,10 @@ export default function ClickDynamicIsland() {
               <div className="flex items-center gap-2">
                 <Command className="w-3.5 h-3.5 text-slate-400 opacity-60 group-hover:opacity-100" />
               </div>
-            </motion.div>
+            </m.div>
           ) : (
             // EXPANDED STATE (SWARM CONSOLE)
-            <motion.div
+            <m.div
               key="expanded"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -455,10 +455,10 @@ export default function ClickDynamicIsland() {
                   Online
                 </span>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

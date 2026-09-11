@@ -117,33 +117,6 @@ router.get('/setup-status', (req, res) => {
   });
 });
 
-/**
- * GET /api/integrations/:id
- * Get integration
- */
-router.get('/:id', auth, asyncHandler(async (req, res) => {
-  if (!isMongoId(req.user._id) || !isMongoId(req.params.id)) {
-    return sendError(res, 'Integration not found', 404);
-  }
-  const integration = await Integration.findOne({
-    _id: req.params.id,
-    userId: req.user._id
-  }).lean();
-
-  if (!integration) {
-    return sendError(res, 'Integration not found', 404);
-  }
-
-  // Don't send sensitive credentials
-  if (integration.config) {
-    delete integration.config.apiSecret;
-    if (integration.config.credentials) {
-      delete integration.config.credentials.refreshToken;
-    }
-  }
-
-  sendSuccess(res, 'Integration retrieved', 200, integration);
-}));
 
 /**
  * PUT /api/integrations/:id
@@ -427,6 +400,34 @@ router.get('/analytics', auth, asyncHandler(async (req, res) => {
   });
 
   sendSuccess(res, 'Integration analytics retrieved', 200, analytics);
+}));
+
+/**
+ * GET /api/integrations/:id
+ * Get integration
+ */
+router.get('/:id', auth, asyncHandler(async (req, res) => {
+  if (!isMongoId(req.user._id) || !isMongoId(req.params.id)) {
+    return sendError(res, 'Integration not found', 404);
+  }
+  const integration = await Integration.findOne({
+    _id: req.params.id,
+    userId: req.user._id
+  }).lean();
+
+  if (!integration) {
+    return sendError(res, 'Integration not found', 404);
+  }
+
+  // Don't send sensitive credentials
+  if (integration.config) {
+    delete integration.config.apiSecret;
+    if (integration.config.credentials) {
+      delete integration.config.credentials.refreshToken;
+    }
+  }
+
+  sendSuccess(res, 'Integration retrieved', 200, integration);
 }));
 
 module.exports = router;

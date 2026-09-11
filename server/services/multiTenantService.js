@@ -40,12 +40,15 @@ async function createTenant(tenantData) {
     await workspace.save();
 
     // Create admin user
+    // `workspaceId`/`tenantId` are not User paths — Mongoose dropped both, so
+    // the tenant's admin was created with no binding to the workspace it was
+    // meant to administer. Membership is modelled on the Workspace side (and via
+    // WorkspaceMember), so the binding is recorded there instead of inventing
+    // two more User paths that nothing reads.
     const admin = new User({
       email: adminEmail,
       password: adminPassword, // Would be hashed
       role: 'admin',
-      workspaceId: workspace._id,
-      tenantId: workspace._id,
     });
     await admin.save();
 

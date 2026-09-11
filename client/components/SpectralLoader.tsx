@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Brain, Fingerprint, Shield, Zap, ActivitySquare } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -24,7 +24,7 @@ export default function SpectralLoader({
       
       {/* Central HUD Pulse */}
       <div className="relative z-10 flex flex-col items-center">
-        <motion.div
+        <m.div
           animate={{ 
             scale: [1, 1.1, 1],
             rotate: [0, 90, 180, 270, 360],
@@ -38,9 +38,9 @@ export default function SpectralLoader({
           className="w-32 h-32 rounded-[2.5rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-[0_0_100px_rgba(79,70,229,0.2)] mb-12"
         >
           <Brain size={48} className="text-indigo-400" />
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            className="flex flex-col items-center gap-4"
@@ -54,12 +54,12 @@ export default function SpectralLoader({
                  {resolvedSubMessage}
                </span>
            </div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Floating Nodes */}
       {[Zap, Fingerprint, ActivitySquare].map((Icon, i) => (
-        <motion.div
+        <m.div
           key={i}
           animate={{ 
             y: [0, -20, 0],
@@ -78,7 +78,7 @@ export default function SpectralLoader({
           }}
         >
           <Icon size={120} className="text-white" />
-        </motion.div>
+        </m.div>
       ))}
 
       <style jsx global>{`

@@ -53,6 +53,20 @@ router.post('/autofill', auth, aiLimiter, costGuard(), asyncHandler(async (req, 
 
   const ideas = await aiService.generateViralIdeas(subject, niche, count, { userId: req.user._id });
 
+  // Nothing was generated (AI unavailable or over quota). Say so, instead of
+  // answering 201 "Calendar drafts created" for an empty plan — and don't bill
+  // the user's AI budget for 1200 output tokens that were never produced. The
+  // costGuard leak guard refunds the unsettled reservation when this response
+  // finishes.
+  if (!Array.isArray(ideas) || ideas.length === 0) {
+    return sendSuccess(res, 'Calendar ideas are unavailable right now', 200, {
+      planId: null,
+      count: 0,
+      posts: [],
+      degraded: true,
+    });
+  }
+
   // Meter the real spend (settles the reservation when atomic-reserve is on).
   await req.recordAiUsage({
     provider: 'gemini',

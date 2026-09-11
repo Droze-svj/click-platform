@@ -21,7 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ShieldCheck, AlertCircle, Loader2, ArrowRight, RefreshCw, AlertTriangle } from 'lucide-react'
 import { apiPost, setTokens } from '@/lib/api'
-import { Button, Card, Icon, Input } from '@/components/ui'
+import { Button, Card, Icon, Input, AuthShell } from '@/components/ui'
 import ClickLogo from '@/components/ClickLogo'
 import { clickVoice } from '@/lib/clickVoice'
 
@@ -87,10 +87,10 @@ function VerifyEmailInner() {
   }, [token, router])
 
   return (
-    <div className="min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12">
+    <AuthShell width="lg">
       <Card
         variant="elevated"
-        className="relative z-10 w-full max-w-lg p-8 sm:p-12 text-center space-y-7 ds-anim-rise"
+        className="relative z-10 w-full p-8 sm:p-12 text-center space-y-7"
       >
         <div className="mx-auto w-20 h-20 rounded-2xl ds-surface-subtle flex items-center justify-center">
           <ClickLogo size={48} />
@@ -194,7 +194,7 @@ function VerifyEmailInner() {
           </div>
         )}
       </Card>
-    </div>
+        </AuthShell>
   )
 }
 

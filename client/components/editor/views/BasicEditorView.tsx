@@ -68,7 +68,7 @@ import {
   CreditCard,
   Image as ImageIcon
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { getMatchingEmojiForChunk } from '../../../utils/captionEmojiMap'
 import { pickHighlightWords, pickCaptionEmoji, DEFAULT_HIGHLIGHT_COLOR } from '../../../lib/captions'
 import { VideoFilter, TextOverlay, TemplateLayout, TEMPLATE_LAYOUTS, ShapeOverlay, ShapeOverlayKind, MOTION_GRAPHIC_TEMPLATES, MotionGraphicTemplate, ImageOverlay, GradientOverlay, GradientOverlayDirection, SvgOverlay, MotionCompound, TransformKeyframe, CAPTION_FONTS } from '../../../types/editor'
@@ -205,7 +205,7 @@ function ImageOverlayKeyframePanel({
           ))}
         </select>
 
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={addKeyframeAtPlayhead}
@@ -213,7 +213,7 @@ function ImageOverlayKeyframePanel({
         >
           <PlusCircle className="w-4 h-4" />
           Add keyframe at playhead
-        </motion.button>
+        </m.button>
 
         {setActiveCategory && (
           <button
@@ -286,6 +286,11 @@ interface BasicEditorViewProps {
   onBeatCut?: () => void
   /** Whether a segment is currently selected (for enabling segment-only ops) */
   hasSegmentSelection?: boolean
+  playbackSpeed?: number
+  setPlaybackSpeed?: (v: number) => void
+  onSeek?: (time: number) => void
+  selectedOverlayId?: string | null
+  onSelectOverlay?: (id: string | null) => void
 }
 
 
@@ -380,11 +385,24 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   onLCutSelected,
   onBeatCut,
   hasSegmentSelection = false,
+  playbackSpeed,
+  setPlaybackSpeed,
+  onSeek,
+  selectedOverlayId,
+  onSelectOverlay,
 }) => {
   const { t } = useTranslation()
   const currentTime = videoState?.currentTime ?? 0
   const duration = videoState?.duration ?? 60
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null)
+
+  // Sync selectedOverlayId from preview with selectedTextId
+  React.useEffect(() => {
+    if (selectedOverlayId !== undefined) {
+      setSelectedTextId(selectedOverlayId)
+    }
+  }, [selectedOverlayId])
+
   const [isDraftMode, setIsDraftMode] = useState<boolean>(true)
   // Trim-tab In/Out markers (timeline-coordinate seconds). Local to this view —
   // the actual trim is applied via onTrimSelectedToRange when the user clicks
@@ -1126,7 +1144,20 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   type EditTab = typeof EDIT_TABS[number]['id']
 
   const [activeEditTab, setActiveEditTab] = React.useState<EditTab>('text')
-  const [speedValue, setSpeedValue] = React.useState(1)
+  const [speedValue, setSpeedValue] = React.useState(playbackSpeed ?? 1)
+
+  React.useEffect(() => {
+    if (playbackSpeed !== undefined) {
+      setSpeedValue(playbackSpeed)
+    }
+  }, [playbackSpeed])
+
+  const handleSpeedChange = (val: number) => {
+    setSpeedValue(val)
+    setPlaybackSpeed?.(val)
+    showToast(`Speed: ${val}×`, 'info')
+  }
+
   const [selectedFilterName, setSelectedFilterName] = React.useState('')
   const [globalSearch, setGlobalSearch] = React.useState('')
   const [neuralAutoFraming, setNeuralAutoFraming] = React.useState(true)
@@ -1485,7 +1516,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         {/* Global search results dropdown */}
         <AnimatePresence>
           {globalSearchResults.length > 0 && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
@@ -1500,7 +1531,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   <span className="ml-auto text-[9px] text-slate-600 font-bold uppercase tracking-widest">{r.tab}</span>
                 </button>
               ))}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -1517,7 +1548,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               }`}
             >
               {activeEditTab === id && (
-                <motion.div
+                <m.div
                   layoutId="edit-tab-bg"
                   className="absolute inset-0 rounded-xl bg-gradient-to-b from-indigo-500/10 to-indigo-500/25 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
@@ -1545,12 +1576,20 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Waveform</span>
                 <span className="text-[10px] font-black text-indigo-400 font-mono">{currentTime.toFixed(2)}s / {duration.toFixed(1)}s</span>
               </div>
-              <div className="relative h-12 flex gap-px items-center overflow-hidden rounded-xl bg-black/40">
+              <div
+                className="relative h-12 flex gap-px items-center overflow-hidden rounded-xl bg-black/40 cursor-pointer group/wave"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+                  onSeek?.(pct * Math.max(duration, 1))
+                }}
+                title="Click to seek playhead"
+              >
                 {Array.from({ length: 48 }, (_, i) => {
                   const h = 20 + Math.abs(Math.sin(i * 0.7) * 60 + Math.cos(i * 1.3) * 20)
                   const isCurrent = Math.abs(i / 48 - currentTime / Math.max(duration, 1)) < 0.025
                   return (
-                    <div key={i} className="flex-1 flex items-center justify-center">
+                    <div key={i} className="flex-1 flex items-center justify-center pointer-events-none">
                       <div
                         style={{ '--bar-height': `${Math.min(h, 95)}%` } as any}
                         className={`w-full rounded-sm transition-colors h-[var(--bar-height)] ${isCurrent ? 'bg-indigo-400' : i / 48 < currentTime / Math.max(duration, 1) ? 'bg-indigo-600/60' : 'bg-slate-600/40'}`}
@@ -1574,14 +1613,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               </div>
               <input
                 type="range" min={0.25} max={4} step={0.25} value={speedValue}
-                onChange={e => { setSpeedValue(Number(e.target.value)); showToast(`Speed: ${e.target.value}×`, 'info') }}
+                onChange={e => handleSpeedChange(Number(e.target.value))}
                 aria-label={`Playback speed: ${speedValue} times`}
                 title={`Playback speed: ${speedValue} times`}
                 className="w-full accent-indigo-500"
               />
               <div className="flex justify-between mt-1.5">
                 {[0.25, 0.5, 1, 1.5, 2, 3, 4].map(v => (
-                  <button type="button" key={v} onClick={() => { setSpeedValue(v); showToast(`Speed: ${v}×`, 'info') }}
+                  <button type="button" key={v} onClick={() => handleSpeedChange(v)}
                     className={`text-[8px] font-black px-1.5 py-1 rounded-lg transition-all ${speedValue === v ? 'bg-indigo-600 text-white' : 'bg-white/[0.04] text-slate-500 hover:text-white hover:bg-white/10 border border-white/[0.06]'}`}
                   >{v}×</button>
                 ))}
@@ -1614,7 +1653,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   ? `${label} — coming soon`
                   : (requiresSelection && !hasSegmentSelection ? `${label} — select a clip first` : label)
                 return (
-                  <motion.button
+                  <m.button
                     key={label}
                     type="button"
                     onClick={disabled ? undefined : action}
@@ -1639,7 +1678,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                         Soon
                       </span>
                     )}
-                  </motion.button>
+                  </m.button>
                 )
               })}
             </div>
@@ -1697,10 +1736,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">{t('editor.aspectRatio')}</span>
               <div className="grid grid-cols-3 gap-1.5">
                 {TEMPLATE_LAYOUTS.map(l => (
-                  <motion.button key={l.id} whileTap={{ scale: 0.96 }}
+                  <m.button key={l.id} whileTap={{ scale: 0.96 }}
                     onClick={() => { pushSnapshot(l.id, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(l.id); showToast(`${l.label} applied`, 'success') }}
                     className={`py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${templateLayout === l.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/[0.02] text-slate-400 hover:bg-white/10 hover:text-white border border-white/[0.06]'}`}
-                  >{l.label}</motion.button>
+                  >{l.label}</m.button>
                 ))}
               </div>
             </div>
@@ -1789,7 +1828,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         {activeEditTab === 'text' && (
           <div className="space-y-3">
             {selectedTextId && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between shadow-[0_0_20px_rgba(99,102,241,0.15)] relative overflow-hidden"
@@ -1811,7 +1850,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 >
                   Deselect
                 </button>
-              </motion.div>
+              </m.div>
             )}
 
             {/* Quick add */}
@@ -1999,17 +2038,17 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 {/* Success state */}
                 <AnimatePresence>
                   {captionSuccess !== null && (
-                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    <m.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                       className="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <p className="text-[9px] text-emerald-300 font-black">{captionSuccess} captions added in {captionStyle} style</p>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
                 {/* Generate button */}
-                <motion.button
+                <m.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleAutoCaption}
                   disabled={captionLoading}
@@ -2022,7 +2061,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 >
                   {captionLoading ? (
                     <>
-                      <motion.div
+                      <m.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                         className="w-3.5 h-3.5 border-2 border-indigo-300/40 border-t-indigo-300 rounded-full"
@@ -2035,16 +2074,16 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       Generate Captions
                     </>
                   )}
-                </motion.button>
+                </m.button>
 
                 {/* Error state */}
                 <AnimatePresence>
                   {captionError && (
-                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    <m.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                       className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20"
                     >
                       <p className="text-[9px] text-rose-300 leading-relaxed">{captionError}</p>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
@@ -2096,7 +2135,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     >
                       {translatingCaptions ? (
                         <>
-                          <motion.div
+                          <m.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                             className="w-3.5 h-3.5 border border-indigo-300/40 border-t-indigo-300 rounded-full"
@@ -2299,7 +2338,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   >
                     {generatingEmojis ? (
                       <>
-                        <motion.div
+                        <m.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                           className="w-3.5 h-3.5 border-2 border-indigo-300/40 border-t-indigo-300 rounded-full"
@@ -2379,7 +2418,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             {selectedTextId && textOverlays?.find(o => o.id === selectedTextId) && (() => {
               const o = textOverlays!.find(o => o.id === selectedTextId)!
               return (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-3 rounded-2xl bg-white/[0.03] border border-indigo-500/20 space-y-3"
@@ -2495,7 +2534,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 transition-all text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest"
                   ><Upload className="w-3 h-3" /> Upload Font</button>
                   <input ref={fontInputRef} type="file" accept=".ttf,.otf,.woff,.woff2" className="hidden" onChange={handleFontUpload} aria-label="Upload custom font file" title="Upload custom font file" />
-                </motion.div>
+                </m.div>
               )
             })()}
           </div>
@@ -2564,7 +2603,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               {FILTER_PRESETS_WITH_CATEGORY
                 .filter(p => filterCategory === 'all' || p.category === filterCategory)
                 .map(p => (
-                <motion.button key={p.n} onClick={() => applyFilter(p)} whileTap={{ scale: 0.97 }}
+                <m.button key={p.n} onClick={() => applyFilter(p)} whileTap={{ scale: 0.97 }}
                   className={`relative overflow-hidden flex flex-col items-start gap-1 p-2.5 rounded-xl border transition-all group ${selectedFilterName === p.n ? 'border-indigo-500/60 bg-indigo-600/10 ring-1 ring-indigo-500/30' : 'border-white/[0.06] bg-white/[0.02] hover:border-white/20'}`}
                 >
                   {/* Live CSS filter preview on a gradient */}
@@ -2575,7 +2614,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   <span className="text-[10px] font-black text-slate-200 group-hover:text-white">{p.n}</span>
                   <span className="text-[8px] text-slate-600 group-hover:text-slate-400">{p.desc}</span>
                   {selectedFilterName === p.n && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                    <m.div initial={{ scale: 0 }} animate={{ scale: 1 }}
                       className="absolute top-2 left-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]"
                     />
                   )}
@@ -2585,7 +2624,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   >
                     <Pin className={`w-3 h-3 ${pinnedFilterNames.includes(p.n) ? 'text-indigo-400' : 'text-slate-500'}`} />
                   </div>
-                </motion.button>
+                </m.button>
               ))}
             </div>
           </div>
@@ -2732,12 +2771,20 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   {textOverlays?.map(o => (
                     <div key={o.id} className="group">
                       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.06] hover:border-indigo-500/20 transition-all cursor-pointer"
-                        onClick={() => { setActiveEditTab('text'); setSelectedTextId(o.id) }}
+                        onClick={() => { setActiveEditTab('text'); setSelectedTextId(o.id); onSelectOverlay?.(o.id) }}
                       >
                         <Type className="w-3 h-3 text-indigo-400 shrink-0" />
                         <span className="flex-1 text-[10px] text-slate-300 truncate">{o.text}</span>
                         <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}–{o.endTime.toFixed(1)}s</span>
-                        <button type="button" onClick={e => { e.stopPropagation(); pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id)) }}
+                        <button type="button" onClick={e => {
+                          e.stopPropagation();
+                          pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []);
+                          if (selectedTextId === o.id || selectedOverlayId === o.id) {
+                            setSelectedTextId(null);
+                            onSelectOverlay?.(null);
+                          }
+                          setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id));
+                        }}
                           aria-label={`Delete text layer "${o.text.slice(0, 20)}"`}
                           title="Delete text layer"
                           className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
@@ -2747,22 +2794,30 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       <div className="opacity-0 group-hover:opacity-100 transition-all pl-8 pr-3 py-1 flex items-center gap-2">
                         <span className="text-[7px] text-slate-600 uppercase tracking-widest font-black shrink-0">Opacity</span>
                         <input type="range" min={0} max={1} step={0.05}
-                          value={layerOpacities[o.id] ?? 1}
-                          onChange={e => setLayerOpacities(prev => ({ ...prev, [o.id]: Number(e.target.value) }))}
+                          value={layerOpacities[o.id] ?? (o.opacity ?? 1)}
+                          onChange={e => {
+                            const val = Number(e.target.value)
+                            setLayerOpacities(prev => ({ ...prev, [o.id]: val }))
+                            setTextOverlays(prev => prev.map(t => t.id === o.id ? { ...t, opacity: val } : t))
+                          }}
                           aria-label="Layer opacity"
                           title="Layer opacity"
                           className="flex-1 accent-indigo-500 h-1"
                         />
-                        <span className="text-[7px] text-slate-600 font-black w-6 text-right">{Math.round((layerOpacities[o.id] ?? 1) * 100)}%</span>
+                        <span className="text-[7px] text-slate-600 font-black w-6 text-right">{Math.round((layerOpacities[o.id] ?? (o.opacity ?? 1)) * 100)}%</span>
                       </div>
                     </div>
                   ))}
                   {shapeOverlays?.map(o => (
-                    <div key={o.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group">
+                    <div key={o.id} onClick={() => onSelectOverlay?.(o.id)} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group cursor-pointer">
                       <Box className="w-3 h-3 text-emerald-400 shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300 capitalize">{o.kind}</span>
                       <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
-                      <button type="button" onClick={() => setShapeOverlays?.((prev: ShapeOverlay[]) => prev.filter(s => s.id !== o.id))}
+                      <button type="button" onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedOverlayId === o.id) onSelectOverlay?.(null);
+                        setShapeOverlays?.((prev: ShapeOverlay[]) => prev.filter(s => s.id !== o.id));
+                      }}
                         aria-label={`Delete ${o.kind} shape`}
                         title={`Delete ${o.kind} shape`}
                         className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
@@ -2770,12 +2825,49 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     </div>
                   ))}
                   {imageOverlays?.map(o => (
-                    <div key={o.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group">
+                    <div key={o.id} onClick={() => onSelectOverlay?.(o.id)} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group cursor-pointer">
                       <ImageIcon className="w-3 h-3 text-amber-400 shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300 truncate">{o.url.split('/').pop()}</span>
-                      <button type="button" onClick={() => setImageOverlays?.((prev: ImageOverlay[]) => prev.filter(i => i.id !== o.id))}
+                      <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
+                      <button type="button" onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedOverlayId === o.id) onSelectOverlay?.(null);
+                        setImageOverlays?.((prev: ImageOverlay[]) => prev.filter(i => i.id !== o.id));
+                      }}
                         aria-label="Delete image layer"
                         title="Delete image layer"
+                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
+                      ><Trash2 className="w-3 h-3" /></button>
+                    </div>
+                  ))}
+                  {svgOverlays?.map(o => (
+                    <div key={o.id} onClick={() => onSelectOverlay?.(o.id)} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group cursor-pointer">
+                      <Zap className="w-3 h-3 text-cyan-400 shrink-0" />
+                      <span className="flex-1 text-[10px] text-slate-300 truncate">{o.url.startsWith('<svg') ? 'Custom SVG' : o.url.split('/').pop()}</span>
+                      <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
+                      <button type="button" onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedOverlayId === o.id) onSelectOverlay?.(null);
+                        setSvgOverlays?.((prev: SvgOverlay[]) => prev.filter(s => s.id !== o.id));
+                      }}
+                        aria-label="Delete SVG layer"
+                        title="Delete SVG layer"
+                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
+                      ><Trash2 className="w-3 h-3" /></button>
+                    </div>
+                  ))}
+                  {gradientOverlays?.map(o => (
+                    <div key={o.id} onClick={() => onSelectOverlay?.(o.id)} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group cursor-pointer">
+                      <Palette className="w-3 h-3 text-purple-400 shrink-0" />
+                      <span className="flex-1 text-[10px] text-slate-300 truncate">{o.region || 'full'} gradient</span>
+                      <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
+                      <button type="button" onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedOverlayId === o.id) onSelectOverlay?.(null);
+                        setGradientOverlays?.((prev: GradientOverlay[]) => prev.filter(g => g.id !== o.id));
+                      }}
+                        aria-label="Delete gradient layer"
+                        title="Delete gradient layer"
                         className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
                       ><Trash2 className="w-3 h-3" /></button>
                     </div>

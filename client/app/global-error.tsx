@@ -1,7 +1,6 @@
 'use client'
 
 import { AlertTriangle, RotateCcw, RefreshCw, Home, Zap } from 'lucide-react'
-import { motion } from 'framer-motion'
 import './globals.css'
 
 export default function GlobalError({
@@ -43,12 +42,13 @@ export default function GlobalError({
           {/* Grid texture */}
           <div className="fixed inset-0 pointer-events-none opacity-[0.015] global-error-grid" />
 
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="relative z-10 max-w-lg w-full"
-          >
+          {/* Plain div with a CSS entrance, deliberately NOT framer-motion.
+              global-error replaces the ROOT layout, so MotionProvider is not in
+              its tree — an `m` element there never loads its features, and with
+              `initial={{ opacity: 0 }}` the card would stay invisible. The one
+              page that has to work when everything else is broken should not
+              depend on a lazily-loaded animation bundle. */}
+          <div className="relative z-10 max-w-lg w-full ds-anim-rise">
             {/* Card */}
             <div className="bg-white/[0.025] border border-white/[0.08] rounded-[3rem] p-10 shadow-2xl shadow-black/50 text-center backdrop-blur-xl">
 
@@ -113,7 +113,7 @@ export default function GlobalError({
               Click — AI Content Platform
               <span className="w-1 h-1 rounded-full bg-slate-700" />
             </p>
-          </motion.div>
+          </div>
         </div>
       </body>
     </html>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Zap,
   Target,
@@ -118,7 +118,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
       ) : (
         <div className="space-y-4">
            {variants.map((variant, i) => (
-             <motion.div
+             <m.div
                key={variant.id}
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
@@ -155,7 +155,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
                       <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Retention</div>
                    </div>
                    <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <motion.div
+                      <m.div
                         initial={{ width: 0 }}
                         animate={{ width: `${variant.predictedRetention}%` }}
                         className="h-full bg-gradient-to-r from-fuchsia-600 to-indigo-600"
@@ -177,7 +177,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
                <div className="absolute top-4 right-8 text-[120px] font-black text-white/[0.02] -z-0 leading-none pointer-events-none select-none italic">
                  {i + 1}
                </div>
-             </motion.div>
+             </m.div>
            ))}
 
            <div className="pt-4 flex items-center justify-center gap-3 opacity-40">

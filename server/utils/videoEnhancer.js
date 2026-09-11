@@ -22,12 +22,16 @@ class VideoEnhancer {
     // letterboxed 1920x1080 landscape. The enhancement chain is quality-only.
     void targetOptions;
 
-    // Normalization (hqdn3d + unsharp)
-    filters.push('hqdn3d=1.5:1.5:6:6'); // Clean noise
-    filters.push('unsharp=3:3:0.5:3:3:0.5'); // Sharpen edges
+    // Normalization: clean high-frequency sensor noise while preserving skin texture
+    filters.push('hqdn3d=1.2:1.2:4:4');
 
-    // Color Normalization
-    filters.push('colorlevels=rimin=0.05:gimin=0.05:bimin=0.05:rimax=0.95:gimax=0.95:bimax=0.95');
+    // Detail enhancement: fine unsharp for retina-sharp edges without ringing/halo artifacts
+    const sharpLuma = targetOptions.ultraCrisp ? '0.6' : '0.45';
+    const sharpChroma = targetOptions.ultraCrisp ? '0.4' : '0.3';
+    filters.push(`unsharp=3:3:${sharpLuma}:3:3:${sharpChroma}`);
+
+    // Dynamic Range & Color Normalization: subtle black/white level correction without clipping
+    filters.push('colorlevels=rimin=0.03:gimin=0.03:bimin=0.03:rimax=0.97:gimax=0.97:bimax=0.97');
 
     return filters;
   }
@@ -35,10 +39,10 @@ class VideoEnhancer {
   /**
    * Get encoding properties for high-fidelity output
    */
-  getHighFidelityOptions() {
+  getHighFidelityOptions(isUltra = false) {
     return [
-      '-preset slow',
-      '-crf 18',
+      `-preset ${isUltra ? 'veryslow' : 'slow'}`,
+      `-crf ${isUltra ? '16' : '18'}`,
       '-pix_fmt yuv420p',
       '-movflags +faststart'
     ];

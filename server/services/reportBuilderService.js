@@ -4,7 +4,6 @@
 const ReportTemplate = require('../models/ReportTemplate');
 const GeneratedReport = require('../models/GeneratedReport');
 const logger = require('../utils/logger');
-const { getClientHealthMetrics } = require('./clientHealthService');
 const { getAggregatedPerformanceMetrics: getPerformanceMetrics } = require('./socialPerformanceMetricsService');
 
 /**

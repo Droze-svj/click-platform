@@ -126,7 +126,8 @@ export const getHeatmap = async (platform?: Platform): Promise<Heatmap> =>
 
 export const autofillCalendar = async (body: {
   count?: number; platforms?: Platform[]; topic?: string; optimalTimes?: boolean; dryRun?: boolean
-}): Promise<{ planId: string; count: number; posts: any[] }> =>
+}): Promise<{ planId: string | null; count: number; posts: any[]; degraded?: boolean }> =>
+  // degraded: true (with planId null and no posts) means the AI produced no ideas.
   unwrap(await apiPost(paths.calendarAutofill(), body))
 
 export const getCalendarDrafts = async (limit = 50, skip = 0): Promise<{ drafts: any[] }> =>

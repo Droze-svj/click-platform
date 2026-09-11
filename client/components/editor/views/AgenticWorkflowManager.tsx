@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 import {
   Bot, Play, CheckCircle2, Loader2, Clock, Sparkles,
@@ -162,7 +162,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-8 max-w-[1200px] mx-auto pb-20 px-4 py-8"
@@ -198,7 +198,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                 const Icon = goal.icon
                 const selected = selectedGoals.has(goal.id)
                 return (
-                  <motion.button
+                  <m.button
                     key={goal.id}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
@@ -220,13 +220,13 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                       <p className="text-[9px] text-slate-600">{goal.desc}</p>
                     </div>
                     {selected && <CheckCircle2 className="w-4 h-4 text-fuchsia-400 ml-auto shrink-0" />}
-                  </motion.button>
+                  </m.button>
                 )
               })}
             </div>
 
             {/* Run Button */}
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={isRunning ? undefined : (tasks.length > 0 ? reset : runAgent)}
@@ -246,13 +246,13 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
               ) : (
                 <><Bot className="w-4 h-4" /> Start Autonomous Agent</>
               )}
-            </motion.button>
+            </m.button>
           </div>
 
           {/* Pipeline Progress */}
           <AnimatePresence>
             {tasks.length > 0 && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`${glassStyle} rounded-[2.5rem] p-6 space-y-4`}
@@ -267,7 +267,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
 
                 {/* Progress bar */}
                 <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div
+                  <m.div
                     className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
@@ -280,7 +280,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                   {tasks.map((task, idx) => {
                     const Icon = task.icon
                     return (
-                      <motion.div
+                      <m.div
                         key={task.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -317,11 +317,11 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                         {task.status === 'queued' && (
                           <ChevronRight className="w-3 h-3 text-slate-700 shrink-0" />
                         )}
-                      </motion.div>
+                      </m.div>
                     )
                   })}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -330,7 +330,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
         <div className="space-y-6">
           <AnimatePresence>
             {draftClips.length > 0 && (
-              <motion.div
+              <m.div
                 key="drafts"
                 initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -345,7 +345,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                 </div>
 
                 {draftClips.map((clip, i) => (
-                  <motion.div
+                  <m.div
                     key={clip.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -362,18 +362,18 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20">
                       <span className="text-[9px] font-black text-emerald-400">{clip.score}%</span>
                     </div>
-                  </motion.div>
+                  </m.div>
                 ))}
 
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => showToast('Clips sent to Content Calendar', 'success')}
                   className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
                 >
                   <Calendar className="w-4 h-4" /> View in Calendar
-                </motion.button>
-              </motion.div>
+                </m.button>
+              </m.div>
             )}
           </AnimatePresence>
 
@@ -407,7 +407,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
         taskName={swarmHUDTask}
         onComplete={() => setShowSwarmHUD(false)}
       />
-    </motion.div>
+    </m.div>
   )
 }
 

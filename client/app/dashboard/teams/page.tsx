@@ -6,7 +6,7 @@ import {
   Users, Plus, MessageSquare, Network, Crown, X, Search,
   Database, ArrowRight, Inbox, ArrowUpRight, Cpu,
 } from 'lucide-react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
@@ -25,6 +25,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 interface Team {
@@ -113,7 +114,7 @@ export default function SwarmCollectiveNodePage() {
   }
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       <SectionHeader
@@ -208,7 +209,7 @@ export default function SwarmCollectiveNodePage() {
               : r.includes('view') ? 'ds-surface-subtle text-theme-muted'
               : 'bg-primary/10 text-primary'
             return (
-              <motion.div
+              <m.div
                 key={team._id}
                 layout
                 whileHover={reduceMotion ? undefined : { y: -4 }}
@@ -261,7 +262,7 @@ export default function SwarmCollectiveNodePage() {
                 <Button variant="primary" size="md" rightIcon={<ArrowUpRight size={16} aria-hidden />} onClick={() => router.push(`/dashboard/teams/${team._id}`)} className="w-full">
                   {t('teamsPage.syncNode')}
                 </Button>
-              </motion.div>
+              </m.div>
             )
           })}
         </section>
@@ -286,6 +287,6 @@ export default function SwarmCollectiveNodePage() {
           </footer>
         </div>
       </Modal>
-    </div>
+    </PageShell>
   )
 }

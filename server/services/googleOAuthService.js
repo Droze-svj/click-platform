@@ -4,8 +4,9 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
+const OAuthStorage = require('../utils/oauthStorage');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const { safeJsonParse } = require('../utils/safeJson');
-const { createClient } = require('@supabase/supabase-js');
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
@@ -25,21 +26,10 @@ const DEFAULT_SCOPE = [
 ].join(' ');
 const LOG_CONTEXT = { service: 'google-oauth' };
 
-let supabase = null;
-
-function getSupabaseClient() {
-  if (!supabase) {
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
-    }
-    supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-    logger.info('Supabase client initialized in Google OAuth service');
-  }
-  return supabase;
-}
+// The direct Supabase client that used to live here is gone: state storage was
+// its only caller, and it now goes through OAuthStorage, which supports both
+// the Mongo and the Supabase backend. Tokens and accounts already routed
+// through the shared helpers.
 
 /**
  * Resolve the Google OAuth client id. Falls back to `YOUTUBE_CLIENT_ID`
@@ -57,9 +47,12 @@ function isConfigured() {
   return !!(getGoogleClientId() && getGoogleClientSecret());
 }
 
-function defaultRedirectUri() {
-  return getGoogleCallbackUrl()
-    || `${process.env.FRONTEND_URL || process.env.API_URL || 'http://localhost:5001'}/api/oauth/google/callback`;
+// Delegates to the shared resolver so the authorize step and the token exchange
+// cannot derive different values. Note the old fallback reached for FRONTEND_URL
+// first — the callback route lives on the API, not the frontend, so that was one
+// of the ways the two steps came to disagree. See utils/oauthCallbackUrl.js.
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('google', req);
 }
 
 function getScope() {
@@ -120,66 +113,42 @@ async function getAuthorizationUrl(userId, stateOrCallbackUrl, maybeCallbackUrl)
     `access_type=offline&` +
     `prompt=consent`;
 
-  const supabase = getSupabaseClient();
-  const { data: currentUser, error: fetchErr } = await supabase
-    .from('users')
-    .select('social_links')
-    .eq('id', userId)
-    .single();
-
-  if (fetchErr) {
-    logger.error('Google OAuth state storage fetch error', { ...LOG_CONTEXT, userId, error: fetchErr.message });
-    throw new Error(`Failed to store OAuth state: ${fetchErr.message}`);
-  }
-
-  const socialLinks = currentUser?.social_links || {};
-  const oauthData = socialLinks.oauth || {};
-  const googleData = oauthData.google || {};
-
-  const { error: updateError } = await supabase
-    .from('users')
-    .update({
-      social_links: {
-        ...socialLinks,
-        oauth: {
-          ...oauthData,
-          google: { ...googleData, state },
-        },
-      },
-    })
-    .eq('id', userId);
-
-  if (updateError) {
-    logger.error('Google OAuth state storage update error', { ...LOG_CONTEXT, userId, error: updateError.message });
-    throw new Error(`Failed to store OAuth state: ${updateError.message}`);
-  }
+  // Stored through the shared OAuthStorage, like the other five providers.
+  //
+  // This used to read and rewrite `users.social_links` in Supabase directly, via
+  // its own createClient(). Supabase auth is OFF by default in this deployment
+  // (ENABLE_SUPABASE_AUTH, and the boot log says "Using Mongoose fallback"), so
+  // getSupabaseClient() threw "Database not configured" and Google was the only
+  // provider whose authorize, callback and /status could not work at all on a
+  // Mongo-only install — every other provider's /status returned 200 in exactly
+  // the same environment. OAuthStorage picks the right backend, and namespaces
+  // state by its own value so two in-flight flows cannot clobber each other.
+  await OAuthStorage.putState(userId, 'google', state, {
+    startedAt: new Date().toISOString(),
+  });
 
   logger.info('Google OAuth authorization URL generated', { ...LOG_CONTEXT, userId });
   return { url: authUrl, state };
 }
 
-async function exchangeCodeForToken(userId, code, state) {
+// callbackUrl MUST be the value the authorize step used; the callback route
+// resolves it from the live request and passes it in.
+async function exchangeCodeForToken(userId, code, state, callbackUrl) {
   if (!isConfigured()) throw new Error('Google OAuth not configured');
   if (!userId || !code || !state) throw new Error('userId, code, and state are required');
 
-  const supabase = getSupabaseClient();
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('social_links')
-    .eq('id', userId)
-    .single();
-
-  const oauthData = user?.social_links?.oauth || {};
-  const googleData = oauthData.google || {};
-
-  if (userError || !user || !googleData.state || googleData.state !== state) {
+  // consumeState both verifies AND clears, so a code cannot be replayed against
+  // a state that is still sitting in storage. The previous version compared a
+  // single `oauth.google.state` field in Supabase and never cleared it.
+  const stateOk = await OAuthStorage.consumeState(userId, 'google', state);
+  if (!stateOk) {
     logger.warn('Google OAuth exchange: state mismatch', { ...LOG_CONTEXT, userId });
     throw new Error('Invalid OAuth state');
   }
 
   const clientId = getGoogleClientId();
   const clientSecret = getGoogleClientSecret();
-  const redirectUri = defaultRedirectUri();
+  const redirectUri = callbackUrl || defaultRedirectUri();
 
   // Google's token endpoint expects form-urlencoded params in the
   // request BODY, not the URL query string.

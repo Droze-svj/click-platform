@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   Dna,
   Play,
@@ -261,13 +261,13 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
 
              {/* Dynamic Overlay Simulation */}
              <div className="absolute inset-0 p-20 flex flex-col items-center justify-center pointer-events-none">
-                <motion.div
+                <m.div
                    animate={{ scale: [1, 1.15, 1], transition: { duration: profile.pacing.medianClipLength, repeat: Infinity } }}
                    style={{ fontFamily: profile.assets.fontFamily, color: profile.assets.fontHex, textShadow: `4px 4px 0px ${profile.assets.dropShadowHex}` }}
                    className="text-8xl font-black italic tracking-tighter uppercase text-center"
                 >
                   Neural<br />Dynamics
-                </motion.div>
+                </m.div>
              </div>
           </div>
 
@@ -296,7 +296,7 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
                  <span>4.2 GB/s</span>
               </div>
               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                 <motion.div
+                 <m.div
                    animate={{ width: ["30%", "85%", "65%"] }}
                    transition={{ duration: 3, repeat: Infinity }}
                    className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 shadow-[0_0_15px_rgba(79,70,229,0.5)]"

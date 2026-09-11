@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import axios from 'axios'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
 import {
@@ -264,7 +264,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
               <Sparkles className={`w-7 h-7 text-${currentTheme.accent} animate-bounce`} />
             </div>
             <AnimatePresence mode="wait">
-              <motion.div
+              <m.div
                 key={activeThought}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -272,7 +272,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                 className="text-[13px] font-black text-slate-400 uppercase tracking-[0.3em] italic"
               >
                 {activeThought}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           </div>
         </div>
@@ -282,7 +282,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
           <div className={`absolute inset-0 bg-gradient-to-r ${currentTheme.bg} via-transparent to-transparent opacity-10 group-hover:opacity-20 transition-opacity duration-1000`} />
           <div className="flex flex-col lg:flex-row items-center justify-between relative z-10 gap-12">
             <div className="flex items-center gap-12 flex-1 w-full">
-              <motion.div
+              <m.div
                 animate={{
                   scale: status === 'processing' ? [1, 1.15, 1] : 1,
                   rotate: status === 'processing' ? 360 : 0
@@ -294,7 +294,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                 {status === 'processing' && (
                   <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-spin" />
                 )}
-              </motion.div>
+              </m.div>
 
               <div className="flex-1 space-y-6">
                 <div className="flex justify-between items-end">
@@ -307,7 +307,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                   </div>
                 </div>
                 <div className="h-3 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5 shadow-inner">
-                  <motion.div
+                  <m.div
                     initial={{ width: 0 }}
                     animate={{ width: status === 'completed' ? '100%' : status === 'processing' ? '65%' : '0%' }}
                     transition={{ duration: 2, ease: "circOut" }}
@@ -321,7 +321,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
               {platforms.filter(p => selectedPlatforms.includes(p.id)).slice(0, 4).map((platform, idx) => {
                 const Icon = platform.icon
                 return (
-                  <motion.div
+                  <m.div
                     key={platform.id}
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -329,7 +329,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                     className={`p-4 rounded-2xl bg-white/[0.03] border border-white/5 ${platform.color} shadow-2xl scale-110`}
                   >
                     <Icon className="w-6 h-6" />
-                  </motion.div>
+                  </m.div>
                 )
               })}
               {selectedPlatforms.length > 4 && (
@@ -347,7 +347,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
           <div className="lg:col-span-12 space-y-12">
             <AnimatePresence mode="wait">
               {status === 'idle' ? (
-                <motion.div
+                <m.div
                   key="setup"
                   variants={containerVariants}
                   initial="hidden"
@@ -371,7 +371,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                         const isSelected = selectedPlatforms.includes(platform.id)
                         const pTheme = platformThemes[platform.id] || currentTheme
                         return (
-                          <motion.button
+                          <m.button
                             key={platform.id}
                             whileHover={{ y: -12, scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -393,9 +393,9 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                               {platform.name}
                             </span>
                             {isSelected && (
-                              <motion.div layoutId={`glow-${platform.id}`} className={`absolute -bottom-8 -right-8 w-16 h-16 bg-${pTheme.accent} blur-2xl rounded-full opacity-40`} />
+                              <m.div layoutId={`glow-${platform.id}`} className={`absolute -bottom-8 -right-8 w-16 h-16 bg-${pTheme.accent} blur-2xl rounded-full opacity-40`} />
                             )}
-                          </motion.button>
+                          </m.button>
                         )
                       })}
                     </div>
@@ -403,7 +403,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
 
                   {/* Elite Options Matrix */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <motion.div
+                    <m.div
                       whileHover={{ y: -8, scale: 1.02 }}
                       className={`relative p-12 rounded-[3.5rem] bg-white/[0.02] border-2 transition-all duration-700 cursor-pointer overflow-hidden group/opt ${autoSchedule ? 'border-emerald-500/30 bg-emerald-500/5 shadow-3xl' : 'border-white/5'}`}
                       onClick={() => setAutoSchedule(!autoSchedule)}
@@ -417,12 +417,12 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           <p className="text-sm text-slate-500 font-medium tracking-tight">{t('unifiedContentPipeline.neuralSchedulingDesc')}</p>
                         </div>
                         <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-700 ${autoSchedule ? 'bg-emerald-500' : 'bg-white/5'} flex items-center border border-white/5 shadow-inner`}>
-                          <motion.div animate={{ x: autoSchedule ? 32 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-2xl" />
+                          <m.div animate={{ x: autoSchedule ? 32 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-2xl" />
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
 
-                    <motion.div
+                    <m.div
                       whileHover={{ y: -8, scale: 1.02 }}
                       className={`relative p-12 rounded-[3.5rem] bg-white/[0.02] border-2 transition-all duration-700 cursor-pointer overflow-hidden group/opt ${enableRecycling ? `border-${currentTheme.accent}/30 bg-${currentTheme.accent}/5 shadow-3xl` : 'border-white/5'}`}
                       onClick={() => setEnableRecycling(!enableRecycling)}
@@ -436,15 +436,15 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           <p className="text-sm text-slate-500 font-medium tracking-tight">{t('unifiedContentPipeline.evergreenSynthesisDesc')}</p>
                         </div>
                         <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-700 ${enableRecycling ? `bg-${currentTheme.accent}` : 'bg-white/5'} flex items-center border border-white/5 shadow-inner`}>
-                          <motion.div animate={{ x: enableRecycling ? 32 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-2xl" />
+                          <m.div animate={{ x: enableRecycling ? 32 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-2xl" />
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   </div>
 
                   {/* Elite Action Control */}
                   <div className="flex justify-center pt-8">
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.05, y: -4 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={processPipeline}
@@ -459,11 +459,11 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                         </div>
                       </div>
                       <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-white/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 rotate-45 pointer-events-none" />
-                    </motion.button>
+                    </m.button>
                   </div>
-                </motion.div>
+                </m.div>
               ) : status === 'processing' ? (
-                <motion.div
+                <m.div
                   key="processing"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -471,13 +471,13 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                 >
                   <div className="flex flex-col items-center gap-16 text-center">
                     <div className="relative">
-                      <motion.div
+                      <m.div
                         animate={{ rotate: 360, scale: [1, 1.1, 1] }}
                         transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                         className={`w-64 h-64 rounded-[4rem] border-4 border-dashed border-${currentTheme.accent}/40 flex items-center justify-center relative shadow-[0_0_80px_${currentTheme.glow}]`}
                       >
                         <Cpu className={`w-32 h-32 text-${currentTheme.accent} animate-pulse`} />
-                      </motion.div>
+                      </m.div>
                       <div className="absolute -inset-10 border border-white/5 rounded-full animate-ping opacity-20" />
                     </div>
 
@@ -487,7 +487,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                         <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic">{t('unifiedContentPipeline.ecosystemCalibration')}</span>
                         <div className="flex items-center gap-2">
                           {[1, 2, 3].map(i => (
-                            <motion.div
+                            <m.div
                               key={i}
                               animate={{ opacity: [0.2, 1, 0.2] }}
                               transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
@@ -506,7 +506,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                       </div>
                       <div className="space-y-6 relative z-10 transition-all duration-500">
                         {processingLog.map((log, i) => (
-                          <motion.div
+                          <m.div
                             key={i}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -515,15 +515,15 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                             <span className="text-slate-700 font-black tabular-nums text-sm">[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
                             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse" />
                             <span className="text-xl tracking-tight uppercase italic">{log}</span>
-                          </motion.div>
+                          </m.div>
                         ))}
                       </div>
                       <div className="absolute bottom-6 right-10 text-[10px] text-slate-700 font-black uppercase tracking-[0.5em] animate-pulse italic">{t('unifiedContentPipeline.cortexChannelAlphaActive')}</div>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               ) : (
-                <motion.div
+                <m.div
                   key="completed"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -557,15 +557,15 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                       </div>
 
                       <div className="flex justify-center gap-10 pt-16">
-                        <motion.button
+                        <m.button
                           whileHover={{ scale: 1.05, y: -4 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setStatus('idle')}
                           className="px-12 py-7 rounded-[2.5rem] bg-white text-black font-black text-sm uppercase tracking-[0.4em] italic shadow-3xl"
                         >
                           {t('unifiedContentPipeline.reconfigureFlow')}
-                        </motion.button>
-                        <motion.button
+                        </m.button>
+                        <m.button
                           whileHover={{ scale: 1.05, y: -4 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={publishAll}
@@ -573,11 +573,11 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                         >
                           <Send className="w-5 h-5 fill-white" />
                           {t('unifiedContentPipeline.broadcastToEcosystem')}
-                        </motion.button>
+                        </m.button>
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>

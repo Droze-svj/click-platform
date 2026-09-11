@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Brain, Cpu, Zap, Activity, Shield, Sparkles, Network, Fingerprint, Quote, Lightbulb } from 'lucide-react'
 import { apiGet } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -62,7 +62,7 @@ const IntelligenceEngine = () => {
           
           <AnimatePresence mode="wait">
             {insight ? (
-              <motion.div 
+              <m.div 
                 key="insight"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -85,7 +85,7 @@ const IntelligenceEngine = () => {
                     {insight.tip}
                   </p>
                 </div>
-              </motion.div>
+              </m.div>
             ) : (
               <p className="text-base sm:text-lg text-[var(--text-dim)] font-medium leading-relaxed italic">
                 {loading ? t('intelligenceEngine.initializing') : t('intelligenceEngine.analyzingDescription')}
@@ -124,27 +124,27 @@ const IntelligenceEngine = () => {
                 const angle = (i * 360) / 12
                 const isActive = activeNodes.includes(i)
                 return (
-                  <motion.div
+                  <m.div
                     key={i}
                     className="absolute w-full h-full"
                     initial={{ rotate: angle }}
                     animate={{ rotate: angle + 360 }}
                     transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
                   >
-                    <motion.div 
+                    <m.div 
                       className={`absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-2 transition-all duration-1000 ${isActive ? 'bg-indigo-500 border-indigo-400 shadow-glow-primary scale-125' : 'bg-white/5 border-white/10'}`}
                       animate={isActive ? { scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] } : {}}
                       transition={{ duration: 2, repeat: Infinity }}
                     />
                     {isActive && (
-                      <motion.div 
+                      <m.div 
                         className="absolute top-2 left-1/2 -translate-x-1/2 w-0.5 h-32 bg-gradient-to-b from-indigo-500 to-transparent opacity-40 origin-top"
                         initial={{ scaleY: 0 }}
                         animate={{ scaleY: 1 }}
                         transition={{ duration: 1 }}
                       />
                     )}
-                  </motion.div>
+                  </m.div>
                 )
               })}
               

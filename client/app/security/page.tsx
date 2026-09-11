@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { LegalPage } from '../../components/ui/legal-page'
 
 export const metadata = {
   title: 'Security — Click',
@@ -8,18 +8,7 @@ export const metadata = {
 
 export default function SecurityPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white px-6 py-24">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href="/trust"
-          className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-white uppercase tracking-widest font-bold mb-12"
-        >
-          ← Trust Center
-        </Link>
-
-        <div className="mb-2 text-xs uppercase tracking-[0.4em] text-indigo-400 font-black">Security</div>
-        <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-8">How we protect your work.</h1>
-
+    <LegalPage kicker="Security" title="How we protect your work." backHref="/trust" backLabel="Trust Center">
         <div className="space-y-10">
           <Section title="Encryption">
             TLS 1.2+ for all traffic to Click; HSTS preload requested. Stored data is encrypted at
@@ -46,8 +35,8 @@ export default function SecurityPage() {
             via Dependabot/Renovate; high-severity CVEs patched within 7 days, criticals within
             48 hours. Container images rebuilt weekly. Annual third-party penetration test;
             executive summary available under NDA at{' '}
-            <a href="mailto:trust@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
-              trust@click.example
+            <a href="mailto:trust@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
+              trust@clickapp.io
             </a>
             .
           </Section>
@@ -74,7 +63,7 @@ export default function SecurityPage() {
 
           <Section title="Resilience">
             Multi-region failover for the API; CDN edge for static assets. RPO 24h, RTO 4h
-            target. Status page at status.click.example.
+            target. Status page at status.clickapp.io.
           </Section>
 
           <Section title="Compliance roadmap">
@@ -89,8 +78,8 @@ export default function SecurityPage() {
 
           <Section title="Responsible disclosure">
             Found something? Email{' '}
-            <a href="mailto:security@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
-              security@click.example
+            <a href="mailto:security@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
+              security@clickapp.io
             </a>{' '}
             or use{' '}
             <a href="/.well-known/security.txt" className="text-indigo-400 hover:text-indigo-300 underline">
@@ -101,8 +90,7 @@ export default function SecurityPage() {
             good-faith research that follows the disclosure policy.
           </Section>
         </div>
-      </div>
-    </div>
+          </LegalPage>
   );
 }
 
@@ -110,7 +98,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section>
       <h2 className="text-2xl font-black mb-3 tracking-tight">{title}</h2>
-      <div className="text-slate-300 leading-relaxed">{children}</div>
+      <div className="text-surface-700 dark:text-surface-300 leading-relaxed">{children}</div>
     </section>
   );
 }

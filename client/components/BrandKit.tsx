@@ -5,7 +5,7 @@ import {
   Palette, Type, Image as ImageIcon, Save, CheckCircle2, Sparkles,
   Upload, Trash2, Eye, EyeOff, ChevronDown
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
 
 export interface BrandKitData {
@@ -188,7 +188,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
               {previewMode && (
                 <div className="space-y-4">
                   <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.neuralPreview')}</label>
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                  <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                     className="relative rounded-[2.5rem] overflow-hidden aspect-video border-2 border-surface-100 dark:border-surface-800 shadow-[0_40px_100px_rgba(0,0,0,0.3)] transition-all duration-500"
                     style={{ background: kit.backgroundColor }}
                   >
@@ -232,7 +232,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                     {/* Accent stripe */}
                     <div className="absolute bottom-0 left-0 right-0 h-1.5"
                       style={{ background: `linear-gradient(90deg, ${kit.primaryColor}, ${kit.accentColor})` }} />
-                  </motion.div>
+                  </m.div>
                 </div>
               )}
             </AnimatePresence>
@@ -320,19 +320,19 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
 
       {/* Global Actions */}
       <footer className="flex flex-col sm:flex-row gap-6 pt-10 border-t-2 border-surface-100 dark:border-surface-800">
-        <motion.button whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={handleApply}
+        <m.button whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={handleApply}
           className="flex-1 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.6em] italic bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-600 dark:text-slate-400 hover:bg-surface-card hover:border-primary-500/40 transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95">
           <Sparkles size={20} className="text-primary-500" />
           {t('brandKit.omniChannelApply')}
-        </motion.button>
-        <motion.button whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={handleSave}
+        </m.button>
+        <m.button whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={handleSave}
           className={`flex-1 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.8em] italic transition-all duration-500 flex items-center justify-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.3)] active:scale-95 border-none ${
             saved
               ? 'bg-emerald-500 text-white shadow-emerald-500/20'
               : 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white'
           }`}>
           {saved ? <><CheckCircle2 size={22} />{t('brandKit.commitComplete')}</> : <><Save size={22} />{t('brandKit.commitKit')}</>}
-        </motion.button>
+        </m.button>
       </footer>
 
       {/* Footer Info */}

@@ -1,4 +1,16 @@
-// Validate environment variables
+// Validate environment variables (quick local sanity check).
+//
+// ⚠️  NOT THE CANONICAL PRODUCTION CHECK.
+//
+// Four env validators exist in this repo and they do NOT agree on what is
+// required. The one that actually gates a deploy is
+// scripts/verify-production-env.js — it is what `npm run preflight` shells out
+// to, and it validates FORMAT (secret length, URI scheme, placeholder values),
+// not just presence, and covers Supabase / OAuth / Redis.
+//
+// Use this script for a quick local sanity check only. A pass here does NOT
+// mean the environment is production-ready; run `npm run preflight` for that.
+//
 
 // Support different environment files
 const env = process.argv[2] || 'development';

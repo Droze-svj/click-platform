@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, Command, Zap, Cpu, Palette, Sliders, Type, Download, Film, Layers as LayersIcon, Sparkles, type LucideIcon } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 export interface CommandKItem {
   id: string
@@ -29,6 +30,7 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, command
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const panelRef = useDialogBehavior(isOpen, onClose)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const DEFAULT_COMMANDS: CommandKItem[] = [
@@ -76,8 +78,8 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, command
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4">
-          <motion.div
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4" role="dialog" aria-modal="true">
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -85,7 +87,8 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, command
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
           />
 
-          <motion.div
+          <m.div
+            ref={panelRef}
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -149,7 +152,7 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, command
               </div>
               <div className="opacity-40">{t('commandK.footerLabel')}</div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>

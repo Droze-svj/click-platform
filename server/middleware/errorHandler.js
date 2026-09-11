@@ -224,6 +224,51 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // JSON parse error (from body-parser / express.json)
+  if ((err instanceof SyntaxError && (err.status === 400 || err.statusCode === 400) && 'body' in err) || err.type === 'entity.parse.failed') {
+    return res.status(400).json({
+      success: false,
+      error: 'Malformed JSON in request body',
+      code: 'BAD_REQUEST'
+    });
+  }
+
+  // URL decoding error (URIError)
+  if (err instanceof URIError) {
+    return res.status(400).json({
+      success: false,
+      error: 'Failed to decode URL parameter: Malformed URI sequence',
+      code: 'INVALID_URI'
+    });
+  }
+
+  // Request payload too large (body-parser limit)
+  if (err.type === 'entity.too.large' || err.status === 413 || err.statusCode === 413) {
+    return res.status(413).json({
+      success: false,
+      error: 'Payload too large',
+      code: 'PAYLOAD_TOO_LARGE'
+    });
+  }
+
+  // CORS rejection
+  if (err.message && (err.message.includes('Not allowed by CORS') || err.message.includes('CORS origin'))) {
+    return res.status(403).json({
+      success: false,
+      error: 'CORS request rejected: Origin not allowed',
+      code: 'CORS_ERROR'
+    });
+  }
+
+  // CSRF token error
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({
+      success: false,
+      error: 'Invalid or missing CSRF token',
+      code: 'CSRF_ERROR'
+    });
+  }
+
   // Map well-known CLIENT-error messages thrown as plain Errors to the right
   // status. Many services throw `new Error('X not found')` / 'Invalid or expired
   // token' / 'access denied' with no statusCode; default-casing those as 500 is
@@ -256,26 +301,43 @@ const errorHandler = (err, req, res, next) => {
     if (/no active connection|not connected|sync not supported|not supported for/.test(m)) {
       return res.status(400).json({ success: false, error: err.message, code: 'PRECONDITION_FAILED' });
     }
+    if (/not implemented|not available yet|coming soon/.test(m)) {
+      return res.status(501).json({ success: false, error: err.message, code: 'NOT_IMPLEMENTED' });
+    }
+    if (/not configured|not enabled|service unavailable/.test(m)) {
+      return res.status(503).json({ success: false, error: err.message, code: 'SERVICE_UNAVAILABLE' });
+    }
   }
 
   // Default error - wrap in try-catch to ensure we always send a response
   try {
-    const statusCode = err.statusCode || 500;
+    const statusCode = err.statusCode || err.status || 500;
     const message = err.message || 'Internal server error';
     const isProduction = process.env.NODE_ENV === 'production';
+    const isServerError = statusCode >= 500;
 
     // Check if response has already been sent
     if (res.headersSent) {
       return;
     }
 
+    // In production, only mask 5xx server errors that aren't marked as operational.
+    // Client errors (4xx) and operational messages must be returned so users/frontends know what happened.
+    const clientMessage = (isProduction && isServerError && !err.isOperational)
+      ? 'An unexpected error occurred. Please try again.'
+      : message;
+
+    const errorCode = err.code || (isServerError ? 'INTERNAL_ERROR' : 'BAD_REQUEST');
+
     res.status(statusCode).json({
       success: false,
-      error: isProduction ? 'An unexpected error occurred' : message,
-      code: err.code || 'INTERNAL_ERROR',
+      error: clientMessage,
+      code: errorCode,
+      ...(err.details && { details: err.details }),
+      ...(err.fields && { fields: err.fields }),
       ...(!isProduction && {
         stack: err.stack,
-        details: err
+        details: err.details || err
       })
     });
   } catch (finalError) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { LegalPage } from '../../../components/ui/legal-page'
 
 type Mode = 'notice' | 'counter';
 
@@ -46,21 +46,11 @@ export default function DmcaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white px-6 py-24">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href="/trust"
-          className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-white uppercase tracking-widest font-bold mb-12"
-        >
-          ← Trust Center
-        </Link>
-
-        <div className="mb-2 text-xs uppercase tracking-[0.4em] text-indigo-400 font-black">DMCA</div>
-        <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-6">Copyright takedown.</h1>
-        <p className="text-slate-400 text-lg leading-relaxed mb-10">
+    <LegalPage kicker="DMCA" title="Copyright takedown." backHref="/trust" backLabel="Trust Center">
+        <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed mb-10">
           Click respects copyright. Use this form to file a takedown notice under 17 U.S.C. §512(c)
           or a counter-notice under §512(g). Knowingly false statements may carry liability under §512(f).
-          Our designated DMCA agent: <strong className="text-white">Click, Inc. — dmca@click.example</strong>.
+          Our designated DMCA agent: <strong className="text-surface-900 dark:text-surface-50">Click, Inc. — dmca@clickapp.io</strong>.
         </p>
 
         {/* Tab toggle */}
@@ -68,7 +58,7 @@ export default function DmcaPage() {
           <button
             onClick={() => { setMode('notice'); setDone(null); setError(null); }}
             className={`px-4 py-2 text-xs font-black uppercase tracking-widest ${
-              mode === 'notice' ? 'bg-indigo-600 text-white' : 'bg-transparent text-slate-400 hover:text-white'
+              mode === 'notice' ? 'bg-indigo-600 text-white' : 'bg-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'
             }`}
           >
             Takedown notice
@@ -76,7 +66,7 @@ export default function DmcaPage() {
           <button
             onClick={() => { setMode('counter'); setDone(null); setError(null); }}
             className={`px-4 py-2 text-xs font-black uppercase tracking-widest ${
-              mode === 'counter' ? 'bg-indigo-600 text-white' : 'bg-transparent text-slate-400 hover:text-white'
+              mode === 'counter' ? 'bg-indigo-600 text-white' : 'bg-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-50'
             }`}
           >
             Counter-notice
@@ -86,7 +76,7 @@ export default function DmcaPage() {
         {done ? (
           <div className="border border-emerald-500/30 bg-emerald-500/5 rounded-2xl p-6">
             <div className="text-emerald-300 font-black mb-2">Submitted.</div>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-surface-700 dark:text-surface-300 leading-relaxed">
               Reference: <span className="font-mono">{done.id}</span>. We will email you when we
               act on this notice. Most takedowns are processed within 48 hours.
             </p>
@@ -130,7 +120,7 @@ export default function DmcaPage() {
             )}
 
             <div>
-              <label htmlFor="signature" className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">
+              <label htmlFor="signature" className="text-xs font-black uppercase tracking-widest text-surface-600 dark:text-surface-400 mb-2 block">
                 Electronic signature (type your full name)
               </label>
               <input
@@ -138,7 +128,7 @@ export default function DmcaPage() {
                 name="signature"
                 required
                 placeholder="Your full legal name"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 focus:outline-none"
+                className="w-full bg-surface-50 dark:bg-white/5 border border-surface-200 dark:border-white/10 rounded-xl px-4 py-3 text-surface-900 dark:text-surface-50 focus:border-indigo-500/50 focus:outline-none"
               />
             </div>
 
@@ -158,11 +148,10 @@ export default function DmcaPage() {
           </form>
         )}
 
-        <p className="text-slate-500 text-xs mt-12 leading-relaxed">
-          You can also submit by email to <a href="mailto:dmca@click.example" className="text-indigo-400 hover:text-indigo-300 underline">dmca@click.example</a> or by post to Click, Inc., DMCA Agent, 1 Market St., Wilmington DE 19801, USA.
+        <p className="text-surface-500 text-xs mt-12 leading-relaxed">
+          You can also submit by email to <a href="mailto:dmca@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">dmca@clickapp.io</a> or by post to Click, Inc., DMCA Agent, 1 Market St., Wilmington DE 19801, USA.
         </p>
-      </div>
-    </div>
+          </LegalPage>
   );
 }
 
@@ -181,7 +170,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">
+      <label htmlFor={name} className="text-xs font-black uppercase tracking-widest text-surface-600 dark:text-surface-400 mb-2 block">
         {label} {required && <span className="text-rose-400">*</span>}
       </label>
       {textarea ? (
@@ -191,7 +180,7 @@ function Field({
           required={required}
           rows={3}
           placeholder={label}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 focus:outline-none"
+          className="w-full bg-surface-50 dark:bg-white/5 border border-surface-200 dark:border-white/10 rounded-xl px-4 py-3 text-surface-900 dark:text-surface-50 focus:border-indigo-500/50 focus:outline-none"
         />
       ) : (
         <input
@@ -200,7 +189,7 @@ function Field({
           type={type}
           required={required}
           placeholder={label}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500/50 focus:outline-none"
+          className="w-full bg-surface-50 dark:bg-white/5 border border-surface-200 dark:border-white/10 rounded-xl px-4 py-3 text-surface-900 dark:text-surface-50 focus:border-indigo-500/50 focus:outline-none"
         />
       )}
     </div>
@@ -216,7 +205,7 @@ function Checkbox({ name, required, children }: { name: string; required?: boole
         required={required}
         className="mt-1 w-4 h-4 rounded border-white/20 bg-white/5 accent-indigo-600 shrink-0"
       />
-      <span className="text-sm text-slate-300 leading-relaxed">{children}</span>
+      <span className="text-sm text-surface-700 dark:text-surface-300 leading-relaxed">{children}</span>
     </label>
   );
 }

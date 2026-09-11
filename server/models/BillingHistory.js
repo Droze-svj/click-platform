@@ -108,14 +108,22 @@ billingHistorySchema.index({ userId: 1, 'invoice.date': -1 });
 billingHistorySchema.index({ 'payment.status': 1, 'invoice.date': -1 });
 // invoiceNumber already has unique: true which creates an index
 
-billingHistorySchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  
-  // Generate invoice number if new
+// Invoice-number generation must run on `validate`, NOT on `save`.
+// invoiceNumber is `required: true`, and Mongoose registers its own validation
+// as a pre-save hook when the schema is created — i.e. before any hook added
+// afterwards. Generating the number in a pre('save') hook therefore ran AFTER
+// validation had already rejected the document, so creating a BillingHistory
+// without supplying an invoiceNumber by hand always threw
+// "Path `invoiceNumber` is required" and no invoice could be written.
+billingHistorySchema.pre('validate', function(next) {
   if (this.isNew && !this.invoiceNumber) {
     this.invoiceNumber = generateInvoiceNumber();
   }
-  
+  next();
+});
+
+billingHistorySchema.pre('save', function(next) {
+  this.updatedAt = new Date();
   next();
 });
 

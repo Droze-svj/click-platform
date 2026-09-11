@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const OAuthService = require('./oauthService');
 const OAuthStorage = require('../utils/oauthStorage');
 const logger = require('../utils/logger');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
@@ -20,16 +21,18 @@ const API_BASE = 'https://www.googleapis.com/youtube/v3';
 const DEFAULT_SCOPE = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const LOG_CONTEXT = { service: 'youtube-oauth' };
 
-function defaultRedirectUri() {
-  return process.env.YOUTUBE_REDIRECT_URI ||
-    `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/youtube/callback`;
+// Delegates to the shared resolver so the authorize step and the token
+// exchange can never derive different values. Called per-use rather than
+// cached at construction: the env is read at boot, but a resolver that
+// depends on the request cannot be memoised into a constructor.
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('youtube', req);
 }
 
 class YouTubeOAuthService {
   constructor() {
     this.clientId = process.env.YOUTUBE_CLIENT_ID;
     this.clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
-    this.redirectUri = defaultRedirectUri();
     this.isConfiguredFlag = !!(this.clientId && this.clientSecret);
     if (this.isConfiguredFlag) {
       logger.info('YouTube OAuth client initialized', LOG_CONTEXT);
@@ -39,6 +42,14 @@ class YouTubeOAuthService {
     
     // Bind methods to ensure they work when destructured in routes
     this.isConfigured = this.isConfigured.bind(this);
+  }
+
+  // Lazy, not snapshotted in the constructor: this module is required at boot,
+  // and a value captured then would ignore any later env change (and would be
+  // wrong for every test that sets one). It is only a fallback now — callers
+  // pass the resolved callback URL explicitly.
+  get redirectUri() {
+    return defaultRedirectUri();
   }
 
   isConfigured() {
@@ -84,7 +95,11 @@ class YouTubeOAuthService {
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }
 
-  async exchangeCodeForToken(code) {
+  // callbackUrl MUST be the same value the authorize step sent. The caller
+  // (the callback route) resolves it from the live request and passes it in;
+  // without it this fell back to a default that did not match, and every
+  // exchange was rejected with redirect_uri_mismatch.
+  async exchangeCodeForToken(code, callbackUrl) {
     if (!this.isConfigured()) throw new Error('YouTube OAuth not configured');
     const response = await fetch(TOKEN_URL, {
       method: 'POST',
@@ -94,7 +109,7 @@ class YouTubeOAuthService {
         client_secret: this.clientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: this.redirectUri,
+        redirect_uri: callbackUrl || this.redirectUri,
       }),
     });
 

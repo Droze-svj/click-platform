@@ -283,11 +283,18 @@ sceneSchema.index({ contentId: 1, start: 1 });
 sceneSchema.index({ 'metadata.tags': 1 });
 sceneSchema.index({ 'metadata.label': 1 });
 
-// Pre-save hook to calculate duration
-sceneSchema.pre('save', function(next) {
+// duration is derived in pre('validate'), NOT pre('save'): Mongoose runs
+// validation before user pre('save') hooks, so this required field was still
+// unset when it was validated — every Scene save() without an explicit duration
+// failed. See SupportTicket.ticketNumber.
+sceneSchema.pre('validate', function(next) {
   if (this.isModified('start') || this.isModified('end')) {
     this.duration = this.end - this.start;
   }
+  next();
+});
+
+sceneSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
