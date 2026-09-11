@@ -1070,22 +1070,51 @@ async function generateFreshHashtags(content) {
 }
 
 /**
+ * Ask the model for one short piece of replacement text, capped at `maxChars`.
+ *
+ * The three refresh helpers below used to call
+ * aiService.generateSocialContent(prompt, { maxLength }). That function takes a
+ * niche STRING as its second argument and returns an object of platform posts,
+ * so the prompt read "Transform this [object Object] content…" and the
+ * "refreshed" caption, title or description came back as that whole object —
+ * saved into a text field as "[object Object]".
+ *
+ * When the model is unavailable this keeps the real original text rather than
+ * inventing a replacement.
+ */
+async function generateRefreshedText(prompt, maxChars, original) {
+  const googleAI = require('../utils/googleAI');
+  if (!googleAI.isConfigured) return original;
+
+  const raw = await googleAI.generateContent(prompt, { maxTokens: Math.max(120, maxChars * 2) });
+  const text = typeof raw === 'string'
+    ? raw.trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim()
+    : '';
+  if (!text) return original;
+  if (text.length <= maxChars) return text;
+
+  // Over the limit: cut at a word boundary when one is reasonably close.
+  const cut = text.slice(0, maxChars);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > maxChars * 0.6 ? cut.slice(0, lastSpace) : cut).trim();
+}
+
+/**
  * Generate refreshed caption
  */
 async function generateRefreshedCaption(content) {
+  const original = content.description || '';
   try {
-    const { generateSocialContent } = require('./aiService');
     const prompt = `Create a fresh, engaging caption for reposting this content. Make it different from the original but maintain the core message.
 
 Original: ${content.title || content.description || ''}
 
-Create a new engaging caption (max 200 characters):`;
+Reply with only the new caption (max 200 characters):`;
 
-    const result = await generateSocialContent(prompt, { maxLength: 200 });
-    return result || content.description || '';
+    return await generateRefreshedText(prompt, 200, original);
   } catch (error) {
     logger.warn('Error generating caption', { error: error.message });
-    return content.description || '';
+    return original;
   }
 }
 
@@ -1093,20 +1122,19 @@ Create a new engaging caption (max 200 characters):`;
  * Generate refreshed title
  */
 async function generateRefreshedTitle(content) {
+  const original = content.title || 'Untitled';
   try {
-    const { generateSocialContent } = require('./aiService');
     const prompt = `Create a fresh title for reposting this content. Make it different but maintain the core message.
 
 Original: ${content.title || ''}
 Description: ${content.description || ''}
 
-Create a new engaging title (max 60 characters):`;
+Reply with only the new title (max 60 characters):`;
 
-    const result = await generateSocialContent(prompt, { maxLength: 60 });
-    return result || content.title || 'Untitled';
+    return await generateRefreshedText(prompt, 60, original);
   } catch (error) {
     logger.warn('Error generating title', { error: error.message });
-    return content.title || 'Untitled';
+    return original;
   }
 }
 
@@ -1114,19 +1142,18 @@ Create a new engaging title (max 60 characters):`;
  * Generate refreshed description
  */
 async function generateRefreshedDescription(content) {
+  const original = content.description || '';
   try {
-    const { generateSocialContent } = require('./aiService');
     const prompt = `Create a fresh description for reposting this content. Make it different but maintain the core message.
 
 Original: ${content.description || content.title || ''}
 
-Create a new engaging description (max 300 characters):`;
+Reply with only the new description (max 300 characters):`;
 
-    const result = await generateSocialContent(prompt, { maxLength: 300 });
-    return result || content.description || '';
+    return await generateRefreshedText(prompt, 300, original);
   } catch (error) {
     logger.warn('Error generating description', { error: error.message });
-    return content.description || '';
+    return original;
   }
 }
 

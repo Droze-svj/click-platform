@@ -16,8 +16,9 @@ async function getAdaptivePerformancePrediction(userId, contentId, platform) {
     }
 
     // Get initial prediction if available
-    const pipeline = content.pipeline;
-    const initialPrediction = pipeline?.performance?.[platform]?.[0] || null;
+    // pipeline.performance is a Mongoose Map — [platform] on it is always undefined.
+    const performance = content.pipeline?.performance;
+    const initialPrediction = (performance instanceof Map ? performance.get(platform) : performance?.[platform])?.[0] || null;
 
     // Get actual performance data
     const posts = await ScheduledPost.find({
@@ -307,32 +308,19 @@ async function updatePredictionsWithNewData(userId, contentId) {
       updatedPredictions[platform] = prediction;
     }
 
-    // Update content pipeline with new predictions
-    if (!content.pipeline) {
-      content.pipeline = {};
-    }
-    if (!content.pipeline.performance) {
-      content.pipeline.performance = {};
-    }
-
-    // Update with adjusted predictions
+    // pipeline.performance is a Mongoose Map: bracket reads and writes on it are
+    // neither seen nor saved, so read with get() and write through a set() path.
     for (const [platform, prediction] of Object.entries(updatedPredictions)) {
-      if (prediction.adjustedPrediction) {
-        if (!content.pipeline.performance[platform]) {
-          content.pipeline.performance[platform] = [];
-        }
-        content.pipeline.performance[platform][0] = {
-          ...content.pipeline.performance[platform][0],
-          predictedEngagement: prediction.adjustedPrediction.engagement,
-          predictedReach: prediction.adjustedPrediction.reach,
-          updatedAt: new Date(),
-          basedOn: prediction.basedOn,
-          accuracy: prediction.accuracy
-        };
-      }
+      const adjusted = prediction && prediction.adjustedPrediction;
+      if (!adjusted) continue;
+      const existing = (content.pipeline?.performance?.get(platform) || [])
+        .map((entry) => (typeof entry.toObject === 'function' ? entry.toObject() : entry));
+      const updated = { ...(existing[0] || {}) };
+      if (Number.isFinite(adjusted.engagement)) updated.predictedEngagement = adjusted.engagement;
+      if (Number.isFinite(adjusted.reach)) updated.predictedReach = adjusted.reach;
+      content.set(`pipeline.performance.${platform}`, [updated, ...existing.slice(1)]);
     }
 
-    content.pipeline.lastUpdated = new Date();
     await content.save();
 
     logger.info('Predictions updated with new data', { userId, contentId });

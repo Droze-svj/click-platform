@@ -12,8 +12,35 @@ const { postToSocial } = require('./socialMediaService');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const contentRecyclingService = require('./contentRecyclingService');
 
+const { personalizePrompt } = require('../utils/applyPersona');
+
 // Supported platforms
 const SUPPORTED_PLATFORMS = ['twitter', 'linkedin', 'facebook', 'instagram', 'youtube', 'tiktok'];
+
+// pipeline.assets / variations / performance / abTests / refreshed are Mongoose
+// Maps on a hydrated document. Bracket access and Object.entries() see nothing on
+// a Map — so one-click publish published nothing, optimal scheduling scheduled
+// nothing, variations always said the pipeline had not run, and refresh refreshed
+// nothing. Reads go through get()/entries(); writes go through a
+// doc.set('pipeline.<map>.<platform>') path so they are actually saved.
+function mapGet(map, key) {
+  if (!map) return undefined;
+  return map instanceof Map ? map.get(key) : map[key];
+}
+
+function mapEntries(map) {
+  if (!map) return [];
+  return map instanceof Map ? [...map.entries()] : Object.entries(map);
+}
+
+// The platform becomes a Map key inside a dotted set() path, so only known ones.
+function assertSupportedPlatform(platform) {
+  if (!SUPPORTED_PLATFORMS.includes(platform)) {
+    const err = new Error(`Unsupported platform: ${String(platform).slice(0, 40)}`);
+    err.statusCode = 400;
+    throw err;
+  }
+}
 
 // Content recycling - use recycling service if available
 async function identifyRecyclableContentForPipeline(userId, contentId) {
@@ -753,7 +780,7 @@ async function publishAllNetworks(userId, contentId, options = {}) {
     };
 
     for (const platform of platforms) {
-      const assets = pipeline.assets[platform] || [];
+      const assets = mapGet(pipeline.assets, platform) || [];
 
       for (const asset of assets) {
         try {
@@ -898,17 +925,18 @@ async function batchProcessPipeline(userId, contentIds, options = {}) {
  */
 async function generateContentVariations(userId, contentId, platform, count = 3) {
   try {
+    assertSupportedPlatform(platform);
     const content = await Content.findById(contentId);
     if (!content || content.userId.toString() !== userId.toString()) {
       throw new Error('Content not found');
     }
 
-    const pipeline = content.pipeline;
-    if (!pipeline || !pipeline.assets || !pipeline.assets[platform]) {
+    const platformAssets = content.pipeline ? mapGet(content.pipeline.assets, platform) : null;
+    if (!platformAssets || platformAssets.length === 0) {
       throw new Error('Pipeline not completed for this platform');
     }
 
-    const originalAsset = pipeline.assets[platform][0];
+    const originalAsset = platformAssets[0];
     const variations = [];
     const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
     if (!geminiConfigured) {
@@ -927,14 +955,26 @@ Create variation ${i + 1} with:
 - Different hashtag mix
 - Same core message`;
 
-      const raw = await geminiGenerate(prompt, { temperature: 0.8, maxTokens: 1024 });
+      const raw = await geminiGenerate(
+        await personalizePrompt(prompt, { userId, platform, stage: 'variations' }),
+        { temperature: 0.8, maxTokens: 1024 }
+      );
       const variation = safeJsonParse(raw, {});
+      // A failed or empty generation is skipped, not saved as a blank variation.
+      if (!variation || typeof variation.content !== 'string' || !variation.content.trim()) {
+        logger.warn('Content variation produced nothing', { contentId, platform, variation: i + 1 });
+        continue;
+      }
       variations.push({
         ...variation,
         platform,
         originalAssetId: originalAsset.id,
         variationNumber: i + 1
       });
+    }
+
+    if (variations.length === 0) {
+      return [];
     }
 
     // Predict performance for each variation
@@ -953,14 +993,8 @@ Create variation ${i + 1} with:
       })
     );
 
-    // Update content with variations
-    if (!content.pipeline.variations) {
-      content.pipeline.variations = {};
-    }
-    if (!content.pipeline.variations[platform]) {
-      content.pipeline.variations[platform] = [];
-    }
-    content.pipeline.variations[platform] = variationsWithPrediction;
+    // Update content with variations (a Map path — see mapGet).
+    content.set(`pipeline.variations.${platform}`, variationsWithPrediction);
     await content.save();
 
     logger.info('Content variations generated', { userId, contentId, platform, count });
@@ -1020,20 +1054,33 @@ async function smartContentRefresh(userId, contentId, options = {}) {
     }
 
     // Refresh each platform's assets
-    for (const [platform, assets] of Object.entries(pipeline.assets)) {
+    for (const [platform, assets] of mapEntries(pipeline.assets)) {
       refreshed[platform] = [];
 
       for (const asset of assets) {
-        const refreshedAsset = { ...asset };
+        // Spreading a subdocument copies Mongoose internals, not its fields.
+        const refreshedAsset = typeof asset.toObject === 'function' ? asset.toObject() : { ...asset };
 
         // Update hashtags
         if (updateHashtags) {
           const { generateHashtags } = require('./hashtagService');
-          const newHashtags = await generateHashtags(
-            asset.content || asset.caption || '',
-            { count: platform === 'instagram' ? 10 : 5, platform }
-          );
-          refreshedAsset.hashtags = newHashtags || asset.hashtags;
+          let newHashtags = [];
+          try {
+            newHashtags = await generateHashtags(
+              asset.content || asset.caption || '',
+              { count: platform === 'instagram' ? 10 : 5, platform }
+            );
+          } catch (err) {
+            logger.warn('Hashtag refresh failed, keeping the current hashtags', { platform, error: err.message });
+          }
+          // generateHashtags answers with { hashtag, category, … } objects (or
+          // strings). The asset stores plain "#tag" strings — an object array
+          // failed the whole save.
+          const tags = (Array.isArray(newHashtags) ? newHashtags : [])
+            .map((h) => (typeof h === 'string' ? h : h && h.hashtag))
+            .filter((t) => typeof t === 'string' && t.trim())
+            .map((t) => (t.trim().startsWith('#') ? t.trim() : `#${t.trim()}`));
+          refreshedAsset.hashtags = tags.length ? tags : (refreshedAsset.hashtags || []);
         }
 
         // Update captions if requested
@@ -1131,7 +1178,7 @@ async function scheduleWithOptimalTimes(userId, contentId, platforms = SUPPORTED
     const scheduled = [];
 
     for (const platform of platforms) {
-      const assets = pipeline.assets[platform] || [];
+      const assets = mapGet(pipeline.assets, platform) || [];
       const optimalTime = optimalTimes[platform];
 
       for (const asset of assets) {
@@ -1176,6 +1223,7 @@ async function scheduleWithOptimalTimes(userId, contentId, platforms = SUPPORTED
  */
 async function setupABTesting(userId, contentId, platform, variations) {
   try {
+    assertSupportedPlatform(platform);
     const content = await Content.findById(contentId);
     if (!content || content.userId.toString() !== userId.toString()) {
       throw new Error('Content not found');
@@ -1189,16 +1237,13 @@ async function setupABTesting(userId, contentId, platform, variations) {
       performance: variation.performance || null
     }));
 
-    // Store A/B test configuration
-    if (!content.pipeline.abTests) {
-      content.pipeline.abTests = {};
-    }
-    content.pipeline.abTests[platform] = {
+    // Store A/B test configuration (a Map path — see mapGet).
+    content.set(`pipeline.abTests.${platform}`, {
       testGroups,
       status: 'active',
       createdAt: new Date(),
       results: null
-    };
+    });
 
     await content.save();
 

@@ -1805,24 +1805,15 @@ __nextReady = initNextApp().catch((e) => {
 // Supports Supabase, Prisma (PostgreSQL), and MongoDB (legacy)
 const { initDatabases, getDatabaseHealth } = require('./config/database');
 
-// Connect to database (supports multiple providers)
-const connectDB = async () => {
-  try {
-    const dbStatus = await initDatabases();
-
-    if (dbStatus.supabase || dbStatus.prisma || dbStatus.mongodb) {
-      logger.info('✅ Database connected successfully');
-      logger.info('Database status:', getDatabaseHealth());
-    } else {
-      logger.error('❌ No database connection available');
-      logger.warn('⚠️ Server will start in degraded mode. Database features will not work.');
-    }
-  } catch (err) {
-    logger.error('❌ Database connection error:', err);
-    logger.warn('⚠️ Server will start without database. Connection will retry in background.');
-    // Don't exit - allow server to start
-  }
-};
+// Connect to database (supports multiple providers). Never exits: the server
+// starts either way. See config/connectDB.js for how a slow connection is
+// reported — it used to be logged as an outage while it was still connecting.
+const connectDB = require('./config/connectDB').createConnectDB({
+  initDatabases,
+  getDatabaseHealth,
+  logger,
+  connection: mongoose.connection,
+});
 
 // Connect to database (non-blocking) - skip in Jest workers so tests control Mongoose
 if (!process.env.JEST_WORKER_ID) {

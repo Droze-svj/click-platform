@@ -244,18 +244,19 @@ function buildFallbackHighlights(transcript, duration) {
 }
 
 // Generate social media content from text
+//
+// Returns { [platform]: { text, hashtags, platform } } containing ONLY the
+// platforms the model actually wrote a post for. A platform it could not produce
+// is left out, and every caller already treats a missing key as "no post".
+//
+// This used to invent posts instead: with no API key every platform got
+// "Check out this <niche> content! <first 100 chars>...", and when the model call
+// failed (googleAI returns null on quota exhaustion or an upstream error) the post
+// became "Check out this <niche> content!". Those were saved and shown as generated.
 async function generateSocialContent(text, niche, platforms = ['twitter', 'linkedin', 'instagram']) {
   if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback content');
-    const fallback = {};
-    platforms.forEach((platform) => {
-      fallback[platform] = {
-        text: `Check out this ${niche} content! ${text.substring(0, 100)}...`,
-        hashtags: [`#${niche}`, '#content', '#social'],
-        platform
-      };
-    });
-    return fallback;
+    logger.warn('Google AI API key not configured; no social posts generated');
+    return {};
   }
 
   try {
@@ -274,9 +275,14 @@ CREATIVE RULES:
 Original content: ${capForPrompt(text)}`;
 
       const response = await geminiGenerate(prompt, { temperature: 0.9, maxTokens: 400 });
+      const post = typeof response === 'string' ? response.trim() : '';
+      if (!post) {
+        logger.warn('No social post produced for platform', { platform, niche });
+        continue;
+      }
       content[platform] = {
-        text: response || `Check out this ${niche} content!`,
-        hashtags: extractHashtags(response || ''),
+        text: post,
+        hashtags: extractHashtags(post),
         platform
       };
     }
@@ -289,10 +295,15 @@ Original content: ${capForPrompt(text)}`;
 }
 
 // Generate blog summary
+//
+// Returns the model's summary, or '' when none was produced. It used to return
+// "Summary: <first 300 characters of the source>..." with no key or when the call
+// failed, and the literal "Summary generation failed. Please try again." on an
+// error — each saved as the content's blog summary.
 async function generateBlogSummary(text, niche) {
   if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback summary');
-    return `Summary: ${text.substring(0, 300)}...`;
+    logger.warn('Google AI API key not configured; no blog summary generated');
+    return '';
   }
 
   try {
@@ -305,15 +316,24 @@ async function generateBlogSummary(text, niche) {
 Content: ${capForPrompt(text)}`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 500 });
-    return response || `Summary: ${text.substring(0, 300)}...`;
+    return typeof response === 'string' ? response.trim() : '';
   } catch (error) {
     logger.error('Blog summary error', { error: error.message, niche });
-    return 'Summary generation failed. Please try again.';
+    return '';
   }
 }
 
 // Generate viral post ideas (Consolidated for Phase 11/12)
 async function generateViralIdeas(topic, niche, count = 3, options = {}) {
+  // Checked first: with no key there is nothing to generate, so don't fetch the
+  // strategy framework and market trends only to discard them. This used to
+  // return invented ideas instead ("<niche> Idea 1…N", each with a made-up
+  // potential of 75).
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured; no viral ideas generated');
+    return [];
+  }
+
   // Bound + sanitize the caller-supplied topic before it goes into the prompt
   // (was interpolated raw — unbounded text starves the token budget and a
   // crafted topic could inject instructions). capForPrompt strips control chars
@@ -324,17 +344,6 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
   const marketTrends = await predictionService.ingestMarketTrends();
 
   const varianceSeed = Math.random().toString(36).substring(7);
-
-  if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback ideas');
-    return Array(count).fill(0).map((_, i) => ({
-      title: `${niche} Idea ${i + 1}`,
-      description: `Engaging strategy for "${safeTopic}"`,
-      platform: ['tiktok', 'instagram', 'twitter'][i % 3],
-      potential: 75,
-      integrityVerified: false
-    }));
-  }
 
   const trendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
   try {

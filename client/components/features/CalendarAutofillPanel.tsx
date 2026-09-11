@@ -10,7 +10,7 @@ interface Draft {
   content?: { text?: string }
   scheduledTime?: string
 }
-interface AutofillResult { planId: string; count: number; posts: Draft[] }
+interface AutofillResult { planId: string | null; count: number; posts: Draft[]; degraded?: boolean }
 
 /**
  * Calendar Autofill panel: pick a platform + count (+ optional topic), generate
@@ -43,7 +43,7 @@ export default function CalendarAutofillPanel() {
   }
 
   async function approve() {
-    if (!result) return
+    if (!result?.planId) return
     setApproving(true); setError(null)
     try {
       await approveCalendarPlan(result.planId)
@@ -111,7 +111,15 @@ export default function CalendarAutofillPanel() {
 
       {error && <p data-testid="autofill-error" className="text-sm text-red-400">{error}</p>}
 
-      {result && (
+      {result && (result.degraded || !result.planId || result.count === 0) && (
+        // The server creates no plan when the AI produced no ideas — there is
+        // nothing to list or approve, so say so instead of "0 drafts created".
+        <p data-testid="autofill-unavailable" className="text-sm text-amber-400">
+          AI ideas are unavailable right now — no drafts were created. Try again in a little while.
+        </p>
+      )}
+
+      {result && !result.degraded && result.planId && result.count > 0 && (
         <div className="space-y-2" data-testid="autofill-result">
           <p className="text-xs text-zinc-500">{result.count} draft{result.count === 1 ? '' : 's'} created</p>
           <ul className="space-y-1">

@@ -46,11 +46,6 @@ const ACCEPTED_UNRESOLVED = new Map([
   ['/api/users/123', 'lib/api.ts usage example in a doc comment'],
   ['/api/brand-kit', 'hooks/useHardenedRequest.ts usage example in a doc comment'],
 
-  // ── Live in components with zero importers (confirmed by import-graph
-  //    reachability from app/ entry points). Not user-reachable, so not a bug;
-  //    listed so that WIRING one of these up surfaces the broken path first.
-  ['/api/social/generate-metadata', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
-  ['/api/social/publish', 'components/editor/views/SocialPublishingView.tsx — orphaned, 0 importers'],
 
   // ── Variable platform segment with no generic route: the server-side code
   //    exchange is mounted per platform (POST /api/oauth/{linkedin,google,
@@ -64,15 +59,12 @@ const ACCEPTED_UNRESOLVED = new Map([
 // bug while nothing renders them — but each is a break waiting to happen, so
 // they are listed rather than ignored, and a test below fails if one is wired
 // up while its endpoints are still missing.
-const UNREACHABLE_COMPONENTS = new Set([
-  'components/CreatorDNA.tsx',               // /api/intelligence/dna*, /api/intelligence/avatar
-  'components/SystemIntelligence.tsx',       // /api/admin/queues/stats
-  'components/TrendRadar.tsx',               // /api/intelligence/trend-alerts, /trending-formats
-  'components/BackupManager.tsx',            // /api/backup/:id (GET)
-  'components/ChunkedUpload.tsx',            // /api/upload/chunked/:id (GET)
-  'components/WorkflowWebhookManager.tsx',   // /api/workflows/webhooks/:id
-  'components/editor/views/SocialPublishingView.tsx', // /api/social/{generate-metadata,publish}
-]);
+//
+// Empty since 2026-09-11: the seven listed here (CreatorDNA, SystemIntelligence,
+// TrendRadar, BackupManager, ChunkedUpload, WorkflowWebhookManager,
+// SocialPublishingView) were deleted rather than kept as exemptions. The
+// mechanism stays for the next orphan that turns up.
+const UNREACHABLE_COMPONENTS = new Set([]);
 
 function walk(dir) {
   let out = [];

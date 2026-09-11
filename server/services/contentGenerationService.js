@@ -43,6 +43,28 @@ async function generateContentFromText(contentId, text, user, platforms = DEFAUL
         hashtags: item.hashtags || [],
       }));
 
+    // No platform produced a post (AI unavailable, over quota, or failing).
+    // Record that honestly rather than saving an empty "completed" result and
+    // counting it against the user's usage. Returned, not thrown: a throw makes
+    // the queue retry, and retrying against an exhausted quota only burns more.
+    if (socialPosts.length === 0) {
+      const reason = 'AI content generation is unavailable right now, so no social posts were produced';
+      logger.warn('Content generation produced no social posts', { contentId });
+      content.status = 'failed';
+      content.errorMessage = reason;
+      await content.save();
+      try {
+        emitToUser(String(userId), 'content-generated', {
+          contentId: content._id.toString(),
+          status: 'failed',
+          error: reason,
+        });
+      } catch (err) {
+        logger.debug('Socket emit skipped', { contentId });
+      }
+      return { generated: false, reason };
+    }
+
     report(50, 'Creating blog summary...');
     const blogSummary = await generateBlogSummary(text, niche);
 

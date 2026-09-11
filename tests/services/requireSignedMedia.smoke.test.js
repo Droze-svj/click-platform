@@ -33,6 +33,22 @@ function buildApp() {
   return app;
 }
 
+// Fetch a response body as raw bytes. Without an explicit parser supertest
+// picks one from the Content-Type, and `res.body` for a media type is not
+// guaranteed to be a Buffer — this suite intermittently failed with
+// `Buffer.from(res.body)` receiving a plain object. Collecting the stream
+// ourselves makes the byte comparison deterministic.
+function getBytes(app, url) {
+  return request(app)
+    .get(url)
+    .buffer(true)
+    .parse((res, done) => {
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => done(null, Buffer.concat(chunks)));
+    });
+}
+
 function sign(uploadsPath) {
   // signMediaUrl returns "/uploads/...?exp=..&sig=.." — hand the whole query back.
   const u = new URL('http://x' + signMediaUrl(uploadsPath));
@@ -63,9 +79,9 @@ afterEach(() => {
 describe('signed-media gate — running-app smoke (real HTTP + static serving)', () => {
   it('flag explicitly OFF (=false): unsigned private video serves (legacy path)', async () => {
     process.env.REQUIRE_SIGNED_MEDIA = 'false';
-    const res = await request(buildApp()).get('/uploads/videos/private.mp4');
+    const res = await getBytes(buildApp(), '/uploads/videos/private.mp4');
     expect(res.status).toBe(200);
-    expect(Buffer.from(res.body)).toEqual(VIDEO_BYTES);
+    expect(res.body).toEqual(VIDEO_BYTES);
   });
 
   it('flag ON: UNSIGNED private video → 403 (the whole point of the gate)', async () => {
@@ -77,9 +93,9 @@ describe('signed-media gate — running-app smoke (real HTTP + static serving)',
 
   it('flag ON: VALIDLY-SIGNED private video → 200 and serves the real bytes', async () => {
     process.env.REQUIRE_SIGNED_MEDIA = 'true';
-    const res = await request(buildApp()).get('/uploads/videos/private.mp4' + sign('/uploads/videos/private.mp4'));
+    const res = await getBytes(buildApp(), '/uploads/videos/private.mp4' + sign('/uploads/videos/private.mp4'));
     expect(res.status).toBe(200);
-    expect(Buffer.from(res.body)).toEqual(VIDEO_BYTES);
+    expect(res.body).toEqual(VIDEO_BYTES);
   });
 
   it('flag ON: TAMPERED signature → 403', async () => {
@@ -108,9 +124,9 @@ describe('signed-media gate — running-app smoke (real HTTP + static serving)',
     process.env.REQUIRE_SIGNED_MEDIA = 'true';
     process.env.PUBLIC_MEDIA_PREFIXES = 'fonts/,music/';
     const app = buildApp();
-    const music = await request(app).get('/uploads/music/catalog.mp3');
+    const music = await getBytes(app, '/uploads/music/catalog.mp3');
     expect(music.status).toBe(200);
-    expect(Buffer.from(music.body)).toEqual(MUSIC_BYTES);
+    expect(music.body).toEqual(MUSIC_BYTES);
     // videos/ is NOT in the allowlist → still 403 unsigned
     const video = await request(app).get('/uploads/videos/private.mp4');
     expect(video.status).toBe(403);

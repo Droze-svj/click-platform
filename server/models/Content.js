@@ -108,6 +108,10 @@ const contentSchema = new mongoose.Schema({
     enum: ['uploading', 'processing', 'completed', 'failed'],
     default: 'uploading'
   },
+  // Why `status` is 'failed'. Content generation has always set this on failure,
+  // but the field was never declared, so the strict schema silently dropped it —
+  // every failed item was saved with no reason at all.
+  errorMessage: { type: String },
   // Top-level snapshot of the manual editor's saved state — videoFilters,
   // textOverlays, shapeOverlays, timelineSegments, captionStyle,
   // colorGradeSettings, etc. Written by `POST /api/video/editor/save`

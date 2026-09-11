@@ -3,7 +3,7 @@
 Honest list of what is intentionally NOT done, with the reason for each. If it's
 listed here it's a conscious deferral with a known impact, not an oversight.
 
-**Last updated: 2026-08-30**, after the production-readiness pass.
+**Last updated: 2026-09-11**, after the pre-launch end-to-end pass.
 
 > The previous revision of this file was dated 2026-05-17 and had drifted badly
 > out of date — it claimed a 30-day access token (actually 1h since June), an
@@ -30,6 +30,10 @@ the current code. Evidence is given so nobody has to re-derive it.
 | Publishing that faked success | `socialPublishingService.mockSuccess` returns `success: false, status: 'requires_setup'` — it never reports a post that didn't happen. |
 | Fabricated analytics ("phantom data") | Purged. The last six surfaces (share of voice, competitor benchmarks, revenue impact, per-scene performance, sentiment risk, audience decline) were fixed in the 2026-08-30 pass — see "Honest by design" below. |
 | Refunds reported without money moving | `processPaymentRefund` no longer synthesizes a `REF-…` id; a refund is only `processed` when Whop confirms it. |
+| AI generators filling failures with canned text | Social posts ("Check out this…"), blog summary, viral ideas and the five script generators return empty/null when the model produced nothing, and their routes say "unavailable" (`degraded: true`, or 503 for scripts) instead of saving a template. Dashboard generation that produced no posts is saved `failed` with its `errorMessage` — a path the schema had been silently dropping. |
+| Calendar autofill billing for nothing | An empty idea set answers `degraded: true` with no plan and no metered usage, and the panel says ideas are unavailable rather than "0 drafts created". |
+| `pipeline.*` Maps read like plain objects | `unifiedContentPipelineService` and `adaptivePerformanceService` read the Maps with `get()` and write through `doc.set('pipeline.<map>.<platform>')`. Publish-all, optimal scheduling, variations, A/B setup, refresh and prediction updates had all been silent no-ops. Guard: `tests/server/pipelineMapPaths.test.js`. |
+| Repurposing prompts built from `content.body` | There is no such path — every prompt said "Body: undefined". They read `content.text` / `transcript` / `description`. Guard: `tests/server/contentRepurposingText.test.js`. |
 
 ---
 
@@ -199,7 +203,7 @@ autonomous-mode kill switch.
 
 ---
 
-## 🔵 Unreachable client files — 209 left, down from 266
+## 🔵 Unreachable client files — 201 left, down from 266
 
 Building the import graph from every Next.js entry point leaves 209 of 781
 client source files with no path from any entry point.
@@ -207,6 +211,12 @@ client source files with no path from any entry point.
 **Closed in the 2026-08/09 pass:** 22 shadow duplicates, 16 files of dead
 development instrumentation, and **38 components that were fully built, called
 live endpoints, and were imported by nothing**.
+
+**Deleted in the 2026-09 pass:** eight more with zero importers and zero
+references — `CreatorDNA`, `SystemIntelligence`, `TrendRadar`, `BackupManager`,
+`ChunkedUpload`, `WorkflowWebhookManager`, `QuickContentCreator`, and
+`SocialPublishingView` from the table below (it needed a second publish path,
+`/api/social/publish`, that deliberately does not exist).
 
 Where the 38 went: new routes `/dashboard/ops` (eleven operational HUDs as
 tabs), `/dashboard/content/operations`, `/dashboard/toolbox`,
@@ -228,7 +238,7 @@ one built:
 `AdvancedSchedulingHub` was the one case that genuinely needed backend work:
 `/api/scheduler/{analytics,templates,bulk-reschedule}` were built for it.
 
-**The 11 NOT wired.** Each duplicates a surface that already ships; mounting
+**The 10 NOT wired.** Each duplicates a surface that already ships; mounting
 them would give the product two competing UIs for one job:
 
 | Component | Superseded by |
@@ -241,7 +251,6 @@ them would give the product two competing UIs for one job:
 | `CollaborativeComments` | `/dashboard/approvals/collaborate` has its own thread. It also needs a `teamId` no page can supply, and returns empty without one |
 | `TeamPresence`, `ProjectBrowser` | the live teams / projects pages — no endpoint of their own |
 | `SocialVaultView` | `DistributionHubView` in the same editor — same `/api/oauth/accounts` |
-| `SocialPublishingView` | the Export → Scheduler bridge. Also needs `/api/social/publish`; a second publish path would reverse the deliberate consolidation onto one scheduling model |
 
 Deleting these is a reasonable follow-up. It is not a bug that they exist, and
 each is a complete implementation someone may want to harvest — so the decision
