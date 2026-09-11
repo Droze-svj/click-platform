@@ -601,6 +601,10 @@ async function getFutureContentSuggestions(userId, gaps = [], count = 5) {
     for (let i = 0; i < count; i++) {
       const platform = platforms[i % platforms.length];
       const idea = await generateContentIdea([platform]);
+      // No idea was produced (AI unavailable, or a cut-off/unparseable response).
+      // Skip it: pushing it would show the user a blank suggestion — formerly a
+      // 'Content Idea' placeholder — with a confidence score attached.
+      if (!idea || idea.degraded || !idea.idea) continue;
       suggestions.push({
         id: `suggestion_${Date.now()}_${i}`,
         title: idea.title,

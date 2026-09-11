@@ -87,7 +87,22 @@ function safeJsonParse(rawString, fallback = {}) {
     }
     
     let repaired = body.slice(0, lastSafe + 1);
-    if (inString) repaired += '"';
+    // lastSafe only ever advances outside a string or on the quote that CLOSES
+    // one, so the cut point is never inside a string. The old
+    // `if (inString) repaired += '"'` read inString at the END of the text, not
+    // at the cut: output truncated inside a value (`…,"idea": "Start with a bo`)
+    // was rewound to the key's closing quote and then handed a stray quote —
+    // `…,"idea""}` — which can never parse. Every response cut off mid-string
+    // (a value, a key, or an array element) therefore fell through to the
+    // caller's fallback, which is how generate-idea returned filler.
+    //
+    // A cut can still leave an object key with no value (`{"a":"x","idea"`).
+    // Drop that key rather than inventing a value for it: a missing field is
+    // honest, half a sentence presented as complete is not. Inside an object a
+    // string that follows `{` or `,` is always a key; values follow `:`.
+    if (stack[stack.length - 1] === '{') {
+      repaired = repaired.replace(/(^|[{,])\s*"(?:[^"\\]|\\.)*"\s*$/, (_m, lead) => (lead === '{' ? '{' : ''));
+    }
     
     // Strip trailing commas before closing
     repaired = repaired.replace(/,\s*([}\]])/g, '$1');
@@ -103,7 +118,10 @@ function safeJsonParse(rawString, fallback = {}) {
     } catch (err) {
       logger.error('Aggressive JSON Repair Failed', { 
         error: err.message, 
-        snippet: repaired.substring(0, 100) 
+        snippet: repaired.substring(0, 100),
+        // The repaired text alone hides the model's actual defect (a cut-off, an
+        // unescaped quote, a refusal). Keep a bounded slice of what it really sent.
+        raw: String(rawString).substring(0, 300) 
       });
       return fallback;
     }

@@ -734,14 +734,35 @@ Return a JSON object with: title, description, action, impact ("high", "medium",
 }
 
 // Generate content idea
+//
+// Returns { title, idea, platforms } for a real idea, or
+// { title: null, idea: null, platforms, degraded: true } when none was produced.
+//
+// It used to return hardcoded filler ('Content Idea' / 'Create engaging
+// content.') with no marker — on a missing key, an upstream error, a cut-off or
+// unparseable response, or a caller passing the wrong arguments — and nothing
+// downstream could tell that apart from a real idea: POST /api/ai/generate-idea
+// reported it as success, and QuickContentCreator seeded it straight into
+// content generation.
 async function generateContentIdea(platforms) {
+  const unavailable = () => ({
+    title: null,
+    idea: null,
+    platforms: Array.isArray(platforms) ? platforms : [],
+    degraded: true
+  });
+
+  // Deliberately not coerced: a non-array here is a caller bug (a niche string
+  // was once passed), and quietly wrapping it would generate an idea "for the
+  // platform general" instead of surfacing the wrong call.
+  if (!Array.isArray(platforms) || platforms.length === 0) {
+    logger.warn('generateContentIdea called without a platforms array', { received: typeof platforms });
+    return unavailable();
+  }
+
   if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback idea');
-    return {
-      title: 'Content Idea',
-      idea: 'Create engaging content that resonates with your audience.',
-      platforms
-    };
+    logger.warn('Google AI API key not configured; no content idea generated');
+    return unavailable();
   }
 
   try {
@@ -751,18 +772,20 @@ Return a JSON object with: title, idea, platforms (array). Return only valid JSO
 
     const response = await geminiGenerate(prompt, { maxTokens: 300 });
     const result = safeJsonParse(response, {});
+    // An idea without its text is not an idea. A cut-off or unparseable response
+    // leaves `idea` missing, and a title on its own would read as a finished result.
+    if (typeof result.idea !== 'string' || !result.idea.trim()) {
+      logger.warn('Content idea generation produced no usable idea', { hadResponse: Boolean(response) });
+      return unavailable();
+    }
     return {
-      title: result.title || 'Content Idea',
-      idea: result.idea || 'Create engaging content.',
-      platforms: result.platforms || platforms
+      title: typeof result.title === 'string' && result.title.trim() ? result.title : null,
+      idea: result.idea,
+      platforms: Array.isArray(result.platforms) && result.platforms.length ? result.platforms : platforms
     };
   } catch (error) {
     logger.error('Content idea generation error', { error: error.message });
-    return {
-      title: 'Content Idea',
-      idea: 'Create engaging content that resonates with your audience.',
-      platforms
-    };
+    return unavailable();
   }
 }
 
