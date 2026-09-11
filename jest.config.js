@@ -109,15 +109,10 @@ module.exports = {
       testMatch: ['<rootDir>/tests/smoke/smokeFull.test.js'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-      // This was the one project with no override, so it inherited the 60s
-      // jest.setTimeout() in tests/setup.js — which applies to HOOKS too. The
-      // sweep walks 1100+ endpoints and abandons any call past its own 6s cap,
-      // but an abandoned request's handler keeps running against Mongo; on a
-      // 2-vCPU CI runner enough calls hit that cap for the backlog to starve
-      // afterAll's deleteMany, so cleanup blew the 60s hook budget and failed a
-      // run that had reported zero server errors. Runtime here scales with the
-      // route count and the hardware, so it gets a budget like render-fidelity.
-      testTimeout: 300000,
+      // NOTE: no testTimeout here on purpose — tests/setup.js calls
+      // jest.setTimeout(60000) at runtime, and a runtime call beats project
+      // config, so it would have no effect. smokeFull.test.js overrides it
+      // in-file instead (the same pattern e2e-flows and user-flow already use).
     },
     {
       // Render-fidelity — renders known editor states through real ffmpeg and

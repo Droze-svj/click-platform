@@ -23,6 +23,17 @@ const SKIP_PREFIXES = [
   '/api/events/stream',
 ];
 
+// tests/setup.js calls jest.setTimeout(60000), which applies to HOOKS as well as
+// tests and beats any project-level testTimeout because it is a runtime call.
+// That 60s is not enough for this suite on CI: the sweep walks 1100+ endpoints
+// and abandons any call past PER_CALL_TIMEOUT_MS, but an abandoned request's
+// handler keeps running against Mongo. On a 2-vCPU runner enough calls hit that
+// cap for the backlog to starve afterAll's cleanup, which failed the job on a
+// run that had reported ZERO server errors. Locally the whole suite finishes in
+// ~22s with no open handles under --detectOpenHandles, so this is hardware
+// timing rather than a leak.
+jest.setTimeout(300000);
+
 const PER_CALL_TIMEOUT_MS = 6000;
 const CONCURRENCY = 8;
 
