@@ -94,7 +94,13 @@ jobs:
       run: npm run test:coverage
       env:
         NODE_ENV: test
-        MONGODB_URI: mongodb://localhost:27017/click-test
+        # Its OWN database. This step re-runs the unit + integration suites a
+        # second time, and --runInBand puts all of them in a single
+        # …-w1 database — the same one the earlier "Run unit tests" step just
+        # filled. Any suite asserting a collection-wide count then sees the
+        # first pass's rows too (useridFlipMigration counted 20 convertible
+        # instead of 10 and failed only here).
+        MONGODB_URI: mongodb://localhost:27017/click-test-coverage
         JWT_SECRET: test-secret-key
 
     - name: Upload coverage to Codecov
