@@ -3,8 +3,14 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+  # Every pull request, whatever its base branch. This used to be limited to PRs
+  # into main/develop, so a PR STACKED on a feature branch ran no gate at all:
+  # tests, both sweeps, the security audit and the Docker build were silently
+  # skipped while the PR showed only green Vercel checks. (#315, stacked on
+  # feat/ui-ux-overhaul, would have merged an image that could not build.) A
+  # stacked PR is exactly where a regression should be caught — before it lands
+  # in the branch it is stacked on.
   pull_request:
-    branches: [ main, develop ]
 
 jobs:
   test:
