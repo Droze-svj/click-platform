@@ -160,16 +160,38 @@ async function checkMongo() {
   }
 }
 
-// Gemini ping — cached for 60s so we don't slam the API with every
-// readiness check. Failures are non-fatal: we surface them but the
-// readiness gate doesn't trip on Gemini being down.
+// Gemini — CONFIGURATION ONLY unless the caller opts in with `?live=1`.
+//
+// This used to make a real generation call every time a 60s cache expired, and
+// RENDER_KEEP_ALIVE_SETUP.md told owners to point an uptime monitor at
+// /api/health every 5 minutes. That is 288 real Gemini requests a day against a
+// free tier of 20: the keep-alive alone used up the AI quota, and real users got
+// degraded AI for the rest of the day. One such probe was seen taking 37.6s in
+// production — far past the 5s probe timeout, while the request kept running and
+// still counted. The round-trip is now opt-in, matching /api/health/ai, and
+// cached for 5 minutes when it is used. Gemini never gates readiness either way.
+const GEMINI_LIVE_CACHE_MS = 5 * 60_000;
 let geminiCache = { at: 0, result: null };
-async function checkGemini() {
-  if (process.env.NODE_ENV === 'test') {
-    return { connected: true, mock: true, provider: 'gemini', latency: '0ms' };
+async function checkGemini({ live = false } = {}) {
+  let configured = false;
+  try {
+    const googleAI = require('../utils/googleAI');
+    configured = !!process.env.GOOGLE_AI_API_KEY && !!googleAI.isConfigured;
+  } catch (_) {
+    configured = false;
   }
+  if (!configured) {
+    return { configured: false, connected: false, error: 'GOOGLE_AI_API_KEY not set', liveTest: 'skipped' };
+  }
+  if (!live) {
+    return { configured: true, liveTest: 'skipped', hint: 'add ?live=1 for a real round-trip (spends one AI request)' };
+  }
+  if (process.env.NODE_ENV === 'test') {
+    return { configured: true, connected: true, mock: true, provider: 'gemini', latency: '0ms', liveTest: 'mock' };
+  }
+
   const now = Date.now();
-  if (geminiCache.result && now - geminiCache.at < 60_000) {
+  if (geminiCache.result && now - geminiCache.at < GEMINI_LIVE_CACHE_MS) {
     return { ...geminiCache.result, cached: true };
   }
   try {
@@ -177,12 +199,12 @@ async function checkGemini() {
     const start = Date.now();
     const r = await aiCall('ok', { maxTokens: 5, taskKind: 'fast' });
     const result = r?.text
-      ? { connected: true, provider: r.provider, latency: `${Date.now() - start}ms` }
-      : { connected: false, error: r?.error || 'empty response' };
+      ? { configured: true, connected: true, provider: r.provider, latency: `${Date.now() - start}ms`, liveTest: 'ok' }
+      : { configured: true, connected: false, error: r?.error || 'empty response', liveTest: 'fail' };
     geminiCache = { at: now, result };
     return result;
   } catch (err) {
-    const result = { connected: false, error: err.message };
+    const result = { configured: true, connected: false, error: err.message, liveTest: 'fail' };
     geminiCache = { at: now, result };
     return result;
   }
@@ -204,7 +226,7 @@ router.get('/', async (req, res) => {
     withTimeout(checkDatabase(), PROBE_TIMEOUT_MS, 'Supabase'),
     withTimeout(checkMongo(),    PROBE_TIMEOUT_MS, 'Mongo'),
     withTimeout(checkRedis(),    PROBE_TIMEOUT_MS, 'Redis'),
-    withTimeout(checkGemini(),   PROBE_TIMEOUT_MS, 'Gemini'),
+    withTimeout(checkGemini({ live: String(req.query.live) === '1' }), PROBE_TIMEOUT_MS, 'Gemini'),
   ]);
 
   // Readiness rule: if ANY required dep is down, the service is not
