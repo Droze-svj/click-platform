@@ -2,21 +2,24 @@
  * Whop webhook handler — POST /api/webhooks/whop
  *
  * Mounted in server/index.js with `express.raw({ type: 'application/json' })`
- * BEFORE the global express.json() so the HMAC signature verifies against
- * the unparsed body.
+ * BEFORE the global express.json() so the signature verifies against the
+ * unparsed body.
  *
- * Configure in your Whop dashboard:
- *   - URL:    ${APP_URL}/api/webhooks/whop
- *   - Events: payment.succeeded, membership.went_valid,
- *             membership.went_invalid, subscription.cancelled, payment.failed
- *   - Secret: paste into WHOP_WEBHOOK_SECRET env var
+ * Configure in your Whop dashboard (full walkthrough: docs/whop-setup.md):
+ *   - URL:     ${APP_URL}/api/webhooks/whop
+ *   - Events:  membership.activated, membership.deactivated,
+ *              payment.succeeded, payment.failed
+ *   - Secret:  the `ws_…` value, pasted into WHOP_WEBHOOK_SECRET unchanged
+ *
+ * Whop signs with the Standard Webhooks scheme (webhook-id / webhook-timestamp
+ * / webhook-signature). See verifyWebhookRequest.
  */
 
 const express = require('express');
 const logger = require('../../utils/logger');
 const User = require('../../models/User');
 const WebhookEvent = require('../../models/WebhookEvent');
-const { verifySignature, processEvent } = require('../../services/whopWebhookService');
+const { verifyWebhookRequest, processEvent } = require('../../services/whopWebhookService');
 
 const router = express.Router();
 
@@ -68,11 +71,6 @@ async function markProcessed(provider, eventId, result) {
 }
 
 router.post('/', async (req, res) => {
-  const signature =
-    req.headers['x-whop-signature'] ||
-    req.headers['X-Whop-Signature'] ||
-    req.headers['whop-signature'] ||
-    '';
   const secret = process.env.WHOP_WEBHOOK_SECRET || '';
 
   // Body is a Buffer because the parent app mounts express.raw on this path.
@@ -83,9 +81,11 @@ router.post('/', async (req, res) => {
     return res.status(503).json({ error: 'webhook-not-configured' });
   }
 
-  if (!verifySignature(rawBody, signature, secret)) {
-    logger.warn('[whop-webhook] signature mismatch', {
-      hasSignature: Boolean(signature),
+  const verdict = verifyWebhookRequest(rawBody, req.headers, secret);
+  if (!verdict.ok) {
+    logger.warn('[whop-webhook] signature rejected', {
+      scheme: verdict.scheme,
+      reason: verdict.reason,
       bodyLen: rawBody.length,
     });
     return res.status(401).json({ error: 'invalid-signature' });
@@ -99,10 +99,11 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'invalid-json' });
   }
 
-  // Idempotency claim. Whop's canonical event id lives at event.id; some
-  // payloads only carry id under data.id, so accept both.
-  const eventId = event?.id || event?.data?.id || null;
-  const eventType = event?.action || event?.type || 'unknown';
+  // Idempotency claim. Under Standard Webhooks the `webhook-id` header is the
+  // message id and stays identical across Whop's retries, so it is the safest
+  // dedupe key. The body `id` and `data.id` remain fallbacks for older payloads.
+  const eventId = req.headers['webhook-id'] || event?.id || event?.data?.id || null;
+  const eventType = event?.type || event?.action || 'unknown';
   const claim = await claimEvent('whop', eventId, eventType);
   if (!claim.claimed && claim.duplicate) {
     logger.info('[whop-webhook] duplicate event, skipping', { eventId, eventType });

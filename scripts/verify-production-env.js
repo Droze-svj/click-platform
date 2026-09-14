@@ -176,31 +176,31 @@ const RECOMMENDED_VARS = {
     message: 'Required for Whop API calls. Get from Whop Dashboard -> Developer Settings.'
   },
   WHOP_WEBHOOK_SECRET: {
-    validate: (val) => val.length > 10,
-    message: 'Required to verify Whop webhooks. Get from Whop Dashboard -> Webhooks.'
+    validate: (val) => /^(ws|whsec)_/.test(val) && val.length > 20,
+    message: 'Must be the webhook secret from Whop Dashboard -> Developer -> Webhooks, starting "ws_" — paste it unchanged.'
   },
   WHOP_PRODUCT_ID_CREATOR_MONTHLY: {
-    validate: (val) => val.startsWith('prod_'),
+    validate: (val) => /^(plan|prod)_[A-Za-z0-9]+$/.test(val),
     message: 'Required for Creator Monthly plan routing.'
   },
   WHOP_PRODUCT_ID_CREATOR_YEARLY: {
-    validate: (val) => val.startsWith('prod_'),
+    validate: (val) => /^(plan|prod)_[A-Za-z0-9]+$/.test(val),
     message: 'Required for Creator Yearly plan routing.'
   },
   WHOP_PRODUCT_ID_PRO_MONTHLY: {
-    validate: (val) => val.startsWith('prod_'),
+    validate: (val) => /^(plan|prod)_[A-Za-z0-9]+$/.test(val),
     message: 'Required for Pro Monthly plan routing.'
   },
   WHOP_PRODUCT_ID_PRO_YEARLY: {
-    validate: (val) => val.startsWith('prod_'),
+    validate: (val) => /^(plan|prod)_[A-Za-z0-9]+$/.test(val),
     message: 'Required for Pro Yearly plan routing.'
   },
   WHOP_PRODUCT_ID_AGENCY_MONTHLY: {
-    validate: (val) => val.startsWith('prod_'),
+    validate: (val) => /^(plan|prod)_[A-Za-z0-9]+$/.test(val),
     message: 'Required for Agency Monthly plan routing.'
   },
   WHOP_PRODUCT_ID_AGENCY_YEARLY: {
-    validate: (val) => val.startsWith('prod_'),
+    validate: (val) => /^(plan|prod)_[A-Za-z0-9]+$/.test(val),
     message: 'Required for Agency Yearly plan routing.'
   },
   NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY: {
@@ -266,6 +266,39 @@ const SECURITY_CHECKS = {
       return { pass: true };
     }
   },
+  // The six Whop checkout links and ids must describe six DIFFERENT plans on
+  // whop.com. A duplicated id makes monthly and yearly indistinguishable (the
+  // webhook ignores such an id); a non-whop.com URL is not a Whop checkout; and
+  // a link whose plan_ id differs from its WHOP_PRODUCT_ID_* plan id sells one
+  // plan while granting another. Skipped when no Whop value is configured.
+  WHOP_CONFIG: {
+    check: (env) => {
+      const combos = ['CREATOR', 'PRO', 'AGENCY'].flatMap((t) => ['MONTHLY', 'YEARLY'].map((p) => `${t}_${p}`));
+      const ids = combos.map((c) => env[`WHOP_PRODUCT_ID_${c}`]).filter(Boolean);
+      const urls = combos.map((c) => [c, env[`NEXT_PUBLIC_WHOP_URL_${c}`]]).filter(([, u]) => u);
+      if (!ids.length && !urls.length) return { pass: true };
+
+      const problems = [];
+      const dupes = [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))];
+      if (dupes.length) {
+        problems.push(`the same id is used for more than one plan/period (${dupes.join(', ')}) — monthly and yearly cannot be told apart`);
+      }
+      for (const [combo, url] of urls) {
+        let host = '';
+        try { host = new URL(url).hostname; } catch (_) { /* invalid URL */ }
+        if (host !== 'whop.com' && !host.endsWith('.whop.com')) {
+          problems.push(`NEXT_PUBLIC_WHOP_URL_${combo} is not a whop.com checkout link`);
+          continue;
+        }
+        const urlPlan = (url.match(/plan_[A-Za-z0-9]+/) || [])[0];
+        const envId = env[`WHOP_PRODUCT_ID_${combo}`] || '';
+        if (urlPlan && envId.startsWith('plan_') && envId !== urlPlan) {
+          problems.push(`NEXT_PUBLIC_WHOP_URL_${combo} sells ${urlPlan} but WHOP_PRODUCT_ID_${combo} is ${envId}`);
+        }
+      }
+      return problems.length ? { pass: false, message: problems.join('; ') } : { pass: true };
+    }
+  },
 };
 
 /**
@@ -293,12 +326,44 @@ const PLACEHOLDER_PATTERNS = [
   /^apik_placeholder/i,
   /default[-_]secret/i,
   /^test[-_]?(client|key|secret|id)$/i,
+  /your[-_]?(app|domain)/i,             // https://your-app.railway.app, noreply@your-domain.com, click.yourdomain.com
 ];
+
+// The .env.production template passed every check above with values like
+// prod_AbCdEfGh1234, https://whop.com/checkout/plan_IjKlMnOp, and an apik_ key and
+// ws_ secret spelled out as the alphabet in order — so preflight reported "not
+// placeholders" and the Whop API rejected the key as invalid. Real credentials
+// essentially never contain a 6-character ascending run, so after removing the
+// provider prefix, a run that long marks a template value.
+const PROVIDER_PREFIX = /^(apik|prod|plan|ws|whsec|sk|pk|rk|biz|user|mem|pay)_|^SG\./i;
+
+function longestAscendingRun(text) {
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < text.length; i++) {
+    const alnum = /[a-z0-9]/i.test(text[i]) && /[a-z0-9]/i.test(text[i - 1]);
+    // `| 32` lower-cases letters and leaves digits unchanged.
+    const step = (text.charCodeAt(i) | 32) === (text.charCodeAt(i - 1) | 32) + 1;
+    if (alnum && step) {
+      run += 1;
+      if (run > best) best = run;
+    } else {
+      run = 1;
+    }
+  }
+  return best;
+}
 
 function detectPlaceholder(value) {
   if (!value || typeof value !== 'string') return null;
   for (const pattern of PLACEHOLDER_PATTERNS) {
     if (pattern.test(value)) return pattern.toString();
+  }
+  for (const token of value.split(/[/:?&=#@.\s-]+/)) {
+    const body = token.replace(PROVIDER_PREFIX, '');
+    if (body.length >= 6 && longestAscendingRun(body) >= 6) {
+      return 'ascending character run (template value)';
+    }
   }
   return null;
 }
@@ -489,7 +554,7 @@ if (require.main === module) {
   verifyEnvironment();
 }
 
-module.exports = { verifyEnvironment, REQUIRED_VARS, RECOMMENDED_VARS, SECURITY_CHECKS };
+module.exports = { verifyEnvironment, REQUIRED_VARS, RECOMMENDED_VARS, SECURITY_CHECKS, detectPlaceholder };
 
 
 

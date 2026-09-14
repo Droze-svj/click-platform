@@ -36,6 +36,125 @@ function verifySignature(rawBody, signature, secret) {
   }
 }
 
+const WEBHOOK_TOLERANCE_SEC = 5 * 60;
+
+/**
+ * Verify an inbound Whop webhook request.
+ *
+ * Whop signs with the Standard Webhooks scheme: headers `webhook-id`,
+ * `webhook-timestamp` and `webhook-signature`; HMAC-SHA256 over
+ * `${webhook-id}.${webhook-timestamp}.${rawBody}`; header value `v1,<base64>`,
+ * possibly several space-separated values while a secret is being rotated. The
+ * HMAC key is the `ws_…` secret exactly as the Whop dashboard shows it — Whop's
+ * docs say the prefix must NOT be stripped. A `whsec_` secret is also accepted
+ * the Standard Webhooks way (base64-decode what follows the prefix).
+ *
+ * Click used to check only a hex HMAC of the body in an `x-whop-signature`
+ * header, which Whop does not send, so every real webhook was rejected with
+ * 401 and no purchase ever upgraded an account. That scheme is kept only as a
+ * fallback for anything still signing the old way.
+ *
+ * @returns {{ ok: boolean, scheme: 'standard'|'legacy'|null, reason?: string }}
+ */
+function verifyWebhookRequest(rawBody, headers = {}, secret, { now = Date.now(), toleranceSec = WEBHOOK_TOLERANCE_SEC } = {}) {
+  if (!secret) return { ok: false, scheme: null, reason: 'no-secret' };
+
+  const header = (name) => {
+    const v = headers[name] ?? headers[name.toLowerCase()];
+    return Array.isArray(v) ? v[0] : v;
+  };
+  const body = Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : String(rawBody ?? '');
+
+  const id = header('webhook-id');
+  const timestamp = header('webhook-timestamp');
+  const signatureHeader = header('webhook-signature');
+
+  if (id && timestamp && signatureHeader) {
+    const ts = Number(timestamp);
+    if (!Number.isFinite(ts)) return { ok: false, scheme: 'standard', reason: 'bad-timestamp' };
+    // Reject stale or future-dated deliveries so a captured request can't be replayed.
+    if (Math.abs(now / 1000 - ts) > toleranceSec) {
+      return { ok: false, scheme: 'standard', reason: 'timestamp-outside-tolerance' };
+    }
+
+    const keys = [Buffer.from(String(secret), 'utf8')];
+    if (/^whsec_/.test(String(secret))) keys.push(Buffer.from(String(secret).slice(6), 'base64'));
+
+    const signedContent = `${id}.${timestamp}.${body}`;
+    const expected = keys.map((key) => crypto.createHmac('sha256', key).update(signedContent).digest());
+    const provided = String(signatureHeader)
+      .split(' ')
+      .map((part) => part.trim())
+      .filter((part) => part.startsWith('v1,'))
+      .map((part) => Buffer.from(part.slice(3), 'base64'))
+      .filter((buf) => buf.length > 0);
+
+    for (const candidate of provided) {
+      for (const want of expected) {
+        if (candidate.length === want.length && crypto.timingSafeEqual(candidate, want)) {
+          return { ok: true, scheme: 'standard' };
+        }
+      }
+    }
+    return { ok: false, scheme: 'standard', reason: 'signature-mismatch' };
+  }
+
+  const legacySignature = header('x-whop-signature') || header('whop-signature');
+  if (legacySignature) {
+    return verifySignature(body, legacySignature, secret)
+      ? { ok: true, scheme: 'legacy' }
+      : { ok: false, scheme: 'legacy', reason: 'signature-mismatch' };
+  }
+
+  return { ok: false, scheme: null, reason: 'missing-signature-headers' };
+}
+
+// ── Whop payload accessors ───────────────────────────────────────────────────
+// Whop's current (v1) webhooks nest related records — data.plan.id,
+// data.product.id, data.user.{id,email} — where older payloads used flat
+// data.plan_id / product_id / user_id / email. Reading only the flat fields
+// meant a real v1 purchase matched no plan and no user and was silently
+// skipped. Each accessor reads the nested shape first, accepts a related record
+// given as a bare id string, and keeps the flat legacy field as a fallback.
+const idOf = (value) => (value && typeof value === 'object' ? value.id : value) || null;
+
+function planIdOf(event) {
+  const d = event?.data || {};
+  return idOf(d.plan) || d.plan_id || idOf(d.membership?.plan) || event?.plan_id || null;
+}
+
+function productIdOf(event) {
+  const d = event?.data || {};
+  return idOf(d.product) || idOf(d.access_pass) || d.product_id || idOf(d.membership?.product) || event?.product_id || null;
+}
+
+function whopUserOf(event) {
+  const d = event?.data || {};
+  const user = d.user && typeof d.user === 'object' ? d.user : {};
+  return {
+    id: user.id || (typeof d.user === 'string' ? d.user : null) || d.user_id || event?.user_id || null,
+    email: user.email || d.email || d.user_email || event?.email || null,
+  };
+}
+
+/**
+ * Normalise a Whop time value to a Date. Membership `renewal_period_end` is a
+ * Unix timestamp in SECONDS; `new Date(seconds)` would land in January 1970, so
+ * numbers below 1e12 are treated as seconds. ISO strings and millis also work.
+ */
+function toDate(raw) {
+  if (raw == null || raw === '') return null;
+  if (raw instanceof Date) return Number.isFinite(raw.getTime()) ? raw : null;
+  let ms;
+  if (typeof raw === 'number' || /^\d+(\.\d+)?$/.test(String(raw))) {
+    const n = Number(raw);
+    ms = n < 1e12 ? n * 1000 : n;
+  } else {
+    ms = Date.parse(raw);
+  }
+  return Number.isFinite(ms) ? new Date(ms) : null;
+}
+
 /**
  * Build the canonical map from Whop product IDs → { planId, period }.
  * Read at request time (not module-load) so env-var rotation works
@@ -52,8 +171,23 @@ function getProductMap() {
     ['agency', 'monthly', env.WHOP_PRODUCT_ID_AGENCY_MONTHLY],
     ['agency', 'yearly', env.WHOP_PRODUCT_ID_AGENCY_YEARLY],
   ];
+  // One id configured for two plan/periods — typically a product id pasted into
+  // both the MONTHLY and YEARLY slots — used to be silently overwritten by the
+  // later entry, so every monthly purchase was recorded as yearly. An ambiguous
+  // id is left out of the map; resolution then falls through to the plan id,
+  // metadata, names and price, which can still tell the periods apart.
+  const seen = new Map();
   for (const [planId, period, productId] of entries) {
-    if (productId) map[productId] = { planId, period };
+    if (!productId) continue;
+    seen.set(productId, seen.has(productId) ? null : { planId, period });
+  }
+  const ambiguous = [];
+  for (const [id, value] of seen) {
+    if (value) map[id] = value;
+    else ambiguous.push(id);
+  }
+  if (ambiguous.length) {
+    logger.warn('[whop] the same id is configured for more than one plan/period — ignoring it for plan mapping', { ids: ambiguous });
   }
   return map;
 }
@@ -72,34 +206,38 @@ function resolvePlanFromEvent(event, user = null) {
   const d = event?.data || {};
   const productMap = getProductMap();
 
-  const rawProductId =
-    d.product_id ||
-    d.plan_id ||
-    event?.product_id ||
-    event?.plan_id ||
-    null;
+  // Candidate ids, most specific first. A Whop PLAN id is unique to one price
+  // and billing period; a PRODUCT id is shared by that product's monthly and
+  // yearly plans. Matching the product first meant a two-plan product could
+  // never resolve both periods correctly.
+  const candidates = [planIdOf(event), productIdOf(event)].filter(Boolean);
 
   // 1. Direct match in configured product map
-  if (rawProductId && productMap[rawProductId]) {
-    return productMap[rawProductId];
+  for (const id of candidates) {
+    if (productMap[id]) return productMap[id];
   }
 
   const canonicalTiers = ['creator', 'pro', 'agency'];
 
   // 2. Direct canonical tier ID
-  if (rawProductId && canonicalTiers.includes(String(rawProductId).toLowerCase())) {
+  const canonical = candidates.find((id) => canonicalTiers.includes(String(id).toLowerCase()));
+  if (canonical) {
     const period = /year|annual/i.test(String(d.billing_period || d.period || '')) ? 'yearly' : 'monthly';
-    return { planId: String(rawProductId).toLowerCase(), period };
+    return { planId: String(canonical).toLowerCase(), period };
   }
 
-  // 3. Metadata fields
-  const meta = d.metadata || event?.metadata || {};
-  const metaPlan = meta.planId || meta.plan || meta.tier || meta.packageId || meta.product;
-  if (metaPlan) {
+  // 3. Metadata. Whop v1 carries metadata on the payment/membership AND on its
+  // plan and product. Tagging a Whop plan with click_plan / click_period is the
+  // most robust mapping of all: it travels with the plan and needs no env var.
+  const metas = [d.metadata, d.plan?.metadata, d.product?.metadata, d.membership?.metadata, event?.metadata]
+    .filter((m) => m && typeof m === 'object');
+  for (const meta of metas) {
+    const metaPlan = meta.click_plan || meta.planId || meta.plan || meta.tier || meta.packageId || meta.product;
+    if (!metaPlan) continue;
     const pStr = String(metaPlan).toLowerCase();
     for (const t of canonicalTiers) {
       if (pStr.includes(t)) {
-        const periodStr = String(meta.period || meta.billingCycle || d.billing_period || '').toLowerCase();
+        const periodStr = String(meta.click_period || meta.period || meta.billingCycle || d.billing_period || '').toLowerCase();
         const period = /year|annual/.test(periodStr) ? 'yearly' : 'monthly';
         return { planId: t, period };
       }
@@ -113,7 +251,9 @@ function resolvePlanFromEvent(event, user = null) {
     d.name,
     d.title,
     d.product?.name,
+    d.product?.title,
     d.plan?.name,
+    d.plan?.title,
     event?.product_name,
     event?.plan_name,
     d.description,
@@ -162,9 +302,10 @@ function resolvePlanFromEvent(event, user = null) {
  * then email match. Returns the user document or null.
  */
 async function resolveUser(event, User) {
+  const metas = [event?.data?.metadata, event?.metadata, event?.data?.membership?.metadata]
+    .filter((m) => m && typeof m === 'object');
   const passthrough =
-    event?.data?.metadata?.passthrough ||
-    event?.metadata?.passthrough ||
+    metas.map((m) => m.passthrough || m.click_user_id).find(Boolean) ||
     event?.data?.passthrough ||
     null;
 
@@ -173,15 +314,16 @@ async function resolveUser(event, User) {
     if (u) return u;
   }
 
-  const whopUserId = event?.data?.user_id || event?.user_id || null;
+  // Nested v1 `data.user.{id,email}` first, flat legacy fields as fallback.
+  // Reading only the flat fields meant every v1 event found no user.
+  const { id: whopUserId, email } = whopUserOf(event);
   if (whopUserId) {
     const u = await User.findOne({ whopUserId }).catch(() => null);
     if (u) return u;
   }
 
-  const email = event?.data?.email || event?.data?.user_email || event?.email || null;
   if (email) {
-    const u = await User.findOne({ email: email.toLowerCase().trim() }).catch(() => null);
+    const u = await User.findOne({ email: String(email).toLowerCase().trim() }).catch(() => null);
     if (u) return u;
   }
 
@@ -321,7 +463,8 @@ async function recordBillingHistory({ user, event, mapping, subId, stampTime }) 
  */
 async function processEvent(event, deps) {
   const { User } = deps;
-  const eventType = event?.action || event?.type || 'unknown';
+  // v1 payloads put the event name in `type`; older ones used `action`.
+  const eventType = event?.type || event?.action || 'unknown';
 
   const user = await resolveUser(event, User);
   if (!user) {
@@ -351,18 +494,17 @@ async function processEvent(event, deps) {
   }
   const stampTime = eventTime != null ? new Date(eventTime) : null;
 
-  const productId =
-    event?.data?.product_id ||
-    event?.data?.plan_id ||
-    event?.product_id ||
-    event?.plan_id ||
-    null;
+  const productId = planIdOf(event) || productIdOf(event);
   const subId = event?.data?.id || event?.data?.subscription_id || event?.id || null;
   const mapping = resolvePlanFromEvent(event, user);
 
   switch (eventType) {
+  // Whop v1 renamed went_valid → activated. Without the membership.activated
+  // cases a v1 membership activation hit `default` and was ignored.
   case 'payment.succeeded':
   case 'payment_succeeded':
+  case 'membership.activated':
+  case 'membership_activated':
   case 'membership.went_valid':
   case 'membership_went_valid':
   case 'subscription.created':
@@ -374,14 +516,12 @@ async function processEvent(event, deps) {
       // Still mark active so the user isn't locked out.
       user.subscription = user.subscription || {};
       user.subscription.status = 'active';
-      const amount = getEventAmount(event);
-      if (!user.subscription.plan || user.subscription.plan === 'free') {
-        if (amount && amount > 0) {
-          user.subscription.plan = 'pro'; // Generous fallback for paying customers
-        }
-      }
+      // No tier is invented here. This branch used to set plan='pro' for ANY
+      // unrecognised paid event, so buying an unrelated Whop product — the
+      // configured video-minutes add-on, say — granted Pro. An unmatched
+      // purchase leaves the plan unchanged and is logged above for review.
       if (subId) user.subscription.whopSubscriptionId = subId;
-      if (event?.data?.user_id && !user.whopUserId) user.whopUserId = event.data.user_id;
+      if (whopUserOf(event).id && !user.whopUserId) user.whopUserId = whopUserOf(event).id;
       if (stampTime) user.subscription.lastEventAt = stampTime;
       await user.save();
 
@@ -389,7 +529,7 @@ async function processEvent(event, deps) {
         await recordBillingHistory({
           user,
           event,
-          mapping: { planId: user.subscription.plan || 'pro', period: 'monthly' },
+          mapping: null,
           subId,
           stampTime,
         });
@@ -404,12 +544,16 @@ async function processEvent(event, deps) {
     user.subscription.status = 'active';
     user.subscription.startDate = user.subscription.startDate || new Date();
 
-    const periodEnd =
-      event?.data?.expires_at ||
-      event?.data?.current_period_end ||
-      event?.expires_at ||
-      event?.current_period_end ||
-      null;
+    // v1 memberships report the period end as `renewal_period_end` in Unix
+    // SECONDS; toDate() normalises that, ISO strings and millis alike.
+    const periodEnd = toDate(
+      event?.data?.renewal_period_end ??
+      event?.data?.expires_at ??
+      event?.data?.current_period_end ??
+      event?.expires_at ??
+      event?.current_period_end ??
+      null
+    );
     if (periodEnd) {
       user.subscription.endDate = new Date(periodEnd);
     } else {
@@ -423,7 +567,7 @@ async function processEvent(event, deps) {
     }
 
     if (subId) user.subscription.whopSubscriptionId = subId;
-    if (event?.data?.user_id && !user.whopUserId) user.whopUserId = event.data.user_id;
+    if (whopUserOf(event).id && !user.whopUserId) user.whopUserId = whopUserOf(event).id;
     if (stampTime) user.subscription.lastEventAt = stampTime;
     await user.save();
 
@@ -435,6 +579,10 @@ async function processEvent(event, deps) {
     return { ok: true, action: eventType, userId: user._id.toString(), plan: mapping.planId, period: mapping.period };
   }
 
+  // Whop v1 renamed went_invalid → deactivated. Without these cases a cancelled
+  // or expired membership was ignored and the customer kept their paid tier.
+  case 'membership.deactivated':
+  case 'membership_deactivated':
   case 'membership.went_invalid':
   case 'membership_went_invalid':
   case 'subscription.cancelled':
@@ -443,12 +591,16 @@ async function processEvent(event, deps) {
   case 'payment_failed': {
     user.subscription = user.subscription || {};
     user.subscription.status = 'cancelled';
-    const periodEnd =
-      event?.data?.expires_at ||
-      event?.data?.current_period_end ||
-      event?.expires_at ||
-      event?.current_period_end ||
-      null;
+    // v1 memberships report the period end as `renewal_period_end` in Unix
+    // SECONDS; toDate() normalises that, ISO strings and millis alike.
+    const periodEnd = toDate(
+      event?.data?.renewal_period_end ??
+      event?.data?.expires_at ??
+      event?.data?.current_period_end ??
+      event?.expires_at ??
+      event?.current_period_end ??
+      null
+    );
     if (periodEnd) {
       user.subscription.endDate = new Date(periodEnd);
     } else if (!user.subscription.endDate) {
@@ -464,7 +616,11 @@ async function processEvent(event, deps) {
   case 'dispute.created':
   case 'dispute_created': {
     user.subscription = user.subscription || {};
-    user.subscription.status = 'refunded';
+    // 'cancelled', not 'refunded': subscription.status is enum
+    // ['active','cancelled','expired','trial'], so 'refunded' failed validation
+    // on save — the handler threw, Whop got a 500, and the refunded customer
+    // kept their paid tier. The refund itself is recorded in BillingHistory.
+    user.subscription.status = 'cancelled';
     user.subscription.plan = 'free';
     user.subscription.endDate = new Date();
     if (stampTime) user.subscription.lastEventAt = stampTime;
@@ -532,6 +688,11 @@ async function processEvent(event, deps) {
 
 module.exports = {
   verifySignature,
+  verifyWebhookRequest,
+  planIdOf,
+  productIdOf,
+  whopUserOf,
+  toDate,
   getProductMap,
   resolvePlanFromEvent,
   resolveUser,
