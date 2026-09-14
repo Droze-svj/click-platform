@@ -33,6 +33,14 @@ export default function SocialProofWidget({ className }: { className?: string })
 
   if (!data || !data.available) return null
 
+  // `soc2` is a status CODE from /api/trust/social-proof, not display text — it is
+  // 'not-certified' today, because Click holds no SOC 2 certification. Never print
+  // the raw code to visitors; show the same "pending" wording the README uses, and
+  // pass through any other status the API reports.
+  const soc2Status = data.soc2 && data.soc2 !== 'not-certified'
+    ? data.soc2
+    : t('socialProofWidget.pending')
+
   return (
     <div
       role="region"
@@ -57,12 +65,17 @@ export default function SocialProofWidget({ className }: { className?: string })
         <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{t('socialProofWidget.postsPublished')}</p>
       </div>
       <div className="flex flex-col items-start gap-1">
-        <ShieldCheck size={16} className="text-emerald-500" />
+        {/* The shield was always green, even beside "unsigned" — a verified look
+            for an unverified state. It is only green when something is signed. */}
+        <ShieldCheck
+          size={16}
+          className={data.verifiedC2PA ? 'text-emerald-500' : 'text-[var(--text-muted)]'}
+        />
         <p className="text-sm font-bold text-[var(--text-main)]">
           {data.verifiedC2PA ? t('socialProofWidget.c2paSigned') : t('socialProofWidget.unsigned')}
         </p>
         <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
-          {t('socialProofWidget.soc2', { status: data.soc2 || t('socialProofWidget.pending') })}
+          {t('socialProofWidget.soc2', { status: soc2Status })}
         </p>
       </div>
     </div>
