@@ -50,6 +50,20 @@ describe('realignWordsToSegments', () => {
     expect(out.map((w) => w.word)).toContain('insane');
   });
 
+  it('does NOT keep a word that merely starts where the segment ends', () => {
+    // Real transcripts put each word's end exactly on the next word's start.
+    // An "any overlap" rule counted 'insane' (0.7–1.3) as inside a segment that
+    // ENDS at 0.7, so trimming the tail of a caption always kept the first word
+    // you deleted. Caught by the PUT route test, not by this file.
+    const out = realignWordsToSegments(WORDS, [{ start: 0, end: 0.7, text: 'this is' }]);
+    expect(out.map((w) => w.word)).toEqual(['this', 'is']);
+  });
+
+  it('does not keep a word that merely ends where the segment starts', () => {
+    const out = realignWordsToSegments(WORDS, [{ start: 1.3, end: 2.0, text: 'value' }]);
+    expect(out.map((w) => w.word)).toEqual(['value']);
+  });
+
   it('survives merging many segments into one', () => {
     const out = realignWordsToSegments(WORDS, [{ start: 0, end: 6, text: 'everything' }]);
     expect(out).toHaveLength(5);

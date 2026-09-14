@@ -16,6 +16,11 @@ const videoCaptionService = require('../../services/videoCaptionService');
 const captionStore = require('../../services/captionStore');
 const Content = require('../../models/Content');
 const { getUserIdFromReq } = require('../../utils/userId');
+// A malformed :contentId used to flow straight into Content.findOne, throw a
+// CastError, and surface as a 500 — a caller's typo reported as a server fault.
+// This answers 400 instead, and lets dev-mode ids ('dev-…') through.
+const { validateObjectId } = require('../../middleware/validateObjectId');
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
@@ -49,6 +54,10 @@ router.post('/generate', authenticate, upload.single('video'), async (req, res) 
 
     if (!contentId) {
       return sendError(res, 'Content ID is required', 400);
+    }
+    // Same guard as the :contentId routes, for the id that arrives in the body.
+    if (!String(contentId).startsWith('dev-') && !mongoose.Types.ObjectId.isValid(String(contentId))) {
+      return sendError(res, 'Invalid contentId', 400);
     }
 
     // Verify content belongs to user
@@ -111,7 +120,7 @@ router.post('/generate', authenticate, upload.single('video'), async (req, res) 
  * GET /api/video/captions/:contentId
  * Get captions for content
  */
-router.get('/:contentId', authenticate, async (req, res) => {
+router.get('/:contentId', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const { format = 'srt' } = req.query;
@@ -145,7 +154,7 @@ router.get('/:contentId', authenticate, async (req, res) => {
  * and the edits were silently lost. The source comment there even flagged the
  * uncertainty ("If your server uses a different verb/path, adjust here").
  */
-router.put('/:contentId', authenticate, async (req, res) => {
+router.put('/:contentId', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const { segments, language } = req.body;
@@ -217,7 +226,7 @@ router.put('/:contentId', authenticate, async (req, res) => {
  * POST /api/video/captions/:contentId/translate
  * Translate captions to another language
  */
-router.post('/:contentId/translate', authenticate, async (req, res) => {
+router.post('/:contentId/translate', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const { targetLanguage } = req.body;
@@ -272,7 +281,7 @@ router.post('/:contentId/translate', authenticate, async (req, res) => {
  * even at video caption" — front-end never has to know whether to call the
  * generate-then-translate flow; it just asks for captions in its language.
  */
-router.get('/:contentId/in-language', authenticate, async (req, res) => {
+router.get('/:contentId/in-language', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId (flip-set)
