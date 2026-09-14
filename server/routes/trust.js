@@ -36,7 +36,11 @@ router.get('/provenance/:contentId', async (req, res) => {
       });
     }
 
-    const authScore = doc?.authenticity?.authScore || 85;
+    // No invented default. `|| 85` handed every unscored asset a passing grade,
+    // which is the same class of fabrication the analytics purge removed.
+    const authScore = Number.isFinite(Number(doc?.authenticity?.authScore))
+      ? Number(doc.authenticity.authScore)
+      : null;
 
     res.json({
       success: true,
@@ -48,12 +52,15 @@ router.get('/provenance/:contentId', async (req, res) => {
         signedAt: block.signedAt || doc.updatedAt || null,
         actions: Array.isArray(block.actions) ? block.actions.slice(0, 8) : [],
         trainingMining: block.trainingMining || 'not-allowed',
-        
-        // ── Extended Provenance Integrity Badges ──
-        antiDeepfakeGrade: authScore >= 90 ? 'A+' : 'A',
+        // The real recorded score, or null — the UI shows "—" rather than a grade
+        // nobody computed.
         transparencyScore: authScore,
-        publicVerificationUrl: `https://verify.contentauthenticity.org/?url=${encodeURIComponent(`${process.env.APP_URL || 'https://clickapp.io'}/verify/${contentId}`)}`,
         aeoIndexed: !!doc?.aeo?.schemaMarkup,
+        // REMOVED — `antiDeepfakeGrade` was `authScore >= 90 ? 'A+' : 'A'`, so it
+        // could only ever return A or A+: a grade that never fails is not a grade.
+        // REMOVED — `publicVerificationUrl` pointed the C2PA verifier at
+        // `${APP_URL}/verify/:contentId`, a route that does not exist in the
+        // client, so every "verify this" link 404'd.
       },
     });
   } catch (err) {
@@ -68,14 +75,35 @@ router.get('/provenance/:contentId', async (req, res) => {
 // empty.
 router.get('/social-proof', async (_req, res) => {
   try {
-    let User = null, Content = null;
+    let User = null, Content = null, AuditMetadata = null;
     try { User = require('../models/User'); } catch (_) { /* optional */ }
     try { Content = require('../models/Content'); } catch (_) { /* optional */ }
+    try { AuditMetadata = require('../models/AuditMetadata'); } catch (_) { /* optional */ }
 
-    const [creators, posts] = await Promise.all([
+    const [creators, posts, signedAssets] = await Promise.all([
       User ? User.estimatedDocumentCount() : Promise.resolve(0),
       Content ? Content.estimatedDocumentCount() : Promise.resolve(0),
+      // `verifiedC2PA: true` used to be a hardcoded constant, so the ONE
+      // provenance claim a visitor sees was never derived from whether anything
+      // had actually been signed. Count the real signed manifests instead.
+      AuditMetadata
+        ? AuditMetadata.countDocuments({ 'authenticity.c2paBlock': { $exists: true, $ne: null } })
+        : Promise.resolve(0),
     ]);
+
+    // Certification status is NOT a marketing field. The project's own README
+    // records SOC 2 / ISO 27001 as pending, so publishing 'compliant' on a
+    // public trust page was a false compliance claim. GDPR data export/delete
+    // genuinely ship, so that one is reported as supported (a capability), not
+    // as a certification.
+    const posture = {
+      soc2: 'not-certified',
+      iso27001: 'not-certified',
+      gdpr: 'supported',
+      encryptionStatus: 'AES-256',
+      verifiedC2PA: (signedAssets || 0) > 0,
+      signedAssets: signedAssets || 0,
+    };
 
     const MIN_TO_SHOW = 25;
     if ((creators || 0) < MIN_TO_SHOW) {
@@ -86,11 +114,7 @@ router.get('/social-proof', async (_req, res) => {
           isSeeded: true,
           creators: creators || 0,
           publishedPosts: posts || 0,
-          verifiedC2PA: true,
-          soc2: 'compliant',
-          iso27001: 'compliant',
-          gdpr: 'compliant',
-          encryptionStatus: 'AES-256',
+          ...posture,
         }
       });
     }
@@ -101,11 +125,7 @@ router.get('/social-proof', async (_req, res) => {
         available: true,
         creators,
         publishedPosts: posts || 0,
-        verifiedC2PA: true,
-        soc2: 'compliant',
-        iso27001: 'compliant',
-        gdpr: 'compliant',
-        encryptionStatus: 'AES-256'
+        ...posture,
       },
     });
   } catch (err) {
