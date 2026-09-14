@@ -67,10 +67,14 @@ which is intact and still covered by a fidelity test.
   plan (`Content.generatedContent.clipPlan`) and shows the real score breakdown, but
   acting on a clip needs both pieces built. `autoClipService`'s old header claim that
   the render "reuses the existing pipeline on demand" described a handoff that never existed.
-- **The json2video word parser is written against an inferred override syntax**
-  (`{\rStyle}word{\r}`), not a captured live response. It fails safe — no markers →
-  `[]` → the old even-split estimate, now tagged `timingSource: 'estimated'` — but
-  capture a real json2video ASS file and add it as a fixture before trusting it.
+- **json2video word parsing — verified against a real capture (2026-09-14).**
+  `tests/fixtures/json2video-karaoke.ass` is a live API response for a short spoken
+  clip. It confirms the override is `{\rWord}word{\r}` and the timings are measured.
+  It also exposed a pre-existing bug: `assTimeToSeconds` padded an unpadded
+  centisecond field on the RIGHT, reading "0:00:00.8" (0.08s) as 0.80s. That dropped
+  each phrase's first word and started segments up to 0.72s late. Fixed, and pinned
+  by that fixture. A file with no karaoke markers still falls back to the even-split
+  estimate, tagged `timingSource: 'estimated'`.
 - **Preview parity is style-level, not pixel-level.** The browser still lays out text
   with CSS; libass lays it out with FreeType. Colours, case, highlight and pop now
   agree; exact wrap points and glyph metrics can still differ.

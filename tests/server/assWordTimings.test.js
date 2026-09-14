@@ -90,3 +90,52 @@ describe('parseAssToWords', () => {
     expect(segments[0].text).toBe("Know what's so crazy,");
   });
 });
+
+// The synthetic fixture above uses two-digit centiseconds, so it could never
+// exercise the case that actually broke. This file is a REAL json2video karaoke
+// response, captured from the live API for a short spoken clip. It is the only
+// test here that proves the parser against the provider rather than against a
+// guess about the provider.
+describe('against a REAL json2video karaoke response', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const { assTimeToSeconds } = _internal;
+  const REAL = fs.readFileSync(path.join(__dirname, '../fixtures/json2video-karaoke.ass'), 'utf8');
+
+  it('reads an unpadded centisecond field as centiseconds (0.8 → 0.08s, not 0.80s)', () => {
+    expect(assTimeToSeconds('0:00:00.8')).toBe(0.08);
+    expect(assTimeToSeconds('0:00:00.32')).toBe(0.32);
+    expect(assTimeToSeconds('0:00:01.5')).toBe(1.05);
+  });
+
+  it('recovers EVERY spoken word — including the first, which the padding bug dropped', () => {
+    const words = parseAssToWords(REAL);
+    expect(words.map((w) => w.word)).toEqual(
+      ['Know', "what's", 'so', 'crazy?', 'This', 'actually', 'worked', 'for', 'me'],
+    );
+    expect(words[0]).toMatchObject({ word: 'Know', start: 0.08, end: 0.32 });
+  });
+
+  it('never produces a timing that runs backwards or overlaps the next word', () => {
+    const words = parseAssToWords(REAL);
+    for (let i = 0; i < words.length; i++) {
+      expect(words[i].end).toBeGreaterThan(words[i].start);
+      if (i > 0) expect(words[i].start).toBeGreaterThanOrEqual(words[i - 1].end);
+    }
+  });
+
+  it('reports clean two-decimal times, without IEEE-754 noise', () => {
+    const words = parseAssToWords(REAL);
+    const thisWord = words.find((w) => w.word === 'This');
+    expect(thisWord).toMatchObject({ start: 1.56, end: 1.82 });
+  });
+
+  it('segments begin when speech actually begins', () => {
+    // With the bug, the first phrase started at 0.32s — the second word — because
+    // the first row's start was misread as 0.80s.
+    const segments = parseAssToSegments(REAL);
+    expect(segments).toHaveLength(2);
+    expect(segments[0]).toMatchObject({ start: 0.08, end: 1.21, text: "Know what's so crazy?" });
+    expect(segments[1].text).toBe('This actually worked for me');
+  });
+});

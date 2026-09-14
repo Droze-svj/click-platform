@@ -148,8 +148,17 @@ function assTimeToSeconds(t) {
   const m = s.match(/^(\d+):(\d+):(\d+)(?:\.(\d{1,3}))?$/);
   if (m) {
     const [, h, mm, ss, cs] = m;
-    const csPadded = cs ? cs.padEnd(2, '0').slice(0, 2) : '0';
-    return Number(h) * 3600 + Number(mm) * 60 + Number(ss) + Number(csPadded) / 100;
+    // Pad on the LEFT. json2video writes centiseconds below 10 without zero
+    // padding, so "0:00:00.8" is 8cs = 0.08s. This used to be padEnd, which
+    // turned "8" into "80" = 0.80s — precisely the misreading described above.
+    // Found by capturing a REAL json2video response
+    // (tests/fixtures/json2video-karaoke.ass): the first word's start landed
+    // AFTER its own end, so parseAssToWords discarded it, and any segment that
+    // began on a single-digit centisecond started up to 0.72s late.
+    const csPadded = cs ? cs.padStart(2, '0').slice(0, 2) : '0';
+    const total = Number(h) * 3600 + Number(mm) * 60 + Number(ss) + Number(csPadded) / 100;
+    // Round away float noise: 1 + 82/100 is 1.8199999999999998 in IEEE-754.
+    return Math.round(total * 100) / 100;
   }
   // Fallback for malformed inputs — match historical behaviour
   const parts = s.split(':');
