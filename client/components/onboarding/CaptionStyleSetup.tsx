@@ -18,7 +18,7 @@ import { PLATFORM_OPTIONS } from '../../lib/nicheCatalog'
 import { CAPTION_TEXT_STYLES, type CaptionTextStyle } from '../../types/editor'
 import { resolveCaptionTextStyle } from '../../utils/captionStyler'
 import { saveEditorContentPreferences } from '../../utils/editorUtils'
-import { apiPut } from '../../lib/api'
+import { apiPost, apiPut } from '../../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 
 // Matches ResizableTimeline's persisted Snap-to-Speech key so this toggle sets
@@ -61,6 +61,15 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
       // and because the call is deliberately best-effort the failure was
       // swallowed, so the chosen platform focus was never saved.
       if (platforms.length) await apiPut('/niche/personalize', { platformFocus: platforms })
+    } catch { /* non-blocking */ }
+    // Train the style profile with the chosen look. Without this the pick only
+    // ever reached localStorage, so the very step that asks a creator to choose
+    // a caption style taught the profile nothing — and caption defaults, the AI
+    // prompts, and the editor's "top styles" rail all stayed generic.
+    try {
+      await apiPost('/me/personalization/record', {
+        choices: [{ facet: 'captionStyles', key: style }],
+      })
     } catch { /* non-blocking */ }
     setSaving(false)
     if (onComplete) onComplete()

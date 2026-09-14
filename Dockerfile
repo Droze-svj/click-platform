@@ -43,9 +43,15 @@ WORKDIR /app
 #                    captions render as tofu boxes. Installs NotoSansCJK-Regular.ttc
 #                    at the exact path server/utils/scriptFont.js already probes.
 # fonts-noto-core  = Arabic/Thai/Devanagari coverage for the same registry.
-# fontconfig       = needed for `fontfile=` resolution in drawtext.
+# fonts-noto-color-emoji = colour emoji. WITHOUT IT every emoji is silently
+#                    dropped from exports: getEmojiFontPath() finds no font and
+#                    the renderer honestly omits them. The ASS caption engine
+#                    renders emoji INLINE, which needs this font present.
+# (Montserrat is NOT an apt package on bookworm — see the pinned download below.)
+# fontconfig       = needed for `fontfile=` resolution in drawtext AND for
+#                    libass to resolve a Style's `Fontname` by family.
 # libfreetype6     = freetype rendering for caption overlays.
-# libass9          = subtitle rendering (ASS/SSA) used by exports.
+# libass9          = subtitle rendering (ASS/SSA) — the caption burn-in engine.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg \
       python3 \
@@ -61,12 +67,35 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       fonts-liberation \
       fonts-noto-cjk \
       fonts-noto-core \
+      fonts-noto-color-emoji \
       fontconfig \
       libfreetype6 \
       libass9 \
       ca-certificates \
       curl \
    && rm -rf /var/lib/apt/lists/*
+
+# Montserrat — the display family captionStyleRegistry names for the creator
+# styles (hormozi, karaoke-fill, neon, sticker, cyberpunk). Debian bookworm does
+# NOT package it: `fonts-montserrat` only exists from trixie on, and asking apt for
+# it here fails the entire image build (and therefore the deploy). It is fetched
+# from the upstream v7.222 release tag — the version trixie packages — and each
+# file is pinned by SHA-256, so a changed or substituted file fails the build
+# instead of shipping. SIL Open Font License.
+RUN set -e; \
+    dir=/usr/share/fonts/truetype/montserrat; mkdir -p "$dir"; \
+    base=https://github.com/JulietaUla/Montserrat/raw/v7.222/fonts/ttf; \
+    for spec in \
+      "Bold 4e6d93bc38122c371acb8dc0dbefbf2649c235191e1be136bb5720546d719808" \
+      "ExtraBold 1b364c3400bf7b1cc2c47a25dd0d3edd8331da451412aa5539080f78f8f70b63" \
+      "Black b404ed39088fcb3f8d2ced8164f7a625dfae2ad43bf4a055b55a84d95038d50d"; do \
+      set -- $spec; \
+      curl -fsSL "$base/Montserrat-$1.ttf" -o "$dir/Montserrat-$1.ttf"; \
+      echo "$2  $dir/Montserrat-$1.ttf" | sha256sum -c -; \
+    done; \
+    fc-cache -f "$dir" >/dev/null; \
+    fc-list : family | grep -qi montserrat \
+      || { echo "FATAL: Montserrat is not visible to fontconfig"; exit 1; }
 
 # yt-dlp is what server/routes/ingest.js shells out to for YouTube /
 # TikTok / IG / Vimeo URL imports. Install via pip (not apt) because the
@@ -91,8 +120,27 @@ RUN curl -L https://github.com/contentauth/c2patool/releases/download/v0.9.12/c2
 
 # Verify ffmpeg has the filters Click depends on. Fail the image build if a
 # filter is missing — this turns a runtime 500 into a clear deploy-time error.
-RUN ffmpeg -hide_banner -filters 2>&1 | grep -E "drawtext|drawbox|boxblur|setpts|scale" >/dev/null \
-   || (echo "FATAL: ffmpeg in this image is missing required filters" && exit 1)
+#
+# NOTE: this used to be a single `grep -E "a|b|c"`, which is an OR — it passed as
+# long as ANY ONE filter existed, so it never actually proved the set was
+# present. Each filter is now checked individually, and `ass` is included because
+# the caption engine burns captions in through libass; an image without it would
+# silently export a video with NO captions at all.
+#
+# The failure branch MUST be a `{ …; exit 1; }` brace group, not `( … && exit 1)`:
+# inside a loop, a subshell's `exit` only ends the subshell, the loop carries on,
+# and the step's status becomes that of the LAST filter checked — so with
+# `subtitles` last, a missing `ass` or `drawtext` would still pass the build.
+RUN for f in drawtext drawbox boxblur setpts scale ass subtitles; do \
+      ffmpeg -hide_banner -filters 2>&1 | grep -qE "^[ .TSC]* ${f} " \
+        || { echo "FATAL: ffmpeg in this image is missing the '${f}' filter"; exit 1; }; \
+    done \
+ && echo "ffmpeg filter check passed (incl. libass)"
+
+# Verify a colour emoji font resolved — captions render emoji inline and a silent
+# substitution here is invisible until a user's export is missing them.
+RUN fc-list | grep -qi "emoji" \
+   || (echo "FATAL: no colour emoji font found (fonts-noto-color-emoji)" && exit 1)
 
 # Server deps — production-only.
 COPY package*.json ./

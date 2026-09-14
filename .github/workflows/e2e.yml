@@ -3,8 +3,9 @@ name: E2E Tests
 on:
   push:
     branches: [ main, develop ]
+  # Every pull request, whatever its base — see the note in ci.yml. Limiting this
+  # to main/develop meant PRs stacked on feature branches never ran the E2E gate.
   pull_request:
-    branches: [ main, develop ]
   workflow_dispatch:
 
 jobs:
@@ -50,9 +51,11 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
+      # Retried once — a transient `canvas` prebuilt download failure otherwise
+      # fails the job. See the note in ci.yml.
       run: |
-        npm ci
-        cd client && npm ci
+        npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
+        cd client && { npm ci || { echo "::warning::client npm ci failed; retrying once"; sleep 15; npm ci; }; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate

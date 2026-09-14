@@ -1509,8 +1509,34 @@ async function renderFromEditorState(options) {
   // before ALL shapes, so a shape the user placed behind text rendered on top
   // (and vice versa). Merge both kinds and stable-sort by layer/zIndex so the
   // export matches the editor's stacking (equal layers keep insertion order).
+  // ── Caption engine split ──────────────────────────────────────────────────
+  // Caption overlays (word-timed / karaoke / preset-styled) are burned in via
+  // libass by assCaptionRenderer instead of drawtext. drawtext cannot animate
+  // fontsize without crashing ffmpeg (see buildTextAnimation's safety note), so
+  // every scale/pop reveal silently became a fade, and its word mode could only
+  // show ONE WORD AT A TIME. libass does all of it, with real font metrics and
+  // inline emoji, in a single filter.
+  //
+  // PLAIN text overlays keep the drawtext path — they are positioned/keyframed
+  // by the editor and have no caption semantics.
+  //
+  // Rollback: CAPTION_ENGINE=drawtext sends captions back through drawtext
+  // exactly as before (buildWordByWordFilter and CAPTION_STYLE_MAP are intact).
+  const captionEngine = String(process.env.CAPTION_ENGINE || 'ass').toLowerCase()
+  const isCaptionOverlay = (o) => !!o && (
+    o.captionMode === 'word'
+    || o.karaoke === true
+    || (Array.isArray(o.words) && o.words.length > 0)
+    || !!o.captionPreset
+  )
+  const useAssCaptions = captionEngine === 'ass' && (textOverlays || []).some(isCaptionOverlay)
+  const assCaptionOverlays = useAssCaptions ? (textOverlays || []).filter(isCaptionOverlay) : []
+  const drawtextOverlays = useAssCaptions
+    ? (textOverlays || []).filter((o) => !isCaptionOverlay(o))
+    : (textOverlays || [])
+
   const _drawnOverlays = []
-  ; (textOverlays || []).forEach((o) => {
+  ; (drawtextOverlays || []).forEach((o) => {
     try {
       _drawnOverlays.push({ layer: Number(o.layer ?? o.zIndex ?? 0) || 0, f: buildDrawTextFilter(o, { width, height }) })
     } catch (e) {
@@ -1643,7 +1669,50 @@ async function renderFromEditorState(options) {
   // order matches the editor. ──
   const MAX_OVERLAYS = 30
   const tmpRenderDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vrender-'))
-  const tmpFiles = [] // temp PNGs to clean up post-render
+  const tmpFiles = [] // temp PNGs + the ASS caption file, cleaned up post-render
+
+  // ── ASS caption burn-in ───────────────────────────────────────────────────
+  // Build the subtitle file INTO the render's own temp dir and register it in
+  // tmpFiles, so the existing cleanupTmp() deletes it on every exit path. No
+  // .ass is ever left behind, and never in the project root.
+  //
+  // `exportOptions.subtitlePath` is still honoured when a caller passes one
+  // explicitly — this only fills it in when captions need burning and nobody
+  // supplied a file.
+  let assSubtitlePath = exportOptions.subtitlePath || null
+  if (assCaptionOverlays.length) {
+    try {
+      const { renderCaptionsToAss } = require('./assCaptionRenderer')
+      const styleId = exportOptions.captionStyle
+        || (assCaptionOverlays.find((o) => o.captionPreset) || {}).captionPreset
+        || 'default'
+      const built = renderCaptionsToAss({
+        captions: assCaptionOverlays.map((o) => ({
+          text: o.text,
+          start: Number(o.startTime ?? 0),
+          end: Number(o.endTime ?? (Number(o.startTime ?? 0) + 3)),
+          words: o.words,
+          highlightWords: o.highlightWords,
+        })),
+        styleId,
+        frame: { width, height },
+        tmpDir: tmpRenderDir,
+      })
+      if (built) {
+        assSubtitlePath = built.path
+        tmpFiles.push(built.path)
+        logger.info('[render] burning captions via libass', {
+          styleId, overlays: assCaptionOverlays.length,
+        })
+      }
+    } catch (e) {
+      // A caption-file failure must never kill the export. Losing the captions
+      // is recoverable; losing the whole render is not.
+      logger.warn('[render] ASS caption build failed — exporting without burned-in captions', {
+        error: e.message,
+      })
+    }
+  }
   /** @type {{kind:string, source:string, spec:object, layer:number}[]} */
   const overlayInputs = []
 
@@ -1772,12 +1841,15 @@ async function renderFromEditorState(options) {
 
       const finalFilterList = [...allVideoFilters, ...enhancementFilters]
     
-      // 🌍 Phase 15: Global Subtitle Burn-in
-      if (exportOptions.subtitlePath && fs.existsSync(exportOptions.subtitlePath)) {
-        logger.info('Injecting Neural Subtitles', { path: exportOptions.subtitlePath });
+      // ── Caption / subtitle burn-in (libass) ──
+      // Either the ASS file assCaptionRenderer just built for this render, or a
+      // subtitle file the caller passed explicitly. Appended AFTER the overlay
+      // filters so captions draw on top of them, matching the editor's z-order.
+      if (assSubtitlePath && fs.existsSync(assSubtitlePath)) {
+        logger.info('Injecting burned-in captions', { path: assSubtitlePath });
         // Escape the path as an unquoted filtergraph value (covers \ ' : [ ] , ;)
         // so nothing in it can break out of / inject into the graph.
-        finalFilterList.push(`ass=${escapeFilterValue(exportOptions.subtitlePath)}`);
+        finalFilterList.push(`ass=${escapeFilterValue(assSubtitlePath)}`);
       }
 
       // 🎬 Phase 16: Cinematic Film Grain (2026 Hollywood Standard)

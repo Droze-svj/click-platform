@@ -158,6 +158,18 @@ const contentSchema = new mongoose.Schema({
     editorState: {
       type: mongoose.Schema.Types.Mixed,
       default: null
+    },
+    // The ranked auto-clip plan (buildClipPlan output). It used to exist only in
+    // the HTTP response, so navigating away lost it and returning paid for a
+    // whole new Gemini pass to rebuild an identical ranking.
+    //
+    // Mixed on purpose: the clip shape is owned by buildClipPlan, not by this
+    // schema. A strict subdocument here would silently DROP new fields such as
+    // `scoreBreakdown` — the exact failure mode the editorState note above
+    // records, where a non-existent field made the autosave a no-op for months.
+    clipPlan: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
     }
   },
   analytics: {

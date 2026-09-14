@@ -101,7 +101,7 @@ async function generateTranscript(videoFilePath, language = null) {
  */
 async function generateCaptionsForContent(contentId, videoFilePath, options = {}) {
   try {
-    const { language, format = 'srt' } = options;
+    const { language, format = 'srt', userId } = options;
 
     // Cache the (expensive) transcript by contentId+language so re-captioning
     // — e.g. requesting a different output format — never re-runs Whisper.
@@ -132,6 +132,24 @@ async function generateCaptionsForContent(contentId, videoFilePath, options = {}
 
     logger.info('Captions saved to content', { contentId, format, language: transcript.language });
 
+    // Default the caption LOOK to what this creator actually picks. This service
+    // never received a user identity, so every creator's captions came back
+    // styled identically no matter how many times they had chosen otherwise.
+    // Null when nothing has been learned yet — the caller then keeps its own
+    // default rather than being handed an invented preference.
+    let suggestedStyleId = null;
+    if (userId) {
+      try {
+        const personalizationService = require('./personalizationService');
+        const { preferredStyleFrom } = require('./captionStyleRegistry');
+        const persona = await personalizationService.getPersona(userId);
+        suggestedStyleId = preferredStyleFrom(persona?.styleProfile?.captionStyles);
+      } catch (err) {
+        // Personalization is an enhancement; never fail caption generation for it.
+        logger.warn('[captions] could not resolve a preferred caption style', { error: err.message });
+      }
+    }
+
     return {
       contentId,
       transcript: transcript.text,
@@ -141,6 +159,7 @@ async function generateCaptionsForContent(contentId, videoFilePath, options = {}
       segments: transcript.segments,
       // Surface word-level timing so the client can one-click "snap to speech".
       words: transcript.words || [],
+      suggestedStyleId,
     };
   } catch (error) {
     logger.error('Error generating captions for content', {
@@ -652,6 +671,12 @@ async function getCaptions(contentId, format = 'srt') {
       throw new Error('Captions not generated for this content');
     }
 
+    // `words` MUST be returned. Word timings are what drive karaoke captions,
+    // and omitting them here meant the editor always read an empty array and
+    // re-POSTed /generate (a fresh paid transcription) on every open, just to
+    // get back data this read already had.
+    const words = Array.isArray(src.words) ? src.words : [];
+
     // Return formatted captions in requested format
     if (format && src.format !== format) {
       // Re-format if different format requested
@@ -666,6 +691,8 @@ async function getCaptions(contentId, format = 'srt') {
           },
           format
         ),
+        segments: src.segments,
+        words,
       };
     }
 
@@ -675,6 +702,7 @@ async function getCaptions(contentId, format = 'srt') {
       format: src.format,
       captions: src.formatted,
       segments: src.segments,
+      words,
     };
   } catch (error) {
     logger.error('Error getting captions', { contentId, error: error.message });

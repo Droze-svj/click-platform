@@ -148,8 +148,17 @@ function assTimeToSeconds(t) {
   const m = s.match(/^(\d+):(\d+):(\d+)(?:\.(\d{1,3}))?$/);
   if (m) {
     const [, h, mm, ss, cs] = m;
-    const csPadded = cs ? cs.padEnd(2, '0').slice(0, 2) : '0';
-    return Number(h) * 3600 + Number(mm) * 60 + Number(ss) + Number(csPadded) / 100;
+    // Pad on the LEFT. json2video writes centiseconds below 10 without zero
+    // padding, so "0:00:00.8" is 8cs = 0.08s. This used to be padEnd, which
+    // turned "8" into "80" = 0.80s — precisely the misreading described above.
+    // Found by capturing a REAL json2video response
+    // (tests/fixtures/json2video-karaoke.ass): the first word's start landed
+    // AFTER its own end, so parseAssToWords discarded it, and any segment that
+    // began on a single-digit centisecond started up to 0.72s late.
+    const csPadded = cs ? cs.padStart(2, '0').slice(0, 2) : '0';
+    const total = Number(h) * 3600 + Number(mm) * 60 + Number(ss) + Number(csPadded) / 100;
+    // Round away float noise: 1 + 82/100 is 1.8199999999999998 in IEEE-754.
+    return Math.round(total * 100) / 100;
   }
   // Fallback for malformed inputs — match historical behaviour
   const parts = s.split(':');
@@ -240,6 +249,73 @@ function parseAssToSegments(assText) {
   return merged;
 }
 
+/**
+ * Extract PER-WORD timings from json2video's karaoke ASS.
+ *
+ * json2video emits karaoke as the same phrase repeated once per word, with the
+ * currently-spoken word wrapped in a style-reset override (`{\rStyle}word{\r}`).
+ * Those boundaries are MEASURED — and `parseAssToSegments` deliberately dedupes
+ * them away to recover phrases, after which `synthesizeWords` re-invents word
+ * timings by dividing each segment evenly. That estimate is what makes
+ * word-by-word captions look out of sync, so keep the real thing when it's there.
+ *
+ * The override spelling is inferred from the format this file already documents,
+ * and cannot be verified against the live API here. It is therefore written to
+ * fail SAFE: a file with no recognisable karaoke markers yields `[]`, and the
+ * caller falls back to the existing estimate. This can improve sync, never break it.
+ */
+function parseAssToWords(assText) {
+  const lines = String(assText || '').split(/\r?\n/);
+  let inEvents = false;
+  let format = null;
+  const raw = [];
+
+  for (const line of lines) {
+    if (line.startsWith('[Events]')) { inEvents = true; continue; }
+    if (line.startsWith('[') && inEvents) { inEvents = false; continue; }
+    if (!inEvents) continue;
+    if (line.startsWith('Format:')) {
+      format = line.slice(7).split(',').map((k) => k.trim().toLowerCase());
+      continue;
+    }
+    if (!line.startsWith('Dialogue:') || !format) continue;
+
+    const textIdx = format.indexOf('text');
+    const startIdx = format.indexOf('start');
+    const endIdx = format.indexOf('end');
+    if (textIdx < 0 || startIdx < 0 || endIdx < 0) continue;
+
+    const cols = line.slice(9).split(',');
+    const head = cols.slice(0, textIdx);
+    // Text may itself contain commas — rejoin everything from the text column on.
+    const text = cols.slice(textIdx).join(',');
+
+    // The active word sits between a style override and the following reset.
+    const m = text.match(/\{\\r[^}\\]*\}([^{}]+)\{\\r\}/);
+    if (!m) continue;
+    const word = m[1].replace(/\\[Nh]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!word) continue;
+
+    const start = assTimeToSeconds(head[startIdx]);
+    const end = assTimeToSeconds(head[endIdx]);
+    if (!(end > start)) continue;
+    raw.push({ word, start, end });
+  }
+
+  // Defensive: collapse consecutive rows that name the same word at the same
+  // instant (a repeated highlight frame) into one span.
+  const out = [];
+  for (const w of raw) {
+    const tail = out[out.length - 1];
+    if (tail && tail.word === w.word && Math.abs(tail.start - w.start) < 0.001) {
+      tail.end = Math.max(tail.end, w.end);
+      continue;
+    }
+    out.push(w);
+  }
+  return out;
+}
+
 async function json2videoUploadAudio(audioPath) {
   const apiKey = process.env.JSON2VIDEO_API_KEY;
   if (!apiKey) throw new Error('JSON2VIDEO_API_KEY not configured');
@@ -321,13 +397,18 @@ async function transcribeViaJson2Video(videoPath, opts = {}) {
       // Render finished but no subtitles file — usually means the audio
       // had no detectable speech. Return an empty transcript instead of
       // erroring so the caller's UI shows "no captions" cleanly.
-      return { language: opts.language && opts.language !== 'auto' ? opts.language : 'en', segments: [] };
+      return { language: opts.language && opts.language !== 'auto' ? opts.language : 'en', segments: [], words: [] };
     }
     const assResp = await axios.get(movie.ass, { responseType: 'text', timeout: 30_000 });
     const segments = parseAssToSegments(assResp.data);
+    // Real, measured word boundaries from the same file the segments come from.
+    // Empty when the provider sent no karaoke markers — the caller then falls
+    // back to an estimate rather than losing the transcript.
+    const words = parseAssToWords(assResp.data);
     return {
       language: opts.language && opts.language !== 'auto' ? opts.language : 'en',
       segments,
+      words,
     };
   } finally {
     if (audioPath) { try { fs.unlinkSync(audioPath); } catch (_) { /* best effort */ } }
@@ -469,17 +550,27 @@ async function transcribeVideo(userId, videoId, videoPath, opts = {}) {
   for (const p of providers) {
     try {
       const t0 = Date.now();
-      const { language: detectedLanguage, segments } = await p.fn(fullPath, opts);
+      const { language: detectedLanguage, segments, words: providerWords } = await p.fn(fullPath, opts);
       const fullText = (segments || []).map((s) => s.text).filter(Boolean).join(' ').trim();
-      const words = synthesizeWords(segments || []).map(enrichWord);
+
+      // Prefer MEASURED word boundaries when the provider supplied them.
+      // synthesizeWords divides each segment evenly across its words, which is
+      // fine for a static caption but reads as visibly out-of-sync the moment
+      // captions are rendered word-by-word. `timingSource` is carried out so
+      // callers can be honest about which one they got.
+      const hasMeasuredWords = Array.isArray(providerWords) && providerWords.length > 0;
+      const words = (hasMeasuredWords ? providerWords : synthesizeWords(segments || [])).map(enrichWord);
+      const timingSource = hasMeasuredWords ? 'measured' : 'estimated';
+
       logger.info('Transcription succeeded', {
         videoId, provider: p.name, segments: segments?.length || 0,
-        chars: fullText.length, ms: Date.now() - t0,
+        chars: fullText.length, words: words.length, timingSource, ms: Date.now() - t0,
       });
       return {
         success: true,
         text: fullText,
         words,
+        timingSource,
         language: detectedLanguage || (language === 'auto' ? 'en' : language),
         provider: p.name,
       };
@@ -506,5 +597,5 @@ module.exports = {
   transcribeVideo,
   isTranscriptionConfigured,
   // Exported for unit testing only
-  _internal: { parseAssToSegments, assTimeToSeconds, synthesizeWords },
+  _internal: { parseAssToSegments, parseAssToWords, assTimeToSeconds, synthesizeWords },
 };

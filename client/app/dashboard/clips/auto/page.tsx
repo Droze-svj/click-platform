@@ -38,6 +38,13 @@ interface Clip {
   endTime?: number
   durationSec?: number
   viralityScore?: number
+  /**
+   * The three real contributions the virality score is made of. The backend
+   * computed these and discarded them, so a clip could only ever show a bare
+   * number. They are raw contributions to a 100-point total — the score is
+   * their sum, rounded and clamped, so they may not re-add to it exactly.
+   */
+  scoreBreakdown?: { hook?: number; peak?: number; trigger?: number }
   hook?: string
   triggerType?: string
   reason?: string
@@ -319,6 +326,36 @@ export default function AutoClipsPage() {
                 {/* Reason */}
                 {clip.reason && (
                   <p className="mt-2 text-sm text-theme-muted leading-relaxed">{clip.reason}</p>
+                )}
+
+                {/* Why it scored — the real contributions, not a synthesised
+                    explanation. Each bar is that part's share of the 100-point
+                    total, so a clip carried by its hook reads differently from
+                    one carried by an in-window reaction. */}
+                {clip.scoreBreakdown && (
+                  <div className="mt-3 space-y-1.5" aria-label="Score breakdown">
+                    {([
+                      ['Hook', clip.scoreBreakdown.hook],
+                      ['Peak', clip.scoreBreakdown.peak],
+                      ['Trigger', clip.scoreBreakdown.trigger],
+                    ] as [string, number | undefined][]).map(([label, value]) => {
+                      const v = typeof value === 'number' && isFinite(value) ? value : 0
+                      return (
+                        <div key={label} className="flex items-center gap-2">
+                          <span className="ds-text-caption text-theme-muted w-14 shrink-0">{label}</span>
+                          <span className="h-1.5 flex-1 rounded-full ds-surface-subtle overflow-hidden">
+                            <span
+                              className="block h-full rounded-full bg-primary/60"
+                              style={{ width: `${Math.min(100, Math.max(0, v))}%` }}
+                            />
+                          </span>
+                          <span className="ds-text-caption tabular-nums text-theme-secondary w-7 text-right">
+                            {Math.round(v)}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
                 )}
 
                 {/* Time window */}

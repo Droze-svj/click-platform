@@ -3,8 +3,14 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+  # Every pull request, whatever its base branch. This used to be limited to PRs
+  # into main/develop, so a PR STACKED on a feature branch ran no gate at all:
+  # tests, both sweeps, the security audit and the Docker build were silently
+  # skipped while the PR showed only green Vercel checks. (#315, stacked on
+  # feat/ui-ux-overhaul, would have merged an image that could not build.) A
+  # stacked PR is exactly where a regression should be caught — before it lands
+  # in the branch it is stacked on.
   pull_request:
-    branches: [ main, develop ]
 
 jobs:
   test:
@@ -41,9 +47,14 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
+      # Retried once: `canvas` downloads a prebuilt binary from GitHub releases
+      # during install, and when that download blips it falls back to a source
+      # build the runner cannot do (no cairo headers). That failed #315's security
+      # job on a run where every other job installed fine. A genuine dependency or
+      # lockfile error fails both attempts.
       run: |
-        npm ci
-        cd client && npm ci
+        npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
+        cd client && { npm ci || { echo "::warning::client npm ci failed; retrying once"; sleep 15; npm ci; }; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate
@@ -168,7 +179,8 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      # Retried once — see the note on the `test` job's install step.
+      run: npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate
@@ -215,9 +227,14 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
+      # Retried once: `canvas` downloads a prebuilt binary from GitHub releases
+      # during install, and when that download blips it falls back to a source
+      # build the runner cannot do (no cairo headers). That failed #315's security
+      # job on a run where every other job installed fine. A genuine dependency or
+      # lockfile error fails both attempts.
       run: |
-        npm ci
-        cd client && npm ci
+        npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
+        cd client && { npm ci || { echo "::warning::client npm ci failed; retrying once"; sleep 15; npm ci; }; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate
@@ -268,7 +285,8 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      # Retried once — see the note on the `test` job's install step.
+      run: npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate

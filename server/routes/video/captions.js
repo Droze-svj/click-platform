@@ -16,6 +16,11 @@ const videoCaptionService = require('../../services/videoCaptionService');
 const captionStore = require('../../services/captionStore');
 const Content = require('../../models/Content');
 const { getUserIdFromReq } = require('../../utils/userId');
+// A malformed :contentId used to flow straight into Content.findOne, throw a
+// CastError, and surface as a 500 — a caller's typo reported as a server fault.
+// This answers 400 instead, and lets dev-mode ids ('dev-…') through.
+const { validateObjectId } = require('../../middleware/validateObjectId');
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
@@ -50,6 +55,10 @@ router.post('/generate', authenticate, upload.single('video'), async (req, res) 
     if (!contentId) {
       return sendError(res, 'Content ID is required', 400);
     }
+    // Same guard as the :contentId routes, for the id that arrives in the body.
+    if (!String(contentId).startsWith('dev-') && !mongoose.Types.ObjectId.isValid(String(contentId))) {
+      return sendError(res, 'Invalid contentId', 400);
+    }
 
     // Verify content belongs to user
     const content = await Content.findOne({ _id: contentId, userId });
@@ -72,10 +81,14 @@ router.post('/generate', authenticate, upload.single('video'), async (req, res) 
     // detected language). If the user's preferred language differs, we then
     // automatically run a per-segment translation so captions are usable
     // immediately in their chosen language without a second API trip.
+    // userId is passed so the service can default the caption STYLE to the one
+    // this creator actually keeps choosing. It was resolved above for the
+    // ownership check and then thrown away, which is why burned-in captions
+    // ignored every style preference the profile had learned.
     const result = await videoCaptionService.generateCaptionsForContent(
       contentId,
       videoFilePath,
-      { language }
+      { language, userId }
     );
 
     // Auto-translate to the user's preferred language when the source video
@@ -107,7 +120,7 @@ router.post('/generate', authenticate, upload.single('video'), async (req, res) 
  * GET /api/video/captions/:contentId
  * Get captions for content
  */
-router.get('/:contentId', authenticate, async (req, res) => {
+router.get('/:contentId', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const { format = 'srt' } = req.query;
@@ -141,7 +154,7 @@ router.get('/:contentId', authenticate, async (req, res) => {
  * and the edits were silently lost. The source comment there even flagged the
  * uncertainty ("If your server uses a different verb/path, adjust here").
  */
-router.put('/:contentId', authenticate, async (req, res) => {
+router.put('/:contentId', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const { segments, language } = req.body;
@@ -179,15 +192,19 @@ router.put('/:contentId', authenticate, async (req, res) => {
     const text = normalized.map((seg) => seg.text).join(' ').trim();
     const formatted = videoCaptionService.formatCaptions({ text, segments: normalized }, format);
 
+    // Word timings are ABSOLUTE — they record when each word was spoken, which an
+    // edit to segment text or boundaries does not change. The previous rule
+    // ("keep them only if the segment COUNT is unchanged") wiped the entire array
+    // whenever a user split or merged a single caption, silently downgrading
+    // karaoke to static blocks with no way back short of re-transcribing.
+    const { realignWordsToSegments } = require('../../utils/subtitleUtils');
+
     await captionStore.saveSource(contentId, {
       language: lang,
       text,
       format,
       segments: normalized,
-      // Word timings belong to the machine transcript; hand-edited segment
-      // boundaries invalidate them, so they are preserved only when the edit
-      // did not change the segment count.
-      words: normalized.length === (existing?.segments || []).length ? (existing?.words || []) : [],
+      words: realignWordsToSegments(existing?.words, normalized),
       formatted,
     });
 
@@ -209,7 +226,7 @@ router.put('/:contentId', authenticate, async (req, res) => {
  * POST /api/video/captions/:contentId/translate
  * Translate captions to another language
  */
-router.post('/:contentId/translate', authenticate, async (req, res) => {
+router.post('/:contentId/translate', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const { targetLanguage } = req.body;
@@ -264,7 +281,7 @@ router.post('/:contentId/translate', authenticate, async (req, res) => {
  * even at video caption" — front-end never has to know whether to call the
  * generate-then-translate flow; it just asks for captions in its language.
  */
-router.get('/:contentId/in-language', authenticate, async (req, res) => {
+router.get('/:contentId/in-language', authenticate, validateObjectId('contentId'), async (req, res) => {
   try {
     const { contentId } = req.params;
     const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId (flip-set)

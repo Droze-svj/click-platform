@@ -227,10 +227,15 @@ describe('API Integration Tests', () => {
 
       expect(response.body).toHaveProperty('success', true);
       expect(response.body.data).toHaveProperty('signed', true);
+      // The recorded score, reported as-is (this fixture seeds authScore 95).
       expect(response.body.data).toHaveProperty('transparencyScore', 95);
       expect(response.body.data).toHaveProperty('signer', 'Click Trust Authority');
-      expect(response.body.data).toHaveProperty('antiDeepfakeGrade', 'A+');
       expect(response.body.data).toHaveProperty('aeoIndexed', true);
+      // Removed on purpose — do not reintroduce: antiDeepfakeGrade was
+      // `score >= 90 ? 'A+' : 'A'` and so could never fail, and
+      // publicVerificationUrl pointed at a /verify page that does not exist.
+      expect(response.body.data).not.toHaveProperty('antiDeepfakeGrade');
+      expect(response.body.data).not.toHaveProperty('publicVerificationUrl');
     });
 
     it('should fetch aggregate social-proof successfully', async () => {
@@ -240,7 +245,16 @@ describe('API Integration Tests', () => {
 
       expect(response.body).toHaveProperty('success', true);
       expect(response.body.data).toHaveProperty('available', true);
-      expect(response.body.data).toHaveProperty('soc2', 'compliant');
+      // This used to assert soc2 === 'compliant', i.e. it REQUIRED the public
+      // trust page to claim a certification Click does not hold. Neither SOC 2
+      // nor ISO 27001 is certified; GDPR export/delete is a shipped capability.
+      expect(response.body.data).toHaveProperty('soc2', 'not-certified');
+      expect(response.body.data).toHaveProperty('iso27001', 'not-certified');
+      expect(response.body.data).toHaveProperty('gdpr', 'supported');
+      // verifiedC2PA is derived, not a constant: this suite seeds a signed
+      // manifest for `signedContent`, so it must be true and counted.
+      expect(response.body.data).toHaveProperty('verifiedC2PA', true);
+      expect(response.body.data.signedAssets).toBeGreaterThanOrEqual(1);
     });
 
     it('should calculate and persist user credibility scoring', async () => {
