@@ -47,9 +47,14 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
+      # Retried once: `canvas` downloads a prebuilt binary from GitHub releases
+      # during install, and when that download blips it falls back to a source
+      # build the runner cannot do (no cairo headers). That failed #315's security
+      # job on a run where every other job installed fine. A genuine dependency or
+      # lockfile error fails both attempts.
       run: |
-        npm ci
-        cd client && npm ci
+        npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
+        cd client && { npm ci || { echo "::warning::client npm ci failed; retrying once"; sleep 15; npm ci; }; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate
@@ -174,7 +179,8 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      # Retried once — see the note on the `test` job's install step.
+      run: npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate
@@ -221,9 +227,14 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
+      # Retried once: `canvas` downloads a prebuilt binary from GitHub releases
+      # during install, and when that download blips it falls back to a source
+      # build the runner cannot do (no cairo headers). That failed #315's security
+      # job on a run where every other job installed fine. A genuine dependency or
+      # lockfile error fails both attempts.
       run: |
-        npm ci
-        cd client && npm ci
+        npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
+        cd client && { npm ci || { echo "::warning::client npm ci failed; retrying once"; sleep 15; npm ci; }; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate
@@ -274,7 +285,8 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      # Retried once — see the note on the `test` job's install step.
+      run: npm ci || { echo "::warning::npm ci failed; retrying once"; sleep 15; npm ci; }
 
     - name: Generate Prisma Client
       run: npm run prisma:generate
