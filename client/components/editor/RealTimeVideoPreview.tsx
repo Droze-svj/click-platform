@@ -13,6 +13,7 @@ import {
 import { usePreviewRecorder } from '../../hooks/usePreviewRecorder'
 import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
 import { resolveCaptionTextStyle, buildKaraokeTokens } from '../../utils/captionStyler'
+import { resolveCaptionStyleOrDefault } from '../../lib/captionStyles'
 import { normWord } from '../../lib/captions'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
 import { mapTimelineToSource, clampPlaybackRate } from '../../utils/timelinePlayback'
@@ -32,12 +33,12 @@ function clampNum(n: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n))
 }
 
-// Caption preset signature colours — mirror the render CAPTION_STYLE_MAP so the
-// editor PREVIEW matches the EXPORT (preview↔export parity).
-const CAPTION_PRESET_COLORS: Record<string, string> = {
-  hook: '#FFD700', stat: '#00FFFF', question: '#FFFFFF',
-  punchline: '#FF3366', CTA: '#FFD700', default: '#FFFFFF',
-}
+// Caption colours now come from the SHARED registry (client/lib/captionStyles.ts
+// — the mirror of server/services/captionStyleRegistry.js that the ASS exporter
+// turns into a Style line). This file used to carry its own six-entry copy of the
+// old CAPTION_STYLE_MAP, so the ~15 styles a user can pick previewed as one of
+// six looks, and anything else fell through to plain white. A CI parity test
+// fails the build if the client and server id sets ever drift.
 
 /** The word active at time t for a word-by-word (karaoke) caption, or '' in a gap. */
 function activeKaraokeWord(words: any[], t: number): string {
@@ -1252,8 +1253,15 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             const rawSafeY = clampNum(kfm ? kfm.y : safeNum(text.y, 50), -50, 150)
             // Preview parity: keep captions inside the safe band unless opted out.
             const safeY = (text as any).safeZone === false ? rawSafeY : clampNum(rawSafeY, 4, 92)
-            // Preview parity: preset colour + word-by-word (karaoke) FULL line.
-            const presetColor = (text as any).captionPreset ? CAPTION_PRESET_COLORS[(text as any).captionPreset] : null
+            // Preview parity: resolve the SHARED caption style record — the same
+            // record the server turns into the ASS style it burns in. The
+            // overlay's own preset wins; the editor-wide `captionStyle` is the
+            // fallback. That prop was accepted and NEVER READ, which is why the
+            // onboarding and PropertiesPanel style pickers had no visible effect.
+            const styleRec = resolveCaptionStyleOrDefault(
+              (text as any).captionPreset || captionStyle?.textStyle || null
+            )
+            const presetColor = (text as any).captionPreset ? styleRec.primary : null
             const isWordMode = (text as any).captionMode === 'word' && Array.isArray((text as any).words) && (text as any).words.length
             const captionWords: any[] = isWordMode ? (text as any).words : []
             // Gradient fill clips on the whole element, so per-word spans would break
@@ -1429,9 +1437,23 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                                   style={{
                                     display: 'inline-block',
                                     marginRight: '0.28em',
-                                    color: isHL ? highlightColor : undefined,
+                                    // Export parity: the ASS engine recolours the ACTIVE
+                                    // word with the style's highlight (`\c`) and pops it
+                                    // via `\t(0,90,\fscx…)`. Mirror both so the preview
+                                    // shows the same emphasis the MP4 will carry. An
+                                    // explicit per-overlay highlightColor still wins for
+                                    // designated keywords.
+                                    color: isHL
+                                      ? highlightColor
+                                      : tok.active
+                                        ? styleRec.highlight
+                                        : undefined,
                                     opacity: tok.active ? 1 : tok.spoken ? 0.5 : 0.82,
-                                    transform: tok.active ? 'scale(1.08)' : 'none',
+                                    // popScale is 100 for styles with wordAnim:'none',
+                                    // so those correctly get no pop — same as the export.
+                                    transform: tok.active
+                                      ? `scale(${styleRec.popScale / 100})`
+                                      : 'none',
                                     transition: 'opacity 90ms linear, transform 90ms ease',
                                   }}
                                 >

@@ -43,9 +43,17 @@ WORKDIR /app
 #                    captions render as tofu boxes. Installs NotoSansCJK-Regular.ttc
 #                    at the exact path server/utils/scriptFont.js already probes.
 # fonts-noto-core  = Arabic/Thai/Devanagari coverage for the same registry.
-# fontconfig       = needed for `fontfile=` resolution in drawtext.
+# fonts-noto-color-emoji = colour emoji. WITHOUT IT every emoji is silently
+#                    dropped from exports: getEmojiFontPath() finds no font and
+#                    the renderer honestly omits them. The ASS caption engine
+#                    renders emoji INLINE, which needs this font present.
+# fonts-montserrat = the display family the caption style registry names for its
+#                    creator styles (hormozi/neon/cyberpunk/sticker). Without it
+#                    fontconfig silently substitutes another family.
+# fontconfig       = needed for `fontfile=` resolution in drawtext AND for
+#                    libass to resolve a Style's `Fontname` by family.
 # libfreetype6     = freetype rendering for caption overlays.
-# libass9          = subtitle rendering (ASS/SSA) used by exports.
+# libass9          = subtitle rendering (ASS/SSA) — the caption burn-in engine.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg \
       python3 \
@@ -61,6 +69,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       fonts-liberation \
       fonts-noto-cjk \
       fonts-noto-core \
+      fonts-noto-color-emoji \
+      fonts-montserrat \
       fontconfig \
       libfreetype6 \
       libass9 \
@@ -91,8 +101,22 @@ RUN curl -L https://github.com/contentauth/c2patool/releases/download/v0.9.12/c2
 
 # Verify ffmpeg has the filters Click depends on. Fail the image build if a
 # filter is missing — this turns a runtime 500 into a clear deploy-time error.
-RUN ffmpeg -hide_banner -filters 2>&1 | grep -E "drawtext|drawbox|boxblur|setpts|scale" >/dev/null \
-   || (echo "FATAL: ffmpeg in this image is missing required filters" && exit 1)
+#
+# NOTE: this used to be a single `grep -E "a|b|c"`, which is an OR — it passed as
+# long as ANY ONE filter existed, so it never actually proved the set was
+# present. Each filter is now checked individually, and `ass` is included because
+# the caption engine burns captions in through libass; an image without it would
+# silently export a video with NO captions at all.
+RUN for f in drawtext drawbox boxblur setpts scale ass subtitles; do \
+      ffmpeg -hide_banner -filters 2>&1 | grep -qE "^[ .TSC]* ${f} " \
+        || (echo "FATAL: ffmpeg in this image is missing the '${f}' filter" && exit 1); \
+    done \
+ && echo "ffmpeg filter check passed (incl. libass)"
+
+# Verify a colour emoji font resolved — captions render emoji inline and a silent
+# substitution here is invisible until a user's export is missing them.
+RUN fc-list | grep -qi "emoji" \
+   || (echo "FATAL: no colour emoji font found (fonts-noto-color-emoji)" && exit 1)
 
 # Server deps — production-only.
 COPY package*.json ./

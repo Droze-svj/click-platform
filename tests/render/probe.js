@@ -64,4 +64,56 @@ function frameAvgLuma(file, t) {
   return sum / buf.length;
 }
 
-module.exports = { hasFfmpeg, ffprobe, makeSource, frameAvgLuma };
+// A region of the frame, as FRACTIONS of width/height (0..1) so an assertion is
+// aspect-independent — `{ x: 0, y: 0.7, w: 1, h: 0.3 }` is "the lower third".
+const LOWER_THIRD = { x: 0, y: 0.7, w: 1, h: 0.3 };
+
+function cropExpr({ x = 0, y = 0, w = 1, h = 1 } = {}) {
+  // ffmpeg evaluates these against the real input dims, so one expression works
+  // for every output size. Guard the minimum so a degenerate region still crops.
+  return `crop=max(2\\,iw*${w}):max(2\\,ih*${h}):iw*${x}:ih*${y}`;
+}
+
+/**
+ * Average luma (0-255) of ONE REGION of the frame at time t.
+ *
+ * This is what makes a caption assertion real: the whole-frame average barely
+ * moves when a caption appears, but the lower third jumps. Use it to assert a
+ * caption is present inside its time window and ABSENT outside it.
+ */
+function regionAvgLuma(file, t, region = LOWER_THIRD) {
+  const r = spawnSync('ffmpeg', [
+    '-v', 'error', '-ss', String(t), '-i', file, '-frames:v', '1',
+    '-vf', `${cropExpr(region)},format=gray,scale=8:8`, '-f', 'rawvideo', '-',
+  ], { encoding: 'buffer', maxBuffer: 16 * 1024 * 1024 });
+  if (r.status !== 0 || !r.stdout || !r.stdout.length) return null;
+  const buf = r.stdout;
+  let sum = 0;
+  for (let i = 0; i < buf.length; i++) sum += buf[i];
+  return sum / buf.length;
+}
+
+/**
+ * Average {r,g,b} (0-255 each) of a region at time t.
+ *
+ * Lets a test assert a HIGHLIGHT COLOUR actually rendered — e.g. a yellow
+ * keyword makes r and g clearly exceed b — which a luma-only probe cannot see.
+ */
+function regionAvgRgb(file, t, region = LOWER_THIRD) {
+  const r = spawnSync('ffmpeg', [
+    '-v', 'error', '-ss', String(t), '-i', file, '-frames:v', '1',
+    '-vf', `${cropExpr(region)},format=rgb24,scale=4:4`, '-f', 'rawvideo', '-',
+  ], { encoding: 'buffer', maxBuffer: 16 * 1024 * 1024 });
+  if (r.status !== 0 || !r.stdout || r.stdout.length < 3) return null;
+  const buf = r.stdout;
+  let sr = 0, sg = 0, sb = 0, n = 0;
+  for (let i = 0; i + 2 < buf.length; i += 3) {
+    sr += buf[i]; sg += buf[i + 1]; sb += buf[i + 2]; n++;
+  }
+  return n ? { r: sr / n, g: sg / n, b: sb / n } : null;
+}
+
+module.exports = {
+  hasFfmpeg, ffprobe, makeSource, frameAvgLuma,
+  regionAvgLuma, regionAvgRgb, LOWER_THIRD,
+};

@@ -7,7 +7,9 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { hasFfmpeg, ffprobe, makeSource, frameAvgLuma } = require('./probe');
+const {
+  hasFfmpeg, ffprobe, makeSource, frameAvgLuma, regionAvgLuma, LOWER_THIRD,
+} = require('./probe');
 const renderService = require('../../server/services/videoRenderService');
 const { resolveTransition } = require('../../server/services/transitionPresetService');
 
@@ -333,4 +335,95 @@ d('render fidelity', () => {
     expect(p.hasVideo).toBe(true);
     expect(p.sizeBytes).toBeGreaterThan(1024);
   }, 90000);
+
+  // ── ASS caption engine ────────────────────────────────────────────────────
+  // Every caption case above asserts only "the file is non-trivial", which
+  // cannot tell a rendered caption from a silently-dropped one. These compare
+  // PIXELS in the region a caption occupies, so a caption that stops rendering
+  // fails the suite.
+
+  const karaokeState = (extra = {}) => ({
+    exportOptions: { width: 1080, height: 1920, duration: 4, ...(extra.exportOptions || {}) },
+    textOverlays: [{
+      id: 'ass-kara',
+      captionMode: 'word',
+      captionPreset: 'hormozi',
+      highlightWords: ['insane'],
+      words: [
+        { word: 'this', start: 0.3, end: 0.7 },
+        { word: 'is', start: 0.7, end: 1.0 },
+        { word: 'insane', start: 1.0, end: 1.6 },
+        { word: 'value', start: 1.6, end: 2.2 },
+      ],
+    }],
+  });
+
+  it('ASS captions measurably change the lower third vs the same render without them', async () => {
+    // A differential against an otherwise-identical render isolates the
+    // caption's contribution. Comparing two timestamps of ONE render would not:
+    // the testsrc source animates, so its own luma moves frame to frame.
+    const withCaps = await render(karaokeState());
+    const without = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 4 },
+      textOverlays: [],
+    });
+
+    const a = regionAvgLuma(withCaps.outputPath, 1.2, LOWER_THIRD);
+    const b = regionAvgLuma(without.outputPath, 1.2, LOWER_THIRD);
+    expect(a).not.toBeNull();
+    expect(b).not.toBeNull();
+    // Burned-in text brightens the band it occupies. If the ASS file stopped
+    // being generated or wired, these would be identical.
+    expect(Math.abs(a - b)).toBeGreaterThan(1);
+  }, 180000);
+
+  it('a 60-word karaoke caption renders — libass handles an event count drawtext could not', async () => {
+    // The old path emitted ONE drawtext filter per word into a single
+    // comma-joined chain; 60 words meant 60 filters. libass takes the same
+    // caption as one filter, so this is cheap where the old path was fragile.
+    const words = Array.from({ length: 60 }, (_, i) => ({
+      word: `w${i}`, start: 0.05 * i, end: 0.05 * (i + 1),
+    }));
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 4 },
+      textOverlays: [{ id: 'many', captionMode: 'word', captionPreset: 'hormozi', words }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 120000);
+
+  it('CAPTION_ENGINE=drawtext still renders captions (the rollback path stays alive)', async () => {
+    const prev = process.env.CAPTION_ENGINE;
+    process.env.CAPTION_ENGINE = 'drawtext';
+    try {
+      const { outputPath } = await render(karaokeState());
+      const p = ffprobe(outputPath);
+      expect(p.hasVideo).toBe(true);
+      expect(p.sizeBytes).toBeGreaterThan(1024);
+    } finally {
+      if (prev === undefined) delete process.env.CAPTION_ENGINE;
+      else process.env.CAPTION_ENGINE = prev;
+    }
+  }, 120000);
+
+  it('a caption overlay carrying emoji renders under the ASS engine', async () => {
+    // drawtext stripped emoji from the body and re-drew them in a separate pass
+    // that was skipped entirely when no colour emoji font was installed. libass
+    // renders them inline, so this must not crash or blank the export.
+    const { outputPath } = await render({
+      exportOptions: { width: 1080, height: 1920, duration: 3 },
+      textOverlays: [{
+        id: 'emoji-ass', captionMode: 'word', captionPreset: 'hormozi',
+        words: [
+          { word: 'GET', start: 0.2, end: 0.7 },
+          { word: 'RICH', start: 0.7, end: 1.2 },
+          { word: '💰🔥', start: 1.2, end: 1.8 },
+        ],
+      }],
+    });
+    const p = ffprobe(outputPath);
+    expect(p.hasVideo).toBe(true);
+    expect(p.sizeBytes).toBeGreaterThan(1024);
+  }, 120000);
 });
