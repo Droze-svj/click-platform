@@ -549,6 +549,46 @@ async function tagKeyMoments(context, config = {}) {
 }
 
 /**
+ * Watch-time performance for one scene, measured from the video's retention
+ * curve over that scene's time window.
+ *
+ * @param {object|null} videoMetrics VideoMetrics doc (may be null)
+ * @param {object} scene { start, end } in seconds
+ * @returns {{viewRate:number, retentionStart:number, retentionEnd:number,
+ *            dropOff:number, samples:number}|null} null when no curve exists
+ */
+function sceneRetention(videoMetrics, scene) {
+  const curve = videoMetrics?.retention?.curve;
+  if (!Array.isArray(curve) || curve.length === 0) return null;
+
+  const start = Number(scene?.start) || 0;
+  const end = Number(scene?.end) || 0;
+  if (end <= start) return null;
+
+  const points = curve
+    .filter((p) => Number.isFinite(p?.second) && p.second >= start && p.second <= end)
+    .sort((a, b) => a.second - b.second);
+
+  if (points.length === 0) return null;
+
+  const percentages = points.map((p) => Number(p.percentage) || 0);
+  const mean = percentages.reduce((a, b) => a + b, 0) / percentages.length;
+  const first = percentages[0];
+  const last = percentages[percentages.length - 1];
+
+  return {
+    // Share of viewers still watching through this scene, as a 0-1 rate.
+    viewRate: Math.round((mean / 100) * 1000) / 1000,
+    retentionStart: first,
+    retentionEnd: last,
+    // Positive = viewers left during this scene. This is the number that makes
+    // the breakdown actionable: it points at the scenes that lose the audience.
+    dropOff: Math.round((first - last) * 100) / 100,
+    samples: points.length,
+  };
+}
+
+/**
  * Export scene analytics
  */
 async function exportSceneAnalytics(context, config = {}) {
@@ -575,16 +615,15 @@ async function exportSceneAnalytics(context, config = {}) {
     const label = scene.metadata?.label || 'unknown';
     analytics.sceneTypes[label] = (analytics.sceneTypes[label] || 0) + 1;
 
-    // Map performance metrics to scenes if available
-    let performance = null;
-    if (videoMetrics) {
-      // Estimate scene performance based on watch time curves
-      // This is a simplified version - in production, use actual watch-time data
-      performance = {
-        estimatedViewRate: Math.random() * 0.3 + 0.5, // Placeholder
-        estimatedEngagement: Math.random() * 0.2 + 0.4 // Placeholder
-      };
-    }
+    // Real per-scene performance, read off the video's watch-time retention
+    // curve (VideoMetrics.retention.curve = [{second, percentage}]) over this
+    // scene's own time window.
+    //
+    // This previously emitted `Math.random() * 0.3 + 0.5` as estimatedViewRate
+    // and `Math.random() * 0.2 + 0.4` as estimatedEngagement — numbers that
+    // changed on every call and described nothing. When no curve has been
+    // ingested for this video, performance stays null rather than invented.
+    const performance = sceneRetention(videoMetrics, scene);
 
     analytics.sceneBreakdown.push({
       sceneId: scene._id || scene.sceneIndex,
@@ -685,6 +724,8 @@ module.exports = {
   generateCaptionsForScenesAction,
   createCarouselFromScenesAction,
   tagKeyMomentsAction,
-  exportSceneAnalyticsAction
+  exportSceneAnalyticsAction,
+  // Exported for testing: the retention math behind per-scene performance.
+  sceneRetention
 };
 

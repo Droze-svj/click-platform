@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import QuickTemplateAccess from '../../../components/QuickTemplateAccess'
 import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
 import TemplateMarketplace from '../../../components/TemplateMarketplace'
@@ -19,6 +20,7 @@ import {
   Badge,
   EmptyState,
   SectionHeader,
+  PageShell,
 } from '../../../components/ui'
 
 interface Template {
@@ -107,7 +109,7 @@ export default function TemplatesPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         {/* Header (global DashboardHeader provides the breadcrumb) */}
         <SectionHeader
           as="h1"
@@ -254,7 +256,11 @@ export default function TemplatesPage() {
             </div>
           </div>
         )}
-      </div>
+
+        {/* Reads GET /api/templates for a one-click "start from a template" rail.
+            Live endpoint, never imported. */}
+        <ErrorBoundary><QuickTemplateAccess /></ErrorBoundary>
+      </PageShell>
     </ErrorBoundary>
   )
 }

@@ -6,7 +6,9 @@ import NicheStrategyPanel from '../../../components/NicheStrategyPanel'
 import HookVariantsCard from '../../../components/HookVariantsCard'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { useTranslation } from '@/hooks/useTranslation'
-import { Panel, SectionHeader, Badge } from '../../../components/ui'
+import { Panel, SectionHeader, Badge,
+  PageShell,
+} from '../../../components/ui'
 
 export default function StrategistPage() {
   const { state, setNiche } = useWorkflow()
@@ -15,7 +17,7 @@ export default function StrategistPage() {
   const platform = state.platform || 'tiktok'
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1900px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <SectionHeader
         as="h1"
         title={t('strategistPage.title')}
@@ -59,6 +61,6 @@ export default function StrategistPage() {
           </Panel>
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

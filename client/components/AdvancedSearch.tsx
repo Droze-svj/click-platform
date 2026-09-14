@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, Filter, X, Clock, Star, TrendingUp, Sparkles, Save, History, Bell, Eye, MoreVertical, Copy, ExternalLink, AlertCircle } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface SearchResult {
   content: any
@@ -46,6 +47,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
   const [searchAlerts, setSearchAlerts] = useState<any[]>([])
   const [previewContent, setPreviewContent] = useState<any>(null)
   const [showPreview, setShowPreview] = useState(false)
+  const panelRef = useDialogBehavior(showPreview && !!previewContent, () => setShowPreview(false))
   const [clusteredResults, setClusteredResults] = useState<any>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
@@ -765,8 +767,8 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
       {/* Result Preview Modal */}
       {showPreview && previewContent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" ref={panelRef}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">

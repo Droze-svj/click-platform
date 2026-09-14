@@ -7,6 +7,7 @@ const auth = require('../../middleware/auth');
 const facebookService = require('../../services/facebookOAuthService');
 const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const ssx = require('../../utils/oauthServerSideExchange');
@@ -67,7 +68,7 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     if (ssx.serverSideExchangeEnabled()) {
       const u = ssx.unwrapCallbackState(state);
       if (!u) return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent('Invalid OAuth state')}`);
-      await facebookService.exchangeCodeForToken(u.userId, code, u.innerState);
+      await facebookService.exchangeCodeForToken(u.userId, code, u.innerState, resolveOAuthCallbackUrl('facebook', req));
       return res.redirect(`${frontendUrl}/dashboard/social?connected=facebook&success=true`);
     }
     res.redirect(`${frontendUrl}/dashboard/social?platform=facebook&code=${code}&state=${state}`);
@@ -89,7 +90,7 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const { accessToken } = await facebookService.exchangeCodeForToken(userId, code, state);
+  const { accessToken } = await facebookService.exchangeCodeForToken(userId, code, state, resolveOAuthCallbackUrl('facebook', req));
 
   const userInfo = await facebookService.getFacebookUserInfo(accessToken);
   const pages = await facebookService.getFacebookPages(accessToken);

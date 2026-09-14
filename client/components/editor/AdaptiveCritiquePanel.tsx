@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   Music, 
   Video, 
@@ -46,12 +46,18 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
     setLearningFeedback(prev => ({ ...prev, [suggestionId]: action }))
     
     try {
-      await apiPost('/ai/adaptive/feedback', {
-        videoId,
-        type,
-        suggestionId,
-        action,
-        original
+      // POST /ai/adaptive/feedback does not exist. /api/ai/feedback does, and is
+      // explicitly the ONE endpoint for every AI surface — it upweights the trait
+      // on positive feedback and records the reason on negative, which is exactly
+      // this panel's job. A second feedback path would split the learning loop
+      // the universal endpoint was built to close.
+      await apiPost('/ai/feedback', {
+        surface: 'adaptive-critique',
+        itemType: type,
+        action: action === 'positive' ? 'thumbs_up' : 'thumbs_down',
+        contentId: videoId,
+        value: suggestionId,
+        reason: action === 'negative' ? original?.reason || original?.action : undefined,
       })
       
       showToast(
@@ -102,7 +108,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
       <div className="space-y-4 relative z-10">
         <AnimatePresence mode="wait">
           {activeTab === 'current' ? (
-            <motion.div
+            <m.div
               key="current"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -130,22 +136,22 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <motion.button 
+                    <m.button 
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleFeedback(s.id, s.type, 'positive', s)}
                       className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'positive' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-emerald-400 hover:border-emerald-500/30'}`}
                     >
                       <ThumbsUp className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button 
+                    </m.button>
+                    <m.button 
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleFeedback(s.id, s.type, 'negative', s)}
                       className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'negative' ? 'bg-rose-600 text-white border-rose-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-rose-400 hover:border-rose-500/30'}`}
                     >
                       <ThumbsDown className="w-4 h-4" />
-                    </motion.button>
+                    </m.button>
                     <div className="w-px h-6 bg-white/10 mx-1" />
                     <button
                       type="button"
@@ -157,9 +163,9 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                   </div>
                 </div>
               ))}
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="learned"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -183,7 +189,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                   <p className="text-[10px] text-white font-black italic">Sarcastic / Witty Bias</p>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   ShieldCheck,
   X,
@@ -39,7 +39,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
   const [selectedCurrency, setSelectedCurrency] = React.useState('USD')
   const currencies = ['USD', 'ETH', 'SOL', 'BTC']
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -100,7 +100,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
 
           <AnimatePresence mode="popLayout">
             {proposals.length > 0 ? proposals.map((proposal) => (
-              <motion.div
+              <m.div
                 key={proposal.id}
                 layout
                 initial={{ opacity: 0, x: -20 }}
@@ -161,7 +161,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )) : (
               <div className="py-48 flex flex-col items-center justify-center gap-8 text-slate-700 opacity-40 uppercase tracking-[0.5em] italic">
                 <ShieldCheck className="w-20 h-20 animate-pulse" />
@@ -185,7 +185,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
                     <span className="text-3xl font-black text-emerald-400 italic tracking-tighter">1.0X</span>
                  </div>
                  <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden shadow-inner">
-                    <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} className="h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                    <m.div initial={{ width: 0 }} animate={{ width: '100%' }} className="h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                  </div>
                  <p className="text-[10px] text-slate-500 leading-relaxed italic border-t-2 border-white/5 pt-6 uppercase tracking-wider">
                    Your authority is absolute. No autonomous decision can impact the fiscal bridge without operator sign-off.
@@ -204,7 +204,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
            </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

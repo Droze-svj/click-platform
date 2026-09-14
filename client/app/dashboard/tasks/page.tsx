@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
 import { useSocket } from '../../../hooks/useSocket'
 import { apiGet, apiPost, apiPut, apiDelete, clearApiCache } from '../../../lib/api'
@@ -28,6 +28,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 // ── Constants ───────────────────────────────────────────────────────
@@ -143,7 +144,7 @@ export default function TasksPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-36 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         {/* ── Header (global DashboardHeader provides the breadcrumb) ── */}
@@ -318,7 +319,7 @@ export default function TasksPage() {
         {selectedTask && (
           <TaskModal task={selectedTask} onClose={() => { setSelectedTask(null); setAddingForParent(null) }} onUpdate={(u: any) => updateTask(selectedTask._id, u)} onDelete={() => deleteTask(selectedTask._id)} onAddSub={() => { setAddingForParent(selectedTask._id); setSelectedTask(null) }} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} socket={socket} userId={user?.id} />
         )}
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }
@@ -334,7 +335,7 @@ function TaskCard({ task, onSelect, onDragStart, reduceMotion }: any) {
   }
 
   return (
-    <motion.div
+    <m.div
       layout draggable
       onDragStart={(e: any) => { e.dataTransfer?.setData('text/plain', task._id); onDragStart() }}
       onClick={onSelect}
@@ -358,7 +359,7 @@ function TaskCard({ task, onSelect, onDragStart, reduceMotion }: any) {
         </Badge>
         <Badge className={priorityColors[task.priority]}>{t(`tasksPage.priorityLabels.${task.priority}`)}</Badge>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

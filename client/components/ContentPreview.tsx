@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface ContentPreviewProps {
   content: {
@@ -17,9 +18,13 @@ interface ContentPreviewProps {
 
 export default function ContentPreview({ content, onClose }: ContentPreviewProps) {
   const { t } = useTranslation()
+  // Always open: the parent mounts this component only while the preview is
+  // showing, so there is no isOpen prop to pass.
+  const panelRef = useDialogBehavior(true, onClose)
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" ref={panelRef}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">{t('contentPreview.heading')}</h2>
           <button

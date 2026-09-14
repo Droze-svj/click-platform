@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 /**
  * Reusable Framer Motion panel: declarative enter/exit with scale and opacity.
@@ -34,7 +34,7 @@ export function MotionPanel({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <m.div
           initial={initial}
           animate={animate}
           exit={exit}
@@ -42,7 +42,7 @@ export function MotionPanel({
           className={className}
         >
           {children}
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   )
@@ -65,14 +65,14 @@ export function MotionScaleIn({
   duration = 0.3,
 }: MotionScaleInProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ duration, delay, ease: 'easeOut' }}
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -107,7 +107,7 @@ export function MotionList({
   staggerChildren = 0.05,
 }: MotionListProps) {
   return (
-    <motion.div
+    <m.div
       variants={listContainerVariants}
       initial="hidden"
       animate="visible"
@@ -116,7 +116,7 @@ export function MotionList({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -129,8 +129,8 @@ export function MotionListItem({
   className?: string
 }) {
   return (
-    <motion.div variants={listItemVariants} className={className}>
+    <m.div variants={listItemVariants} className={className}>
       {children}
-    </motion.div>
+    </m.div>
   )
 }

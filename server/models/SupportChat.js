@@ -12,7 +12,13 @@ const supportChatSchema = new mongoose.Schema({
   chatId: {
     type: String,
     unique: true,
-    required: true
+    required: true,
+    // Assigned here rather than in pre('save'): Mongoose registers its
+    // validation hook when the schema is created, so validation runs BEFORE
+    // any user pre('save') hook. A required field first assigned in
+    // pre('save') is still unset at validation time, which made every
+    // save() of this model fail. See SupportTicket.ticketNumber.
+    default: generateChatId
   },
   // Chat details
   category: {
@@ -111,12 +117,9 @@ supportChatSchema.index({ status: 1, priority: 1, createdAt: -1 });
 
 supportChatSchema.pre('save', function(next) {
   this.updatedAt = new Date();
-  
-  // Generate chat ID if new
-  if (this.isNew && !this.chatId) {
-    this.chatId = generateChatId();
-  }
-  
+
+  // chatId is assigned by the field default above — see the note there.
+
   next();
 });
 

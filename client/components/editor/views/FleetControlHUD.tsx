@@ -20,7 +20,7 @@ import {
   Linkedin,
   LucideIcon
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface FleetNode {
@@ -150,7 +150,7 @@ export const FleetControlHUD: React.FC = () => {
 
             {/* Scale Recommendation Alert */}
             {status?.recommendation && (
-                <motion.div 
+                <m.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className={`p-6 rounded-[2rem] border flex items-center justify-between gap-6 ${
@@ -171,14 +171,14 @@ export const FleetControlHUD: React.FC = () => {
                     <button className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[9px] font-black uppercase tracking-widest italic transition-all border border-white/10">
                         Authorize Scale
                     </button>
-                </motion.div>
+                </m.div>
             )}
 
             {/* Node Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <AnimatePresence>
                     {status?.nodes.map((node, i) => (
-                        <motion.div 
+                        <m.div 
                             key={i}
                             layout
                             initial={{ opacity: 0 }}
@@ -224,7 +224,7 @@ export const FleetControlHUD: React.FC = () => {
                                     Inspect Node <ChevronRight className="w-3 h-3" />
                                 </button>
                             </div>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </AnimatePresence>
             </div>

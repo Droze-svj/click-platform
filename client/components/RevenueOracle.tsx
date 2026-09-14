@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   TrendingUp, Zap, Activity, ShieldCheck,
   BarChart3, Orbit, Cpu
@@ -69,7 +69,7 @@ export default function RevenueOracle() {
       <header className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8 relative z-10">
         <div className="flex items-center gap-8">
           <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-[2.2rem] flex items-center justify-center shadow-2xl overflow-hidden relative">
-             <motion.div 
+             <m.div 
                animate={{ rotate: 360 }} 
                transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent"

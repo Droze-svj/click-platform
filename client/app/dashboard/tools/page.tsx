@@ -17,7 +17,9 @@ import {
   Subtitles, Type, Sparkles, FileText, type LucideIcon
 } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
-import { Panel, SectionHeader } from '../../../components/ui'
+import { Panel, SectionHeader,
+  PageShell,
+} from '../../../components/ui'
 
 interface Tool {
   id: string
@@ -111,7 +113,7 @@ const TOOLS: Tool[] = [
 export default function ToolsHubPage() {
   const { t } = useTranslation()
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <SectionHeader
         as="h1"
         title={t('toolsPage.heading')}
@@ -139,6 +141,6 @@ export default function ToolsHubPage() {
           )
         })}
       </div>
-    </div>
+    </PageShell>
   )
 }

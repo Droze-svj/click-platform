@@ -28,7 +28,8 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Analytics fetched', 200, analytics);
   } catch (error) {
     logger.error('Get creator analytics error', { error: error.message });
-    sendError(res, error.message, 500);
+    // Don't echo the raw error message to the client.
+    sendError(res, 'Failed to load creator analytics', 500);
   }
 }));
 
@@ -49,8 +50,14 @@ router.get('/:templateId/trends', auth, asyncHandler(async (req, res) => {
     const trends = await getTemplateTrends(templateId, period);
     sendSuccess(res, 'Trends fetched', 200, trends);
   } catch (error) {
+    // A missing template is a client-addressable 404, not a server fault. This
+    // branch previously reported every error as a 500 (including the old
+    // not-implemented stub, which is why this endpoint always 500'd).
+    if (/not found/i.test(error.message)) {
+      return sendError(res, 'Template not found', 404);
+    }
     logger.error('Get trends error', { error: error.message, templateId });
-    sendError(res, error.message, 500);
+    sendError(res, 'Failed to load template trends', 500);
   }
 }));
 

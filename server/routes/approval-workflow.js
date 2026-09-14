@@ -37,6 +37,7 @@ async function requireApprovalAccess(req, res, next) {
     return sendError(res, 'Approval not found', 404);
   }
 }
+const { objectIdOrSkip } = require('../middleware/validateObjectId');
 const router = express.Router();
 
 /**
@@ -82,7 +83,7 @@ router.post('/multi-step', auth, asyncHandler(async (req, res) => {
  * GET /api/approvals/:approvalId/status
  * Get approval status with audit trail
  */
-router.get('/:approvalId/status', auth, asyncHandler(async (req, res) => {
+router.get('/:approvalId/status', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const status = await getApprovalStatus(approvalId, req.user._id);
   sendSuccess(res, 'Approval status retrieved', 200, status);
@@ -92,7 +93,7 @@ router.get('/:approvalId/status', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/approve
  * Approve current stage
  */
-router.post('/:approvalId/approve', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/approve', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { comment = '' } = req.body;
 
@@ -104,7 +105,7 @@ router.post('/:approvalId/approve', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/reject
  * Reject approval
  */
-router.post('/:approvalId/reject', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/reject', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { comment = '', reason = '' } = req.body;
 
@@ -116,7 +117,7 @@ router.post('/:approvalId/reject', auth, asyncHandler(async (req, res) => {
  * POST /api/approvals/:approvalId/request-changes
  * Request changes
  */
-router.post('/:approvalId/request-changes', auth, asyncHandler(async (req, res) => {
+router.post('/:approvalId/request-changes', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { comment = '', changes = '' } = req.body;
 
@@ -168,7 +169,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  * GET /api/approvals/:approvalId/audit-trail
  * Get audit trail
  */
-router.get('/:approvalId/audit-trail', auth, asyncHandler(async (req, res) => {
+router.get('/:approvalId/audit-trail', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const uid = req.user._id;
   // Scope to participants (creator / assignee / approver) — was an unscoped leak.
@@ -207,7 +208,7 @@ const approvalCollab = require('../services/approvalCollaborationService');
 
 // POST /api/approvals/:approvalId/comments — add an inline comment (optionally on
 // a specific field / as a threaded reply).
-router.post('/:approvalId/comments', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
+router.post('/:approvalId/comments', objectIdOrSkip('approvalId'), auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const { text, targetField, parentId, authorRole } = req.body || {};
   const comment = await approvalCollab.addComment(req.params.approvalId, {
     authorId: req.user._id, authorName: req.user.name, authorRole, text, targetField, parentId,
@@ -216,14 +217,14 @@ router.post('/:approvalId/comments', auth, requireApprovalAccess, asyncHandler(a
 }));
 
 // POST /api/approvals/:approvalId/comments/:commentId/resolve
-router.post('/:approvalId/comments/:commentId/resolve', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
+router.post('/:approvalId/comments/:commentId/resolve', objectIdOrSkip('approvalId'), auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const resolved = !(req.body && req.body.resolved === false);
   const comment = await approvalCollab.resolveComment(req.params.approvalId, req.params.commentId, resolved);
   sendSuccess(res, 'Comment updated', 200, comment);
 }));
 
 // POST /api/approvals/:approvalId/revisions — creator re-submits after changes.
-router.post('/:approvalId/revisions', auth, requireApprovalAccess, asyncHandler(async (req, res) => {
+router.post('/:approvalId/revisions', objectIdOrSkip('approvalId'), auth, requireApprovalAccess, asyncHandler(async (req, res) => {
   const rev = await approvalCollab.addRevision(req.params.approvalId, {
     changedBy: req.user._id, note: req.body && req.body.note, changes: req.body && req.body.changes,
   });

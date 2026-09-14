@@ -13,6 +13,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/register`, lastModified: now, changeFrequency: 'yearly', priority: 0.6 },
     { url: `${baseUrl}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${baseUrl}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/refund`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/dmca`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/cookies`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/acceptable-use`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/ai-disclosure`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${baseUrl}/compliance`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${baseUrl}/contact`, lastModified: now, changeFrequency: 'yearly', priority: 0.4 },
   ];
 }

@@ -50,10 +50,14 @@ async function remixProject(userId, sourceId, workspaceId = null) {
       workspaceId,
       title: `Remix: ${source.name}`,
       type: source.type || 'video',
-      status: 'draft',
-      settings: source.settings, // Copy the technical JSON
-      sourceTemplateId: source._id,
+      // 'draft' is not in the Content status enum, so this threw on save; and
+      // `settings`/`sourceTemplateId` are not Content paths, so the template's
+      // technical JSON — the entire point of a remix — was being dropped.
+      // Both now ride in metadata, which is declared Mixed.
+      status: 'completed',
       metadata: {
+        settings: source.settings, // the technical JSON this remix is based on
+        sourceTemplateId: source._id,
         remixedFrom: source.name,
         remixedAt: new Date()
       }

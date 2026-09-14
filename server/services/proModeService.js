@@ -123,9 +123,9 @@ async function createDefaultPreferences(userId) {
  */
 async function toggleProMode(userId, enabled) {
   try {
-    const preferences = await UserPreferences.findOne({ userId });
+    let preferences = await UserPreferences.findOne({ userId });
     if (!preferences) {
-      throw new Error('Preferences not found');
+      preferences = await createDefaultPreferences(userId);
     }
 
     preferences.proMode.enabled = enabled;
@@ -138,6 +138,7 @@ async function toggleProMode(userId, enabled) {
       preferences.proMode.features.advancedAnalytics = true;
     }
 
+    preferences.markModified('proMode');
     await preferences.save();
     return preferences;
   } catch (error) {
@@ -151,9 +152,16 @@ async function toggleProMode(userId, enabled) {
  */
 async function saveAdvancedFilter(userId, filterData) {
   try {
-    const preferences = await UserPreferences.findOne({ userId });
+    let preferences = await UserPreferences.findOne({ userId });
     if (!preferences) {
-      throw new Error('Preferences not found');
+      preferences = await createDefaultPreferences(userId);
+    }
+
+    if (!preferences.filters) {
+      preferences.filters = { saved: [], quickFilters: [] };
+    }
+    if (!Array.isArray(preferences.filters.saved)) {
+      preferences.filters.saved = [];
     }
 
     preferences.filters.saved.push({
@@ -171,6 +179,7 @@ async function saveAdvancedFilter(userId, filterData) {
       });
     }
 
+    preferences.markModified('filters');
     await preferences.save();
     return preferences;
   } catch (error) {
@@ -186,8 +195,8 @@ async function getAdvancedFilters(userId) {
   try {
     const preferences = await getUserPreferences(userId);
     return {
-      saved: preferences.filters.saved,
-      quickFilters: preferences.filters.quickFilters
+      saved: preferences.filters?.saved || [],
+      quickFilters: preferences.filters?.quickFilters || []
     };
   } catch (error) {
     logger.error('Error getting advanced filters', { error: error.message, userId });
@@ -200,9 +209,16 @@ async function getAdvancedFilters(userId) {
  */
 async function saveKeyboardShortcut(userId, shortcutData) {
   try {
-    const preferences = await UserPreferences.findOne({ userId });
+    let preferences = await UserPreferences.findOne({ userId });
     if (!preferences) {
-      throw new Error('Preferences not found');
+      preferences = await createDefaultPreferences(userId);
+    }
+
+    if (!preferences.shortcuts) {
+      preferences.shortcuts = { enabled: true, custom: [], defaults: {} };
+    }
+    if (!Array.isArray(preferences.shortcuts.custom)) {
+      preferences.shortcuts.custom = [];
     }
 
     // Check if custom shortcut exists
@@ -224,6 +240,7 @@ async function saveKeyboardShortcut(userId, shortcutData) {
       });
     }
 
+    preferences.markModified('shortcuts');
     await preferences.save();
     return preferences;
   } catch (error) {
@@ -239,9 +256,9 @@ async function getKeyboardShortcuts(userId) {
   try {
     const preferences = await getUserPreferences(userId);
     return {
-      enabled: preferences.shortcuts.enabled,
-      defaults: preferences.shortcuts.defaults,
-      custom: preferences.shortcuts.custom
+      enabled: preferences.shortcuts?.enabled ?? true,
+      defaults: preferences.shortcuts?.defaults || {},
+      custom: preferences.shortcuts?.custom || []
     };
   } catch (error) {
     logger.error('Error getting keyboard shortcuts', { error: error.message, userId });
@@ -254,18 +271,28 @@ async function getKeyboardShortcuts(userId) {
  */
 async function updateConfiguration(userId, category, config) {
   try {
-    const preferences = await UserPreferences.findOne({ userId });
+    let preferences = await UserPreferences.findOne({ userId });
     if (!preferences) {
-      throw new Error('Preferences not found');
+      preferences = await createDefaultPreferences(userId);
     }
 
-    if (!preferences.configuration[category]) {
-      preferences.configuration[category] = {};
+    if (!preferences.configuration) {
+      preferences.configuration = {};
     }
 
-    Object.assign(preferences.configuration[category], config);
+    if (category === 'ui') {
+      preferences.ui = preferences.ui || {};
+      Object.assign(preferences.ui, config);
+      preferences.markModified('ui');
+    } else {
+      if (!preferences.configuration[category]) {
+        preferences.configuration[category] = {};
+      }
+      Object.assign(preferences.configuration[category], config);
+      preferences.markModified('configuration');
+    }
+
     await preferences.save();
-
     return preferences;
   } catch (error) {
     logger.error('Error updating configuration', { error: error.message, userId });
@@ -327,6 +354,7 @@ async function updateBrandKit(userId, brandKit) {
         }
       }
     });
+    preferences.markModified('brandKit');
     await preferences.save();
     return preferences.brandKit;
   } catch (error) {

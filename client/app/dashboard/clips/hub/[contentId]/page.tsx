@@ -8,6 +8,7 @@ import ClipCard, { type Clip } from '../../../../../components/clips/ClipCard'
 import ClipLightbox from '../../../../../components/clips/ClipLightbox'
 import { CardSkeleton } from '../../../../../components/LoadingSkeleton'
 import { useTranslation } from '@/hooks/useTranslation'
+import { PageShell } from '../../../../../components/ui'
 
 type SortKey = 'viralScore' | 'rating' | 'newest' | 'duration'
 
@@ -160,8 +161,11 @@ export default function ClipHubByContentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--text-main)] pb-16">
-      <div className="max-w-[1500px] mx-auto px-6 lg:px-12 pt-10 space-y-8">
+    // Outer frame + content column collapse into the shell. max-w-[1500px] →
+    // the `wide` token (1536px). The bulk bar and the lightbox below are both
+    // position:fixed and the shell sets no transform, so re-parenting them
+    // under it does not change where they render.
+    <PageShell width="wide" className="min-h-screen bg-[var(--page-bg)]">
         {/* Auto-generating banner — shown when arriving from Forge with no clips yet */}
         {autoPolling && clips.length === 0 && (
           <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
@@ -323,7 +327,6 @@ export default function ClipHubByContentPage() {
             ))}
           </div>
         )}
-      </div>
 
       {/* Bulk action bar — pinned to the bottom when items are selected. */}
       {selectMode && selectedIds.size > 0 && (
@@ -375,6 +378,6 @@ export default function ClipHubByContentPage() {
           onOpenInEditor={(c) => router.push(`/dashboard/video/edit/${c.contentId}`)}
         />
       )}
-    </div>
+    </PageShell>
   )
 }

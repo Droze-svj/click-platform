@@ -26,6 +26,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
+import { useDialogBehavior } from './modal'
 
 export interface ConfirmDialogOptions {
   title: string
@@ -52,17 +53,17 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const confirmRef = useRef<HTMLButtonElement>(null)
+  // Escape, the focus trap, scroll lock and focus restore all come from here
+  // now; this used to add its own Escape listener and nothing else, so a
+  // keyboard user could Tab out of a destructive confirm into the page behind.
+  const panelRef = useDialogBehavior(open, onCancel)
 
   useEffect(() => {
     if (!open) return
-    // Auto-focus the confirm button so Enter triggers the action; Esc cancels.
+    // Auto-focus the confirm button so Enter triggers the action. Declared
+    // after the hook, so this wins over its generic first-control focus.
     confirmRef.current?.focus()
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel()
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
-  }, [open, onCancel])
+  }, [open])
 
   if (!open || typeof document === 'undefined') return null
 
@@ -74,7 +75,7 @@ export function ConfirmDialog({
       className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
     >
-      <div className="w-full max-w-md rounded-2xl bg-[#0d0d10] border border-white/10 shadow-2xl overflow-hidden">
+      <div ref={panelRef} className="w-full max-w-md rounded-2xl bg-[#0d0d10] border border-white/10 shadow-2xl overflow-hidden">
         <div className="p-6">
           <div className="flex items-start gap-4">
             {destructive && (

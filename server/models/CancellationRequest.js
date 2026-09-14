@@ -54,7 +54,13 @@ const cancellationRequestSchema = new mongoose.Schema({
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'processed', 'rejected', 'cancelled'],
+      // 'processing' — a refund attempt is in flight with the payment provider.
+      // 'failed'     — the provider rejected it or is unreachable; needs a retry
+      //                or an operator. Distinct from 'rejected', which means a
+      //                human decided not to refund.
+      // Both were missing while processRefund() assigned 'processing', so every
+      // refund attempt threw a ValidationError on save.
+      enum: ['pending', 'approved', 'processing', 'processed', 'failed', 'rejected', 'cancelled'],
       default: 'pending'
     },
     processedAt: Date,
@@ -62,7 +68,11 @@ const cancellationRequestSchema = new mongoose.Schema({
       type: String,
       enum: ['original_payment', 'store_credit', 'bank_transfer']
     },
-    transactionId: String
+    // The payment provider's own refund id. Only ever set from a real provider
+    // response — never synthesized.
+    transactionId: String,
+    // Why a refund is sitting in 'failed'/'pending', for the operator queue.
+    failureReason: String
   },
   // Status
   status: {

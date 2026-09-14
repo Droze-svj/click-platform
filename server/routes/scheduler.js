@@ -4,6 +4,7 @@ const ScheduledPost = require('../models/ScheduledPost');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { sendError } = require('../utils/response');
 const cron = process.env.NODE_ENV === 'test' 
   ? { schedule: () => ({ start: () => {}, stop: () => {} }) } 
   : require('node-cron');
@@ -278,6 +279,120 @@ router.post('/:postId/cancel', auth, async (req, res) => {
 });
 
 // Get scheduled posts
+/**
+ * GET /api/scheduler/analytics
+ *
+ * Aggregate view of the caller's queue. Added because AdvancedSchedulingHub —
+ * a fully-built UI — called this, /templates and /bulk-reschedule, and none of
+ * the three existed: the component was unreachable, so the 404s never surfaced.
+ *
+ * Every number is derived from real rows; nothing is estimated.
+ *   byStatus         count per ScheduledPost.status
+ *   optimalTimeUsage % of posts whose slot came from the optimal-time model
+ *                    (metadata.optimalTime / metadata.optimized, written by
+ *                    contentSchedulingService and unifiedContentPipelineService)
+ *   conflictRate     % of posts sharing a platform + minute with another post,
+ *                    which is what the hub's "signal conflicts" tile counts
+ */
+router.get('/analytics', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id || req.user.id;
+  const posts = await ScheduledPost.find({ userId })
+    .select('status platform scheduledTime metadata')
+    .lean();
+
+  const byStatus = {};
+  for (const p of posts) byStatus[p.status] = (byStatus[p.status] || 0) + 1;
+  // The hub reads byStatus.active; "active" is anything still ahead of publish.
+  byStatus.active = (byStatus.scheduled || 0) + (byStatus.pending || 0) + (byStatus.pending_approval || 0);
+
+  const total = posts.length;
+  const optimal = posts.filter((p) => p.metadata?.optimalTime || p.metadata?.optimized).length;
+
+  // Two posts collide when they target the same platform in the same minute.
+  const slots = new Map();
+  for (const p of posts) {
+    if (!p.scheduledTime) continue;
+    const key = `${p.platform}|${new Date(p.scheduledTime).toISOString().slice(0, 16)}`;
+    slots.set(key, (slots.get(key) || 0) + 1);
+  }
+  const conflicted = [...slots.values()].filter((n) => n > 1).reduce((a, n) => a + n, 0);
+
+  res.json({
+    success: true,
+    total,
+    byStatus,
+    optimalTimeUsage: total ? (optimal / total) * 100 : 0,
+    conflictRate: total ? (conflicted / total) * 100 : 0,
+  });
+}));
+
+/**
+ * GET /api/scheduler/templates
+ *
+ * Recurring templates, in the shape AdvancedSchedulingHub renders
+ * ({ _id, name, platforms[], usageCount }). Backed by RecurringPostTemplate,
+ * which stores a single `platform` and a `fireCount`.
+ */
+router.get('/templates', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id || req.user.id;
+  const RecurringPostTemplate = require('../models/RecurringPostTemplate');
+  const rows = await RecurringPostTemplate.find({ userId }).sort({ createdAt: -1 }).limit(100).lean();
+
+  res.json(rows.map((r) => ({
+    _id: String(r._id),
+    // The model has no name field; the cadence + platform is what identifies a
+    // template to a human, and inventing a stored name would be worse.
+    name: r.cadence ? `${r.cadence} · ${r.platform || 'all platforms'}` : (r.platform || 'Recurring post'),
+    platforms: r.platform ? [r.platform] : [],
+    usageCount: r.fireCount || 0,
+    active: r.active !== false,
+    nextFireAt: r.nextFireAt || null,
+  })));
+}));
+
+/**
+ * POST /api/scheduler/bulk-reschedule
+ * Body: { postIds: string[], timeShiftMs: number }
+ *
+ * Shifts every named post by the same offset. Scoped to the caller's own rows,
+ * and refuses to move a post that has already been published or is mid-publish.
+ */
+router.post('/bulk-reschedule', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id || req.user.id;
+  const { postIds, timeShiftMs } = req.body || {};
+
+  if (!Array.isArray(postIds) || postIds.length === 0) {
+    return sendError(res, 'postIds must be a non-empty array', 400);
+  }
+  if (!Number.isFinite(Number(timeShiftMs))) {
+    return sendError(res, 'timeShiftMs must be a number', 400);
+  }
+  const shift = Number(timeShiftMs);
+  const ids = postIds.filter((id) => mongoose.Types.ObjectId.isValid(String(id)));
+  if (ids.length === 0) return sendError(res, 'No valid post ids supplied', 400);
+
+  // Only rows this user owns, and only ones still waiting to go out — moving a
+  // post that is publishing or already posted would be a lie.
+  const movable = await ScheduledPost.find({
+    _id: { $in: ids },
+    userId,
+    status: { $in: ['scheduled', 'pending', 'pending_approval'] },
+  }).select('_id scheduledTime holdUntil');
+
+  let updated = 0;
+  for (const post of movable) {
+    if (!post.scheduledTime) continue;
+    post.scheduledTime = new Date(new Date(post.scheduledTime).getTime() + shift);
+    // Keep the safety hold consistent with the new time rather than stranding it
+    // in the past, which would let the post fire immediately.
+    if (post.holdUntil) post.holdUntil = new Date(new Date(post.holdUntil).getTime() + shift);
+    await post.save();
+    updated += 1;
+  }
+
+  res.json({ success: true, requested: postIds.length, updated, skipped: postIds.length - updated });
+}));
+
 router.get('/', auth, async (req, res) => {
   try {
     const { platform, status, startDate, endDate } = req.query;

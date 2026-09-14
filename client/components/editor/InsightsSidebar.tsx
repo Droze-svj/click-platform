@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Zap,
   Sparkles,
@@ -276,7 +276,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
          </div>
          <AnimatePresence initial={false}>
            {!isEcosystemCollapsed && (
-             <motion.div
+             <m.div
                initial={{ height: 0, opacity: 0 }}
                animate={{ height: 'auto', opacity: 1 }}
                exit={{ height: 0, opacity: 0 }}
@@ -297,7 +297,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                          className="flex-1 flex items-center justify-center py-2 rounded-lg transition-all relative group"
                        >
                          {isSelected && (
-                           <motion.div
+                           <m.div
                              layoutId="active-platform-bg"
                              className="absolute inset-0 bg-white/10 rounded-lg border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"
                              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
@@ -306,7 +306,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                          <p.icon className={`w-4 h-4 relative z-10 transition-colors ${isSelected ? p.color : 'text-slate-400 opacity-60 group-hover:opacity-100 group-hover:text-white'}`} />
                          
                          {hasSynergy && (
-                           <motion.div
+                           <m.div
                              layoutId="platform-glow"
                              className={`absolute inset-0 rounded-lg blur-md ${p.color.replace('text', 'bg')} opacity-20`}
                              initial={{ scale: 0.8 }}
@@ -318,7 +318,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                      )
                   })}
                 </div>
-             </motion.div>
+             </m.div>
            )}
          </AnimatePresence>
       </div>
@@ -327,7 +327,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
       <div className="space-y-6">
         {/* Neural Platform Advice */}
         {advice && (
-           <motion.div
+           <m.div
              key={`advice-${activePlatform}`}
              initial={{ opacity: 0, y: 10 }}
              animate={{ opacity: 1, y: 0 }}
@@ -335,7 +335,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
            >
              <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
              {advice}
-           </motion.div>
+           </m.div>
         )}
 
         {/* CTA Placement Optimizer */}
@@ -366,7 +366,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
            
            <div className="space-y-2">
               {currentScore.hookStrength < 85 && (
-                <motion.div 
+                <m.div 
                   whileHover={{ scale: 1.02 }}
                   className="p-3 rounded-2xl bg-rose-500/5 border border-rose-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-rose-500/[0.08]"
                 >
@@ -386,11 +386,11 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                   <p className="ds-text-caption text-theme-muted leading-relaxed">
                     First 3 seconds are slow. Inject an energetic kinetic zoom pattern-interrupt graphic to capture viewer interest immediately.
                   </p>
-                </motion.div>
+                </m.div>
               )}
 
               {currentScore.trendAlignment < 85 && (
-                <motion.div 
+                <m.div 
                   whileHover={{ scale: 1.02 }}
                   className="p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-amber-500/[0.08]"
                 >
@@ -410,11 +410,11 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                   <p className="ds-text-caption text-theme-muted leading-relaxed">
                     Pacing is slightly generic. Sync transitions to viral style patterns and inject high-tempo sfx hooks.
                   </p>
-                </motion.div>
+                </m.div>
               )}
 
               {hasHighDropoff && (
-                <motion.div 
+                <m.div 
                   whileHover={{ scale: 1.02 }}
                   className="p-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-indigo-500/[0.08]"
                 >
@@ -434,7 +434,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                   <p className="ds-text-caption text-theme-muted leading-relaxed">
                     Viewer drop-offs detected. Tighten pacing by automatically stripping out filler gaps and silences.
                   </p>
-                </motion.div>
+                </m.div>
               )}
            </div>
         </div>

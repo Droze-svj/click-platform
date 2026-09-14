@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   ChevronLeft,
   ChevronRight,
@@ -21,7 +21,7 @@ import {
   Sparkles,
   Library,
   Wand2,
-  Type,
+  Type, DollarSign
 } from 'lucide-react'
 import { EditorCategory } from '../../types/editor'
 import { CATEGORIES } from '../../utils/editorConstants'
@@ -71,6 +71,30 @@ function tierUnlocks(userTier: Tier, required: Tier): boolean {
 // that fell through to BasicEditorView). Thumbnail AI moved out of sidebar
 // since it's accessible via the dashboard's Studio zone.
 const NEW_2026_CATEGORIES = [
+  // Both were fully built against live endpoints and reachable from nowhere.
+  // Added as two categories, not ten — the rest of the unreachable editor views
+  // are account-level readouts and went to /dashboard/ops instead, so this
+  // sidebar stays the size the 2026 calm-down left it.
+  {
+    id: 'ai-assist' as EditorCategory,
+    label: 'AI Assist',
+    icon: Sparkles,
+    color: 'from-violet-500 to-indigo-600',
+    bgColor: 'bg-violet-900/20',
+    textColor: 'text-violet-400',
+    description: 'Smart cuts · suggestion review · apply & undo',
+    badge: 'NEW',
+  },
+  {
+    id: 'monetize' as EditorCategory,
+    label: 'Monetize',
+    icon: DollarSign,
+    color: 'from-emerald-500 to-teal-600',
+    bgColor: 'bg-emerald-900/20',
+    textColor: 'text-emerald-400',
+    description: 'Product links · QR · AI monetisation plan',
+    badge: 'NEW',
+  },
   {
     id: 'stock-library' as EditorCategory,
     label: 'Stock Library',
@@ -447,7 +471,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
 
                 {/* Pin button (hover) */}
                 {!isCollapsed && !isLocked && hoveredCategory === category.id && (
-                  <motion.button
+                  <m.button
                     initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     onClick={(e) => togglePin(category.id as EditorCategory, e)}
@@ -455,7 +479,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     title={isPinned ? 'Unpin' : 'Pin to top'}
                   >
                     <Pin className={cn('w-3 h-3', isPinned && 'text-primary fill-primary')} aria-hidden />
-                  </motion.button>
+                  </m.button>
                 )}
               </div>
             </React.Fragment>
@@ -502,7 +526,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
         {/* Keyboard shortcuts popover */}
         <AnimatePresence>
           {showShortcuts && !isCollapsed && (
-            <motion.div
+            <m.div
               initial={reduceMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
@@ -532,7 +556,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                   <kbd className="px-1.5 py-0.5 rounded bg-accent text-[10px] font-mono text-theme-primary">⌘F</kbd>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

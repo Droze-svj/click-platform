@@ -221,13 +221,15 @@ try {
  */
 async function detectScenes(config, context) {
   try {
-    // sceneDetectionService is an unimplemented stub (empty module). Degrade
-    // honestly instead of throwing "detectScenes is not a function".
+    // sceneDetectionService is real (ffmpeg-based, via multiModalSceneDetection).
+    // The typeof guard stays as cheap insurance — this module was a blank stub
+    // for a while, and callers here would otherwise throw
+    // "detectScenes is not a function".
     const sceneDetection = require('./sceneDetectionService');
     const detectScenesService = sceneDetection && sceneDetection.detectScenes;
     const { videoUrl, videoId, sensitivity, minSceneLength, maxScenes, fps, extractMetadata } = config;
     if (typeof detectScenesService !== 'function') {
-      logger.warn('Automation: scene detection unavailable (sceneDetectionService not implemented) — skipping', { videoId: videoId || videoUrl });
+      logger.warn('Automation: scene detection unavailable — skipping', { videoId: videoId || videoUrl });
       return { scenes: [], skipped: true, reason: 'scene_detection_unavailable' };
     }
     const userId = context.userId || context.user?._id?.toString();

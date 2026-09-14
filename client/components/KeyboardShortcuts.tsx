@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface KeyboardShortcut {
   key: string
@@ -181,6 +182,8 @@ export default function KeyboardShortcuts({ shortcuts = [], enabled = true }: Ke
 
 export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardShortcutsHelpProps) {
   const { t } = useTranslation()
+  const panelRef = useDialogBehavior(isOpen, onClose)
+
   if (!isOpen) return null
 
   // Group shortcuts by category

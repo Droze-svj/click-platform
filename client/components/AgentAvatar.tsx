@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import Image from 'next/image'
 
 interface AgentAvatarProps {
@@ -61,7 +61,7 @@ export default function AgentAvatar({ agentId, size = 100, className = '', glowC
       title={asset.alt}
     >
       {/* Background Pulse Glow */}
-      <motion.div
+      <m.div
         animate={{
           scale: [1, 1.25, 1],
           opacity: [0.3, 0.6, 0.3],
@@ -72,13 +72,13 @@ export default function AgentAvatar({ agentId, size = 100, className = '', glowC
       />
 
       {/* Holographic Ring Inner */}
-      <motion.div
+      <m.div
         animate={{ rotate: 360 }}
         transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
         className="absolute inset-[-5%] rounded-[3rem] border border-white/10 pointer-events-none overflow-hidden z-10"
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent blur-[1px]" />
-      </motion.div>
+      </m.div>
 
       {/* Main Avatar Container */}
       <div className="relative w-full h-full rounded-[3rem] overflow-hidden border-[1.5px] border-white/20 bg-black/40 shadow-2xl backdrop-blur-2xl group-hover:border-white/40 transition-all duration-700 p-[3px] z-20">
@@ -95,7 +95,7 @@ export default function AgentAvatar({ agentId, size = 100, className = '', glowC
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
           {/* Holographic Scanline */}
-          <motion.div
+          <m.div
             animate={{ y: ['-100%', '300%'] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
             className="absolute left-0 right-0 h-[2px] bg-white/30 blur-[2px] pointer-events-none z-10 opacity-40"
@@ -104,14 +104,14 @@ export default function AgentAvatar({ agentId, size = 100, className = '', glowC
       </div>
 
       {/* External Orbit / Accents */}
-      <motion.div 
+      <m.div 
         animate={{ rotate: -360 }}
         transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
         className="absolute -inset-4 border border-white/5 rounded-[3.5rem] pointer-events-none group-hover:scale-110 transition-transform duration-1000 z-0"
       >
         <div className="absolute top-[10%] left-[10%] w-2 h-2 rounded-full border border-white/20 bg-white/10 blur-[1px]" />
         <div className="absolute bottom-[20%] right-[15%] w-1.5 h-1.5 rounded-full border border-white/20 bg-white/5 blur-[1.5px]" />
-      </motion.div>
+      </m.div>
 
       {/* Dynamic Agent Name Tooltip (Desktop) */}
       <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none scale-90 group-hover:scale-100 z-30">

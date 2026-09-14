@@ -33,7 +33,10 @@ router.post('/schedule', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Report scheduled', 200, result);
   } catch (error) {
     logger.error('Schedule report error', { error: error.message });
-    sendError(res, error.message, 500);
+    // Honour the status the service set. Scheduled reports are not implemented,
+    // and that is a 501 the caller can act on — not a 500 that reads like a bug
+    // on our side and trips alerting.
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 
@@ -73,7 +76,7 @@ router.delete('/schedule/:reportType', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Scheduled report cancelled', 200);
   } catch (error) {
     logger.error('Cancel scheduled report error', { error: error.message, reportType });
-    sendError(res, error.message, 500);
+    sendError(res, error.message, error.statusCode || 500);
   }
 }));
 

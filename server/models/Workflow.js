@@ -23,6 +23,18 @@ const workflowSchema = new mongoose.Schema({
     required: true
   },
   description: String,
+  // Node/edge graph for the visual builder, as written by
+  // advancedWorkflowService.createWorkflow({ definition: { nodes, edges, triggers } }).
+  // It was never declared, so Mongoose dropped it on save — every workflow was
+  // stored with no definition at all — and executeWorkflow then did
+  // `const { nodes, edges } = workflow.definition`, which throws on undefined.
+  // Create silently lost the graph, execute crashed. Kept Mixed because the
+  // builder's node shape is client-defined and evolves independently of `steps`,
+  // which models the older linear form.
+  definition: {
+    type: mongoose.Schema.Types.Mixed,
+    default: undefined,
+  },
   steps: [{
     order: Number,
     action: {

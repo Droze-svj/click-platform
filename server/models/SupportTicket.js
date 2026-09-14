@@ -13,7 +13,17 @@ const supportTicketSchema = new mongoose.Schema({
   ticketNumber: {
     type: String,
     unique: true,
-    required: true
+    required: true,
+    // Generated as a schema default, NOT in the pre('save') hook below. Mongoose
+    // registers its validation hook when the schema is created, so it runs
+    // BEFORE any user pre('save') hook — a required field first assigned in
+    // pre('save') is still unset at validation time. That made every
+    // `new SupportTicket(...).save()` fail with "Path `ticketNumber` is
+    // required", which silently killed all three ticket-creating features
+    // (billing support, help-center tickets, invoice-correction requests).
+    // A default is applied at construction, so it also covers create() and
+    // insertMany().
+    default: generateTicketNumber
   },
   // Ticket details
   category: {
@@ -100,12 +110,10 @@ supportTicketSchema.index({ priority: 1, createdAt: -1 });
 
 supportTicketSchema.pre('save', function(next) {
   this.updatedAt = new Date();
-  
-  // Generate ticket number if new
-  if (this.isNew && !this.ticketNumber) {
-    this.ticketNumber = generateTicketNumber();
-  }
-  
+
+  // ticketNumber is assigned by the field default above — see the note there for
+  // why generating it here does not work.
+
   // Set SLA for billing tickets
   if (this.billingRelated && !this.sla.targetResponseTime) {
     this.sla.targetResponseTime = 60; // 1 hour for billing

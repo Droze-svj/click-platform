@@ -156,14 +156,20 @@ function customizeTemplate(template, customizations) {
  */
 async function createContentFromTemplate(userId, clientId, template) {
   try {
+    // Field names must match the Content schema: `content` is a sub-document
+    // ({ text, hashtags, … }), not a string; there is no `platform`, `clientId`
+    // or `hashtags` path; and 'draft' is not in the status enum, so save() threw
+    // before any of the dropped fields could even matter.
     const content = new Content({
       userId,
-      clientId,
-      platform: template.platform,
+      clientWorkspaceId: clientId,
+      platforms: template.platform ? [template.platform] : [],
       type: template.format,
-      content: template.template.caption || '',
-      hashtags: template.template.hashtags || [],
-      status: 'draft',
+      content: {
+        text: template.template.caption || '',
+        hashtags: template.template.hashtags || [],
+      },
+      status: 'completed',
       metadata: {
         createdFromPlaybook: true,
         templateName: template.name

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo, type CSSProperties } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Palette, Zap, Layout, Eye, Shield, Mic,
   Type as FontIcon, ToggleLeft, ToggleRight
@@ -325,7 +325,7 @@ export default function DynamicSubtitleEngine({
         ))}
 
         {/* Caption container — Y position shifts away from avoidance zones */}
-        <motion.div
+        <m.div
           className="absolute left-1/2 -translate-x-1/2 w-full text-center px-8"
           animate={{ top: `${captionY}%` }}
           transition={{ type: 'spring', stiffness: 200, damping: 25 }}
@@ -346,7 +346,7 @@ export default function DynamicSubtitleEngine({
                 const proceduralJitter = (isActive && isShouting) ? [-1, 1, -2, 2, 0] : 0
 
                 return (
-                  <motion.span
+                  <m.span
                     key={`${word.text}-${word.start}`}
                     initial={{ opacity: 0, scale: 0.8, y: 10 }}
                     animate={{
@@ -372,12 +372,12 @@ export default function DynamicSubtitleEngine({
                     >
                       {word.text}
                     </span>
-                  </motion.span>
+                  </m.span>
                 )
               })}
             </AnimatePresence>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Status badges */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Zap, Activity, TrendingUp, TrendingDown, AlertTriangle,
   CheckCircle2, Flame, MessageSquare, Eye, Heart,
@@ -13,6 +13,7 @@ import { apiGet } from '../lib/api'
 import ToastContainer from '../components/ToastContainer'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const glass = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
 
@@ -97,6 +98,7 @@ export default function ResonanceCommandMatrix() {
   const [data, setData] = useState<CommandCenterData | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedPost, setSelectedPost] = useState<PostHealth | null>(null)
+  const panelRef = useDialogBehavior(!!selectedPost, () => setSelectedPost(null))
 
   const fetchResonanceData = useCallback(async () => {
     setLoading(true)
@@ -167,7 +169,7 @@ export default function ResonanceCommandMatrix() {
             { label: t('engagementCommandCenter.kpiAvgAffinity'), value: data.avgEngagementRate.toFixed(1), unit: '%', icon: Heart, color: 'text-rose-400', trend: t('engagementCommandCenter.trendSignalTrajectory') },
             { label: t('engagementCommandCenter.kpiWorkflowVelocity'), value: data.workflowEfficiencyScore, unit: '%', icon: Zap, color: getScoreColor(data.workflowEfficiencyScore), trend: t('engagementCommandCenter.trendIdeationThroughput') },
           ].map((kpi, i) => (
-            <motion.div key={kpi.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+            <m.div key={kpi.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
               whileHover={{ y: -10, backgroundColor: 'rgba(255,255,255,0.06)' }}
               className={`${glass} p-12 rounded-[5rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)]`}
             >
@@ -182,14 +184,14 @@ export default function ResonanceCommandMatrix() {
                <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5">
                   {kpi.trend}
                </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
 
         {/* Matrix Intelligence & Kinetic Alert */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-16 relative z-10">
            {/* Heuristic Protocol Advice */}
-           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+           <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
              className={`${glass} p-16 rounded-[6rem] bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20 shadow-[inset_0_0_100px_rgba(0,0,0,0.4)] relative flex flex-col justify-between min-h-[400px] group transition-all duration-1000`}
            >
               <div className="absolute top-0 right-0 p-16 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity duration-1000"><Terminal size={300} /></div>
@@ -210,11 +212,11 @@ export default function ResonanceCommandMatrix() {
               <div className="flex items-center gap-6 text-[11px] font-black text-indigo-400 uppercase tracking-[0.8em] italic border-t border-white/5 pt-12">
                  {t('engagementCommandCenter.missionCriticalUpdate')}
               </div>
-           </motion.div>
+           </m.div>
 
            {/* Kinetic Signal Breach Card */}
            {data.peakVelocityPost && (
-             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
+             <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
                className={`${glass} p-16 rounded-[6rem] bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20 shadow-[inset_0_0_100px_rgba(0,0,0,0.4)] cursor-pointer group flex flex-col justify-between min-h-[400px] transition-all duration-1000`}
                onClick={() => setSelectedPost(data.peakVelocityPost)}
              >
@@ -243,7 +245,7 @@ export default function ResonanceCommandMatrix() {
                     <p className="text-[18px] font-black text-white italic tracking-tight leading-snug">{data.peakVelocityPost.anomalyAdvice.action}</p>
                   </div>
                 )}
-             </motion.div>
+             </m.div>
            )}
         </div>
 
@@ -260,7 +262,7 @@ export default function ResonanceCommandMatrix() {
 
            <div className="grid grid-cols-1 gap-10 relative z-10">
               {data.posts.map((post, i) => (
-                <motion.div key={post.postId} initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                <m.div key={post.postId} initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                   whileHover={{ x: 20, backgroundColor: 'rgba(255,255,255,0.04)' }}
                   className={`${glass} flex flex-col xl:flex-row items-center gap-12 p-8 rounded-[4rem] border shadow-2xl cursor-pointer transition-all duration-700 ${getScoreBg(post.healthScore)}`}
                   onClick={() => setSelectedPost(post)}
@@ -289,7 +291,7 @@ export default function ResonanceCommandMatrix() {
                    <div className={`text-7xl font-black italic tracking-tighter tabular-nums leading-none flex items-end gap-2 drop-shadow-2xl ${getScoreColor(post.healthScore)}`}>
                       {post.healthScore}<span className="text-2xl opacity-40 mb-2">%_INTEGRITY</span>
                    </div>
-                </motion.div>
+                </m.div>
               ))}
            </div>
         </div>
@@ -297,11 +299,13 @@ export default function ResonanceCommandMatrix() {
         {/* ── Post Detail Drawer (Heuristic Insight) ── */}
         <AnimatePresence>
           {selectedPost && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xl flex items-center justify-center p-8"
               onClick={() => setSelectedPost(null)}
+              role="dialog"
+              aria-modal="true"
             >
-              <motion.div initial={{ scale: 0.9, y: 100, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 100, opacity: 0 }} transition={{ type: "spring", damping: 25 }}
+              <m.div ref={panelRef} initial={{ scale: 0.9, y: 100, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 100, opacity: 0 }} transition={{ type: "spring", damping: 25 }}
                 className={`${glass} w-full max-w-4xl rounded-[6rem] p-24 space-y-16 border-white/10 shadow-[0_100px_200px_rgba(0,0,0,0.8)] relative overflow-hidden`}
                 onClick={e => e.stopPropagation()}
               >
@@ -360,8 +364,8 @@ export default function ResonanceCommandMatrix() {
                  <div className="pt-8 flex justify-center relative z-10">
                     <button type="button" onClick={() => setSelectedPost(null)} className="px-16 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3.5rem] hover:bg-indigo-600 hover:text-white transition-all duration-700 shadow-2xl active:scale-95">{t('engagementCommandCenter.closeDiagnosticButton')}</button>
                  </div>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           )}
         </AnimatePresence>
 

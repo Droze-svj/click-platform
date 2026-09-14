@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Check, ArrowRight, Wand2, Layers, CalendarClock, LineChart } from 'lucide-react'
 import { useLandingTheme } from './LandingThemeContext'
 import {
@@ -66,7 +66,7 @@ export default function PlanBuilder() {
 
   return (
     <section id="plan-builder" className={`relative ${sectionPadding}`}>
-      <motion.div {...fadeUpInView} className="max-w-6xl mx-auto">
+      <m.div {...fadeUpInView} className="max-w-6xl mx-auto">
         <div className="text-center mb-10">
           <span className={`inline-block text-[11px] font-black uppercase tracking-[0.3em] bg-gradient-to-r ${accent.gradient} bg-clip-text text-transparent`}>
             Build your plan
@@ -172,7 +172,7 @@ export default function PlanBuilder() {
 
             <div className="flex-1 space-y-3" aria-live="polite">
               <AnimatePresence mode="wait">
-                <motion.ul
+                <m.ul
                   key={`${niche}-${platforms.join()}-${goal}`}
                   initial={reduce ? false : { opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -194,7 +194,7 @@ export default function PlanBuilder() {
                       </li>
                     )
                   })}
-                </motion.ul>
+                </m.ul>
               </AnimatePresence>
             </div>
 
@@ -208,7 +208,7 @@ export default function PlanBuilder() {
             <p className="mt-2 text-center text-[11px] text-white/40">Free forever · No card · First export in 90 seconds</p>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </section>
   )
 }

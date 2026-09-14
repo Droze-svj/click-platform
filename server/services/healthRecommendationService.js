@@ -109,7 +109,11 @@ async function generateComponentRecommendations(clientWorkspaceId, component, sc
     });
   }
 
-  if (awareness[0]?.shareOfVoice.total < 10) {
+  // Only advise on share of voice when it was actually measured. `total` is null
+  // when no social-listening/competitor data is available, and `null < 10` is
+  // true — which would fire this recommendation at every workspace on no evidence.
+  const shareOfVoiceTotal = awareness[0]?.shareOfVoice?.total;
+  if (typeof shareOfVoiceTotal === 'number' && shareOfVoiceTotal < 10) {
     recommendations.push({
       component: 'awareness',
       priority: 'medium',

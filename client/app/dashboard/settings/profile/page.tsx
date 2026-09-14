@@ -14,6 +14,7 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
 import {
   Panel, SectionHeader, Button, IconButton, FormField, Input, Textarea,
+  PageShell,
 } from '@/components/ui'
 
 export default function IdentityMatrixInterfacePage() {
@@ -202,7 +203,7 @@ export default function IdentityMatrixInterfacePage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1400px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -377,7 +378,7 @@ export default function IdentityMatrixInterfacePage() {
             </Panel>
           </section>
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

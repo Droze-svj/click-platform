@@ -197,10 +197,25 @@ async function downloadTemplate(templateId, userId) {
       throw new Error('Template not accessible');
     }
 
-    // Check if premium and user has access
-    if (template.isPremium && template.price > 0) {
-      // In production, check payment/subscription
-      // For now, allow download
+    // Premium templates. There is NO purchase flow anywhere in this codebase —
+    // no checkout, no entitlement record, nothing that could mark this template
+    // as bought. The previous version acknowledged that with "In production,
+    // check payment/subscription / For now, allow download" and then handed the
+    // template over, so anything a creator published at a price was free to
+    // every other user while still being advertised as paid.
+    //
+    // Refusing is the honest side of that contradiction: giving away content the
+    // platform presented as costing money misleads the seller, and nobody loses
+    // access they were ever entitled to. The template's own author keeps access
+    // (the ownership check above lets them through before this point only for
+    // non-public templates, so re-check it here).
+    const isAuthor = template.userId?.toString?.() === userId?.toString?.();
+    if (template.isPremium && template.price > 0 && !isAuthor) {
+      const err = new Error(
+        'This template is premium and template purchases are not available yet.'
+      );
+      err.statusCode = 402;
+      throw err;
     }
 
     // Increment download count

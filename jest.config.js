@@ -14,17 +14,37 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json'],
+  // V8 coverage, NOT the default babel-plugin-istanbul provider.
+  //
+  // WHY: the security-audit override pins `minimatch: ^10` for every package in
+  // the tree, but babel-plugin-istanbul@6 depends on test-exclude@6, which
+  // declares `minimatch: ^3.0.4` and calls it as a CALLABLE DEFAULT. minimatch
+  // dropped that default export in v7+, so instrumentation threw
+  // `TypeError: minimatch is not a function` and EVERY suite failed to run the
+  // moment --coverage was passed. That is the real reason coverage collapsed to
+  // 0/0 (the old "no --selectProjects" theory in ci.yml was a misdiagnosis).
+  // The v8 provider reads coverage straight from the VM, so it never loads
+  // test-exclude and the override can keep doing its security job untouched.
+  coverageProvider: 'v8',
+  // RATCHET, not an aspiration. 70/70/70/70 was configured but never enforced —
+  // coverage had been silently reporting 0/0 (see coverageProvider below), so the
+  // number was never true and the CI step was continue-on-error. These are the
+  // real measured values for `unit`+`integration` (the projects `test:coverage`
+  // runs), set a couple of points below current so normal churn doesn't trip it.
+  // Raise them as coverage improves; never lower them to make a red build green.
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70
+      branches: 55,
+      functions: 20,
+      lines: 30,
+      statements: 30
     }
   },
   setupFiles: ['<rootDir>/tests/setup-env.js'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  testTimeout: 30000,
+  // No root-level testTimeout: with `projects`, jest ignores it AND warns
+  // "Unknown option testTimeout" on every single run. Each project sets its own
+  // (verified honoured — a deliberate 7s test passes under the unit project).
   // Handle ES modules in node_modules (for isomorphic-dompurify)
   transformIgnorePatterns: [
     'node_modules/(?!(isomorphic-dompurify|parse5)/)'
@@ -89,6 +109,10 @@ module.exports = {
       testMatch: ['<rootDir>/tests/smoke/smokeFull.test.js'],
       setupFiles: ['<rootDir>/tests/setup-env.js'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      // NOTE: no testTimeout here on purpose — tests/setup.js calls
+      // jest.setTimeout(60000) at runtime, and a runtime call beats project
+      // config, so it would have no effect. smokeFull.test.js overrides it
+      // in-file instead (the same pattern e2e-flows and user-flow already use).
     },
     {
       // Render-fidelity — renders known editor states through real ffmpeg and

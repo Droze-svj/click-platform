@@ -50,6 +50,7 @@ async function checkDatabase() {
  * Check Redis connection (if configured)
  */
 async function checkRedis() {
+  let client = null;
   try {
     const redis = require('redis');
     const isDev = process.env.NODE_ENV !== 'production';
@@ -59,16 +60,26 @@ async function checkRedis() {
       return { enabled: !!process.env.REDIS_URL, status: isDev && isLocalhost ? 'Local-Guard Bypassed' : 'not configured' };
     }
 
-    const client = redis.createClient({ url: process.env.REDIS_URL });
+    client = redis.createClient({
+      url: process.env.REDIS_URL,
+      socket: { connectTimeout: 3000 }
+    });
+    client.on('error', (err) => {
+      logger.warn('Health check Redis client error', { error: err.message });
+    });
+
     await client.connect();
     const start = Date.now();
     await client.ping();
     const latency = Date.now() - start;
-    await client.quit();
 
     return { enabled: true, connected: true, latency: `${latency}ms` };
   } catch (error) {
     return { enabled: true, connected: false, error: error.message };
+  } finally {
+    if (client) {
+      try { await client.disconnect(); } catch (_) { /* ignore */ }
+    }
   }
 }
 

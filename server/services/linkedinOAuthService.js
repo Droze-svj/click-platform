@@ -6,6 +6,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const User = require('../models/User');
 const oauthService = require('./oauthService');
 const OAuthStorage = require('../utils/oauthStorage');
@@ -34,9 +35,11 @@ function getScope() {
   return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
 }
 
-function defaultRedirectUri() {
-  return process.env.LINKEDIN_CALLBACK_URL ||
-    `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/linkedin/callback`;
+// Delegates to the shared resolver so the authorize step and the token exchange
+// can never derive different values (they previously used different env names
+// and different fallbacks — see utils/oauthCallbackUrl.js).
+function defaultRedirectUri(req) {
+  return resolveOAuthCallbackUrl('linkedin', req);
 }
 
 /**
@@ -93,7 +96,10 @@ async function getAuthorizationUrl(userId, state, callbackUrl) {
 /**
  * Exchange code for token
  */
-async function exchangeCodeForToken(userId, code, state) {
+// callbackUrl MUST be the value the authorize step used; the callback route
+// resolves it from the live request and passes it in. Falling back to the
+// default here is what made every exchange fail with redirect_uri_mismatch.
+async function exchangeCodeForToken(userId, code, state, callbackUrl) {
   // Resolve the OAuth state we saved during getAuthorizationUrl.
   let linkedinData;
   if (isMongoUserId(userId)) {
@@ -110,7 +116,7 @@ async function exchangeCodeForToken(userId, code, state) {
     const response = await axios.post(TOKEN_URL, new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: defaultRedirectUri(),
+      redirect_uri: callbackUrl || defaultRedirectUri(),
       client_id: process.env.LINKEDIN_CLIENT_ID,
       client_secret: process.env.LINKEDIN_CLIENT_SECRET,
     }), {

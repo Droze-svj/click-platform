@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Virtuoso } from 'react-virtuoso'
 import {
   Zap,
@@ -244,13 +244,21 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       setIsExtractingQuotes(true)
       showToast(`Extracting quotes with ${aiProfile.label}…`, 'info')
       const fullText = editingWords.map(w => w.word).join(' ')
-      const data = await apiPost<{ success?: boolean; quotes?: any[] }>('/ai/extract-quotes', {
+      // The route is sendSuccess-wrapped and the service's own { success, quotes }
+      // object is the payload, so the quotes land at data.data.quotes. Reading
+      // data.quotes matched the OUTER envelope's shape — success was true, quotes
+      // was undefined — so the guard never passed and extraction silently
+      // produced nothing, every time.
+      const res = await apiPost<{ success?: boolean; data?: { quotes?: any[] } }>('/ai/extract-quotes', {
         transcript: fullText,
         persona: activePersona
       })
-      if (data?.success && data.quotes) {
-        setViralQuotes(data.quotes)
-        showToast(`✓ Extracted ${data.quotes.length} key quotes`, 'success')
+      const quotes = res?.data?.quotes
+      if (res?.success && Array.isArray(quotes) && quotes.length > 0) {
+        setViralQuotes(quotes)
+        showToast(`✓ Extracted ${quotes.length} key quotes`, 'success')
+      } else {
+        showToast('No quotes found in this transcript', 'info')
       }
     } catch (e) {
       showToast('Quote extraction failed', 'error')
@@ -456,7 +464,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   }
 
   return (
-    <motion.div
+    <m.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -465,7 +473,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       {/* ── SUBVIEW: THE MIMIC ── */}
       <AnimatePresence mode="wait">
         {view === 'mimic' && (
-          <motion.div
+          <m.div
             key="mimic-view"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -481,11 +489,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 setView('main')
               }}
             />
-          </motion.div>
+          </m.div>
         )}
 
         {view === 'variant-factory' && (
-          <motion.div
+          <m.div
             key="factory-view"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -514,12 +522,12 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 setView('main')
               }}
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Header Node */}
-      <motion.div variants={itemVariants} className="space-y-6">
+      <m.div variants={itemVariants} className="space-y-6">
         <div className="flex flex-col justify-between gap-8 xl:flex-row xl:items-start">
           <div className="space-y-5">
             <SectionHeader as="h1" title="AI Storyteller" description={`${aiProfile.label} · ${aiLevelBits.join(' · ')}`} />
@@ -649,7 +657,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
                   {/* Loading progress indicator while the forge runs */}
                   {isForging && (
-                    <motion.div
+                    <m.div
                       initial={{ width: 0 }}
                       animate={{ width: '100%' }}
                       transition={{ duration: 5, ease: 'linear' }}
@@ -673,15 +681,15 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
              </div>
           </Panel>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Suggested Assets Node */}
       {suggestedAssets.length > 0 && (
-        <motion.div variants={itemVariants} className="space-y-4">
+        <m.div variants={itemVariants} className="space-y-4">
            <SectionHeader as="h3" title="Suggested Assets" />
            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {suggestedAssets.map((asset, i) => (
-                <motion.div
+                <m.div
                   key={asset.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -710,14 +718,14 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                       Inject Draft Node
                     </Button>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
            </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Initialize / Management Card */}
-      <motion.div variants={itemVariants}>
+      <m.div variants={itemVariants}>
        <Panel variant="glass" className="relative overflow-hidden">
         <div className="relative z-10 space-y-8">
           {requirementsReady === false && (
@@ -769,7 +777,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             </div>
           </div>
 
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={async () => {
@@ -812,7 +820,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
           >
             {isTranscribing ? <Loader2 className="h-6 w-6 animate-spin" aria-hidden /> : <Fingerprint className="h-6 w-6" aria-hidden />}
             {isTranscribing ? 'Transcribing…' : requirementsReady === false ? 'Core Offline' : 'Initialize Semantic Extraction'}
-          </motion.button>
+          </m.button>
 
           <div className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-border bg-background/40 p-6 transition-colors hover:border-primary/20 xl:flex-row">
             <div className="flex items-center gap-4">
@@ -879,7 +887,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             {autoEditClips.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {autoEditClips.map((clip, i) => (
-                  <motion.div
+                  <m.div
                     key={clip.id}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -895,7 +903,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     <h5 className="ds-text-label mb-4 truncate text-theme-primary">{clip.name}</h5>
                     <div className="mb-6 flex items-center gap-3">
                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent">
-                          <motion.div
+                          <m.div
                             initial={{ width: 0 }}
                             animate={{ width: `${clip.engagementScore?.viralPotential || 0}%` }}
                             className="h-full bg-primary"
@@ -906,7 +914,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     <Button variant="secondary" size="sm" className="w-full" onClick={() => onApplyClip?.(clip)}>
                       Apply to Timeline
                     </Button>
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
             ) : (
@@ -917,7 +925,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
           </div>
         </div>
        </Panel>
-      </motion.div>
+      </m.div>
 
       <SwarmConsensusHUD
         isVisible={showSwarmHUD}
@@ -945,14 +953,14 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
       <AnimatePresence>
         {transcript && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -40 }}
             className="space-y-12"
           >
             {/* Transcript Card */}
-            <motion.div variants={itemVariants}>
+            <m.div variants={itemVariants}>
              <Panel variant="glass">
                <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                   <div className="space-y-1">
@@ -975,30 +983,30 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                    itemContent={(index, chunk) => (
                      <div className="flex flex-wrap gap-3 border-b border-border p-6 last:border-0">
                         {chunk.words.map((w: any, i: number) => (
-                          <motion.span
+                          <m.span
                             key={`${index}-${i}`}
                             whileHover={{ scale: 1.1, color: '#818cf8' }}
                             className="cursor-pointer select-none text-lg font-semibold text-theme-secondary transition-colors"
                           >
                             {w.word}
-                          </motion.span>
+                          </m.span>
                         ))}
                      </div>
                    )}
                  />
                </div>
              </Panel>
-            </motion.div>
+            </m.div>
 
             {/* Quotes Node */}
-            <motion.div variants={itemVariants} className="space-y-4">
+            <m.div variants={itemVariants} className="space-y-4">
                <SectionHeader as="h3" title="Viral-worthy quotes" />
 
               <div>
                 {viralQuotes.length > 0 ? (
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {viralQuotes.map((quote, i) => (
-                      <motion.div
+                      <m.div
                         key={i}
                         initial={{ opacity: 0, x: -16 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -1024,7 +1032,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                             <div className="flex items-center gap-3">
                                <span className="ds-text-caption">Logic {String(i + 1).padStart(2, '0')}</span>
                                <div className="relative h-1 w-24 overflow-hidden rounded-full bg-accent" title={`Originality Score: ${quote.originalityScore}%`}>
-                                  <motion.div
+                                  <m.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${quote.originalityScore || 70}%` }}
                                     className="h-full bg-gradient-to-r from-orange-500 to-indigo-500"
@@ -1081,7 +1089,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                             </div>
                           )}
                         </div>
-                      </motion.div>
+                      </m.div>
                     ))}
                   </div>
                 ) : (
@@ -1094,11 +1102,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                   </Panel>
                 )}
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   )
 }
 

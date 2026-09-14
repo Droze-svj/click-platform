@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   X, HelpCircle, Layers, SlidersHorizontal, Sun, PaintBucket,
   ZoomIn, Type, MonitorPlay, Zap, RefreshCw, Smartphone, Monitor, Hexagon,
@@ -142,7 +142,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       </div>
       <div className="relative h-6 flex items-center">
         <div className="absolute inset-x-0 h-1 bg-white/5 rounded-full overflow-hidden">
-          <motion.div
+          <m.div
             className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500"
             style={{ width: `${((value - min) / (max - min)) * 100}%` }}
           />
@@ -165,7 +165,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           }}
           className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
         />
-        <motion.div
+        <m.div
           className="absolute w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] border border-indigo-500 pointer-events-none"
           style={{ left: `calc(${((value - min) / (max - min)) * 100}% - 5px)` }}
         />
@@ -174,7 +174,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   )
 
   return (
-    <motion.aside
+    <m.aside
       initial={{ x: 320, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 320, opacity: 0 }}
@@ -219,7 +219,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 )}
               >
                 {activeTab === tab && (
-                  <motion.div
+                  <m.div
                     layoutId="active-property-tab"
                     className="absolute inset-0 ds-surface-card rounded-lg"
                   />
@@ -234,7 +234,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-8 pb-12">
           <AnimatePresence mode="wait">
             {activeTab === 'clip' && selectedSegmentId && (
-              <motion.div
+              <m.div
                 key="clip"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -369,7 +369,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                      }}
                                      className={`w-10 h-5 rounded-full relative transition-colors ${seg.audioDucking ? 'bg-orange-500' : 'bg-white/10'}`}
                                   >
-                                     <motion.div
+                                     <m.div
                                         animate={{ x: seg.audioDucking ? 20 : 2 }}
                                         className="absolute top-0.5 left-0 w-4 h-4 rounded-full bg-white shadow-sm"
                                      />
@@ -381,11 +381,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                      </div>
                   )
                 })()}
-              </motion.div>
+              </m.div>
             )}
 
             {activeTab === 'transform' && (
-              <motion.div
+              <m.div
                 key="transform"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -410,7 +410,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           <span className="ds-text-label text-theme-secondary">Animation</span>
                           <span className="ds-text-caption text-primary">{videoTransformKeyframes?.length || 0} keyframes</span>
                         </div>
-                        <motion.button
+                        <m.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => {
@@ -428,7 +428,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           className="w-full py-3 rounded-lg bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary ds-text-label transition-all"
                         >
                           + Add keyframe at playhead
-                        </motion.button>
+                        </m.button>
 
                         {onTimeUpdate && videoTransformKeyframes && videoTransformKeyframes.length > 0 && (
                            <div className="flex items-center gap-2 mt-2">
@@ -504,11 +504,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     )}
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             )}
 
             {activeTab === 'synthesis' && (
-              <motion.div
+              <m.div
                 key="synthesis"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -528,11 +528,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <ControllerSlider label="Edge Clarity" value={videoFilters.clarity} min={-100} max={100} field="clarity" resetValue={0} />
                   <ControllerSlider label="Atmospheric Dehaze" value={videoFilters.dehaze} min={-100} max={100} field="dehaze" resetValue={0} />
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {activeTab === 'projection' && (
-              <motion.div
+              <m.div
                 key="projection"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -553,7 +553,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       <span className="ds-text-caption text-theme-muted">Render real-time transcript</span>
                     </div>
                     <div className={`w-10 h-5 rounded-full border border-white/10 relative transition-all ${cap.enabled ? 'bg-emerald-600' : 'bg-white/5'}`}>
-                      <motion.div animate={{ x: cap.enabled ? 20 : 2 }} className="absolute top-1 w-3 h-3 rounded-full bg-white shadow-sm" />
+                      <m.div animate={{ x: cap.enabled ? 20 : 2 }} className="absolute top-1 w-3 h-3 rounded-full bg-white shadow-sm" />
                     </div>
                   </div>
 
@@ -561,7 +561,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     {CAPTION_CREATIVE_PRESETS.map((pre) => {
                       const isActive = cap.enabled && cap.textStyle === pre.textStyle && cap.layout === pre.layout
                       return (
-                        <motion.button
+                        <m.button
                           key={pre.id}
                           whileHover={{ y: -2 }}
                           whileTap={{ scale: 0.95 }}
@@ -570,7 +570,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         >
                           <span className={cn('block ds-text-label', isActive ? 'text-primary-foreground' : 'text-theme-secondary group-hover/preset:text-theme-primary')}>{pre.label}</span>
                           <span className={cn('block ds-text-caption mt-1', isActive ? 'text-primary-foreground/70' : 'text-theme-muted')}>{pre.description}</span>
-                        </motion.button>
+                        </m.button>
                       )
                     })}
                   </div>
@@ -591,11 +591,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {activeTab === 'entities' && (
-              <motion.div
+              <m.div
                 key="entities"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -638,7 +638,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     ))
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -652,7 +652,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <Zap className="w-3 h-3 text-amber-500" />
         </div>
       </div>
-    </motion.aside>
+    </m.aside>
   )
 }
 

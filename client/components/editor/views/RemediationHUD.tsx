@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Sparkles
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface RemediationAction {
@@ -96,7 +96,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                     <div className="space-y-4">
                         {status?.actionPlan ? (
                             status.actionPlan.map((action, i) => (
-                                <motion.div 
+                                <m.div 
                                     key={i}
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
@@ -119,7 +119,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                                         </div>
                                     </div>
                                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                </motion.div>
+                                </m.div>
                             ))
                         ) : (
                             <div className="h-48 flex flex-col items-center justify-center space-y-4 opacity-30 italic">

@@ -17,7 +17,7 @@ import {
   ChevronRight,
   ShieldCheck
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiPost } from '../../../lib/api'
 
 interface ComparisonResult {
@@ -157,16 +157,16 @@ export const RegionalComplianceView: React.FC = () => {
                 <div className="space-y-8">
                     <AnimatePresence mode="wait">
                         {!result && !loading ? (
-                            <motion.div 
+                            <m.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className={`${glassStyle} rounded-[2.5rem] p-24 flex flex-col items-center justify-center text-center space-y-6 italic opacity-20 h-full`}
                             >
                                 <Search className="w-16 h-16" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em]">Awaiting Compliance Ingestion</span>
-                            </motion.div>
+                            </m.div>
                         ) : (
-                            <motion.div 
+                            <m.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="space-y-8"
@@ -262,7 +262,7 @@ export const RegionalComplianceView: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </div>

@@ -331,7 +331,16 @@ async function restoreFromBackup(userId, backupData, options = {}) {
             } else {
               const exists = await Content.findOne({ _id: item._id, userId });
               if (!exists) {
-                await Content.create({ ...item, userId });
+                // `pipeline` holds Mongoose Maps. Mongoose 8 cannot validate a NEW
+                // document built with those Maps inside a nested object: it throws
+                // an uncaught TypeError ("val.keys is not a function") that escapes
+                // this try/catch. Create without it, then store it the way the
+                // pipeline itself does — as an update.
+                const { pipeline, ...fields } = item;
+                await Content.create({ ...fields, userId });
+                if (pipeline) {
+                  await Content.updateOne({ _id: item._id, userId }, { $set: { pipeline } });
+                }
               } else {
                 results.skipped.content++;
               }

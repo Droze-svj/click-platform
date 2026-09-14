@@ -6,6 +6,7 @@ const auth = require('../../middleware/auth');
 // drop the `this` binding and crash on the first call that touches state.
 const twitterService = require('../../services/twitterOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const { signState, verifyState } = require('../../utils/oauthState');
@@ -78,7 +79,7 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     if (!userId) {
       return sendError(res, 'Invalid OAuth state', 400);
     }
-    await twitterService.exchangeCodeForToken(userId, code, state);
+    await twitterService.exchangeCodeForToken(userId, code, state, resolveOAuthCallbackUrl('twitter', req));
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?connected=twitter&success=true`);

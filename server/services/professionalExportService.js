@@ -219,7 +219,7 @@ async function exportCustom(videoPath, outputPath, settings) {
 /**
  * Batch export to multiple formats
  */
-async function batchExport(videoPath, exports, onProgress) {
+async function batchExport(videoPath, exports, onProgress = null) {
   const results = [];
 
   for (const exportConfig of exports) {

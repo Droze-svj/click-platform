@@ -18,7 +18,15 @@ router.post('/generate-idea', auth, asyncHandler(async (req, res) => {
   
   const idea = await generateContentIdea(targetPlatforms);
 
-  sendSuccess(res, 'Content idea generated', 200, idea);
+  // Same honest-degraded shape as the other AI surfaces (see ai/recommendations):
+  // a 200 whose data says plainly that no idea was produced, instead of a
+  // placeholder the client would seed straight into content generation.
+  sendSuccess(
+    res,
+    idea.degraded ? 'Content idea temporarily unavailable' : 'Content idea generated',
+    200,
+    idea
+  );
 }));
 
 module.exports = router;

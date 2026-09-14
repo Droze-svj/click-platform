@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -240,7 +240,7 @@ export default function NeuralStrategyHub() {
           {/* Success Prediction Section */}
           <AnimatePresence>
             {prediction && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`${glassStyle} p-10 space-y-12 bg-gradient-to-br from-indigo-500/[0.08] via-transparent to-emerald-500/5`}
@@ -276,7 +276,7 @@ export default function NeuralStrategyHub() {
                        <span className="text-3xl font-black text-indigo-400 italic">%</span>
                     </div>
                     <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
-                       <motion.div
+                       <m.div
                          initial={{ width: 0 }}
                          animate={{ width: `${(typeof prediction.probability !== 'number' || isNaN(prediction.probability)) ? 0 : prediction.probability}%` }}
                          transition={{ duration: 2, ease: "circOut" }}
@@ -353,7 +353,7 @@ export default function NeuralStrategyHub() {
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             )}
  
             {/* Neural Agent reasoning log */}

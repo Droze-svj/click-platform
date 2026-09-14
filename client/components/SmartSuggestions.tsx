@@ -113,7 +113,7 @@ export default function SmartSuggestions() {
       {suggestions.length > 3 && (
         <button
           type="button"
-          onClick={() => router.push('/dashboard/suggestions')}
+          onClick={() => router.push('/dashboard/insights')}
           className="mt-4 w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
         >
           {t('smartSuggestions.viewAll', { count: suggestions.length })}

@@ -25,7 +25,13 @@ const emailApprovalTokenSchema = new mongoose.Schema({
   token: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    // Assigned here rather than in pre('save'): Mongoose registers its
+    // validation hook when the schema is created, so validation runs BEFORE
+    // any user pre('save') hook. A required field first assigned in
+    // pre('save') is still unset at validation time, which made every
+    // save() of this model fail. See SupportTicket.ticketNumber.
+    default: () => crypto.randomBytes(32).toString('hex')
   },
   action: {
     type: String,
@@ -58,14 +64,6 @@ const emailApprovalTokenSchema = new mongoose.Schema({
 emailApprovalTokenSchema.index({ token: 1, used: 1 });
 emailApprovalTokenSchema.index({ approvalId: 1, stageOrder: 1 });
 // token already has unique: true which creates an index
-
-emailApprovalTokenSchema.pre('save', function(next) {
-  if (this.isNew && !this.token) {
-    // Generate secure token
-    this.token = crypto.randomBytes(32).toString('hex');
-  }
-  next();
-});
 
 module.exports = mongoose.model('EmailApprovalToken', emailApprovalTokenSchema);
 

@@ -33,7 +33,7 @@ import {
   Share2,
   type LucideIcon,
 } from 'lucide-react'
-import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
+import { m, AnimatePresence, useMotionValue } from 'framer-motion'
 
 // Clinical Utilities
 import { getStatusColor, loadEditorContentPreferences, pushRecentSection } from '../utils/editorUtils'
@@ -53,6 +53,9 @@ import HealthDeltaOverlay from './editor/HealthDeltaOverlay'
 
 // Specialized Views
 import EliteAIView from './editor/views/EliteAIView'
+import AIAssistView from './editor/views/AIAssistView'
+import AdaptiveCritiquePanel from './editor/AdaptiveCritiquePanel'
+import MonetizationHub from './editor/views/MonetizationHub'
 import CreativeAIView from './editor/views/CreativeAIView'
 // Lazy-loaded: pulls in recharts (~heavy). Only loads when the Growth tab is
 // opened, keeping it out of the editor's initial chunk. (AdvancedTimelineView
@@ -934,7 +937,28 @@ const ModernVideoEditor: React.FC<{
     filterStrength, projectName, audioMix, videoId: videoId || 'temp-id'
   }), [videoFilters, textOverlays, timelineSegments, timelineMarkers, timelineEffects, colorGradeSettings, captionStyle, templateLayout, filterStrength, projectName, audioMix, videoId])
 
-  const effectiveFilters = useMemo(() => videoFilters, [videoFilters])
+  const effectiveFilters = useMemo(() => {
+    if (filterStrength === 100) return videoFilters
+    const factor = Math.max(0, Math.min(100, filterStrength)) / 100
+    const blend = (cur: number | undefined, base: number) => {
+      const c = typeof cur === 'number' ? cur : base
+      return base + (c - base) * factor
+    }
+    return {
+      ...videoFilters,
+      brightness: blend(videoFilters.brightness, 100),
+      contrast: blend(videoFilters.contrast, 100),
+      saturation: blend(videoFilters.saturation, 100),
+      temperature: blend(videoFilters.temperature, 0),
+      sepia: blend(videoFilters.sepia, 0),
+      blur: blend(videoFilters.blur, 0),
+      vignette: blend(videoFilters.vignette, 0),
+      highlights: blend(videoFilters.highlights, 0),
+      shadows: blend(videoFilters.shadows, 0),
+      tint: blend(videoFilters.tint, 0),
+      vfx: factor < 0.05 ? [] : videoFilters.vfx
+    }
+  }, [videoFilters, filterStrength])
 
   const { autosaveStatus, loadSavedState, getStatusIcon, retrySave, manualSave } = useVideoEditorAutosave({
     state: editorState,
@@ -2121,6 +2145,43 @@ const ModernVideoEditor: React.FC<{
         }))
         setTimelineSegments((prev: TimelineSegment[]) => [...prev, ...brollSegments])
       }} />
+      // Built, live (POST /api/video/manual-editing/ai-assist/smart-cuts) and
+      // imported by nothing until 2026-08. Distinct from EliteAIView/AutomateView,
+      // which do not touch the smart-cuts endpoint.
+      case 'ai-assist': return <>
+        <AIAssistView
+          videoId={videoId || ''}
+          transcript={transcript?.fullText}
+          aiSuggestions={aiSuggestions}
+          setAiSuggestions={setAiSuggestions}
+          setActiveCategory={setActiveCategory}
+          showToast={showToast}
+        />
+        {/* Rate each suggestion so the model learns this creator's taste. Posts
+            to the universal /api/ai/feedback, which upweights the trait on a
+            thumbs-up and records the reason on a thumbs-down. AIAssistView
+            reviews suggestions but captures no feedback at all, so the learning
+            loop was open on this surface. */}
+        <AdaptiveCritiquePanel
+          videoId={videoId || ''}
+          suggestions={aiSuggestions}
+          onOverride={(type, choice) => {
+            setAiSuggestions((prev: any[]) =>
+              prev.map((s) => (s.type === type ? { ...s, value: choice } : s)))
+          }}
+          showToast={showToast}
+        />
+      </>
+      // GET /api/monetization/products + POST /api/video/advanced/monetization-plan.
+      // DistributionHubView covers publishing, not monetisation.
+      case 'monetize': return <MonetizationHub
+        contentId={videoId || ''}
+        // The hub loads the real catalogue itself from GET /api/monetization/products;
+        // this is only the pre-fetch seed, so an empty list is the correct start.
+        initialProducts={[]}
+        transcript={transcript?.fullText}
+        onClose={() => setActiveCategory('edit')}
+      />
       case 'ai-edit': return <EliteAIView
         videoId={videoId || ''}
         isTranscribing={isTranscribing}
@@ -2143,7 +2204,7 @@ const ModernVideoEditor: React.FC<{
         onApplyStyleProfile={handleApplyStyleProfile}
         onBeatSync={handleBeatSync}
       />
-      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} onBeatCut={handleBeatCut} hasSegmentSelection={!!selectedSegmentId} />
+      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} onBeatCut={handleBeatCut} hasSegmentSelection={!!selectedSegmentId} playbackSpeed={playbackSpeed} setPlaybackSpeed={setPlaybackSpeed} onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))} selectedOverlayId={selectedOverlayId} onSelectOverlay={setSelectedOverlayId} />
       case 'short-clips': return <ShortClipsView videoState={videoState} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} setActiveCategory={setActiveCategory} showToast={showToast} transcript={transcript} />
       case 'growth': return <GrowthInsightsView isOledTheme={true} />
       case 'automate': return <AutomateView
@@ -2295,7 +2356,7 @@ const ModernVideoEditor: React.FC<{
         />
       }
 
-      default: return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} onBeatCut={handleBeatCut} hasSegmentSelection={!!selectedSegmentId} />
+      default: return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} onBeatCut={handleBeatCut} hasSegmentSelection={!!selectedSegmentId} playbackSpeed={playbackSpeed} setPlaybackSpeed={setPlaybackSpeed} onSeek={(time) => setVideoState(prev => ({ ...prev, currentTime: time }))} selectedOverlayId={selectedOverlayId} onSelectOverlay={setSelectedOverlayId} />
     }
   }
 
@@ -2459,7 +2520,7 @@ const ModernVideoEditor: React.FC<{
           <div className="px-4 pt-2 relative z-20">
             <AnimatePresence>
               {(activeCategory === 'insights' || activeCategory === 'ai-edit') && (
-                <motion.div
+                <m.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
@@ -2471,7 +2532,7 @@ const ModernVideoEditor: React.FC<{
                     duration={videoState.duration}
                   />
                   <div className="h-4" />
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>
@@ -2717,17 +2778,18 @@ const ModernVideoEditor: React.FC<{
                   
 
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
+                <div className={`flex-1 min-h-0 ${activeCategory === 'edit' ? 'overflow-hidden p-0' : 'overflow-y-auto p-4 custom-scrollbar'}`}>
                   <AnimatePresence mode="wait">
-                    <motion.div
+                    <m.div
                       key={activeCategory}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.4, ease: 'circOut' }}
+                      className={activeCategory === 'edit' ? 'h-full flex flex-col' : ''}
                     >
                       {getCategoryContent()}
-                    </motion.div>
+                    </m.div>
                   </AnimatePresence>
                 </div>
               </div>
@@ -2897,6 +2959,7 @@ const ModernVideoEditor: React.FC<{
                       selectedSegmentId={selectedSegmentId}
                       selectedSegmentIds={selectedSegmentIds}
                       onSegmentSelect={handleSegmentSelect}
+                      onBatchSegmentSelect={setSelectedSegmentIds}
                       onSegmentDeleted={() => showToast(t('modernVideoEditor.segmentPurged'), 'info')}
                       trackVisibility={trackVisibility}
                       onTrackVisibilityChange={(trackIndex, visible) => setTrackVisibility((prev) => ({ ...prev, [trackIndex]: visible }))}

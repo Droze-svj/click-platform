@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, Zap, Music, Hash, Eye, Target, Activity, Globe,
   Mic, Volume2, Wand2, Clock, Flame, TrendingUp, Layers,
@@ -215,7 +215,7 @@ export default function Trends2026View({
           ) : null}
         </div>
       ) : liveLoading ? (
-        <div className="rounded-2xl p-5 border border-white/[0.06] bg-white/[0.02] flex items-center gap-3">
+        <div role="status" aria-live="polite" className="rounded-2xl p-5 border border-white/[0.06] bg-white/[0.02] flex items-center gap-3">
           <Loader2 className="w-4 h-4 text-fuchsia-400 animate-spin" />
           <span className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">Pulling live niche signals…</span>
         </div>

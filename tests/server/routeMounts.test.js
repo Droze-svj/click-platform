@@ -15,22 +15,36 @@ const featureRoutesSrc = fs.readFileSync(path.join(ROUTES_DIR, 'featureRoutes.js
 // Intentionally NOT mounted (dead / superseded duplicates / experimental). Adding a
 // new route file? Mount it in server/index.js, or add it here ON PURPOSE.
 //   - ai-content        → superseded by routes/ai/content-generation (mounted)
-//   - music-*           → the whole family is unmounted (confirmed in the security audit)
-//   - creatorDna/digitalTwin/hookEnsemble/dubbing/creative/ai-enhanced/toolbox/trust/
-//     style-vault/remix/videoSharing/retention-heatmap/automation-analytics/admin-new/dmca
+//   - creative/ai-enhanced/videoSharing/automation-analytics/admin-new
 // (hookEnsemble, music-catalog, music-catalog-sync, music-editing,
 //  music-ai-suggestions were DELETED in the dead-code purge — pruned from here.)
+//
+// The music-licensing (10) and ai-music (6) clusters were MOUNTED in the
+// production-readiness pass — see the prefix map in featureRoutes.js. Only the
+// 0-byte music-licensing.js file remains dead.
 const KNOWN_DEAD = new Set([
-  'admin-new', 'ai-content', 'ai-enhanced', 'ai-music-admin', 'ai-music-analytics',
-  'ai-music-batch', 'ai-music-generation', 'ai-music-recommendations', 'ai-music-templates',
-  'automation-analytics', 'creative', 'creatorDna', 'dmca',
-  'music-catalog-playlists', 'music-dynamic-generation', 'music-learning',
-  'music-licensing-admin', 'music-licensing-analytics', 'music-licensing-compliance',
-  'music-licensing-favorites', 'music-licensing-tools',
-  'music-licensing-transparency', 'music-licensing', 'music-smart-sync', 'remix',
-  'style-vault', 'videoSharing',
+  'ai-content', 'ai-enhanced', 'creative',
+  // 'music-licensing' (the 0-byte file) stays dead — see the note below.
+  'music-licensing',
   // digitalTwin, retention-heatmap, trust, toolbox, dubbing were REVIVED (Phase F)
   // — mounted because the frontend already calls them; verified by the smoke sweep.
+  //
+  // creatorDna, dmca, remix, style-vault (+ routes/api/brand) were REVIVED in the
+  // production-readiness pass. dmca is the notable one: client/app/legal/dmca/
+  // page.tsx has been POSTing to /api/dmca/notice all along and getting a 404.
+  // style-vault and api/brand were unmountable until their fake auth was replaced
+  // with the real middleware (style-vault hardcoded req.user = 'test_user_v6';
+  // api/brand had no auth and fell back to a shared 'mock-user-123' bucket).
+  //
+  // STILL DEAD, deliberately — these are duplicates, not unshipped features:
+  //   admin-new           → same route paths as the mounted admin.js; one would
+  //                         silently shadow the other. Reconcile, don't mount.
+  //   videoSharing        → GET /accounts is a hardcoded placeholder AND collides
+  //                         with the real GET /api/social/accounts in social.js.
+  //   automation-analytics→ 0-byte file; require() yields {} (see featureRoutes
+  //                         mount guard). Nothing to mount yet.
+  //   music-licensing     → 0-byte file, same as above.
+  'admin-new', 'automation-analytics', 'videoSharing',
 ]);
 
 const isMounted = (name) =>

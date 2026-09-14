@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Globe, Zap, Users, Brain, Activity, 
   ShieldCheck, Rocket, Database, Network, TrendingUp, AlertTriangle, Crosshair,
@@ -244,12 +244,12 @@ export default function SovereignDashboard() {
 
       {/* Active Section */}
       <AnimatePresence mode="wait">
-        <motion.div key={activeSection} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
+        <m.div key={activeSection} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
             {activeSection === 'fleet' && <FleetManagementPanel />}
             {activeSection === 'arbitrage' && <ArbitragePanel />}
             {activeSection === 'encirclement' && <EncirclementPanel />}
             {activeSection === 'stability' && <StabilityPanel />}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   )

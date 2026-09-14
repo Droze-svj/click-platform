@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Play, Trash2, Pencil, Plus, X, ChevronRight,
   Sparkles, Zap, Cpu, Layers, RefreshCw,
@@ -11,6 +11,8 @@ import {
 import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api'
 import { extractApiData } from '../../../utils/apiResponse'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import EnhancedWorkflowBuilder from '../../../components/EnhancedWorkflowBuilder'
+import NextStepsPanel from '../../../components/NextStepsPanel'
 import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
@@ -28,6 +30,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 interface Workflow {
@@ -206,7 +209,7 @@ export default function WorkflowsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -267,7 +270,7 @@ export default function WorkflowsPage() {
         ) : (
           <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {workflows.map((w) => (
-              <motion.div
+              <m.div
                 key={w._id}
                 layout
                 whileHover={reduceMotion ? undefined : { y: -4 }}
@@ -324,7 +327,7 @@ export default function WorkflowsPage() {
                     <Trash2 size={16} aria-hidden />
                   </IconButton>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </section>
         )}
@@ -332,7 +335,7 @@ export default function WorkflowsPage() {
         {/* Execution Overlay */}
         <AnimatePresence>
           {executingId && (
-            <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-6">
+            <m.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-6">
               <div className="ds-surface-elevated ds-anim-rise max-w-xl w-full p-8 space-y-6 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mx-auto">
                   <Zap size={32} className="text-primary animate-pulse" aria-hidden />
@@ -357,7 +360,7 @@ export default function WorkflowsPage() {
                   })}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -426,7 +429,17 @@ export default function WorkflowsPage() {
             </footer>
           </div>
         </Modal>
-      </div>
+
+        {/* Suggests the next workflow to build from /api/workflows/suggestions
+            (plus /api/workflows and /api/onboarding). Live endpoints, no
+            importer — the suggestions endpoint had no client at all. */}
+        <ErrorBoundary><NextStepsPanel /></ErrorBoundary>
+
+        {/* Visual builder over /api/workflows/enhanced and
+            /enhanced/suggestions. This page can create a workflow through a
+            modal form; neither enhanced endpoint had any client at all. */}
+        <ErrorBoundary><EnhancedWorkflowBuilder /></ErrorBoundary>
+      </PageShell>
     </ErrorBoundary>
   )
 }

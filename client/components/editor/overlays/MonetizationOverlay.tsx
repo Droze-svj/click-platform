@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { QrCode, ShoppingCart, ArrowRight, DollarSign } from 'lucide-react'
 
 interface MonetizationOverlayProps {
@@ -27,7 +27,7 @@ export default function MonetizationOverlay({
   const isNeural = style === 'neural-glass'
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.9 }}
@@ -85,13 +85,13 @@ export default function MonetizationOverlay({
               </span>
             </div>
             
-            <motion.div 
+            <m.div 
               animate={{ x: [0, 5, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
               className="p-2 bg-white/10 rounded-xl"
             >
               <ArrowRight className="w-4 h-4 text-blue-400" />
-            </motion.div>
+            </m.div>
           </div>
         </div>
 
@@ -101,6 +101,6 @@ export default function MonetizationOverlay({
           <span className="text-[8px] font-black text-white uppercase tracking-widest whitespace-nowrap">Instant Checkout</span>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }

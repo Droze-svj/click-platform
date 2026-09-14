@@ -18,6 +18,7 @@ import {
   SectionHeader,
   FormField,
   Input,
+  PageShell,
 } from '../../../components/ui'
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -174,7 +175,7 @@ export default function AutopilotPage() {
   }
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       {/* ── Header ── */}
@@ -384,6 +385,6 @@ export default function AutopilotPage() {
           className="ds-surface-card"
         />
       )}
-    </div>
+    </PageShell>
   )
 }

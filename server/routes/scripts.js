@@ -27,7 +27,12 @@ const router = express.Router();
  */
 router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
   try {
-    const { topic, type, options = {} } = req.body;
+    const { topic, type } = req.body;
+    // The caller's id rides along so the generators can ground the script in the
+    // creator's own top performers and learned voice. It was never passed, so
+    // every script was written as if for an anonymous user.
+    const bodyOptions = req.body.options && typeof req.body.options === 'object' ? req.body.options : {};
+    const options = { ...bodyOptions, userId: req.user._id };
 
     if (!topic || !type) {
       return res.status(400).json({
@@ -86,6 +91,16 @@ router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Unsupported script type'
+      });
+    }
+
+    // Nothing was generated (AI unavailable, over quota, or an unusable reply).
+    // Say so, rather than saving a template ("Hey everyone! Welcome back to the
+    // channel…") as a completed script and counting it as usage.
+    if (!scriptData) {
+      return res.status(503).json({
+        success: false,
+        error: 'Script generation is unavailable right now. Please try again shortly.'
       });
     }
 

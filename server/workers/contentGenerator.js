@@ -21,7 +21,17 @@ async function processContentJob(jobData, job) {
     onProgress(10, 'Starting content generation...');
     logger.info('Starting content generation', { contentId, jobId: job.id });
 
-    await generateContentFromText(contentId, text, user, platforms, onProgress);
+    const outcome = await generateContentFromText(contentId, text, user, platforms, onProgress);
+
+    // Generation ran but produced nothing (AI unavailable or over quota). The
+    // content is already marked failed with the reason; report the job the same
+    // way. Returned rather than thrown: a throw makes the queue retry the job
+    // against the same exhausted quota.
+    if (outcome && outcome.generated === false) {
+      logger.warn('Content generation produced nothing', { contentId, jobId: job.id, reason: outcome.reason });
+      emitProcessingFailed(userId, job.id, new Error(outcome.reason));
+      return { success: false, contentId, reason: outcome.reason };
+    }
 
     onProgress(100, 'Complete');
     emitProcessingComplete(userId, job.id, { success: true, contentId });

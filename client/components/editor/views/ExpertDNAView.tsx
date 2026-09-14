@@ -15,7 +15,7 @@ import {
   Split,
   ChevronRight, RefreshCw
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface GeneticMarker {
@@ -131,7 +131,7 @@ export const ExpertDNAView: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {dna?.geneticMarkers.map((marker, idx) => (
-                                <motion.div 
+                                <m.div 
                                     key={idx}
                                     layout
                                     initial={{ scale: 0.95, opacity: 0 }}
@@ -151,7 +151,7 @@ export const ExpertDNAView: React.FC = () => {
                                              <span className="text-[8px] font-black text-indigo-400 uppercase">{(marker.strength * 100).toFixed(0)}%</span>
                                           </div>
                                           <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                             <motion.div 
+                                             <m.div 
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${marker.strength * 100}%` }}
                                                 className={`h-full ${marker.isMutated ? 'bg-amber-500' : 'bg-indigo-500'}`}
@@ -168,7 +168,7 @@ export const ExpertDNAView: React.FC = () => {
                                        </div>
                                     </div>
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-[40px] -mr-16 -mt-16 pointer-events-none" />
-                                </motion.div>
+                                </m.div>
                             ))}
                         </div>
                     </div>

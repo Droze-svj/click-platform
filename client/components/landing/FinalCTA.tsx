@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Wand2 } from 'lucide-react';
 import { useLandingTheme } from './LandingThemeContext';
 
@@ -14,7 +14,7 @@ export function FinalCTA() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#050505]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-indigo-600/15 blur-[160px] rounded-full" />
       </div>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -44,7 +44,7 @@ export function FinalCTA() {
         <p className="mt-6 text-xs text-slate-600 font-bold uppercase tracking-widest">
           Free forever · No card · First clip in 90 seconds · Cancel anytime
         </p>
-      </motion.div>
+      </m.div>
     </section>
   );
 }

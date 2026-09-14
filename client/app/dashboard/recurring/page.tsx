@@ -13,6 +13,7 @@ import { FormField, Input, Textarea } from '../../../components/ui/form-field'
 import { EmptyState } from '../../../components/ui/empty-state'
 import { SectionHeader } from '../../../components/ui/section-header'
 import { Badge } from '../../../components/ui/badge'
+import { PageShell } from '../../../components/ui'
 
 type PlatformId = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'linkedin' | 'facebook'
 
@@ -162,7 +163,7 @@ export default function RecurringPostsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen ds-bg-mesh-soft text-theme-primary px-4 sm:px-8 pt-8 pb-24 max-w-[1400px] mx-auto space-y-8">
+      <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
         <ToastContainer />
 
         <header className="flex items-center gap-4">
@@ -299,7 +300,7 @@ export default function RecurringPostsPage() {
             </div>
           )}
         </section>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

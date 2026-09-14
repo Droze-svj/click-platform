@@ -2789,6 +2789,19 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       appliedEdits.push(`${gradeDef.label} Grade`);
     }
 
+    // Video quality enhancements (adaptive sharpening, denoising, dynamic range)
+    try {
+      const videoEnhancer = require('../utils/videoEnhancer');
+      const isUltra = editingOptions.quality === 'ultra' || editingOptions.isUltra === true;
+      const enhFilters = videoEnhancer.getEnhancementFilters(metadata, { isUltra, ultraCrisp: isUltra });
+      if (enhFilters && enhFilters.length > 0) {
+        videoFilters.push(...enhFilters);
+        appliedEdits.push(isUltra ? 'Ultra Video Enhancement (Retina Edge)' : 'Video Quality Enhancement');
+      }
+    } catch (enhErr) {
+      logger.warn('Auto-edit videoEnhancer skipped', { error: enhErr.message });
+    }
+
     // Build cut filter only when pacing speed-ramp is OFF.
     // When optimizePacing=true the speed-ramp pipeline handles silences by
     // accelerating through them (1.15x). Applying the select-based cut filter
@@ -2815,13 +2828,15 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     const isShortForm = clipTargetLength === 'short' || (Array.isArray(aspectFormats) && aspectFormats.includes('9:16'));
     const targetLUFS = isShortForm ? -14 : -16; // -14 LUFS = mobile/short-form friendly
 
-    // Quality: Audio enhancement (clean voice, tame harsh, mobile-friendly level)
+    // Quality: Audio enhancement (clean voice, tame harsh, mobile-friendly level, studio vocal presence)
     if (enhanceAudio) {
       audioFilters.push(`loudnorm=I=${targetLUFS}:TP=-1.5:LRA=11`);
-      audioFilters.push('highpass=f=80,lowpass=f=15000');
+      audioFilters.push('highpass=f=85,lowpass=f=14000');
+      // Vocal intelligibility & presence boost ~3.4kHz for clarity on phones and headphones
+      audioFilters.push('equalizer=f=3400:width_type=o:width=1.2:g=3.0');
       // Gentle cut ~4kHz to tame harshness so voice stays clear, not brittle
       audioFilters.push('equalizer=f=4000:width_type=o:width=1:g=-1.2');
-      appliedEdits.push(isShortForm ? 'Audio Enhancement (mobile mix)' : 'Audio Enhancement');
+      appliedEdits.push(isShortForm ? 'Audio Enhancement (Studio Mobile Mix)' : 'Audio Enhancement (Studio Voice)');
     }
 
     // Quality: Noise reduction — spectral denoising only; no frequency cuts here
@@ -3436,15 +3451,21 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       // NOTE: -hwaccel auto is set on the MAIN input at command-build time
       // (see above). It is intentionally NOT re-applied here, where it would
       // bind to the last-added (b-roll) input and break the filtergraph.
+      const isUltraQuality = editingOptions.quality === 'ultra' || editingOptions.isUltra === true;
+      const isBestQuality = editingOptions.quality === 'best' || isUltraQuality;
+      const outCrf = isUltraQuality ? '16' : (isBestQuality ? '18' : '23');
+      const outPreset = isUltraQuality ? 'veryslow' : (isBestQuality ? 'slow' : 'medium');
+      const outAudioBitrate = (isUltraQuality || isBestQuality) ? '320k' : '192k';
+
       finalCommand
         .output(outputPath)
         .outputOptions([
           '-c:v', 'libx264',
-          '-preset', 'medium',
-          '-crf', '23',
+          '-preset', outPreset,
+          '-crf', outCrf,
           '-pix_fmt', 'yuv420p',
           '-c:a', 'aac',
-          '-b:a', '192k',
+          '-b:a', outAudioBitrate,
           '-movflags', '+faststart',
           '-threads', '0',
           '-report',

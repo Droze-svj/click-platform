@@ -157,9 +157,11 @@ function buildMasterFx(a = {}) {
 
 // Voice-clarity chains per audio preset (the part after the de-hum aeval prefix).
 const VOICE_PRESETS = {
+  'studio-presence': 'highpass=f=85,equalizer=f=250:t=q:w=1:g=1.5,equalizer=f=3400:t=q:w=1.2:g=3.5,equalizer=f=10000:t=q:w=1:g=2,acompressor=threshold=-16dB:ratio=3.5:attack=15:release=120:makeup=2.5,dynaudnorm=p=0.95:m=100',
+  'viral-hype': 'highpass=f=95,equalizer=f=3500:t=q:w=1:g=4,acompressor=threshold=-20dB:ratio=4:attack=10:release=100:makeup=4,dynaudnorm=p=0.98:m=100',
   'podcast-clean': 'highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100',
   'music-forward': 'highpass=f=90,dynaudnorm=p=0.85:m=80',
-  'voice-boost': 'highpass=f=80,lowpass=f=13000,dynaudnorm=p=0.95:m=120,acompressor=threshold=-18dB:ratio=3:attack=20:release=200:makeup=3',
+  'voice-boost': 'highpass=f=80,lowpass=f=13000,dynaudnorm=p=0.95:m=100,acompressor=threshold=-18dB:ratio=3:attack=20:release=200:makeup=3',
   'none': 'anull',
 }
 const DEFAULT_VOICE = 'highpass=f=80,lowpass=f=12000,dynaudnorm=p=0.9:m=100'
@@ -180,7 +182,10 @@ function buildAudioMix(audio, { duration } = {}) {
   const duckLevel = _audClamp(a.duckingAmount, -40, 0, null)
   const fadeIn = _audClamp(a.fadeInSec, 0, 10, 0)
   const fadeOut = _audClamp(a.fadeOutSec, 0, 10, 0)
-  const preset = Object.prototype.hasOwnProperty.call(VOICE_PRESETS, a.audioPreset) ? a.audioPreset : null
+  let preset = Object.prototype.hasOwnProperty.call(VOICE_PRESETS, a.audioPreset) ? a.audioPreset : null
+  if (!preset && (a.voiceClarity === true || a.enhanceSpeech === true)) {
+    preset = 'studio-presence'
+  }
   let musicFade = ''
   if (fadeIn > 0) musicFade += `,afade=t=in:d=${fadeIn}`
   if (fadeOut > 0 && Number.isFinite(duration) && duration > fadeOut) {
@@ -1188,14 +1193,14 @@ async function resolveInputPath(videoId, videoUrl) {
 // Compile the editor's `timelineEffects[]` into time-gated FFmpeg video filters.
 // Each effect applies only within its [startTime,endTime] window via the filter
 // `enable='between(t,a,b)'` option, so multiple effects coexist without changing
-// the timeline structure or duration. Maps the color/overlay FX that translate
-// cleanly to single-pass filters (vignette, grain, chromatic aberration, glow,
-// flash/brightness, generic color). Motion/zoom/transition/speed effects need
-// structural changes (stitch/transition path) and are skipped here with a log,
-// not silently — so they never corrupt the graph.
-function compileTimelineEffects(effects) {
+// the timeline structure or duration. Maps color/overlay FX, plus dynamic single-pass
+// kinetic punch-in zoom, action camera shake/jitter, and cyber glitch effects.
+// Pure + exported for unit tests.
+function compileTimelineEffects(effects, { width = 1920, height = 1080 } = {}) {
   if (!Array.isArray(effects) || effects.length === 0) return []
   const out = []
+  const w = Math.max(16, Number(width) || 1920)
+  const h = Math.max(16, Number(height) || 1080)
   for (const e of effects.slice(0, 50)) {
     if (!e || e.enabled === false) continue
     const start = Number(e.startTime) || 0
@@ -1215,16 +1220,39 @@ function compileTimelineEffects(effects) {
       } else if (/chromat|aberration|rgb/.test(name)) {
         const off = Math.max(1, Math.min(12, Math.round(Number(p.offset) || (3 + 3 * k))))
         out.push(`rgbashift=rh=${off}:bv=${-off}:${en}`)
+      } else if (/blur|defocus/.test(name)) {
+        out.push(`gblur=sigma=${(1 + 4 * k).toFixed(2)}:${en}`)
       } else if (/glow|bloom|neural/.test(name)) {
-        out.push(`gblur=sigma=${(1 + 3 * k).toFixed(2)}:${en}`)
-      } else if (/flash|leak|light/.test(name)) {
-        out.push(`eq=brightness=${(0.25 * k).toFixed(3)}:saturation=${(1 + 0.3 * k).toFixed(3)}:${en}`)
+        out.push(`unsharp=5:5:${(0.8 * k).toFixed(2)}:5:5:0.0:${en}`)
+        out.push(`eq=brightness=${(0.06 * k).toFixed(3)}:contrast=${(1 + 0.12 * k).toFixed(3)}:saturation=${(1 + 0.25 * k).toFixed(3)}:${en}`)
+      } else if (/leak|burn|warm/.test(name)) {
+        out.push(`colorchannelmixer=rr=${(1 + 0.15 * k).toFixed(3)}:bb=${(1 - 0.15 * k).toFixed(3)}:${en}`)
+        out.push(`eq=brightness=${(0.12 * k).toFixed(3)}:saturation=${(1 + 0.25 * k).toFixed(3)}:${en}`)
+      } else if (/flash|strobe|light/.test(name)) {
+        out.push(`eq=brightness=${(0.3 * k).toFixed(3)}:saturation=${(1 + 0.3 * k).toFixed(3)}:${en}`)
+      } else if (/glitch|cyber/.test(name) || type === 'glitch') {
+        const off = Math.max(2, Math.min(20, Math.round(4 + 8 * k)))
+        out.push(`rgbashift=rh=${off}:bv=${-off}:${en}`)
+        out.push(`noise=alls=${Math.round(15 + 25 * k)}:allf=t+u:${en}`)
+      } else if (/shake|jitter/.test(name) || (type === 'motion' && /shake|jitter/.test(name))) {
+        const baseAmp = Number.isFinite(Number(p.intensity)) ? Math.max(1, Math.min(25, Number(p.intensity))) : 8
+        const amp = Math.max(1, Math.min(30, Math.round(baseAmp * (k || 1))))
+        const freq = Number.isFinite(Number(p.frequency)) ? Math.max(5, Math.min(60, Number(p.frequency))) : 30
+        const freqY = Math.round(freq * 0.85)
+        out.push(`crop=w=iw-20:h=ih-20:x='(iw-ow)/2+${amp}*sin(t*${freq})*between(t\\,${start.toFixed(3)}\\,${end.toFixed(3)})':y='(ih-oh)/2+${amp}*cos(t*${freqY})*between(t\\,${start.toFixed(3)}\\,${end.toFixed(3)})',scale=${w}:${h}`)
+      } else if (/zoom|punch|kinetic|snap/.test(name) || type === 'motion') {
+        let baseZoom = 1.15
+        if (Number.isFinite(Number(p.zoom)) && Number(p.zoom) > 50) {
+          baseZoom = Math.max(1.05, Math.min(2.0, Number(p.zoom) / 100))
+        }
+        const zoomFactor = (1 + (baseZoom - 1) * (k || 1)).toFixed(3)
+        out.push(`crop=w='iw/if(between(t\\,${start.toFixed(3)}\\,${end.toFixed(3)})\\,${zoomFactor}\\,1)':h='ih/if(between(t\\,${start.toFixed(3)}\\,${end.toFixed(3)})\\,${zoomFactor}\\,1)':x=(iw-ow)/2:y=(ih-oh)/2,scale=${w}:${h}:eval=frame`)
       } else if (type === 'filter' || type === 'style' || type === 'retention') {
         const b = Number.isFinite(Number(p.brightness)) ? Number(p.brightness) : 0
         const c = Number.isFinite(Number(p.contrast)) ? Number(p.contrast) : 1
         const s = Number.isFinite(Number(p.saturation)) ? Number(p.saturation) : 1 + 0.1 * k
         out.push(`eq=brightness=${b.toFixed(3)}:contrast=${c.toFixed(3)}:saturation=${s.toFixed(3)}:${en}`)
-      } else if (type === 'audio' || type === 'motion' || type === 'transition' || type === 'speed') {
+      } else if (type === 'audio' || type === 'transition' || type === 'speed') {
         logger.info('[render] timelineEffect skipped in video-filter pass', { type, name })
       } else {
         logger.info('[render] timelineEffect unmapped, skipped', { type, name })
@@ -1371,7 +1399,8 @@ async function renderFromEditorState(options) {
     (Number(videoCrop.width) > 0 && Number(videoCrop.width) < 100) ||
     (Number(videoCrop.height) > 0 && Number(videoCrop.height) < 100)
   ))
-  const isBestQuality = exportOptions.quality === 'best'
+  const isUltraQuality = exportOptions.quality === 'ultra'
+  const isBestQuality = exportOptions.quality === 'best' || isUltraQuality
   const isProres = exportOptions.codec === 'prores'
   let bitrateMbps = exportOptions.bitrateMbps ?? 8
   let codec = 'libx264'
@@ -1382,9 +1411,9 @@ async function renderFromEditorState(options) {
   let audioBitrate = '192k'
 
   if (isBestQuality && !isProres) {
-    bitrateMbps = Math.max(bitrateMbps, 20)
-    crf = 18
-    preset = 'slow'
+    bitrateMbps = Math.max(bitrateMbps, isUltraQuality ? 35 : 20)
+    crf = isUltraQuality ? 16 : 18
+    preset = isUltraQuality ? 'veryslow' : 'slow'
     audioBitrate = '320k'
   }
   if (isProres) {
@@ -1593,10 +1622,9 @@ async function renderFromEditorState(options) {
     overlayFilters.push(`drawbox=x=0:y=h-15:w='iw*(t/${estimatedDuration})':h=15:color=#00FFFF@0.9:t=fill`);
   }
 
-  // Time-gated timeline effects (vignette/grain/chromatic/glow/flash/color). These
-  // were previously built in the editor's EffectsView but never reached the render
-  // — the whole effects layer was dropped. Each applies only within its window.
-  const timelineEffectFilters = compileTimelineEffects(timelineEffects)
+  // Time-gated timeline effects (vignette/grain/chromatic/glow/flash/color/motion/zoom/shake/glitch).
+  // Each applies only within its window.
+  const timelineEffectFilters = compileTimelineEffects(timelineEffects, { width, height })
 
   const allVideoFilters = [...videoFilters_ff, ...timelineEffectFilters, ...lutFilters, ...overlayFilters]
   // ALL audio-track segments (music track 6 + SFX tracks 8/9 + added dialogue
@@ -1711,7 +1739,10 @@ async function renderFromEditorState(options) {
         const metadata = await new Promise((res, rej) => {
           ffmpeg.ffprobe(inputPath, (err, data) => err ? rej(err) : res(data))
         })
-        enhancementFilters = videoEnhancer.getEnhancementFilters(metadata)
+        enhancementFilters = videoEnhancer.getEnhancementFilters(metadata, {
+          isUltra: isUltraQuality,
+          ultraCrisp: isUltraQuality,
+        })
         hasAudio = Array.isArray(metadata.streams) && metadata.streams.some(s => s.codec_type === 'audio')
       } catch (err) {
         logger.warn('Quality scan failed, proceeding with baseline', { error: err.message })
@@ -1846,7 +1877,10 @@ async function renderFromEditorState(options) {
       // Pro audio mix (music volume / ducking / fades / voice preset / EQ-comp-reverb)
       // resolved from the RenderTree. Neutral when `audio` is absent, so the rendered
       // graph stays byte-identical to the prior behavior.
-      const audioMix = buildAudioMix(audio, { duration: exportOptions.duration })
+      const audioMix = buildAudioMix({
+        ...(audio || {}),
+        ...(exportOptions.voiceClarity ? { voiceClarity: true } : {}),
+      }, { duration: exportOptions.duration })
       const _voice = audioMix.voice || DEFAULT_VOICE
       const _masterFx = audioMix.masterFx ? `${audioMix.masterFx},` : ''
 
@@ -2556,4 +2590,6 @@ module.exports = {
   buildTextAnimation,
   generateGradientPng,
   rasterizeSvgToPng,
+  compileTimelineEffects,
+  VOICE_PRESETS,
 }

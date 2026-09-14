@@ -139,7 +139,7 @@ async function getRevenueOptimizationRecommendations(workspaceId, filters = {}) 
       summary: {
         totalRecommendations: recommendations.length,
         highPriority: recommendations.filter(r => r.priority === 'high').length,
-        estimatedImpact: calculateTotalImpact(recommendations)
+        estimatedImpact: calculateTotalImpact(recommendations, conversions)
       }
     };
   } catch (error) {
@@ -336,14 +336,60 @@ function analyzeCampaignPerformance(posts, conversions) {
 }
 
 /**
- * Calculate total impact
+ * Estimate the impact of acting on the recommendations, from the workspace's
+ * OWN measured conversion data.
+ *
+ * Previously this returned `recommendations.length * 100` dollars and
+ * `recommendations.length * 5` conversions — numbers that moved only with how
+ * many tips were generated and had nothing to do with the account.
+ *
+ * The only recommendation carrying a quantified, data-derived delta is
+ * conversion_rate (its analysis already knows current rate, target rate and the
+ * click volume behind them). We convert that into conversions, then into revenue
+ * at the account's own measured average order value. Recommendations without a
+ * measurable delta contribute nothing rather than an invented constant.
+ *
+ * @param {Array} recommendations
+ * @param {Array} conversions the window's Conversion docs
+ * @returns {{estimatedRevenueIncrease:number, estimatedConversionIncrease:number,
+ *            confidence:number, basis:string, averageOrderValue:number}}
  */
-function calculateTotalImpact(recommendations) {
-  // Simplified calculation - would be more sophisticated in production
+function calculateTotalImpact(recommendations, conversions = []) {
+  const revenueOf = (c) => c.revenue?.attributed || c.conversionValue || 0;
+  const totalRevenue = conversions.reduce((sum, c) => sum + revenueOf(c), 0);
+  const averageOrderValue = conversions.length > 0 ? totalRevenue / conversions.length : 0;
+
+  const rateRec = recommendations.find((r) => r.type === 'conversion_rate');
+  const analysis = rateRec?.data;
+
+  let estimatedConversionIncrease = 0;
+  if (analysis && Number.isFinite(analysis.targetRate) && Number.isFinite(analysis.currentRate)) {
+    const clickVolume = Number(analysis.clicks) || 0;
+    const ratePoints = Math.max(0, analysis.targetRate - analysis.currentRate);
+    estimatedConversionIncrease = Math.round((ratePoints * clickVolume) / 100);
+  }
+
+  const estimatedRevenueIncrease = Math.round(estimatedConversionIncrease * averageOrderValue);
+
+  // Confidence tracks how much data the estimate rests on, instead of a flat 70.
+  // Below ~30 conversions an average order value is not yet meaningful.
+  let confidence = 0;
+  if (conversions.length >= 100) confidence = 80;
+  else if (conversions.length >= 30) confidence = 60;
+  else if (conversions.length >= 10) confidence = 35;
+  else if (conversions.length > 0) confidence = 15;
+
   return {
-    estimatedRevenueIncrease: recommendations.length * 100, // Placeholder
-    estimatedConversionIncrease: recommendations.length * 5, // Placeholder
-    confidence: 70
+    estimatedRevenueIncrease,
+    estimatedConversionIncrease,
+    confidence,
+    averageOrderValue: Math.round(averageOrderValue * 100) / 100,
+    // Tells the client whether this is a real projection or "not enough data",
+    // so the UI never presents an empty estimate as a confident zero.
+    basis: conversions.length === 0
+      ? 'no_conversion_data'
+      : estimatedConversionIncrease > 0 ? 'measured_conversion_gap' : 'no_quantified_gap',
+    sampleSize: conversions.length,
   };
 }
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -23,6 +24,8 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
+
+  const panelRef = useDialogBehavior(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -137,8 +140,8 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md" ref={panelRef}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">{t('exportImportModal.title')}</h2>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Pipette, Sparkles, RotateCcw, Fingerprint, Eye, Scissors, BoxSelect } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 export interface ChromaKeySettings {
   enabled: boolean
@@ -98,7 +98,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
 
         <AnimatePresence>
           {activePreview && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-8">
+            <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-8">
               <div className="h-64 rounded-[2.5rem] bg-black/60 border border-white/10 shadow-inner relative flex items-center justify-center overflow-hidden p-6 group">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,theme(colors.emerald.900/40),transparent_70%)] opacity-30 group-hover:opacity-60 transition-opacity" />
                 {/* Simulated Matrix Background Extraction */}
@@ -118,7 +118,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -259,13 +259,13 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
 
         <AnimatePresence>
           {samMode && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-8 relative z-10">
+            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="space-y-8 relative z-10">
                {/* SAM Point Map Visualization */}
                <div className="h-48 rounded-[2rem] bg-black/40 border border-white/10 relative overflow-hidden group/points flex items-center justify-center p-4">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.1),transparent_70%)]" />
                   <div className="grid grid-cols-12 gap-2 w-full max-w-2xl opacity-40 group-hover/points:opacity-100 transition-opacity">
                     {Array.from({ length: 48 }).map((_, i) => (
-                      <motion.div
+                      <m.div
                         key={i}
                         animate={{
                           scale: [1, 1.5, 1],
@@ -317,7 +317,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
                      <button title="Extract Alpha Mask" className="flex-1 md:flex-none px-6 py-3 bg-blue-500 text-white text-[10px] font-black uppercase rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-400 transition-colors">Extract Alpha</button>
                    </div>
                </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

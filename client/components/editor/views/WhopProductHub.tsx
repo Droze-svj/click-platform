@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { ShoppingCart, ExternalLink, QrCode, TrendingUp, DollarSign, Package, AlertCircle } from 'lucide-react'
 
 interface WhopProduct {
@@ -20,7 +20,7 @@ interface WhopProductHubProps {
 
 const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) => {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -67,7 +67,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                        <span className="text-white">4.2%</span>
                     </div>
                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                       <motion.div initial={{ width: 0 }} animate={{ width: '42%' }} className="h-full bg-emerald-500" />
+                       <m.div initial={{ width: 0 }} animate={{ width: '42%' }} className="h-full bg-emerald-500" />
                     </div>
                  </div>
                  <div className="text-right">
@@ -119,7 +119,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
 
            <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
               {products.map((product) => (
-                <motion.div
+                <m.div
                   key={product.id}
                   whileHover={{ y: -5, backgroundColor: 'rgba(255,255,255,0.04)' }}
                   className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/10 group cursor-pointer transition-all"
@@ -156,12 +156,12 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                         Get QR
                      </button>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
            </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

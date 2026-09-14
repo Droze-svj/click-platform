@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/form-field'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SectionHeader } from '@/components/ui/section-header'
 import { cn } from '@/lib/utils'
+import { PageShell } from '../../../components/ui'
 
 interface SearchResult {
   _id: string
@@ -67,7 +68,7 @@ export default function SearchPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto text-theme-primary space-y-6">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
         <ToastContainer />
 
         <SectionHeader
@@ -182,7 +183,7 @@ export default function SearchPage() {
             </div>
           )}
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

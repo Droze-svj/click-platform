@@ -37,8 +37,8 @@ export default function EditorEmptyState({
   title,
   hint,
   action,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  gradient,
+  // `gradient` stays in Props for callers that still pass it, but this
+  // component no longer renders one, so it is deliberately not destructured.
   className = '',
 }: Props) {
   return (

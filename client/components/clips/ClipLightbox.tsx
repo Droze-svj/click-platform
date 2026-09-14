@@ -9,6 +9,7 @@ import {
 import type { Clip } from './ClipCard'
 import { apiPost, apiDelete } from '../../lib/api'
 import SchedulePublishDrawer from './SchedulePublishDrawer'
+import { useDialogBehavior } from '../ui/modal'
 
 interface Props {
   clips: Clip[]
@@ -163,6 +164,8 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
     if ((clip.editsApplied || []).includes('Remove silence')) out.push('Silence trimmed')
     return out
   }, [clip])
+
+  const panelRef = useDialogBehavior(!!clip, onClose)
 
   if (!clip || typeof document === 'undefined') return null
 

@@ -183,10 +183,23 @@ async function checkNegativeSentiment(userId, clientId) {
       createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
     }).limit(20).lean();
 
-    // Calculate sentiment (would use actual sentiment analysis)
+    // Real sentiment, from the comments actually ingested for this content
+    // (commentSentimentService writes these, keyed by postId). Previously both
+    // counts were hardcoded 0, so this check could never fire.
     const negativeThreshold = 0.3; // 30% negative
-    const negativeCount = 0; // placeholder - would calculate from comments
-    const totalComments = 0; // placeholder
+    const CommentSentiment = require('../models/CommentSentiment');
+    const contentIds = recentContent.map((c) => c._id);
+
+    let negativeCount = 0;
+    let totalComments = 0;
+    if (contentIds.length > 0) {
+      const [negative, total] = await Promise.all([
+        CommentSentiment.countDocuments({ postId: { $in: contentIds }, 'sentiment.overall': 'negative' }),
+        CommentSentiment.countDocuments({ postId: { $in: contentIds } }),
+      ]);
+      negativeCount = negative;
+      totalComments = total;
+    }
 
     if (totalComments > 10 && (negativeCount / totalComments) > negativeThreshold) {
       const severity = (negativeCount / totalComments) > 0.5 ? 'high' : 'medium';
@@ -290,9 +303,31 @@ async function checkContentGaps(userId, clientId) {
  */
 async function checkAudienceDecline(userId, clientId) {
   try {
-    // Would get from analytics
-    const currentFollowers = 0; // placeholder
-    const previousFollowers = 0; // placeholder
+    // Real follower counts from the daily AudienceGrowth snapshots that
+    // audienceGrowthSyncService writes (3 AM cron + on-demand route). Previously
+    // both were hardcoded 0, so this check could never fire.
+    //
+    // Summed across platforms for the newest snapshot date, so a creator losing
+    // followers on one platform while flat elsewhere is judged on the total.
+    const AudienceGrowth = require('../models/AudienceGrowth');
+    const latest = await AudienceGrowth.find({ userId })
+      .sort({ snapshotDate: -1 })
+      .limit(10)
+      .lean();
+
+    let currentFollowers = 0;
+    let previousFollowers = 0;
+    if (latest.length > 0) {
+      // Keep only the most recent snapshot per platform.
+      const newestPerPlatform = new Map();
+      for (const row of latest) {
+        if (!newestPerPlatform.has(row.platform)) newestPerPlatform.set(row.platform, row);
+      }
+      for (const row of newestPerPlatform.values()) {
+        currentFollowers += Number(row.followers?.current) || 0;
+        previousFollowers += Number(row.followers?.previous) || 0;
+      }
+    }
 
     if (currentFollowers > 0 && previousFollowers > 0) {
       const change = ((currentFollowers - previousFollowers) / previousFollowers) * 100;

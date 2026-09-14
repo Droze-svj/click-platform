@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { 
   Play, 
   Pause, 

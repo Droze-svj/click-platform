@@ -3,6 +3,11 @@
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
 const { buildSystemPrompt, getTopPerformingPlaybook } = require('./marketingKnowledge');
+const { personalizePrompt } = require('../utils/applyPersona');
+
+// Every generator returns null when nothing usable was generated (AI not
+// configured, over quota, or an unparsable reply). The route turns that into an
+// honest "unavailable" instead of saving a canned template as the user's script.
 
 /**
  * Generate YouTube video script with Strategic Upgrades (Phase 11)
@@ -14,8 +19,8 @@ async function generateYouTubeScript(topic, options = {}) {
   const strategy = await liveTrendService.getTrendStrategy(trends);
 
   if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback script');
-    return generateFallbackScript('youtube', topic, options);
+    logger.warn('Google AI API key not configured — no script generated');
+    return null;
   }
 
   const {
@@ -81,15 +86,15 @@ Create a ${duration}-minute YouTube video script about "${topic}".
     const content = await geminiGenerate(prompt, { temperature: 0.8, maxTokens: 3000 });
     if (!content) {
       // Gemini hit quota / parse / network error and degraded to null. Bail
-      // early to the structured fallback so the route still returns a valid,
-      // saveable script document instead of crashing on `null.segments`.
-      logger.warn('YouTube script: Gemini returned null, using fallback', { topic });
-      return generateFallbackScript('youtube', topic, options);
+      // early — the route answers "unavailable" instead of crashing on
+      // `null.segments` or saving a template as if it were a script.
+      logger.warn('YouTube script: Gemini returned null', { topic });
+      return null;
     }
     const script = JSON.parse(content);
     if (!script || !Array.isArray(script.segments) || script.segments.length === 0) {
-      logger.warn('YouTube script: AI returned no segments, using fallback', { topic });
-      return generateFallbackScript('youtube', topic, options);
+      logger.warn('YouTube script: AI returned no segments', { topic });
+      return null;
     }
 
     // Calculate Pacing Heatmap
@@ -119,7 +124,7 @@ Create a ${duration}-minute YouTube video script about "${topic}".
     };
   } catch (error) {
     logger.error('Strategic YouTube script error', { error: error.message, topic });
-    return generateFallbackScript('youtube', topic, options);
+    return null;
   }
 }
 
@@ -128,7 +133,7 @@ Create a ${duration}-minute YouTube video script about "${topic}".
  */
 async function generatePodcastScript(topic, options = {}) {
   if (!geminiConfigured) {
-    return generateFallbackScript('podcast', topic, options);
+    return null;
   }
 
   const {
@@ -155,15 +160,18 @@ Requirements:
 Format as JSON with structure similar to YouTube script but adapted for podcast format.`;
 
     const fullPrompt = `You are an expert podcast scriptwriter.\n\n${prompt}`;
-    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 3000 });
+    const content = await geminiGenerate(
+      await personalizePrompt(fullPrompt, { userId: options.userId, niche: targetAudience, stage: 'script', role: 'script-writer' }),
+      { temperature: 0.7, maxTokens: 3000 }
+    );
     if (!content) {
-      logger.warn('Podcast script: Gemini returned null, using fallback', { topic });
-      return generateFallbackScript('podcast', topic, options);
+      logger.warn('Podcast script: Gemini returned null', { topic });
+      return null;
     }
     const script = JSON.parse(content);
     if (!script || !Array.isArray(script.mainPoints)) {
-      logger.warn('Podcast script: AI returned no mainPoints, using fallback', { topic });
-      return generateFallbackScript('podcast', topic, options);
+      logger.warn('Podcast script: AI returned no mainPoints', { topic });
+      return null;
     }
 
     let fullScript = (script.introduction || '') + '\n\n';
@@ -183,7 +191,7 @@ Format as JSON with structure similar to YouTube script but adapted for podcast 
     };
   } catch (error) {
     logger.error('Podcast script generation error', { error: error.message, topic });
-    return generateFallbackScript('podcast', topic, options);
+    return null;
   }
 }
 
@@ -192,7 +200,7 @@ Format as JSON with structure similar to YouTube script but adapted for podcast 
  */
 async function generateSocialMediaScript(topic, options = {}) {
   if (!geminiConfigured) {
-    return generateFallbackScript('social-media', topic, options);
+    return null;
   }
 
   const {
@@ -237,12 +245,12 @@ Requirements:
     const fullPrompt = `${system}\n\n── Task ──\n${prompt}`;
     const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 500 });
     if (!content) {
-      logger.warn('Social media script: Gemini returned null, using fallback', { topic });
-      return generateFallbackScript('social-media', topic, options);
+      logger.warn('Social media script: Gemini returned null', { topic });
+      return null;
     }
     const script = JSON.parse(content);
     if (!script) {
-      return generateFallbackScript('social-media', topic, options);
+      return null;
     }
 
     let fullScript = script.content || '';
@@ -260,7 +268,7 @@ Requirements:
     };
   } catch (error) {
     logger.error('Social media script generation error', { error: error.message, topic });
-    return generateFallbackScript('social-media', topic, options);
+    return null;
   }
 }
 
@@ -269,7 +277,7 @@ Requirements:
  */
 async function generateBlogScript(topic, options = {}) {
   if (!geminiConfigured) {
-    return generateFallbackScript('blog', topic, options);
+    return null;
   }
 
   const {
@@ -290,15 +298,20 @@ Requirements:
 - Format as JSON with: title, introduction, sections (array with title and content), conclusion, keywords, metaDescription`;
 
     const fullPrompt = `You are an expert blog writer and SEO specialist.\n\n${prompt}`;
-    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
+    // Not the short-form 'script-writer' persona: long-form copy gets the general
+    // creative-collaborator voice, carrying the creator's own style.
+    const content = await geminiGenerate(
+      await personalizePrompt(fullPrompt, { userId: options.userId, niche: options.targetAudience, stage: 'script', role: 'copywriter' }),
+      { temperature: 0.7, maxTokens: 2000 }
+    );
     if (!content) {
-      logger.warn('Blog script: Gemini returned null, using fallback', { topic });
-      return generateFallbackScript('blog', topic, options);
+      logger.warn('Blog script: Gemini returned null', { topic });
+      return null;
     }
     const script = JSON.parse(content);
     if (!script || !Array.isArray(script.sections)) {
-      logger.warn('Blog script: AI returned no sections, using fallback', { topic });
-      return generateFallbackScript('blog', topic, options);
+      logger.warn('Blog script: AI returned no sections', { topic });
+      return null;
     }
 
     let fullScript = (script.introduction || '') + '\n\n';
@@ -314,7 +327,7 @@ Requirements:
     };
   } catch (error) {
     logger.error('Blog script generation error', { error: error.message, topic });
-    return generateFallbackScript('blog', topic, options);
+    return null;
   }
 }
 
@@ -323,7 +336,7 @@ Requirements:
  */
 async function generateEmailScript(topic, options = {}) {
   if (!geminiConfigured) {
-    return generateFallbackScript('email', topic, options);
+    return null;
   }
 
   const {
@@ -352,14 +365,17 @@ Requirements:
 - Format as JSON with: subject, opening, body, callToAction`;
 
     const fullPrompt = `You are an expert email copywriter.\n\n${prompt}`;
-    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 800 });
+    const content = await geminiGenerate(
+      await personalizePrompt(fullPrompt, { userId: options.userId, niche: options.targetAudience, stage: 'script', role: 'copywriter' }),
+      { temperature: 0.7, maxTokens: 800 }
+    );
     if (!content) {
-      logger.warn('Email script: Gemini returned null, using fallback', { topic });
-      return generateFallbackScript('email', topic, options);
+      logger.warn('Email script: Gemini returned null', { topic });
+      return null;
     }
     const script = JSON.parse(content);
     if (!script) {
-      return generateFallbackScript('email', topic, options);
+      return null;
     }
 
     const fullScript = `${script.subject}\n\n${script.opening}\n\n${script.body}\n\n${script.callToAction}`;
@@ -371,92 +387,8 @@ Requirements:
     };
   } catch (error) {
     logger.error('Email script generation error', { error: error.message, topic });
-    return generateFallbackScript('email', topic, options);
+    return null;
   }
-}
-
-/**
- * Fallback script generator
- */
-function generateFallbackScript(type, topic, options = {}) {
-  const templates = {
-    youtube: {
-      introduction: `Hey everyone! Welcome back to the channel. Today, we're diving into ${topic}.`,
-      mainPoints: [
-        { title: 'What is it?', content: `Let's start by understanding what ${topic} really means.`, duration: 2 },
-        { title: 'Why it matters', content: `Here's why ${topic} is important for you.`, duration: 3 },
-        { title: 'How to use it', content: `Now let's see how you can apply ${topic} in your life.`, duration: 3 }
-      ],
-      conclusion: `So there you have it - everything you need to know about ${topic}.`,
-      callToAction: `If you found this helpful, don't forget to like and subscribe!`
-    },
-    podcast: {
-      introduction: `Welcome to today's episode where we're exploring ${topic}.`,
-      mainPoints: [
-        { title: 'Introduction', content: `Let's start by introducing ${topic}.`, duration: 5 },
-        { title: 'Deep dive', content: `Now let's take a deeper look at ${topic}.`, duration: 10 },
-        { title: 'Practical tips', content: `Here are some practical ways to apply ${topic}.`, duration: 10 }
-      ],
-      conclusion: `That wraps up our discussion on ${topic}.`,
-      callToAction: `Thanks for listening! Be sure to subscribe for more episodes.`
-    },
-    'social-media': {
-      content: `Check out this amazing insight about ${topic}! 🚀\n\nThis is something you need to know.`,
-      hashtags: ['#content', '#tips', '#growth'],
-      callToAction: 'What do you think? Share your thoughts below! 👇'
-    },
-    blog: {
-      introduction: `In this post, we'll explore ${topic} and how it can benefit you.`,
-      sections: [
-        { title: 'Understanding the Basics', content: `Let's start with the fundamentals of ${topic}.` },
-        { title: 'Key Benefits', content: `Here are the main benefits of ${topic}.` },
-        { title: 'Getting Started', content: `Ready to get started with ${topic}? Here's how.` }
-      ],
-      conclusion: `In conclusion, ${topic} offers numerous benefits worth exploring.`
-    },
-    email: {
-      subject: `Everything you need to know about ${topic}`,
-      opening: `Hi there!`,
-      body: `I wanted to share some insights about ${topic} with you.`,
-      callToAction: `Click here to learn more!`
-    }
-  };
-
-  const template = templates[type] || templates.youtube;
-
-  // Stitch a flat `script` text from whatever the template gave us so the
-  // Script Mongoose model's `script: required` field is always populated —
-  // otherwise save() throws "Path script is required" and 500s the route.
-  const parts = [];
-  if (template.subject) parts.push(template.subject);
-  if (template.opening) parts.push(template.opening);
-  if (template.introduction) parts.push(template.introduction);
-  if (template.body) parts.push(template.body);
-  if (template.content) parts.push(template.content);
-  if (Array.isArray(template.mainPoints)) {
-    template.mainPoints.forEach(p => parts.push(`${p.title}\n${p.content}`));
-  }
-  if (Array.isArray(template.sections)) {
-    template.sections.forEach(s => parts.push(`${s.title}\n${s.content}`));
-  }
-  if (template.conclusion) parts.push(template.conclusion);
-  if (template.callToAction) parts.push(template.callToAction);
-  const scriptText = parts.join('\n\n');
-
-  // Default duration in minutes per type so the route's scriptData.duration
-  // is always a number (the Script model's `duration` is optional but the
-  // route reads it without guarding).
-  const defaultDurations = { youtube: 10, video: 10, podcast: 30, blog: 0, email: 0, 'social-media': 0, presentation: 15, sales: 10 };
-
-  return {
-    ...template,
-    title: `${topic} - ${type} Script`,
-    keywords: [topic],
-    hashtags: template.hashtags || [],
-    script: scriptText,
-    duration: options.duration ?? defaultDurations[type] ?? 0,
-    wordCount: scriptText.split(/\s+/).filter(Boolean).length || 500,
-  };
 }
 
 module.exports = {

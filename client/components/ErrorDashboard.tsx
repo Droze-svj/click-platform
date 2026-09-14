@@ -7,6 +7,7 @@ import { AlertCircle, RefreshCw, BarChart3, TrendingUp, Zap } from 'lucide-react
 import { errorMonitor } from '../utils/errorMonitor'
 import { errorHandler } from '../utils/errorHandler'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface ErrorStats {
   sessionErrors: number
@@ -21,6 +22,7 @@ export default function ErrorDashboard() {
   const [stats, setStats] = useState<ErrorStats | null>(null)
   const [recentErrors, setRecentErrors] = useState<any[]>([])
   const [isVisible, setIsVisible] = useState(false)
+  const panelRef = useDialogBehavior(isVisible, () => setIsVisible(false))
 
   useEffect(() => {
     updateStats()
@@ -69,8 +71,8 @@ export default function ErrorDashboard() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+      <Card ref={panelRef} className="w-full max-w-4xl max-h-[90vh] overflow-auto">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-red-500" />

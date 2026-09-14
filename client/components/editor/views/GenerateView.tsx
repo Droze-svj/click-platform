@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { getMediaUrl } from '../../../utils/url'
 import { Sparkles, Image as ImageIcon, Mic, AudioWaveform, Loader2, Download, Plus, Lock } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
@@ -168,15 +168,15 @@ const GenerateView: React.FC<GenerateViewProps> = ({ videoId, currentTime = 0, s
             </div>
           )}
 
-          <motion.button whileTap={{ scale: canSubmit ? 0.97 : 1 }} disabled={!canSubmit} onClick={generate}
+          <m.button whileTap={{ scale: canSubmit ? 0.97 : 1 }} disabled={!canSubmit} onClick={generate}
             className={`h-12 px-6 rounded-2xl inline-flex items-center gap-2 text-white font-black uppercase tracking-widest text-sm transition-all ${canSubmit ? 'bg-violet-600 hover:bg-violet-500' : 'bg-slate-700 opacity-60 cursor-not-allowed'}`}>
             {busy ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4" /> Generate</>}
-          </motion.button>
+          </m.button>
         </div>
 
         {/* Result */}
         {asset && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
+          <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
             <div className="text-sm font-black text-[var(--text-main)]">{asset.title}</div>
             {asset.type === 'image'
               ? <img src={asset.url} alt={asset.title} className="max-h-72 rounded-xl border border-white/10" />
@@ -189,7 +189,7 @@ const GenerateView: React.FC<GenerateViewProps> = ({ videoId, currentTime = 0, s
                 <Download className="w-4 h-4" /> Download
               </a>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </div>
     </div>

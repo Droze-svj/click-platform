@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Globe, Cpu, Zap, TrendingUp, Layers, ShieldCheck, BarChart3, Activity, Users,
   Rocket, Search, Brain, Repeat, Share2, Lock, ChevronRight, RefreshCw,
@@ -219,9 +219,9 @@ const InfiniteAgencyDashboardView: React.FC = () => {
               </div>
               <div className="flex items-center gap-6">
                  <div className="w-56 h-3 bg-black/80 rounded-full overflow-hidden border-2 border-white/5 shadow-inner p-0.5">
-                    <motion.div animate={{ width: `${efficiency}%` }} className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.6)] rounded-full relative overflow-hidden">
+                    <m.div animate={{ width: `${efficiency}%` }} className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.6)] rounded-full relative overflow-hidden">
                        <div className="absolute inset-0 bg-white/20 animate-shimmer" />
-                    </motion.div>
+                    </m.div>
                  </div>
                  <span className="text-3xl font-black text-white italic tabular-nums tracking-tighter drop-shadow-2xl">{efficiency.toFixed(1)}%</span>
               </div>
@@ -234,7 +234,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
         <section className="col-span-8 flex flex-col gap-12 overflow-hidden">
            <AnimatePresence mode="wait">
               {activeView === 'pipeline' && (
-                 <motion.div initial={{ opacity: 0, scale: 0.98, x: -50 }} animate={{ opacity: 1, scale: 1, x: 0 }} exit={{ opacity: 0, scale: 1.02, x: 50 }} transition={{ duration: 0.8 }} className="flex flex-col gap-12 h-full">
+                 <m.div initial={{ opacity: 0, scale: 0.98, x: -50 }} animate={{ opacity: 1, scale: 1, x: 0 }} exit={{ opacity: 0, scale: 1.02, x: 50 }} transition={{ duration: 0.8 }} className="flex flex-col gap-12 h-full">
                     {/* Orchestration Matrix */}
                     <div className={`${glassStyle} flex-1 rounded-[6rem] p-24 relative overflow-hidden flex flex-col justify-between group bg-black/40 shadow-[0_100px_300px_rgba(0,0,0,1)] border-white/5`}>
                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/[0.04] blur-[200px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-indigo-500/[0.08] transition-all duration-[3s]" />
@@ -251,11 +251,11 @@ const InfiniteAgencyDashboardView: React.FC = () => {
 
                        <div className="relative flex items-center justify-between px-20 py-16">
                           <div className="absolute top-1/2 left-24 right-24 h-[3px] bg-white/[0.02] -translate-y-1/2 rounded-full">
-                             <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }} className="h-full w-96 bg-gradient-to-r from-transparent via-indigo-400 to-transparent shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
+                             <m.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }} className="h-full w-96 bg-gradient-to-r from-transparent via-indigo-400 to-transparent shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
                           </div>
 
                           {supplyChainSteps.map((step, idx) => (
-                             <motion.div key={step.id} whileHover={{ scale: 1.15, y: -20 }} onMouseEnter={() => setHoveredStep(step.id)} onMouseLeave={() => setHoveredStep(null)}
+                             <m.div key={step.id} whileHover={{ scale: 1.15, y: -20 }} onMouseEnter={() => setHoveredStep(step.id)} onMouseLeave={() => setHoveredStep(null)}
                                className="relative flex flex-col items-center gap-10 cursor-pointer group/step z-10"
                              >
                                 <div className={`w-32 h-32 rounded-[3.5rem] flex items-center justify-center border-4 transition-all duration-1000 shadow-3xl relative ${
@@ -277,7 +277,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
 
                                 <AnimatePresence>
                                    {hoveredStep === step.id && (
-                                     <motion.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.9 }} className="absolute -bottom-48 w-96 p-10 rounded-[4rem] bg-[#050505] border-2 border-indigo-500/30 shadow-[0_80px_200px_rgba(0,0,0,1)] z-[100] pointer-events-none">
+                                     <m.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.9 }} className="absolute -bottom-48 w-96 p-10 rounded-[4rem] bg-[#050505] border-2 border-indigo-500/30 shadow-[0_80px_200px_rgba(0,0,0,1)] z-[100] pointer-events-none">
                                         <div className="space-y-6">
                                            <div className="flex justify-between items-center border-b-2 border-white/5 pb-5 px-4">
                                               <p className="text-[14px] font-black text-white uppercase italic tracking-widest">{step.desc}</p>
@@ -292,10 +292,10 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                               ))}
                                            </div>
                                         </div>
-                                     </motion.div>
+                                     </m.div>
                                    )}
                                 </AnimatePresence>
-                             </motion.div>
+                             </m.div>
                           ))}
                        </div>
 
@@ -337,11 +337,11 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                               {heatmapData.map((d, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar">
                                    <div className="w-full h-full relative flex flex-col justify-end">
-                                      <motion.div initial={{ height: '0%' }} animate={{ height: `${d.score}%` }} transition={{ duration: 2.5, delay: i * 0.1, ease: "circOut" }}
+                                      <m.div initial={{ height: '0%' }} animate={{ height: `${d.score}%` }} transition={{ duration: 2.5, delay: i * 0.1, ease: "circOut" }}
                                         className={`w-full rounded-t-2xl transition-all duration-[2s] relative overflow-hidden ${d.level === 'high' ? 'bg-indigo-500/50 shadow-[0_0_40px_rgba(99,102,241,0.4)]' : d.level === 'medium' ? 'bg-indigo-500/20' : 'bg-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.3)]'}`}
                                       >
                                          <div className="absolute inset-0 bg-white/10 animate-shimmer" />
-                                      </motion.div>
+                                      </m.div>
                                    </div>
                                    <span className="text-[9px] font-black text-slate-950 italic tabular-nums tracking-widest">{d.time}</span>
                                 </div>
@@ -397,7 +397,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 {Array.from({ length: 4 }).map((_, i) => (
                                    <div key={i} className="bg-black/60 rounded-[1.5rem] p-5 border-2 border-white/5 flex flex-col items-center gap-3 shadow-inner hover:border-indigo-500/30 transition-all duration-700">
                                       <p className="text-[8px] font-black text-slate-950 uppercase italic group-hover:text-white transition-colors">DIM_{i}</p>
-                                      <motion.p animate={{ opacity: [1, 0.3, 1], scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }} className="text-[14px] font-black text-white italic tabular-nums">{(Math.random()).toFixed(3)}</motion.p>
+                                      <m.p animate={{ opacity: [1, 0.3, 1], scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }} className="text-[14px] font-black text-white italic tabular-nums">{(Math.random()).toFixed(3)}</m.p>
                                    </div>
                                 ))}
                              </div>
@@ -414,7 +414,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           </div>
                        </div>
                     </div>
-                 </motion.div>
+                 </m.div>
               )}
               {activeView === 'strategic' && <StrategicPivotsView pivots={pivots} currentWins={currentWins} onScale={(n) => loadAll()} loading={loadingPivots} onClose={() => setActiveView('pipeline')} />}
               {activeView === 'monetization' && <WhopProductHub products={whopProducts} onClose={() => setActiveView('pipeline')} />}
@@ -442,7 +442,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
 
               <div className="flex-1 space-y-8 overflow-y-auto custom-scrollbar pr-6 relative z-10 px-4">
                  {agents.map(agent => (
-                    <motion.div key={agent.id} layout whileHover={{ x: 15, scale: 1.02 }} className="p-10 rounded-[3.5rem] bg-black/60 border-2 border-white/5 flex flex-col gap-10 group/node cursor-pointer transition-all duration-1000 shadow-[inset_0_0_50px_rgba(255,255,255,0.02)] hover:border-white/10">
+                    <m.div key={agent.id} layout whileHover={{ x: 15, scale: 1.02 }} className="p-10 rounded-[3.5rem] bg-black/60 border-2 border-white/5 flex flex-col gap-10 group/node cursor-pointer transition-all duration-1000 shadow-[inset_0_0_50px_rgba(255,255,255,0.02)] hover:border-white/10">
                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-8">
                              <div className={`w-20 h-20 rounded-[2.5rem] ${colorMap[agent.color].bg} border-2 ${colorMap[agent.color].border} ${colorMap[agent.color].text} group-hover/node:rotate-12 transition-all duration-1000 shadow-3xl flex items-center justify-center flex-shrink-0`}>
@@ -459,7 +459,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           <div className="text-right flex flex-col items-end gap-3">
                              <p className={`text-4xl font-black italic tabular-nums leading-none ${colorMap[agent.color].text} drop-shadow-2xl`}>{agent.load.toFixed(0)}%</p>
                              <div className="w-32 h-2.5 bg-black/60 rounded-full overflow-hidden border-2 border-white/5 shadow-inner p-0.5">
-                                <motion.div animate={{ width: `${agent.load}%` }} className={`h-full ${colorMap[agent.color].bar} shadow-[0_0_20px_rgba(99,102,241,0.5)] rounded-full`} />
+                                <m.div animate={{ width: `${agent.load}%` }} className={`h-full ${colorMap[agent.color].bar} shadow-[0_0_20px_rgba(99,102,241,0.5)] rounded-full`} />
                              </div>
                           </div>
                        </div>
@@ -470,16 +470,16 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 <p className="text-[12px] font-black uppercase tracking-tight italic truncate max-w-[280px]">{agent.task}</p>
                              </div>
                              {debateMode && agent.critique && (
-                                <motion.div initial={{ opacity: 0, height: 0, y: 20 }} animate={{ opacity: 1, height: 'auto', y: 0 }} className="p-8 rounded-[2.5rem] bg-indigo-500/5 border-2 border-indigo-500/10 shadow-inner group-hover/node:bg-indigo-500/10 transition-all duration-1000">
+                                <m.div initial={{ opacity: 0, height: 0, y: 20 }} animate={{ opacity: 1, height: 'auto', y: 0 }} className="p-8 rounded-[2.5rem] bg-indigo-500/5 border-2 border-indigo-500/10 shadow-inner group-hover/node:bg-indigo-500/10 transition-all duration-1000">
                                    <div className="flex gap-4">
                                       <div className="text-amber-500 mt-1 flex-shrink-0"><Sparkle size={16} className="animate-pulse" /></div>
                                       <p className="text-[13px] font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter group-hover:text-white/80 transition-colors">"{agent.critique}"</p>
                                    </div>
-                                </motion.div>
+                                </m.div>
                              )}
                           </div>
                        )}
-                    </motion.div>
+                    </m.div>
                  ))}
               </div>
 
@@ -502,7 +502,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           </div>
                        </div>
                        <button type="button" onClick={() => setAutoSurgeActive(!autoSurgeActive)} className={`w-24 h-12 rounded-[2rem] relative transition-all duration-1000 border-4 shadow-3xl active:scale-75 ${autoSurgeActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_50px_rgba(99,102,241,0.5)]' : 'bg-slate-950 border-slate-900 shadow-inner'}`}>
-                          <motion.div animate={{ x: autoSurgeActive ? 48 : 0 }} className={`absolute top-1 left-1 w-7 h-7 rounded-full shadow-2xl ${autoSurgeActive ? 'bg-white' : 'bg-slate-700'}`} />
+                          <m.div animate={{ x: autoSurgeActive ? 48 : 0 }} className={`absolute top-1 left-1 w-7 h-7 rounded-full shadow-2xl ${autoSurgeActive ? 'bg-white' : 'bg-slate-700'}`} />
                        </button>
                     </div>
                     
@@ -558,10 +558,10 @@ const InfiniteAgencyDashboardView: React.FC = () => {
 
               <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-8 relative z-10 px-8">
                  {thoughts.slice(0, 15).map((t, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1 - (i * 0.08), x: 0 }} transition={{ duration: 1, delay: i * 0.05 }} className="flex items-start gap-10 p-6 rounded-[2.5rem] bg-white/[0.01] border-2 border-white/[0.03] group/log hover:bg-white/5 hover:border-emerald-500/20 transition-all duration-700">
+                    <m.div key={i} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1 - (i * 0.08), x: 0 }} transition={{ duration: 1, delay: i * 0.05 }} className="flex items-start gap-10 p-6 rounded-[2.5rem] bg-white/[0.01] border-2 border-white/[0.03] group/log hover:bg-white/5 hover:border-emerald-500/20 transition-all duration-700">
                        <span className="text-[12px] font-mono font-black text-emerald-500/60 mt-1 tabular-nums italic group-hover:text-emerald-400 transition-colors">BLOCK_0x_{1240 - i}</span>
                        <p className="text-[14px] font-black text-slate-600 italic uppercase tracking-tighter leading-relaxed group-hover:text-white transition-colors duration-700">{t}</p>
-                    </motion.div>
+                    </m.div>
                  ))}
               </div>
 

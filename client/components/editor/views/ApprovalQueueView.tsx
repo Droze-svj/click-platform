@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   CheckCircle, 
   XCircle, 
@@ -183,7 +183,7 @@ const ApprovalQueueView: React.FC = () => {
                 </div>
               ) : (
                 approvals.map((approval) => (
-                  <motion.div
+                  <m.div
                     key={approval._id}
                     layoutId={approval._id}
                     onClick={() => setSelectedId(approval._id)}
@@ -224,7 +224,7 @@ const ApprovalQueueView: React.FC = () => {
                           <span className="text-[10px] font-mono text-white">{new Date(approval.createdAt).toLocaleDateString()}</span>
                        </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 ))
               )}
             </div>
@@ -235,7 +235,7 @@ const ApprovalQueueView: React.FC = () => {
       {/* Action Sidebar */}
       <AnimatePresence>
         {selectedId && selectedApproval && (
-          <motion.div
+          <m.div
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 450, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
@@ -268,7 +268,7 @@ const ApprovalQueueView: React.FC = () => {
                      
                      {/* AI Revision Banner */}
                      {detailedApproval?.contentId?.metadata?.proposedV2 && (
-                       <motion.div 
+                       <m.div 
                          initial={{ opacity: 0, y: 10 }}
                          animate={{ opacity: 1, y: 0 }}
                          className="p-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 mb-4"
@@ -289,7 +289,7 @@ const ApprovalQueueView: React.FC = () => {
                           <p className="text-[9px] text-slate-400 leading-relaxed italic truncate">
                              &quot;{detailedApproval.contentId.metadata.proposedV2.explanation}&quot;
                           </p>
-                       </motion.div>
+                       </m.div>
                      )}
 
                      <textarea
@@ -343,7 +343,7 @@ const ApprovalQueueView: React.FC = () => {
                   </button>
                </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

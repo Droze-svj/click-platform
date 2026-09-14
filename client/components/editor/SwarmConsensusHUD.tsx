@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   ShieldCheck, 
   BrainCircuit, 
@@ -79,14 +79,14 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none p-4 sm:p-6 lg:p-8">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.9, backdropFilter: 'blur(0px)' }}
         animate={{ opacity: 1, scale: 1, backdropFilter: 'blur(40px)' }}
         exit={{ opacity: 0, scale: 0.9, backdropFilter: 'blur(0px)' }}
         className="w-full max-w-2xl bg-black/60 border-2 border-white/5 rounded-[3rem] sm:rounded-[4rem] p-8 sm:p-14 shadow-[0_0_150px_rgba(0,0,0,0.9)] relative overflow-hidden pointer-events-auto"
       >
         {/* Scanning Line Animation */}
-        <motion.div 
+        <m.div 
           animate={{ y: [0, 500, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
           className="absolute inset-0 bg-gradient-to-b from-transparent via-primary-500/10 to-transparent h-24 w-full z-0 opacity-40"
@@ -112,7 +112,7 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
               const Icon = d.icon
 
               return (
-                <motion.div
+                <m.div
                   key={i}
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ 
@@ -140,14 +140,14 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
                   </div>
 
                   {isActive && (
-                    <motion.div 
+                    <m.div 
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                       className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                     />
                   )}
                   {isPast && <ShieldCheck className="w-6 h-6 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />}
-                </motion.div>
+                </m.div>
               )
             })}
           </div>
@@ -173,7 +173,7 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
                   `[0x${Math.random().toString(16).slice(2, 6)}] SWARM_CONSENSUS_REACHED_8ms_LATENCY`,
                   `[0x${Math.random().toString(16).slice(2, 6)}] INJECTING_STYLE_DNA_INTO_CLUSTER…`
                 ].map((log, i) => (
-                  <motion.p 
+                  <m.p 
                     key={i} 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -181,12 +181,12 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
                     className="text-[9px] font-mono font-black text-primary-400/60 whitespace-nowrap overflow-hidden italic uppercase tracking-widest"
                   >
                     {log}
-                  </motion.p>
+                  </m.p>
                 ))}
              </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

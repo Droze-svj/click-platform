@@ -17,6 +17,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Gem } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { PageShell } from '../../../components/ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,9 +30,9 @@ export default function MembershipPage() {
   }, [router])
 
   return (
-    <div className="flex flex-col items-center justify-center py-48 ds-bg-mesh-soft min-h-screen text-theme-primary">
+    <PageShell width="full" flush className="flex flex-col items-center justify-center py-48 ds-bg-mesh-soft min-h-screen">
       <Gem size={40} className="text-primary animate-pulse motion-reduce:animate-none mb-4" aria-hidden />
       <span className="ds-text-caption">{t('membershipPage.synchronizing')}</span>
-    </div>
+    </PageShell>
   )
 }

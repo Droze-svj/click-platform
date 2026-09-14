@@ -42,7 +42,7 @@ export {
 } from "./select"
 
 // Overlays
-export { Modal, Sheet } from "./modal"
+export { Modal, Sheet, useDialogBehavior } from "./modal"
 export type { ModalProps, SheetProps, SheetSide } from "./modal"
 
 // Entitlements / paywall
@@ -58,6 +58,27 @@ export type {
 // Tabs & Tooltip
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs"
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip"
+
+// Page-level layout — the frame a route sits in.
+export { PageShell, PageHeader, Toolbar, DetailLayout, AuthShell } from "./page"
+export type {
+  PageShellProps,
+  PageHeaderProps,
+  ToolbarProps,
+  DetailLayoutProps,
+  PageWidth,
+  Breadcrumb,
+  AuthShellProps,
+  AuthWidth,
+} from "./page"
+
+// Public document pages (privacy, terms, security, …).
+export { LegalPage } from "./legal-page"
+export type { LegalPageProps } from "./legal-page"
+
+// Tabular data — owns its own loading / empty / error states.
+export { DataTable } from "./data-table"
+export type { DataTableProps, Column, SortDirection } from "./data-table"
 
 // Layout / misc
 export { EmptyState } from "./empty-state"

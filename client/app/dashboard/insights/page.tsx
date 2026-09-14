@@ -12,8 +12,12 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import IntelligenceEngine from '../../../components/IntelligenceEngine'
+import RevenueOracle from '../../../components/RevenueOracle'
 import { StatsCardSkeleton, ContentSkeleton } from '../../../components/LoadingSkeleton'
-import { Panel, Button, IconButton, StatCard, SectionHeader, Badge, EmptyState } from '../../../components/ui'
+import { Panel, Button, IconButton, StatCard, SectionHeader, Badge, EmptyState,
+  PageShell,
+} from '../../../components/ui'
 import { cn } from '../../../lib/utils'
 
 interface AudienceOverview {
@@ -161,7 +165,7 @@ export default function CognitiveForecasterPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1900px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -345,7 +349,20 @@ export default function CognitiveForecasterPage() {
             )
           })}
         </section>
-      </div>
+
+        {/* Both were built against live endpoints and imported by nothing:
+            IntelligenceEngine reads GET /api/analytics/overview, RevenueOracle
+            reads GET /api/sovereign/insights. Neither duplicates this page's own
+            data. Bounded separately so one failing cannot blank the other. */}
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <ErrorBoundary>
+            <IntelligenceEngine />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <RevenueOracle />
+          </ErrorBoundary>
+        </section>
+      </PageShell>
     </ErrorBoundary>
   )
 }

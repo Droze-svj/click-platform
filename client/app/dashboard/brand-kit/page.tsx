@@ -5,13 +5,15 @@ import BrandKit from '../../../components/BrandKit';
 import { Palette, ShieldCheck, RefreshCw } from 'lucide-react';
 import ToastContainer from '../../../components/ToastContainer';
 import { useTranslation } from '../../../hooks/useTranslation';
-import { Panel, SectionHeader, Badge } from '../../../components/ui';
+import { Panel, SectionHeader, Badge,
+  PageShell,
+} from '../../../components/ui';
 
 export default function BrandKitPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       {/* Header (global DashboardHeader provides the breadcrumb) */}
@@ -60,6 +62,6 @@ export default function BrandKitPage() {
           </Panel>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

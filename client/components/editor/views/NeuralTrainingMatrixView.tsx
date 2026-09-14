@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   Cpu,
   CheckCircle2,
@@ -152,7 +152,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
         </div>
 
         {loading ? (
-          <div className="flex-1 flex items-center justify-center text-slate-500">
+          <div role="status" aria-live="polite" className="flex-1 flex items-center justify-center text-slate-500">
             <Loader2 className="w-6 h-6 animate-spin" />
           </div>
         ) : error ? (

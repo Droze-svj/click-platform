@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
+  PageShell,
 } from '../../../../components/ui'
 
 // ── Angle taxonomy returned by the backend hook generator. ──
@@ -191,7 +192,7 @@ export default function HookABPage() {
 
   return (
     <TooltipProvider>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -403,7 +404,7 @@ export default function HookABPage() {
             )}
           </Panel>
         )}
-      </div>
+      </PageShell>
     </TooltipProvider>
   )
 }

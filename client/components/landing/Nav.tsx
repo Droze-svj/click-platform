@@ -4,7 +4,7 @@ import Link from 'next/link';
 import ClickLogo from '../ClickLogo';
 import { Menu, X, ShieldCheck, Cpu, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -63,7 +63,7 @@ export function Nav() {
       {/* Mobile Menu - High Fidelity */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -81,7 +81,7 @@ export function Nav() {
                <div className="h-px flex-1 bg-surface-100 dark:bg-white/5" />
                <span className="text-[10px] font-black uppercase tracking-widest italic text-surface-300">Click mobile</span>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </nav>

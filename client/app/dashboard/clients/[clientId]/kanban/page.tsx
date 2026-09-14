@@ -2,7 +2,9 @@
 
 import { useParams, useSearchParams } from 'next/navigation'
 import ApprovalKanbanBoard from '../../../../../components/ApprovalKanbanBoard'
-import { SectionHeader, EmptyState } from '@/components/ui'
+import { SectionHeader, EmptyState,
+  PageShell,
+} from '@/components/ui'
 import { LayoutGrid } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -15,13 +17,13 @@ export default function ClientKanbanPage() {
 
   if (!agencyWorkspaceId) {
     return (
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
         <EmptyState
           icon={LayoutGrid}
           title={t('clientKanbanPage.workspaceIdRequired')}
           className="py-24"
         />
-      </div>
+      </PageShell>
     )
   }
 

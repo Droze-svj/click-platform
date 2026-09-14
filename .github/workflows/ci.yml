@@ -84,17 +84,43 @@ jobs:
         REDIS_URL: redis://localhost:6379
 
     - name: Generate test coverage
-      # Informational. `jest --coverage` runs at the ROOT config (no
-      # --selectProjects), so it matches every *.test.js under one config and the
-      # client/e2e suites fail in the wrong environment (collapses to 0%). That's a
-      # coverage-tooling config issue, independent of the now-gating unit +
-      # integration + security projects; kept non-gating until the coverage config
-      # is reworked to run per-project.
-      continue-on-error: true
-      run: npm run test:coverage
+      # GATING against a ratchet. This was non-gating because coverage always
+      # reported 0/0 — not because of --selectProjects (the old theory here) but
+      # because the tree-wide `minimatch: ^10` security override broke
+      # test-exclude@6 inside babel-plugin-istanbul, so every suite failed to run
+      # under --coverage. jest.config.js now uses the v8 provider, the script is
+      # scoped to unit+integration, and coverageThreshold holds the real measured
+      # numbers so coverage can't silently regress.
+      #
+      # Retried ONCE, and ONLY on exit 133. The v8 provider collects coverage
+      # through an in-process inspector session with the Debugger domain enabled
+      # (collect-v8-coverage), and Node 20's V8 11.3 has an unfixed assertion in
+      # its scope iterator that can fire when that debugger pauses:
+      #   Check failed: needs_context && current_scope_ == closure_scope_ ...
+      # (nodejs/node#58460). It killed this step with SIGTRAP (exit 133) on one
+      # run and not on an otherwise identical one, and it is not a test result.
+      # Every real outcome still fails the step with no retry: a failing test or
+      # a missed coverageThreshold exits 1. The retry gets a fresh database so it
+      # does not inherit rows from the crashed partial run.
+      run: |
+        set +e
+        npm run test:coverage
+        code=$?
+        if [ "$code" -eq 133 ]; then
+          echo "::warning::Coverage run was killed by the known V8 inspector assertion (exit 133, SIGTRAP; nodejs/node#58460). Retrying once against a fresh database."
+          MONGODB_URI=mongodb://localhost:27017/click-test-coverage-retry npm run test:coverage
+          code=$?
+        fi
+        exit $code
       env:
         NODE_ENV: test
-        MONGODB_URI: mongodb://localhost:27017/click-test
+        # Its OWN database. This step re-runs the unit + integration suites a
+        # second time, and --runInBand puts all of them in a single
+        # …-w1 database — the same one the earlier "Run unit tests" step just
+        # filled. Any suite asserting a collection-wide count then sees the
+        # first pass's rows too (useridFlipMigration counted 20 convertible
+        # instead of 10 and failed only here).
+        MONGODB_URI: mongodb://localhost:27017/click-test-coverage
         JWT_SECRET: test-secret-key
 
     - name: Upload coverage to Codecov
@@ -102,6 +128,78 @@ jobs:
       with:
         files: ./coverage/lcov.info
         fail_ci_if_error: false
+
+  # Breadth sweeps over every mounted endpoint. These are the two checks that
+  # actually catch a route regressing to a 5xx or leaking across tenants, and
+  # they were manual-only until now (see docs/readiness/endpoint-coverage.md).
+  # Both are hermetic and self-isolating — writeSweep.js forces an in-memory
+  # Mongo and blanks REDIS_URL/SUPABASE_URL itself, and smokeFull boots the app
+  # in-process — so they need no service containers and no secrets. Kept in
+  # their own job so a sweep failure is legible at a glance instead of being
+  # buried at the end of the long `test` job.
+  sweeps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Both sweeps need a database. This job used to declare none, so
+    # tests/setup.js fell through to its documented fallback — MongoMemoryServer
+    # cannot download its binary on the runner, so it tried
+    # mongodb://localhost:27017 and got ECONNREFUSED. Every query then buffered
+    # until the 60s bufferTimeoutMS fired, which surfaced as a hook timeout and
+    # failed the job on runs where the sweep itself reported ZERO server errors.
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate Prisma Client
+      run: npm run prisma:generate
+
+    # Walks every mounted GET endpoint. Fails if SERVER_ERROR exceeds the
+    # ratchet in tests/smoke/smokeFull.test.js (MAX_SERVER_ERRORS = 0) — any new
+    # GET 5xx is a regression.
+    - name: GET breadth sweep
+      run: npm run smoke:full
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-secret-key
+        MONGODB_URI: mongodb://localhost:27017/click-test-sweeps
+
+    # Walks every mounted POST/PUT/PATCH/DELETE as user A, then replays each
+    # successful write on an owned resource as user B. Exit 1 on any 5xx, any
+    # cross-tenant write (IDOR), or any 2xx carrying success:false.
+    - name: WRITE breadth sweep (incl. cross-tenant IDOR)
+      run: npm run smoke:writes
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test-secret-key
+        MONGODB_URI: mongodb://localhost:27017/click-test-sweeps
+
+    - name: Upload sweep reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: endpoint-sweep-reports
+        path: tests/reports/
+        if-no-files-found: ignore
 
   build:
     runs-on: ubuntu-latest

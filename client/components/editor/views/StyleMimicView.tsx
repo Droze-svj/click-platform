@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Link as LinkIcon,
   Upload,
@@ -101,7 +101,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
 
       <AnimatePresence mode="wait">
         {status === 'idle' && (
-          <motion.div
+          <m.div
             key="idle"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -136,11 +136,11 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Start Mirroring</span>
               </button>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {status === 'analyzing' && (
-          <motion.div
+          <m.div
             key="analyzing"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -174,11 +174,11 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
                 {progress >= 80 && "Synthesizing Neural Profile..."}
               </p>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {status === 'complete' && extractedProfile && (
-          <motion.div
+          <m.div
             key="complete"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -219,7 +219,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
               Apply Mirrored DNA to Project
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

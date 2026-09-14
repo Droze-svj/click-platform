@@ -5,6 +5,7 @@ import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import ExportImportModal from './ExportImportModal'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -35,6 +36,8 @@ export default function EnhancedBatchOperations({
   const [showExportImport, setShowExportImport] = useState(false)
   const [showTagModal, setShowTagModal] = useState(false)
   const [showFolderModal, setShowFolderModal] = useState(false)
+  const tagPanelRef = useDialogBehavior(showTagModal, () => setShowTagModal(false))
+  const folderPanelRef = useDialogBehavior(showFolderModal, () => setShowFolderModal(false))
   const [newTag, setNewTag] = useState('')
   const [selectedFolder, setSelectedFolder] = useState('')
 
@@ -196,8 +199,8 @@ export default function EnhancedBatchOperations({
 
       {/* Tag Modal */}
       {showTagModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6" ref={tagPanelRef}>
             <h3 className="text-xl font-semibold mb-4">{t('enhancedBatchOperations.addTag')}</h3>
             <input
               type="text"
@@ -237,8 +240,8 @@ export default function EnhancedBatchOperations({
 
       {/* Folder Modal */}
       {showFolderModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6" ref={folderPanelRef}>
             <h3 className="text-xl font-semibold mb-4">{t('enhancedBatchOperations.moveToFolder')}</h3>
             <select
               value={selectedFolder}

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Upload, Wand2, Calendar, Send, type LucideIcon, Activity, Terminal, Fingerprint, Sparkles } from 'lucide-react';
 
 interface Step {
@@ -49,7 +49,7 @@ export function Workflow() {
       
       <div className="max-w-[1900px] mx-auto relative z-10">
         <div className="text-center mb-32 space-y-8">
-           <motion.div
+           <m.div
              initial={{ opacity: 0, y: 20 }}
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
@@ -57,7 +57,7 @@ export function Workflow() {
            >
              <Sparkles size={14} className="animate-pulse" />
              How it works
-           </motion.div>
+           </m.div>
 
           <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic px-4">
             ONE VIDEO IN. <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">A WEEK OF POSTS OUT.</span>
@@ -79,7 +79,7 @@ export function Workflow() {
             {STEPS.map((s, i) => {
               const Icon = s.icon;
               return (
-                <motion.div
+                <m.div
                   key={s.num}
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -117,7 +117,7 @@ export function Workflow() {
                        <Terminal size={14} className="text-primary-500 shrink-0" />
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>

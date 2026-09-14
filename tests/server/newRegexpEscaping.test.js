@@ -13,7 +13,7 @@ describe('new RegExp user-input escaping (ReDoS guard)', () => {
     let out = '';
     try {
       out = execSync(
-        `grep -rnE "new RegExp\\\\((search|q|query|searchQuery|phrase|req\\\\.query\\\\.search)[,)]" ${root} | grep -v escapeRegex || true`,
+        `grep -rnE "new RegExp\\\\((search|q|query|searchQuery|phrase|req\\\\.query\\\\.search)[,)]" "${root}" | grep -v escapeRegex || true`,
         { encoding: 'utf8' }
       ).trim();
     } catch (_) { out = ''; }

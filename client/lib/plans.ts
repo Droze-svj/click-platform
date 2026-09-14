@@ -65,8 +65,12 @@ export interface Plan {
   accent: string;   // tailwind text-x-400 used for highlights
 }
 
-const env = (key: string): string =>
-  (typeof process !== 'undefined' && process.env?.[key]) || '';
+// Each checkout URL MUST be read as a literal `process.env.NEXT_PUBLIC_…`
+// expression. Next.js inlines public env vars at build time by replacing those
+// exact expressions; a dynamic lookup such as process.env[key] is never replaced,
+// so in the browser it read an empty object and every paid plan lost its Whop
+// checkout link (sign-up, pricing and billing all fell back to "no checkout").
+// Guarded by lib/__tests__/plans.test.ts.
 
 export const PLANS: Plan[] = [
   {
@@ -114,8 +118,8 @@ export const PLANS: Plan[] = [
       { label: 'Workspaces & approvals', included: false },
     ],
     checkoutUrl: {
-      monthly: env('NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY'),
-      yearly: env('NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY'),
+      monthly: process.env.NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY || '',
+      yearly: process.env.NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY || '',
     },
     cta: { label: 'Get Creator' },
     serverTier: 'creator',
@@ -145,8 +149,8 @@ export const PLANS: Plan[] = [
       { label: 'Workspaces & approvals', included: false },
     ],
     checkoutUrl: {
-      monthly: env('NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY'),
-      yearly: env('NEXT_PUBLIC_WHOP_URL_PRO_YEARLY'),
+      monthly: process.env.NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY || '',
+      yearly: process.env.NEXT_PUBLIC_WHOP_URL_PRO_YEARLY || '',
     },
     cta: { label: 'Get Pro' },
     serverTier: 'pro',
@@ -177,8 +181,8 @@ export const PLANS: Plan[] = [
       { label: 'Early access: developer API + dedicated GPU pods', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
     ],
     checkoutUrl: {
-      monthly: env('NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY'),
-      yearly: env('NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY'),
+      monthly: process.env.NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY || '',
+      yearly: process.env.NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY || '',
     },
     cta: { label: 'Get Agency', subLabel: 'or talk to sales' },
     serverTier: 'agency',
@@ -235,6 +239,8 @@ export function buildCheckoutTarget(
   const params = new URLSearchParams();
   if (userId) params.set('passthrough', userId);
   if (user.email) params.set('email', user.email);
+  params.set('plan', plan.id);
+  params.set('billingCycle', period);
   const sep = baseUrl.includes('?') ? '&' : '?';
   return { kind: 'whop', href: `${baseUrl}${params.toString() ? sep + params.toString() : ''}` };
 }

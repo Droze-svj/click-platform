@@ -24,7 +24,7 @@ const crypto = require('crypto');
 const { execFile } = require('child_process');
 const logger = require('../utils/logger');
 
-const SIGNER_ID = process.env.C2PA_SIGNER_ID || 'click.example/signer/1';
+const SIGNER_ID = process.env.C2PA_SIGNER_ID || 'clickapp.io/signer/1';
 const CLAIM_GENERATOR = `Click/${process.env.npm_package_version || '1.0.0'}`;
 
 function tryRequireC2paNode() {

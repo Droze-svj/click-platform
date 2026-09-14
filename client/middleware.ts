@@ -15,6 +15,11 @@ const BLOCKED_IN_PROD = [
   '/test-registration',
   '/auto-test-registration',
   '/test-debug',
+  // Unlinked registration harness: inline-styled, titled "Simple Registration
+  // Test", and it prints the API URL plus "Check console (F12)" on the page.
+  // Same class as the six above but it was never added to this list, so it was
+  // the one piece of test scaffolding still reachable in production.
+  '/simple-register',
   '/__probe',
   '/which-build',
 ]
@@ -38,6 +43,7 @@ export const config = {
     '/test-registration/:path*',
     '/auto-test-registration/:path*',
     '/test-debug/:path*',
+    '/simple-register/:path*',
     '/__probe/:path*',
     '/which-build/:path*',
   ],

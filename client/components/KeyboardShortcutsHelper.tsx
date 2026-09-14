@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Keyboard, X } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface Shortcut {
   keys: string[]
@@ -57,6 +58,8 @@ export default function KeyboardShortcutsHelper() {
     return acc
   }, {} as Record<string, Shortcut[]>)
 
+  const panelRef = useDialogBehavior(isOpen, () => setIsOpen(false))
+
   if (!isOpen) return null
 
   return (
@@ -68,6 +71,7 @@ export default function KeyboardShortcutsHelper() {
       aria-labelledby="shortcuts-title"
     >
       <div
+        ref={panelRef}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { getMediaUrl } from '../../../utils/url'
 import {
   Smartphone,
@@ -315,7 +315,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
               Subject-aware reframe · per-platform copy
             </span>
           </div>
-          <motion.button
+          <m.button
             whileHover={{ scale: isBusy ? 1 : 1.04 }}
             whileTap={{ scale: isBusy ? 1 : 0.96 }}
             disabled={isBusy || selected.length === 0}
@@ -325,7 +325,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
             }`}
           >
             {isBusy ? (<><Loader2 className="w-5 h-5 animate-spin" /> Working…</>) : (<><Play className="w-5 h-5 fill-current" /> Repurpose</>)}
-          </motion.button>
+          </m.button>
         </div>
 
         {/* Recipes: save the current setup, or remix a community recipe */}
@@ -380,7 +380,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
         {/* Variant results */}
         <AnimatePresence>
           {variants.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               {variants.map((v) => (
                 <div key={v.jobId} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                   <div className="flex items-start justify-between gap-4">
@@ -431,7 +431,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
                   )}
                 </div>
               ))}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

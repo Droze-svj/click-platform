@@ -215,9 +215,11 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
         }
       })
 
-      if (res?.success) {
+      if (res?.success && !res?.data?.notImplemented && res?.data?.status !== 'unavailable') {
         setAvatarGenerated(true)
         showToast('Digital twin generation started. Check the activity log for status.', 'success')
+      } else if (res?.data?.notImplemented || res?.data?.status === 'unavailable') {
+        showToast(res?.data?.message || 'AI Avatar synthesis requires a HeyGen or Sora API key.', 'info')
       } else {
         showToast('Avatar generation failed.', 'error')
       }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion';
+import { m as Motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion';
 import {
   Activity, ShieldCheck, TrendingUp, Sparkles, Cpu, Users, Zap,
   Terminal, ActivitySquare, ArrowRight, Info, Pause, Play,
@@ -27,7 +27,7 @@ function AnimatedNumber({ value, format }: { value: number; format: (n: number) 
     return () => controls.stop();
   }, [value, motionValue]);
 
-  return <motion.span>{rounded}</motion.span>;
+  return <Motion.span>{rounded}</Motion.span>;
 }
 
 /**
@@ -290,7 +290,7 @@ export function LiveDemo() {
         </p>
       </div>
 
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-100px' }}
@@ -305,7 +305,7 @@ export function LiveDemo() {
               switched to, not just "Recalibrating…". Honest UI. */}
           <AnimatePresence>
             {scanning && (
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -317,7 +317,7 @@ export function LiveDemo() {
                      Loading {NICHES[(activeIdx + 1) % NICHES.length].label.toLowerCase()}…
                    </span>
                 </div>
-              </motion.div>
+              </Motion.div>
             )}
           </AnimatePresence>
 
@@ -366,7 +366,7 @@ export function LiveDemo() {
                       Niche: {niche.label}
                     </div>
                     <div className="h-4 w-64 max-w-full bg-surface-100 dark:bg-white/5 rounded-full overflow-hidden relative shadow-inner">
-                       <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }} className="absolute inset-y-0 left-0 bg-primary-500/20" />
+                       <Motion.div initial={{ width: 0 }} animate={{ width: '65%' }} transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }} className="absolute inset-y-0 left-0 bg-primary-500/20" />
                     </div>
                   </div>
                   {/* Real CTA — replaces the snake_case "INITIALIZE_SYNTHESIS"
@@ -389,7 +389,7 @@ export function LiveDemo() {
                     a hard swap. */}
                 <div className="grid grid-cols-3 gap-4 md:gap-8">
                   {niche.metrics.map((m, i) => (
-                    <motion.div
+                    <Motion.div
                       key={m.label + niche.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -411,7 +411,7 @@ export function LiveDemo() {
 
                       <AnimatePresence>
                         {hoveredMetric === i && (
-                          <motion.div
+                          <Motion.div
                             initial={{ opacity: 0, y: 4 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 4 }}
@@ -419,10 +419,10 @@ export function LiveDemo() {
                             className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full z-20 px-4 py-3 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-[11px] leading-relaxed shadow-2xl w-64 max-w-[80vw] pointer-events-none"
                           >
                             {m.help}
-                          </motion.div>
+                          </Motion.div>
                         )}
                       </AnimatePresence>
-                    </motion.div>
+                    </Motion.div>
                   ))}
                 </div>
 
@@ -453,7 +453,7 @@ export function LiveDemo() {
                           onMouseEnter={() => setHoveredBar(i)}
                           className="relative w-full h-full flex items-end cursor-pointer"
                         >
-                          <motion.div
+                          <Motion.div
                             initial={{ height: '0%' }}
                             animate={{ height: `${h}%` }}
                             transition={{ duration: 1, delay: i * 0.05, type: 'spring', damping: 15 }}
@@ -467,7 +467,7 @@ export function LiveDemo() {
                           />
                           <AnimatePresence>
                             {active && (
-                              <motion.div
+                              <Motion.div
                                 initial={{ opacity: 0, y: 4 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 4 }}
@@ -477,7 +477,7 @@ export function LiveDemo() {
                                 <div className="text-[9px] opacity-60">{label}</div>
                                 <div>{caption}</div>
                                 <div className="text-primary-400 dark:text-primary-600 font-black tabular-nums">{h}% engagement</div>
-                              </motion.div>
+                              </Motion.div>
                             )}
                           </AnimatePresence>
                         </div>
@@ -488,7 +488,7 @@ export function LiveDemo() {
 
                 {/* Per-niche insight strip — the educational payoff. */}
                 <AnimatePresence mode="wait">
-                  <motion.div
+                  <Motion.div
                     key={`insight-${niche.id}`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -503,7 +503,7 @@ export function LiveDemo() {
                       <span className="font-bold text-surface-900 dark:text-white">Why this matters: </span>
                       {niche.insight}
                     </p>
-                  </motion.div>
+                  </Motion.div>
                 </AnimatePresence>
 
                 {/* ─── Hook playground ────────────────────────────────────
@@ -645,7 +645,7 @@ export function LiveDemo() {
                           <div className="relative w-20 h-20 shrink-0">
                             <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
                               <circle cx="18" cy="18" r="15.915" fill="none" className="stroke-surface-100 dark:stroke-white/10" strokeWidth="3" />
-                              <motion.circle
+                              <Motion.circle
                                 cx="18"
                                 cy="18"
                                 r="15.915"
@@ -671,7 +671,7 @@ export function LiveDemo() {
                             {/* Delta badge — floats up when score improves. */}
                             <AnimatePresence>
                               {scoreDelta && scoreDelta.value > 0 && (
-                                <motion.div
+                                <Motion.div
                                   key={scoreDelta.id}
                                   initial={{ opacity: 0, y: 0, scale: 0.7 }}
                                   animate={{ opacity: 1, y: -28, scale: 1 }}
@@ -680,7 +680,7 @@ export function LiveDemo() {
                                   className="absolute -top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black tabular-nums shadow-lg shadow-emerald-500/30 pointer-events-none"
                                 >
                                   +{scoreDelta.value}
-                                </motion.div>
+                                </Motion.div>
                               )}
                             </AnimatePresence>
 
@@ -690,7 +690,7 @@ export function LiveDemo() {
                                 noise. */}
                             <AnimatePresence>
                               {crossedThreshold && (
-                                <motion.div
+                                <Motion.div
                                   key={`burst-${result.score}`}
                                   initial={{ opacity: 0, scale: 0.8 }}
                                   animate={{ opacity: [0, 1, 0], scale: [0.8, 1.4, 1.6] }}
@@ -716,7 +716,7 @@ export function LiveDemo() {
                           not on a sample. Quietly powerful. */}
                       <AnimatePresence>
                         {rewriteSuggestion && (
-                          <motion.div
+                          <Motion.div
                             initial={{ opacity: 0, height: 0, marginTop: 0 }}
                             animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
                             exit={{ opacity: 0, height: 0, marginTop: 0 }}
@@ -745,7 +745,7 @@ export function LiveDemo() {
                                 <ArrowRight className="w-3 h-3" />
                               </button>
                             </div>
-                          </motion.div>
+                          </Motion.div>
                         )}
                       </AnimatePresence>
                     </div>
@@ -818,7 +818,7 @@ export function LiveDemo() {
             </Link>
           </div>
         </div>
-      </motion.div>
+      </Motion.div>
     </section>
   );
 }

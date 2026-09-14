@@ -45,6 +45,17 @@ const contentRecycleSchema = new mongoose.Schema({
     engagementRate: Number,
     postedAt: Date
   },
+
+  // Written by advancedEvergreenService when it builds a calendar; both were
+  // undeclared and therefore dropped on save.
+  performanceThresholds: {
+    type: mongoose.Schema.Types.Mixed,
+    default: undefined,
+  },
+  metadata: {
+    type: mongoose.Schema.Types.Mixed,
+    default: undefined,
+  },
   repostSchedule: {
     frequency: {
       type: String,

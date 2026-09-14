@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import { X, RefreshCw, Trash2, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -65,6 +66,8 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
     }
   }
 
+  const panelRef = useDialogBehavior(isOpen, onClose)
+
   if (!isOpen) return null
 
   const getStateIcon = (state: string) => {
@@ -78,8 +81,8 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" ref={panelRef}>
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold">{t('jobDetailsModal.jobDetails')}</h2>
           <button

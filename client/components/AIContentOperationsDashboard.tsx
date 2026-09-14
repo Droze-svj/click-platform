@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import axios from 'axios'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useToast } from '../contexts/ToastContext'
 import { useSocket } from '../hooks/useSocket'
 import { useAuth } from '../hooks/useAuth'
@@ -358,7 +358,7 @@ export default function AIContentOperationsDashboard() {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.03]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.08),transparent_50%),radial-gradient(circle_at_50%_100%,rgba(139,92,246,0.05),transparent_50%)]" />
 
-        <motion.div
+        <m.div
           animate={{ x: mousePos.x / 40, y: mousePos.y / 40 }}
           className="absolute inset-0 opacity-20 mix-blend-screen"
         >
@@ -367,13 +367,13 @@ export default function AIContentOperationsDashboard() {
             style={{ backgroundColor: `${currentTheme.accentHex}15` }}
           />
           <div className="absolute bottom-1/4 right-1/4 w-[900px] h-[900px] bg-indigo-600/5 blur-[200px] rounded-full animate-pulse transition-all duration-1000" style={{ animationDelay: '2s' }} />
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Scanning Overlay */}
       <AnimatePresence>
         {isScanning && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -382,15 +382,15 @@ export default function AIContentOperationsDashboard() {
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
             <div className="text-center space-y-16 max-w-2xl w-full px-8 relative">
               <div className="relative inline-block">
-                <motion.div
+                <m.div
                   animate={{ rotate: 360, scale: [1, 1.05, 1] }}
                   transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
                   className={`w-56 h-56 rounded-full border-2 border-dashed border-${currentTheme.accent}/40 flex items-center justify-center relative shadow-[0_0_50px_${currentTheme.glow}]`}
                 >
                   <Cpu className={`w-24 h-24 text-${currentTheme.accent}`} />
-                </motion.div>
+                </m.div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
+                  <m.div
                     animate={{ opacity: [0, 1, 0], scale: [0.8, 1.4, 0.8] }}
                     transition={{ duration: 3, repeat: Infinity }}
                     className={`w-72 h-72 rounded-full border border-${currentTheme.accent}/20`}
@@ -403,7 +403,7 @@ export default function AIContentOperationsDashboard() {
               </div>
               <div className="space-y-6">
                 <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
-                  <motion.div
+                  <m.div
                     className="h-full bg-gradient-to-r from-transparent via-white to-transparent"
                     style={{ width: `${scanProgress}%`, backgroundColor: currentTheme.accentHex, boxShadow: `0 0 30px ${currentTheme.glow}` }}
                     initial={{ width: 0 }}
@@ -415,28 +415,28 @@ export default function AIContentOperationsDashboard() {
                  <div className="space-y-4">
                   <AnimatePresence mode="popLayout">
                     {repairLogs.map((log, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-6 text-emerald-400 font-bold">
+                      <m.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-6 text-emerald-400 font-bold">
                         <span className="text-slate-700 font-black tabular-nums">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse" />
                         <span className="tracking-tight uppercase">{log}</span>
-                      </motion.div>
+                      </m.div>
                     ))}
                   </AnimatePresence>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
-      <motion.div
+      <m.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="relative z-10 max-w-[1600px] mx-auto space-y-12 px-6 py-16 md:px-12"
       >
         {/* Elite Navigation Control Cluster */}
-        <motion.div variants={itemVariants} className="flex flex-col xl:flex-row items-center justify-between gap-12 bg-white/[0.01] border border-white/5 rounded-[3.5rem] p-4 backdrop-blur-3xl shadow-3xl">
+        <m.div variants={itemVariants} className="flex flex-col xl:flex-row items-center justify-between gap-12 bg-white/[0.01] border border-white/5 rounded-[3.5rem] p-4 backdrop-blur-3xl shadow-3xl">
           <div className="flex flex-wrap items-center justify-center gap-2 pl-4">
             <div className="mr-6 pr-6 border-r border-white/10 hidden xl:block">
               <TeamPresence />
@@ -451,23 +451,23 @@ export default function AIContentOperationsDashboard() {
                 <span className="text-xl relative z-10">{p.icon}</span>
                 <span className="text-[11px] font-black uppercase tracking-[0.3em] relative z-10">{p.name}</span>
                 {selectedPlatform === p.id && (
-                  <motion.div layoutId="platform-glow" className="absolute inset-0 bg-white" transition={{ type: "spring", bounce: 0.1, duration: 0.6 }} />
+                  <m.div layoutId="platform-glow" className="absolute inset-0 bg-white" transition={{ type: "spring", bounce: 0.1, duration: 0.6 }} />
                 )}
               </button>
             ))}
           </div>
           <div className="flex items-center gap-4 pr-4">
-            <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={loadDashboard} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all font-black text-[11px] uppercase tracking-[0.4em] italic">
+            <m.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={loadDashboard} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all font-black text-[11px] uppercase tracking-[0.4em] italic">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> {t('aiContentOperationsDashboard.syncLogic')}
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={startDeepScan} style={{ backgroundColor: currentTheme.accentHex, boxShadow: `0 20px 40px ${currentTheme.glow}` }} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] text-white font-black text-[11px] uppercase tracking-[0.4em] border border-white/20 italic">
+            </m.button>
+            <m.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={startDeepScan} style={{ backgroundColor: currentTheme.accentHex, boxShadow: `0 20px 40px ${currentTheme.glow}` }} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] text-white font-black text-[11px] uppercase tracking-[0.4em] border border-white/20 italic">
               <Fingerprint className="w-4 h-4" /> {t('aiContentOperationsDashboard.deepScan')}
-            </motion.button>
+            </m.button>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Elite Sub-Header (Neural Status) */}
-        <motion.div variants={itemVariants} className={`relative flex flex-col lg:flex-row items-center gap-12 p-16 rounded-[4.5rem] border-white/5 overflow-hidden ${glassStyle}`}>
+        <m.div variants={itemVariants} className={`relative flex flex-col lg:flex-row items-center gap-12 p-16 rounded-[4.5rem] border-white/5 overflow-hidden ${glassStyle}`}>
           <div className="absolute top-0 right-0 w-[600px] h-[600px] blur-[150px] rounded-full pointer-events-none" style={{ backgroundColor: `${currentTheme.accentHex}10` }} />
           <div className="space-y-12 flex-1 text-center lg:text-left">
             <div className="space-y-6">
@@ -482,7 +482,7 @@ export default function AIContentOperationsDashboard() {
                   <Sparkles className="w-6 h-6" style={{ color: currentTheme.accentHex }} />
                 </div>
                 <AnimatePresence mode="wait">
-                  <motion.div key={activeThought} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="text-[14px] font-black text-slate-300 uppercase tracking-[0.3em] italic">{activeThought}</motion.div>
+                  <m.div key={activeThought} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="text-[14px] font-black text-slate-300 uppercase tracking-[0.3em] italic">{activeThought}</m.div>
                 </AnimatePresence>
               </div>
             </div>
@@ -493,21 +493,21 @@ export default function AIContentOperationsDashboard() {
           <div className="relative group/core scale-125 lg:scale-110 pr-8">
             <div className={`w-80 h-80 rounded-[5.5rem] flex items-center justify-center bg-white/[0.01] border border-white/5 backdrop-blur-3xl relative overflow-hidden transition-all duration-1000 ${isAutoLoopActive ? 'shadow-2xl' : ''}`} style={{ boxShadow: isAutoLoopActive ? `0 0 100px ${currentTheme.glow}` : 'none' }}>
               <div className="relative w-48 h-48">
-                <motion.div animate={{ scale: isAutoLoopActive ? [1, 1.1, 1] : 1, rotate: isAutoLoopActive ? 360 : 0 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-4 border-white/10 rounded-full border-dashed" />
+                <m.div animate={{ scale: isAutoLoopActive ? [1, 1.1, 1] : 1, rotate: isAutoLoopActive ? 360 : 0 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-4 border-white/10 rounded-full border-dashed" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <BrainCircuit className="w-32 h-32" style={{ color: isAutoLoopActive ? currentTheme.accentHex : '#1e293b', filter: isAutoLoopActive ? `drop-shadow(0 0 40px ${currentTheme.accentHex}60)` : 'none' }} />
                 </div>
               </div>
             </div>
-            <motion.button whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAutoLoopActive(!isAutoLoopActive)} style={{ backgroundColor: isAutoLoopActive ? currentTheme.accentHex : '#0f172a', boxShadow: isAutoLoopActive ? `0 20px 50px ${currentTheme.glow}` : 'none' }} className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-12 py-5 rounded-[2.2rem] border border-white/10 text-white`}>
+            <m.button whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAutoLoopActive(!isAutoLoopActive)} style={{ backgroundColor: isAutoLoopActive ? currentTheme.accentHex : '#0f172a', boxShadow: isAutoLoopActive ? `0 20px 50px ${currentTheme.glow}` : 'none' }} className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-12 py-5 rounded-[2.2rem] border border-white/10 text-white`}>
               <Zap className={`w-5 h-5 ${isAutoLoopActive ? 'fill-white' : ''}`} />
               <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">{isAutoLoopActive ? t('aiContentOperationsDashboard.neuralActive') : t('aiContentOperationsDashboard.suspended')}</span>
-            </motion.button>
+            </m.button>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Intelligence Grid */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <m.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-12 xl:col-span-5 space-y-12">
             <div className={`${glassStyle} p-16 rounded-[4rem] group border-white/5`}>
               {healthCheck && healthCheck.overall && (
@@ -551,10 +551,10 @@ export default function AIContentOperationsDashboard() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Footer Intelligence */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <m.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
             <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.decayAlert')}</h3>
             <div className="space-y-4">
@@ -572,15 +572,15 @@ export default function AIContentOperationsDashboard() {
             <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.autoLoop')}</h3>
             <p className="text-slate-400 text-sm italic mb-6">{t('aiContentOperationsDashboard.autoLoopDescription')}</p>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-               <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="h-full w-1/3 bg-white/20" />
+               <m.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="h-full w-1/3 bg-white/20" />
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {teamId && (
           <CollaborativeComments teamId={teamId} entityId={`health-${selectedPlatform}`} title={t('aiContentOperationsDashboard.healthOperationsTitle', { platform: selectedPlatform })} />
         )}
-      </motion.div>
+      </m.div>
     </div>
   )
 }

@@ -28,7 +28,8 @@ async function createAssetFromTemplate(userId, templateId, templateData = {}) {
       type: template.type,
       category: templateData.category || template.category || 'general',
       tags: templateData.tags || template.tags || [],
-      body: templateData.body || template.body || '',
+      // `body` is not a Content path; the post text lives in content.text.
+      content: { text: templateData.body || template.body || '' },
       transcript: templateData.transcript || template.transcript || '',
       isTemplate: false,
       status: 'completed'

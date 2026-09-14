@@ -5,6 +5,7 @@ const auth = require('../../middleware/auth');
 // Singleton instance — destructuring would drop `this` and crash.
 const linkedinService = require('../../services/linkedinOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const ssx = require('../../utils/oauthServerSideExchange');
@@ -66,7 +67,7 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     if (ssx.serverSideExchangeEnabled()) {
       const u = ssx.unwrapCallbackState(state);
       if (!u) return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent('Invalid OAuth state')}`);
-      await linkedinService.exchangeCodeForToken(u.userId, code, u.innerState);
+      await linkedinService.exchangeCodeForToken(u.userId, code, u.innerState, resolveOAuthCallbackUrl('linkedin', req));
       return res.redirect(`${frontendUrl}/dashboard/social?connected=linkedin&success=true`);
     }
     res.redirect(`${frontendUrl}/dashboard/social?platform=linkedin&code=${code}&state=${state}`);
@@ -88,7 +89,7 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const { accessToken } = await linkedinService.exchangeCodeForToken(userId, code, state);
+  const { accessToken } = await linkedinService.exchangeCodeForToken(userId, code, state, resolveOAuthCallbackUrl('linkedin', req));
 
   const userInfo = await linkedinService.getLinkedInUserInfo(accessToken);
 

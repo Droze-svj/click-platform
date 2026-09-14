@@ -7,13 +7,23 @@ const nextConfig = {
   },
   // Both checks enforced at build time. Flip either back to `true` only if
   // a hard deploy gate is needed and there's a known acceptable backlog.
+  //
+  // eslint was suppressed here; the backlog turned out to be exactly TWO
+  // errors (a rules-of-hooks violation from a handler misnamed `useAsTarget`,
+  // and a stale eslint-disable naming a rule this config doesn't load). Both
+  // are fixed, so the gate is on and real lint errors can no longer ship.
   typescript: { ignoreBuildErrors: false },
-  eslint: { ignoreDuringBuilds: true },
+  eslint: { ignoreDuringBuilds: false },
   productionBrowserSourceMaps: false,
   swcMinify: true,
   experimental: {
     workerThreads: false,
-    cpus: 1
+    cpus: 1,
+    // Rewrites barrel imports to deep paths so a single `import { Icon } from
+    // 'lucide-react'` doesn't pull the whole icon set into the bundle. These
+    // are the three barrel packages this app imports most widely — lucide-react
+    // alone appears in hundreds of files.
+    optimizePackageImports: ['lucide-react', 'recharts', 'date-fns'],
   },
   images: {
     remotePatterns: [

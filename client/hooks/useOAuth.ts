@@ -24,8 +24,13 @@ export function useOAuth() {
     return await apiGet<{ auth_url: string; state: string }>(`/oauth/${platform}/connect`)
   }, [])
 
+  // POSTs to /complete, not /callback: the server's :platform/callback routes are
+  // GET (the provider redirects the browser to them). The frontend-facing
+  // exchange is POST /api/oauth/<platform>/complete, which takes exactly this
+  // { code, state } body. As /callback this 404'd. Available for linkedin,
+  // google, facebook, tiktok and youtube — the server-side-exchange platforms.
   const completeConnection = useCallback(async (platform: string, code: string, state: string): Promise<void> => {
-    await apiPost(`/oauth/${platform}/callback`, { code, state })
+    await apiPost(`/oauth/${platform}/complete`, { code, state })
   }, [])
 
   const getStatus = useCallback(async (platform: string): Promise<OAuthStatus> => {

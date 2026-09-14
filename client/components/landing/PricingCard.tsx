@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ArrowRight, Sparkles, Zap, ShieldCheck, Cpu } from 'lucide-react';
 import type { Plan, BillingPeriod } from '../../lib/plans';
 import { formatPrice, formatPriceCadence, freeMonthsYearly } from '../../lib/plans';
@@ -19,7 +19,7 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
   const freeMonths = freeMonthsYearly(plan);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
@@ -71,14 +71,14 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
       </div>
       
       {period === 'yearly' && plan.priceYearly > 0 && (
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           className="mt-4 inline-flex items-center gap-3 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-widest italic"
         >
           <Zap size={12} />
           {freeMonths} MONTHS FREE
-        </motion.div>
+        </m.div>
       )}
 
       <div className="my-10 h-[2px] bg-gradient-to-r from-transparent via-surface-100 dark:via-white/5 to-transparent relative z-10" />
@@ -90,7 +90,7 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
 
       {/* Tactical CTA */}
       <div className="mt-12 relative z-10">
-        <motion.button
+        <m.button
           whileHover={{ y: -5, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
@@ -105,11 +105,11 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
         >
           {plan.cta.label.toUpperCase()}
           <ArrowRight className="w-5 h-5 group-hover:translate-x-3 transition-transform duration-500" aria-hidden="true" />
-        </motion.button>
+        </m.button>
 
         {plan.cta.subLabel && (
           <a
-            href="mailto:sales@click.example?subject=Agency%20Plan%20Inquiry"
+            href="mailto:sales@clickapp.io?subject=Agency%20Plan%20Inquiry"
             className="mt-6 block text-center text-[9px] font-black uppercase tracking-[0.6em] text-surface-400 dark:text-slate-700 hover:text-primary-500 transition-all italic leading-none magnetic-hover"
           >
             {plan.cta.subLabel.toUpperCase()}
@@ -124,6 +124,6 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
             <span className="text-[8px] font-black uppercase tracking-widest text-surface-900 dark:text-white">NODE_{index + 1}</span>
          </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

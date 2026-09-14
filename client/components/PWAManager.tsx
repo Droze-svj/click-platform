@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { toast } from 'react-hot-toast'
 import { Download, RefreshCw, X, CheckCircle, Zap, Shield, Wifi, Smartphone, Github as Google } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
 
 interface PWAState {
@@ -170,7 +170,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
       <AnimatePresence>
         {/* Update Banner - High Priority Elite Design */}
         {state.updateAvailable && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -50, scale: 0.95 }}
@@ -194,12 +194,12 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 {state.isUpdating ? t('pwaManager.syncing') : t('pwaManager.restart')}
               </button>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Install Banner - The Glass Vault Design */}
         {showInstallBanner && state.canInstall && !state.isInstalled && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 100, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9, x: 50 }}
@@ -266,17 +266,17 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Offline Overlay - Non-intrusive but clear */}
         {!state.isOnline && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-end justify-center pb-12 pointer-events-none"
           >
-            <motion.div
+            <m.div
               initial={{ y: 20 }} animate={{ y: 0 }}
               className="bg-zinc-900 border border-red-500/30 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto"
             >
@@ -292,8 +292,8 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
               >
                 {t('pwaManager.retryConnection')}
               </button>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </PWAContext.Provider>

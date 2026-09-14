@@ -201,6 +201,7 @@ router.get(
       defaults: {
         niche: mi.niche || '',
         platformFocus: Array.isArray(mi.platformFocus) ? mi.platformFocus : [],
+        goals: Array.isArray(mi.goals) ? mi.goals : [],
       },
     });
   })
@@ -237,6 +238,10 @@ router.put(
     const d = body.defaults || {};
     if (str(d.niche, 40) !== undefined) prefs.marketingIntelligence.niche = str(d.niche, 40);
     if (strArray(d.platformFocus, 10, 30) !== undefined) prefs.marketingIntelligence.platformFocus = strArray(d.platformFocus, 10, 30);
+    // `goals` is on the model and feeds the marketing brain, but there was no
+    // path to write it here — so the creator goal captured during onboarding
+    // could never reach the server and lived only in the browser.
+    if (strArray(d.goals, 10, 40) !== undefined) prefs.marketingIntelligence.goals = strArray(d.goals, 10, 40);
 
     prefs.markModified('videoEditing');
     prefs.markModified('brandKit');

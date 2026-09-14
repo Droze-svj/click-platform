@@ -81,7 +81,7 @@ export default function OptimalPostingWindow({ niche, platform, onSchedule, clas
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 py-2">
+        <div role="status" aria-live="polite" className="flex items-center gap-2 py-2">
           <Loader2 size={11} className="text-fuchsia-400 animate-spin" />
           <span className="text-[10px] text-slate-500">Reading platform peaks + niche windows…</span>
         </div>

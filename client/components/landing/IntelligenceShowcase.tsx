@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Brain, Radar, RefreshCw, Clock, Sparkles, ArrowUpRight, Terminal, Fingerprint, Activity } from 'lucide-react';
 
 export function IntelligenceShowcase() {
@@ -14,7 +14,7 @@ export function IntelligenceShowcase() {
 
       <div className="max-w-[1900px] mx-auto relative z-10">
         <div className="text-center mb-32 space-y-8">
-           <motion.div
+           <m.div
              initial={{ opacity: 0, y: 20 }}
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
@@ -22,7 +22,7 @@ export function IntelligenceShowcase() {
            >
              <Brain size={14} className="animate-pulse" />
              Why Click feels different
-           </motion.div>
+           </m.div>
 
           <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic px-4">
             CLICK STUDIED YOUR NICHE <br className="hidden md:block" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">BEFORE YOU SIGNED UP.</span>
@@ -35,7 +35,7 @@ export function IntelligenceShowcase() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-[auto_auto] gap-8 lg:gap-12 max-w-[1800px] mx-auto">
           {/* Niche-aware AI — large left cell */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -70,10 +70,10 @@ export function IntelligenceShowcase() {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Trend radar — top right */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -96,10 +96,10 @@ export function IntelligenceShowcase() {
                 Hooks, sounds, formats, hashtags — Click pulls what&apos;s working in your niche right now, every 6 hours. You stop guessing what to post; Click brings the answers to your editor.
               </p>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Learning loop — bottom right */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -119,10 +119,10 @@ export function IntelligenceShowcase() {
                 The hook that hit. The font that landed. The slot that popped. Click logs every win and tilts tomorrow&apos;s suggestions toward it — automatically, while you sleep.
               </p>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Posting window predictor — full width bottom */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
@@ -170,7 +170,7 @@ export function IntelligenceShowcase() {
                   <Terminal size={16} className="text-primary-500" />
                </div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

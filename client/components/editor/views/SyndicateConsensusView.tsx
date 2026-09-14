@@ -16,7 +16,7 @@ import {
   Gavel,
   Scale
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface AgentVote {
@@ -140,7 +140,7 @@ export const SyndicateConsensusView: React.FC = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {(result?.votes || [1,2,3,4]).map((vote, i) => (
-                                <motion.div 
+                                <m.div 
                                     key={i}
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
@@ -171,14 +171,14 @@ export const SyndicateConsensusView: React.FC = () => {
                                         ) : (
                                             <div className="space-y-2">
                                                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                                    <motion.div 
+                                                    <m.div 
                                                         animate={{ x: ['100%', '-100%'] }}
                                                         transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                                                         className="h-full w-1/2 bg-violet-500/50"
                                                     />
                                                 </div>
                                                 <div className="h-2 w-2/3 bg-white/5 rounded-full overflow-hidden">
-                                                    <motion.div 
+                                                    <m.div 
                                                         animate={{ x: ['100%', '-100%'] }}
                                                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                                                         className="h-full w-1/2 bg-violet-500/30"
@@ -191,7 +191,7 @@ export const SyndicateConsensusView: React.FC = () => {
                                     <div className="absolute bottom-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform">
                                         <Shield className="w-16 h-16" />
                                     </div>
-                                </motion.div>
+                                </m.div>
                             ))}
                         </div>
                     )}
@@ -199,7 +199,7 @@ export const SyndicateConsensusView: React.FC = () => {
                     {/* Final Status */}
                     <AnimatePresence>
                         {result && (
-                            <motion.div 
+                            <m.div 
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 className={`p-8 rounded-[2rem] border relative overflow-hidden ${
@@ -238,7 +238,7 @@ export const SyndicateConsensusView: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </div>

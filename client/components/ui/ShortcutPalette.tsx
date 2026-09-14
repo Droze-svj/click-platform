@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Keyboard, X } from 'lucide-react'
 import { EDITOR_SHORTCUTS, isMac, type Shortcut } from '../../lib/editorShortcuts'
+import { useDialogBehavior } from './modal'
 
 const GROUP_ORDER: Shortcut['group'][] = ['Playback', 'Selection', 'Editing', 'Timeline', 'View']
 
@@ -38,6 +39,8 @@ export function ShortcutPalette() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  const panelRef = useDialogBehavior(open, () => setOpen(false))
+
   if (!open || typeof document === 'undefined') return null
 
   const grouped = GROUP_ORDER.map((g) => ({
@@ -53,7 +56,7 @@ export function ShortcutPalette() {
       className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
     >
-      <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-2xl bg-[#0d0d10] border border-white/10 shadow-2xl flex flex-col">
+      <div ref={panelRef} className="w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-2xl bg-[#0d0d10] border border-white/10 shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center">

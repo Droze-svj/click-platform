@@ -7,6 +7,7 @@ const auth = require('../../middleware/auth');
 const youtubeService = require('../../services/youtubeOAuthService');
 const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
@@ -23,17 +24,9 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
     return sendError(res, 'YouTube OAuth not configured', 503);
   }
 
-  let callbackUrl = process.env.YOUTUBE_CALLBACK_URL;
-
-  if (!callbackUrl) {
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
-    const host = req.get('host') || req.get('x-forwarded-host') || 'localhost:5001';
-    callbackUrl = `${protocol}://${host}/api/oauth/youtube/callback`;
-
-    if (process.env.NODE_ENV === 'production') {
-      logger.warn('YOUTUBE_CALLBACK_URL not set, using fallback', { callbackUrl, host });
-    }
-  }
+  // Resolved through the shared helper so the callback route's exchange can
+  // derive the identical value — OAuth rejects the exchange otherwise.
+  const callbackUrl = resolveOAuthCallbackUrl('youtube', req);
 
   const userId = req.userId || req.user?._id || req.user?.id;
   const { url, state } = await youtubeService.getAuthorizationUrl(userId, callbackUrl);
@@ -99,11 +92,27 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
   try {
     logger.info('Starting YouTube OAuth token exchange', { userId, hasCode: !!code, hasState: !!state });
 
-    const { accessToken } = await youtubeService.exchangeCodeForToken(userId, code, state);
+    // This block used to call exchangeCodeForToken(userId, code, state) against a
+    // method whose signature is (code, callbackUrl) — so Google was sent the
+    // USER ID in place of the authorization code, and answered invalid_grant. It
+    // then destructured `accessToken` from a response that carries `access_token`,
+    // and, having never called connectAccount(), reported "YouTube account
+    // connected successfully" while storing nothing at all. Rewritten to follow
+    // the same shape as the TikTok/Instagram completions, which work.
+    //
+    // The callback URL is resolved the same way the authorize step resolved it,
+    // so the two redirect_uri values match (see utils/oauthCallbackUrl.js).
+    const callbackUrl = resolveOAuthCallbackUrl('youtube', req);
+    const tokens = await youtubeService.exchangeCodeForToken(code, callbackUrl);
+    const accessToken = tokens.access_token || tokens.accessToken;
+    if (!accessToken) throw new Error('YouTube token exchange returned no access token');
 
     logger.info('Token exchange successful, fetching user info', { userId });
 
     const userInfo = await youtubeService.getYouTubeUserInfo(accessToken);
+
+    // Persist it — without this the "connected" response was a claim, not a fact.
+    await youtubeService.connectAccount(userId, tokens, userInfo);
 
     logger.info('YouTube OAuth connection completed', { userId, channelId: userInfo.id });
 
@@ -148,7 +157,16 @@ router.post('/upload', auth, oauthPostLimiter, asyncHandler(async (req, res) => 
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const video = await youtubeService.uploadVideoToYouTube(userId, videoFile, title, description || '', options || {});
+  // uploadVideoToYouTube(userId, videoPath, metadata) — the title/description/
+  // options were being passed as three positional arguments, so `metadata`
+  // received the title STRING. metadata.title was then undefined and every
+  // upload went out as "Untitled Sovereign Video" with the default description
+  // and tags, silently discarding what the caller asked for.
+  const video = await youtubeService.uploadVideoToYouTube(userId, videoFile, {
+    title,
+    description: description || '',
+    ...(options || {}),
+  });
 
   sendSuccess(res, 'YouTube video uploaded successfully', 200, { video });
 }));
@@ -164,7 +182,18 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const post = await youtubeService.postToYouTube(userId, videoUrl, title, description || '', options || {});
+  // postToYouTube(userId, postData) destructures { title, description, videoPath,
+  // mediaUrl } out of its SECOND argument. It was being handed the videoUrl
+  // string, so every field destructured to undefined, the "do we have a video?"
+  // branch was never taken, and the call fell through to the explicit
+  // "text-only posts are not yet supported" throw — this endpoint could not
+  // succeed for any input.
+  const post = await youtubeService.postToYouTube(userId, {
+    title,
+    description: description || '',
+    mediaUrl: videoUrl,
+    ...(options || {}),
+  });
 
   sendSuccess(res, 'YouTube post published successfully', 200, { post });
 }));

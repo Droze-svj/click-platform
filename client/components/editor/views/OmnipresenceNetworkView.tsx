@@ -16,7 +16,7 @@ import {
   Radio,
   BarChart3
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 import { 
   OmnipresencePulse, 
@@ -292,7 +292,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                 <div className="space-y-6">
                     <AnimatePresence mode="popLayout">
                         {drafts.map((draft) => (
-                            <motion.div 
+                            <m.div 
                                 key={draft._id}
                                 layout
                                 initial={{ opacity: 0, scale: 0.9 }}
@@ -334,7 +334,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                         Approve Response
                                     </button>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         ))}
                     </AnimatePresence>
                     {drafts.length === 0 && !loading && (

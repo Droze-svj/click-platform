@@ -1,5 +1,5 @@
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { 
   Zap, 
   Target, 
@@ -48,7 +48,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Style Persona Card */}
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className={`${glassStyle} p-8 rounded-[3rem] col-span-1 flex flex-col gap-8 relative overflow-hidden group`}
@@ -68,7 +68,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
               <span className="text-white font-black italic">{dna.cpm} cuts/min</span>
             </div>
             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-               <motion.div 
+               <m.div 
                  initial={{ width: 0 }}
                  animate={{ width: `${Math.min(dna.cpm * 5, 100)}%` }}
                  className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
@@ -80,7 +80,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
               <span className="text-white font-black italic">{dna.visualDensity} elements/min</span>
             </div>
             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-               <motion.div 
+               <m.div 
                  initial={{ width: 0 }}
                  animate={{ width: `${Math.min(dna.visualDensity * 10, 100)}%` }}
                  className="h-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]" 
@@ -93,10 +93,10 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
               AI has identified a preference for <span className="text-emerald-400 font-bold">rapid-fire jump cuts</span> and <span className="text-emerald-400 font-bold">minimalist graphics</span>. Suggestions are being tailored to your specific timing signature.
             </p>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Agentic Accuracy KPIs */}
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -145,7 +145,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
             <div className="text-4xl font-black text-emerald-400 tracking-tighter italic">{kpis.sessionUtilityScore}/100</div>
             <p className="text-[9px] text-slate-500 font-medium italic">Net efficiency gain for this session.</p>
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Algorithmic Feedback Loop */}

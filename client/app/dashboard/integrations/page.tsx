@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import {
   Plus, RefreshCw, Trash2, Search, X,
   Zap, Globe, Radio, Link2, Unlink, AlertTriangle, Network,
@@ -25,6 +25,7 @@ import {
   EmptyState,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 interface Integration {
@@ -163,7 +164,7 @@ export default function IntegrationsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1500px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -193,7 +194,7 @@ export default function IntegrationsPage() {
         {/* Marketplace */}
         <AnimatePresence initial={false}>
           {showMarketplace && (
-            <motion.div
+            <m.div
               initial={reduceMotion ? false : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
@@ -239,7 +240,7 @@ export default function IntegrationsPage() {
                   </div>
                 )}
               </Panel>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -325,7 +326,7 @@ export default function IntegrationsPage() {
             </div>
           )}
         </Modal>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

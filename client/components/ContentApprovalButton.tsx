@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { CheckCircle, Clock, AlertCircle, Send } from 'lucide-react'
 import axios from 'axios'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -20,6 +21,9 @@ export default function ContentApprovalButton({
   const [workflows, setWorkflows] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  // Top level, not inside the workflows.length === 0 branch below: a hook
+  // called conditionally changes hook order between renders.
+  const panelRef = useDialogBehavior(showModal, () => setShowModal(false))
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>('')
 
   useEffect(() => {
@@ -74,7 +78,7 @@ export default function ContentApprovalButton({
   }
 
   if (workflows.length === 0) {
-    return (
+  return (
       <button
         type="button"
         onClick={() => alert(t('contentApprovalButton.noWorkflowsAlert'))}
@@ -99,8 +103,8 @@ export default function ContentApprovalButton({
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full" ref={panelRef}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">

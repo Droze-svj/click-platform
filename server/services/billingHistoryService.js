@@ -166,12 +166,67 @@ async function getInvoice(invoiceNumber, userId) {
 async function downloadInvoicePDF(invoiceNumber, userId) {
   try {
     const invoice = await getInvoice(invoiceNumber, userId);
-    
-    // Would generate PDF
-    // For now, return URL
+
+    // If a PDF was previously stored somewhere, hand back that URL.
+    if (invoice.documents?.invoicePdf) {
+      return { url: invoice.documents.invoicePdf, invoiceNumber: invoice.invoiceNumber };
+    }
+
+    // Otherwise render it now. This used to return `{ url: null }` — the
+    // download endpoint answered 200 with nothing to download, so the button
+    // silently did nothing.
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+
+    const amount = invoice.invoice?.amount || {};
+    const currency = amount.currency || 'USD';
+    const money = (n) => (typeof n === 'number' ? `${currency} ${n.toFixed(2)}` : '—');
+
+    doc.fontSize(20).text('Invoice', { align: 'right' });
+    doc.fontSize(10).fillColor('#555').text(invoice.invoiceNumber, { align: 'right' });
+    doc.fillColor('black').moveDown();
+
+    doc.fontSize(11);
+    doc.text(`Date: ${invoice.invoice?.date ? new Date(invoice.invoice.date).toLocaleDateString() : '—'}`);
+    if (invoice.invoice?.period?.start && invoice.invoice?.period?.end) {
+      doc.text(`Billing period: ${new Date(invoice.invoice.period.start).toLocaleDateString()} — ` +
+               `${new Date(invoice.invoice.period.end).toLocaleDateString()}`);
+    }
+    doc.text(`Status: ${invoice.status || 'unknown'}`);
+    doc.moveDown();
+
+    doc.fontSize(14).text('Items', { underline: true });
+    doc.moveDown(0.4).fontSize(11);
+    const items = Array.isArray(invoice.invoice?.items) ? invoice.invoice.items : [];
+    if (items.length === 0) {
+      doc.fillColor('#555').text('No line items recorded for this invoice.').fillColor('black');
+    } else {
+      for (const item of items) {
+        doc.text(`${item.description || 'Item'}  ×${item.quantity ?? 1}    ${money(item.total)}`);
+      }
+    }
+    doc.moveDown();
+
+    doc.fontSize(12);
+    if (typeof amount.subtotal === 'number') doc.text(`Subtotal: ${money(amount.subtotal)}`, { align: 'right' });
+    if (amount.discount) doc.text(`Discount: -${money(amount.discount)}`, { align: 'right' });
+    if (amount.tax) doc.text(`Tax: ${money(amount.tax)}`, { align: 'right' });
+    doc.fontSize(14).text(`Total: ${money(amount.total)}`, { align: 'right' });
+
+    doc.end();
+    const content = await new Promise((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+    });
+
     return {
-      url: invoice.documents.invoicePdf || null,
-      invoiceNumber: invoice.invoiceNumber
+      invoiceNumber: invoice.invoiceNumber,
+      content,
+      contentType: 'application/pdf',
+      filename: `invoice-${invoice.invoiceNumber}.pdf`,
+      url: null,
     };
   } catch (error) {
     logger.error('Error downloading invoice PDF', { error: error.message, invoiceNumber });

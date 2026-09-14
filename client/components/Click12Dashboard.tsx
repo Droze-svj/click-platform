@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Globe, Zap, Brain,
   ShieldCheck, Network, TrendingUp, AlertTriangle,
@@ -78,7 +78,7 @@ const ArbitragePanel = () => {
             
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
                 {offers.map(offer => (
-                    <motion.div key={offer.id} whileHover={{ y: -10, backgroundColor: 'rgba(249,115,22,0.06)' }}
+                    <m.div key={offer.id} whileHover={{ y: -10, backgroundColor: 'rgba(249,115,22,0.06)' }}
                       className={`${glass} p-12 flex flex-col justify-between border-orange-500/10 hover:border-orange-500/30 transition-all duration-1000 relative overflow-hidden group min-h-[400px]`}>
                         <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-1000"><DollarSign size={200} /></div>
                         
@@ -107,7 +107,7 @@ const ArbitragePanel = () => {
                                 <Zap size={20} className="group-hover:animate-bounce" /> {t('click12Dashboard.steerSwarmUplink')}
                             </span>
                         </button>
-                    </motion.div>
+                    </m.div>
                 ))}
                 
                 {offers.length === 0 && (
@@ -152,7 +152,7 @@ const EncirclementPanel = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                 {stats.map((s, i) => (
-                    <motion.div key={s.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                    <m.div key={s.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                       className={`${glass} p-12 text-center bg-purple-500/5 group hover:bg-purple-500/10 border-purple-500/10 hover:border-purple-500/40 transition-all duration-1000 rounded-[4rem] relative overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)]`}>
                         <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-[2s]"><s.icon size={120} /></div>
                         <p className="text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] mb-8 italic opacity-60 leading-none">{s.label}</p>
@@ -160,7 +160,7 @@ const EncirclementPanel = () => {
                           {s.value}<span className="text-3xl opacity-40 ml-2">{s.unit}</span>
                         </div>
                         <div className="w-12 h-1 bg-purple-500/20 mx-auto rounded-full group-hover:w-24 transition-all duration-1000" />
-                    </motion.div>
+                    </m.div>
                 ))}
             </div>
 
@@ -229,7 +229,7 @@ const StabilityPanel = () => {
             {subsystems && subsystems.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                     {subsystems.map((item: any, i: number) => (
-                        <motion.div key={item.label ?? i} whileHover={{ scale: 1.02, backgroundColor: 'rgba(6,182,212,0.03)' }}
+                        <m.div key={item.label ?? i} whileHover={{ scale: 1.02, backgroundColor: 'rgba(6,182,212,0.03)' }}
                           className={`${glass} p-10 flex flex-col justify-between border-cyan-500/10 hover:border-cyan-500/40 transition-all duration-700 group min-h-[320px] shadow-[0_40px_100px_rgba(0,0,0,0.4)]`}>
                             <div className="space-y-8">
                                 <div className="flex items-center justify-between">
@@ -246,10 +246,10 @@ const StabilityPanel = () => {
                                 </div>
                             </div>
                             <div className="h-1 w-full bg-black/40 rounded-full overflow-hidden mt-8 border border-white/5">
-                                <motion.div initial={{ width: 0 }} animate={{ width: statusWidth(item.status) }} transition={{ duration: 2, delay: i * 0.2 }}
+                                <m.div initial={{ width: 0 }} animate={{ width: statusWidth(item.status) }} transition={{ duration: 2, delay: i * 0.2 }}
                                   className={`h-full shadow-[0_0_20px_rgba(6,182,212,0.5)] ${isHealthy(item.status) ? 'bg-cyan-400' : 'bg-rose-400'}`} />
                             </div>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
             ) : (
@@ -341,29 +341,29 @@ export default function Click12Dashboard() {
         <main className="relative z-10 min-h-[800px]">
            <AnimatePresence mode="wait">
               {activeTab === 'resonance' && (
-                <motion.div key="resonance" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
+                <m.div key="resonance" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
                    <div className="scale-[0.9] -mt-24 origin-top">
                       <ResonanceCommandMatrix />
                    </div>
-                </motion.div>
+                </m.div>
               )}
 
               {activeTab === 'arbitrage' && (
-                <motion.div key="arbitrage" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.8 }}>
+                <m.div key="arbitrage" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.8 }}>
                    <ArbitragePanel />
-                </motion.div>
+                </m.div>
               )}
 
               {activeTab === 'encirclement' && (
-                <motion.div key="encirclement" initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -100 }} transition={{ duration: 0.8 }}>
+                <m.div key="encirclement" initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -100 }} transition={{ duration: 0.8 }}>
                    <EncirclementPanel />
-                </motion.div>
+                </m.div>
               )}
 
               {activeTab === 'stability' && (
-                <motion.div key="stability" initial={{ opacity: 0, rotateX: 45 }} animate={{ opacity: 1, rotateX: 0 }} exit={{ opacity: 0, rotateX: -45 }} transition={{ duration: 0.8 }}>
+                <m.div key="stability" initial={{ opacity: 0, rotateX: 45 }} animate={{ opacity: 1, rotateX: 0 }} exit={{ opacity: 0, rotateX: -45 }} transition={{ duration: 0.8 }}>
                    <StabilityPanel />
-                </motion.div>
+                </m.div>
               )}
            </AnimatePresence>
         </main>

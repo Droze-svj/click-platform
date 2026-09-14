@@ -7,7 +7,6 @@ const ContentRecycle = require('../models/ContentRecycle');
 const logger = require('../utils/logger');
 
 // Moved imports from internal functions to top of file to avoid lazy-loading sync overhead
-const { generateContentVariation } = require('./contentVariationService');
 // Raw prompt→text LLM primitive. The variant generators below need
 // prompt-guided rewriting, which aiService's high-level helpers don't expose
 // (they never had generateContent/generateHashtags — those calls silently threw,
@@ -220,11 +219,16 @@ async function generateTimingVariant(baseContent, index) {
   const day = days[safeIndex];
   
   try {
-    const optimal = await predictOptimalTime(baseContent.userId, 'twitter', 'UTC');
+    // (userId, contentId, platform, options) -> { bestTime: { scheduledTime,
+    // confidence } }. Previously called as (userId, 'twitter', 'UTC'), which put
+    // 'UTC' in the platform slot, and read optimal.optimalTime/optimal.confidence
+    // — neither of which the service returns — so every timing variant came back
+    // as "now" with a hardcoded 0.5 confidence.
+    const optimal = await predictOptimalTime(baseContent.userId, baseContent._id, 'twitter', { dateRange: 7 });
     return {
       day,
-      time: optimal.optimalTime || new Date(),
-      confidence: optimal.confidence || 0.5
+      time: optimal.bestTime?.scheduledTime || new Date(),
+      confidence: optimal.bestTime?.confidence ?? 0.5
     };
   } catch (error) {
     logger.warn('Error generating timing variant', { error: error.message });

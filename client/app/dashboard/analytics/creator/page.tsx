@@ -23,6 +23,7 @@ import {
   EmptyState,
   Button,
   IconButton,
+  PageShell,
 } from '@/components/ui'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -171,22 +172,19 @@ export default function HeuristicMatrixPage() {
   const compact = width > 0 && width < 640
 
   if (loading) return (
-     <div className="min-h-screen ds-bg-mesh-soft px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('analyticsCreatorPage.loading')}>
+     <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft" aria-busy="true" aria-label={t('analyticsCreatorPage.loading')}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
            {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
         </div>
         <ContentSkeleton />
-     </div>
+     </PageShell>
   )
 
   const hasVideos = videos.length > 0
 
   return (
     <ErrorBoundary>
-      <div
-        ref={shellRef}
-        className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary"
-      >
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden" ref={shellRef}>
         <ToastContainer />
 
         <SectionHeader
@@ -447,7 +445,7 @@ export default function HeuristicMatrixPage() {
             )}
           </div>
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

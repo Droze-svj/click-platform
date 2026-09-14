@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { AlertCircle, RotateCcw, Home } from 'lucide-react'
 import Link from 'next/link'
 
@@ -27,7 +27,7 @@ export default function Error({
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-orange-600/10 blur-[120px] rounded-full animate-pulse delay-700" />
       </div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className={`${glassStyle} p-10 md:p-16 rounded-[3rem] w-full max-w-2xl text-center relative z-10`}
@@ -61,7 +61,7 @@ export default function Error({
             Return Home
           </Link>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

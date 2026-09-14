@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiPost, handleApiError } from '../../lib/api'
-import { Button, Card, FormField, Input, Icon } from '../../components/ui'
+import { Button, Card, FormField, Input, Icon, AuthShell } from '../../components/ui'
 import { CheckCircle2, ArrowLeft, Lock } from 'lucide-react'
 import ClickLogo from '../../components/ClickLogo'
 
@@ -53,8 +53,7 @@ function ResetPasswordInner() {
   }
 
   return (
-    <main className="min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6 ds-anim-rise">
+    <AuthShell width="md" contentClassName="space-y-6">
         <Link
           href="/login"
           className="inline-flex items-center gap-2 ds-text-label text-theme-muted hover:text-theme-primary transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -155,8 +154,7 @@ function ResetPasswordInner() {
             </form>
           )}
         </Card>
-      </div>
-    </main>
+    </AuthShell>
   )
 }
 

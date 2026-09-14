@@ -6,16 +6,23 @@ import {
   Eye, Heart, Share2, Zap, Activity, Target, Cpu, TrendingUp,
   ArrowLeft, Waves,
 } from 'lucide-react'
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts'
 
+import dynamic from 'next/dynamic'
 import { apiGet } from '../../../../../lib/api'
+
+// recharts pulls the whole d3 family with it. Loading it on demand keeps it out
+// of this route's first load — it was the heaviest page in the app at 312kB.
+// ssr:false because the chart measures its container to size itself.
+const EngagementAreaChart = dynamic(
+  () => import('../../../../../components/analytics/EngagementAreaChart'),
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse rounded-xl bg-[hsl(var(--muted))]" /> }
+)
 import SpectralLoader from '../../../../../components/SpectralLoader'
 import { ErrorBoundary } from '../../../../../components/ErrorBoundary'
 import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel, StatCard, SectionHeader, EmptyState, Button, IconButton,
+  PageShell,
 } from '@/components/ui'
 
 interface PostStats {
@@ -75,7 +82,7 @@ export default function SovereignPostDiagnosticHub() {
   if (loading) return <SpectralLoader message={t('analyticsPostPage.loaderMessage')} />;
 
   if (!data) return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
       <EmptyState
         icon={Target}
         title={t('analyticsPostPage.nodeNotFound')}
@@ -86,7 +93,7 @@ export default function SovereignPostDiagnosticHub() {
           </Button>
         }
       />
-    </div>
+    </PageShell>
   )
 
   const mainStat = data.analytics[0] || { views: 0, likes: 0, shares: 0, comments: 0, engagement_rate: 0 }
@@ -131,33 +138,7 @@ export default function SovereignPostDiagnosticHub() {
               />
               <div className="h-[320px] w-full">
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
-                      <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} dy={8} />
-                      <YAxis stroke="var(--text-muted)" fontSize={12} axisLine={false} tickLine={false} width={40} />
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            return (
-                              <div className="ds-surface-elevated p-3">
-                                <p className="ds-text-caption mb-1">{payload[0].payload.name}</p>
-                                <div className="ds-text-h3 text-theme-primary">{payload[0].value} <span className="ds-text-caption">{t('analyticsPostPage.engagements')}</span></div>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Area type="monotone" dataKey="val" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorEngagement)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  <EngagementAreaChart data={chartData} metricLabel={t('analyticsPostPage.engagements')} />
                 ) : (
                   <EmptyState icon={Target} title={t('analyticsPostPage.nullPath')} className="h-full" />
                 )}

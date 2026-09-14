@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 const logger = require('../utils/logger');
-const { uploadFileToS3, isCloudStorageEnabled } = require('./storageService');
 
 // Store chunk information (in production, use Redis)
 const chunkStore = new Map();

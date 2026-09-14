@@ -7,10 +7,8 @@ import {
   RefreshCw, Trophy, Clock, ArrowUpRight,
   AlertCircle, CalendarDays, BrainCircuit, CheckCircle2
 } from 'lucide-react'
-import { AreaChart, Area, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, Cell, LineChart, Line } from 'recharts'
+import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, Cell } from 'recharts'
 import { apiGet, apiPost } from '../../../lib/api'
-import { useSocket } from '../../../hooks/useSocket'
-import { useAuth } from '../../../hooks/useAuth'
 import { Panel, Button, Badge, Input, SectionHeader, EmptyState } from '../../ui'
 import { cn } from '../../../lib/utils'
 
@@ -45,13 +43,6 @@ interface WeekPlanDay {
   bestTime?: string
   estimatedReach?: number
   hook?: string
-}
-
-interface ViralDelta {
-  timestamp: number
-  delta: number
-  platform: string
-  handle: string
 }
 
 const PLATFORMS = ['tiktok', 'instagram', 'youtube', 'linkedin', 'twitter']
@@ -110,22 +101,13 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
   const [trackLoading, setTrackLoading] = useState(false)
   const [trackResult, setTrackResult] = useState<{ handle: string; platform: string } | null>(null)
 
-  // Live Viral Delta
-  const { user } = useAuth()
-  const { socket } = useSocket((user as any)?._id || (user as any)?.id)
-  const [deltaLogs, setDeltaLogs] = useState<ViralDelta[]>([])
-  const [isLive, setIsLive] = useState(false)
-
-  useEffect(() => {
-    if (!socket) return
-    const handleDelta = (data: ViralDelta) => {
-      setDeltaLogs(prev => [data, ...prev].slice(0, 50))
-      setIsLive(true)
-      setTimeout(() => setIsLive(false), 2000)
-    }
-    socket.on('viral-delta', handleDelta)
-    return () => { socket.off('viral-delta', handleDelta) }
-  }, [socket])
+  // There was a "Live Viral Delta" feed here: a socket listener for a
+  // `viral-delta` event, feeding a live line chart behind a pulsing "Live"
+  // badge. No server code has ever emitted that event — it arrived in a bulk
+  // merge and was never implemented — so the badge could not pulse, the live
+  // chart could not appear, and the panel permanently rendered its fallback
+  // while claiming to be live. Removed rather than left as a decoy; if a real
+  // engagement-delta stream is added later, it needs the emitter first.
 
   const fetchBenchmark = useCallback(async () => {
     setLoading(true); setError(null)
@@ -159,16 +141,6 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
   useEffect(() => {
     if (activeTab === 'nextweek' && weekPlan.length === 0) fetchWeekPlan()
   }, [activeTab, fetchWeekPlan, weekPlan.length])
-
-  const retentionData = benchmark
-    ? [
-        { time: '0s', prob: 100 }, { time: '5s', prob: 78 },
-        { time: '10s', prob: benchmark.industry.percentile },
-        { time: '15s', prob: Math.max(20, benchmark.industry.percentile - 10) },
-        { time: '20s', prob: Math.max(10, benchmark.industry.percentile - 20) },
-        { time: '25s', prob: Math.max(5,  benchmark.industry.percentile - 30) },
-      ]
-    : [{ time: '0s', prob: 0 }]
 
   const gapChartData = benchmark
     ? [
@@ -340,10 +312,6 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
 
             {/* Gap chart */}
             <Panel variant="glass" className="relative overflow-hidden p-6">
-              <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-1.5">
-                <span className={cn('h-1.5 w-1.5 rounded-full', isLive ? 'animate-ping bg-rose-500' : 'bg-rose-500/40')} />
-                <span className="ds-text-caption text-rose-500">Live Viral Delta</span>
-              </div>
               <h3 className="mb-5 flex items-center gap-2 ds-text-label text-theme-secondary">
                 <ChartIcon className="h-4 w-4 text-indigo-500" aria-hidden /> Engagement vs Industry
               </h3>
@@ -362,29 +330,14 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                   </ResponsiveContainer>
                 )}
               </div>
-              <div className="mt-5">
-                <h4 className="mb-3 ds-text-caption text-theme-muted">Retention Forecast</h4>
-                <div className="h-[100px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    {deltaLogs.length > 2 ? (
-                      <LineChart data={deltaLogs.map(l => ({ v: l.delta, t: l.timestamp })).reverse()}>
-                        <Line type="monotone" dataKey="v" stroke="#f43f5e" strokeWidth={2} dot={false} isAnimationActive={false} />
-                      </LineChart>
-                    ) : (
-                      <AreaChart data={retentionData}>
-                        <defs>
-                          <linearGradient id="retGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <Area type="monotone" dataKey="prob" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#retGrad)" />
-                        <Tooltip contentStyle={TOOLTIP_STYLE} />
-                      </AreaChart>
-                    )}
-                  </ResponsiveContainer>
-                </div>
-              </div>
+              {/* A "Retention Forecast" area chart used to sit here. Its curve was
+                  not a forecast of anything: two invented constants (100% at 0s,
+                  78% at 5s) followed by the ENGAGEMENT percentile re-labelled as a
+                  retention probability and ramped down by a fixed 10 points per
+                  5 seconds. Different metric, invented shape, presented as a
+                  prediction about the user's videos. Removed — the bar chart above
+                  it is real, and per-video retention already has an honest home in
+                  Growth → Outliers, which reads /seo/video-retention/:externalId. */}
             </Panel>
           </div>
 

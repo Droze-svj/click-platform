@@ -16,6 +16,7 @@ import {
   Badge,
   EmptyState,
   SectionHeader,
+  PageShell,
 } from '../../../../components/ui'
 
 // ── Honest contract ──────────────────────────────────────────────────────────
@@ -143,7 +144,9 @@ export default function KeywordExplorerPage() {
     }
   }
 
-  const useAsTarget = async (keyword?: string) => {
+  // NOT a hook — a click handler. The `use` prefix made eslint's
+// rules-of-hooks treat it as one and error on the call below.
+  const copyKeywordAsTarget = async (keyword?: string) => {
     const value = keyword?.trim() || ''
     if (!value) {
       toast.info('Nothing to copy for this keyword')
@@ -161,7 +164,7 @@ export default function KeywordExplorerPage() {
   const unavailable = searched && !loading && (data?.available === false || ideas.length === 0)
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       <ToastContainer />
 
       {/* ── Header ── */}
@@ -299,7 +302,7 @@ export default function KeywordExplorerPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => useAsTarget(idea?.keyword)}
+                    onClick={() => copyKeywordAsTarget(idea?.keyword)}
                     leftIcon={<Copy className="h-3.5 w-3.5" aria-hidden />}
                     title="Copy keyword to clipboard"
                     aria-label="Use as target keyword"
@@ -332,6 +335,6 @@ export default function KeywordExplorerPage() {
           className="ds-surface-card"
         />
       )}
-    </div>
+    </PageShell>
   )
 }

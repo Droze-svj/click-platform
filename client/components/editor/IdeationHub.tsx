@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   Brain,
   Zap,
@@ -59,7 +59,7 @@ export default function IdeationHub() {
 
       <AnimatePresence mode="wait">
         {activeTab === 'gaps' && (
-          <motion.div
+          <m.div
             key="gaps"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -102,11 +102,11 @@ export default function IdeationHub() {
                 />
               </Panel>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {activeTab === 'forcing' && (
-          <motion.div
+          <m.div
             key="forcing"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export default function IdeationHub() {
               { id: 'aida', name: 'Attention-Interest-Desire-Action', desc: 'The classic framework for storytelling and engagement.' },
               { id: 'hook-payoff', name: 'Loop-The-Loop (Loop Hook)', desc: 'Optimized for high-retention short form loops.' },
             ].map((framework, i) => (
-              <motion.div
+              <m.div
                 key={framework.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -136,13 +136,13 @@ export default function IdeationHub() {
                     Apply Framework
                   </Button>
                 </Panel>
-              </motion.div>
+              </m.div>
             ))}
-          </motion.div>
+          </m.div>
         )}
 
         {activeTab === 'autopsy' && (
-          <motion.div
+          <m.div
             key="autopsy"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -179,7 +179,7 @@ export default function IdeationHub() {
             </Panel>
 
             {autopsyData && (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   { label: 'Hook DNA', val: autopsyData.hook, icon: Zap },
                   { label: 'Pacing Ratios', val: autopsyData.pacing, icon: Activity },
@@ -188,9 +188,9 @@ export default function IdeationHub() {
                 ].map((stat) => (
                   <StatCard key={stat.label} label={stat.label} value={stat.val} icon={stat.icon} />
                 ))}
-              </motion.div>
+              </m.div>
             )}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

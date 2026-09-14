@@ -3,13 +3,38 @@
 
 const mongoose = require('mongoose');
 
+// One edit session. Declared as its own schema rather than inline, because
+// `errors` is a reserved Document pathname and the suppression flag has to sit on
+// the schema that actually owns the path. It was previously set on the PARENT
+// schema, where it does nothing: an inline array literal (`sessions: [{ … }]`)
+// makes Mongoose build an implicit sub-schema that inherits none of the parent's
+// options, so the warning fired on every single boot.
+//
+// The name is kept — the field is only ever written (editAnalyticsService spreads
+// the caller's session object in and never reads it back), so renaming would
+// orphan stored data for no gain. If something ever needs to READ it, read it off
+// the plain object (`.toObject().errors`), not off the subdocument, where the
+// reserved name shadows Mongoose's own validation-errors property.
+const editSessionSchema = new mongoose.Schema({
+  id: String,
+  startedAt: Date,
+  endedAt: Date,
+  featuresUsed: [String],
+  renderTime: Number,
+  exportTime: Number,
+  errors: [String]
+}, { suppressReservedKeysWarning: true });
+
 const userPreferencesSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.Mixed, // Supports ObjectId, string UUIDs, and dev-user strings
     ref: 'User',
     required: true,
     unique: true
-    // unique: true already creates an index, and there's also a standalone index below
+    // unique: true already builds the {userId: 1} index — do not add a standalone
+    // one. (The previous note here claimed there was "also a standalone index
+    // below"; there isn't, and adding one is exactly the duplicate-index warning
+    // that CommandPalette.js was tripping.)
   },
   // Pro mode
   proMode: {
@@ -102,15 +127,7 @@ const userPreferencesSchema = new mongoose.Schema({
   }],
   // Edit analytics
   editAnalytics: {
-    sessions: [{
-      id: String,
-      startedAt: Date,
-      endedAt: Date,
-      featuresUsed: [String],
-      renderTime: Number,
-      exportTime: Number,
-      errors: [String]
-    }],
+    sessions: [editSessionSchema],
     featureUsage: mongoose.Schema.Types.Mixed,
     cacheHitRate: { type: Number, default: 0 }
   },
@@ -184,7 +201,7 @@ const userPreferencesSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-}, { suppressReservedKeysWarning: true }); // 'errors' in editAnalytics.sessions is intentional
+});
 
 // userId already has unique: true which creates an index
 userPreferencesSchema.index({ 'proMode.enabled': 1 });

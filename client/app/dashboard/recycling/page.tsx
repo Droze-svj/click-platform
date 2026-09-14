@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import SectionHeader from '../../../components/dashboard/SectionHeader'
 import { Recycle } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
+import { PageShell } from '../../../components/ui'
 
 export default function ContentRemixPage() {
   const router = useRouter()
@@ -20,8 +21,7 @@ export default function ContentRemixPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen ds-bg-mesh-soft text-theme-primary">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pt-8 pb-24">
+    <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
         <SectionHeader
           tone="publish"
           icon={Recycle}
@@ -30,7 +30,6 @@ export default function ContentRemixPage() {
           subtitle={t('recyclingPage.subtitle')}
         />
         <EntropyReversalNode />
-      </div>
-    </div>
+    </PageShell>
   )
 }

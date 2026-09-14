@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface VideoComparisonProps {
   originalVideo: string
@@ -61,9 +62,12 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
     targetVideo.currentTime = sourceVideo.currentTime
   }
 
+  // Always open — the parent mounts this only while the comparison is showing.
+  const panelRef = useDialogBehavior(true, () => onClose?.())
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden" ref={panelRef}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('videoComparison.title')}</h3>
           {onClose && (

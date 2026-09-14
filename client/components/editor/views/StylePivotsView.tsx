@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Sparkles, Camera, Zap, Terminal, Ghost } from 'lucide-react'
 
 interface StylePivotsViewProps {
@@ -64,7 +64,7 @@ const StylePivotsView: React.FC<StylePivotsViewProps> = ({ currentPivot, onSelec
           const isActive = currentPivot === pivot.id
 
           return (
-            <motion.button
+            <m.button
               key={pivot.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -77,7 +77,7 @@ const StylePivotsView: React.FC<StylePivotsViewProps> = ({ currentPivot, onSelec
             >
               {/* Animated Progress/Active bar */}
               {isActive && (
-                <motion.div
+                <m.div
                   layoutId="pivot-active-bar"
                   className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${pivot.color}`}
                 />
@@ -120,7 +120,7 @@ const StylePivotsView: React.FC<StylePivotsViewProps> = ({ currentPivot, onSelec
 
               {/* Decorative Mesh */}
               <div className={`absolute -right-4 -bottom-4 w-32 h-32 opacity-10 blur-3xl rounded-full bg-gradient-to-br ${pivot.color} pointer-events-none`} />
-            </motion.button>
+            </m.button>
           )
         })}
       </div>

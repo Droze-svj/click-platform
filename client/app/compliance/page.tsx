@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LegalPage } from '../../components/ui/legal-page'
 
 export const metadata = {
   title: 'Compliance — Click',
@@ -8,18 +9,8 @@ export const metadata = {
 
 export default function CompliancePage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white px-6 py-24">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href="/trust"
-          className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-white uppercase tracking-widest font-bold mb-12"
-        >
-          ← Trust Center
-        </Link>
-
-        <div className="mb-2 text-xs uppercase tracking-[0.4em] text-indigo-400 font-black">Compliance Notice</div>
-        <h1 className="text-5xl md:text-6xl font-black tracking-tighter mb-8">Regulatory posture.</h1>
-        <p className="text-slate-400 text-lg leading-relaxed mb-12">
+    <LegalPage kicker="Compliance Notice" title="Regulatory posture." backHref="/trust" backLabel="Trust Center">
+        <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed mb-12">
           A plain-language summary of the laws Click follows, how we apply them, and where to
           find authoritative documentation. This page is summary; the binding documents are our{' '}
           <Link href="/terms" className="text-indigo-400 hover:text-indigo-300 underline">Terms</Link>{' '}
@@ -33,7 +24,7 @@ export default function CompliancePage() {
             classification="Limited-risk"
             details={[
               "Click is a general-purpose creative-AI tool. Outputs that are wholly or substantially AI-generated carry a visible AI-disclosure marker and a C2PA provenance manifest, satisfying Art. 50 transparency obligations for synthetic content.",
-              "We perform a written AI risk assessment and review it at least annually. Available under NDA at trust@click.example.",
+              "We perform a written AI risk assessment and review it at least annually. Available under NDA at trust@clickapp.io.",
               "We do not deploy prohibited practices (Art. 5): no social scoring, no real-time remote biometric ID, no exploitation of vulnerabilities by age/disability/socioeconomic status.",
               "We monitor for systemic risk in any model classified as GPAI with systemic risk under Art. 51.",
             ]}
@@ -49,7 +40,7 @@ export default function CompliancePage() {
               "Standard Contractual Clauses + UK IDTA for EU/UK→US transfers; supplementary measures: encryption, access logs, vendor due diligence.",
               "Data subject rights served within 30 days (extendable to 90).",
               "EU representative appointed (Art. 27): Click EU GmbH, Berlin.",
-              "DPO contact: privacy@click.example.",
+              "DPO contact: privacy@clickapp.io.",
             ]}
           />
 
@@ -71,7 +62,7 @@ export default function CompliancePage() {
               "Click is not directed to children under 13.",
               "Signup requires date of birth and is rejected server-side for under-13.",
               "Users 13–17 require verifiable parental/guardian consent before account activation.",
-              "Children's data, if discovered, is deleted within 7 days; complaints to privacy@click.example.",
+              "Children's data, if discovered, is deleted within 7 days; complaints to privacy@clickapp.io.",
             ]}
           />
 
@@ -89,7 +80,7 @@ export default function CompliancePage() {
             title="DMCA (17 USC §512)"
             classification="In scope"
             details={[
-              "Designated agent registered with the US Copyright Office: Click, Inc., dmca@click.example.",
+              "Designated agent registered with the US Copyright Office: Click, Inc., dmca@clickapp.io.",
               "File a takedown or counter-notice at /legal/dmca.",
               "Repeat infringers terminated.",
             ]}
@@ -110,7 +101,7 @@ export default function CompliancePage() {
             details={[
               "We design for keyboard-only navigation, screen-reader landmarks, focus visibility, and 4.5:1 contrast minimum on body text.",
               "Annual accessibility audit with remediation plan; current report available on request.",
-              "Found a barrier? a11y@click.example.",
+              "Found a barrier? a11y@clickapp.io.",
             ]}
           />
 
@@ -124,11 +115,10 @@ export default function CompliancePage() {
           />
         </div>
 
-        <p className="text-slate-500 text-sm mt-16 leading-relaxed">
-          Questions: <a href="mailto:compliance@click.example" className="text-indigo-400 hover:text-indigo-300 underline">compliance@click.example</a>.
+        <p className="text-surface-500 text-sm mt-16 leading-relaxed">
+          Questions: <a href="mailto:compliance@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">compliance@clickapp.io</a>.
         </p>
-      </div>
-    </div>
+          </LegalPage>
   );
 }
 
@@ -141,7 +131,7 @@ function Reg({ title, classification, details }: { title: string; classification
           {classification}
         </span>
       </div>
-      <ul className="text-slate-300 leading-relaxed list-disc pl-6 space-y-2 text-sm">
+      <ul className="text-surface-700 dark:text-surface-300 leading-relaxed list-disc pl-6 space-y-2 text-sm">
         {details.map((d, i) => (
           <li key={i}>{d}</li>
         ))}

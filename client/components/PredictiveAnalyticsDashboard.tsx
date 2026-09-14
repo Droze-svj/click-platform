@@ -220,7 +220,7 @@ export default function PredictiveAnalyticsDashboard({
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8">
-        <div className="flex items-center justify-center">
+        <div role="status" aria-live="polite" className="flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           <span className="ml-3 text-gray-600 dark:text-gray-400">{t('predictiveAnalyticsDashboard.loadingPredictions')}</span>
         </div>
@@ -478,7 +478,7 @@ export default function PredictiveAnalyticsDashboard({
 
           <div className="p-6">
             {heatmapLoading ? (
-              <div className="flex items-center gap-3 py-8 justify-center">
+              <div role="status" aria-live="polite" className="flex items-center gap-3 py-8 justify-center">
                 <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
                 <span className="text-sm text-gray-500">{t('predictiveAnalyticsDashboard.analyzingRetention')}</span>
               </div>

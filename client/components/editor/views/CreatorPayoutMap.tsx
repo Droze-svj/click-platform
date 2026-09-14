@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Globe, DollarSign, Users, ArrowUpRight, MapPin, Fingerprint, Zap, Cpu } from 'lucide-react'
 
 interface StyleDNA {
@@ -71,7 +71,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="flex flex-col gap-8 h-full"
@@ -159,14 +159,14 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                    className="absolute pointer-events-none"
                    style={{ left: region.coords.x + 30, top: region.coords.y - 30 }}
                  >
-                    <motion.div
+                    <m.div
                       animate={{ opacity: [0.1, 0.4, 0.1], scale: [1, 1.2, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                       className="relative flex items-center justify-center"
                     >
                        <div className="absolute w-12 h-12 rounded-full bg-indigo-500/10 blur-xl" />
                        <Cpu className="w-6 h-6 text-indigo-400 opacity-40 shrink-0" />
-                    </motion.div>
+                    </m.div>
                     <div className="absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-indigo-600/20 backdrop-blur-sm border border-indigo-500/20 px-2 py-0.5 rounded text-[6px] font-black text-indigo-300 uppercase tracking-widest">
                        Surge Echo: {f.probability}
                     </div>
@@ -180,7 +180,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
            </div>
 
             {regions.map((region) => (
-             <motion.div
+             <m.div
                key={region.id}
                className="absolute cursor-pointer group/node"
                style={{ left: region.coords.x, top: region.coords.y }}
@@ -189,7 +189,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
              >
                 {/* Pulse Ring */}
                 <div className="absolute inset-0 -translate-x-1/2 -translate-y-1/2">
-                   <motion.div
+                   <m.div
                      animate={{
                         scale: bridgingId === region.id ? [1, 3] : [1, 2],
                         opacity: bridgingId === region.id ? [1, 0] : [0.5, 0],
@@ -201,7 +201,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                 </div>
 
                 {/* Node Core */}
-                <motion.div
+                <m.div
                    animate={{
                       backgroundColor: viewMode === 'style' ? region.styleDNA.color : viewMode === 'evolution' ? '#818cf8' : '#10b981',
                       boxShadow: viewMode === 'style' ? `0 0 20px ${region.styleDNA.color}cc` : viewMode === 'evolution' ? '0 0 20px rgba(129,140,248,0.8)' : '0 0 20px rgba(16,185,129,0.8)',
@@ -213,14 +213,14 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                 {/* Bridging Status */}
                 <AnimatePresence>
                   {bridgingId === region.id && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-black text-[8px] font-black uppercase tracking-widest rounded-full shadow-2xl z-30 whitespace-nowrap"
                     >
                       Bridging Style
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
@@ -271,7 +271,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                            </div>
                         </div>
                         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                           <motion.div
+                           <m.div
                              initial={{ width: 0 }}
                              animate={{ width: `${region.evolutionVelocity}%` }}
                              className="h-full bg-indigo-500"
@@ -279,7 +279,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                         </div>
 
                         {evolutionForecast.find(f => f.regionId === region.id) && (
-                          <motion.div
+                          <m.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2"
@@ -297,17 +297,17 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                                    <span className="text-[9px] font-black text-white uppercase tracking-tighter">T-Minus {evolutionForecast.find(f => f.regionId === region.id).timeToSurge}</span>
                                 </div>
                              </div>
-                          </motion.div>
+                          </m.div>
                         )}
                      </div>
                    )}
                 </div>
-             </motion.div>
+             </m.div>
            ))}
 
            {/* Connecting Lines Overlay */}
            <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none">
-              <motion.path
+              <m.path
                 d="M200,150 Q485,145 480,140"
                 fill="none"
                 stroke={viewMode === 'style' ? '#8b5cf6' : viewMode === 'evolution' ? '#6366f1' : '#10b981'}
@@ -354,7 +354,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                             </span>
                          </div>
                          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <motion.div
+                            <m.div
                               initial={{ width: 0 }}
                               animate={{
                                  width: viewMode === 'revenue' ? `${(region.revenue / 200000) * 100}%` :
@@ -398,7 +398,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
            </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

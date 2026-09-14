@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { Video, RotateCcw, Home, Trash2 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 export default function VideoError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function VideoError({ error, reset }: { error: Error & { digest?:
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-8 text-white">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full text-center bg-white/[0.02] border border-white/[0.06] rounded-[2.5rem] p-10">
+      <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full text-center bg-white/[0.02] border border-white/[0.06] rounded-[2.5rem] p-10">
         <div className="w-14 h-14 bg-violet-500/10 border border-violet-500/20 rounded-[1.25rem] flex items-center justify-center mx-auto mb-5">
           <Video className="w-7 h-7 text-violet-400" />
         </div>
@@ -62,7 +62,7 @@ export default function VideoError({ error, reset }: { error: Error & { digest?:
             <Home className="w-3.5 h-3.5" />
           </a>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

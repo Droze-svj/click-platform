@@ -21,7 +21,7 @@ import {
   ArrowUpRight,
   ZapOff
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { api, apiGet } from '../../../lib/api'
 import { EditorCategory } from '../../../types/editor'
 
@@ -119,7 +119,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
           </p>
         </div>
 
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.05, rotate: 180 }}
           whileTap={{ scale: 0.95 }}
           onClick={fetchAccounts}
@@ -128,7 +128,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
           className="p-6 bg-white/[0.03] border border-white/10 rounded-[2.5rem] text-slate-400 hover:text-white hover:bg-white/10 shadow-3xl group transition-all"
         >
           <RefreshCcw className={`w-8 h-8 ${loading ? 'animate-spin' : ''}`} />
-        </motion.button>
+        </m.button>
       </div>
 
       {/* Platform Grid (Elite) */}
@@ -138,7 +138,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
           const isConnected = !!account
 
           return (
-            <motion.div
+            <m.div
               key={platform.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -185,7 +185,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
 
                 <AnimatePresence>
                   {activePreviewId === platform.id && (
-                    <motion.div
+                    <m.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -217,7 +217,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
@@ -233,7 +233,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                       </div>
                     </div>
 
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleDisconnect(platform.id, account.platform_user_id)}
@@ -241,7 +241,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                       title="Disconnect Node"
                     >
                       <X className="w-5 h-5" />
-                    </motion.button>
+                    </m.button>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between pt-4">
@@ -249,7 +249,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                       <ShieldCheck className="w-5 h-5" />
                       <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">Encryption Primed</span>
                     </div>
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.05, y: -4 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleConnect(platform.id)}
@@ -258,7 +258,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                     >
                       Link Node
                       <ArrowUpRight className="w-4 h-4" />
-                    </motion.button>
+                    </m.button>
                   </div>
                 )}
 
@@ -287,7 +287,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           )
         })}
       </div>
@@ -309,7 +309,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
             </p>
           </div>
           <div className="flex justify-center gap-6 pt-8">
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.05, y: -4 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveCategory('export')}
@@ -318,7 +318,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
             >
               Initiate Viral Sequence
               <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </motion.button>
+            </m.button>
           </div>
         </div>
 

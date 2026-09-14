@@ -11,6 +11,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SectionHeader } from '@/components/ui/section-header';
+import { PageShell } from '../../../components/ui'
 
 export const dynamic = 'force-dynamic';
 
@@ -77,7 +78,7 @@ export default function InfrastructurePage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
         <ToastContainer />
 
         <SectionHeader
@@ -109,7 +110,7 @@ export default function InfrastructurePage() {
         <div className="ds-surface-card p-4 sm:p-6">
           <InfrastructureDashboard />
         </div>
-      </div>
+      </PageShell>
     </ErrorBoundary>
   );
 }

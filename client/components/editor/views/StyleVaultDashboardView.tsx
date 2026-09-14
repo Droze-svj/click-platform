@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   Plus,
   Zap,
@@ -114,7 +114,7 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
       <div className="absolute top-0 right-1/4 w-[800px] h-[800px] bg-blue-600/10 blur-[180px] rounded-full opacity-60 pointer-events-none" />
 
       {/* Header — real stats only */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -147,7 +147,7 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
             </>
           )}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Real learned profile panel */}
       {!loading && (
@@ -224,13 +224,13 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
       )}
 
       {/* Saved (user-created) profiles — empty until the user actually saves one */}
-      <motion.div
+      <m.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 relative z-10"
       >
-        <motion.button
+        <m.button
           variants={itemVariants}
           whileHover={{ scale: 1.02, y: -8 }}
           whileTap={{ scale: 0.98 }}
@@ -243,10 +243,10 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
           <div className="text-center space-y-4 relative z-10">
             <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">{t('styleVault.startTraining')}</h3>
           </div>
-        </motion.button>
+        </m.button>
 
         {profiles.map((profile, i) => (
-          <motion.div
+          <m.div
             key={profile.id}
             variants={itemVariants}
             onMouseEnter={() => setHoveredIndex(i)}
@@ -296,9 +296,9 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
               </button>
               <ChevronRight className="w-8 h-8 text-slate-700 group-hover:text-white group-hover:translate-x-2 transition-all duration-300" />
             </div>
-          </motion.div>
+          </m.div>
         ))}
-      </motion.div>
+      </m.div>
     </div>
   )
 }

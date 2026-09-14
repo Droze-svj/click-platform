@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Bot, CheckCircle2, X, Loader2, Zap, MessageSquare, ChevronRight } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -123,7 +123,7 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         key={commentId}
         initial={{ opacity: 0, y: -8, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -172,28 +172,28 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleAccept}
                     className="flex-1 py-2 rounded-xl bg-fuchsia-600 text-white font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1.5"
                   >
                     <CheckCircle2 className="w-3 h-3" /> {t('clientFeedbackAgent.acceptGhostEdit')}
-                  </motion.button>
-                  <motion.button
+                  </m.button>
+                  <m.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleDecline}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 font-black text-[9px] uppercase tracking-widest flex items-center gap-1"
                   >
                     <X className="w-3 h-3" /> {t('clientFeedbackAgent.decline')}
-                  </motion.button>
+                  </m.button>
                 </div>
               </>
             )}
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   )
 }

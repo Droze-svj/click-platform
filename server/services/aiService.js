@@ -244,18 +244,19 @@ function buildFallbackHighlights(transcript, duration) {
 }
 
 // Generate social media content from text
+//
+// Returns { [platform]: { text, hashtags, platform } } containing ONLY the
+// platforms the model actually wrote a post for. A platform it could not produce
+// is left out, and every caller already treats a missing key as "no post".
+//
+// This used to invent posts instead: with no API key every platform got
+// "Check out this <niche> content! <first 100 chars>...", and when the model call
+// failed (googleAI returns null on quota exhaustion or an upstream error) the post
+// became "Check out this <niche> content!". Those were saved and shown as generated.
 async function generateSocialContent(text, niche, platforms = ['twitter', 'linkedin', 'instagram']) {
   if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback content');
-    const fallback = {};
-    platforms.forEach((platform) => {
-      fallback[platform] = {
-        text: `Check out this ${niche} content! ${text.substring(0, 100)}...`,
-        hashtags: [`#${niche}`, '#content', '#social'],
-        platform
-      };
-    });
-    return fallback;
+    logger.warn('Google AI API key not configured; no social posts generated');
+    return {};
   }
 
   try {
@@ -274,9 +275,14 @@ CREATIVE RULES:
 Original content: ${capForPrompt(text)}`;
 
       const response = await geminiGenerate(prompt, { temperature: 0.9, maxTokens: 400 });
+      const post = typeof response === 'string' ? response.trim() : '';
+      if (!post) {
+        logger.warn('No social post produced for platform', { platform, niche });
+        continue;
+      }
       content[platform] = {
-        text: response || `Check out this ${niche} content!`,
-        hashtags: extractHashtags(response || ''),
+        text: post,
+        hashtags: extractHashtags(post),
         platform
       };
     }
@@ -289,10 +295,15 @@ Original content: ${capForPrompt(text)}`;
 }
 
 // Generate blog summary
+//
+// Returns the model's summary, or '' when none was produced. It used to return
+// "Summary: <first 300 characters of the source>..." with no key or when the call
+// failed, and the literal "Summary generation failed. Please try again." on an
+// error — each saved as the content's blog summary.
 async function generateBlogSummary(text, niche) {
   if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback summary');
-    return `Summary: ${text.substring(0, 300)}...`;
+    logger.warn('Google AI API key not configured; no blog summary generated');
+    return '';
   }
 
   try {
@@ -305,15 +316,24 @@ async function generateBlogSummary(text, niche) {
 Content: ${capForPrompt(text)}`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 500 });
-    return response || `Summary: ${text.substring(0, 300)}...`;
+    return typeof response === 'string' ? response.trim() : '';
   } catch (error) {
     logger.error('Blog summary error', { error: error.message, niche });
-    return 'Summary generation failed. Please try again.';
+    return '';
   }
 }
 
 // Generate viral post ideas (Consolidated for Phase 11/12)
 async function generateViralIdeas(topic, niche, count = 3, options = {}) {
+  // Checked first: with no key there is nothing to generate, so don't fetch the
+  // strategy framework and market trends only to discard them. This used to
+  // return invented ideas instead ("<niche> Idea 1…N", each with a made-up
+  // potential of 75).
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured; no viral ideas generated');
+    return [];
+  }
+
   // Bound + sanitize the caller-supplied topic before it goes into the prompt
   // (was interpolated raw — unbounded text starves the token budget and a
   // crafted topic could inject instructions). capForPrompt strips control chars
@@ -324,17 +344,6 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
   const marketTrends = await predictionService.ingestMarketTrends();
 
   const varianceSeed = Math.random().toString(36).substring(7);
-
-  if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback ideas');
-    return Array(count).fill(0).map((_, i) => ({
-      title: `${niche} Idea ${i + 1}`,
-      description: `Engaging strategy for "${safeTopic}"`,
-      platform: ['tiktok', 'instagram', 'twitter'][i % 3],
-      potential: 75,
-      integrityVerified: false
-    }));
-  }
 
   const trendingTopicsList = marketTrends.trendingTopics || (Array.isArray(marketTrends) ? marketTrends.map(t => t.topic || t) : []);
   try {
@@ -734,14 +743,35 @@ Return a JSON object with: title, description, action, impact ("high", "medium",
 }
 
 // Generate content idea
+//
+// Returns { title, idea, platforms } for a real idea, or
+// { title: null, idea: null, platforms, degraded: true } when none was produced.
+//
+// It used to return hardcoded filler ('Content Idea' / 'Create engaging
+// content.') with no marker — on a missing key, an upstream error, a cut-off or
+// unparseable response, or a caller passing the wrong arguments — and nothing
+// downstream could tell that apart from a real idea: POST /api/ai/generate-idea
+// reported it as success, and QuickContentCreator seeded it straight into
+// content generation.
 async function generateContentIdea(platforms) {
+  const unavailable = () => ({
+    title: null,
+    idea: null,
+    platforms: Array.isArray(platforms) ? platforms : [],
+    degraded: true
+  });
+
+  // Deliberately not coerced: a non-array here is a caller bug (a niche string
+  // was once passed), and quietly wrapping it would generate an idea "for the
+  // platform general" instead of surfacing the wrong call.
+  if (!Array.isArray(platforms) || platforms.length === 0) {
+    logger.warn('generateContentIdea called without a platforms array', { received: typeof platforms });
+    return unavailable();
+  }
+
   if (!geminiConfigured) {
-    logger.warn('Google AI API key not configured, using fallback idea');
-    return {
-      title: 'Content Idea',
-      idea: 'Create engaging content that resonates with your audience.',
-      platforms
-    };
+    logger.warn('Google AI API key not configured; no content idea generated');
+    return unavailable();
   }
 
   try {
@@ -751,18 +781,82 @@ Return a JSON object with: title, idea, platforms (array). Return only valid JSO
 
     const response = await geminiGenerate(prompt, { maxTokens: 300 });
     const result = safeJsonParse(response, {});
+    // An idea without its text is not an idea. A cut-off or unparseable response
+    // leaves `idea` missing, and a title on its own would read as a finished result.
+    if (typeof result.idea !== 'string' || !result.idea.trim()) {
+      logger.warn('Content idea generation produced no usable idea', { hadResponse: Boolean(response) });
+      return unavailable();
+    }
     return {
-      title: result.title || 'Content Idea',
-      idea: result.idea || 'Create engaging content.',
-      platforms: result.platforms || platforms
+      title: typeof result.title === 'string' && result.title.trim() ? result.title : null,
+      idea: result.idea,
+      platforms: Array.isArray(result.platforms) && result.platforms.length ? result.platforms : platforms
     };
   } catch (error) {
     logger.error('Content idea generation error', { error: error.message });
-    return {
-      title: 'Content Idea',
-      idea: 'Create engaging content that resonates with your audience.',
-      platforms
-    };
+    return unavailable();
+  }
+}
+
+// Generate several content ideas in ONE model call.
+//
+// getFutureContentSuggestions used to call generateContentIdea once per
+// suggestion: up to 10 sequential Gemini requests for a single page load, on a
+// key whose free tier allows 20 requests a day. One request for an array does
+// the same job.
+//
+// `slots` lists one platform per wanted idea (repeats allowed). Returns
+// { ideas: [{ platform, title, idea }], degraded }, where `ideas` holds only
+// complete, distinct items for platforms that were actually asked for.
+// A short batch is kept as-is; `degraded` is true only when nothing usable came back.
+async function generateContentIdeaBatch(slots) {
+  const wanted = Array.isArray(slots)
+    ? slots.filter((p) => typeof p === 'string' && p.trim()).map((p) => p.trim().toLowerCase())
+    : [];
+  if (wanted.length === 0) return { ideas: [], degraded: true };
+
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured; no content ideas generated');
+    return { ideas: [], degraded: true };
+  }
+
+  try {
+    const prompt = `Generate ${wanted.length} distinct, creative content ideas, one for each numbered platform below:
+${wanted.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+Return a JSON array of ${wanted.length} objects in the same order, each with: platform (exactly as named above), title, idea. Return only valid JSON.`;
+
+    // ~180 output tokens per idea plus array overhead; googleAI retries once at a
+    // doubled budget if the model still runs out.
+    const response = await geminiGenerate(prompt, { maxTokens: Math.min(4000, 200 + wanted.length * 180) });
+    const parsed = safeJsonParse(response, null);
+    const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.ideas) ? parsed.ideas : []);
+
+    const allowed = new Set(wanted);
+    const seen = new Set();
+    const ideas = [];
+    for (const item of items) {
+      if (!item || typeof item.idea !== 'string' || !item.idea.trim()) continue;
+      const platform = typeof item.platform === 'string' ? item.platform.trim().toLowerCase() : '';
+      if (!allowed.has(platform)) continue;
+      const key = item.idea.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      ideas.push({
+        platform,
+        title: typeof item.title === 'string' && item.title.trim() ? item.title.trim() : null,
+        idea: item.idea.trim()
+      });
+      if (ideas.length === wanted.length) break;
+    }
+
+    if (ideas.length === 0) {
+      logger.warn('Content idea batch produced no usable ideas', { requested: wanted.length, hadResponse: Boolean(response) });
+    }
+    return { ideas, degraded: ideas.length === 0 };
+  } catch (error) {
+    logger.error('Content idea batch generation error', { error: error.message });
+    return { ideas: [], degraded: true };
   }
 }
 
@@ -848,6 +942,7 @@ module.exports = {
   generateContentAdaptation: withAgentSpan('Content Adaptation Agent', generateContentAdaptation),
   generateAIInsight: withAgentSpan('Growth Insight Agent', generateAIInsight),
   generateContentIdea: withAgentSpan('Content Idea Agent', generateContentIdea),
+  generateContentIdeaBatch: withAgentSpan('Content Idea Batch Agent', generateContentIdeaBatch),
   analyzeContentWithAI: withAgentSpan('Content Health Agent', analyzeContentWithAI),
   getUniversalStrategicFramework: withAgentSpan('Strategic Framework Agent', getUniversalStrategicFramework),
   validateAndRefineOutput: withAgentSpan('Validation Agent', validateAndRefineOutput),

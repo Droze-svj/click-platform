@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
 import {
     Trophy,
@@ -68,7 +68,7 @@ export default function AchievementSystem() {
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none">
             <AnimatePresence>
                 {unlocked && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: -50, scale: 0.8 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.9 }}
@@ -105,7 +105,7 @@ export default function AchievementSystem() {
                                     <span className="text-blue-500">{t('achievementSystem.xpGain', { xp: 500 })}</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <motion.div
+                                    <m.div
                                         initial={{ width: 0 }}
                                         animate={{ width: '85%' }}
                                         className={`h-full bg-gradient-to-r ${unlocked.color}`}
@@ -113,7 +113,7 @@ export default function AchievementSystem() {
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

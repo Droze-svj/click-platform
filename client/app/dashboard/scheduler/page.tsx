@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import AdvancedSchedulingHub from '../../../components/scheduler/AdvancedSchedulingHub'
 import { useAuth } from '../../../hooks/useAuth'
 import { useUserSocket } from '../../../hooks/useUserSocket'
 import { useToast } from '../../../contexts/ToastContext'
@@ -27,6 +28,7 @@ import {
   FormField,
   EmptyState,
   SectionHeader,
+  PageShell,
 } from '../../../components/ui'
 
 interface ScheduledPost {
@@ -103,17 +105,28 @@ export default function SchedulerPage() {
     const ids = idsParam.split(',').map(s => s.trim()).filter(Boolean)
     if (ids.length === 0) return
     setQueuedClipIds(ids)
-    apiGet<any>(`/video/clips/${ids[0]}`)
-      .then((res: any) => {
-        const c = res?.data || res
-        if (!c) return
-        setForm(f => ({
-          ...f,
-          text: c.caption || c.hookText || f.text,
-          mediaUrl: c.url || c.signedUrl || f.mediaUrl,
-        }))
-      })
-      .catch(() => { /* best-effort prefill */ })
+    // Clips are addressed by their parent video, not on their own: the server
+    // exposes GET /video/clips/hub/:contentId, and there is no
+    // /video/clips/:clipId. This used to call the latter, 404 on every hand-off
+    // and swallow it in the catch below — so "Send to Scheduler" from the clip
+    // hub never actually prefilled the caption or the media, silently.
+    // The hub link always carries contentId alongside clipIds.
+    const contentId = searchParams.get('contentId')
+    if (contentId) {
+      apiGet<any>(`/video/clips/hub/${encodeURIComponent(contentId)}`)
+        .then((res: any) => {
+          const items = (res?.data ?? res)?.items
+          if (!Array.isArray(items)) return
+          const c = items.find((i: any) => String(i?.id) === ids[0]) || items[0]
+          if (!c) return
+          setForm(f => ({
+            ...f,
+            text: c.caption || c.hookText || f.text,
+            mediaUrl: c.url || c.signedUrl || f.mediaUrl,
+          }))
+        })
+        .catch(() => { /* best-effort prefill */ })
+    }
     showToast(t(ids.length === 1 ? 'schedulerPage.toastClipPreloaded' : 'schedulerPage.toastClipsPreloaded', { count: ids.length }), 'success')
   }, [searchParams, showToast, t])
 
@@ -306,7 +319,7 @@ export default function SchedulerPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         {/* Header (global DashboardHeader provides breadcrumb) */}
@@ -579,7 +592,14 @@ export default function SchedulerPage() {
             )}
           </section>
         </main>
-      </div>
+
+        {/* Queue analytics, recurring templates and bulk reschedule. The component
+            was built and unreachable, and the three endpoints it calls
+            (/api/scheduler/analytics, /templates, /bulk-reschedule) did not exist —
+            they were added alongside this. */}
+        <ErrorBoundary><AdvancedSchedulingHub /></ErrorBoundary>
+
+      </PageShell>
     </ErrorBoundary>
   )
 }

@@ -31,7 +31,7 @@ import {
   ZapOff
 } from 'lucide-react'
 import { apiGet, apiPost, apiPatch } from '../../../lib/api'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { loadEditorContentPreferences, saveEditorContentPreferences } from '../../../utils/editorUtils'
 import OptimalPostingWindow from '../OptimalPostingWindow'
 import { Panel, Button, Badge, SectionHeader } from '../../ui'
@@ -86,8 +86,9 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
   const [extendingId, setExtendingId] = useState<string | null>(null)
   const [extendDays, setExtendDays] = useState(10)
   const [copySuccessId, setCopySuccessId] = useState<string | null>(null)
-  const [exportQuality, setExportQuality] = useState<'high' | 'medium' | 'low'>('high')
+  const [exportQuality, setExportQuality] = useState<'ultra' | 'high' | 'medium' | 'low'>('high')
   const [exportCodec, setExportCodec] = useState<'h264' | 'hevc' | 'prores'>('h264')
+  const [voiceClarity, setVoiceClarity] = useState(true)
   const [duckMusicWhenVoiceover, setDuckMusicWhenVoiceover] = useState(true)
   const [duckLevel, setDuckLevel] = useState(-12)
   const [isPublishing, setIsPublishing] = useState(false)
@@ -103,6 +104,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
      { id: '1:1', label: 'Square (Instagram Post)', selected: false }
   ])
   const [batchProgress, setBatchProgress] = useState<{ [key: string]: number }>({})
+  const [batchResults, setBatchResults] = useState<{ [formatId: string]: { url?: string; downloadUrl?: string } }>({})
 
   const [lastRenderExportPath, setLastRenderExportPath] = useState<string | null>(null)
 
@@ -219,7 +221,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
   }
 
   const selectedPresetConfig = EXPORT_PRESETS.find(p => p.id === selectedPreset) || EXPORT_PRESETS[3]
-  const qualityMultiplier = exportQuality === 'high' ? 1 : exportQuality === 'medium' ? 0.7 : 0.5
+  const qualityMultiplier = exportQuality === 'ultra' ? 1.5 : exportQuality === 'high' ? 1 : exportQuality === 'medium' ? 0.7 : 0.5
   const effectiveBitrateMbpsNum = selectedPresetConfig ? selectedPresetConfig.bitrateMbps * qualityMultiplier : 0
   const effectiveBitrateMbps = selectedPresetConfig ? effectiveBitrateMbpsNum.toFixed(1) : '—'
   const durationSec = typeof videoDuration === 'number' && videoDuration > 0 ? videoDuration : 0
@@ -303,14 +305,14 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 <h3 className="ds-text-label text-theme-secondary">Quality</h3>
               </div>
               <div className="flex w-fit rounded-xl ds-surface-card p-1">
-                {(['high', 'medium', 'low'] as const).map(q => (
+                {(['ultra', 'high', 'medium', 'low'] as const).map(q => (
                   <button
                     type="button"
                     key={q}
                     onClick={() => setExportQuality(q)}
-                    className={cn('rounded-lg px-4 py-2 text-xs font-semibold transition-colors', exportQuality === q ? 'bg-primary text-primary-foreground' : 'text-theme-muted hover:text-theme-primary')}
+                    className={cn('rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors', exportQuality === q ? 'bg-primary text-primary-foreground' : 'text-theme-muted hover:text-theme-primary')}
                   >
-                    {q === 'high' ? 'High' : q === 'medium' ? 'Standard' : 'Low'}
+                    {q === 'ultra' ? 'Ultra (Master)' : q === 'high' ? 'High' : q === 'medium' ? 'Standard' : 'Low'}
                   </button>
                 ))}
               </div>
@@ -360,8 +362,21 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Layers className="h-4 w-4 text-indigo-500" aria-hidden />
-                <h3 className="ds-text-label text-theme-secondary">Audio</h3>
+                <h3 className="ds-text-label text-theme-secondary">Audio & Voice</h3>
               </div>
+              <label className="group/voice flex cursor-pointer items-center gap-3">
+                <div className={cn('flex h-6 w-6 items-center justify-center rounded-lg border-2 transition-all', voiceClarity ? 'border-indigo-500 bg-indigo-600' : 'border-subtle group-hover:border-border')}>
+                  {voiceClarity && <CheckCircle2 className="h-4 w-4 text-white" aria-hidden />}
+                </div>
+                <input
+                  type="checkbox"
+                  title="Enable Studio Voice Clarity"
+                  checked={voiceClarity}
+                  onChange={(e) => setVoiceClarity(e.target.checked)}
+                  className="hidden"
+                />
+                <span className="text-sm text-theme-secondary transition-colors group-hover/voice:text-theme-primary">Studio Voice Clarity (AI Vocal Presence)</span>
+              </label>
               <label className="group/audio flex cursor-pointer items-center gap-3">
                 <div className={cn('flex h-6 w-6 items-center justify-center rounded-lg border-2 transition-all', duckMusicWhenVoiceover ? 'border-indigo-500 bg-indigo-600' : 'border-subtle group-hover:border-border')}>
                   {duckMusicWhenVoiceover && <CheckCircle2 className="h-4 w-4 text-white" aria-hidden />}
@@ -465,43 +480,95 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 
                 if (isBatchMode) {
                    const selected = batchFormats.filter(f => f.selected)
-                   showToast(`Initializing ${selected.length} parallel render threads...`, 'info')
+                   showToast(`Starting production for ${selected.length} multi-aspect formats...`, 'info')
                    
-                   const InitialProgress: any = {}
-                   selected.forEach(f => { InitialProgress[f.id] = 0 })
-                   setBatchProgress(InitialProgress)
-                   
-                   // Simulate Parallel Rendering
-                   const interval = setInterval(() => {
-                      setBatchProgress(prev => {
-                         const next = { ...prev }
-                         let allDone = true
-                         Object.keys(next).forEach(key => {
-                            if (next[key] < 100) {
-                               next[key] = Math.min(100, next[key] + (Math.random() * 8))
-                               allDone = false
-                            }
-                         })
-                         
-                         if (allDone) {
-                            clearInterval(interval)
-                            setIsRendering(false)
-                            // Honest: batch multi-format export isn't wired to a
-                            // real packaged output yet — render each format
-                            // individually (single mode) to get a downloadable file.
-                            showToast('Batch preview complete. Use single-format render for a downloadable file.', 'info')
-                         }
-                         return next
-                      })
-                   }, 400)
-                   
+                   const initProg: any = {}
+                   selected.forEach(f => { initProg[f.id] = 15 })
+                   setBatchProgress(initProg)
+                   setBatchResults({})
+
+                   const formatConfigs: Record<string, { width: number; height: number; bitrate: number }> = {
+                     '9:16': { width: 1080, height: 1920, bitrate: 4 },
+                     '16:9': { width: 1920, height: 1080, bitrate: 8 },
+                     '1:1':  { width: 1080, height: 1080, bitrate: 5 },
+                   }
+
+                   const qualityMult = exportQuality === 'ultra' ? 1.5 : exportQuality === 'high' ? 1 : exportQuality === 'medium' ? 0.7 : 0.5
+
+                   const jobs = selected.map(async (f) => {
+                     const cfg = formatConfigs[f.id] || { width: 1080, height: 1920, bitrate: 4 }
+                     try {
+                       setBatchProgress(prev => ({ ...prev, [f.id]: 35 }))
+                       const res = await apiPost<{ data?: { url?: string; downloadUrl?: string }; url?: string; downloadUrl?: string }>(
+                         '/video/manual-editing/render',
+                         {
+                           videoId: videoId || undefined,
+                           videoUrl: videoUrl || undefined,
+                           videoFilters: videoFilters || {},
+                           audio: audio || undefined,
+                           videoTransform: videoTransform || {},
+                           videoTransformKeyframes: videoTransformKeyframes || [],
+                           textOverlays: textOverlays || [],
+                           shapeOverlays: shapeOverlays || [],
+                           imageOverlays: imageOverlays || [],
+                           svgOverlays: svgOverlays || [],
+                           gradientOverlays: gradientOverlays || [],
+                           videoCrop: (videoCrop && (videoCrop.top || videoCrop.right || videoCrop.bottom || videoCrop.left))
+                             ? {
+                                 x: videoCrop.left || 0,
+                                 y: videoCrop.top || 0,
+                                 width: Math.max(1, 100 - (videoCrop.left || 0) - (videoCrop.right || 0)),
+                                 height: Math.max(1, 100 - (videoCrop.top || 0) - (videoCrop.bottom || 0)),
+                               }
+                             : undefined,
+                           chromaKey: (chromaKey && chromaKey.enabled) ? chromaKey : undefined,
+                           playbackSpeed: playbackSpeed && playbackSpeed !== 1 ? playbackSpeed : undefined,
+                           exportOptions: {
+                             width: cfg.width,
+                             height: cfg.height,
+                             bitrateMbps: Math.round(cfg.bitrate * qualityMult * 10) / 10,
+                             codec: exportCodec,
+                             quality: exportQuality === 'ultra' ? 'ultra' : exportQuality === 'high' ? 'best' : undefined,
+                             voiceClarity,
+                             duckMusicWhenVoiceover,
+                             duckLevel,
+                           },
+                           timelineSegments: timelineSegments || [],
+                           timelineEffects: timelineEffects || [],
+                         },
+                         { timeout: 180000 }
+                       )
+                       const data = (res as any)?.data ?? res
+                       const url = data?.url ?? data?.downloadUrl
+                       const downloadUrl = data?.downloadUrl ?? url
+                       if (downloadUrl || url) {
+                         setBatchProgress(prev => ({ ...prev, [f.id]: 100 }))
+                         setBatchResults(prev => ({ ...prev, [f.id]: { url, downloadUrl } }))
+                         return { id: f.id, success: true, url, downloadUrl }
+                       }
+                       throw new Error('No download URL returned')
+                     } catch (err: any) {
+                       setBatchProgress(prev => ({ ...prev, [f.id]: -1 }))
+                       return { id: f.id, success: false, error: err.message }
+                     }
+                   })
+
+                   const results = await Promise.allSettled(jobs)
+                   setIsRendering(false)
+                   const succeeded = results.filter(r => r.status === 'fulfilled' && (r.value as any).success).length
+                   if (succeeded > 0) {
+                     showToast(`Batch export complete: ${succeeded}/${selected.length} format(s) ready to download`, 'success')
+                     onExportComplete?.()
+                   } else {
+                     showToast('Batch export failed for selected formats. Please try single export.', 'error')
+                   }
                    return
                 }
 
                 // Standard Single Render Flow
                 try {
                   const preset = EXPORT_PRESETS.find(p => p.id === selectedPreset)!
-                  const qualityMult = exportQuality === 'high' ? 1 : exportQuality === 'medium' ? 0.7 : 0.5
+                  const qualityMult = exportQuality === 'ultra' ? 1.5 : exportQuality === 'high' ? 1 : exportQuality === 'medium' ? 0.7 : 0.5
                   const res = await apiPost<{ data?: { url?: string; downloadUrl?: string }; url?: string; downloadUrl?: string }>(
                     '/video/manual-editing/render',
                     {
@@ -535,7 +602,8 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                         height: preset.height,
                         bitrateMbps: (preset as { codec?: string }).codec === 'prores' ? 0 : Math.round((preset.bitrateMbps || 8) * qualityMult * 10) / 10,
                         codec: (preset as { codec?: string }).codec === 'prores' ? 'prores' : exportCodec,
-                        quality: (preset as { quality?: string }).quality ?? undefined,
+                        quality: (preset as { quality?: string }).quality ?? (exportQuality === 'ultra' ? 'ultra' : exportQuality === 'high' ? 'best' : undefined),
+                        voiceClarity,
                         duckMusicWhenVoiceover,
                         duckLevel,
                       },
@@ -627,6 +695,23 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 </span>
               )}
             </button>
+
+            {Object.keys(batchResults).length > 0 && (
+              <div className="flex flex-col items-center justify-center gap-3 ds-anim-fade-in sm:flex-row sm:flex-wrap">
+                {Object.entries(batchResults).map(([fmtId, res]) => (
+                  <a
+                    key={fmtId}
+                    href={res.downloadUrl || res.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white transition-all hover:bg-emerald-700"
+                  >
+                    <Download className="h-4 w-4" aria-hidden />
+                    Download {fmtId} ({fmtId === '9:16' ? 'Vertical' : fmtId === '16:9' ? 'Horizontal' : 'Square'})
+                  </a>
+                ))}
+              </div>
+            )}
 
             {renderResult?.downloadUrl && (
                 <div className="flex flex-col items-center justify-center gap-3 ds-anim-fade-in sm:flex-row">

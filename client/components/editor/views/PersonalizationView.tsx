@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Fingerprint, Save, Loader2, Sparkles } from 'lucide-react'
 import { apiGet, apiPut } from '../../../lib/api'
 
@@ -60,25 +60,43 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
   const toast = useCallback((m: string, t: 'success' | 'error' | 'info' = 'info') => showToast?.(m, t), [showToast])
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiGet<any>('/me/ai-preferences', undefined, false)
+    let cancelled = false
+
+    // These three reads are independent, but they used to be awaited one after
+    // another, so the view waited for the sum of three round-trips before it
+    // was complete. Fired together they cost the slowest one instead.
+    // allSettled, not all: insights and recommendations are best-effort and
+    // must not stop preferences from loading.
+    ;(async () => {
+      const [prefsRes, insightsRes, recsRes] = await Promise.allSettled([
+        apiGet<any>('/me/ai-preferences', undefined, false),
+        apiGet<any>('/me/personalization/insights', undefined, false),
+        apiGet<any>('/me/personalization/recommendations', undefined, false),
+      ])
+      if (cancelled) return
+
+      if (prefsRes.status === 'fulfilled') {
+        const res = prefsRes.value
         const d = (res?.data ?? res) as AiPreferences
         if (d?.voice) {
           setPrefs({ voice: { ...EMPTY.voice, ...d.voice }, brand: { ...EMPTY.brand, ...d.brand }, defaults: { ...EMPTY.defaults, ...d.defaults } })
           setVocabText((d.voice.vocab || []).join(', '))
           setBannedText((d.voice.banned || []).join(', '))
         }
-      } catch { /* defaults */ } finally { setLoading(false) }
-      try {
-        const ir = await apiGet<any>('/me/personalization/insights', undefined, false)
+      }
+      setLoading(false)
+
+      if (insightsRes.status === 'fulfilled') {
+        const ir = insightsRes.value
         setInsights((ir?.data ?? ir) as Insights)
-      } catch { /* best-effort */ }
-      try {
-        const rr = await apiGet<any>('/me/personalization/recommendations', undefined, false)
+      }
+      if (recsRes.status === 'fulfilled') {
+        const rr = recsRes.value
         setRecs((rr?.data ?? rr) as Recommendations)
-      } catch { /* best-effort */ }
+      }
     })()
+
+    return () => { cancelled = true }
   }, [])
 
   const save = async () => {
@@ -239,10 +257,10 @@ const PersonalizationView: React.FC<{ showToast?: (m: string, t?: 'success' | 'e
               <input className={input} value={prefs.defaults.niche} onChange={(e) => setDefault('niche', e.target.value)} placeholder="finance / fitness / tech…" />
             </div>
 
-            <motion.button whileTap={{ scale: saving ? 1 : 0.97 }} disabled={saving} onClick={save}
+            <m.button whileTap={{ scale: saving ? 1 : 0.97 }} disabled={saving} onClick={save}
               className={`h-12 px-6 rounded-2xl inline-flex items-center gap-2 text-white font-black uppercase tracking-widest text-sm ${saving ? 'bg-slate-700 opacity-60' : 'bg-fuchsia-600 hover:bg-fuchsia-500'}`}>
               {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : <><Save className="w-4 h-4" /> Save personalization</>}
-            </motion.button>
+            </m.button>
           </>
         )}
       </div>

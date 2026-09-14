@@ -16,7 +16,7 @@ import {
 import { PricingCard } from './PricingCard';
 import { PricingToggle } from './PricingToggle';
 import { Brain, Gauge, Globe, Crown, Zap, Target, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useLandingTheme } from './LandingThemeContext';
 
 // What makes Click different — only REAL, shipped capabilities. Each maps to a
@@ -104,7 +104,7 @@ export function Pricing() {
 
       <div className="max-w-[1900px] mx-auto relative z-10">
         <div className="text-center mb-24 space-y-8">
-           <motion.div
+           <m.div
              initial={{ opacity: 0, y: 20 }}
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
@@ -112,7 +112,7 @@ export function Pricing() {
            >
              <Zap size={14} className="motion-safe:animate-pulse" />
              Simple, scale-as-you-grow pricing
-           </motion.div>
+           </m.div>
 
           <h2 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">
             PRICED <span className={`text-transparent bg-clip-text ${headingGradient} transition-all duration-500`}>FOR CREATORS.</span>
@@ -147,7 +147,7 @@ export function Pricing() {
             {DIFFERENTIATORS.map((d, i) => {
               const DIcon = d.icon;
               return (
-                <motion.div
+                <m.div
                   key={d.title}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -160,7 +160,7 @@ export function Pricing() {
                   </span>
                   <h4 className="text-lg font-black tracking-tight text-surface-900 dark:text-white leading-snug">{d.title}</h4>
                   <p className="text-sm leading-relaxed text-surface-500 dark:text-slate-400">{d.body}</p>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>
@@ -168,7 +168,7 @@ export function Pricing() {
 
         {/* ── Agency exclusive early-access callout (real earlyAccess catalog) ── */}
         {(loadingCatalog || earlyAccess.length > 0) && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
@@ -228,7 +228,7 @@ export function Pricing() {
                     ))}
               </ul>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         <div className="mt-24 flex flex-col items-center gap-6 opacity-40">

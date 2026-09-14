@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { Sparkles, X, Send, GitBranch, GitMerge, Wand2, ChevronRight } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../lib/api'
 import { IconButton, Input, Button, Badge } from '../ui'
 import { cn } from '../../lib/utils'
@@ -163,7 +163,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
     return (
         <AnimatePresence>
             {isOpen && (
-                <motion.aside
+                <m.aside
                     initial={{ x: '100%' }}
                     animate={{ x: 0 }}
                     exit={{ x: '100%' }}
@@ -345,7 +345,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                             </IconButton>
                         </div>
                     </div>
-                </motion.aside>
+                </m.aside>
             )}
         </AnimatePresence>
     )

@@ -6,196 +6,172 @@ import { reportWebVitals } from '../utils/performance'
 import { sendDebugLog } from '../utils/debugLog'
 
 /**
- * Performance Monitor Component
+ * Performance Monitor — Core Web Vitals + runtime health.
  *
- * Automatically tracks and reports Core Web Vitals metrics:
- * - CLS (Cumulative Layout Shift)
- * - FID (First Input Delay)
- * - FCP (First Contentful Paint)
- * - LCP (Largest Contentful Paint)
- * - TTFB (Time to First Byte)
+ * Reports CLS / FID / FCP / LCP / TTFB via `reportWebVitals`, plus memory,
+ * navigation timing, slow `_next` resources, long tasks and real frame rate.
+ * Renders nothing.
  *
- * @remarks
- * - Only tracks in production or when analytics endpoint is configured
- * - Uses web-vitals library for accurate measurements
- * - Reports metrics via reportWebVitals utility
- * - Renders nothing (null component)
+ * Only active in production or when NEXT_PUBLIC_ANALYTICS_ENDPOINT is set, and
+ * `sendDebugLog` is itself gated on an opt-in localStorage flag, so a normal
+ * user session sends nothing.
  *
- * @example
- * ```tsx
- * <PerformanceMonitor />
- * ```
+ * STRUCTURE MATTERS HERE. Everything that INSTALLS something — the long-task
+ * observer, the window error handlers, the frame-rate loop — is set up exactly
+ * once and torn down on unmount. Only the cheap sampling runs on the interval.
+ * Previously the whole body ran every 30s, so each tick added another
+ * PerformanceObserver and wrapped window.onerror again; after an hour that was
+ * 120 live observers and a 120-deep handler chain. A monitor that degrades the
+ * thing it measures is worse than no monitor.
  */
 export default function PerformanceMonitor() {
-  const frameCountRef = useRef(0)
-  const lastTimeRef = useRef(performance.now())
   const frameRateRef = useRef(60)
 
   useEffect(() => {
+    const shouldTrack =
+      process.env.NODE_ENV === 'production' || !!process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT
+    if (!shouldTrack) return
+
     const send = (message: string, data: Record<string, unknown>) => {
-      if (message.includes('slow') || message.includes('memory') || message.includes('error')) {
-        console.log('PerformanceMonitor:', message, data)
-      }
-      sendDebugLog('PerformanceMonitor', message, { ...data, sessionId: 'debug-session', runId: 'run-perf-monitor' })
+      sendDebugLog('PerformanceMonitor', message, {
+        ...data,
+        sessionId: 'debug-session',
+        runId: 'run-perf-monitor',
+      })
     }
 
-    // Enhanced performance monitoring
-    const monitorPerformance = () => {
-      try {
-        // Memory usage tracking
-        if ('memory' in performance) {
-          const memory = (performance as any).memory
-          send('memory_usage', {
-            usedJSHeapSize: memory.usedJSHeapSize,
-            totalJSHeapSize: memory.totalJSHeapSize,
-            jsHeapSizeLimit: memory.jsHeapSizeLimit,
-            usagePercent: ((memory.usedJSHeapSize / memory.totalJSHeapSize) * 100).toFixed(2)
-          })
-        }
-
-        // Navigation timing
-        if ('timing' in performance) {
-          const timing = performance.timing
-          const loadTime = timing.loadEventEnd - timing.navigationStart
-          const domReady = timing.domContentLoadedEventEnd - timing.navigationStart
-          const firstPaint = performance.getEntriesByType('paint').find(entry => entry.name === 'first-paint')
-
-          send('navigation_timing', {
-            loadTime,
-            domReady,
-            firstPaint: firstPaint ? firstPaint.startTime : null,
-            dnsLookup: timing.domainLookupEnd - timing.domainLookupStart,
-            tcpConnect: timing.connectEnd - timing.connectStart,
-            serverResponse: timing.responseStart - timing.requestStart
-          })
-        }
-
-        // Resource loading performance
-        const resources = performance.getEntriesByType('resource')
-        const slowResources = resources.filter(resource =>
-          resource.duration > 1000 && resource.name.includes('/_next/')
-        )
-
-        if (slowResources.length > 0) {
-          sendDebugLog('PerformanceMonitor', 'slow_resources', {
-            count: slowResources.length,
-            resources: slowResources.map(r => ({
-              name: r.name,
-              duration: r.duration,
-              size: (r as any).transferSize || 0
-            })),
-            sessionId: 'debug-session',
-            runId: 'run-perf-monitor'
-          })
-        }
-
-        // Frame rate monitoring
-        const now = performance.now()
-        frameCountRef.current++
-
-        if (now - lastTimeRef.current >= 1000) {
-          const fps = (frameCountRef.current * 1000) / (now - lastTimeRef.current)
-          frameRateRef.current = fps
-          frameCountRef.current = 0
-          lastTimeRef.current = now
-
-          if (fps < 30) {
-            send('low_frame_rate', {
-              fps: fps.toFixed(2),
-              warning: 'Frame rate dropped below 30 FPS'
-            })
-          }
-        }
-
-        // Long tasks monitoring
-        const observer = new PerformanceObserver((list) => {
-          const entries = list.getEntries()
-          entries.forEach((entry) => {
-            if (entry.duration > 50) { // Tasks longer than 50ms
-              sendDebugLog('PerformanceMonitor', 'long_task', {
-                duration: entry.duration,
-                startTime: entry.startTime,
-                name: entry.name,
-                sessionId: 'debug-session',
-                runId: 'run-perf-monitor'
-              })
-            }
-          })
-        })
-
-        try {
-          observer.observe({ entryTypes: ['longtask'] })
-        } catch (e) {
-          // Long tasks API might not be supported
-        }
-
-        // JavaScript errors monitoring
-        const originalOnError = window.onerror
-        window.onerror = (message, source, lineno, colno, error) => {
-          send('javascript_error', {
-            message,
-            source,
-            lineno,
-            colno,
-            stack: error?.stack,
-            userAgent: navigator.userAgent
-          })
-          return originalOnError?.(message, source, lineno, colno, error) || false
-        }
-
-        // Unhandled promise rejections
-        const originalOnUnhandledRejection = window.onunhandledrejection
-        window.onunhandledrejection = (event) => {
-          const msg = event.reason instanceof Error ? event.reason.message : String(event.reason)
-          if (msg.includes('MetaMask') || msg.includes('extension') || msg.includes('inpage.js')) {
-            return false
-          }
-
-          sendDebugLog('PerformanceMonitor', 'unhandled_promise_rejection', {
-            reason: event.reason,
-            promise: event.promise?.toString(),
-            stack: event.reason?.stack,
-            sessionId: 'debug-session',
-            runId: 'run-perf-monitor'
-          })
-          return originalOnUnhandledRejection?.call(window, event) || false
-        }
-
-      } catch (error) {
-        send('performance_monitor_error', {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined
-        })
-      }
-    }
-
-    // Only track in production or when analytics endpoint is configured
-    const shouldTrack = process.env.NODE_ENV === 'production' ||
-      !!process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT
-
-    if (!shouldTrack) {
-      return
-    }
-
-    // Track Core Web Vitals
+    /* ── One-time: Core Web Vitals ─────────────────────────────────────── */
     onCLS((metric: Metric) => reportWebVitals(metric))
     onFID((metric: Metric) => reportWebVitals(metric))
     onFCP((metric: Metric) => reportWebVitals(metric))
     onLCP((metric: Metric) => reportWebVitals(metric))
     onTTFB((metric: Metric) => reportWebVitals(metric))
 
-    // Start enhanced monitoring
-    monitorPerformance()
+    /* ── One-time: navigation timing (a page loads once) ───────────────── */
+    try {
+      const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+      if (nav) {
+        const firstPaint = performance.getEntriesByType('paint').find((e) => e.name === 'first-paint')
+        send('navigation_timing', {
+          loadTime: nav.loadEventEnd - nav.startTime,
+          domReady: nav.domContentLoadedEventEnd - nav.startTime,
+          firstPaint: firstPaint ? firstPaint.startTime : null,
+          dnsLookup: nav.domainLookupEnd - nav.domainLookupStart,
+          tcpConnect: nav.connectEnd - nav.connectStart,
+          serverResponse: nav.responseStart - nav.requestStart,
+        })
+      }
+    } catch {
+      /* timing API unavailable — not worth failing the monitor over */
+    }
 
-    // Periodic performance checks
-    const intervalId = setInterval(monitorPerformance, 30000) // Every 30 seconds
+    /* ── One-time: long tasks ──────────────────────────────────────────── */
+    let longTaskObserver: PerformanceObserver | null = null
+    try {
+      longTaskObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.duration > 50) {
+            send('long_task', {
+              duration: entry.duration,
+              startTime: entry.startTime,
+              name: entry.name,
+            })
+          }
+        }
+      })
+      longTaskObserver.observe({ entryTypes: ['longtask'] })
+    } catch {
+      // Long Tasks API isn't in every browser.
+      longTaskObserver = null
+    }
+
+    /* ── One-time: global error capture ────────────────────────────────── */
+    const previousOnError = window.onerror
+    window.onerror = (message, source, lineno, colno, error) => {
+      send('javascript_error', { message, source, lineno, colno, stack: error?.stack, userAgent: navigator.userAgent })
+      return previousOnError?.(message, source, lineno, colno, error) ?? false
+    }
+
+    const previousOnRejection = window.onunhandledrejection
+    window.onunhandledrejection = (event) => {
+      const msg = event.reason instanceof Error ? event.reason.message : String(event.reason)
+      // Browser-extension noise, not our code.
+      if (!/MetaMask|extension|inpage\.js/.test(msg)) {
+        send('unhandled_promise_rejection', { reason: msg, stack: event.reason?.stack })
+      }
+      return previousOnRejection?.call(window, event) ?? false
+    }
+
+    /* ── One-time: real frame rate ─────────────────────────────────────── */
+    // Counted per animation frame. The old version incremented once per 30s
+    // interval tick and divided by the elapsed ms, which always produced
+    // ~0.03 "fps" and fired a low-frame-rate warning on every single tick.
+    let frames = 0
+    let windowStart = performance.now()
+    let rafId = 0
+    const countFrame = () => {
+      frames++
+      const now = performance.now()
+      if (now - windowStart >= 1000) {
+        frameRateRef.current = (frames * 1000) / (now - windowStart)
+        frames = 0
+        windowStart = now
+      }
+      rafId = requestAnimationFrame(countFrame)
+    }
+    rafId = requestAnimationFrame(countFrame)
+
+    /* ── Periodic: cheap sampling only ─────────────────────────────────── */
+    let reportedSlowResources = 0
+    const sample = () => {
+      try {
+        if ('memory' in performance) {
+          const memory = (performance as any).memory
+          send('memory_usage', {
+            usedJSHeapSize: memory.usedJSHeapSize,
+            totalJSHeapSize: memory.totalJSHeapSize,
+            jsHeapSizeLimit: memory.jsHeapSizeLimit,
+            usagePercent: ((memory.usedJSHeapSize / memory.totalJSHeapSize) * 100).toFixed(2),
+          })
+        }
+
+        // Only report resources we haven't already reported — the resource
+        // buffer is cumulative, so re-scanning it resent the same entries.
+        const resources = performance.getEntriesByType('resource')
+        const slow = resources.filter((r) => r.duration > 1000 && r.name.includes('/_next/'))
+        if (slow.length > reportedSlowResources) {
+          send('slow_resources', {
+            count: slow.length - reportedSlowResources,
+            resources: slow.slice(reportedSlowResources).map((r) => ({
+              name: r.name,
+              duration: r.duration,
+              size: (r as any).transferSize || 0,
+            })),
+          })
+          reportedSlowResources = slow.length
+        }
+
+        if (frameRateRef.current < 30) {
+          send('low_frame_rate', { fps: frameRateRef.current.toFixed(2) })
+        }
+      } catch (error) {
+        send('performance_monitor_error', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    sample()
+    const intervalId = setInterval(sample, 30000)
 
     return () => {
       clearInterval(intervalId)
+      cancelAnimationFrame(rafId)
+      longTaskObserver?.disconnect()
+      window.onerror = previousOnError
+      window.onunhandledrejection = previousOnRejection
     }
   }, [])
 
-  // This component doesn't render anything
   return null
 }
-

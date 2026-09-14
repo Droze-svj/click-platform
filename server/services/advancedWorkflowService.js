@@ -280,13 +280,19 @@ async function executeAction(action, data) {
     }
     case 'schedule_post': {
       const ScheduledPost = require('../models/ScheduledPost');
+      // Field names must match the ScheduledPost schema. This used to pass
+      // `scheduledFor` and `caption`; the schema has `scheduledTime` (which is
+      // REQUIRED) and `content.text`. So every schedule_post workflow action
+      // threw "scheduledTime is required" on save — the action could not
+      // succeed — and had it saved, the caption would have been dropped
+      // silently, since Mongoose discards undeclared paths.
       const post = new ScheduledPost({
         userId: data.userId,
         contentId: data.contentId || data.videoId,
         platform: config.platform || data.platform || 'tiktok',
-        scheduledFor: config.scheduledFor ? new Date(config.scheduledFor) : new Date(Date.now() + 3600000),
-        caption: config.caption || data.caption || '',
-        status: 'pending',
+        scheduledTime: config.scheduledFor ? new Date(config.scheduledFor) : new Date(Date.now() + 3600000),
+        content: { text: config.caption || data.caption || '' },
+        status: 'scheduled',
       });
       await post.save();
       return { ...data, actionExecuted: type, scheduledPostId: post._id };

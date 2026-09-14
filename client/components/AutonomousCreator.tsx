@@ -40,7 +40,7 @@ import {
   Database,
   Cloud
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiPost } from '../lib/api'
 import { useHardenedRequest } from '../hooks/useHardenedRequest'
 import { useToast } from '../contexts/ToastContext'
@@ -219,7 +219,7 @@ export default function AutonomousCreator() {
                          <span className="text-[9px] font-black text-primary-500 uppercase italic tracking-widest">{t('autonomousCreator.workingPercent', { percent: Math.round(cognitiveLoad) })}</span>
                        )}
                        <div className="flex-1 sm:w-32 h-2 bg-surface-page dark:bg-surface-900 rounded-full overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner">
-                          <motion.div 
+                          <m.div 
                             animate={{ 
                               width: (rateLimitCountdown ?? 0) > 0 ? '100%' : `${cognitiveLoad}%`,
                               backgroundColor: (rateLimitCountdown ?? 0) > 0 ? '#f43f5e' : '#6366f1'
@@ -414,7 +414,7 @@ export default function AutonomousCreator() {
                  </button>
               </div>
               {stylePivot === 'UGC_RAW' && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-orange-500/5 border-2 border-orange-500/10 mt-6 relative z-10 backdrop-blur-xl shadow-inner"
@@ -424,7 +424,7 @@ export default function AutonomousCreator() {
                     <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white tabular-nums italic">{t('autonomousCreator.realFeel')}</span>
                   </div>
                   <div className="h-2.5 rounded-full bg-surface-page dark:bg-surface-950 overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner">
-                    <motion.div
+                    <m.div
                       initial={{ width: 0 }}
                       animate={{ width: '85%' }}
                       transition={{ duration: 1.5, ease: 'circOut' }}
@@ -434,7 +434,7 @@ export default function AutonomousCreator() {
                   <p className="text-[8px] sm:text-[9px] text-surface-400 dark:text-slate-600 font-bold uppercase tracking-widest mt-4 italic">
                     {t('autonomousCreator.ugcAddingDescription')}
                   </p>
-                </motion.div>
+                </m.div>
               )}
            </div>
 
@@ -459,7 +459,7 @@ export default function AutonomousCreator() {
                           </div>
                           <div className="flex-1 min-w-0">
                              <p className={`text-[11px] sm:text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors truncate ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : currentStage === s.id ? 'text-primary-500' : 'text-surface-300 dark:text-slate-800'}`}>{t(s.labelKey)}</p>
-                             {currentStage === s.id && <motion.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-[8px] sm:text-[9px] font-black text-primary-500 uppercase italic mt-2 tracking-[0.2em] animate-pulse">{t('autonomousCreator.working')}</motion.div>}
+                             {currentStage === s.id && <m.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-[8px] sm:text-[9px] font-black text-primary-500 uppercase italic mt-2 tracking-[0.2em] animate-pulse">{t('autonomousCreator.working')}</m.div>}
                           </div>
                           {i < STAGES.length - 1 && <div className={`absolute top-8 sm:top-10 left-4 sm:left-5 w-0.5 h-6 sm:h-8 transition-colors ${completedStages.includes(s.id) ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-surface-100 dark:bg-surface-800'}`} />}
                        </div>
@@ -473,7 +473,7 @@ export default function AutonomousCreator() {
       {/* Synthesis Output Chamber */}
       <AnimatePresence mode="wait">
         {result && (
-          <motion.div
+          <m.div
             key={result.id}
             initial={{ opacity: 0, scale: 0.98, y: 100 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -659,13 +659,13 @@ export default function AutonomousCreator() {
                   </div>
                </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Error Hub */}
       {error && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.95, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="p-12 sm:p-16 rounded-[4rem] bg-rose-500/5 border-2 border-rose-500/20 flex flex-col md:flex-row items-center gap-10 shadow-2xl backdrop-blur-3xl relative z-50 overflow-hidden"
@@ -685,7 +685,7 @@ export default function AutonomousCreator() {
           >
             {t('autonomousCreator.dismiss')}
           </button>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Heuristic Wisdom Grid */}

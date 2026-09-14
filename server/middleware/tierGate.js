@@ -124,7 +124,7 @@ async function checkFeatureRateLimit(userId, feature) {
   if (!limits) return { allowed: true }
 
   const redis = getRedis()
-  if (!redis) return { allowed: true } // no Redis → open gate
+  if (!redis || !redis.isReady) return { allowed: true } // no Redis or not ready → open gate
 
   try {
     const key = `rl:${feature}:${userId}:hour`

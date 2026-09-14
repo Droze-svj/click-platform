@@ -106,7 +106,7 @@ export default function JobProgressViewer({
 
   if (isLoading && !job) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+      <div role="status" aria-live="polite" className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
         <Loader2 className="w-4 h-4 animate-spin" />
         <span>{t('jobProgressViewer.loadingJobStatus')}</span>
       </div>

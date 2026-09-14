@@ -11,6 +11,7 @@ import { Skull, RefreshCw, RotateCw, Trash2, ShieldAlert, Inbox } from 'lucide-r
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SectionHeader } from '@/components/ui/section-header'
+import { PageShell } from '../../../../components/ui'
 
 interface DeadLetterJob {
   _id: string
@@ -76,7 +77,7 @@ export default function DeadLetterQueuePage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1600px] mx-auto text-theme-primary">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen">
         <ToastContainer />
 
         <SectionHeader
@@ -169,7 +170,7 @@ export default function DeadLetterQueuePage() {
             </div>
           </div>
         )}
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }

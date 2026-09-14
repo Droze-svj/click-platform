@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Send, X, User } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
@@ -130,7 +130,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
         ) : (
           <AnimatePresence initial={false}>
             {comments.map((comment) => (
-              <motion.div
+              <m.div
                 key={comment._id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -145,7 +145,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-sm text-slate-300 leading-relaxed">
                   {comment.text}
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </AnimatePresence>
         )}

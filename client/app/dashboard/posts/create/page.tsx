@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { ErrorBoundary } from '../../../../components/ErrorBoundary'
+import PerformancePredictor from '../../../../components/PerformancePredictor'
 import { useRouter } from 'next/navigation'
 import { apiPost } from '../../../../lib/api'
 import { useAuth } from '../../../../hooks/useAuth'
@@ -21,6 +23,7 @@ import {
   Input,
   Textarea,
   SectionHeader,
+  PageShell,
 } from '../../../../components/ui'
 
 const PLATFORMS: { id: string; name: string; icon: LucideIcon }[] = [
@@ -138,7 +141,7 @@ export default function CreatePostPage() {
   }
 
   return (
-    <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-4xl mx-auto overflow-x-hidden text-theme-primary">
+    <PageShell width="narrow" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
       {/* Header (global DashboardHeader provides the breadcrumb) */}
       <SectionHeader
         as="h1"
@@ -369,6 +372,22 @@ export default function CreatePostPage() {
           </FormField>
         </Panel>
       </form>
-    </div>
+
+      {/* Predicts reach/engagement for what is being composed, before it is
+          published (POST /api/ai/predict-performance). Live endpoint, and its
+          only client had never been imported. This is the pre-publish surface —
+          the same panel on a published post's diagnostics page would be
+          predicting something that has already happened. */}
+      <ErrorBoundary>
+        <PerformancePredictor
+          content={{
+            text: formData.content,
+            type: 'post',
+            platform: formData.platforms[0],
+            tags: formData.tags,
+          }}
+        />
+      </ErrorBoundary>
+    </PageShell>
   )
 }

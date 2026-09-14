@@ -13,6 +13,7 @@ router.use(costGuard());
 const { authenticate } = require('../../middleware/auth');
 const { sendSuccess, sendError } = require('../../utils/response');
 const videoCaptionService = require('../../services/videoCaptionService');
+const captionStore = require('../../services/captionStore');
 const Content = require('../../models/Content');
 const { getUserIdFromReq } = require('../../utils/userId');
 const multer = require('multer');
@@ -128,6 +129,79 @@ router.get('/:contentId', authenticate, async (req, res) => {
     // hasn't been captioned), not a server error — surface it as 404.
     const notReady = /not generated|no captions|have not been generated|not found/i.test(error.message || '');
     return sendError(res, error.message, notReady ? 404 : 500);
+  }
+});
+
+/**
+ * PUT /api/video/captions/:contentId
+ * Persist hand-edited caption segments.
+ *
+ * VideoCaptionEditor (mounted on /dashboard/content/[id]) has always sent this
+ * request when the user hits Save, but no PUT handler existed — every save 404'd
+ * and the edits were silently lost. The source comment there even flagged the
+ * uncertainty ("If your server uses a different verb/path, adjust here").
+ */
+router.put('/:contentId', authenticate, async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { segments, language } = req.body;
+    const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId
+
+    if (!Array.isArray(segments) || segments.length === 0) {
+      return sendError(res, 'segments must be a non-empty array', 400);
+    }
+    // Reject malformed timings rather than persisting captions that cannot render.
+    const bad = segments.findIndex(
+      (seg) => !seg || typeof seg.text !== 'string'
+        || !Number.isFinite(Number(seg.start)) || !Number.isFinite(Number(seg.end))
+        || Number(seg.end) < Number(seg.start)
+    );
+    if (bad !== -1) {
+      return sendError(res, `segments[${bad}] needs a text string and numeric start/end with end >= start`, 400);
+    }
+
+    // Ownership scope, same as the GET handler — never a bare findById.
+    const content = await Content.findOne({ _id: contentId, userId });
+    if (!content) {
+      return sendError(res, 'Content not found', 404);
+    }
+
+    const existing = await captionStore.getSource(contentId, { content });
+    const lang = language || existing?.language || 'en';
+    const format = existing?.format || 'srt';
+
+    const normalized = segments.map((seg) => ({
+      ...seg,
+      start: Number(seg.start),
+      end: Number(seg.end),
+      text: seg.text,
+    }));
+    const text = normalized.map((seg) => seg.text).join(' ').trim();
+    const formatted = videoCaptionService.formatCaptions({ text, segments: normalized }, format);
+
+    await captionStore.saveSource(contentId, {
+      language: lang,
+      text,
+      format,
+      segments: normalized,
+      // Word timings belong to the machine transcript; hand-edited segment
+      // boundaries invalidate them, so they are preserved only when the edit
+      // did not change the segment count.
+      words: normalized.length === (existing?.segments || []).length ? (existing?.words || []) : [],
+      formatted,
+    });
+
+    // Same shape the GET returns, which is what the editor re-renders from.
+    return sendSuccess(res, {
+      text,
+      language: lang,
+      format,
+      captions: formatted,
+      segments: normalized,
+    });
+  } catch (error) {
+    logger.error('Error saving captions', { error: error.message });
+    return sendError(res, error.message, 500);
   }
 });
 

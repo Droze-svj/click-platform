@@ -476,6 +476,16 @@ setImmediate(() => {
         const { startDigestCron } = require('./services/weeklyDigestService');
         startDigestCron();
 
+        // Daily audience-growth sync (03:00). The service existed and exported a
+        // start function, but nothing ever called it — so follower/subscriber
+        // trends only moved when a user happened to hit the manual
+        // POST /api/audience-growth/sync-all, and the growth charts were flat by
+        // construction rather than by fact. Cursor-paginated, capped per tick and
+        // cronLock-guarded (the original loaded every active connection at once
+        // and ran on every replica simultaneously).
+        const { startAudienceGrowthCron } = require('./services/audienceGrowthCronService');
+        startAudienceGrowthCron();
+
         // Trends ingest schedule — pulls REAL web-grounded trends (Claude web
         // search via liveTrendService) per platform into TrendSnapshot on a
         // repeatable BullMQ job. Previously defined but never registered.
@@ -1795,24 +1805,15 @@ __nextReady = initNextApp().catch((e) => {
 // Supports Supabase, Prisma (PostgreSQL), and MongoDB (legacy)
 const { initDatabases, getDatabaseHealth } = require('./config/database');
 
-// Connect to database (supports multiple providers)
-const connectDB = async () => {
-  try {
-    const dbStatus = await initDatabases();
-
-    if (dbStatus.supabase || dbStatus.prisma || dbStatus.mongodb) {
-      logger.info('✅ Database connected successfully');
-      logger.info('Database status:', getDatabaseHealth());
-    } else {
-      logger.error('❌ No database connection available');
-      logger.warn('⚠️ Server will start in degraded mode. Database features will not work.');
-    }
-  } catch (err) {
-    logger.error('❌ Database connection error:', err);
-    logger.warn('⚠️ Server will start without database. Connection will retry in background.');
-    // Don't exit - allow server to start
-  }
-};
+// Connect to database (supports multiple providers). Never exits: the server
+// starts either way. See config/connectDB.js for how a slow connection is
+// reported — it used to be logged as an outage while it was still connecting.
+const connectDB = require('./config/connectDB').createConnectDB({
+  initDatabases,
+  getDatabaseHealth,
+  logger,
+  connection: mongoose.connection,
+});
 
 // Connect to database (non-blocking) - skip in Jest workers so tests control Mongoose
 if (!process.env.JEST_WORKER_ID) {
@@ -1941,7 +1942,18 @@ app.use('/api/analytics', require('./routes/analytics'));
 
 app.use('/api/niche', require('./routes/niche'));
 app.use('/api/intelligence', require('./routes/intelligence'));
-app.use('/api/upload', require('./routes/upload'));
+// routes/upload.js used to be mounted here, ahead of routes/upload/progress.
+// Its only route was GET /progress/:uploadId with NO auth, reading an in-memory
+// Map that nothing ever writes (setUploadProgress has zero call sites), so it
+// answered every caller — signed in or not — with a fabricated
+// { progress: 0, status: 'pending' } for any id at all.
+//
+// Worse, it won: only the FIRST registration of a method+path runs, so it
+// shadowed routes/upload/progress's GET /:uploadId, which is behind
+// `authenticate` AND an ownsUpload() check written specifically to stop one user
+// reading another's upload. That guard could never execute. Nothing leaked only
+// because the Map was permanently empty — wiring the service up would have
+// turned it into an unauthenticated read of other people's uploads.
 app.use('/api/upload/progress', require('./routes/upload/progress'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/api/marketing-knowledge', require('./routes/marketingKnowledge'));
@@ -2373,52 +2385,51 @@ app.use('/api/phase8', require('./routes/phase8'));
 // Phase 9-18 routers. phase10_12 / phase13_15 / phase16_18 each cover several
 // phases via flat internal paths (e.g. /fleet, /arbitrage, /s2s), so they are
 // mounted at each phase prefix they serve so the frontend's /phaseN/* calls resolve.
+//
+// The span prefix ('/api/phase10_12') is mounted too, and is NOT decoration: the
+// client addresses these routers by their file name — OverlordDashboard,
+// FleetControlHUD, ArbitrageSteererView, RemediationHUD and ExpertDNAView issue
+// 13 calls to /api/phase10_12/* and /api/phase16_18/*. Every one of them 404'd
+// against the single-phase prefixes above, so the Overlord dashboard, the fleet
+// HUD, the arbitrage steerer, the remediation HUD and Expert DNA all rendered
+// their error/empty state and nothing else.
 app.use('/api/phase9', require('./routes/phase9'));
 const phase10_12 = require('./routes/phase10_12');
 app.use('/api/phase10', phase10_12);
 app.use('/api/phase11', phase10_12);
 app.use('/api/phase12', phase10_12);
+app.use('/api/phase10_12', phase10_12);
 const phase13_15 = require('./routes/phase13_15');
 app.use('/api/phase13', phase13_15);
 app.use('/api/phase14', phase13_15);
 app.use('/api/phase15', phase13_15);
+app.use('/api/phase13_15', phase13_15);
 const phase16_18 = require('./routes/phase16_18');
 app.use('/api/phase16', phase16_18);
 app.use('/api/phase17', phase16_18);
 app.use('/api/phase18', phase16_18);
+app.use('/api/phase16_18', phase16_18);
 app.use('/api/monetization', require('./routes/monetization'));
 app.use('/api/click', require('./routes/click'));
 app.use('/api/vector-memory', require('./routes/vector-memory'));
 
-app.get('/api/dev/db-cleanup', async (req, res) => {
-  try {
-    const mongoose = require('mongoose');
-    const adminDb = mongoose.connection.db.admin();
-    const dbs = await adminDb.listDatabases();
-    let droppedMsg = [];
-    for (const dbInfo of dbs.databases) {
-      if (dbInfo.name !== 'click_v3' && dbInfo.name !== 'admin' && dbInfo.name !== 'local') {
-        const tempDb = mongoose.connection.client.db(dbInfo.name);
-        await tempDb.dropDatabase();
-        droppedMsg.push(`Dropped DB: ${dbInfo.name}`);
-      }
-    }
-    
-    // Also drop some specific junk collections in click_v3 if any
-    const db = mongoose.connection.db;
-    const collections = await db.listCollections().toArray();
-    let droppedCols = 0;
-    const junkCols = collections.filter(c => c.name.includes('test') || c.name.includes('old') || c.name.includes('bak'));
-    for (const coll of junkCols.slice(0, 10)) {
-      await db.collection(coll.name).drop();
-      droppedCols++;
-    }
-
-    res.json({ success: true, message: `Dropped ${droppedCols} junk collections. ${droppedMsg.join(', ')}` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// REMOVED: GET /api/dev/db-cleanup.
+//
+// It was mounted unconditionally, behind no authentication, as a GET — and it
+// called dropDatabase() on EVERY database on the connected cluster except
+// click_v3/admin/local, then dropped up to ten collections in click_v3 whose
+// name contained "test", "old" or "bak".
+//
+// Unauthenticated plus GET is the dangerous combination: no credential, no CSRF
+// token and no request body are needed, so a crawler following a link, a
+// prefetch, or an <img src> on any page is enough to fire it. On a shared Atlas
+// cluster it destroys neighbouring databases; in click_v3 it drops anything a
+// migration happened to name `..._old` or `..._bak`.
+//
+// Deleted rather than gated. Dropping databases is not something an HTTP
+// surface should be able to do at all, and this repo already has the right home
+// for it: scripts/, where utils/dbSafety.assertSafeScriptDbUri() refuses to run
+// against a remote/production URI unless explicitly overridden.
 
 // Health check (no rate limiting)
 app.use('/api/health', require('./routes/health'));
@@ -2495,7 +2506,11 @@ app.get('/api/monitoring/alerts', (req, res) => {
   res.json({ alerts, timestamp: new Date().toISOString() })
 })
 
-app.post('/api/monitoring/test-alert', async (req, res) => {
+// Admin-gated: this fires a REAL alert through whatever channel alerting is
+// configured with (email / Slack / webhook). Unauthenticated, anyone could spam
+// the operators' alert channel on demand. The sibling routes in
+// routes/monitoring.js are auth+requireAdmin; this app-level one was not.
+app.post('/api/monitoring/test-alert', require('./middleware/auth'), require('./middleware/requireAdmin').requireAdmin, async (req, res) => {
   if (global.alertingSystem) {
     await global.alertingSystem.test()
     res.json({ message: 'Test alert sent' })

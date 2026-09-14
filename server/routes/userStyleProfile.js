@@ -66,6 +66,22 @@ function devRecordAverage(userId, key, value) {
   return p;
 }
 
+function devResetProfile(userId, facet) {
+  const p = getDevProfile(userId);
+  if (facet) {
+    if (facet === 'totalPicks') {
+      p.totalPicks = 0;
+    } else if (facet === 'averages') {
+      p.averages = { avgCutDuration: null, avgFontSize: null, avgCaptionLength: null, avgVideoDuration: null };
+    } else if (facet in p && Array.isArray(p[facet])) {
+      p[facet] = [];
+    }
+  } else {
+    devProfiles.delete(userId);
+  }
+  return getDevProfile(userId);
+}
+
 // ── Routes ────────────────────────────────────────────────────────────────
 
 router.get('/', auth, async (req, res) => {
@@ -99,11 +115,21 @@ router.get('/', auth, async (req, res) => {
     // secondary right after a write.
     // Atomic upsert avoids a find-then-create race on the unique userId index.
     // .read('primary') + new:true returns the up-to-date doc, never a stale read.
-    const profile = await UserStyleProfile.findOneAndUpdate(
-      { userId },
-      { $setOnInsert: { userId } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    ).read('primary').lean();
+    // Concurrency guard: if two requests hit upsert simultaneously, catch E11000 and find the existing doc.
+    let profile;
+    try {
+      profile = await UserStyleProfile.findOneAndUpdate(
+        { userId },
+        { $setOnInsert: { userId } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ).read('primary').lean();
+    } catch (upsertErr) {
+      if (upsertErr.code === 11000 || (upsertErr.message && upsertErr.message.includes('E11000'))) {
+        profile = await UserStyleProfile.findOne({ userId }).read('primary').lean();
+      } else {
+        throw upsertErr;
+      }
+    }
     res.json({ success: true, data: profile });
   } catch (err) {
     logger.error('[style-profile] GET failed', err);
@@ -338,6 +364,112 @@ router.get('/insights', auth, async (req, res) => {
     });
   } catch (err) {
     logger.error('[style-profile] insights failed', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── GET /api/style-profile/recommendations ────────────────────────────────
+// Returns an actionable, single-bundle style recommendation for AI avatar
+// generation or video editor presets based on the user's top-performing
+// facets and platform/niche context.
+router.get('/recommendations', auth, async (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
+
+    let profile = null;
+    if (isDevUser(req.user) || !isMongoId(userId)) {
+      profile = getDevProfile(String(userId));
+    } else {
+      profile = await UserStyleProfile.findOne({ userId }).read('primary').lean();
+    }
+
+    const getTop = (arr) => Array.isArray(arr) && arr.length > 0
+      ? [...arr].sort((a, b) => (b.count || 0) - (a.count || 0))[0]?.key
+      : null;
+
+    const recommendedFont = getTop(profile?.fonts) || 'Inter, system-ui, sans-serif';
+    const recommendedCaptionStyle = getTop(profile?.captionStyles) || 'bold-kinetic';
+    const recommendedColorGrade = getTop(profile?.colorGrades) || 'cinematic';
+    const recommendedAnimation = getTop(profile?.animations) || 'pop';
+    const recommendedMotion = getTop(profile?.motions) || 'dynamic-zoom';
+    const recommendedHook = getTop(profile?.hookStyles) || 'curiosity-gap';
+    const recommendedPreset = getTop(profile?.presets) || 'hormozi-bold';
+    const avgCutDuration = profile?.averages?.avgCutDuration || 1.8;
+
+    const totalPicks = profile?.totalPicks || 0;
+    const confidence = totalPicks > 20 ? 0.95 : totalPicks > 5 ? 0.75 : totalPicks > 0 ? 0.5 : 0.2;
+
+    res.json({
+      success: true,
+      data: {
+        recommendedFont,
+        recommendedCaptionStyle,
+        recommendedColorGrade,
+        recommendedAnimation,
+        recommendedMotion,
+        recommendedHook,
+        recommendedPreset,
+        avgCutDuration,
+        confidence,
+        totalPicks,
+        isCalibrated: totalPicks >= 5,
+      },
+    });
+  } catch (err) {
+    logger.error('[style-profile] recommendations failed', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── POST /api/style-profile/reset ─────────────────────────────────────────
+// Resets a specific facet or the entire profile taste graph.
+// Body: { facet?: string }
+router.post('/reset', auth, async (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
+    const { facet } = req.body || {};
+    const ALLOWED_FACETS = [
+      'fonts', 'captionStyles', 'animations', 'motions',
+      'colorGrades', 'transitions', 'hooks', 'presets', 'niches', 'platforms',
+      'averages', 'totalPicks'
+    ];
+    if (facet && !ALLOWED_FACETS.includes(facet)) {
+      return res.status(400).json({ success: false, error: `Invalid facet: '${facet}'. Allowed facets: ${ALLOWED_FACETS.join(', ')}` });
+    }
+
+    if (isDevUser(req.user) || !isMongoId(userId)) {
+      const resetP = devResetProfile(String(userId), facet);
+      return res.json({ success: true, message: facet ? `Facet ${facet} reset` : 'Profile reset', data: resetP });
+    }
+
+    let profile;
+    if (facet) {
+      const update = {};
+      if (facet === 'totalPicks') {
+        update.totalPicks = 0;
+        update.totalWeightedPicks = 0;
+      } else if (facet === 'averages') {
+        update.averages = { avgCutDuration: null, avgFontSize: null, avgCaptionLength: null, avgVideoDuration: null };
+      } else {
+        update[facet] = [];
+        const weightedFacet = `weighted${facet.charAt(0).toUpperCase()}${facet.slice(1)}`;
+        update[weightedFacet] = [];
+      }
+      profile = await UserStyleProfile.findOneAndUpdate({ userId }, { $set: update }, { new: true, lean: true });
+    } else {
+      await UserStyleProfile.findOneAndDelete({ userId });
+      profile = await UserStyleProfile.create({ userId });
+    }
+
+    res.json({
+      success: true,
+      message: facet ? `Facet '${facet}' has been reset` : 'Taste profile reset successfully',
+      data: profile,
+    });
+  } catch (err) {
+    logger.error('[style-profile] reset failed', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

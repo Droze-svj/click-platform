@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, XCircle, Clock, Zap, Cpu, ArrowRight } from 'lucide-react'
 import { apiGet } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -90,7 +90,7 @@ export default function VideoProgressTracker({
   const isProcessing = progress.status === 'processing'
 
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`relative overflow-hidden rounded-2xl border transition-all duration-500 ${
@@ -150,7 +150,7 @@ export default function VideoProgressTracker({
 
         {/* High-Contrast Progress Bar */}
         <div className="w-full bg-surface-900 rounded-full h-1.5 overflow-hidden">
-          <motion.div
+          <m.div
             initial={{ width: 0 }}
             animate={{ width: `${progress.progress}%` }}
             transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
@@ -163,13 +163,13 @@ export default function VideoProgressTracker({
             {isProcessing && (
               <div className="absolute inset-0 bg-white/20 w-full animate-[shimmer_1s_infinite]" />
             )}
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Autonomous Decision Feed */}
         <AnimatePresence>
           {isProcessing && autonomousMode && (
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -184,10 +184,10 @@ export default function VideoProgressTracker({
                   <span>{progress.message || t('videoProgressTracker.executingAnalysis')}</span>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </m.div>
   )
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { apiPost, setTokens, clearAuthToken, handleApiError } from '../../lib/api'
-import { Button, Card, FormField, Input, Icon } from '../../components/ui'
+import { Button, Card, FormField, Input, Icon, AuthShell } from '../../components/ui'
 import LanguagePicker from '../../components/LanguagePicker'
 import { useTranslation } from '../../hooks/useTranslation'
 import { AlertCircle, Lock, ShieldCheck, Sparkles } from 'lucide-react'
@@ -98,12 +98,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12">
-      <div className="absolute top-6 right-6 z-50">
-        <LanguagePicker />
-      </div>
-
-      <div className="w-full max-w-md ds-anim-rise">
+    <AuthShell width="md" corner={<LanguagePicker />}>
         <Card variant="elevated" className="p-8 sm:p-10 space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
@@ -220,7 +215,6 @@ export default function Login() {
             </Link>
           </p>
         </Card>
-      </div>
-    </div>
+    </AuthShell>
   )
 }

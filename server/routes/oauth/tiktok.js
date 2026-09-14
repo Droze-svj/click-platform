@@ -7,6 +7,7 @@ const auth = require('../../middleware/auth');
 const tiktokService = require('../../services/tiktokOAuthService');
 const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
@@ -24,8 +25,9 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
     return sendError(res, 'TikTok OAuth not configured', 503);
   }
 
-  const callbackUrl = process.env.TIKTOK_CALLBACK_URL ||
-    `${req.protocol}://${req.get('host')}/api/oauth/tiktok/callback`;
+  // Resolved through the shared helper so the callback route's exchange can
+  // derive the identical value — OAuth rejects the exchange otherwise.
+  const callbackUrl = resolveOAuthCallbackUrl('tiktok', req);
 
   const userId = req.userId || req.user?._id || req.user?.id;
   const { url, state } = await tiktokService.getAuthorizationUrl(userId, callbackUrl);
@@ -61,7 +63,7 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
     const { userId, redirectUri: originalRedirectUri } = stateData;
 
     // Exchange the code for token
-    const tokens = await tiktokService.exchangeCodeForToken(code);
+    const tokens = await tiktokService.exchangeCodeForToken(code, resolveOAuthCallbackUrl('tiktok', req));
     const accessToken = tokens.access_token || tokens.accessToken;
     const profile = await tiktokService.getUserProfile(accessToken);
     
@@ -92,7 +94,8 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const tokens = await tiktokService.exchangeCodeForToken(code);
+  // // Same value the authorize step used, so the two redirect_uri match.
+  const tokens = await tiktokService.exchangeCodeForToken(code, resolveOAuthCallbackUrl('tiktok', req));
   const accessToken = tokens.access_token || tokens.accessToken;
   const userInfo = await tiktokService.getTikTokUserInfo(accessToken);
 

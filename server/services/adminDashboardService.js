@@ -233,13 +233,21 @@ async function getSystemHealth() {
         const isDev = process.env.NODE_ENV !== 'production';
         const isLocalHost = !process.env.REDIS_URL || process.env.REDIS_URL.includes('localhost') || process.env.REDIS_URL.includes('127.0.0.1');
 
-        if (!(isDev && isLocalHost)) {
-          const client = redis.createClient();
-          await client.ping();
-          redisStatus = 'healthy';
-          await client.quit();
+        if (!(isDev && isLocalHost) && process.env.REDIS_URL) {
+          const client = redis.createClient({
+            url: process.env.REDIS_URL,
+            socket: { connectTimeout: 3000 }
+          });
+          client.on('error', () => { /* handled */ });
+          try {
+            await client.connect();
+            await client.ping();
+            redisStatus = 'healthy';
+          } finally {
+            try { await client.disconnect(); } catch (_) { /* ignore */ }
+          }
         } else {
-          redisStatus = 'bypassed';
+          redisStatus = isDev && isLocalHost ? 'bypassed' : 'not_configured';
         }
       } catch (error) {
         redisStatus = 'unhealthy';

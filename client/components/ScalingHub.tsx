@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Activity, Database, Server, Cpu, 
   BarChart3, Clock, AlertCircle, CheckCircle2,
@@ -82,7 +82,7 @@ export default function ScalingHub() {
           { label: t('scalingHub.substrateErrors'), val: telemetry?.metrics.totalErrors || 0, unit: t('scalingHub.unitErrs'), icon: ZapOff, color: 'text-rose-400', bg: 'bg-rose-500/10' },
           { label: t('scalingHub.retryResilience'), val: telemetry?.metrics.totalRetries || 0, unit: t('scalingHub.unitTries'), icon: RefreshCw, color: 'text-amber-400', bg: 'bg-amber-500/10' }
         ].map((stat, i) => (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
@@ -101,7 +101,7 @@ export default function ScalingHub() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         ))}
       </section>
 
@@ -128,7 +128,7 @@ export default function ScalingHub() {
              <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
                 <AnimatePresence mode="popLayout">
                   {batchJobs.length > 0 ? batchJobs.map((job, i) => (
-                    <motion.div 
+                    <m.div 
                       layout
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -151,7 +151,7 @@ export default function ScalingHub() {
                       </div>
                       <div className="col-span-3 flex items-center gap-3">
                          <div className="w-24 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                            <motion.div 
+                            <m.div 
                               animate={{ width: '100%' }}
                               transition={{ duration: 5, repeat: Infinity }}
                               className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,1)]" 
@@ -159,7 +159,7 @@ export default function ScalingHub() {
                          </div>
                          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 animate-pulse italic">{job.status}</span>
                       </div>
-                    </motion.div>
+                    </m.div>
                   )) : (
                     <div className="py-32 flex flex-col items-center justify-center text-[var(--text-dim)]">
                        <ZapOff className="w-16 h-16 mb-6 opacity-20" />

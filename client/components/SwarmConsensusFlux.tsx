@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Activity, ShieldCheck, Cpu, Fingerprint, BarChart3, Database, Workflow, Signal } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -76,7 +76,7 @@ export default function SwarmConsensusFlux() {
       <div className="space-y-4">
         <AnimatePresence mode="popLayout">
           {blocks.map((block) => (
-            <motion.div 
+            <m.div 
               key={block._id}
               initial={{ opacity: 0, x: -20, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -117,7 +117,7 @@ export default function SwarmConsensusFlux() {
 
               {/* Decorative block scan effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/[0.03] to-transparent -translate-x-full group-hover/item:animate-shimmer pointer-events-none" />
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

@@ -18,7 +18,7 @@ import {
   Timer,
   Globe
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
 
 interface PlatformHealth {
@@ -136,7 +136,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                 ))
                             ) : health?.platforms ? (
                                 Object.entries(health.platforms).map(([platform, data], i) => (
-                                    <motion.div 
+                                    <m.div 
                                         key={platform}
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -159,7 +159,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                                 {data.message}
                                             </p>
                                         </div>
-                                    </motion.div>
+                                    </m.div>
                                 ))
                             ) : (
                                 <div className="col-span-2 p-20 text-center opacity-20">
@@ -194,7 +194,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                                        <motion.div 
+                                        <m.div 
                                             initial={{ width: 0 }}
                                             animate={{ width: `${(quota.used / quota.limit) * 100}%` }}
                                             className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"

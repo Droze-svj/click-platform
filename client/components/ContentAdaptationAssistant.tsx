@@ -115,7 +115,7 @@ export default function ContentAdaptationAssistant({
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-8">
+        <div role="status" aria-live="polite" className="flex items-center justify-center py-8">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           <span className="ml-3 text-gray-600 dark:text-gray-400">
             {t('contentAdaptationAssistant.adaptingContent')}

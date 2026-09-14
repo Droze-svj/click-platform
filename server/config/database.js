@@ -72,16 +72,44 @@ const initMongoDB = async () => {
     // local test DB without installing MongoDB. Still fully isolated; the dev-safety
     // guard above guarantees this path is only ever taken for a non-prod boot.
     let opts;
+    let abs = null;
     const dbPath = (process.env.INMEMORY_DB_PATH || '').trim();
     if (dbPath) {
       const fsMod = require('fs');
       const pathMod = require('path');
-      const abs = pathMod.isAbsolute(dbPath) ? dbPath : pathMod.join(process.cwd(), dbPath);
+      abs = pathMod.isAbsolute(dbPath) ? dbPath : pathMod.join(process.cwd(), dbPath);
       fsMod.mkdirSync(abs, { recursive: true });
       // doCleanup:false keeps our data on disk when the server stops/restarts.
       opts = { instance: { dbPath: abs, storageEngine: 'wiredTiger' }, cleanup: { doCleanup: false } };
     }
-    const mongoServer = await MongoMemoryServer.create(opts);
+
+    // A persistent dbPath can be left unstartable by an unclean shutdown, or —
+    // when the checkout lives in iCloud Drive / Dropbox — by the sync client
+    // writing conflict copies ("WiredTiger 2.turtle") into the data directory.
+    // mongod then dies with an fassert() failure, MongoMemoryServer.create()
+    // rejects, and the whole boot silently falls through to degraded mode with
+    // no database, which reads as a broken app rather than a stale dev fixture.
+    // Recover once: quarantine the unreadable directory (never delete it — it is
+    // the user's local test data) and start fresh. Only reachable on the
+    // non-prod in-memory path, so real data is never involved.
+    let mongoServer;
+    try {
+      mongoServer = await MongoMemoryServer.create(opts);
+    } catch (startErr) {
+      if (!abs) throw startErr;
+      const fsMod = require('fs');
+      const quarantine = `${abs}.corrupt-${Date.now()}`;
+      logger.warn(
+        `⚠️  The persistent local MongoDB at ${dbPath} could not start — its data files look corrupt. `
+        + `Moving it to ${require('path').basename(quarantine)} and starting a fresh one. `
+        + `If this checkout is in iCloud Drive or Dropbox, the sync client writing conflict copies `
+        + `(files ending in " 2") into the data directory is the usual cause.`,
+        { error: startErr.message }
+      );
+      fsMod.renameSync(abs, quarantine);
+      fsMod.mkdirSync(abs, { recursive: true });
+      mongoServer = await MongoMemoryServer.create(opts);
+    }
     await mongoose.connect(mongoServer.getUri());
     databaseStatus.mongodb = true;
     logger.info(dbPath

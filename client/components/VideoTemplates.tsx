@@ -22,6 +22,7 @@ import {
   X
 } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useDialogBehavior } from './ui/modal'
 
 interface VideoFilter {
   brightness: number
@@ -80,6 +81,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [personalizeId, setPersonalizeId] = useState<string | null>(null)
+  const panelRef = useDialogBehavior(!!personalizeId, () => setPersonalizeId(null))
   const [customColor, setCustomColor] = useState('#8B5CF6')
   const [customFont, setCustomFont] = useState('Inter')
   const [lastUsedId, setLastUsedId] = useState<string | null>(() => {

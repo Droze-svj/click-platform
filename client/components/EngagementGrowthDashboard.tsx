@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, Users, Heart, Eye, ArrowUp, ArrowDown, Target, Zap, Activity, Boxes } from 'lucide-react'
 import axios from 'axios'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
@@ -131,7 +131,7 @@ export default function EngagementGrowthDashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
             {insights.map((insight, idx) => (
-              <motion.div
+              <m.div
                 key={idx}
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -168,7 +168,7 @@ export default function EngagementGrowthDashboard() {
                     {t('engagementGrowthDashboard.executeProtocol')} <span className="group-hover:translate-x-2 transition-transform">→</span>
                   </button>
                 )}
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function EngagementGrowthDashboard() {
 function MetricCard({ label, value, change, icon: Icon, color }: { label: string; value: string; change: number; icon: any; color: string }) {
   const isPositive = change >= 0
   return (
-    <motion.div whileHover={{ y: -10, backgroundColor: 'rgba(255,255,255,0.06)' }}
+    <m.div whileHover={{ y: -10, backgroundColor: 'rgba(255,255,255,0.06)' }}
       className={`${glass} p-10 rounded-[4rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)]`}
     >
        <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none"><Activity size={120} className="text-white" /></div>
@@ -193,6 +193,6 @@ function MetricCard({ label, value, change, icon: Icon, color }: { label: string
           {isPositive ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
           {Math.abs(change).toFixed(1)}%_DELTA
        </div>
-    </motion.div>
+    </m.div>
   )
 }

@@ -119,11 +119,19 @@ const membershipPackageSchema = new mongoose.Schema({
 // Note: slug already has unique: true in field definition, so no need to index again
 membershipPackageSchema.index({ isActive: 1, sortOrder: 1 });
 
-membershipPackageSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+// slug is derived in pre('validate'), NOT pre('save'): Mongoose runs validation
+// before user pre('save') hooks, so a required field first assigned in
+// pre('save') is still unset when it is validated — every save() of a package
+// without an explicit slug failed. See SupportTicket.ticketNumber.
+membershipPackageSchema.pre('validate', function(next) {
   if (!this.slug && this.name) {
     this.slug = this.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   }
+  next();
+});
+
+membershipPackageSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
   next();
 });
 

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { Bell } from 'lucide-react'
 
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
@@ -37,12 +38,6 @@ export default function NotificationBell() {
 
   const loadPendingApprovals = async () => {
     try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [NotificationBell] Skipping pending approvals API call in development mode')
-        setPendingApprovals(0)
-        return
-      }
 
       const response = await apiGet<any>('/approvals/pending-count')
       if (response?.success) {
@@ -69,14 +64,6 @@ export default function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [NotificationBell] Skipping notifications API call in development mode')
-        setNotifications([])
-        setUnreadCount(0)
-        setLoading(false)
-        return
-      }
 
       const response = await apiGet<any>('/notifications?limit=10')
       if (response?.success) {
@@ -92,15 +79,6 @@ export default function NotificationBell() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [NotificationBell] Skipping mark as read API call in development mode')
-        setNotifications(prev =>
-          prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
-        )
-        setUnreadCount(prev => Math.max(0, prev - 1))
-        return
-      }
 
       await apiPut(`/notifications/${notificationId}/read`, {})
       setNotifications(prev =>
@@ -114,13 +92,6 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [NotificationBell] Skipping mark all as read API call in development mode')
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-        setUnreadCount(0)
-        return
-      }
 
       await apiPut('/notifications/read-all', {})
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -130,49 +101,75 @@ export default function NotificationBell() {
     }
   }
 
+  const totalBadge = unreadCount + pendingApprovals
+  const rootRef = useRef<HTMLDivElement | null>(null)
+
+  // A dropdown that only closes by clicking its own trigger is a trap on
+  // desktop. Escape and outside-click both dismiss it.
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsOpen(false) }
+    const onPointer = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setIsOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onPointer)
+    }
+  }, [isOpen])
+
   return (
-    <div className="relative">
+    <div ref={rootRef} className="relative">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-800"
-        aria-label={t('notificationBell.notifications')}
+        aria-label={
+          totalBadge > 0
+            ? `${t('notificationBell.notifications')} (${totalBadge} unread)`
+            : t('notificationBell.notifications')
+        }
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-theme-muted transition-colors hover:bg-accent hover:text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-        {(unreadCount > 0 || pendingApprovals > 0) && (
-          <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center ring-2 ring-white">
-            {unreadCount + pendingApprovals}
+        <Bell size={18} aria-hidden="true" />
+        {totalBadge > 0 && (
+          <span
+            aria-hidden="true"
+            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--destructive))] px-1 text-[10px] font-bold leading-none text-white"
+          >
+            {totalBadge > 9 ? '9+' : totalBadge}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="font-semibold">{t('notificationBell.notifications')}</h3>
+        <div role="menu" aria-label={t('notificationBell.notifications')} className="ds-surface-elevated absolute right-0 z-50 mt-2 max-h-96 w-80 overflow-y-auto rounded-xl">
+          <div className="flex items-center justify-between border-b border-[var(--glass-border)] p-4">
+            <h3 className="ds-text-label text-theme-primary">{t('notificationBell.notifications')}</h3>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={markAllAsRead}
-                className="text-sm text-blue-600 hover:underline"
+                className="rounded text-sm text-[hsl(var(--primary))] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {t('notificationBell.markAllAsRead')}
               </button>
             )}
           </div>
-          <div className="divide-y">
+          <div className="divide-y divide-[var(--glass-border)]">
             {loading ? (
-              <div className="p-4 text-center text-gray-500">{t('notificationBell.loading')}</div>
+              <div className="p-4 text-center text-theme-muted">{t('notificationBell.loading')}</div>
             ) : notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">{t('notificationBell.noNotifications')}</div>
+              <div className="p-4 text-center text-theme-muted">{t('notificationBell.noNotifications')}</div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`p-4 hover:bg-gray-50 cursor-pointer ${
-                    !notification.read ? 'bg-blue-50' : ''
+                  className={`cursor-pointer p-4 transition-colors hover:bg-accent ${
+                    !notification.read ? 'bg-[hsl(var(--primary)/0.08)]' : ''
                   }`}
                   onClick={() => {
                     if (!notification.read) markAsRead(notification._id)
@@ -187,20 +184,20 @@ export default function NotificationBell() {
                       'bg-blue-500'
                     }`} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm">{notification.title}</p>
+                      <p className="text-sm font-semibold text-theme-primary">{notification.title}</p>
                       {(notification.message || notification.suggestion) && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="mt-1 text-sm text-theme-secondary">
                           {notification.message}
                           {notification.suggestion && (
-                            <span className="text-blue-600 font-medium">{notification.message ? ' — ' : ''}{notification.suggestion}</span>
+                            <span className="font-medium text-[hsl(var(--primary))]">{notification.message ? ' — ' : ''}{notification.suggestion}</span>
                           )}
                         </p>
                       )}
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="mt-1 text-xs text-theme-muted">
                         {new Date(notification.createdAt).toLocaleString()}
                       </p>
                       {notification.link && (
-                        <span className="text-xs text-blue-600 mt-1 inline-block">{t('notificationBell.view')} →</span>
+                        <span className="mt-1 inline-block text-xs text-[hsl(var(--primary))]">{t('notificationBell.view')} →</span>
                       )}
                     </div>
                   </div>

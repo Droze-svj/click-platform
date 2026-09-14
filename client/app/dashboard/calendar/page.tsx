@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { useToast } from '../../../contexts/ToastContext'
@@ -26,6 +26,7 @@ import {
   StatCard,
   SectionHeader,
   Badge,
+  PageShell,
 } from '../../../components/ui'
 
 interface ScheduledPost {
@@ -141,7 +142,7 @@ export default function ContentCalendarPage() {
 
   return (
     <ErrorBoundary>
-      <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 pb-24 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary space-y-8">
+      <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
         <ToastContainer />
 
         <SectionHeader
@@ -310,7 +311,7 @@ export default function ContentCalendarPage() {
             </Modal>
           )
         })()}
-      </div>
+      </PageShell>
     </ErrorBoundary>
   )
 }
