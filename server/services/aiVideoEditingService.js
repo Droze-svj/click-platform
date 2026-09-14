@@ -4479,12 +4479,26 @@ function buildClipPlan(keyMoments = {}, options = {}) {
     }, 0);
     const react = reactions.find((x) => inWin(Number(x && x.time), start, end));
     const trigBoost = react ? (CLIP_TRIGGER_WEIGHT[String(react.triggerType || '').toLowerCase()] || 0.7) * 20 : 0;
-    const score = Math.round(Math.max(1, Math.min(100, 0.6 * hookScore + 0.25 * peakBoost + trigBoost)));
+    const hookPart = 0.6 * hookScore;
+    const peakPart = 0.25 * peakBoost;
+    const score = Math.round(Math.max(1, Math.min(100, hookPart + peakPart + trigBoost)));
     clips.push({
       startTime: Number(start.toFixed(2)),
       endTime: Number(end.toFixed(2)),
       durationSec: Number((end - start).toFixed(2)),
       viralityScore: score,
+      // The three parts the score is actually made of. They were computed here
+      // and discarded, so a clip could only ever show a bare number — which is
+      // why the clips hub ended up SYNTHESISING its own "why" from thresholds
+      // ("Strong hook (…)") rather than reporting the real contributions.
+      // Surfacing them is the difference between a score and an explanation.
+      // NOTE: these are the raw contributions; `viralityScore` is their sum
+      // rounded and clamped to 1..100, so they may not re-add to it exactly.
+      scoreBreakdown: {
+        hook: Number(hookPart.toFixed(1)),
+        peak: Number(peakPart.toFixed(1)),
+        trigger: Number(trigBoost.toFixed(1)),
+      },
       hook: (react && react.text) || (km.hook && km.hook.text) || r.reason || '',
       triggerType: (react && react.triggerType) || null,
       reason: r.reason || (react && react.reason) || '',

@@ -52,7 +52,7 @@ async function generateAutoClips(videoId, options = {}) {
 
   const clips = aiEditing.buildClipPlan(moments, { duration, maxClips, minLen, maxLen });
 
-  return {
+  const result = {
     clips,
     total: clips.length,
     hookScore: (moments.geminiInsights && Number(moments.geminiInsights.hookScore)) || null,
@@ -60,6 +60,24 @@ async function generateAutoClips(videoId, options = {}) {
     niche: moments.niche || niche || null,
     topPlatform: moments.topPlatform || null,
   };
+
+  // Persist so the ranking survives navigation. Without this the plan existed
+  // only in the response body: leaving the page threw it away, and coming back
+  // re-ran the full detectKeyMoments → Gemini pass to rebuild the SAME ranking —
+  // paying for the analysis twice on a key that is currently free-tier.
+  //
+  // Best-effort: a write failure must never lose the plan we just computed, so
+  // the caller still gets its result either way.
+  try {
+    content.set('generatedContent.clipPlan', { ...result, generatedAt: new Date() });
+    await content.save();
+    result.persisted = true;
+  } catch (err) {
+    logger.warn('[auto-clip] could not persist the clip plan', { error: err.message, videoId });
+    result.persisted = false;
+  }
+
+  return result;
 }
 
 module.exports = { generateAutoClips };
