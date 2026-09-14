@@ -72,10 +72,14 @@ router.post('/generate', authenticate, upload.single('video'), async (req, res) 
     // detected language). If the user's preferred language differs, we then
     // automatically run a per-segment translation so captions are usable
     // immediately in their chosen language without a second API trip.
+    // userId is passed so the service can default the caption STYLE to the one
+    // this creator actually keeps choosing. It was resolved above for the
+    // ownership check and then thrown away, which is why burned-in captions
+    // ignored every style preference the profile had learned.
     const result = await videoCaptionService.generateCaptionsForContent(
       contentId,
       videoFilePath,
-      { language }
+      { language, userId }
     );
 
     // Auto-translate to the user's preferred language when the source video
@@ -179,15 +183,19 @@ router.put('/:contentId', authenticate, async (req, res) => {
     const text = normalized.map((seg) => seg.text).join(' ').trim();
     const formatted = videoCaptionService.formatCaptions({ text, segments: normalized }, format);
 
+    // Word timings are ABSOLUTE — they record when each word was spoken, which an
+    // edit to segment text or boundaries does not change. The previous rule
+    // ("keep them only if the segment COUNT is unchanged") wiped the entire array
+    // whenever a user split or merged a single caption, silently downgrading
+    // karaoke to static blocks with no way back short of re-transcribing.
+    const { realignWordsToSegments } = require('../../utils/subtitleUtils');
+
     await captionStore.saveSource(contentId, {
       language: lang,
       text,
       format,
       segments: normalized,
-      // Word timings belong to the machine transcript; hand-edited segment
-      // boundaries invalidate them, so they are preserved only when the edit
-      // did not change the segment count.
-      words: normalized.length === (existing?.segments || []).length ? (existing?.words || []) : [],
+      words: realignWordsToSegments(existing?.words, normalized),
       formatted,
     });
 
