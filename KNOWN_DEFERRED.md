@@ -54,7 +54,7 @@ never fed. Verified through real ffmpeg (differential lower-third luma).
 | Real word timings kept (json2video karaoke no longer discarded; edits no longer wipe words; `GET /captions` returns them) | `aiTranscriptionService.parseAssToWords`, `subtitleUtils.realignWordsToSegments`, `videoCaptionService.getCaptions` |
 | Preview parity at the style level | `RealTimeVideoPreview` reads the registry and the previously-dead `captionStyle` prop |
 | Caption style personalization | `generateCaptionsForContent` returns `suggestedStyleId`; onboarding records a `captionStyles` pick |
-| Runtime | `Dockerfile`: `fonts-noto-color-emoji`, `fonts-montserrat`; per-filter assertion incl. `ass` |
+| Runtime | `Dockerfile`: `fonts-noto-color-emoji` (apt); Montserrat Bold/ExtraBold/Black fetched from upstream tag `v7.222` and pinned by SHA-256 — **bookworm has no `fonts-montserrat` package**, so an apt line for it breaks the image build; per-filter assertion incl. `ass`, using `{ …; exit 1; }` so a missing filter actually fails the step |
 
 **Rollback:** `CAPTION_ENGINE=drawtext` sends captions back through the old path,
 which is intact and still covered by a fidelity test.
