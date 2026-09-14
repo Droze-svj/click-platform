@@ -61,6 +61,10 @@ const PUBLIC = new Map([
   [/^\/api\/(brand|content-ops|integrations|database|admin|disaster-recovery|test-mi|video\/test|free-ai-models)/,
     'router-level auth (router.use) or an API-key middleware the name scan cannot see — verified by probe'],
   [/^\/api\/cdn\/url$/, 'builds a public asset URL'],
+  [/^\/api\/privacy\/facebook-data-deletion$/,
+    'Meta data-deletion callback — Meta\'s crawler calls it unauthenticated, so it '
+    + 'CANNOT require a session. It authenticates the caller instead by verifying '
+    + 'the signed_request HMAC against FACEBOOK_APP_SECRET and rejects anything unsigned.'],
   [/^\/$/, 'root'],
   // Not listed: /api-docs and /uploads. Neither is a route layer — swagger-ui
   // and express.static are plain middleware — so they never reach this walk.
