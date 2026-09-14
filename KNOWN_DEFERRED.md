@@ -3,7 +3,8 @@
 Honest list of what is intentionally NOT done, with the reason for each. If it's
 listed here it's a conscious deferral with a known impact, not an oversight.
 
-**Last updated: 2026-09-11**, after the pre-launch end-to-end pass.
+**Last updated: 2026-09-14**, after the ASS caption engine pass (branch
+`feat/ass-caption-engine`, stacked on `feat/ui-ux-overhaul` / PR #314).
 
 > The previous revision of this file was dated 2026-05-17 and had drifted badly
 > out of date — it claimed a 30-day access token (actually 1h since June), an
@@ -34,6 +35,49 @@ the current code. Evidence is given so nobody has to re-derive it.
 | Calendar autofill billing for nothing | An empty idea set answers `degraded: true` with no plan and no metered usage, and the panel says ideas are unavailable rather than "0 drafts created". |
 | `pipeline.*` Maps read like plain objects | `unifiedContentPipelineService` and `adaptivePerformanceService` read the Maps with `get()` and write through `doc.set('pipeline.<map>.<platform>')`. Publish-all, optimal scheduling, variations, A/B setup, refresh and prediction updates had all been silent no-ops. Guard: `tests/server/pipelineMapPaths.test.js`. |
 | Repurposing prompts built from `content.body` | There is no such path — every prompt said "Body: undefined". They read `content.text` / `transcript` / `description`. Guard: `tests/server/contentRepurposingText.test.js`. |
+
+---
+
+## 🎬 Caption engine — shipped 2026-09-14, and what it deliberately does not do
+
+Burned-in captions now render through **libass** (`server/services/assCaptionRenderer.js`)
+instead of per-line/per-word `drawtext`. drawtext could not animate font size
+without SIGSEGV-ing ffmpeg, so every pop/scale reveal had silently become a fade,
+and its word mode showed one word at a time. The ASS engine renders the full line
+with the spoken word recoloured and scale-popped, inline emoji, and real font
+metrics — plugged into the `ass=` filter that `videoRenderService` had built and
+never fed. Verified through real ffmpeg (differential lower-third luma).
+
+| Piece | Where |
+|---|---|
+| Style vocabulary (15 styles + aliases for ~40 legacy names) | `server/services/captionStyleRegistry.js`, mirror `client/lib/captionStyles.ts`, parity guard `tests/server/captionStyleRegistry.test.js` |
+| Real word timings kept (json2video karaoke no longer discarded; edits no longer wipe words; `GET /captions` returns them) | `aiTranscriptionService.parseAssToWords`, `subtitleUtils.realignWordsToSegments`, `videoCaptionService.getCaptions` |
+| Preview parity at the style level | `RealTimeVideoPreview` reads the registry and the previously-dead `captionStyle` prop |
+| Caption style personalization | `generateCaptionsForContent` returns `suggestedStyleId`; onboarding records a `captionStyles` pick |
+| Runtime | `Dockerfile`: `fonts-noto-color-emoji`, `fonts-montserrat`; per-filter assertion incl. `ass` |
+
+**Rollback:** `CAPTION_ENGINE=drawtext` sends captions back through the old path,
+which is intact and still covered by a fidelity test.
+
+**Deliberately NOT done — do not assume otherwise:**
+
+- **No "render / schedule this clip" action on `/dashboard/clips/auto`.** There is no
+  endpoint that renders a time window (`POST /api/video/render` takes a RenderTree),
+  and `ModernVideoEditor` has no seek/initial-time prop. The page now persists the
+  plan (`Content.generatedContent.clipPlan`) and shows the real score breakdown, but
+  acting on a clip needs both pieces built. `autoClipService`'s old header claim that
+  the render "reuses the existing pipeline on demand" described a handoff that never existed.
+- **The json2video word parser is written against an inferred override syntax**
+  (`{\rStyle}word{\r}`), not a captured live response. It fails safe — no markers →
+  `[]` → the old even-split estimate, now tagged `timingSource: 'estimated'` — but
+  capture a real json2video ASS file and add it as a fixture before trusting it.
+- **Preview parity is style-level, not pixel-level.** The browser still lays out text
+  with CSS; libass lays it out with FreeType. Colours, case, highlight and pop now
+  agree; exact wrap points and glyph metrics can still differ.
+- **Agency entry points (plan phase 6d) not started**: no client-workspace creation
+  UI, `/dashboard/agency` and `/dashboard/clients/*` are URL-only, and `requireTierLimit`
+  is applied for `add_client` / `generate_report` only — `add_profile`, `ai_minutes`,
+  `add_team_member`, `api_call` are unenforced.
 
 ---
 
@@ -68,6 +112,41 @@ state: the previous behaviour was worse than an error, because it was trusted.
 | `POST /api/video/manual-editing/marketplace/:id/download` for a premium template | Download allowed | The payment check was the comment `// For now, allow download`, so paid templates were free to everyone | 402 — there is no purchase flow to check against, and giving away content the platform priced misleads the seller |
 
 If any of these is implemented for real, delete its row.
+
+### Made honest in 2026-09 — the public trust page
+
+`server/routes/trust.js` fed the public `/trust` page claims nothing backed:
+
+| Claim | Was | Now |
+|---|---|---|
+| `verifiedC2PA` | hardcoded `true` | `true` only when at least one signed C2PA manifest exists; `signedAssets` count exposed |
+| `soc2`, `iso27001` | `'compliant'` | `'not-certified'` — this file's own README note records both as pending |
+| `transparencyScore` | `authScore \|\| 85` (a passing grade for unscored assets) | the recorded score or `null` |
+| `antiDeepfakeGrade` | `score >= 90 ? 'A+' : 'A'` — could never fail | removed |
+| `publicVerificationUrl` | pointed at `/verify/:contentId`, which does not exist | removed |
+
+`GET /api/trust/provenance/:contentId` stays **public on purpose** (C2PA exists to be
+publicly verifiable; listed in `routeAuthCoverage.test.js`).
+
+The Meta data-deletion callback (`POST /api/privacy/facebook-data-deletion`) now
+verifies `signed_request` HMAC against `FACEBOOK_APP_SECRET` and fails closed when
+it is unset. It **records** the request for an operator; it does not yet map the
+Facebook user id to a Click account or erase anything.
+
+**Account erasure is unreachable in the app, and incomplete.** `DELETE /api/privacy/delete`
+→ `privacyService.deleteUserData` removes `Content`, `ScheduledPost`, `SecurityLog`,
+`ErrorLog` and the `User` — but not connected-account tokens (`SocialConnection`),
+stored media files, `Caption`, `AuditMetadata`, `UserStyleProfile` or `UserPreferences`.
+Its UI, `client/components/PrivacySettings.tsx`, is imported by no page. The only
+in-app control is Settings → Account & Security → *Deactivate account*
+(`POST /api/auth/deactivate`), which is reversible and erases nothing.
+
+`/data-deletion` (the status URL the Meta callback returns) was rewritten to say
+exactly that, instead of promising an instant purge of tokens and media and a
+"Disconnect All" button that never existed. It now commits to **manual** removal of
+the uncovered data on request — that is an operational promise the owner must be
+able to keep, and it needs owner review before Meta app review. The real fix is to
+extend `deleteUserData` to the missing collections + media and mount a delete control.
 
 ---
 
