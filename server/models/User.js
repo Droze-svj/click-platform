@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema({
     // Paid flows (Whop webhook / billing service) overwrite this on purchase.
     endDate: { type: Date, default: () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
     whopSubscriptionId: String,
+    // 'monthly' | 'yearly'. The Whop webhook has always written this, but the
+    // field was missing from the schema, so Mongoose strict mode silently
+    // dropped it and no account ever recorded which billing period it paid for.
+    billingCycle: { type: String, enum: ['monthly', 'yearly'] },
     // Source timestamp of the last billing webhook applied to this subscription.
     // Used by the opt-in Whop ordering guard (WHOP_WEBHOOK_ORDERING_GUARD) to drop
     // out-of-order / replayed events older than what we've already applied.
