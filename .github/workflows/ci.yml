@@ -110,6 +110,12 @@ jobs:
       #   Check failed: needs_context && current_scope_ == closure_scope_ ...
       # (nodejs/node#58460). It killed this step with SIGTRAP (exit 133) on one
       # run and not on an otherwise identical one, and it is not a test result.
+      # Also retried ONCE on exit 134 (SIGABRT). On the #316 merge commit every
+      # unit and integration test passed, then this --runInBand coverage process
+      # died at V8's default heap cap ("Ineffective mark-compacts near heap limit
+      # … JavaScript heap out of memory") — skipping `build` and holding the
+      # Render deploy. NODE_OPTIONS below raises the cap so that should not
+      # recur; the retry covers a one-off abort.
       # Every real outcome still fails the step with no retry: a failing test or
       # a missed coverageThreshold exits 1. The retry gets a fresh database so it
       # does not inherit rows from the crashed partial run.
@@ -117,14 +123,18 @@ jobs:
         set +e
         npm run test:coverage
         code=$?
-        if [ "$code" -eq 133 ]; then
-          echo "::warning::Coverage run was killed by the known V8 inspector assertion (exit 133, SIGTRAP; nodejs/node#58460). Retrying once against a fresh database."
+        if [ "$code" -eq 133 ] || [ "$code" -eq 134 ]; then
+          echo "::warning::Coverage run was killed by a V8 crash, not a test result (exit $code: 133 = inspector assertion nodejs/node#58460, 134 = abort / heap out of memory). Retrying once against a fresh database."
           MONGODB_URI=mongodb://localhost:27017/click-test-coverage-retry npm run test:coverage
           code=$?
         fi
         exit $code
       env:
         NODE_ENV: test
+        # All ~314 suites run in ONE process (--runInBand) while V8 accumulates
+        # coverage data, which outgrew Node's default heap cap. 6 GB fits the
+        # ubuntu-latest runner alongside the Mongo and Redis service containers.
+        NODE_OPTIONS: --max-old-space-size=6144
         # Its OWN database. This step re-runs the unit + integration suites a
         # second time, and --runInBand puts all of them in a single
         # …-w1 database — the same one the earlier "Run unit tests" step just
