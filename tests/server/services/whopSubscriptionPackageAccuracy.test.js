@@ -100,17 +100,21 @@ describe('Whop Webhook Plan Resolution', () => {
   });
 
   it('resolves tier by price heuristic when other metadata is absent', () => {
-    // $119 / month -> Pro
-    const eventPro = { data: { amount: 119.0 } };
+    // $69 / month -> Pro
+    const eventPro = { data: { amount: 69.0 } };
     expect(resolvePlanFromEvent(eventPro)).toEqual({ planId: 'pro', period: 'monthly' });
 
-    // $390 / year -> Creator Yearly
-    const eventCreatorYearly = { data: { amount: 390.0 } };
+    // $290 / year -> Creator Yearly
+    const eventCreatorYearly = { data: { amount: 290.0 } };
     expect(resolvePlanFromEvent(eventCreatorYearly)).toEqual({ planId: 'creator', period: 'yearly' });
 
-    // $3490 / year -> Agency Yearly
-    const eventAgencyYearly = { data: { amount: 3490.0 } };
+    // $1990 / year -> Agency Yearly
+    const eventAgencyYearly = { data: { amount: 1990.0 } };
     expect(resolvePlanFromEvent(eventAgencyYearly)).toEqual({ planId: 'agency', period: 'yearly' });
+
+    // An amount that is not one of our prices matches nothing, rather than
+    // being read as "expensive, therefore Agency".
+    expect(resolvePlanFromEvent({ data: { amount: 3490.0 } })).toBeNull();
   });
 
   it('preserves user active paid plan during renewal when event has no recognized product_id', () => {
@@ -159,7 +163,7 @@ describe('Whop processEvent Lifecycle', () => {
         id: 'txn_test_123',
         passthrough: userId,
         product_name: 'Click Pro (Monthly)',
-        amount: 119.0,
+        amount: 69.0,
         currency: 'usd',
       },
     };

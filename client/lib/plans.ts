@@ -15,8 +15,8 @@
  * pricing stay consistent across every surface.
  *
  * CANONICAL PRICING (mirrors GET /api/plans → server/config/entitlements.js):
- *   free $0 · creator $39/mo ($390/yr) · pro $119/mo ($1190/yr, MOST POPULAR)
- *   · agency $349/mo ($3490/yr, FLAGSHIP). Yearly === 10× monthly (2 months
+ *   free $0 · creator $29/mo ($290/yr) · pro $69/mo ($690/yr, MOST POPULAR)
+ *   · agency $199/mo ($1990/yr, FLAGSHIP). Yearly === 10× monthly (2 months
  *   free). If these ever drift from the server, the server wins — prefer the
  *   live catalog (fetchPublicCatalog) and treat this static set as the typed
  *   fallback that MUST match it.
@@ -102,8 +102,8 @@ export const PLANS: Plan[] = [
     id: 'creator',
     name: 'Creator',
     tagline: 'For rising channels',
-    priceMonthly: 39,
-    priceYearly: 390, // 10 × monthly — 2 months free
+    priceMonthly: 29,
+    priceYearly: 290, // 10 × monthly — 2 months free
     featured: false,
     features: [
       { label: 'Advanced AI + live-web trends', included: true, tooltip: 'Higher reasoning effort and live web grounding than Free' },
@@ -132,8 +132,8 @@ export const PLANS: Plan[] = [
     id: 'pro',
     name: 'Pro',
     tagline: 'The AI command center',
-    priceMonthly: 119,
-    priceYearly: 1190, // 10 × monthly — 2 months free
+    priceMonthly: 69,
+    priceYearly: 690, // 10 × monthly — 2 months free
     featured: true,
     features: [
       { label: 'Everything in Creator', included: true },
@@ -163,8 +163,8 @@ export const PLANS: Plan[] = [
     id: 'agency',
     name: 'Agency',
     tagline: 'For volume operations',
-    priceMonthly: 349,
-    priceYearly: 3490, // 10 × monthly — 2 months free
+    priceMonthly: 199,
+    priceYearly: 1990, // 10 × monthly — 2 months free
     featured: false,
     features: [
       { label: 'Everything in Pro', included: true },

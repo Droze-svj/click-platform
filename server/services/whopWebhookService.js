@@ -199,9 +199,19 @@ function getProductMap() {
  *  2. Direct plan ID if it is a canonical tier name
  *  3. Metadata fields (metadata.planId, metadata.plan, metadata.tier, metadata.packageId)
  *  4. Product / Plan titles or names (e.g. "Pro Yearly", "Creator Monthly", "Agency")
- *  5. Price heuristic ($39/390, $119/1190, $349/3490)
+ *  5. Price heuristic (see CLICK_PRICES)
  *  6. Fallback to existing user subscription plan (for recurring renewals)
  */
+// Published prices in USD major units, mirroring server/config/entitlements.js
+// (the source of truth) and client/lib/plans.ts. Only used by the price
+// heuristic below, when an event carries no id, metadata or name to match on.
+// Keep in step with entitlements.js if prices change.
+const CLICK_PRICES = [
+  { planId: 'agency', monthly: 199, yearly: 1990 },
+  { planId: 'pro', monthly: 69, yearly: 690 },
+  { planId: 'creator', monthly: 29, yearly: 290 },
+];
+
 function resolvePlanFromEvent(event, user = null) {
   const d = event?.data || {};
   const productMap = getProductMap();
@@ -271,17 +281,17 @@ function resolvePlanFromEvent(event, user = null) {
     }
   }
 
-  // 5. Price heuristic (standard Click pricing)
+  // 5. Price heuristic — last resort before falling back to the existing plan.
+  // Matched against the published prices rather than open-ended thresholds:
+  // `amount >= 3400` used to read ANY large payment as an Agency year, so an
+  // unrelated expensive purchase could grant the top tier.
   const amount = getEventAmount(event);
   if (amount != null) {
-    if (amount >= 3400 || amount === 349) {
-      return { planId: 'agency', period: amount >= 3400 ? 'yearly' : 'monthly' };
-    }
-    if (amount >= 1100 || amount === 119) {
-      return { planId: 'pro', period: amount >= 1100 ? 'yearly' : 'monthly' };
-    }
-    if (amount >= 350 || amount === 39) {
-      return { planId: 'creator', period: amount >= 350 ? 'yearly' : 'monthly' };
+    for (const { planId, monthly, yearly } of CLICK_PRICES) {
+      // A dollar of tolerance absorbs rounding; anything further off is not one
+      // of our plans and is better left unmatched than guessed.
+      if (Math.abs(amount - yearly) <= 1) return { planId, period: 'yearly' };
+      if (Math.abs(amount - monthly) <= 1) return { planId, period: 'monthly' };
     }
   }
 

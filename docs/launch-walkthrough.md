@@ -28,14 +28,17 @@ Go to <https://whop.com/dashboard>. Make sure you're in the right "Whop" (Whop's
 
 In the dashboard, **Products → New Product**. Make six of them:
 
+> Prices and the Whop steps below are kept current in **`docs/whop-setup.md`** —
+> follow that guide; this table is a summary.
+
 | Product name | Pricing | Period |
 |---|---|---|
-| Click Creator (Monthly) | $49 / month | Monthly |
-| Click Creator (Yearly) | $470 / year ($39.17/mo eff.) | Yearly |
-| Click Pro (Monthly) | $149 / month | Monthly |
-| Click Pro (Yearly) | $1430 / year ($119.17/mo eff.) | Yearly |
-| Click Agency (Monthly) | $399 / month | Monthly |
-| Click Agency (Yearly) | $3830 / year ($319.17/mo eff.) | Yearly |
+| Click Creator (Monthly) | $29 / month | Monthly |
+| Click Creator (Yearly) | $290 / year ($24.17/mo eff.) | Yearly |
+| Click Pro (Monthly) | $69 / month | Monthly |
+| Click Pro (Yearly) | $690 / year ($57.50/mo eff.) | Yearly |
+| Click Agency (Monthly) | $199 / month | Monthly |
+| Click Agency (Yearly) | $1990 / year ($165.83/mo eff.) | Yearly |
 
 For each product, set:
 - **Type**: Subscription
@@ -276,9 +279,9 @@ Open `https://YOUR-RENDER-URL.onrender.com/` in a fresh browser (incognito).
 
 Check:
 - Hero loads, animations play
-- Pricing section shows 4 tiers with the right prices ($0 / $49 / $149 / $399)
+- Pricing section shows 4 tiers with the right prices ($0 / $29 / $69 / $199)
 - Stats section shows numbers — bonus if it shows the green "Live · updated every 5 min" pill
-- Click "Get Pro" → lands on `/register?plan=pro&period=monthly` with the "Signing up for Pro · $149/mo" badge
+- Click "Get Pro" → lands on `/register?plan=pro&period=monthly` with the "Signing up for Pro · $69/mo" badge
 
 ### 4.4 Real payment test
 
