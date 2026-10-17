@@ -17,6 +17,12 @@ describe('FeaturesDashboard', () => {
     ;(api.getResponderHistory as jest.Mock).mockResolvedValue({ replies: [] })
     ;(api.getResponderStats as jest.Mock).mockResolvedValue({ sinceDays: 30, total: 0, byStatus: {} })
     ;(api.getNextBest as jest.Mock).mockResolvedValue({ hasRealData: false, reason: 'need-more-data', ideas: [] })
+    ;(api.getMorningBrief as jest.Mock).mockResolvedValue({
+      generatedAt: '', performance: null, sales: null, needsYou: [], hasData: false,
+      audience: { window: '', scanned: 0, questions: 0, leads24h: 0, themes: [] },
+      makeNext: { source: 'baseline', title: 'Answer the question you hear most', why: '' },
+    })
+    ;(api.getBriefSubscription as jest.Mock).mockResolvedValue({ subscription: null, deliveryActive: false })
   })
 
   it('renders all feature groups and settles its async children', async () => {

@@ -16,6 +16,7 @@ const FEATURE_ROUTES = [
   ['/api/responder', './social-responder'],      // AI Comment/DM Responder
   ['/api/series', './content-series'],           // Content Series Planner
   ['/api/hooks', './hook-generator'],            // Hook Generator
+  ['/api/brief', './morning-brief'],             // Morning Brief
   ['/api/hashtags', './hashtag-strategist'],     // Hashtag Strategist
   ['/api/captions', './caption-angles'],         // Caption Angles
   ['/api/critique', './caption-critique'],       // Caption Critique
