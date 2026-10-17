@@ -33,7 +33,10 @@ Production `npm audit`: **0 critical, 0 high.** Patched via direct bumps +
 | undici | override `^7.27.3` | Unbounded decompression; bumped 2026-06-29 to clear new highs (TLS bypass via SOCKS5, Set-Cookie/header injection, cache poisoning). Stays within major 7. |
 | minimatch | override `^10.2.5` | ReDoS via repeated wildcards. |
 | form-data | override `^4.0.6` | (2026-06-29) CRLF injection via unescaped multipart field names/filenames. Transitive; pinned to the 4.x patch. |
-| nodemailer | bumped to `^9.0.1` | (2026-06-29) Direct dep. Fixes SMTP command injection (envelope.size, EHLO/HELO CRLF), List-* header injection, jsonTransport file-access bypass, OAuth2 TLS validation, raw-option SSRF/file-read. The only fix is the v9 major; the createTransport/sendMail API Click uses is unchanged. |
+| nodemailer | bumped to `^10.0.14` | (2026-10-17) Direct dep. Fixes cross-tenant SMTP credential disclosure via the process-global DNS cache, nested-recipient stack-exhaustion DoS, and malformed envelope recipients from quoted local-parts (all `<=10.0.8`). v10's only breaking change is "Node 20+" (CI and the Docker image run 20); the CommonJS `createTransport`/`sendMail` API is unchanged (verified). |
+| tailwindcss (root) | moved to `devDependencies` | (2026-10-17) It was the ONLY runtime path to `braces` (all versions vulnerable: nested-pattern stack exhaustion; npm's "fix" is the breaking Tailwind 4). Nothing at the root requires it; the client builds with its own `client/package.json` copy. |
+| transitive (axios, proxy-addr, engine.io, compression, sharp, @grpc/grpc-js, adm-zip, brace-expansion, source-map-js) | lockfile `npm audit fix` | (2026-10-17) Non-breaking patch/minor bumps from the scheduled auto-fix job's `chore/audit-autofix` branch (it can't open its own PR: the repo setting "Allow GitHub Actions to create pull requests" is off). |
+| nodemailer (prior) | bumped to `^9.0.1` | (2026-06-29) Direct dep. Fixes SMTP command injection (envelope.size, EHLO/HELO CRLF), List-* header injection, jsonTransport file-access bypass, OAuth2 TLS validation, raw-option SSRF/file-read. The only fix is the v9 major; the createTransport/sendMail API Click uses is unchanged. |
 
 ## Outstanding (4 moderate, accepted)
 
