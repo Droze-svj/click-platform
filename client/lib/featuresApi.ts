@@ -2,7 +2,7 @@
 // NOTE: apiGet/apiPost already prefix with `/api` — never include it here.
 // Responses come back as { success, message, data }; `unwrap` returns `data`.
 
-import { apiGet, apiPost } from './api'
+import { apiGet, apiPost, apiPut } from './api'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 export type Platform =
@@ -90,6 +90,8 @@ export const paths = {
   calendarCancel: (planId: string) => `/calendar/plans/${encodeURIComponent(planId)}/cancel`,
   triage: () => '/triage',
   digestLatest: () => '/digest/latest',
+  briefToday: () => '/brief/today',
+  briefSubscription: () => '/brief/subscription',
   repurposeStudio: () => '/repurpose/studio',
   repurposeSchedule: () => '/repurpose/studio/schedule',
   firstComment: () => '/first-comment',
@@ -292,3 +294,37 @@ export const rejectReply = async (id: string): Promise<{ reply: SocialReply }> =
 // the UI only surfaces this when getResponderPlatforms().sendEnabled is true.
 export const sendReply = async (id: string): Promise<{ reply: SocialReply }> =>
   unwrap(await apiPost(paths.responderSend(id), {}))
+
+// ── Morning Brief ────────────────────────────────────────────────────────────
+export interface MorningBrief {
+  generatedAt: string
+  performance: {
+    window: string; views: number; viewsChangePct: number | null
+    engagement: number; engagementChangePct: number | null
+  } | null
+  sales: {
+    currency: string
+    last24h: { count: number; revenue: number }
+    revenueChangePct: number | null
+    last7d: { count: number; revenue: number }
+  } | null
+  audience: {
+    window: string; scanned: number; questions: number; leads24h: number
+    themes: { theme: string; count: number; example: string }[]
+  }
+  needsYou: { id: string; count: number; label: string; link: string }[]
+  makeNext: { source: 'audience' | 'next-best' | 'baseline'; title: string; why: string }
+  hasData: boolean
+}
+export interface BriefSubscription { enabled: boolean; timezone: string; hour: number; lastSentLocalDate: string | null }
+export interface BriefSubscriptionState { subscription: BriefSubscription | null; deliveryActive: boolean }
+
+export const getMorningBrief = async (): Promise<MorningBrief> =>
+  unwrap<MorningBrief>(await apiGet(paths.briefToday()))
+
+export const getBriefSubscription = async (): Promise<BriefSubscriptionState> =>
+  unwrap<BriefSubscriptionState>(await apiGet(paths.briefSubscription()))
+
+export const setBriefSubscription = async (body: {
+  enabled: boolean; timezone?: string; hour?: number
+}): Promise<BriefSubscriptionState> => unwrap<BriefSubscriptionState>(await apiPut(paths.briefSubscription(), body))

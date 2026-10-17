@@ -5,6 +5,7 @@ import StreakWidget from './StreakWidget'
 import DigestWidget from './DigestWidget'
 import HeatmapWidget from './HeatmapWidget'
 import NextBestTile from './NextBestTile'
+import MorningBriefPanel from './MorningBriefPanel'
 import CalendarAutofillPanel from './CalendarAutofillPanel'
 import IdeaGeneratorPanel from './IdeaGeneratorPanel'
 import CommentTriageInbox from './CommentTriageInbox'
@@ -27,7 +28,7 @@ function Group({ id, title, subtitle, children }: {
   id: string; title: string; subtitle: string; children: ReactNode
 }) {
   return (
-    <section aria-label={title} data-testid={`group-${id}`} className="space-y-3">
+    <section id={id} aria-label={title} data-testid={`group-${id}`} className="space-y-3 scroll-mt-4">
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{title}</h2>
         <p className="text-xs text-zinc-600">{subtitle}</p>
@@ -46,6 +47,7 @@ export default function FeaturesDashboard() {
   return (
     <div data-testid="features-dashboard" className="space-y-8">
       <Group id="overview" title="Overview" subtitle="How your posting is trending">
+        <div className="md:col-span-2"><MorningBriefPanel /></div>
         <div><StreakWidget /></div>
         <div><DigestWidget /></div>
         <div className="md:col-span-2"><NextBestTile /></div>

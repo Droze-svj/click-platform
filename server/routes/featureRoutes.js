@@ -12,6 +12,7 @@ const FEATURE_ROUTES = [
   ['/api/triage', './comment-triage'],           // Comment Triage
   ['/api/streak', './streak'],                   // Posting Streak
   ['/api/digest', './digest'],                   // Weekly Performance Digest
+  ['/api/brief', './morning-brief'],             // Morning Brief
   ['/api/repurpose', './repurpose-studio'],      // Smart Repurpose Studio
   ['/api/responder', './social-responder'],      // AI Comment/DM Responder
   ['/api/series', './content-series'],           // Content Series Planner

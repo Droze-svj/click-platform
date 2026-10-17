@@ -263,10 +263,10 @@ async function getEngagementMetrics(userId, startDate) {
       postedAt: p.postedAt,
     }));
 
-    return { totalViews, totalEngagement, averageEngagementRate, topPerformingContent };
+    return { totalViews, totalEngagement, totalReach, averageEngagementRate, topPerformingContent };
   } catch (error) {
     logger.error('Get engagement metrics error', { error: error.message, userId });
-    return { totalViews: 0, totalEngagement: 0, averageEngagementRate: 0, topPerformingContent: [] };
+    return { totalViews: 0, totalEngagement: 0, totalReach: 0, averageEngagementRate: 0, topPerformingContent: [] };
   }
 }
 
