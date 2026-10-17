@@ -65,6 +65,11 @@ services:
       # legacy/unused). Without this, AI features fall back to heuristics.
       - key: GOOGLE_AI_API_KEY
         sync: false
+      # Whisper transcription for Voice Memo → Script (/api/memo-script/transcribe).
+      # Without it, recording/uploading a memo returns an honest 503 and creators
+      # can still type their raw thoughts.
+      - key: OPENAI_API_KEY
+        sync: false
       # Encrypts stored OAuth tokens. MUST be set — defaults to a known insecure
       # constant otherwise. Use a random 32+ char string.
       - key: OAUTH_ENCRYPTION_KEY

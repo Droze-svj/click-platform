@@ -29,7 +29,80 @@ const multiStepWorkflowService = require('../services/multiStepWorkflowService')
 // below only ever protected ordering WITHIN this file; it could not see across
 // routers.
 const { objectIdOrSkip } = require('../middleware/validateObjectId');
+const mongoose = require('mongoose');
+const validator = require('validator');
+const ApprovalRequest = require('../models/ApprovalRequest');
+const approvalService = require('../services/approvalService');
 const router = express.Router();
+
+// Two approval systems share this mount. The dashboard approvals page lists
+// ApprovalRequest documents (one-step sign-offs, approvalService), but the
+// approve/reject/cancel handlers below only knew ContentApproval (multi-step
+// workflows), so every button on that page failed with "Approval not found" and
+// its create form posted to a route that did not exist. An id that belongs to
+// an ApprovalRequest is now handled by approvalService; any other id continues
+// to the multi-step workflow code unchanged.
+const isApprovalRequest = (id) => ApprovalRequest.exists({ _id: id });
+
+// approvalService throws plain Errors; map them to honest status codes.
+function sendApprovalRequestError(res, err) {
+  const msg = err.message || 'Approval request failed';
+  const status = /not found/i.test(msg) ? 404
+    : /unauthorized|insufficient permissions/i.test(msg) ? 403
+      : /not pending/i.test(msg) ? 409
+        : 500;
+  return sendError(res, msg, status);
+}
+
+// The global sanitizer HTML-escapes body strings; these are stored and later
+// rendered as React text (which escapes again), so store the real characters.
+const cleanText = (v, max) => (typeof v === 'string' ? validator.unescape(v).slice(0, max) : '');
+
+const ENTITY_OWNER_MODELS = { content: 'Content', script: 'Script', post: 'ScheduledPost' };
+const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
+const isObjectId = (v) => typeof v === 'string' && mongoose.Types.ObjectId.isValid(v);
+
+/**
+ * POST /api/approvals
+ * Request a one-step sign-off on something you own.
+ * Body: { entityType: 'content'|'script'|'post', entityId, requestedFrom?, priority?, message?, teamId?, expiresIn? }
+ * requestedFrom defaults to yourself (a creator signing off on AI output).
+ */
+router.post('/', auth, asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  const modelName = ENTITY_OWNER_MODELS[body.entityType];
+  if (!modelName) return sendError(res, 'entityType must be content, script or post', 400);
+  if (!isObjectId(body.entityId)) return sendError(res, 'A valid entityId is required', 400);
+
+  const Model = require(`../models/${modelName}`);
+  const owned = await Model.exists({ _id: body.entityId, userId: req.user._id });
+  if (!owned) return sendError(res, `${body.entityType} not found`, 404);
+
+  let requestedFrom = req.user._id;
+  if (body.requestedFrom) {
+    if (!isObjectId(body.requestedFrom)) return sendError(res, 'requestedFrom must be a user id', 400);
+    const User = require('../models/User');
+    if (!(await User.exists({ _id: body.requestedFrom }))) return sendError(res, 'Approver not found', 404);
+    requestedFrom = body.requestedFrom;
+  }
+
+  const expiresIn = Number.parseInt(body.expiresIn, 10);
+  try {
+    const request = await approvalService.createApprovalRequest({
+      entityType: body.entityType,
+      entityId: body.entityId,
+      requestedBy: req.user._id,
+      requestedFrom,
+      teamId: isObjectId(body.teamId) ? body.teamId : null,
+      priority: PRIORITIES.includes(body.priority) ? body.priority : 'medium',
+      message: cleanText(body.message, 500),
+      expiresIn: Number.isFinite(expiresIn) ? Math.min(720, Math.max(1, expiresIn)) : undefined,
+    });
+    return sendSuccess(res, 'Approval requested', 201, request);
+  } catch (err) {
+    return sendApprovalRequestError(res, err);
+  }
+}));
 
 /**
  * GET /api/approvals/pending-count
@@ -133,6 +206,15 @@ router.post('/:approvalId/approve', objectIdOrSkip('approvalId'), auth, asyncHan
   const { approvalId } = req.params;
   const { comment } = req.body;
 
+  if (await isApprovalRequest(approvalId)) {
+    try {
+      const request = await approvalService.approveRequest(approvalId, req.user._id, cleanText(req.body.response || comment, 2000));
+      return sendSuccess(res, 'Approved', 200, request);
+    } catch (err) {
+      return sendApprovalRequestError(res, err);
+    }
+  }
+
   // Use the advanced multi-step service for stage advancement
   const approval = await multiStepWorkflowService.advanceToNextStage(approvalId, req.user._id, 'approve', comment || '');
   sendSuccess(res, 'Content approved and advanced to next stage', 200, approval);
@@ -158,6 +240,16 @@ router.post('/:approvalId/accept-v2', objectIdOrSkip('approvalId'), auth, asyncH
 router.post('/:approvalId/reject', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { rejectionReason, comment } = req.body;
+
+  if (await isApprovalRequest(approvalId)) {
+    try {
+      const reason = cleanText(req.body.response || rejectionReason || comment, 2000);
+      const request = await approvalService.rejectRequest(approvalId, req.user._id, reason);
+      return sendSuccess(res, 'Rejected', 200, request);
+    } catch (err) {
+      return sendApprovalRequestError(res, err);
+    }
+  }
 
   if (!rejectionReason) {
     return sendError(res, 'Rejection reason is required', 400);
@@ -210,6 +302,14 @@ router.get('/my-approvals', auth, asyncHandler(async (req, res) => {
  */
 router.post('/:approvalId/cancel', objectIdOrSkip('approvalId'), auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
+  if (await isApprovalRequest(approvalId)) {
+    try {
+      const request = await approvalService.cancelRequest(approvalId, req.user._id);
+      return sendSuccess(res, 'Approval request cancelled', 200, request);
+    } catch (err) {
+      return sendApprovalRequestError(res, err);
+    }
+  }
   const approval = await cancelApproval(approvalId, req.user._id);
   sendSuccess(res, 'Approval cancelled', 200, approval);
 }));

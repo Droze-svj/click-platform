@@ -476,6 +476,11 @@ setImmediate(() => {
         const { startDigestCron } = require('./services/weeklyDigestService');
         startDigestCron();
 
+        // Morning Brief delivery (hourly check, sends at each subscriber's local
+        // hour). OFF unless ENABLE_BRIEF_CRONS=true. cronLock-guarded.
+        const { startBriefCron } = require('./services/morningBriefService');
+        startBriefCron();
+
         // Daily audience-growth sync (03:00). The service existed and exported a
         // start function, but nothing ever called it — so follower/subscriber
         // trends only moved when a user happened to hit the manual

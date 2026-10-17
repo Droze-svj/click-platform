@@ -114,6 +114,16 @@ async function approveRequest(requestId, approverId, response = '') {
 
     await request.save();
 
+    // A signed-off script is ready to record: move it out of draft. Best-effort —
+    // the approval itself already succeeded.
+    if (request.entityType === 'script') {
+      const Script = require('../models/Script');
+      await Script.updateOne(
+        { _id: request.entityId, userId: request.requestedBy },
+        { $set: { status: 'completed', updatedAt: new Date() } }
+      ).catch((err) => logger.warn('Could not mark approved script completed', { error: err.message, requestId }));
+    }
+
     // Create activity
     await createActivity(request.requestedBy, 'approval_approved', {
       title: 'Approval Approved',

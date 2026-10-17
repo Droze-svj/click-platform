@@ -2,7 +2,7 @@
 // NOTE: apiGet/apiPost already prefix with `/api` — never include it here.
 // Responses come back as { success, message, data }; `unwrap` returns `data`.
 
-import { apiGet, apiPost } from './api'
+import { apiGet, apiPost, apiPut } from './api'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 export type Platform =
@@ -90,10 +90,15 @@ export const paths = {
   calendarCancel: (planId: string) => `/calendar/plans/${encodeURIComponent(planId)}/cancel`,
   triage: () => '/triage',
   digestLatest: () => '/digest/latest',
+  briefToday: () => '/brief/today',
+  briefSubscription: () => '/brief/subscription',
   repurposeStudio: () => '/repurpose/studio',
   repurposeSchedule: () => '/repurpose/studio/schedule',
   firstComment: () => '/first-comment',
   hooks: () => '/hooks',
+  memoScript: () => '/memo-script',
+  memoTranscribe: () => '/memo-script/transcribe',
+  memoSave: () => '/memo-script/save',
   hashtags: () => '/hashtags',
   captions: () => '/captions',
   critique: () => '/critique',
@@ -163,6 +168,39 @@ export interface HookResult { platform: string; style: string; hooks: Hook[] }
 export const generateHooks = async (body: {
   topic?: string; contentId?: string; platform?: Platform; style?: HookStyle; count?: number
 }): Promise<HookResult> => unwrap<HookResult>(await apiPost(paths.hooks(), body))
+
+export type ScriptFormat = 'short' | 'long'
+export interface MemoScript {
+  title: string; hook: string; body: string[]; cta: string; brollCues: string[]; claims: string[]
+}
+export interface ScriptQaCheck { id: string; ok: boolean; message: string }
+export interface MemoScriptResult {
+  platform: string
+  format: ScriptFormat
+  script: MemoScript
+  qa: { passed: boolean; estimatedSeconds: number; checks: ScriptQaCheck[] }
+  markdown: string
+}
+
+/** Upload a voice memo (recorded Blob or picked File) and get its transcript. */
+export const transcribeMemo = async (audio: Blob, filename = 'memo.webm'): Promise<{ transcript: string }> => {
+  const form = new FormData()
+  form.append('audio', audio, filename)
+  return unwrap<{ transcript: string }>(await apiPost(paths.memoTranscribe(), form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }))
+}
+
+export const writeMemoScript = async (body: {
+  memo: string; platform?: Platform; format?: ScriptFormat
+}): Promise<MemoScriptResult> => unwrap<MemoScriptResult>(await apiPost(paths.memoScript(), body))
+
+export interface SavedMemoScript { scriptId: string; approvalId: string | null; approvalError?: string }
+
+/** Save a script to the Scripts library; `requestApproval` also opens a sign-off in Approvals. */
+export const saveMemoScript = async (body: {
+  script: MemoScript; format?: ScriptFormat; requestApproval?: boolean
+}): Promise<SavedMemoScript> => unwrap<SavedMemoScript>(await apiPost(paths.memoSave(), body))
 
 export type HashtagTier = 'broad' | 'niche' | 'community' | 'branded'
 export interface Hashtag { tag: string; tier: string }
@@ -256,3 +294,37 @@ export const rejectReply = async (id: string): Promise<{ reply: SocialReply }> =
 // the UI only surfaces this when getResponderPlatforms().sendEnabled is true.
 export const sendReply = async (id: string): Promise<{ reply: SocialReply }> =>
   unwrap(await apiPost(paths.responderSend(id), {}))
+
+// ── Morning Brief ────────────────────────────────────────────────────────────
+export interface MorningBrief {
+  generatedAt: string
+  performance: {
+    window: string; views: number; viewsChangePct: number | null
+    engagement: number; engagementChangePct: number | null
+  } | null
+  sales: {
+    currency: string
+    last24h: { count: number; revenue: number }
+    revenueChangePct: number | null
+    last7d: { count: number; revenue: number }
+  } | null
+  audience: {
+    window: string; scanned: number; questions: number; leads24h: number
+    themes: { theme: string; count: number; example: string }[]
+  }
+  needsYou: { id: string; count: number; label: string; link: string }[]
+  makeNext: { source: 'audience' | 'next-best' | 'baseline'; title: string; why: string }
+  hasData: boolean
+}
+export interface BriefSubscription { enabled: boolean; timezone: string; hour: number; lastSentLocalDate: string | null }
+export interface BriefSubscriptionState { subscription: BriefSubscription | null; deliveryActive: boolean }
+
+export const getMorningBrief = async (): Promise<MorningBrief> =>
+  unwrap<MorningBrief>(await apiGet(paths.briefToday()))
+
+export const getBriefSubscription = async (): Promise<BriefSubscriptionState> =>
+  unwrap<BriefSubscriptionState>(await apiGet(paths.briefSubscription()))
+
+export const setBriefSubscription = async (body: {
+  enabled: boolean; timezone?: string; hour?: number
+}): Promise<BriefSubscriptionState> => unwrap<BriefSubscriptionState>(await apiPut(paths.briefSubscription(), body))

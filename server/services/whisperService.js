@@ -177,10 +177,11 @@ async function generateTranscriptFromVideo(videoPath, options = {}) {
 /**
  * Generate transcript from audio file
  * @param {string} audioPath - Path to audio file
- * @returns {Promise<string>} - Generated transcript
+ * @param {object} options - Same options as generateTranscriptFromVideo
+ * @returns {Promise<string|object>} - Generated transcript
  */
-async function generateTranscriptFromAudio(audioPath) {
-  return generateTranscriptFromVideo(audioPath); // Same implementation
+async function generateTranscriptFromAudio(audioPath, options = {}) {
+  return generateTranscriptFromVideo(audioPath, options); // Same implementation
 }
 
 module.exports = {
