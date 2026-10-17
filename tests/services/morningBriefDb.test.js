@@ -8,7 +8,9 @@ const ScheduledPost = require('../../server/models/ScheduledPost');
 const Conversion = require('../../server/models/Conversion');
 const SocialReply = require('../../server/models/SocialReply');
 const ApprovalRequest = require('../../server/models/ApprovalRequest');
-const { getBriefForUser } = require('../../server/services/morningBriefService');
+const BriefSubscription = require('../../server/models/BriefSubscription');
+const Notification = require('../../server/models/Notification');
+const { getBriefForUser, deliverDueBriefs, localClock } = require('../../server/services/morningBriefService');
 
 const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
@@ -35,6 +37,8 @@ const cleanup = () => Promise.all([
   Conversion.deleteMany({ userId: { $in: [me, someoneElse] } }),
   SocialReply.deleteMany({ userId: { $in: [String(me), String(someoneElse)] } }),
   ApprovalRequest.deleteMany({ requestedFrom: { $in: [me, someoneElse] } }),
+  BriefSubscription.deleteMany({ userId: { $in: [String(me), String(someoneElse)] } }),
+  Notification.deleteMany({ userId: { $in: [me, someoneElse, String(me), String(someoneElse)] } }),
 ]);
 
 beforeAll(async () => {
@@ -64,7 +68,7 @@ beforeAll(async () => {
   });
 });
 
-afterEach(cleanup);
+afterAll(async () => { if (mongoose.connection.readyState === 1) await cleanup(); });
 
 test('builds the brief from this user\'s real data only', async () => {
   const b = await getBriefForUser(me, { now: NOW });
@@ -79,4 +83,31 @@ test('builds the brief from this user\'s real data only', async () => {
   expect(b.audience).toMatchObject({ scanned: 3, questions: 2 });
   expect(b.makeNext).toMatchObject({ source: 'audience', title: 'Answer this: "which microphone is that?"' }); // newest phrasing
   expect(b.needsYou.map((n) => [n.id, n.count])).toEqual(expect.arrayContaining([['replies', 1], ['signoffs', 1]]));
+});
+
+test('delivers a due brief once as a real in-app notification (and email when chosen), never twice the same day', async () => {
+  const tz = 'Europe/Rome';
+  const { hour } = localClock(NOW, tz);
+  await BriefSubscription.create({ userId: String(me), timezone: tz, hour, channels: { inApp: true, email: true } });
+  // Not due: a different hour for someone else.
+  await BriefSubscription.create({ userId: String(someoneElse), timezone: tz, hour: (hour + 3) % 24 });
+  const sendEmail = jest.fn().mockResolvedValue({ success: true });
+
+  const first = await deliverDueBriefs(NOW, { sendEmail, getUserEmail: async () => 'me@example.com', appUrl: 'https://app.example.com' });
+  expect(first).toEqual({ sent: 1, failed: 0 });
+
+  const notes = await Notification.find({ title: 'Your morning brief' }).lean();
+  expect(notes).toHaveLength(1);
+  expect(String(notes[0].userId)).toBe(String(me));
+  expect(notes[0]).toMatchObject({ link: '/dashboard/features#brief', category: 'brief', priority: 'high' });
+  expect(notes[0].message).toMatch(/Make next: Answer this:/);
+  expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'me@example.com', subject: 'Your morning brief' }));
+
+  const sub = await BriefSubscription.findOne({ userId: String(me) }).lean();
+  expect(sub.lastSentLocalDate).toBe(localClock(NOW, tz).date);
+
+  // The next 15-minute tick in the same hour sends nothing.
+  const second = await deliverDueBriefs(NOW + 15 * 60 * 1000, { sendEmail, getUserEmail: async () => 'me@example.com' });
+  expect(second).toEqual({ sent: 0, failed: 0 });
+  expect(await Notification.countDocuments({ title: 'Your morning brief' })).toBe(1);
 });

@@ -22,7 +22,7 @@ describe('FeaturesDashboard', () => {
       audience: { window: '', scanned: 0, questions: 0, leads24h: 0, themes: [] },
       makeNext: { source: 'baseline', title: 'Answer the question you hear most', why: '' },
     })
-    ;(api.getBriefSubscription as jest.Mock).mockResolvedValue({ subscription: null, deliveryActive: false })
+    ;(api.getBriefSubscription as jest.Mock).mockResolvedValue({ subscription: null, deliveryActive: false, emailAvailable: false })
   })
 
   it('renders all feature groups and settles its async children', async () => {

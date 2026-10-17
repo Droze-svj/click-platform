@@ -316,8 +316,11 @@ export interface MorningBrief {
   makeNext: { source: 'audience' | 'next-best' | 'baseline'; title: string; why: string }
   hasData: boolean
 }
-export interface BriefSubscription { enabled: boolean; timezone: string; hour: number; lastSentLocalDate: string | null }
-export interface BriefSubscriptionState { subscription: BriefSubscription | null; deliveryActive: boolean }
+export interface BriefChannels { inApp: boolean; email: boolean }
+export interface BriefSubscription {
+  enabled: boolean; timezone: string; hour: number; channels: BriefChannels; lastSentLocalDate: string | null
+}
+export interface BriefSubscriptionState { subscription: BriefSubscription | null; deliveryActive: boolean; emailAvailable: boolean }
 
 export const getMorningBrief = async (): Promise<MorningBrief> =>
   unwrap<MorningBrief>(await apiGet(paths.briefToday()))
@@ -326,5 +329,5 @@ export const getBriefSubscription = async (): Promise<BriefSubscriptionState> =>
   unwrap<BriefSubscriptionState>(await apiGet(paths.briefSubscription()))
 
 export const setBriefSubscription = async (body: {
-  enabled: boolean; timezone?: string; hour?: number
+  enabled: boolean; timezone?: string; hour?: number; channels?: Partial<BriefChannels>
 }): Promise<BriefSubscriptionState> => unwrap<BriefSubscriptionState>(await apiPut(paths.briefSubscription(), body))

@@ -4,6 +4,8 @@ const {
   extractQuestionThemes,
   buildBrief,
   summarize,
+  renderBriefEmail,
+  sendBrief,
   isValidTimeZone,
   localClock,
   isDue,
@@ -148,7 +150,8 @@ describe('morningBrief delivery timing', () => {
     expect(out).toEqual({ sent: 1, failed: 0 });
     expect(getBriefForUser).toHaveBeenCalledWith('u-rome', { now: NOW });
     expect(createNotification).toHaveBeenCalledWith(
-      'u-rome', 'Your morning brief', expect.stringContaining('Make next:'), 'info', '/dashboard/features#brief', expect.any(Object),
+      'u-rome', 'Your morning brief', expect.stringContaining('Make next:'), 'info', '/dashboard/features#brief',
+      expect.objectContaining({ category: 'brief', priority: 'high' }),
     );
     expect(updateOne).toHaveBeenCalledWith({ _id: 'a' }, { $set: { lastSentLocalDate: '2026-10-17' } });
   });
@@ -164,5 +167,63 @@ describe('morningBrief delivery timing', () => {
     });
     expect(out).toEqual({ sent: 0, failed: 1 });
     expect(updateOne).not.toHaveBeenCalled();
+  });
+});
+
+describe('morningBrief.renderBriefEmail', () => {
+  test('escapes audience-written text and links back to the brief + settings', () => {
+    const b = buildBrief({
+      now: NOW,
+      inbound: [
+        { text: 'Is the <script>alert(1)</script> microphone good?', createdAt: new Date(NOW).toISOString() },
+        { text: 'which microphone "really" works?', createdAt: new Date(NOW).toISOString() },
+      ],
+    });
+    const { subject, html, text } = renderBriefEmail(b, { appUrl: 'https://app.example.com/' });
+    expect(subject).toBe('Your morning brief');
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).toContain('Answer this: &quot;Is the &lt;script&gt;alert(1)&lt;/script&gt; microphone good?&quot;');
+    expect(html).toContain('href="https://app.example.com/dashboard/settings?tab=notifications"');
+    expect(html).toContain('href="https://app.example.com/dashboard/features#brief"');
+    expect(text).toContain('Make next:');
+  });
+});
+
+describe('morningBrief.sendBrief channels', () => {
+  const brief = buildBrief({ now: NOW });
+  const deps = (over = {}) => ({
+    notify: jest.fn().mockResolvedValue({ _id: 'n1' }),
+    sendEmail: jest.fn().mockResolvedValue({ success: true }),
+    getUserEmail: jest.fn().mockResolvedValue('me@example.com'),
+    appUrl: 'https://app.example.com',
+    ...over,
+  });
+
+  test('in-app only by default', async () => {
+    const d = deps();
+    await sendBrief({ userId: 'u1' }, brief, d);
+    expect(d.notify).toHaveBeenCalled();
+    expect(d.sendEmail).not.toHaveBeenCalled();
+  });
+
+  test('email channel sends to the account address', async () => {
+    const d = deps();
+    await sendBrief({ userId: 'u1', channels: { inApp: false, email: true } }, brief, d);
+    expect(d.notify).not.toHaveBeenCalled();
+    expect(d.sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'me@example.com', subject: 'Your morning brief' }));
+  });
+
+  test('one working channel is enough; all channels failing throws', async () => {
+    const d = deps({ sendEmail: jest.fn().mockResolvedValue({ success: false, error: 'not configured' }) });
+    await expect(sendBrief({ userId: 'u1', channels: { inApp: true, email: true } }, brief, d)).resolves.toBe(true);
+    const dead = deps({ notify: jest.fn().mockResolvedValue(null), sendEmail: jest.fn().mockResolvedValue({ success: false, error: 'not configured' }) });
+    await expect(sendBrief({ userId: 'u1', channels: { inApp: true, email: true } }, brief, dead))
+      .rejects.toThrow(/in-app notifications are turned off.*email: not configured/);
+  });
+
+  test('email with no address on the account fails that channel', async () => {
+    const d = deps({ getUserEmail: jest.fn().mockResolvedValue(null) });
+    await expect(sendBrief({ userId: 'u1', channels: { inApp: false, email: true } }, brief, d)).rejects.toThrow(/no email address/);
   });
 });

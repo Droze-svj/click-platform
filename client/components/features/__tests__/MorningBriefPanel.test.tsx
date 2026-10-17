@@ -33,7 +33,7 @@ const FULL: api.MorningBrief = {
 describe('MorningBriefPanel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mGetSub.mockResolvedValue({ subscription: null, deliveryActive: true })
+    mGetSub.mockResolvedValue({ subscription: null, deliveryActive: true, emailAvailable: false })
   })
 
   it('renders make-next, numbers, audience asks and needs-you from real data', async () => {
@@ -66,7 +66,7 @@ describe('MorningBriefPanel', () => {
 
   it('subscribes to daily delivery in the browser timezone', async () => {
     mBrief.mockResolvedValue(EMPTY)
-    mSetSub.mockResolvedValue({ subscription: { enabled: true, timezone: 'Europe/Rome', hour: 7, lastSentLocalDate: null }, deliveryActive: true })
+    mSetSub.mockResolvedValue({ subscription: { enabled: true, timezone: 'Europe/Rome', hour: 7, channels: { inApp: true, email: false }, lastSentLocalDate: null }, deliveryActive: true, emailAvailable: false })
     render(<MorningBriefPanel />)
     await waitFor(() => expect(screen.getByTestId('brief-delivery')).toHaveTextContent('Send daily at 07:00'))
     fireEvent.click(screen.getByTestId('brief-delivery'))
@@ -77,17 +77,44 @@ describe('MorningBriefPanel', () => {
     expect(screen.getByTestId('brief-delivery-note')).toHaveTextContent('Arrives as a notification around 07:00 Europe/Rome time.')
   })
 
+  it('links to Settings for time, time zone and email, and describes email delivery', async () => {
+    mBrief.mockResolvedValue(EMPTY)
+    mGetSub.mockResolvedValue({
+      subscription: { enabled: true, timezone: 'Asia/Kolkata', hour: 6, channels: { inApp: true, email: true }, lastSentLocalDate: null },
+      deliveryActive: true, emailAvailable: true,
+    })
+    render(<MorningBriefPanel />)
+    expect(screen.getByTestId('brief-settings-link')).toHaveAttribute('href', '/dashboard/settings?tab=notifications')
+    await waitFor(() => expect(screen.getByTestId('brief-delivery-note')).toHaveTextContent('Arrives in-app and by email around 06:00 Asia/Kolkata time.'))
+  })
+
+  it('quick toggle keeps the time zone chosen in Settings', async () => {
+    mBrief.mockResolvedValue(EMPTY)
+    mGetSub.mockResolvedValue({
+      subscription: { enabled: false, timezone: 'Asia/Kolkata', hour: 6, channels: { inApp: true, email: false }, lastSentLocalDate: null },
+      deliveryActive: true, emailAvailable: false,
+    })
+    mSetSub.mockResolvedValue({
+      subscription: { enabled: true, timezone: 'Asia/Kolkata', hour: 6, channels: { inApp: true, email: false }, lastSentLocalDate: null },
+      deliveryActive: true, emailAvailable: false,
+    })
+    render(<MorningBriefPanel />)
+    await waitFor(() => expect(screen.getByTestId('brief-delivery')).toHaveTextContent('Send daily at 06:00'))
+    fireEvent.click(screen.getByTestId('brief-delivery'))
+    await waitFor(() => expect(mSetSub).toHaveBeenCalledWith({ enabled: true, timezone: 'Asia/Kolkata', hour: 6 }))
+  })
+
   it('never promises a notification when this server has delivery switched off', async () => {
     mBrief.mockResolvedValue(EMPTY)
-    mGetSub.mockResolvedValue({ subscription: { enabled: true, timezone: 'Europe/Rome', hour: 7, lastSentLocalDate: null }, deliveryActive: false })
+    mGetSub.mockResolvedValue({ subscription: { enabled: true, timezone: 'Europe/Rome', hour: 7, channels: { inApp: true, email: false }, lastSentLocalDate: null }, deliveryActive: false, emailAvailable: false })
     render(<MorningBriefPanel />)
     await waitFor(() => expect(screen.getByTestId('brief-delivery-note')).toHaveTextContent(/not switched on for this server/))
   })
 
   it('turns delivery off', async () => {
     mBrief.mockResolvedValue(EMPTY)
-    mGetSub.mockResolvedValue({ subscription: { enabled: true, timezone: 'Europe/Rome', hour: 7, lastSentLocalDate: null }, deliveryActive: true })
-    mSetSub.mockResolvedValue({ subscription: { enabled: false, timezone: 'Europe/Rome', hour: 7, lastSentLocalDate: null }, deliveryActive: true })
+    mGetSub.mockResolvedValue({ subscription: { enabled: true, timezone: 'Europe/Rome', hour: 7, channels: { inApp: true, email: false }, lastSentLocalDate: null }, deliveryActive: true, emailAvailable: false })
+    mSetSub.mockResolvedValue({ subscription: { enabled: false, timezone: 'Europe/Rome', hour: 7, channels: { inApp: true, email: false }, lastSentLocalDate: null }, deliveryActive: true, emailAvailable: false })
     render(<MorningBriefPanel />)
     await waitFor(() => expect(screen.getByTestId('brief-delivery')).toHaveTextContent('Daily at 07:00 ✓'))
     fireEvent.click(screen.getByTestId('brief-delivery'))

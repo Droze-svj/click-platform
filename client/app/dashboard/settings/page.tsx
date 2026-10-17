@@ -30,6 +30,7 @@ import { Modal } from '../../../components/ui/modal'
 import { Button } from '../../../components/ui/button'
 import { EmptyState } from '../../../components/ui/empty-state'
 import { PageShell } from '../../../components/ui'
+import MorningBriefSettings from '../../../components/settings/MorningBriefSettings'
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -603,6 +604,7 @@ function NotificationsSection({ settings, setField, saving, onSave }: {
 }) {
   const n = settings.notifications
   return (
+    <>
     <Card>
       <SubHeader>Channels</SubHeader>
       <div className="divide-y divide-[var(--border-subtle)]">
@@ -634,6 +636,13 @@ function NotificationsSection({ settings, setField, saving, onSave }: {
 
       <SaveBar saving={saving} onSave={onSave} />
     </Card>
+
+    {/* Saves on its own (to the brief subscription), so it is a separate card. */}
+    <Card className="mt-4">
+      <SubHeader>Morning brief</SubHeader>
+      <MorningBriefSettings />
+    </Card>
+    </>
   )
 }
 
