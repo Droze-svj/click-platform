@@ -44,6 +44,7 @@ interface ApprovalRequest {
   }
   status: string
   priority: string
+  message?: string
   response: string
   createdAt: string
   expiresAt: string | null
@@ -233,6 +234,12 @@ export default function ApprovalsPage() {
                       </Badge>
                       <h3 className="ds-text-h3 text-theme-primary truncate">{request.requestedBy.name}</h3>
                       <p className="ds-text-caption truncate">{t('approvalsPage.idLabel', { id: request.entityId.substring(0, 16) })}</p>
+                      {request.message && <p className="ds-text-body text-theme-muted line-clamp-2">{request.message}</p>}
+                      {request.entityType === 'script' && (
+                        <a href={`/dashboard/scripts/${request.entityId}`} className="ds-text-caption text-primary underline">
+                          {t('approvalsPage.openScript')}
+                        </a>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 ds-text-caption flex-shrink-0">
                       <Clock size={14} aria-hidden />

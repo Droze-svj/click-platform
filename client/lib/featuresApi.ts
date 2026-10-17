@@ -96,6 +96,9 @@ export const paths = {
   repurposeSchedule: () => '/repurpose/studio/schedule',
   firstComment: () => '/first-comment',
   hooks: () => '/hooks',
+  memoScript: () => '/memo-script',
+  memoTranscribe: () => '/memo-script/transcribe',
+  memoSave: () => '/memo-script/save',
   hashtags: () => '/hashtags',
   captions: () => '/captions',
   critique: () => '/critique',
@@ -165,6 +168,39 @@ export interface HookResult { platform: string; style: string; hooks: Hook[] }
 export const generateHooks = async (body: {
   topic?: string; contentId?: string; platform?: Platform; style?: HookStyle; count?: number
 }): Promise<HookResult> => unwrap<HookResult>(await apiPost(paths.hooks(), body))
+
+export type ScriptFormat = 'short' | 'long'
+export interface MemoScript {
+  title: string; hook: string; body: string[]; cta: string; brollCues: string[]; claims: string[]
+}
+export interface ScriptQaCheck { id: string; ok: boolean; message: string }
+export interface MemoScriptResult {
+  platform: string
+  format: ScriptFormat
+  script: MemoScript
+  qa: { passed: boolean; estimatedSeconds: number; checks: ScriptQaCheck[] }
+  markdown: string
+}
+
+/** Upload a voice memo (recorded Blob or picked File) and get its transcript. */
+export const transcribeMemo = async (audio: Blob, filename = 'memo.webm'): Promise<{ transcript: string }> => {
+  const form = new FormData()
+  form.append('audio', audio, filename)
+  return unwrap<{ transcript: string }>(await apiPost(paths.memoTranscribe(), form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }))
+}
+
+export const writeMemoScript = async (body: {
+  memo: string; platform?: Platform; format?: ScriptFormat
+}): Promise<MemoScriptResult> => unwrap<MemoScriptResult>(await apiPost(paths.memoScript(), body))
+
+export interface SavedMemoScript { scriptId: string; approvalId: string | null; approvalError?: string }
+
+/** Save a script to the Scripts library; `requestApproval` also opens a sign-off in Approvals. */
+export const saveMemoScript = async (body: {
+  script: MemoScript; format?: ScriptFormat; requestApproval?: boolean
+}): Promise<SavedMemoScript> => unwrap<SavedMemoScript>(await apiPost(paths.memoSave(), body))
 
 export type HashtagTier = 'broad' | 'niche' | 'community' | 'branded'
 export interface Hashtag { tag: string; tier: string }
