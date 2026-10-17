@@ -38,21 +38,21 @@ const TIERS = [
     name: 'Creator',
     order: 1,
     tagline: 'For rising channels',
-    price: { monthlyUsd: 39, yearlyUsd: 390 },
+    price: { monthlyUsd: 29, yearlyUsd: 290 },
   },
   {
     id: 'pro',
     name: 'Pro',
     order: 2,
     tagline: 'The AI command center',
-    price: { monthlyUsd: 119, yearlyUsd: 1190 },
+    price: { monthlyUsd: 69, yearlyUsd: 690 },
   },
   {
     id: 'agency',
     name: 'Agency',
     order: 3,
     tagline: 'For volume operations',
-    price: { monthlyUsd: 349, yearlyUsd: 3490 },
+    price: { monthlyUsd: 199, yearlyUsd: 1990 },
   },
 ];
 

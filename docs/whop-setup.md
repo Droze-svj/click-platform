@@ -6,9 +6,9 @@ plan ID Click maps it to, and a signed webhook from Whop telling Click it happen
 
 | Tier | Monthly | Yearly |
 |---|---|---|
-| Creator | $39 | $390 |
-| Pro | $119 | $1,190 |
-| Agency | $349 | $3,490 |
+| Creator | $29 | $290 |
+| Pro | $69 | $690 |
+| Agency | $199 | $1,990 |
 
 Yearly is 10× monthly (two months free). These prices live in
 `client/lib/plans.ts`; the webhook's price fallback uses the same numbers.

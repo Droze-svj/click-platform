@@ -162,7 +162,7 @@ describe('resolvePlanFromEvent — tier AND billing period', () => {
     process.env.WHOP_PRODUCT_ID_CREATOR_YEARLY = 'prod_samebothperiods';
     expect(getProductMap()).not.toHaveProperty('prod_samebothperiods');
     // Falls through to the price, which CAN tell the periods apart.
-    expect(resolvePlanFromEvent({ data: { product: { id: 'prod_samebothperiods' }, total: 39 } }))
+    expect(resolvePlanFromEvent({ data: { product: { id: 'prod_samebothperiods' }, total: 29 } }))
       .toEqual({ planId: 'creator', period: 'monthly' });
   });
 
