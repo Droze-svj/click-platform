@@ -192,6 +192,32 @@ function toMarkdown(script) {
 }
 
 /**
+ * Pure: map a script onto the Script model so it lands in the Scripts library
+ * (and can be sent for sign-off as an approval of entityType 'script').
+ */
+function toScriptDoc(script, { format, userId }) {
+  const fmt = normalizeFormat(format);
+  const words = countWords([script.hook, ...script.body, script.cta].join(' '));
+  return {
+    userId,
+    title: script.title.slice(0, 200),
+    type: fmt === 'long' ? 'youtube' : 'social-media',
+    topic: script.title.slice(0, 200),
+    tone: 'casual',
+    duration: Math.round((words / WORDS_PER_MINUTE) * 10) / 10, // minutes
+    wordCount: words,
+    script: toMarkdown(script),
+    structure: {
+      introduction: script.hook,
+      mainPoints: script.body.map((content, i) => ({ title: `Beat ${i + 1}`, content })),
+      callToAction: script.cta,
+    },
+    metadata: { hooks: [script.hook] },
+    status: 'draft',
+  };
+}
+
+/**
  * Generate a script from a memo. External calls injected via `deps`:
  *   { sanitize, generate, assertBudget?, recordUsage?, buildSystemPrompt?, getBannedWords? }
  * Returns null when the model produced nothing usable.
@@ -248,5 +274,6 @@ module.exports = {
   shapeScript,
   qaCheck,
   toMarkdown,
+  toScriptDoc,
   generateMemoScript,
 };

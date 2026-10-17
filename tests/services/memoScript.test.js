@@ -9,6 +9,7 @@ const {
   shapeScript,
   qaCheck,
   toMarkdown,
+  toScriptDoc,
   generateMemoScript,
 } = require('../../server/services/memoScriptService');
 
@@ -154,6 +155,20 @@ describe('memoScript.toMarkdown', () => {
     const md = toMarkdown({ ...GOOD, brollCues: [] });
     expect(md).not.toContain('B-roll');
     expect(md).not.toContain('Claims to verify');
+  });
+});
+
+describe('memoScript.toScriptDoc', () => {
+  test('maps onto the Script model: markdown body, structure, type by format, draft status', () => {
+    const doc = toScriptDoc(GOOD, { format: 'short', userId: 'u1' });
+    expect(doc).toMatchObject({ userId: 'u1', title: GOOD.title, type: 'social-media', tone: 'casual', status: 'draft' });
+    expect(doc.script).toBe(toMarkdown(GOOD));
+    expect(doc.structure.introduction).toBe(GOOD.hook);
+    expect(doc.structure.mainPoints).toEqual(GOOD.body.map((content, i) => ({ title: `Beat ${i + 1}`, content })));
+    expect(doc.structure.callToAction).toBe(GOOD.cta);
+    expect(doc.metadata.hooks).toEqual([GOOD.hook]);
+    expect(doc.wordCount).toBe(countWords([GOOD.hook, ...GOOD.body, GOOD.cta].join(' ')));
+    expect(toScriptDoc(GOOD, { format: 'long', userId: 'u1' }).type).toBe('youtube');
   });
 });
 

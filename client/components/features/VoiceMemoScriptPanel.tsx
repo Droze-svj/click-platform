@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { handleApiError } from '@/lib/api'
 import {
-  transcribeMemo, writeMemoScript,
-  type Platform, type ScriptFormat, type MemoScriptResult,
+  transcribeMemo, writeMemoScript, saveMemoScript,
+  type Platform, type ScriptFormat, type MemoScriptResult, type SavedMemoScript,
 } from '@/lib/featuresApi'
 
 const PLATFORMS: Platform[] = ['tiktok', 'instagram', 'youtube', 'linkedin', 'facebook']
@@ -38,6 +38,8 @@ export default function VoiceMemoScriptPanel() {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [recordable, setRecordable] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<SavedMemoScript | null>(null)
 
   const recorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -109,13 +111,25 @@ export default function VoiceMemoScriptPanel() {
 
   async function write() {
     if (!memo.trim()) { setError('Record a memo or type your raw thoughts first.'); return }
-    setWriting(true); setError(null); setCopied(false)
+    setWriting(true); setError(null); setCopied(false); setSaved(null)
     try {
       setResult(await writeMemoScript({ memo, platform, format }))
     } catch (e) {
       setError(handleApiError(e) || 'Failed to write the script')
     } finally {
       setWriting(false)
+    }
+  }
+
+  async function save(requestApproval: boolean) {
+    if (!result) return
+    setSaving(true); setError(null)
+    try {
+      setSaved(await saveMemoScript({ script: result.script, format: result.format, requestApproval }))
+    } catch (e) {
+      setError(handleApiError(e) || 'Failed to save the script')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -256,6 +270,33 @@ export default function VoiceMemoScriptPanel() {
               Download script.md
             </button>
           </div>
+
+          {saved ? (
+            <div data-testid="memo-saved" className="space-y-1 text-xs">
+              <p className="text-zinc-300">
+                Saved. <a href={`/dashboard/scripts/${saved.scriptId}`} className="underline hover:text-white">Open in Scripts</a>
+                {saved.approvalId && (
+                  <> · <a href="/dashboard/approvals" className="underline hover:text-white">Waiting for your sign-off in Approvals</a></>
+                )}
+              </p>
+              {saved.approvalError && <p className="text-amber-400">{saved.approvalError}</p>}
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button" data-testid="memo-approve" onClick={() => save(true)} disabled={saving}
+                className="rounded-lg bg-green-500/90 px-3 py-1.5 text-xs font-medium text-black disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Send for approval'}
+              </button>
+              <button
+                type="button" data-testid="memo-save" onClick={() => save(false)} disabled={saving}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 disabled:opacity-50"
+              >
+                Save to Scripts
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -978,7 +978,8 @@
     "placeholderConsensusGoal": "DEFINE_CONSENSUS_GOAL...",
     "toastInitialized": "PROTOCOL_INITIALIZED",
     "toastInitFailed": "INITIALIZATION_FAILED",
-    "startGateProtocol": "START_GATE_PROTOCOL"
+    "startGateProtocol": "START_GATE_PROTOCOL",
+    "openScript": "Open script"
   },
   "brandKitPage": {
     "backToDashboard": "Back to Dashboard",

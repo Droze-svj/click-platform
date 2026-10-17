@@ -8,6 +8,7 @@ jest.mock('@/lib/api', () => ({
 }))
 const mTranscribe = api.transcribeMemo as jest.MockedFunction<typeof api.transcribeMemo>
 const mWrite = api.writeMemoScript as jest.MockedFunction<typeof api.writeMemoScript>
+const mSave = api.saveMemoScript as jest.MockedFunction<typeof api.saveMemoScript>
 
 const RESULT: api.MemoScriptResult = {
   platform: 'youtube',
@@ -88,6 +89,45 @@ describe('VoiceMemoScriptPanel', () => {
     fireEvent.change(screen.getByTestId('memo-input'), { target: { value: 'x' } })
     fireEvent.click(screen.getByTestId('memo-run'))
     await waitFor(() => expect(screen.getByTestId('memo-error')).toHaveTextContent(/temporarily unavailable/))
+  })
+
+  async function renderWithScript() {
+    mWrite.mockResolvedValue(RESULT)
+    render(<VoiceMemoScriptPanel />)
+    fireEvent.change(screen.getByTestId('memo-input'), { target: { value: 'x' } })
+    fireEvent.click(screen.getByTestId('memo-run'))
+    await waitFor(() => expect(screen.getByTestId('memo-approve')).toBeInTheDocument())
+  }
+
+  it('sends the script for approval and links to Scripts + Approvals', async () => {
+    mSave.mockResolvedValue({ scriptId: 's1', approvalId: 'a1' })
+    await renderWithScript()
+    fireEvent.click(screen.getByTestId('memo-approve'))
+
+    await waitFor(() => expect(screen.getByTestId('memo-saved')).toBeInTheDocument())
+    expect(mSave).toHaveBeenCalledWith({ script: RESULT.script, format: 'long', requestApproval: true })
+    expect(screen.getByText('Open in Scripts')).toHaveAttribute('href', '/dashboard/scripts/s1')
+    expect(screen.getByText(/Waiting for your sign-off/)).toHaveAttribute('href', '/dashboard/approvals')
+    expect(screen.queryByTestId('memo-approve')).not.toBeInTheDocument()
+  })
+
+  it('saves without approval, and says so when only the approval step failed', async () => {
+    mSave.mockResolvedValue({ scriptId: 's1', approvalId: null, approvalError: 'Could not create the approval request.' })
+    await renderWithScript()
+    fireEvent.click(screen.getByTestId('memo-save'))
+
+    await waitFor(() => expect(screen.getByTestId('memo-saved')).toBeInTheDocument())
+    expect(mSave).toHaveBeenCalledWith(expect.objectContaining({ requestApproval: false }))
+    expect(screen.queryByText(/Waiting for your sign-off/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Could not create the approval request/)).toBeInTheDocument()
+  })
+
+  it('surfaces a save error and keeps the buttons', async () => {
+    mSave.mockRejectedValue(new Error('Provide a script with a hook, body and CTA'))
+    await renderWithScript()
+    fireEvent.click(screen.getByTestId('memo-save'))
+    await waitFor(() => expect(screen.getByTestId('memo-error')).toHaveTextContent(/hook, body and CTA/))
+    expect(screen.getByTestId('memo-save')).toBeInTheDocument()
   })
 
   it('copies script.md to the clipboard', async () => {

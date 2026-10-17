@@ -12,6 +12,8 @@ const fs = require('fs');
 
 const mockGenerateMemoScript = jest.fn();
 const mockTranscribe = jest.fn();
+const mockScriptCreate = jest.fn();
+const mockCreateApproval = jest.fn();
 
 jest.mock('../../../server/middleware/auth', () => (req, res, next) => {
   req.user = { _id: 'user-1' };
@@ -31,6 +33,10 @@ jest.mock('../../../server/services/personalizationService', () => ({
 }));
 jest.mock('../../../server/services/whisperService', () => ({
   generateTranscriptFromAudio: (...args) => mockTranscribe(...args),
+}));
+jest.mock('../../../server/models/Script', () => ({ create: (...args) => mockScriptCreate(...args) }));
+jest.mock('../../../server/services/approvalService', () => ({
+  createApprovalRequest: (...args) => mockCreateApproval(...args),
 }));
 jest.mock('../../../server/services/memoScriptService', () => {
   const actual = jest.requireActual('../../../server/services/memoScriptService');
@@ -135,5 +141,61 @@ describe('POST /api/memo-script/transcribe', () => {
       .post('/api/memo-script/transcribe')
       .attach('audio', audio, { filename: 'memo.mp3', contentType: 'audio/mpeg' })
       .expect(502);
+  });
+});
+
+describe('POST /api/memo-script/save', () => {
+  const SCRIPT = {
+    title: 'Why nobody buys', hook: 'You post daily. Nobody buys.',
+    body: ['Your regulars are bored.', 'Show one new drink.'], cta: 'DM me MENU.',
+    brollCues: [], claims: [],
+  };
+  beforeEach(() => {
+    mockScriptCreate.mockReset().mockResolvedValue({ _id: 'script-1' });
+    mockCreateApproval.mockReset().mockResolvedValue({ _id: 'approval-1' });
+  });
+
+  it('400s on a script without hook/body/cta, saving nothing', async () => {
+    await request(app).post('/api/memo-script/save').send({ script: { hook: 'h', body: [], cta: '' } }).expect(400);
+    await request(app).post('/api/memo-script/save').send({ script: 'nope' }).expect(400);
+    expect(mockScriptCreate).not.toHaveBeenCalled();
+  });
+
+  it('saves to the Scripts library as a draft with unescaped text, no approval by default', async () => {
+    const res = await request(app).post('/api/memo-script/save')
+      .send({ script: { ...SCRIPT, hook: 'Don&#x27;t post &amp; pray' }, format: 'long' })
+      .expect(201);
+    const doc = mockScriptCreate.mock.calls[0][0];
+    expect(doc).toMatchObject({ userId: 'user-1', type: 'youtube', status: 'draft' });
+    expect(doc.structure.introduction).toBe("Don't post & pray");
+    expect(doc.script).toContain("# Hook\n\nDon't post & pray");
+    expect(mockCreateApproval).not.toHaveBeenCalled();
+    expect(res.body.data).toEqual({ scriptId: 'script-1', approvalId: null });
+  });
+
+  it('opens a self sign-off in Approvals when requestApproval is true', async () => {
+    const res = await request(app).post('/api/memo-script/save').send({ script: SCRIPT, requestApproval: true }).expect(201);
+    expect(mockCreateApproval).toHaveBeenCalledWith(expect.objectContaining({
+      entityType: 'script', entityId: 'script-1', requestedBy: 'user-1', requestedFrom: 'user-1',
+      message: 'Script: Why nobody buys',
+    }));
+    expect(res.body.data).toEqual({ scriptId: 'script-1', approvalId: 'approval-1' });
+  });
+
+  it('keeps the saved script and says so when only the approval step fails', async () => {
+    mockCreateApproval.mockRejectedValue(new Error('db hiccup'));
+    const res = await request(app).post('/api/memo-script/save').send({ script: SCRIPT, requestApproval: true }).expect(201);
+    expect(res.body.data.scriptId).toBe('script-1');
+    expect(res.body.data.approvalId).toBeNull();
+    expect(res.body.data.approvalError).toMatch(/approval request/);
+  });
+
+  it('caps oversized fields before storing', async () => {
+    await request(app).post('/api/memo-script/save')
+      .send({ script: { ...SCRIPT, body: [...Array.from({ length: 40 }, () => 'beat'), 'x'.repeat(5000)].reverse() } })
+      .expect(201);
+    const doc = mockScriptCreate.mock.calls[0][0];
+    expect(doc.structure.mainPoints).toHaveLength(30);
+    expect(doc.structure.mainPoints[0].content).toHaveLength(2000);
   });
 });

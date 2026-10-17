@@ -23,7 +23,9 @@ const { capForPrompt } = require('../utils/promptSafe');
 const logger = require('../utils/logger');
 const googleAI = require('../utils/googleAI');
 const personalizationService = require('../services/personalizationService');
-const { generateMemoScript, normalizeFormat, MAX_MEMO_CHARS } = require('../services/memoScriptService');
+const {
+  generateMemoScript, normalizeFormat, shapeScript, toScriptDoc, MAX_MEMO_CHARS,
+} = require('../services/memoScriptService');
 
 // Whisper's upload cap is 25MB; a 2-minute memo is ~1-4MB in any browser codec.
 const MAX_MEMO_BYTES = 25 * 1024 * 1024;
@@ -138,6 +140,58 @@ router.post('/', auth, aiLimiter, costGuard(), asyncHandler(async (req, res) => 
     return sendError(res, 'Script writing is temporarily unavailable. Your memo was not lost; try again shortly.', 503);
   }
   return sendSuccess(res, 'Script written', 200, result);
+}));
+
+// Unescape (see the note on POST /) and bound a client-sent script before it is
+// stored: strings capped, arrays capped, anything else dropped.
+function cleanScriptInput(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const str = (v) => (typeof v === 'string' ? validator.unescape(v).slice(0, 2000) : '');
+  const list = (v) => (Array.isArray(v) ? v.slice(0, 30).map(str) : []);
+  return {
+    title: str(raw.title).slice(0, 200),
+    hook: str(raw.hook),
+    body: list(raw.body),
+    cta: str(raw.cta),
+    brollCues: list(raw.brollCues),
+    claims: list(raw.claims),
+  };
+}
+
+/**
+ * POST /api/memo-script/save
+ * Body: { script: { title, hook, body[], cta, brollCues[], claims[] }, format?, requestApproval? }
+ * Saves the script to the Scripts library and, when requestApproval is true,
+ * opens a sign-off in Approvals (approver = the creator).
+ */
+router.post('/save', auth, asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  const script = shapeScript(JSON.stringify(cleanScriptInput(body.script)));
+  if (!script) return sendError(res, 'Provide a script with a hook, body and CTA', 400);
+
+  const Script = require('../models/Script');
+  const doc = await Script.create(toScriptDoc(script, { format: body.format, userId: req.user._id }));
+
+  if (body.requestApproval !== true) {
+    return sendSuccess(res, 'Script saved', 201, { scriptId: doc._id, approvalId: null });
+  }
+  try {
+    const { createApprovalRequest } = require('../services/approvalService');
+    const approval = await createApprovalRequest({
+      entityType: 'script',
+      entityId: doc._id,
+      requestedBy: req.user._id,
+      requestedFrom: req.user._id,
+      message: `Script: ${script.title}`.slice(0, 500),
+    });
+    return sendSuccess(res, 'Script saved and sent for approval', 201, { scriptId: doc._id, approvalId: approval._id });
+  } catch (err) {
+    // The script is saved; say plainly that only the approval step failed.
+    logger.warn('[memo-script] approval request failed', { scriptId: doc._id, error: err.message });
+    return sendSuccess(res, 'Script saved, but the approval request failed', 201, {
+      scriptId: doc._id, approvalId: null, approvalError: 'Could not create the approval request. Try again from Approvals.',
+    });
+  }
 }));
 
 module.exports = router;

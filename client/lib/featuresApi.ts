@@ -96,6 +96,7 @@ export const paths = {
   hooks: () => '/hooks',
   memoScript: () => '/memo-script',
   memoTranscribe: () => '/memo-script/transcribe',
+  memoSave: () => '/memo-script/save',
   hashtags: () => '/hashtags',
   captions: () => '/captions',
   critique: () => '/critique',
@@ -191,6 +192,13 @@ export const transcribeMemo = async (audio: Blob, filename = 'memo.webm'): Promi
 export const writeMemoScript = async (body: {
   memo: string; platform?: Platform; format?: ScriptFormat
 }): Promise<MemoScriptResult> => unwrap<MemoScriptResult>(await apiPost(paths.memoScript(), body))
+
+export interface SavedMemoScript { scriptId: string; approvalId: string | null; approvalError?: string }
+
+/** Save a script to the Scripts library; `requestApproval` also opens a sign-off in Approvals. */
+export const saveMemoScript = async (body: {
+  script: MemoScript; format?: ScriptFormat; requestApproval?: boolean
+}): Promise<SavedMemoScript> => unwrap<SavedMemoScript>(await apiPost(paths.memoSave(), body))
 
 export type HashtagTier = 'broad' | 'niche' | 'community' | 'branded'
 export interface Hashtag { tag: string; tier: string }
