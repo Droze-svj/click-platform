@@ -5,6 +5,9 @@ const { getIO } = require('./socketService');
 const Notification = require('../models/Notification');
 const UserSettings = require('../models/UserSettings');
 
+const NOTIFICATION_PRIORITIES = Notification.schema.path('priority').enumValues;
+const NOTIFICATION_CATEGORIES = Notification.schema.path('category').enumValues;
+
 function normalizeUserId(userId) {
   return userId != null && typeof userId === 'object' && userId.toString
     ? userId.toString()
@@ -79,8 +82,13 @@ class NotificationService {
    */
   async createNotification(userId, title, message, type = 'info', link = null, options = {}) {
     const uid = normalizeUserId(userId);
-    const category = options.category || 'system';
-    const priority = options.priority || 'medium';
+    // Coerce to the schema's enums: an unknown value (e.g. priority 'normal')
+    // used to fail validation and drop the whole notification.
+    const priority = NOTIFICATION_PRIORITIES.includes(options.priority) ? options.priority : 'medium';
+    const category = NOTIFICATION_CATEGORIES.includes(options.category) ? options.category : 'system';
+    if (options.category && category !== options.category) {
+      logger.debug('Unknown notification category; stored as system', { category: options.category });
+    }
     const allowed = await this.shouldSendInAppNotification(uid, category, priority);
     if (!allowed) {
       logger.debug('Notification skipped by user preferences', { userId: uid, category, priority });
@@ -90,11 +98,11 @@ class NotificationService {
       const doc = await Notification.create({
         userId: uid,
         type: type || 'info',
-        priority: options.priority || 'medium',
+        priority,
         title: title || 'Notification',
         message: message || '',
         link: link || options.link || null,
-        category: options.category || null,
+        category,
         context: options.context || {},
         aiSummary: options.aiSummary || null,
         suggestion: options.suggestion || null,
@@ -357,6 +365,11 @@ async function sendNotification(userId, notification) {
 
 module.exports = notificationService;
 module.exports.sendNotification = sendNotification;
-module.exports.createNotification = (userId, title, message, type, link, options) =>
-  notificationService.createNotification(userId, title, message, type, link, options);
+// Bound to the instance so destructured callers (`const { createNotification } =
+// require(...)`) keep `this`. It used to be an arrow wrapper calling
+// notificationService.createNotification — but module.exports IS the instance, so
+// this own property shadowed the prototype method and the wrapper called itself:
+// every createNotification/sendNotification stack-overflowed and no in-app
+// notification was ever saved.
+module.exports.createNotification = Object.getPrototypeOf(notificationService).createNotification.bind(notificationService);
 

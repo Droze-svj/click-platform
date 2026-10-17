@@ -7,9 +7,10 @@
 // it makes no AI call, so opening it never spends model quota. A section with
 // no data says so instead of showing a made-up number.
 //
-// Delivery: an opt-in BriefSubscription (timezone + hour, default 07:00) read by
-// an hourly, cronLock-guarded cron that posts the brief as an in-app
-// notification. OFF unless ENABLE_BRIEF_CRONS=true AND autonomousMode allows.
+// Delivery: an opt-in BriefSubscription (timezone + hour, default 07:00, and
+// channels: in-app and/or email) read by a cronLock-guarded cron that runs
+// every 15 minutes, so half-hour/quarter-hour timezones still get it at :00
+// local. OFF unless ENABLE_BRIEF_CRONS=true AND autonomousMode allows.
 
 const cron = require('node-cron');
 const mongoose = require('mongoose');
@@ -182,6 +183,47 @@ function summarize(brief) {
   return `${lead}Make next: ${brief.makeNext.title}`.slice(0, 500);
 }
 
+const escapeHtml = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+/**
+ * Pure: the brief as an email. Everything interpolated is escaped — audience
+ * comment text flows into the themes and make-next title.
+ */
+function renderBriefEmail(brief, { appUrl = '' } = {}) {
+  const base = String(appUrl || '').replace(/\/+$/, '');
+  const link = (path) => escapeHtml(`${base}${path}`);
+  const money = (n, cur) => {
+    try { return Number(n).toLocaleString('en-US', { style: 'currency', currency: cur, maximumFractionDigits: 0 }); } catch (_) { return `${n} ${cur}`; }
+  };
+  const pct = (p) => (p == null ? '' : ` (${p >= 0 ? '+' : ''}${p}%)`);
+  const rows = [];
+  if (brief.performance) {
+    rows.push(`<p><strong>${escapeHtml(brief.performance.views.toLocaleString('en-US'))}</strong> views${escapeHtml(pct(brief.performance.viewsChangePct))} · <strong>${escapeHtml(brief.performance.engagement.toLocaleString('en-US'))}</strong> engagements on posts from the last 7 days</p>`);
+  }
+  if (brief.sales) {
+    rows.push(`<p><strong>${brief.sales.last24h.count}</strong> sale(s) in 24h · ${escapeHtml(money(brief.sales.last24h.revenue, brief.sales.currency))}${escapeHtml(pct(brief.sales.revenueChangePct))}</p>`);
+  }
+  const themes = brief.audience.themes.map((t) => `<li>${t.count}× “${escapeHtml(t.example)}”</li>`).join('');
+  const needs = brief.needsYou.map((n) => `<li><a href="${link(n.link)}">${escapeHtml(n.label)}</a></li>`).join('');
+
+  const html = `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#111">
+<h2 style="margin:0 0 12px">Your morning brief</h2>
+<div style="border:1px solid #16a34a;border-radius:8px;padding:12px;margin-bottom:16px">
+<p style="margin:0;font-size:12px;color:#16a34a;text-transform:uppercase">Make next</p>
+<p style="margin:6px 0 0;font-size:16px">${escapeHtml(brief.makeNext.title)}</p>
+<p style="margin:6px 0 0;font-size:13px;color:#555">${escapeHtml(brief.makeNext.why)}</p>
+</div>
+${rows.join('\n')}
+${themes ? `<p style="margin-bottom:4px">Your audience keeps asking:</p><ul>${themes}</ul>` : ''}
+${needs ? `<p style="margin-bottom:4px">Needs you:</p><ul>${needs}</ul>` : ''}
+<p><a href="${link('/dashboard/features#brief')}">Open the full brief</a></p>
+<p style="font-size:12px;color:#777">You get this because you turned on the morning brief. Change the time or turn it off in <a href="${link('/dashboard/settings?tab=notifications')}">Settings → Notifications</a>.</p>
+</div>`;
+  return { subject: 'Your morning brief', html, text: `${summarize(brief)}\n\nOpen it: ${base}/dashboard/features#brief\nChange or stop: ${base}/dashboard/settings?tab=notifications` };
+}
+
 // ── I/O ──────────────────────────────────────────────────────────────────────
 
 async function salesBetween(userId, from, to) {
@@ -269,11 +311,61 @@ function isDue(sub, nowMs) {
   return hour === target && sub.lastSentLocalDate !== date;
 }
 
-/** Send every brief that is due this hour. `deps` injectable for tests. */
+/** Is an email provider configured on this server? */
+function emailDeliveryAvailable() {
+  try { return Boolean(require('./emailService').isEmailServiceAvailable()); } catch (_) { return false; }
+}
+
+async function defaultGetUserEmail(userId) {
+  const User = require('../models/User');
+  if (!mongoose.Types.ObjectId.isValid(String(userId))) return null;
+  const u = await User.findById(userId).select('email').lean();
+  return (u && u.email) || null;
+}
+
+/**
+ * Send one brief over the subscriber's channels. Resolves true when at least
+ * one channel delivered; throws when every chosen channel failed.
+ */
+async function sendBrief(sub, brief, deps) {
+  const channels = sub.channels || {};
+  const errors = [];
+  let delivered = 0;
+  if (channels.inApp !== false) {
+    try {
+      // 'high' priority: this is a brief the user explicitly scheduled, so an
+      // "alerts: high only" preference must not silently drop it.
+      const doc = await deps.notify(sub.userId, 'Your morning brief', summarize(brief), 'info', '/dashboard/features#brief', {
+        category: 'brief', priority: 'high', data: { makeNext: brief.makeNext },
+      });
+      // null = skipped because in-app notifications are switched off in Settings.
+      if (doc === null) throw new Error('in-app notifications are turned off in Settings');
+      delivered += 1;
+    } catch (err) { errors.push(`in-app: ${err.message}`); }
+  }
+  if (channels.email === true) {
+    try {
+      const to = await deps.getUserEmail(sub.userId);
+      if (!to) throw new Error('no email address on the account');
+      const res = await deps.sendEmail({ to, ...renderBriefEmail(brief, { appUrl: deps.appUrl }) });
+      if (res && res.success === false) throw new Error(res.error || 'email not sent');
+      delivered += 1;
+    } catch (err) { errors.push(`email: ${err.message}`); }
+  }
+  if (!delivered) throw new Error(errors.join('; ') || 'no delivery channel selected');
+  return true;
+}
+
+/** Send every brief that is due now. `deps` injectable for tests. */
 async function deliverDueBriefs(nowMs = Date.now(), deps = {}) {
   const BriefSubscription = deps.BriefSubscription || require('../models/BriefSubscription');
   const getBrief = deps.getBriefForUser || getBriefForUser;
-  const notify = deps.createNotification || require('./notificationService').createNotification;
+  const sendDeps = {
+    notify: deps.createNotification || require('./notificationService').createNotification,
+    sendEmail: deps.sendEmail || ((opts) => require('./emailService').sendEmail(opts)),
+    getUserEmail: deps.getUserEmail || defaultGetUserEmail,
+    appUrl: deps.appUrl != null ? deps.appUrl : (process.env.FRONTEND_URL || ''),
+  };
 
   let sent = 0; let failed = 0; let after = null;
   for (;;) {
@@ -284,15 +376,14 @@ async function deliverDueBriefs(nowMs = Date.now(), deps = {}) {
       if (!isDue(sub, nowMs)) continue;
       try {
         const brief = await getBrief(sub.userId, { now: nowMs });
-        await notify(sub.userId, 'Your morning brief', summarize(brief), 'info', '/dashboard/features#brief', {
-          category: 'morning-brief', data: { makeNext: brief.makeNext },
-        });
-        // Mark per local date so a restart in the same hour never double-sends.
+        await sendBrief(sub, brief, sendDeps);
+        // Mark per local date so the next 15-minute tick (or a restart) in the
+        // same hour never double-sends.
         await BriefSubscription.updateOne({ _id: sub._id }, { $set: { lastSentLocalDate: localClock(nowMs, sub.timezone).date } });
         sent += 1;
       } catch (err) {
         failed += 1;
-        logger.debug('[brief] delivery failed', { userId: String(sub.userId), error: err.message });
+        logger.warn('[brief] delivery failed', { userId: String(sub.userId), error: err.message });
       }
     }
     after = batch[batch.length - 1]._id;
@@ -314,8 +405,11 @@ function startBriefCron() {
     logger.info('[brief] disabled (set ENABLE_BRIEF_CRONS=true to activate).');
     return tasks;
   }
-  // Top of every hour: send briefs whose local delivery hour it now is.
-  tasks.push(cron.schedule('0 * * * *', async () => {
+  // Every 15 minutes: send briefs whose local delivery hour it now is. The
+  // first tick inside that hour is :00 local for every timezone offset that is
+  // a multiple of 15 minutes (India +5:30, Nepal +5:45 included); later ticks
+  // in the hour catch up after a restart, and lastSentLocalDate stops repeats.
+  tasks.push(cron.schedule('*/15 * * * *', async () => {
     if (!briefEnabled() || mongoose.connection.readyState !== 1) return;
     const release = await acquire('briefCron:deliver', LOCK_TTL_MS);
     if (!release) return; // another instance holds it
@@ -323,7 +417,7 @@ function startBriefCron() {
       logger.warn('[brief] delivery run failed', { error: err.message });
     } finally { await release(); }
   }));
-  logger.info('[brief] started (ENABLE_BRIEF_CRONS=true): hourly delivery check.');
+  logger.info('[brief] started (ENABLE_BRIEF_CRONS=true): delivery check every 15 minutes.');
   return tasks;
 }
 
@@ -337,7 +431,10 @@ module.exports = {
   extractQuestionThemes,
   buildBrief,
   summarize,
+  renderBriefEmail,
   getBriefForUser,
+  emailDeliveryAvailable,
+  sendBrief,
   isValidTimeZone,
   localClock,
   isDue,

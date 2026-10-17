@@ -35,7 +35,10 @@ const notificationSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['task', 'project', 'content', 'approval', 'mention', 'system', 'workflow'],
+    // publishing/recurring/brief were sent by callers but missing here, so every
+    // "post published/failed", recurring-post and morning-brief notification
+    // failed validation and was silently dropped.
+    enum: ['task', 'project', 'content', 'approval', 'mention', 'system', 'workflow', 'publishing', 'recurring', 'brief'],
     default: null
   },
   context: {

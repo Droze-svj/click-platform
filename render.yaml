@@ -53,6 +53,12 @@ services:
       # testers out of the dashboard. Set to "false"/unset for public launch.
       - key: AUTO_VERIFY_EMAIL
         value: "true"
+      # Morning Brief delivery: sends each subscriber's brief at the hour and
+      # time zone they chose in Settings -> Notifications (in-app, plus email
+      # when an email provider is configured). Users opt in; nobody gets it
+      # without turning it on.
+      - key: ENABLE_BRIEF_CRONS
+        value: "true"
       # Invite gate for the private beta (optional). Set EITHER (or both):
       #   BETA_ALLOWED_EMAILS = comma-separated emails that may register
       #   BETA_INVITE_CODE    = a shared code testers must enter to sign up

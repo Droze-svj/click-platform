@@ -52,7 +52,10 @@ export default function MorningBriefPanel() {
     const on = !sub?.subscription?.enabled
     setSaving(true); setError(null)
     try {
-      setSub(await setBriefSubscription({ enabled: on, timezone: browserTimeZone(), hour: sub?.subscription?.hour ?? 7 }))
+      // Keep a timezone the user picked in Settings; only default to the browser's.
+      setSub(await setBriefSubscription({
+        enabled: on, timezone: sub?.subscription?.timezone || browserTimeZone(), hour: sub?.subscription?.hour ?? 7,
+      }))
     } catch (e) {
       setError(handleApiError(e) || 'Could not update delivery')
     } finally {
@@ -63,6 +66,8 @@ export default function MorningBriefPanel() {
   const subscribed = !!sub?.subscription?.enabled
   const tz = sub?.subscription?.timezone || browserTimeZone()
   const hour = sub?.subscription?.hour ?? 7
+  const ch = sub?.subscription?.channels
+  const channelLabel = ch?.email && ch?.inApp ? 'in-app and by email' : ch?.email ? 'by email' : 'as a notification'
 
   return (
     <div id="brief" data-testid="brief-panel" className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-4">
@@ -80,10 +85,16 @@ export default function MorningBriefPanel() {
           </button>
         )}
       </div>
+      <a
+        data-testid="brief-settings-link" href="/dashboard/settings?tab=notifications"
+        className="inline-block text-xs text-zinc-400 underline hover:text-white"
+      >
+        Change time, time zone or email delivery
+      </a>
       {subscribed && (
         <p data-testid="brief-delivery-note" className="text-xs text-zinc-500">
           {sub?.deliveryActive
-            ? `Arrives as a notification around ${fmtHour(hour)} ${tz} time.`
+            ? `Arrives ${channelLabel} around ${fmtHour(hour)} ${tz} time.`
             : 'Saved. Daily delivery is not switched on for this server yet, so check here each morning.'}
         </p>
       )}
