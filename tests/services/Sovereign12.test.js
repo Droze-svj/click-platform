@@ -1,5 +1,4 @@
 const ArbitrageSteeringService = require('../../server/services/arbitrageSteeringService');
-const S2SProtocolService = require('../../server/services/S2SProtocolService');
 const MonetizationPlan = require('../../server/models/MonetizationPlan');
 const Conversion = require('../../server/models/Conversion');
 const ClickTracking = require('../../server/models/ClickTracking');
@@ -53,44 +52,7 @@ describe('Sovereign 12 Services - Phase 11 & 12', () => {
             expect(manifest.autonomyState.recommendation).toBe('NO_ACTIVE_OFFERS');
         });
     });
-
-    describe('Phase 12: Global Ecosystem Encirclement (S2S)', () => {
-        beforeEach(() => {
-            // Register nodes for testing
-            S2SProtocolService.registerNode('node_sib_001', { region: 'eu-west-1' });
-            S2SProtocolService.registerNode('node_sib_002', { region: 'us-west-2' });
-        });
-
-        it('should ingest a victory pulse and return encirclement weight', async () => {
-            const pulse = { instanceId: 'node_sib_001', hookHash: 'e7a1b', pi: 0.95 };
-            const result = await S2SProtocolService.processVictoryPulse(pulse);
-            expect(result.status).toBe('vector_ingested');
-            expect(result.encirclementWeight).toBeGreaterThan(1.0);
-        });
-
-        it('should correctly calculate lattice integrity (network health)', async () => {
-            const healthStats = await S2SProtocolService.getNetworkHealth();
-            expect(healthStats.health).toBeGreaterThan(0);
-            expect(healthStats.overLordStats.activeNodes).toBeGreaterThanOrEqual(1);
-        });
-
-        it('should increase encirclement weight as adoption rises', async () => {
-            const hookHash = 'trend_2026_xyz';
-            const pulse1 = { instanceId: 'node_A', hookHash, pi: 0.9, ia: 5 };
-            const pulse2 = { instanceId: 'node_B', hookHash, pi: 0.9, ia: 10 };
-
-            await S2SProtocolService.processVictoryPulse(pulse1);
-            const w1 = S2SProtocolService.getEncirclementWeight(hookHash);
-
-            await S2SProtocolService.processVictoryPulse(pulse2);
-            const w2 = S2SProtocolService.getEncirclementWeight(hookHash);
-
-            expect(w2).toBeGreaterThan(w1);
-        });
-
-        it('should aggregate revenue oracle data in stats', async () => {
-            const healthStats = await S2SProtocolService.getNetworkHealth();
-            expect(healthStats.overLordStats.aggregatedRevenueOracle).toBeGreaterThan(1000000);
-        });
-    });
+    // Phase 12 (the S2S protocol service) was removed: it was dead (0 production
+    // references) and has been deleted. The Phase 11 arbitrage-steering suite above
+    // still covers the live arbitrageSteeringService.
 });
