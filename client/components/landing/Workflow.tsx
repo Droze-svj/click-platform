@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import { Upload, Wand2, Calendar, Send, type LucideIcon, Activity, Terminal, Fingerprint, Sparkles } from 'lucide-react';
+import { Upload, Wand2, Calendar, Send, type LucideIcon, Activity, Terminal, Sparkles } from 'lucide-react';
 
 interface Step {
   num: string;
@@ -44,7 +44,7 @@ const STEPS: Step[] = [
 
 export function Workflow() {
   return (
-    <section id="workflow" className="py-48 px-6 bg-surface-page relative overflow-hidden font-inter border-y-2 border-surface-100 dark:border-white/5">
+    <section id="workflow" className="py-24 md:py-32 px-6 bg-surface-page relative overflow-hidden font-inter border-y-2 border-surface-100 dark:border-white/5">
       <div aria-hidden="true" className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
       
       <div className="max-w-[1900px] mx-auto relative z-10">
@@ -59,11 +59,11 @@ export function Workflow() {
              How it works
            </m.div>
 
-          <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic px-4">
-            ONE VIDEO IN. <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">A WEEK OF POSTS OUT.</span>
+          <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl break-words font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic px-4">
+            ONE VIDEO IN. <span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone bg-gradient-to-r from-primary-400 to-fuchsia-400">A WEEK OF POSTS OUT.</span>
           </h2>
 
-          <p className="text-surface-500 dark:text-slate-500 max-w-4xl mx-auto text-lg sm:text-xl md:text-2xl font-medium italic uppercase tracking-tight opacity-70 leading-relaxed px-4">
+          <p className="text-surface-600 dark:text-slate-300 max-w-4xl mx-auto text-lg sm:text-xl md:text-2xl leading-relaxed px-4">
             Four steps. About 90 seconds of your time. Click handles the rest — every clip, every platform, every day you ship.
           </p>
         </div>
@@ -105,7 +105,7 @@ export function Workflow() {
                     
                     <div className="space-y-4">
                        <h3 className="relative text-3xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">{s.title}</h3>
-                       <p className="relative text-base text-surface-500 dark:text-slate-500 font-medium leading-relaxed italic uppercase tracking-tight opacity-80">{s.desc}</p>
+                       <p className="relative text-base text-surface-600 dark:text-slate-300 leading-relaxed">{s.desc}</p>
                     </div>
 
                     {/* Step HUD Telemetry */}
@@ -124,15 +124,6 @@ export function Workflow() {
         </div>
       </div>
 
-      {/* Decorative Floor Telemetry */}
-      <div className="max-w-7xl mx-auto mt-32 flex justify-between items-center px-12 opacity-[0.03] dark:opacity-[0.07] pointer-events-none">
-         <div className="flex items-center gap-6">
-            <Fingerprint size={24} className="text-primary-500" />
-            <div className="h-px w-64 bg-primary-500/50" />
-            <span className="text-[10px] font-black uppercase tracking-widest italic text-primary-500">Workflow active</span>
-         </div>
-         <Activity size={24} className="text-primary-500 animate-pulse" />
-      </div>
     </section>
   );
 }

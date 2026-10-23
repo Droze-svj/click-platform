@@ -96,7 +96,7 @@ export function Pricing() {
   const agencyPlan = getPlan('agency');
 
   return (
-    <section id="pricing" className="py-48 px-6 bg-surface-page relative border-y-2 border-surface-100 dark:border-white/5 overflow-hidden font-inter">
+    <section id="pricing" className="py-24 md:py-32 px-6 bg-surface-page relative border-y-2 border-surface-100 dark:border-white/5 overflow-hidden font-inter">
       <div aria-hidden="true" className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[60%] h-[60%] bg-primary-600/10 blur-[180px] rounded-full opacity-40 motion-safe:animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[40%] h-[40%] bg-fuchsia-600/10 blur-[160px] rounded-full opacity-30" />
@@ -114,11 +114,11 @@ export function Pricing() {
              Simple, scale-as-you-grow pricing
            </m.div>
 
-          <h2 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">
-            PRICED <span className={`text-transparent bg-clip-text ${headingGradient} transition-all duration-500`}>FOR CREATORS.</span>
+          <h2 className="text-[2.75rem] sm:text-6xl md:text-8xl break-words font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">
+            PRICED <span className={`text-transparent bg-clip-text pr-[0.15em] box-decoration-clone ${headingGradient} transition-all duration-500`}>FOR CREATORS.</span>
           </h2>
 
-          <p className="text-surface-500 dark:text-slate-500 max-w-3xl mx-auto text-xl font-medium italic uppercase tracking-tight opacity-70">
+          <p className="text-surface-600 dark:text-slate-300 max-w-3xl mx-auto text-xl">
             Start free. Upgrade when you outgrow it. Cancel any time — no contracts, no salesperson. Pay yearly and get 2 months free.
           </p>
 
@@ -140,7 +140,7 @@ export function Pricing() {
           <div className="text-center mb-12 space-y-4">
             <p className={`text-[10px] font-black uppercase tracking-[0.5em] ${accentText} italic transition-colors duration-500`}>Why Click</p>
             <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">
-              Not another editor. A <span className={`text-transparent bg-clip-text ${headingGradient} transition-all duration-500`}>growth engine.</span>
+              Not another editor. A <span className={`text-transparent bg-clip-text pr-[0.15em] box-decoration-clone ${headingGradient} transition-all duration-500`}>growth engine.</span>
             </h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-[1700px] mx-auto">
@@ -236,11 +236,11 @@ export function Pricing() {
               <div className="h-px w-32 bg-surface-100 dark:bg-white/5" />
               <div className="flex items-center gap-3">
                  <Target size={16} className="text-primary-500" />
-                 <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic">14-day refund guarantee</p>
+                 <p className="text-xs font-semibold text-surface-600 dark:text-slate-300 uppercase tracking-wider">14-day refund guarantee</p>
               </div>
               <div className="h-px w-32 bg-surface-100 dark:bg-white/5" />
            </div>
-           <p className="text-[9px] font-black text-slate-800 dark:text-slate-900 uppercase tracking-[0.4em] italic">Secure payments — cancel anytime</p>
+           <p className="text-xs font-medium text-surface-500 dark:text-slate-400">Secure payments — cancel anytime</p>
         </div>
       </div>
     </section>

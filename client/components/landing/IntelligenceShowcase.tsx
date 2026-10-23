@@ -5,7 +5,7 @@ import { Brain, Radar, RefreshCw, Clock, Sparkles, ArrowUpRight, Terminal, Finge
 
 export function IntelligenceShowcase() {
   return (
-    <section id="intelligence" className="py-48 px-6 bg-surface-page relative overflow-hidden font-inter border-y-2 border-surface-100 dark:border-white/5">
+    <section id="intelligence" className="py-24 md:py-32 px-6 bg-surface-page relative overflow-hidden font-inter border-y-2 border-surface-100 dark:border-white/5">
       {/* High-Fidelity Ambient Backgrounds */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 pointer-events-none opacity-40">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] bg-primary-600/10 blur-[180px] rounded-full animate-pulse" style={{ animationDuration: '10s' }} />
@@ -24,11 +24,11 @@ export function IntelligenceShowcase() {
              Why Click feels different
            </m.div>
 
-          <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic px-4">
-            CLICK STUDIED YOUR NICHE <br className="hidden md:block" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">BEFORE YOU SIGNED UP.</span>
+          <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl break-words font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic px-4">
+            CLICK STUDIED YOUR NICHE <br className="hidden md:block" /><span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone bg-gradient-to-r from-primary-400 to-fuchsia-400">BEFORE YOU SIGNED UP.</span>
           </h2>
 
-          <p className="text-surface-500 dark:text-slate-500 max-w-4xl mx-auto text-lg sm:text-xl md:text-2xl font-medium italic uppercase tracking-tight opacity-70 leading-relaxed px-6">
+          <p className="text-surface-600 dark:text-slate-300 max-w-4xl mx-auto text-lg sm:text-xl md:text-2xl leading-relaxed px-6">
             Most AI editors give every creator the same generic clip. Click ships with playbooks for the niches you actually live in — and four engines that quietly tune every cut to YOUR audience.
           </p>
         </div>
@@ -54,7 +54,7 @@ export function IntelligenceShowcase() {
                   </div>
                 </div>
                 <h3 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">Speaks your niche</h3>
-                <p className="text-surface-500 dark:text-slate-500 text-lg md:text-xl font-medium leading-relaxed mb-10 max-w-2xl italic uppercase tracking-tight opacity-80">
+                <p className="text-surface-600 dark:text-slate-300 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl">
                   A finance creator gets dollar-anchored hooks. A fitness creator gets transformation framing. A gamer gets pattern-break edits. Every hook, caption, and cut is written through your niche&apos;s playbook — never the generic AI mush.
                 </p>
               </div>
@@ -92,7 +92,7 @@ export function IntelligenceShowcase() {
                 </div>
               </div>
               <h3 className="text-2xl md:text-3xl font-black mb-4 tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">Watches the trends</h3>
-              <p className="text-surface-500 dark:text-slate-500 text-base font-medium leading-relaxed italic uppercase tracking-tight opacity-80">
+              <p className="text-surface-600 dark:text-slate-300 text-base leading-relaxed">
                 Hooks, sounds, formats, hashtags — Click pulls what&apos;s working in your niche right now, every 6 hours. You stop guessing what to post; Click brings the answers to your editor.
               </p>
             </div>
@@ -115,7 +115,7 @@ export function IntelligenceShowcase() {
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 italic">Always on</span>
               </div>
               <h3 className="text-2xl md:text-3xl font-black mb-4 tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">Remembers what worked</h3>
-              <p className="text-surface-500 dark:text-slate-500 text-base font-medium leading-relaxed italic uppercase tracking-tight opacity-80">
+              <p className="text-surface-600 dark:text-slate-300 text-base leading-relaxed">
                 The hook that hit. The font that landed. The slot that popped. Click logs every win and tilts tomorrow&apos;s suggestions toward it — automatically, while you sleep.
               </p>
             </div>
@@ -137,7 +137,7 @@ export function IntelligenceShowcase() {
                 </div>
                 <div>
                   <h3 className="text-3xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none mb-4">Knows when YOU pop</h3>
-                  <p className="text-surface-500 dark:text-slate-500 text-lg font-medium leading-relaxed italic uppercase tracking-tight opacity-80">
+                  <p className="text-surface-600 dark:text-slate-300 text-lg leading-relaxed">
                     Generic &quot;best times to post&quot; charts don&apos;t know your audience. Click does — and stacks platform peaks against your real engagement history to pick the exact slot you&apos;ll land.
                   </p>
                 </div>

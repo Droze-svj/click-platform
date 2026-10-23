@@ -103,10 +103,11 @@ export default function LandingPage() {
 
       <ScrollProgress />
       <Nav />
-      <NichePicker />
 
       <main className="relative z-10 w-full">
         <Hero />
+        {/* Below the hero (it used to sit at the very top, under the fixed nav). */}
+        <NichePicker />
         <LiveDemo />
         <PlatformMarquee />
         <EnginePillars />
