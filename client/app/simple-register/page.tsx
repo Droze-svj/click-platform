@@ -77,7 +77,7 @@ export default function SimpleRegister() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form method="post" onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="simple-name" style={{ display: 'block', marginBottom: '5px' }}>Name:</label>
           <input
@@ -113,7 +113,7 @@ export default function SimpleRegister() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
             style={{ width: '100%', padding: '8px', fontSize: '16px' }}
           />
         </div>

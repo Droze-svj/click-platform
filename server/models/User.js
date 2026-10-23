@@ -91,7 +91,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  twoFactorSecret: String,
+  twoFactorSecret: String, // encrypted at rest (utils/dataEncryption)
+  twoFactorTempSecret: String, // encrypted; set by /2fa/setup until /2fa/enable confirms it
+  twoFactorBackupCodes: [String], // sha256 hashes of one-time backup codes
+  // Tokens issued before this instant are rejected (password change/reset,
+  // "sign out of all devices"). See services/authSecurityService.
+  sessionsRevokedAt: Date,
+  deactivatedAt: Date, // self-service deactivation (status → 'suspended')
+  deactivationReason: String,
   lastLogin: Date,
   loginAttempts: {
     type: Number,
@@ -375,9 +382,10 @@ userSchema.methods.incLoginAttempts = async function() {
     });
   }
   const updates = { $inc: { loginAttempts: 1 } };
-  // Lock account after 5 failed attempts for 2 hours
+  // Lock account after 5 failed attempts for 15 minutes (same policy as
+  // services/authSecurityService, which the login route uses).
   if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
-    updates.$set = { lockUntil: Date.now() + 2 * 60 * 60 * 1000 };
+    updates.$set = { lockUntil: Date.now() + 15 * 60 * 1000 };
   }
   return this.updateOne(updates);
 };

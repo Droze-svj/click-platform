@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { apiPost, handleApiError } from '../lib/api'
+import { apiPost, handleApiError, setTokens } from '../lib/api'
 import { Eye, EyeOff, Lock } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -59,10 +59,13 @@ export default function ChangePasswordForm() {
       // The server endpoint is POST /api/auth/change-password — the previous
       // PUT /api/user/change-password 404'd silently because no such route
       // existed. apiPost auto-attaches the Bearer token from localStorage.
-      await apiPost('/auth/change-password', {
+      const res = await apiPost<{ data?: { token?: string; refreshToken?: string } }>('/auth/change-password', {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       })
+      // Changing the password signs out every other device; the server hands
+      // this one fresh tokens so it stays signed in.
+      if (res?.data?.token) setTokens(res.data.token, res.data.refreshToken)
 
       setSuccess(true)
       setFormData({

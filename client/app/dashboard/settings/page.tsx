@@ -31,6 +31,7 @@ import { Button } from '../../../components/ui/button'
 import { EmptyState } from '../../../components/ui/empty-state'
 import { PageShell } from '../../../components/ui'
 import MorningBriefSettings from '../../../components/settings/MorningBriefSettings'
+import AccountSecurityPanel from '../../../components/settings/AccountSecurityPanel'
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -130,7 +131,7 @@ interface SectionDef {
 
 const SECTIONS: SectionDef[] = [
   { id: 'profile', label: 'Profile', icon: <User size={18} />, keywords: ['profile', 'name', 'avatar', 'account info'] },
-  { id: 'security', label: 'Account & Security', icon: <Lock size={18} />, keywords: ['password', 'security', 'change password', 'delete account', 'danger'] },
+  { id: 'security', label: 'Account & Security', icon: <Lock size={18} />, keywords: ['password', 'security', 'change password', 'two-factor', '2fa', 'two-step', 'authenticator', 'sessions', 'devices', 'sign out', 'delete account', 'danger'] },
   { id: 'notifications', label: 'Notifications', icon: <Bell size={18} />, keywords: ['notifications', 'email', 'push', 'digest', 'alerts', 'mentions'] },
   { id: 'privacy', label: 'Privacy', icon: <EyeOff size={18} />, keywords: ['privacy', 'analytics', 'consent', 'data', 'marketing'] },
   { id: 'appearance', label: 'Appearance', icon: <Palette size={18} />, keywords: ['theme', 'dark', 'light', 'density', 'compact', 'motion', 'accent', 'appearance', 'display', 'language', 'timezone', 'workspace', 'pinned', 'sidebar', 'landing', 'start page'] },
@@ -579,6 +580,12 @@ function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
         <SubHeader>Change password</SubHeader>
         <div className="mt-3">
           <ChangePasswordForm />
+        </div>
+      </Card>
+      <Card>
+        <SubHeader>Sign-in protection</SubHeader>
+        <div className="mt-3">
+          <AccountSecurityPanel />
         </div>
       </Card>
       <Card className="border-rose-500/30">
