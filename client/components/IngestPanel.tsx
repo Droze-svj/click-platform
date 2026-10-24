@@ -254,7 +254,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
       if (!newId) throw new Error('Remix failed')
       goToEditor(newId, 'Remix')
     } catch (e: any) {
-      setError(e?.message || 'Remix failed')
+      setError(e?.response?.data?.error || e?.message || 'Remix failed')
     } finally { setBusy(false) }
   }, [goToEditor])
 
