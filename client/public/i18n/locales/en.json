@@ -10052,5 +10052,12 @@
       "comingSoonHint": "Retention, hook strength and pacing analytics will appear here once your video has been analyzed.",
       "transcript": "Transcript"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Processing your invitation…",
+    "body": "We are adding you to the team. This only takes a moment.",
+    "noToken": "This invitation link is missing its code. Ask for a new invite.",
+    "joined": "✓ You joined the team",
+    "failed": "Couldn't accept the invitation"
   }
 }
